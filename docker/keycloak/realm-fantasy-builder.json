@@ -1,0 +1,76 @@
+{
+  "realm": "fantasy-builder",
+  "enabled": true,
+  "registrationAllowed": false,
+  "loginWithEmailAllowed": true,
+  "duplicateEmailsAllowed": false,
+  "resetPasswordAllowed": true,
+  "editUsernameAllowed": false,
+  "sslRequired": "none",
+  "roles": {
+    "realm": [
+      { "name": "default-roles-fantasy-builder", "composite": true, "clientRole": false },
+      { "name": "offline_access", "clientRole": false },
+      { "name": "uma_authorization", "clientRole": false }
+    ]
+  },
+  "users": [
+    {
+      "username": "demo",
+      "enabled": true,
+      "emailVerified": true,
+      "firstName": "Demo",
+      "lastName": "Manager",
+      "email": "demo@fantasy-builder.local",
+      "credentials": [
+        {
+          "type": "password",
+          "value": "demo",
+          "temporary": false
+        }
+      ]
+    }
+  ],
+  "clients": [
+    {
+      "clientId": "laliga-fantasy-builder",
+      "name": "LaLiga Fantasy Builder (local)",
+      "enabled": true,
+      "publicClient": true,
+      "bearerOnly": false,
+      "standardFlowEnabled": true,
+      "implicitFlowEnabled": false,
+      "directAccessGrantsEnabled": false,
+      "serviceAccountsEnabled": false,
+      "protocol": "openid-connect",
+      "rootUrl": "http://localhost:8000",
+      "baseUrl": "/",
+      "redirectUris": [
+        "http://localhost:8000/auth/callback"
+      ],
+      "webOrigins": [
+        "http://localhost:8000",
+        "http://localhost:3000"
+      ],
+      "attributes": {
+        "pkce.code.challenge.method": "S256",
+        "post.logout.redirect.uris": "http://localhost:8000/*"
+      },
+      "fullScopeAllowed": true,
+      "defaultClientScopes": [
+        "web-origins",
+        "acr",
+        "profile",
+        "roles",
+        "email",
+        "basic"
+      ],
+      "optionalClientScopes": [
+        "address",
+        "phone",
+        "offline_access",
+        "microprofile-jwt"
+      ]
+    }
+  ]
+}

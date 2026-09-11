@@ -1,0 +1,48 @@
+# Secrets and local state
+.env
+.env.*
+!.env.example
+*.key
+*.pem
+
+# Python / uv
+backend/**/.venv/
+backend/**/__pycache__/
+backend/**/*.py[cod]
+backend/**/.pytest_cache/
+backend/**/.mypy_cache/
+backend/**/.ruff_cache/
+backend/**/*.egg-info/
+backend/**/dist/
+backend/**/build/
+
+# Go builds (legacy ignore)
+bin/
+dist/
+*.exe
+*.out
+*.test
+coverage.out
+coverage.html
+/vendor/
+
+# Backend runtime
+backend/**/*.db
+backend/**/*.sqlite*
+
+# CLI binaries
+cli/laliga_auth_helper/laliga_auth_helper
+
+# IDE and OS artefacts
+.DS_Store
+.idea/
+.vscode/
+*.swp
+
+# Test artefacts
+__debug_bin*
+.coverage
+htmlcov/
+
+# Local secrets / one-off OAuth callbacks
+tmp/

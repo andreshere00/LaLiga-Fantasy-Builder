@@ -1,0 +1,38 @@
+services:
+  keycloak:
+    image: quay.io/keycloak/keycloak:26.2
+    command:
+      - start-dev
+      - --import-realm
+    environment:
+      KC_BOOTSTRAP_ADMIN_USERNAME: admin
+      KC_BOOTSTRAP_ADMIN_PASSWORD: admin
+      KC_HTTP_PORT: 8080
+      KC_HOSTNAME: localhost
+      KC_HOSTNAME_PORT: 8080
+      KC_HOSTNAME_STRICT: "false"
+      KC_HOSTNAME_STRICT_HTTPS: "false"
+    ports:
+      - "8080:8080"
+    volumes:
+      - ./docker/keycloak/realm-fantasy-builder.json:/opt/keycloak/data/import/realm-fantasy-builder.json:ro
+    healthcheck:
+      test: ["CMD-SHELL", "exec 3<>/dev/tcp/127.0.0.1/8080"]
+      interval: 5s
+      timeout: 5s
+      retries: 30
+      start_period: 20s
+
+  auth:
+    build:
+      context: ./backend/auth
+      dockerfile: Dockerfile
+    ports:
+      - "8000:8000"
+    env_file:
+      - ./backend/auth/.env
+    depends_on:
+      keycloak:
+        condition: service_started
+    profiles:
+      - full

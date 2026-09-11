@@ -1,0 +1,98 @@
+[
+  {
+    "key": "coach",
+    "title": "Entrenador",
+    "description": "Ficha hasta dos entrenadores para tu equipo. Solo podr\u00e1s alinear uno.",
+    "modalDescription": "A\u00f1adir\u00e1s un <span class=\"premium-option-title\">Entrenador<\/span> a tu equipo",
+    "value": true,
+    "subConfiguration": [],
+    "icon": "https:\/\/assets-fantasy.llt-services.com\/premium\/coach_icon.png"
+  },
+  {
+    "key": "formations",
+    "title": "Nuevos esquemas de juego",
+    "description": "Disp\u00f3n a tus jugadores en nuevas alineaciones.",
+    "modalDescription": "Accede a nuevas <span class=\"premium-option-title\">formaciones<\/span>",
+    "value": true,
+    "subConfiguration": [],
+    "icon": "https:\/\/assets-fantasy.llt-services.com\/premium\/formations_icon.png"
+  },
+  {
+    "key": "captain",
+    "title": "Capit\u00e1n",
+    "description": "Elige un capit\u00e1n para tu equipo. Este jugador puntuar\u00e1 doble.",
+    "modalDescription": "Asignar\u00e1s un <span class=\"premium-option-title\">Capit\u00e1n<\/span> que punt\u00fae doble",
+    "value": true,
+    "subConfiguration": [],
+    "icon": "https:\/\/assets-fantasy.llt-services.com\/premium\/captain_icon.png"
+  },
+  {
+    "key": "bench",
+    "title": "Banquillo",
+    "description": "Crea un banquillo donde los jugadores puntuar\u00e1n en caso de que el jugador alineado no dispute el partido.",
+    "modalDescription": "Crear\u00e1s un <span class=\"premium-option-title\">banquillo<\/span> con suplentes",
+    "value": true,
+    "subConfiguration": [],
+    "icon": "https:\/\/assets-fantasy.llt-services.com\/premium\/bench_icon.png"
+  },
+  {
+    "key": "loan",
+    "title": "Cesiones",
+    "description": "Cede jugadores a otros m\u00e1nagers. Podr\u00e1s personalizar las caracter\u00edsticas de esta funcionalidad.",
+    "modalDescription": "Podr\u00e1s hacer <span class=\"premium-option-title\">cesiones<\/span>",
+    "value": true,
+    "subConfiguration": [
+      {
+        "key": "duration",
+        "title": "Duraci\u00f3n de cesiones",
+        "description": "N\u00famero de jornadas que durar\u00e1n las cesiones de jugadores.",
+        "value": 1,
+        "subConfiguration": [],
+        "isEditable": false
+      },
+      {
+        "key": "maxLoans",
+        "title": "M\u00e1x. jugadores cedidos",
+        "description": "Define el n\u00famero m\u00e1ximo de jugadores que se puede tener cedidos. Esto limita tambi\u00e9n el n\u00famero de solicitudes simultaneas aceptadas.",
+        "value": 3,
+        "subConfiguration": [],
+        "isEditable": false
+      },
+      {
+        "key": "enableConclude",
+        "title": "Permitir finalizar cesiones",
+        "description": "Se podr\u00e1n finalizar las cesiones antes de tiempo si el m\u00e1nager que recibe la cesi\u00f3n lo considera.",
+        "value": true,
+        "subConfiguration": [],
+        "isEditable": false
+      },
+      {
+        "key": "minPercentage",
+        "title": "Precio m\u00ednimo",
+        "description": "Define precio m\u00e1s bajo al que se puede ceder un jugador medido como un porcentaje del valor de mercado.",
+        "value": 0.25,
+        "subConfiguration": [],
+        "isEditable": false
+      }
+    ],
+    "icon": "https:\/\/assets-fantasy.llt-services.com\/premium\/loan_icon.png"
+  },
+  {
+    "key": "ideal",
+    "title": "11 ideal",
+    "description": "Consigue saldo extra si alguno de tus jugadores est\u00e1n entre el 11 ideal.",
+    "modalDescription": "Consigue saldo extra gracias al 11 ideal",
+    "value": true,
+    "subConfiguration": [
+      {
+        "key": "reward",
+        "title": "Importe del premio",
+        "description": "Importe que recibir\u00e1s por cada jugador de tu plantilla escogido en el 11 ideal.",
+        "value": 100000,
+        "subConfiguration": [],
+        "isEditable": true
+      }
+    ],
+    "icon": "https:\/\/assets-fantasy.llt-services.com\/premium\/ideal_icon.png"
+  }
+]
