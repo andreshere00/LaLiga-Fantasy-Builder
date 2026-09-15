@@ -13,6 +13,8 @@ from fantasy_api.api import leagues, me
 from fantasy_api.api.deps import AppContainer, build_container, set_container
 from fantasy_api.config import Settings, get_settings
 from fantasy_api.domain.errors import NeedsReauthError, UnauthorizedError, UpstreamError
+from fantasy_api.openapi import API_DESCRIPTION, OPENAPI_TAGS, attach_openapi
+from fantasy_api.schemas.common import HealthResponse
 
 
 @asynccontextmanager
@@ -39,7 +41,13 @@ def create_app(
         Configured FastAPI app.
     """
     cfg = settings or get_settings()
-    app = FastAPI(title=cfg.app_name, version="0.1.0", lifespan=_lifespan)
+    app = FastAPI(
+        title=cfg.app_name,
+        version="0.1.0",
+        description=API_DESCRIPTION,
+        openapi_tags=OPENAPI_TAGS,
+        lifespan=_lifespan,
+    )
     app.state.settings = cfg
     if container is not None:
         app.state.container = container
@@ -54,15 +62,33 @@ def create_app(
     )
     app.include_router(me.router)
     app.include_router(leagues.router)
+    attach_openapi(app)
 
-    @app.get("/health")
-    @app.get("/health/live")
-    async def health_live() -> dict[str, str]:
-        return {"status": "ok"}
+    @app.get(
+        "/health",
+        response_model=HealthResponse,
+        tags=["health"],
+        summary="Liveness probe",
+    )
+    @app.get(
+        "/health/live",
+        response_model=HealthResponse,
+        tags=["health"],
+        summary="Liveness probe",
+    )
+    async def health_live() -> HealthResponse:
+        """Return process liveness."""
+        return HealthResponse(status="ok")
 
-    @app.get("/health/ready")
-    async def health_ready() -> dict[str, str]:
-        return {"status": "ok"}
+    @app.get(
+        "/health/ready",
+        response_model=HealthResponse,
+        tags=["health"],
+        summary="Readiness probe",
+    )
+    async def health_ready() -> HealthResponse:
+        """Return process readiness."""
+        return HealthResponse(status="ok")
 
     @app.exception_handler(UnauthorizedError)
     async def unauthorized_handler(

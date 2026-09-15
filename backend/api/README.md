@@ -92,6 +92,27 @@ Requires auth on `:8000` and this API on `:8001` (overridable with
 `--auth-base` / `--api-base`). If week is omitted, the CLI tries to infer
 the current/última jornada from the leagues or standing payload.
 
+## OpenAPI / Swagger
+
+While the API is running, interactive docs are at:
+
+- Swagger UI: http://localhost:8001/docs
+- ReDoc: http://localhost:8001/redoc
+- Live schema: http://localhost:8001/openapi.json
+
+Input/output models live under `src/fantasy_api/schemas/`. Route docstrings
+and `response_model` annotations drive the Swagger schema. Regenerate the
+committed document (same content as `/openapi.json`) with:
+
+```bash
+cd backend/api
+uv run generate-openapi                 # writes ./openapi.json
+uv run generate-openapi --stdout        # print only
+```
+
+Programmatic API: `fantasy_api.openapi.generate_openapi()` /
+`build_openapi_schema(app)`.
+
 ## Tests
 
 ```bash

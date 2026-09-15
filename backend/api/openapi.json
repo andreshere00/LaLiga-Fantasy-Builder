@@ -1,0 +1,2773 @@
+{
+  "openapi": "3.1.0",
+  "info": {
+    "title": "LaLiga Fantasy Builder API",
+    "description": "LaLiga Fantasy Builder API.\n\nAuthenticated callers send an **internal JWT** minted by the auth service\n(``POST /auth/token``). LaLiga-backed routes exchange that JWT for a short-lived\nFantasy bearer via auth's private credential endpoint; bearers are never\nreturned to clients.",
+    "version": "0.1.0"
+  },
+  "paths": {
+    "/me": {
+      "get": {
+        "tags": [
+          "me"
+        ],
+        "summary": "Get authenticated application user",
+        "description": "Return the authenticated user from the internal JWT.\n\nArgs:\n    authorization: ``Bearer <internal JWT>``.\n\nReturns:\n    Public user fields (no tokens).",
+        "operationId": "me_me_get",
+        "parameters": [
+          {
+            "name": "authorization",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Bearer internal JWT issued by auth ``POST /auth/token``.",
+              "title": "Authorization"
+            },
+            "description": "Bearer internal JWT issued by auth ``POST /auth/token``."
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MeResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized or LaLiga re-auth required.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "502": {
+            "description": "Auth or Fantasy upstream failure.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ]
+      }
+    },
+    "/laliga/credential-probe": {
+      "get": {
+        "tags": [
+          "me"
+        ],
+        "summary": "Probe LaLiga bearer availability",
+        "description": "Fetch a LaLiga bearer via auth without exposing the token.\n\nArgs:\n    authorization: ``Bearer <internal JWT>``.\n\nReturns:\n    Redacted credential probe for the JWT subject.",
+        "operationId": "laliga_credential_probe_laliga_credential_probe_get",
+        "parameters": [
+          {
+            "name": "authorization",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Bearer internal JWT issued by auth ``POST /auth/token``.",
+              "title": "Authorization"
+            },
+            "description": "Bearer internal JWT issued by auth ``POST /auth/token``."
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/LaligaCredentialProbeResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized or LaLiga re-auth required.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "502": {
+            "description": "Auth or Fantasy upstream failure.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ]
+      }
+    },
+    "/laliga/leagues-probe": {
+      "get": {
+        "tags": [
+          "leagues"
+        ],
+        "summary": "Probe Fantasy leagues connectivity",
+        "description": "Verify Fantasy leagues connectivity without exposing the bearer.\n\nArgs:\n    authorization: ``Bearer <internal JWT>``.\n\nReturns:\n    Redacted leagues probe (count and ids only).",
+        "operationId": "leagues_probe_laliga_leagues_probe_get",
+        "parameters": [
+          {
+            "name": "authorization",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Bearer internal JWT issued by auth ``POST /auth/token``.",
+              "title": "Authorization"
+            },
+            "description": "Bearer internal JWT issued by auth ``POST /auth/token``."
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/LeaguesProbeResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized or LaLiga re-auth required.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "502": {
+            "description": "Auth or Fantasy upstream failure.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ]
+      }
+    },
+    "/leagues": {
+      "get": {
+        "tags": [
+          "leagues"
+        ],
+        "summary": "List competition leagues",
+        "description": "Return competition leagues from Fantasy.\n\nArgs:\n    authorization: ``Bearer <internal JWT>``.\n\nReturns:\n    Upstream leagues JSON (league objects with embedded team summary).",
+        "operationId": "list_leagues_leagues_get",
+        "parameters": [
+          {
+            "name": "authorization",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Bearer internal JWT issued by auth ``POST /auth/token``.",
+              "title": "Authorization"
+            },
+            "description": "Bearer internal JWT issued by auth ``POST /auth/token``."
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/FantasyLeague"
+                  },
+                  "title": "Response List Leagues Leagues Get"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized or LaLiga re-auth required.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "502": {
+            "description": "Auth or Fantasy upstream failure.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ]
+      }
+    },
+    "/leagues/{league_id}/standing": {
+      "get": {
+        "tags": [
+          "leagues"
+        ],
+        "summary": "Get overall league standing",
+        "description": "Return overall league standing.\n\nArgs:\n    league_id: Fantasy league identifier.\n    authorization: ``Bearer <internal JWT>``.\n\nReturns:\n    Upstream standing rows (ranking / position).",
+        "operationId": "get_standing_leagues__league_id__standing_get",
+        "parameters": [
+          {
+            "name": "league_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "description": "Fantasy league identifier.",
+              "title": "League Id"
+            },
+            "description": "Fantasy league identifier."
+          },
+          {
+            "name": "authorization",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Bearer internal JWT issued by auth ``POST /auth/token``.",
+              "title": "Authorization"
+            },
+            "description": "Bearer internal JWT issued by auth ``POST /auth/token``."
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/StandingRow"
+                  },
+                  "title": "Response Get Standing Leagues  League Id  Standing Get"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized or LaLiga re-auth required.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "502": {
+            "description": "Auth or Fantasy upstream failure.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ]
+      }
+    },
+    "/leagues/{league_id}/standing/{week}": {
+      "get": {
+        "tags": [
+          "leagues"
+        ],
+        "summary": "Get league standing for a matchweek",
+        "description": "Return league standing for a matchweek.\n\nArgs:\n    league_id: Fantasy league identifier.\n    week: Matchweek number.\n    authorization: ``Bearer <internal JWT>``.\n\nReturns:\n    Upstream standing rows for the requested week.",
+        "operationId": "get_standing_by_week_leagues__league_id__standing__week__get",
+        "parameters": [
+          {
+            "name": "league_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "description": "Fantasy league identifier.",
+              "title": "League Id"
+            },
+            "description": "Fantasy league identifier."
+          },
+          {
+            "name": "week",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "description": "Matchweek number (última jornada when known).",
+              "title": "Week"
+            },
+            "description": "Matchweek number (última jornada when known)."
+          },
+          {
+            "name": "authorization",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Bearer internal JWT issued by auth ``POST /auth/token``.",
+              "title": "Authorization"
+            },
+            "description": "Bearer internal JWT issued by auth ``POST /auth/token``."
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/StandingRow"
+                  },
+                  "title": "Response Get Standing By Week Leagues  League Id  Standing  Week  Get"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized or LaLiga re-auth required.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "502": {
+            "description": "Auth or Fantasy upstream failure.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ]
+      }
+    },
+    "/leagues/{league_id}/activity/{page}": {
+      "get": {
+        "tags": [
+          "leagues"
+        ],
+        "summary": "Get paginated league activity",
+        "description": "Return a page of league activity.\n\nArgs:\n    league_id: Fantasy league identifier.\n    page: Activity page index (typically starts at ``0``).\n    authorization: ``Bearer <internal JWT>``.\n\nReturns:\n    Upstream activity items.",
+        "operationId": "get_activity_leagues__league_id__activity__page__get",
+        "parameters": [
+          {
+            "name": "league_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "description": "Fantasy league identifier.",
+              "title": "League Id"
+            },
+            "description": "Fantasy league identifier."
+          },
+          {
+            "name": "page",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "description": "Activity page index (typically starts at 0).",
+              "title": "Page"
+            },
+            "description": "Activity page index (typically starts at 0)."
+          },
+          {
+            "name": "authorization",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Bearer internal JWT issued by auth ``POST /auth/token``.",
+              "title": "Authorization"
+            },
+            "description": "Bearer internal JWT issued by auth ``POST /auth/token``."
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/ActivityItem"
+                  },
+                  "title": "Response Get Activity Leagues  League Id  Activity  Page  Get"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized or LaLiga re-auth required.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "502": {
+            "description": "Auth or Fantasy upstream failure.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ]
+      }
+    },
+    "/leagues/{league_id}/teams": {
+      "get": {
+        "tags": [
+          "leagues"
+        ],
+        "summary": "List league teams and managers",
+        "description": "Return teams/managers in a league.\n\nArgs:\n    league_id: Fantasy league identifier.\n    authorization: ``Bearer <internal JWT>``.\n\nReturns:\n    Upstream teams list.",
+        "operationId": "list_teams_leagues__league_id__teams_get",
+        "parameters": [
+          {
+            "name": "league_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "description": "Fantasy league identifier.",
+              "title": "League Id"
+            },
+            "description": "Fantasy league identifier."
+          },
+          {
+            "name": "authorization",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Bearer internal JWT issued by auth ``POST /auth/token``.",
+              "title": "Authorization"
+            },
+            "description": "Bearer internal JWT issued by auth ``POST /auth/token``."
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/LeagueTeam"
+                  },
+                  "title": "Response List Teams Leagues  League Id  Teams Get"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized or LaLiga re-auth required.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "502": {
+            "description": "Auth or Fantasy upstream failure.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ]
+      }
+    },
+    "/leagues/{league_id}/teams/{team_id}": {
+      "get": {
+        "tags": [
+          "leagues"
+        ],
+        "summary": "Get team roster and clauses",
+        "description": "Return a team roster and clauses.\n\nArgs:\n    league_id: Fantasy league identifier.\n    team_id: Fantasy team identifier.\n    authorization: ``Bearer <internal JWT>``.\n\nReturns:\n    Upstream team detail including players and buyout clauses.",
+        "operationId": "get_team_leagues__league_id__teams__team_id__get",
+        "parameters": [
+          {
+            "name": "league_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "description": "Fantasy league identifier.",
+              "title": "League Id"
+            },
+            "description": "Fantasy league identifier."
+          },
+          {
+            "name": "team_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "description": "Fantasy team identifier.",
+              "title": "Team Id"
+            },
+            "description": "Fantasy team identifier."
+          },
+          {
+            "name": "authorization",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Bearer internal JWT issued by auth ``POST /auth/token``.",
+              "title": "Authorization"
+            },
+            "description": "Bearer internal JWT issued by auth ``POST /auth/token``."
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TeamDetail"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized or LaLiga re-auth required.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "502": {
+            "description": "Auth or Fantasy upstream failure.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ]
+      }
+    },
+    "/health/live": {
+      "get": {
+        "tags": [
+          "health"
+        ],
+        "summary": "Liveness probe",
+        "description": "Return process liveness.",
+        "operationId": "health_live_health_live_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HealthResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/health": {
+      "get": {
+        "tags": [
+          "health"
+        ],
+        "summary": "Liveness probe",
+        "description": "Return process liveness.",
+        "operationId": "health_live_health_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HealthResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/health/ready": {
+      "get": {
+        "tags": [
+          "health"
+        ],
+        "summary": "Readiness probe",
+        "description": "Return process readiness.",
+        "operationId": "health_ready_health_ready_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HealthResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "schemas": {
+      "ActivityItem": {
+        "properties": {
+          "id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Id"
+          },
+          "activityTypeId": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Activitytypeid"
+          },
+          "amount": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Amount"
+          },
+          "createdAt": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Createdat"
+          },
+          "playerMasterId": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Playermasterid"
+          },
+          "user1Id": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "User1Id"
+          },
+          "user2Id": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "User2Id"
+          },
+          "weekNumber": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Weeknumber"
+          },
+          "msg": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Msg"
+          },
+          "message": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Message"
+          },
+          "description": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Description"
+          }
+        },
+        "additionalProperties": true,
+        "type": "object",
+        "title": "ActivityItem",
+        "description": "One league activity feed item."
+      },
+      "ClubTeam": {
+        "properties": {
+          "id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Id"
+          },
+          "name": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Name"
+          },
+          "slug": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Slug"
+          },
+          "assets": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Assets"
+          },
+          "badgeColor": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Badgecolor"
+          },
+          "badgeWhite": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Badgewhite"
+          }
+        },
+        "additionalProperties": true,
+        "type": "object",
+        "title": "ClubTeam",
+        "description": "Real-world club metadata on a player."
+      },
+      "ErrorResponse": {
+        "properties": {
+          "error": {
+            "type": "string",
+            "title": "Error"
+          },
+          "detail": {
+            "type": "string",
+            "title": "Detail"
+          }
+        },
+        "type": "object",
+        "required": [
+          "error",
+          "detail"
+        ],
+        "title": "ErrorResponse",
+        "description": "Stable API error body returned by exception handlers.\n\nAttributes:\n    error: Machine-readable error category.\n    detail: Human-readable explanation (never contains tokens)."
+      },
+      "FantasyLeague": {
+        "properties": {
+          "id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Id"
+          },
+          "access": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Access"
+          },
+          "type": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/LeagueType"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "managersNumber": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Managersnumber"
+          },
+          "name": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Name"
+          },
+          "config": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/LeagueConfig"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "isDuplicated": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Isduplicated"
+          },
+          "isSecondRound": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Issecondround"
+          },
+          "token": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Token"
+          },
+          "description": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Description"
+          },
+          "premium": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Premium"
+          },
+          "team": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/LeagueTeamSummary"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        },
+        "additionalProperties": true,
+        "type": "object",
+        "title": "FantasyLeague",
+        "description": "Fantasy competition league returned by ``GET /leagues``."
+      },
+      "HTTPValidationError": {
+        "properties": {
+          "detail": {
+            "items": {
+              "$ref": "#/components/schemas/ValidationError"
+            },
+            "type": "array",
+            "title": "Detail"
+          }
+        },
+        "type": "object",
+        "title": "HTTPValidationError"
+      },
+      "HealthResponse": {
+        "properties": {
+          "status": {
+            "type": "string",
+            "title": "Status",
+            "examples": [
+              "ok"
+            ]
+          }
+        },
+        "type": "object",
+        "required": [
+          "status"
+        ],
+        "title": "HealthResponse",
+        "description": "Liveness / readiness payload."
+      },
+      "IdealPremiumConfig": {
+        "properties": {
+          "reward": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Reward"
+          }
+        },
+        "additionalProperties": true,
+        "type": "object",
+        "title": "IdealPremiumConfig",
+        "description": "Ideal lineup premium configuration."
+      },
+      "LaligaCredentialProbeResponse": {
+        "properties": {
+          "user_id": {
+            "type": "string",
+            "title": "User Id"
+          },
+          "has_bearer": {
+            "type": "boolean",
+            "title": "Has Bearer"
+          },
+          "expires_at": {
+            "type": "integer",
+            "title": "Expires At"
+          }
+        },
+        "type": "object",
+        "required": [
+          "user_id",
+          "has_bearer",
+          "expires_at"
+        ],
+        "title": "LaligaCredentialProbeResponse",
+        "description": "Probe that auth returned a LaLiga bearer (token redacted)."
+      },
+      "LeagueConfig": {
+        "properties": {
+          "features": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/LeagueFeatures"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "premiumFeatures": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/PremiumFeatures"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "premiumConfigurations": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/PremiumConfigurations"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        },
+        "additionalProperties": true,
+        "type": "object",
+        "title": "LeagueConfig",
+        "description": "League configuration."
+      },
+      "LeagueFeatures": {
+        "properties": {
+          "buyoutClause": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Buyoutclause"
+          }
+        },
+        "additionalProperties": true,
+        "type": "object",
+        "title": "LeagueFeatures",
+        "description": "League feature flags."
+      },
+      "LeagueTeam": {
+        "properties": {
+          "id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Id"
+          },
+          "managerId": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Managerid"
+          },
+          "banned": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Banned"
+          },
+          "position": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Position"
+          },
+          "previousPosition": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Previousposition"
+          },
+          "fixturePoints": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Fixturepoints"
+          },
+          "startingWeek": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Startingweek"
+          },
+          "teamMoney": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Teammoney"
+          },
+          "teamPoints": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Teampoints"
+          },
+          "teamValue": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Teamvalue"
+          },
+          "manager": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/Manager"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "players": {
+            "anyOf": [
+              {
+                "items": {
+                  "$ref": "#/components/schemas/SquadPlayer"
+                },
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Players"
+          },
+          "loanedPlayers": {
+            "anyOf": [
+              {
+                "items": {},
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Loanedplayers"
+          }
+        },
+        "additionalProperties": true,
+        "type": "object",
+        "title": "LeagueTeam",
+        "description": "Team / manager entry from ``GET /leagues/{id}/teams``."
+      },
+      "LeagueTeamSummary": {
+        "properties": {
+          "id": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Id"
+          },
+          "money": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Money"
+          },
+          "teamPoints": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Teampoints"
+          },
+          "playersNumber": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Playersnumber"
+          },
+          "teamValue": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Teamvalue"
+          },
+          "canPunctuate": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Canpunctuate"
+          },
+          "position": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Position"
+          },
+          "previousPosition": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Previousposition"
+          },
+          "isAdmin": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Isadmin"
+          }
+        },
+        "additionalProperties": true,
+        "type": "object",
+        "title": "LeagueTeamSummary",
+        "description": "Caller's team summary embedded in a league object."
+      },
+      "LeagueType": {
+        "properties": {
+          "id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Id"
+          },
+          "canBeDuplicated": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Canbeduplicated"
+          },
+          "sponsorId": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Sponsorid"
+          },
+          "prizeInformation": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/PrizeInformation"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        },
+        "additionalProperties": true,
+        "type": "object",
+        "title": "LeagueType",
+        "description": "Fantasy league type metadata."
+      },
+      "LeaguesProbeResponse": {
+        "properties": {
+          "ok": {
+            "type": "boolean",
+            "title": "Ok"
+          },
+          "league_count": {
+            "type": "integer",
+            "minimum": 0.0,
+            "title": "League Count"
+          },
+          "league_ids": {
+            "items": {},
+            "type": "array",
+            "title": "League Ids"
+          }
+        },
+        "additionalProperties": true,
+        "type": "object",
+        "required": [
+          "ok",
+          "league_count"
+        ],
+        "title": "LeaguesProbeResponse",
+        "description": "Redacted connectivity probe for Fantasy leagues."
+      },
+      "LoanPremiumConfig": {
+        "properties": {
+          "duration": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Duration"
+          },
+          "maxLoans": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Maxloans"
+          },
+          "enableConclude": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Enableconclude"
+          },
+          "minPercentage": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Minpercentage"
+          }
+        },
+        "additionalProperties": true,
+        "type": "object",
+        "title": "LoanPremiumConfig",
+        "description": "Loan premium configuration."
+      },
+      "Manager": {
+        "properties": {
+          "id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Id"
+          },
+          "managerName": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Managername"
+          },
+          "avatar": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Avatar"
+          }
+        },
+        "additionalProperties": true,
+        "type": "object",
+        "title": "Manager",
+        "description": "Manager identity."
+      },
+      "MeResponse": {
+        "properties": {
+          "user_id": {
+            "type": "string",
+            "title": "User Id"
+          },
+          "email": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Email"
+          },
+          "name": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Name"
+          }
+        },
+        "type": "object",
+        "required": [
+          "user_id"
+        ],
+        "title": "MeResponse",
+        "description": "Public view of the authenticated API caller."
+      },
+      "PlayerMarket": {
+        "properties": {
+          "id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Id"
+          },
+          "salePrice": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Saleprice"
+          },
+          "expirationDate": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Expirationdate"
+          },
+          "numberOfOffers": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Numberofoffers"
+          },
+          "directOffer": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Directoffer"
+          }
+        },
+        "additionalProperties": true,
+        "type": "object",
+        "title": "PlayerMarket",
+        "description": "Market listing for a player on a team."
+      },
+      "PlayerMaster": {
+        "properties": {
+          "id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Id"
+          },
+          "name": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Name"
+          },
+          "nickname": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Nickname"
+          },
+          "slug": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Slug"
+          },
+          "points": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Points"
+          },
+          "weekPoints": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Weekpoints"
+          },
+          "marketValue": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Marketvalue"
+          },
+          "positionId": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Positionid"
+          },
+          "playerStatus": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Playerstatus"
+          },
+          "teamId": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Teamid"
+          },
+          "lastSeasonPoints": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Lastseasonpoints"
+          },
+          "averagePoints": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Averagepoints"
+          },
+          "images": {
+            "anyOf": [
+              {
+                "additionalProperties": true,
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Images"
+          },
+          "lastStats": {
+            "anyOf": [
+              {
+                "items": {
+                  "$ref": "#/components/schemas/PlayerStatWeek"
+                },
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Laststats"
+          },
+          "team": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/ClubTeam"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        },
+        "additionalProperties": true,
+        "type": "object",
+        "title": "PlayerMaster",
+        "description": "Master player card."
+      },
+      "PlayerStatWeek": {
+        "properties": {
+          "weekNumber": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Weeknumber"
+          },
+          "totalPoints": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Totalpoints"
+          },
+          "isInIdealFormation": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Isinidealformation"
+          },
+          "stats": {
+            "anyOf": [
+              {
+                "additionalProperties": true,
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Stats"
+          }
+        },
+        "additionalProperties": true,
+        "type": "object",
+        "title": "PlayerStatWeek",
+        "description": "Weekly stats block for a player."
+      },
+      "PremiumConfigurations": {
+        "properties": {
+          "loan": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/LoanPremiumConfig"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "ideal": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/IdealPremiumConfig"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        },
+        "additionalProperties": true,
+        "type": "object",
+        "title": "PremiumConfigurations",
+        "description": "Premium configuration block."
+      },
+      "PremiumFeatures": {
+        "properties": {
+          "formations": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Formations"
+          },
+          "captain": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Captain"
+          },
+          "bench": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Bench"
+          },
+          "loan": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Loan"
+          },
+          "ideal": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Ideal"
+          },
+          "coach": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Coach"
+          }
+        },
+        "additionalProperties": true,
+        "type": "object",
+        "title": "PremiumFeatures",
+        "description": "Premium feature toggles."
+      },
+      "PrizeInformation": {
+        "properties": {
+          "title": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Title"
+          },
+          "description": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Description"
+          }
+        },
+        "additionalProperties": true,
+        "type": "object",
+        "title": "PrizeInformation",
+        "description": "League prize copy."
+      },
+      "SquadPlayer": {
+        "properties": {
+          "playerTeamId": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Playerteamid"
+          },
+          "buyoutClause": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Buyoutclause"
+          },
+          "buyoutClauseLockedEndTime": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Buyoutclauselockedendtime"
+          },
+          "isShielded": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Isshielded"
+          },
+          "managerId": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Managerid"
+          },
+          "manager": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/Manager"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "playerMarket": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/PlayerMarket"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "playerMaster": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/PlayerMaster"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        },
+        "additionalProperties": true,
+        "type": "object",
+        "title": "SquadPlayer",
+        "description": "Player slot inside a Fantasy team roster."
+      },
+      "StandingRow": {
+        "properties": {
+          "position": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Position"
+          },
+          "previousPosition": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Previousposition"
+          },
+          "points": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Points"
+          },
+          "livePoints": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Livepoints"
+          },
+          "team": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/StandingTeam"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "teamId": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Teamid"
+          },
+          "name": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Name"
+          }
+        },
+        "additionalProperties": true,
+        "type": "object",
+        "title": "StandingRow",
+        "description": "One standing / ranking row."
+      },
+      "StandingTeam": {
+        "properties": {
+          "id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Id"
+          },
+          "managerId": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Managerid"
+          },
+          "banned": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Banned"
+          },
+          "managerWarned": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Managerwarned"
+          },
+          "isAdmin": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Isadmin"
+          },
+          "teamValue": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Teamvalue"
+          },
+          "teamPoints": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Teampoints"
+          },
+          "teamMoney": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Teammoney"
+          },
+          "manager": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/Manager"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        },
+        "additionalProperties": true,
+        "type": "object",
+        "title": "StandingTeam",
+        "description": "Team row nested under standing."
+      },
+      "TeamDetail": {
+        "properties": {
+          "id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Id"
+          },
+          "managerId": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Managerid"
+          },
+          "banned": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Banned"
+          },
+          "position": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Position"
+          },
+          "startingWeek": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Startingweek"
+          },
+          "teamMoney": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Teammoney"
+          },
+          "playersNumber": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Playersnumber"
+          },
+          "teamValue": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Teamvalue"
+          },
+          "teamPoints": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Teampoints"
+          },
+          "manager": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/Manager"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "players": {
+            "anyOf": [
+              {
+                "items": {
+                  "$ref": "#/components/schemas/SquadPlayer"
+                },
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Players"
+          },
+          "loanedPlayers": {
+            "anyOf": [
+              {
+                "items": {},
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Loanedplayers"
+          }
+        },
+        "additionalProperties": true,
+        "type": "object",
+        "title": "TeamDetail",
+        "description": "Team roster and clauses from ``GET /leagues/{id}/teams/{teamId}``."
+      },
+      "ValidationError": {
+        "properties": {
+          "loc": {
+            "items": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "integer"
+                }
+              ]
+            },
+            "type": "array",
+            "title": "Location"
+          },
+          "msg": {
+            "type": "string",
+            "title": "Message"
+          },
+          "type": {
+            "type": "string",
+            "title": "Error Type"
+          },
+          "input": {
+            "title": "Input"
+          },
+          "ctx": {
+            "type": "object",
+            "title": "Context"
+          }
+        },
+        "type": "object",
+        "required": [
+          "loc",
+          "msg",
+          "type"
+        ],
+        "title": "ValidationError"
+      }
+    },
+    "securitySchemes": {
+      "HTTPBearer": {
+        "type": "http",
+        "scheme": "bearer",
+        "bearerFormat": "JWT",
+        "description": "Auth-issued internal JWT (audience ``fantasy-api``)."
+      }
+    }
+  },
+  "tags": [
+    {
+      "name": "health",
+      "description": "Liveness and readiness probes."
+    },
+    {
+      "name": "me",
+      "description": "Application identity and credential probes."
+    },
+    {
+      "name": "leagues",
+      "description": "LaLiga Fantasy league reads (standing, activity, teams). Thin authenticated proxies of competition league resources."
+    }
+  ]
+}

@@ -3,32 +3,25 @@
 from __future__ import annotations
 
 from fastapi import APIRouter, Header
-from pydantic import BaseModel
 
 from fantasy_api.api.deps import get_container, get_current_user
+from fantasy_api.openapi import ERROR_RESPONSES
+from fantasy_api.schemas.common import LaligaCredentialProbeResponse, MeResponse
 
 router = APIRouter(tags=["me"])
 
 
-class MeResponse(BaseModel):
-    """Public view of the authenticated API caller."""
-
-    user_id: str
-    email: str | None = None
-    name: str | None = None
-
-
-class LaligaCredentialProbeResponse(BaseModel):
-    """Probe that auth returned a LaLiga bearer (token redacted)."""
-
-    user_id: str
-    has_bearer: bool
-    expires_at: int
-
-
-@router.get("/me", response_model=MeResponse)
+@router.get(
+    "/me",
+    response_model=MeResponse,
+    responses=ERROR_RESPONSES,
+    summary="Get authenticated application user",
+)
 async def me(
-    authorization: str | None = Header(default=None),
+    authorization: str | None = Header(
+        default=None,
+        description="Bearer internal JWT issued by auth ``POST /auth/token``.",
+    ),
 ) -> MeResponse:
     """Return the authenticated user from the internal JWT.
 
@@ -42,9 +35,17 @@ async def me(
     return MeResponse(user_id=user.user_id, email=user.email, name=user.name)
 
 
-@router.get("/laliga/credential-probe", response_model=LaligaCredentialProbeResponse)
+@router.get(
+    "/laliga/credential-probe",
+    response_model=LaligaCredentialProbeResponse,
+    responses=ERROR_RESPONSES,
+    summary="Probe LaLiga bearer availability",
+)
 async def laliga_credential_probe(
-    authorization: str | None = Header(default=None),
+    authorization: str | None = Header(
+        default=None,
+        description="Bearer internal JWT issued by auth ``POST /auth/token``.",
+    ),
 ) -> LaligaCredentialProbeResponse:
     """Fetch a LaLiga bearer via auth without exposing the token.
 

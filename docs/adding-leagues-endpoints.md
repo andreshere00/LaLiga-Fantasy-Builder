@@ -53,6 +53,15 @@ Upstream base path:
    - `needs_reauth`;
    - Fantasy non-2xx mapped to `UpstreamError` categories;
    - bearer absent from the HTTP response body.
+8. **OpenAPI** — declare `response_model` (and path/header descriptions) on
+   the new route, then regenerate the committed schema:
+
+```bash
+cd backend/api && uv run generate-openapi
+```
+
+Swagger UI at `/docs` always reflects the same generator
+(`fantasy_api.openapi.build_openapi_schema`).
 
 ## MockTransport test sketch
 

@@ -201,15 +201,37 @@ def test_list_leagues_proxies_upstream_json(
 
 
 @pytest.mark.parametrize(
-    ("path", "expected_suffix"),
+    ("path", "expected_suffix", "upstream", "expected"),
     [
-        ("/leagues/42/standing", "/api/v1/competition/1/leagues/42/standing"),
-        ("/leagues/42/standing/3", "/api/v1/competition/1/leagues/42/standing/3"),
-        ("/leagues/42/activity/0", "/api/v1/competition/1/leagues/42/activity/0"),
-        ("/leagues/42/teams", "/api/v1/competition/1/leagues/42/teams"),
+        (
+            "/leagues/42/standing",
+            "/api/v1/competition/1/leagues/42/standing",
+            [{"position": 1, "points": 10}],
+            [{"position": 1, "points": 10}],
+        ),
+        (
+            "/leagues/42/standing/3",
+            "/api/v1/competition/1/leagues/42/standing/3",
+            [{"position": 2, "points": 5}],
+            [{"position": 2, "points": 5}],
+        ),
+        (
+            "/leagues/42/activity/0",
+            "/api/v1/competition/1/leagues/42/activity/0",
+            [{"id": "a1", "activityTypeId": 1}],
+            [{"id": "a1", "activityTypeId": 1}],
+        ),
+        (
+            "/leagues/42/teams",
+            "/api/v1/competition/1/leagues/42/teams",
+            [{"id": "99", "teamPoints": 1}],
+            [{"id": "99", "teamPoints": 1}],
+        ),
         (
             "/leagues/42/teams/99",
             "/api/v1/competition/1/leagues/42/teams/99",
+            {"id": "99", "playersNumber": 15},
+            {"id": "99", "playersNumber": 15},
         ),
     ],
 )
@@ -217,16 +239,17 @@ def test_league_routes_proxy_expected_fantasy_paths(
     rsa_pems: tuple[str, str],
     path: str,
     expected_suffix: str,
+    upstream: object,
+    expected: object,
 ) -> None:
     # Arrange
     private_pem, public_pem = rsa_pems
     token = mint_internal_jwt(private_pem)
-    payload = {"ok": True, "path": path}
 
     def fantasy_handler(request: httpx.Request) -> httpx.Response:
         assert request.url.path == expected_suffix
         assert request.headers["Authorization"] == f"Bearer {LALIGA_BEARER}"
-        return httpx.Response(200, json=payload)
+        return httpx.Response(200, json=upstream)
 
     with make_client(public_pem, fantasy_handler) as client:
         # Act
@@ -234,7 +257,16 @@ def test_league_routes_proxy_expected_fantasy_paths(
 
     # Assert
     assert response.status_code == 200
-    assert response.json() == payload
+    body = response.json()
+    if isinstance(expected, list):
+        assert isinstance(body, list)
+        assert len(body) == len(expected)
+        for actual_row, expected_row in zip(body, expected, strict=True):
+            for key, value in expected_row.items():
+                assert actual_row[key] == value
+    else:
+        for key, value in expected.items():
+            assert body[key] == value
     assert LALIGA_BEARER not in response.text
 
 

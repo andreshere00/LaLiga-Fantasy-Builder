@@ -2,19 +2,34 @@
 
 from __future__ import annotations
 
-from typing import Any
-
-from fastapi import APIRouter, Header
+from fastapi import APIRouter, Header, Path
 
 from fantasy_api.api.deps import get_container, get_current_user
-from fantasy_api.schemas.leagues import LeaguesProbeResponse, summarize_leagues_payload
+from fantasy_api.openapi import ERROR_RESPONSES
+from fantasy_api.schemas.leagues import (
+    ActivityItem,
+    FantasyLeague,
+    LeagueTeam,
+    LeaguesProbeResponse,
+    StandingRow,
+    TeamDetail,
+    summarize_leagues_payload,
+)
 
 router = APIRouter(tags=["leagues"])
 
 
-@router.get("/laliga/leagues-probe", response_model=LeaguesProbeResponse)
+@router.get(
+    "/laliga/leagues-probe",
+    response_model=LeaguesProbeResponse,
+    responses=ERROR_RESPONSES,
+    summary="Probe Fantasy leagues connectivity",
+)
 async def leagues_probe(
-    authorization: str | None = Header(default=None),
+    authorization: str | None = Header(
+        default=None,
+        description="Bearer internal JWT issued by auth ``POST /auth/token``.",
+    ),
 ) -> LeaguesProbeResponse:
     """Verify Fantasy leagues connectivity without exposing the bearer.
 
@@ -34,27 +49,46 @@ async def leagues_probe(
     )
 
 
-@router.get("/leagues")
+@router.get(
+    "/leagues",
+    response_model=list[FantasyLeague],
+    response_model_exclude_none=True,
+    responses=ERROR_RESPONSES,
+    summary="List competition leagues",
+)
 async def list_leagues(
-    authorization: str | None = Header(default=None),
-) -> Any:
+    authorization: str | None = Header(
+        default=None,
+        description="Bearer internal JWT issued by auth ``POST /auth/token``.",
+    ),
+) -> list[FantasyLeague]:
     """Return competition leagues from Fantasy.
 
     Args:
         authorization: ``Bearer <internal JWT>``.
 
     Returns:
-        Upstream leagues JSON.
+        Upstream leagues JSON (league objects with embedded team summary).
     """
     _user, internal_jwt = await get_current_user(authorization)
-    return await get_container().leagues_service.list_leagues(internal_jwt)
+    data = await get_container().leagues_service.list_leagues(internal_jwt)
+    return _as_model_list(data, FantasyLeague)
 
 
-@router.get("/leagues/{league_id}/standing")
+@router.get(
+    "/leagues/{league_id}/standing",
+    response_model=list[StandingRow],
+    response_model_exclude_none=True,
+    responses=ERROR_RESPONSES,
+    summary="Get overall league standing",
+)
 async def get_standing(
-    league_id: str,
-    authorization: str | None = Header(default=None),
-) -> Any:
+    league_id: str = Path(description="Fantasy league identifier."),
+    authorization: str | None = Header(
+        default=None,
+        description="Bearer internal JWT issued by auth ``POST /auth/token``.",
+    ),
+) -> list[StandingRow]:
     """Return overall league standing.
 
     Args:
@@ -62,18 +96,28 @@ async def get_standing(
         authorization: ``Bearer <internal JWT>``.
 
     Returns:
-        Upstream standing JSON.
+        Upstream standing rows (ranking / position).
     """
     _user, internal_jwt = await get_current_user(authorization)
-    return await get_container().leagues_service.get_standing(internal_jwt, league_id)
+    data = await get_container().leagues_service.get_standing(internal_jwt, league_id)
+    return _as_model_list(data, StandingRow)
 
 
-@router.get("/leagues/{league_id}/standing/{week}")
+@router.get(
+    "/leagues/{league_id}/standing/{week}",
+    response_model=list[StandingRow],
+    response_model_exclude_none=True,
+    responses=ERROR_RESPONSES,
+    summary="Get league standing for a matchweek",
+)
 async def get_standing_by_week(
-    league_id: str,
-    week: int,
-    authorization: str | None = Header(default=None),
-) -> Any:
+    league_id: str = Path(description="Fantasy league identifier."),
+    week: int = Path(description="Matchweek number (última jornada when known)."),
+    authorization: str | None = Header(
+        default=None,
+        description="Bearer internal JWT issued by auth ``POST /auth/token``.",
+    ),
+) -> list[StandingRow]:
     """Return league standing for a matchweek.
 
     Args:
@@ -82,22 +126,32 @@ async def get_standing_by_week(
         authorization: ``Bearer <internal JWT>``.
 
     Returns:
-        Upstream standing JSON.
+        Upstream standing rows for the requested week.
     """
     _user, internal_jwt = await get_current_user(authorization)
-    return await get_container().leagues_service.get_standing_by_week(
+    data = await get_container().leagues_service.get_standing_by_week(
         internal_jwt,
         league_id,
         week,
     )
+    return _as_model_list(data, StandingRow)
 
 
-@router.get("/leagues/{league_id}/activity/{page}")
+@router.get(
+    "/leagues/{league_id}/activity/{page}",
+    response_model=list[ActivityItem],
+    response_model_exclude_none=True,
+    responses=ERROR_RESPONSES,
+    summary="Get paginated league activity",
+)
 async def get_activity(
-    league_id: str,
-    page: int,
-    authorization: str | None = Header(default=None),
-) -> Any:
+    league_id: str = Path(description="Fantasy league identifier."),
+    page: int = Path(description="Activity page index (typically starts at 0)."),
+    authorization: str | None = Header(
+        default=None,
+        description="Bearer internal JWT issued by auth ``POST /auth/token``.",
+    ),
+) -> list[ActivityItem]:
     """Return a page of league activity.
 
     Args:
@@ -106,21 +160,31 @@ async def get_activity(
         authorization: ``Bearer <internal JWT>``.
 
     Returns:
-        Upstream activity JSON.
+        Upstream activity items.
     """
     _user, internal_jwt = await get_current_user(authorization)
-    return await get_container().leagues_service.get_activity(
+    data = await get_container().leagues_service.get_activity(
         internal_jwt,
         league_id,
         page,
     )
+    return _as_model_list(data, ActivityItem)
 
 
-@router.get("/leagues/{league_id}/teams")
+@router.get(
+    "/leagues/{league_id}/teams",
+    response_model=list[LeagueTeam],
+    response_model_exclude_none=True,
+    responses=ERROR_RESPONSES,
+    summary="List league teams and managers",
+)
 async def list_teams(
-    league_id: str,
-    authorization: str | None = Header(default=None),
-) -> Any:
+    league_id: str = Path(description="Fantasy league identifier."),
+    authorization: str | None = Header(
+        default=None,
+        description="Bearer internal JWT issued by auth ``POST /auth/token``.",
+    ),
+) -> list[LeagueTeam]:
     """Return teams/managers in a league.
 
     Args:
@@ -128,18 +192,28 @@ async def list_teams(
         authorization: ``Bearer <internal JWT>``.
 
     Returns:
-        Upstream teams JSON.
+        Upstream teams list.
     """
     _user, internal_jwt = await get_current_user(authorization)
-    return await get_container().leagues_service.list_teams(internal_jwt, league_id)
+    data = await get_container().leagues_service.list_teams(internal_jwt, league_id)
+    return _as_model_list(data, LeagueTeam)
 
 
-@router.get("/leagues/{league_id}/teams/{team_id}")
+@router.get(
+    "/leagues/{league_id}/teams/{team_id}",
+    response_model=TeamDetail,
+    response_model_exclude_none=True,
+    responses=ERROR_RESPONSES,
+    summary="Get team roster and clauses",
+)
 async def get_team(
-    league_id: str,
-    team_id: str,
-    authorization: str | None = Header(default=None),
-) -> Any:
+    league_id: str = Path(description="Fantasy league identifier."),
+    team_id: str = Path(description="Fantasy team identifier."),
+    authorization: str | None = Header(
+        default=None,
+        description="Bearer internal JWT issued by auth ``POST /auth/token``.",
+    ),
+) -> TeamDetail:
     """Return a team roster and clauses.
 
     Args:
@@ -148,11 +222,47 @@ async def get_team(
         authorization: ``Bearer <internal JWT>``.
 
     Returns:
-        Upstream team JSON.
+        Upstream team detail including players and buyout clauses.
     """
     _user, internal_jwt = await get_current_user(authorization)
-    return await get_container().leagues_service.get_team(
+    data = await get_container().leagues_service.get_team(
         internal_jwt,
         league_id,
         team_id,
     )
+    if isinstance(data, dict):
+        return TeamDetail.model_validate(data)
+    return TeamDetail.model_validate({})
+
+
+def _as_model_list(data: object, model: type) -> list:
+    """Coerce upstream JSON into a list of Pydantic models.
+
+    Args:
+        data: Upstream payload (list or wrapped object).
+        model: Target model class.
+
+    Returns:
+        Validated model list (empty when shape is unexpected).
+    """
+    if isinstance(data, list):
+        items = data
+    elif isinstance(data, dict):
+        for key in (
+            "leagues",
+            "standing",
+            "standings",
+            "teams",
+            "activity",
+            "items",
+            "data",
+        ):
+            nested = data.get(key)
+            if isinstance(nested, list):
+                items = nested
+                break
+        else:
+            items = [data]
+    else:
+        items = []
+    return [model.model_validate(item) for item in items if isinstance(item, dict)]

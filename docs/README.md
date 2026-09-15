@@ -10,6 +10,9 @@ This directory describes the authentication model and backend architecture.
   — patterns for adding protected API, auth, and LaLiga-backed endpoints.
 - [Adding leagues endpoints](adding-leagues-endpoints.md) — controller–
   service–repository checklist for Fantasy leagues routes.
+- API OpenAPI/Swagger — live at `http://localhost:8001/docs`; committed
+  schema at [`backend/api/openapi.json`](../backend/api/openapi.json)
+  (regenerate with `uv run generate-openapi` in `backend/api`).
 
 ## Service ownership
 
