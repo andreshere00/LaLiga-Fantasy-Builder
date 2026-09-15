@@ -41,6 +41,24 @@ Optional: build/run auth in Docker (`docker compose --profile full up --build`).
 
 ## Pair LaLiga
 
+Automated local setup and pairing:
+
+```bash
+./scripts/authenticate-laliga.sh
+```
+
+Equivalent CLI command from `backend/auth`:
+
+```bash
+uv run authenticate-laliga
+```
+
+Both commands start the local prerequisites, open application login, run the
+LaLiga PKCE helper, and verify the connection. Browser login and consent remain
+interactive; the CLI securely prompts for the session and CSRF cookie values.
+
+Manual pairing against an already-running auth service:
+
 ```bash
 export FANTASY_SESSION='…'
 export FANTASY_CSRF='…'

@@ -130,6 +130,52 @@ where possible.
 LaLiga access is optional. An authenticated browser creates a one-time pairing
 with `POST /laliga/pairings`, protected by session and CSRF.
 
+For local development, the preferred entry point is:
+
+```bash
+./scripts/authenticate-laliga.sh
+```
+
+The equivalent package command is:
+
+```bash
+cd backend/auth
+uv run authenticate-laliga
+```
+
+This automation:
+
+1. creates `backend/auth/.env` from the example when missing;
+2. starts the local Keycloak service;
+3. synchronizes auth dependencies with `uv`;
+4. starts and health-checks auth when it is not already running;
+5. opens `/auth/login`;
+6. securely prompts for the session and CSRF cookie values;
+7. runs the LaLiga PKCE pairing helper;
+8. verifies `/laliga/connection`.
+
+Application and LaLiga login remain interactive by design. Normal CLI code
+cannot read the browser's HttpOnly session cookie, and user consent must not
+be bypassed. Retrieve `fantasy_session` and `fantasy_csrf` from browser
+developer tools after application login and paste them at the prompts.
+
+On macOS, the helper reads the final `authredirect://...` URL from the
+clipboard after confirmation. Use `--stdin` to paste it in the terminal or
+`--callback-file PATH` to read it from a file.
+
+Useful automation flags:
+
+- `--skip-keycloak`: use an existing IdP;
+- `--skip-server`: require auth to be already running;
+- `--skip-sync`: skip dependency synchronization;
+- `--no-browser`: print URLs without opening them;
+- `--no-keep-server`: stop a CLI-started auth server after pairing;
+- `--api-base` and `--origin`: target a non-default local endpoint.
+
+When the CLI starts auth, it uses an in-memory store and keeps the process
+alive by default. Stopping it removes the in-memory pairing state. Use a
+persistent deployment for credentials that must survive process restarts.
+
 The helper performs LaLiga Authorization Code + PKCE and calls
 `POST /laliga/pairings/{pairing_id}/complete` with the one-time pairing secret.
 Auth:
