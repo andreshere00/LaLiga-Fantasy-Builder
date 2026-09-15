@@ -1,0 +1,47 @@
+[project]
+name = "laliga-fantasy-builder-api"
+version = "0.1.0"
+description = "Main Fantasy Builder API (consumes auth internal JWTs)"
+readme = "README.md"
+authors = [
+    { name = "Andrés Herencia" }
+]
+requires-python = ">=3.12"
+dependencies = [
+    "fastapi>=0.115.0",
+    "httpx>=0.28.0",
+    "pydantic-settings>=2.7.0",
+    "pyjwt[crypto]>=2.10.0",
+    "uvicorn[standard]>=0.34.0",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=8.3.0",
+    "pytest-asyncio>=0.25.0",
+]
+
+[project.scripts]
+laliga-fantasy-builder-api = "fantasy_api.main:run"
+
+[build-system]
+requires = ["uv_build>=0.11.29,<0.12.0"]
+build-backend = "uv_build"
+
+[tool.pytest.ini_options]
+asyncio_mode = "auto"
+asyncio_default_fixture_loop_scope = "function"
+testpaths = ["tests"]
+pythonpath = ["src"]
+
+[tool.uv]
+package = true
+
+[tool.uv.build-backend]
+module-name = "fantasy_api"
+
+[dependency-groups]
+dev = [
+    "pytest>=8.3.0",
+    "pytest-asyncio>=0.25.0",
+]

@@ -8,7 +8,7 @@ from typing import Any, AsyncIterator
 from fastapi import FastAPI, Request
 from fastapi.responses import JSONResponse
 
-from fantasy_auth.api import auth, pairings
+from fantasy_auth.api import auth, internal_auth, internal_credentials, pairings
 from fantasy_auth.api.deps import AppContainer, build_container, set_container
 from fantasy_auth.api.middleware import (
     RedactedAccessLogMiddleware,
@@ -121,6 +121,8 @@ def create_app(
     app.add_middleware(SecurityHeadersMiddleware)
 
     app.include_router(auth.router)
+    app.include_router(internal_auth.router)
+    app.include_router(internal_credentials.router)
     app.include_router(pairings.router)
 
     @app.get("/health")

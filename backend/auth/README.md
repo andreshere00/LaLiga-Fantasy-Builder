@@ -50,6 +50,11 @@ uv run pair-laliga
 
 - `GET /health` / `GET /health/live` — process liveness
 - `GET /health/ready` — Postgres + Redis when `USE_MEMORY_STORE=false`
+- `GET /.well-known/jwks.json` — public keys for internal JWT verification
+- `POST /auth/token` — session+CSRF → short-lived internal JWT
+- `GET /internal/laliga/bearer` — private; JWT + `X-Service-Token` → LaLiga bearer
+
+`/internal/*` must not be exposed on the public internet.
 
 ## Tests
 

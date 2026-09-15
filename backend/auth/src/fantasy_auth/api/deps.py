@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import secrets
 from dataclasses import dataclass
 from typing import Annotated, Any
 
@@ -9,6 +10,7 @@ from fastapi import Cookie, Header, Request
 
 from fantasy_auth.adapters.b2c_httpx import HttpxB2CClient
 from fantasy_auth.adapters.fantasy_httpx import HttpxFantasyClient
+from fantasy_auth.adapters.internal_jwt import Rs256InternalJwt, generate_dev_rsa_keypair
 from fantasy_auth.adapters.jwks import AppOidcJwksValidator, B2CJwksValidator
 from fantasy_auth.adapters.memory import (
     MemoryConnectionRepo,
@@ -20,10 +22,11 @@ from fantasy_auth.adapters.memory import (
 from fantasy_auth.adapters.redis import MemoryRefreshLock
 from fantasy_auth.adapters.vault_aesgcm import AesGcmTokenVault
 from fantasy_auth.application.credentials import CredentialProvider
+from fantasy_auth.application.internal_tokens import InternalTokenService
 from fantasy_auth.application.pairing import PairingService
 from fantasy_auth.application.sessions import SessionService
 from fantasy_auth.config import Settings, get_settings
-from fantasy_auth.domain.errors import SessionError
+from fantasy_auth.domain.errors import SessionError, ValidationError
 from fantasy_auth.domain.users import AppUser
 from fantasy_auth.ports.repos import (
     Clock,
@@ -50,18 +53,20 @@ class AppContainer:
         sessions: Session use cases.
         pairings: Pairing use cases.
         credentials: Credential provider.
+        internal_tokens: Internal JWT issuer/validator.
         rate_limiter: Rate limiter for pairing complete.
         clock: Clock implementation.
         session_store: Underlying session store (for cookie TTL).
+        refresh_lock: Refresh singleflight lock.
         pg_pool: Optional asyncpg pool (production).
         redis: Optional Redis client (production).
-        refresh_lock: Refresh singleflight lock.
     """
 
     settings: Settings
     sessions: SessionService
     pairings: PairingService
     credentials: CredentialProvider
+    internal_tokens: InternalTokenService
     rate_limiter: RateLimiter
     clock: Clock
     session_store: SessionStore
@@ -71,6 +76,28 @@ class AppContainer:
 
 
 _container: AppContainer | None = None
+
+
+def _build_internal_jwt(cfg: Settings) -> Rs256InternalJwt:
+    """Build the internal JWT adapter, generating a dev keypair when unset.
+
+    Args:
+        cfg: Application settings.
+
+    Returns:
+        Configured RS256 adapter.
+    """
+    private_pem = cfg.internal_jwt_private_key_pem
+    public_pem = cfg.internal_jwt_public_key_pem
+    if not private_pem or not public_pem:
+        private_pem, public_pem = generate_dev_rsa_keypair()
+    return Rs256InternalJwt(
+        private_key_pem=private_pem,
+        public_key_pem=public_pem,
+        issuer=cfg.internal_jwt_issuer,
+        audience=cfg.internal_jwt_audience,
+        ttl_seconds=cfg.internal_jwt_ttl_seconds,
+    )
 
 
 def build_container(
@@ -84,6 +111,7 @@ def build_container(
     rate_limiter: RateLimiter | None = None,
     refresh_lock: RefreshLock | None = None,
     oidc_validator: Any | None = None,
+    internal_jwt: Rs256InternalJwt | None = None,
 ) -> AppContainer:
     """Build a fully wired container.
 
@@ -97,6 +125,7 @@ def build_container(
         rate_limiter: Optional rate limiter override (tests).
         refresh_lock: Optional refresh lock override (tests).
         oidc_validator: Optional app OIDC validator override (tests).
+        internal_jwt: Optional internal JWT adapter override (tests).
 
     Returns:
         Application container.
@@ -148,6 +177,12 @@ def build_container(
         jwks_url=cfg.app_oidc_jwks_url,
         issuer=cfg.app_oidc_issuer,
     )
+    resolved_internal = internal_jwt or _build_internal_jwt(cfg)
+    internal_tokens = InternalTokenService(
+        issuer=resolved_internal,
+        validator=resolved_internal,
+        clock=clock,
+    )
 
     sessions = SessionService(
         sessions=resolved_sessions,
@@ -188,6 +223,7 @@ def build_container(
         sessions=sessions,
         pairings=pairings,
         credentials=credentials,
+        internal_tokens=internal_tokens,
         rate_limiter=resolved_rate_limiter,
         clock=clock,
         session_store=resolved_sessions,
@@ -281,3 +317,43 @@ async def require_csrf(
     if x_csrf_token != session.csrf_token:
         raise SessionError("csrf failed")
     return user
+
+
+def require_service_token(x_service_token: str | None) -> None:
+    """Require the shared service credential for ``/internal/*`` routes.
+
+    Args:
+        x_service_token: Value of the ``X-Service-Token`` header.
+
+    Raises:
+        SessionError: When the token is missing or mismatched.
+    """
+    expected = get_container().settings.internal_service_token
+    if not expected:
+        raise SessionError("service token not configured")
+    if not x_service_token or not secrets.compare_digest(x_service_token, expected):
+        raise SessionError("invalid service token")
+
+
+async def require_internal_user(authorization: str | None) -> AppUser:
+    """Resolve the app user from an internal Bearer JWT.
+
+    Args:
+        authorization: ``Authorization`` header value.
+
+    Returns:
+        Application user from verified JWT claims.
+
+    Raises:
+        SessionError: When the header is missing or malformed.
+        ValidationError: When JWT validation fails.
+    """
+    if not authorization or not authorization.lower().startswith("bearer "):
+        raise SessionError("missing bearer token")
+    token = authorization.split(" ", 1)[1].strip()
+    if not token:
+        raise SessionError("missing bearer token")
+    try:
+        return get_container().internal_tokens.user_from_token(token)
+    except ValidationError:
+        raise

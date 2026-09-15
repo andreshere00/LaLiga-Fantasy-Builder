@@ -100,3 +100,23 @@ def test_resolve_vault_key_rejects_wrong_length() -> None:
     # Act / Assert
     with pytest.raises(StartupError, match="32 bytes"):
         resolve_vault_key(settings)
+
+
+def test_validate_settings_requires_internal_jwt_in_production() -> None:
+    # Arrange
+    settings = Settings(
+        use_memory_store=False,
+        token_vault_key_base64=base64.b64encode(b"k" * 32).decode(),
+        database_url="postgresql://x",
+        redis_url="redis://x",
+        app_oidc_jwks_url="http://idp/certs",
+        internal_jwt_private_key_pem="",
+        internal_jwt_public_key_pem="",
+        internal_service_token="",
+    )
+
+    # Act / Assert
+    with pytest.raises(StartupError, match="INTERNAL_JWT_PRIVATE_KEY_PEM"):
+        validate_settings(settings)
+
+

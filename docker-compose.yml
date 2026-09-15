@@ -22,6 +22,9 @@ services:
       timeout: 5s
       retries: 30
       start_period: 20s
+    networks:
+      - public
+      - internal
 
   postgres:
     image: postgres:16-alpine
@@ -38,6 +41,8 @@ services:
       retries: 20
     profiles:
       - full
+    networks:
+      - internal
 
   redis:
     image: redis:7-alpine
@@ -50,6 +55,8 @@ services:
       retries: 20
     profiles:
       - full
+    networks:
+      - internal
 
   otel-collector:
     image: otel/opentelemetry-collector-contrib:0.120.0
@@ -61,6 +68,8 @@ services:
     profiles:
       - full
       - otel
+    networks:
+      - internal
 
   auth:
     build:
@@ -76,6 +85,7 @@ services:
       REDIS_URL: redis://redis:6379/0
       MIGRATION_AUTO_APPLY: "true"
       OTEL_EXPORTER_OTLP_ENDPOINT: http://otel-collector:4318/v1/traces
+      INTERNAL_SERVICE_TOKEN: ${INTERNAL_SERVICE_TOKEN:-dev-service-token}
     depends_on:
       keycloak:
         condition: service_started
@@ -85,3 +95,34 @@ services:
         condition: service_healthy
     profiles:
       - full
+    networks:
+      - public
+      - internal
+
+  api:
+    build:
+      context: ./backend/api
+      dockerfile: Dockerfile
+    ports:
+      - "8001:8001"
+    env_file:
+      - ./backend/api/.env
+    environment:
+      AUTH_JWKS_URL: http://auth:8000/.well-known/jwks.json
+      AUTH_INTERNAL_BASE_URL: http://auth:8000
+      INTERNAL_JWT_ISSUER: https://auth.fantasy-builder.local
+      INTERNAL_JWT_AUDIENCE: fantasy-api
+      INTERNAL_SERVICE_TOKEN: ${INTERNAL_SERVICE_TOKEN:-dev-service-token}
+    depends_on:
+      auth:
+        condition: service_started
+    profiles:
+      - full
+    networks:
+      - public
+      - internal
+
+networks:
+  public:
+  internal:
+    internal: true

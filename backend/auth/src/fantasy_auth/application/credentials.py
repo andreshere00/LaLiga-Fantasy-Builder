@@ -66,6 +66,22 @@ class CredentialProvider:
             NeedsReauth: When no connection exists or refresh is invalid_grant.
             OwnershipError: If a record's user_id does not match (defense).
         """
+        bearer, _expires_at = await self.get_valid_bearer(user_id)
+        return bearer
+
+    async def get_valid_bearer(self, user_id: str) -> tuple[str, int]:
+        """Return a non-expired bearer and its Unix expiry.
+
+        Args:
+            user_id: Application user that owns the connection.
+
+        Returns:
+            Tuple of ``(bearer_token, expires_at)``.
+
+        Raises:
+            NeedsReauth: When no connection exists or refresh is invalid_grant.
+            OwnershipError: If a record's user_id does not match (defense).
+        """
         async with self._lock_for(user_id):
             connection = await self._require_connection(user_id)
             if connection.needs_reauth:
@@ -78,9 +94,12 @@ class CredentialProvider:
                 now=now,
                 skew_seconds=self._refresh_skew_seconds,
             ):
-                return bundle.bearer()
+                return bundle.bearer(), bundle.expires_on
 
-            return await self._refresh_and_return(user_id, connection)
+            bearer = await self._refresh_and_return(user_id, connection)
+            connection = await self._require_connection(user_id)
+            refreshed = self._vault.open(connection.sealed_blob)
+            return bearer, refreshed.expires_on
 
     async def retry_after_unauthorized(self, user_id: str) -> str:
         """Force a single refresh after a Fantasy ``401`` and return bearer.

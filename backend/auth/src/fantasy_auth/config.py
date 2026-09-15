@@ -47,6 +47,12 @@ class Settings(BaseSettings):
         log_level: Root log level.
         log_json: Emit structured JSON logs when True.
         migration_auto_apply: Apply SQL migrations on startup when True.
+        internal_jwt_issuer: Issuer claim for cross-service JWTs.
+        internal_jwt_audience: Audience claim (Fantasy API).
+        internal_jwt_ttl_seconds: Internal JWT lifetime.
+        internal_jwt_private_key_pem: PEM RSA private key for signing.
+        internal_jwt_public_key_pem: PEM RSA public key for JWKS/verify.
+        internal_service_token: Shared secret for ``/internal/*`` calls.
     """
 
     model_config = SettingsConfigDict(
@@ -112,6 +118,14 @@ class Settings(BaseSettings):
     log_level: str = "INFO"
     log_json: bool = True
     migration_auto_apply: bool = False
+
+    # Cross-service internal JWT + service credential
+    internal_jwt_issuer: str = "https://auth.fantasy-builder.local"
+    internal_jwt_audience: str = "fantasy-api"
+    internal_jwt_ttl_seconds: int = 300
+    internal_jwt_private_key_pem: str = ""
+    internal_jwt_public_key_pem: str = ""
+    internal_service_token: str = ""
 
     @model_validator(mode="after")
     def _validate_cookie_samesite(self) -> Settings:
