@@ -50,7 +50,8 @@ Leagues endpoints are a thin authenticated proxy of LaLiga Fantasy. Layout:
 `clients/laliga_fantasy.py`.
 
 See [`docs/adding-leagues-endpoints.md`](../../docs/adding-leagues-endpoints.md)
-for extending leagues.
+for extending leagues. Use `uv run fantasy-leagues` for a local CLI summary
+(ranking, week standing, activity, teams).
 
 ## Live connectivity check
 
@@ -64,6 +65,32 @@ curl -sS -H "Authorization: Bearer ${INTERNAL_JWT}" \
 
 Expected JSON shape: `{"ok": true, "league_count": N, "league_ids": [...]}`.
 The LaLiga bearer must never appear in the response.
+
+## CLI: fantasy-leagues
+
+Fetches leagues, overall standing (with your position), last-week standing,
+activity, teams, and your squad via this API.
+
+```bash
+cd backend/api
+uv sync --all-extras
+
+# Option A — session cookies (exchanges /auth/token for you)
+export FANTASY_SESSION='…'
+export FANTASY_CSRF='…'
+uv run fantasy-leagues
+
+# Option B — already minted JWT
+export INTERNAL_JWT='…'
+uv run fantasy-leagues --jwt "$INTERNAL_JWT"
+
+# Useful flags
+uv run fantasy-leagues --league-id 123 --week 5 --json
+```
+
+Requires auth on `:8000` and this API on `:8001` (overridable with
+`--auth-base` / `--api-base`). If week is omitted, the CLI tries to infer
+the current/última jornada from the leagues or standing payload.
 
 ## Tests
 
