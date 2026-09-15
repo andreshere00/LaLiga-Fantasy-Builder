@@ -428,6 +428,92 @@ async def test_laliga_fantasy_client_get_json_raises_upstream_on_500() -> None:
     assert exc_info.value.category == "fantasy_error"
 
 
+@pytest.mark.asyncio
+async def test_laliga_fantasy_client_get_json_raises_upstream_on_invalid_json() -> None:
+    # Arrange
+    client = LaligaFantasyClient(
+        origin=FANTASY_ORIGIN,
+        transport=httpx.MockTransport(
+            lambda _r: httpx.Response(200, text="<html>nope</html>"),
+        ),
+    )
+
+    # Act / Assert
+    with pytest.raises(UpstreamError, match="fantasy response was not JSON") as exc_info:
+        await client.get_json("/x", "tok")
+    assert exc_info.value.status_code == 502
+    assert exc_info.value.category == "fantasy_error"
+
+
+def test_list_leagues_maps_non_json_to_upstream_error(
+    rsa_pems: tuple[str, str],
+) -> None:
+    # Arrange
+    private_pem, public_pem = rsa_pems
+    token = mint_internal_jwt(private_pem)
+
+    def fantasy_handler(_request: httpx.Request) -> httpx.Response:
+        return httpx.Response(200, text="<html>nope</html>")
+
+    with make_client(public_pem, fantasy_handler) as client:
+        # Act
+        response = client.get(
+            "/leagues",
+            headers={"Authorization": f"Bearer {token}"},
+        )
+
+    # Assert
+    assert response.status_code == 502
+    assert response.json()["error"] == "fantasy_error"
+    assert "<html>" not in response.text
+    assert LALIGA_BEARER not in response.text
+
+
+def test_list_leagues_maps_unexpected_payload_to_upstream_error(
+    rsa_pems: tuple[str, str],
+) -> None:
+    # Arrange
+    private_pem, public_pem = rsa_pems
+    token = mint_internal_jwt(private_pem)
+
+    def fantasy_handler(_request: httpx.Request) -> httpx.Response:
+        return httpx.Response(200, json="not-a-collection")
+
+    with make_client(public_pem, fantasy_handler) as client:
+        # Act
+        response = client.get(
+            "/leagues",
+            headers={"Authorization": f"Bearer {token}"},
+        )
+
+    # Assert
+    assert response.status_code == 502
+    assert response.json()["error"] == "fantasy_error"
+    assert response.json()["detail"] == "fantasy payload had an unexpected shape"
+
+
+def test_get_team_rejects_non_object_payload(
+    rsa_pems: tuple[str, str],
+) -> None:
+    # Arrange
+    private_pem, public_pem = rsa_pems
+    token = mint_internal_jwt(private_pem)
+
+    def fantasy_handler(_request: httpx.Request) -> httpx.Response:
+        return httpx.Response(200, json=[{"id": "99"}])
+
+    with make_client(public_pem, fantasy_handler) as client:
+        # Act
+        response = client.get(
+            "/leagues/42/teams/99",
+            headers={"Authorization": f"Bearer {token}"},
+        )
+
+    # Assert
+    assert response.status_code == 502
+    assert response.json()["error"] == "fantasy_error"
+
+
 # ---- Edge cases ---- #
 
 
@@ -435,9 +521,53 @@ def test_summarize_leagues_payload_handles_wrapped_and_empty() -> None:
     # Arrange / Act / Assert
     assert summarize_leagues_payload([{"id": 1}, {"name": "x"}]) == (2, [1])
     assert summarize_leagues_payload({"leagues": [{"id": "a"}]}) == (1, ["a"])
-    assert summarize_leagues_payload({"leagues": "bad"}) == (0, [])
-    assert summarize_leagues_payload(None) == (0, [])
-    assert summarize_leagues_payload("x") == (0, [])
+    assert summarize_leagues_payload({"data": [{"id": "b"}]}) == (1, ["b"])
+    assert summarize_leagues_payload({"id": "solo"}) == (1, ["solo"])
+    assert summarize_leagues_payload([]) == (0, [])
+
+
+def test_summarize_leagues_payload_rejects_non_collection() -> None:
+    # Arrange / Act / Assert
+    with pytest.raises(ValueError):
+        summarize_leagues_payload(None)
+    with pytest.raises(ValueError):
+        summarize_leagues_payload("x")
+    with pytest.raises(ValueError):
+        summarize_leagues_payload({"leagues": "bad"})
+    with pytest.raises(ValueError):
+        summarize_leagues_payload(["not-an-object"])
+
+
+def test_leagues_probe_unwraps_data_wrapper(
+    rsa_pems: tuple[str, str],
+) -> None:
+    # Arrange
+    private_pem, public_pem = rsa_pems
+    token = mint_internal_jwt(private_pem)
+
+    def fantasy_handler(_request: httpx.Request) -> httpx.Response:
+        return httpx.Response(200, json={"data": [{"id": "lg-1"}, {"id": "lg-2"}]})
+
+    with make_client(public_pem, fantasy_handler) as client:
+        # Act
+        list_response = client.get(
+            "/leagues",
+            headers={"Authorization": f"Bearer {token}"},
+        )
+        probe_response = client.get(
+            "/laliga/leagues-probe",
+            headers={"Authorization": f"Bearer {token}"},
+        )
+
+    # Assert
+    assert list_response.status_code == 200
+    assert [row["id"] for row in list_response.json()] == ["lg-1", "lg-2"]
+    assert probe_response.status_code == 200
+    assert probe_response.json() == {
+        "ok": True,
+        "league_count": 2,
+        "league_ids": ["lg-1", "lg-2"],
+    }
 
 
 def test_standing_route_rejects_invalid_jwt(

@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import json
 from dataclasses import dataclass
 
 import httpx
@@ -84,7 +85,14 @@ class AuthCredentialsClient:
                 status_code=response.status_code,
                 category="auth_error",
             )
-        data = response.json()
+        try:
+            data = response.json()
+        except json.JSONDecodeError as exc:
+            raise UpstreamError(
+                "auth response was not JSON",
+                status_code=502,
+                category="auth_error",
+            ) from exc
         return LaligaBearer(
             bearer_token=str(data["bearer_token"]),
             expires_at=int(data["expires_at"]),
@@ -96,6 +104,6 @@ def _safe_json(response: httpx.Response) -> dict:
     """Parse JSON body or return an empty dict."""
     try:
         data = response.json()
-    except Exception:
+    except json.JSONDecodeError:
         return {}
     return data if isinstance(data, dict) else {}

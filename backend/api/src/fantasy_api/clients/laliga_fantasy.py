@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import json
 from typing import Any
 
 import httpx
@@ -38,7 +39,7 @@ class LaligaFantasyClient:
             Parsed JSON body (object or array).
 
         Raises:
-            UpstreamError: On non-OK responses (status preserved, no body leak).
+            UpstreamError: On non-OK or non-JSON responses (no body leak).
         """
         url = f"{self._origin}{path}"
         headers = {
@@ -64,4 +65,11 @@ class LaligaFantasyClient:
                 status_code=response.status_code,
                 category="fantasy_error",
             )
-        return response.json()
+        try:
+            return response.json()
+        except json.JSONDecodeError as exc:
+            raise UpstreamError(
+                "fantasy response was not JSON",
+                status_code=502,
+                category="fantasy_error",
+            ) from exc

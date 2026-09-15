@@ -492,6 +492,30 @@ async def test_credentials_client_401_non_json_raises_upstream(
     assert exc_info.value.status_code == 401
 
 
+@pytest.mark.asyncio
+async def test_credentials_client_200_non_json_raises_upstream(
+    rsa_pems: tuple[str, str],
+) -> None:
+    # Arrange
+    private_pem, _public_pem = rsa_pems
+
+    def handler(request: httpx.Request) -> httpx.Response:
+        return httpx.Response(200, text="<html>nope</html>")
+
+    client = AuthCredentialsClient(
+        base_url="http://auth.test",
+        service_token=SERVICE_TOKEN,
+        transport=httpx.MockTransport(handler),
+    )
+    token = mint_internal_jwt(private_pem)
+
+    # Act / Assert
+    with pytest.raises(UpstreamError, match="auth response was not JSON") as exc_info:
+        await client.get_laliga_bearer(token)
+    assert exc_info.value.status_code == 502
+    assert exc_info.value.category == "auth_error"
+
+
 def test_internal_jwt_validator_pyjwt_error_raises_unauthorized() -> None:
     # Arrange
     mock_client = MagicMock()

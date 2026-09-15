@@ -12,7 +12,6 @@
           "me"
         ],
         "summary": "Get authenticated application user",
-        "description": "Return the authenticated user from the internal JWT.\n\nArgs:\n    authorization: ``Bearer <internal JWT>``.\n\nReturns:\n    Public user fields (no tokens).",
         "operationId": "me_me_get",
         "parameters": [
           {
@@ -65,6 +64,16 @@
               }
             }
           },
+          "503": {
+            "description": "Fantasy upstream unavailable.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
           "422": {
             "description": "Validation Error",
             "content": {
@@ -89,7 +98,6 @@
           "me"
         ],
         "summary": "Probe LaLiga bearer availability",
-        "description": "Fetch a LaLiga bearer via auth without exposing the token.\n\nArgs:\n    authorization: ``Bearer <internal JWT>``.\n\nReturns:\n    Redacted credential probe for the JWT subject.",
         "operationId": "laliga_credential_probe_laliga_credential_probe_get",
         "parameters": [
           {
@@ -142,6 +150,16 @@
               }
             }
           },
+          "503": {
+            "description": "Fantasy upstream unavailable.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
           "422": {
             "description": "Validation Error",
             "content": {
@@ -166,7 +184,6 @@
           "leagues"
         ],
         "summary": "Probe Fantasy leagues connectivity",
-        "description": "Verify Fantasy leagues connectivity without exposing the bearer.\n\nArgs:\n    authorization: ``Bearer <internal JWT>``.\n\nReturns:\n    Redacted leagues probe (count and ids only).",
         "operationId": "leagues_probe_laliga_leagues_probe_get",
         "parameters": [
           {
@@ -219,6 +236,16 @@
               }
             }
           },
+          "503": {
+            "description": "Fantasy upstream unavailable.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
           "422": {
             "description": "Validation Error",
             "content": {
@@ -243,7 +270,6 @@
           "leagues"
         ],
         "summary": "List competition leagues",
-        "description": "Return competition leagues from Fantasy.\n\nArgs:\n    authorization: ``Bearer <internal JWT>``.\n\nReturns:\n    Upstream leagues JSON (league objects with embedded team summary).",
         "operationId": "list_leagues_leagues_get",
         "parameters": [
           {
@@ -300,6 +326,16 @@
               }
             }
           },
+          "503": {
+            "description": "Fantasy upstream unavailable.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
           "422": {
             "description": "Validation Error",
             "content": {
@@ -324,7 +360,6 @@
           "leagues"
         ],
         "summary": "Get overall league standing",
-        "description": "Return overall league standing.\n\nArgs:\n    league_id: Fantasy league identifier.\n    authorization: ``Bearer <internal JWT>``.\n\nReturns:\n    Upstream standing rows (ranking / position).",
         "operationId": "get_standing_leagues__league_id__standing_get",
         "parameters": [
           {
@@ -392,6 +427,16 @@
               }
             }
           },
+          "503": {
+            "description": "Fantasy upstream unavailable.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
           "422": {
             "description": "Validation Error",
             "content": {
@@ -416,7 +461,6 @@
           "leagues"
         ],
         "summary": "Get league standing for a matchweek",
-        "description": "Return league standing for a matchweek.\n\nArgs:\n    league_id: Fantasy league identifier.\n    week: Matchweek number.\n    authorization: ``Bearer <internal JWT>``.\n\nReturns:\n    Upstream standing rows for the requested week.",
         "operationId": "get_standing_by_week_leagues__league_id__standing__week__get",
         "parameters": [
           {
@@ -495,6 +539,16 @@
               }
             }
           },
+          "503": {
+            "description": "Fantasy upstream unavailable.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
           "422": {
             "description": "Validation Error",
             "content": {
@@ -519,7 +573,6 @@
           "leagues"
         ],
         "summary": "Get paginated league activity",
-        "description": "Return a page of league activity.\n\nArgs:\n    league_id: Fantasy league identifier.\n    page: Activity page index (typically starts at ``0``).\n    authorization: ``Bearer <internal JWT>``.\n\nReturns:\n    Upstream activity items.",
         "operationId": "get_activity_leagues__league_id__activity__page__get",
         "parameters": [
           {
@@ -598,6 +651,16 @@
               }
             }
           },
+          "503": {
+            "description": "Fantasy upstream unavailable.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
           "422": {
             "description": "Validation Error",
             "content": {
@@ -622,7 +685,6 @@
           "leagues"
         ],
         "summary": "List league teams and managers",
-        "description": "Return teams/managers in a league.\n\nArgs:\n    league_id: Fantasy league identifier.\n    authorization: ``Bearer <internal JWT>``.\n\nReturns:\n    Upstream teams list.",
         "operationId": "list_teams_leagues__league_id__teams_get",
         "parameters": [
           {
@@ -690,6 +752,16 @@
               }
             }
           },
+          "503": {
+            "description": "Fantasy upstream unavailable.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
           "422": {
             "description": "Validation Error",
             "content": {
@@ -714,7 +786,6 @@
           "leagues"
         ],
         "summary": "Get team roster and clauses",
-        "description": "Return a team roster and clauses.\n\nArgs:\n    league_id: Fantasy league identifier.\n    team_id: Fantasy team identifier.\n    authorization: ``Bearer <internal JWT>``.\n\nReturns:\n    Upstream team detail including players and buyout clauses.",
         "operationId": "get_team_leagues__league_id__teams__team_id__get",
         "parameters": [
           {
@@ -789,6 +860,16 @@
               }
             }
           },
+          "503": {
+            "description": "Fantasy upstream unavailable.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
           "422": {
             "description": "Validation Error",
             "content": {
@@ -813,7 +894,6 @@
           "health"
         ],
         "summary": "Liveness probe",
-        "description": "Return process liveness.",
         "operationId": "health_live_health_live_get",
         "responses": {
           "200": {
@@ -835,7 +915,6 @@
           "health"
         ],
         "summary": "Liveness probe",
-        "description": "Return process liveness.",
         "operationId": "health_live_health_get",
         "responses": {
           "200": {
@@ -857,7 +936,6 @@
           "health"
         ],
         "summary": "Readiness probe",
-        "description": "Return process readiness.",
         "operationId": "health_ready_health_ready_get",
         "responses": {
           "200": {

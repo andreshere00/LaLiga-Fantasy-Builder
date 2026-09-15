@@ -93,7 +93,5 @@ response models.
 
 Captured Fantasy payloads used to refine schemas:
 
-- [`assets/leagues_info.json`](../../assets/leagues_info.json) — example CLI /
-  leagues aggregate dump
 - [`assets/leagues_info_structure.json`](../../assets/leagues_info_structure.json)
-  — key/type structure extracted from that dump
+  — key/type structure extracted from a CLI leagues dump

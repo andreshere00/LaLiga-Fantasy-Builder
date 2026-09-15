@@ -15,7 +15,6 @@ from fantasy_api.openapi import (
 from fantasy_api.schemas.common import MeResponse
 from fastapi.testclient import TestClient
 
-
 # ---- Happy path ---- #
 
 
@@ -45,6 +44,10 @@ def test_build_openapi_schema_includes_documented_paths() -> None:
     assert "ErrorResponse" in schema["components"]["schemas"]
     assert paths["/leagues"]["get"]["security"] == [{"HTTPBearer": []}]
     assert "summary" in paths["/leagues"]["get"]
+    leagues_description = paths["/leagues"]["get"].get("description", "")
+    assert "Args:" not in leagues_description
+    assert "Returns:" not in leagues_description
+    assert "503" in paths["/leagues"]["get"]["responses"]
 
 
 def test_generate_openapi_writes_file(tmp_path: Path) -> None:
@@ -113,6 +116,29 @@ def test_enrich_operation_from_docstring_uses_summary_and_body() -> None:
     assert "Extra description line." in operation["description"]
 
 
+def test_enrich_operation_from_docstring_strips_args_and_keeps_summary() -> None:
+    # Arrange
+    operation: dict = {
+        "summary": "Decorator summary",
+        "description": "Full docstring including Args.",
+    }
+
+    def endpoint() -> None:
+        """Unused first line.
+
+        Args:
+            authorization: Bearer token.
+        """
+        return None
+
+    # Act
+    enrich_operation_from_docstring(operation, endpoint)
+
+    # Assert
+    assert operation["summary"] == "Decorator summary"
+    assert "description" not in operation
+
+
 def test_openapi_cli_main_writes_default_path(
     tmp_path: Path,
     monkeypatch: pytest.MonkeyPatch,
@@ -161,6 +187,4 @@ def test_swagger_openapi_route_matches_generated_schema() -> None:
 
     # Assert — Swagger uses the same generator (paths + security)
     assert set(live["paths"]) == set(generated["paths"])
-    assert live["components"]["securitySchemes"] == generated["components"][
-        "securitySchemes"
-    ]
+    assert live["components"]["securitySchemes"] == generated["components"]["securitySchemes"]

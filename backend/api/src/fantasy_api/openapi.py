@@ -10,12 +10,13 @@ from __future__ import annotations
 
 import argparse
 import json
-from collections.abc import Callable
+from collections.abc import Callable, Iterator
 from pathlib import Path
 from typing import Any
 
 from fastapi import FastAPI
 from fastapi.openapi.utils import get_openapi
+from fastapi.routing import APIRoute
 
 from fantasy_api.config import Settings
 from fantasy_api.schemas.common import ErrorResponse
@@ -48,6 +49,10 @@ ERROR_RESPONSES: dict[int | str, dict[str, Any]] = {
     },
     502: {
         "description": "Auth or Fantasy upstream failure.",
+        "model": ErrorResponse,
+    },
+    503: {
+        "description": "Fantasy upstream unavailable.",
         "model": ErrorResponse,
     },
 }
@@ -84,6 +89,7 @@ def build_openapi_schema(app: FastAPI) -> dict[str, Any]:
         "description": "Auth-issued internal JWT (audience ``fantasy-api``).",
     }
     _apply_bearer_security(schema)
+    _apply_google_docstrings(app, schema)
     _ensure_error_components(schema)
     app.openapi_schema = schema
     return schema
@@ -197,13 +203,47 @@ def _ensure_error_components(schema: dict[str, Any]) -> None:
     schemas.setdefault("ErrorResponse", ErrorResponse.model_json_schema())
 
 
+def _apply_google_docstrings(app: FastAPI, schema: dict[str, Any]) -> None:
+    """Keep decorator summaries; strip Args/Returns/Raises from descriptions."""
+    paths = schema.get("paths", {})
+    for path, route in _iter_api_routes(app.routes):
+        path_item = paths.get(path)
+        if not isinstance(path_item, dict):
+            continue
+        for method in route.methods:
+            operation = path_item.get(method.lower())
+            if isinstance(operation, dict):
+                enrich_operation_from_docstring(operation, route.endpoint)
+
+
+def _iter_api_routes(
+    routes: list[Any],
+    prefix: str = "",
+) -> Iterator[tuple[str, APIRoute]]:
+    """Yield OpenAPI paths and APIRoute objects, including nested routers."""
+    for route in routes:
+        if isinstance(route, APIRoute):
+            yield f"{prefix}{route.path}", route
+            continue
+        original = getattr(route, "original_router", None)
+        include_ctx = getattr(route, "include_context", None)
+        nested_prefix = prefix
+        if include_ctx is not None:
+            nested_prefix = f"{prefix}{getattr(include_ctx, 'prefix', '') or ''}"
+        nested = getattr(original, "routes", None)
+        if nested:
+            yield from _iter_api_routes(nested, nested_prefix)
+
+
 def enrich_operation_from_docstring(
     operation: dict[str, Any],
     endpoint: Callable[..., Any],
 ) -> None:
     """Copy Google-style docstring summary/description onto an operation.
 
-    FastAPI already does this for routes; exposed for tests and custom builders.
+    FastAPI already does this for routes; this strips ``Args`` / ``Returns`` /
+    ``Raises`` so Swagger shows the narrative body only. An existing ``summary``
+    (from the route decorator) is left unchanged.
 
     Args:
         operation: OpenAPI operation object to mutate.
@@ -222,9 +262,12 @@ def enrich_operation_from_docstring(
             break
         body_lines.append(line)
     description = "\n".join(body_lines).strip()
-    operation["summary"] = summary
+    if not operation.get("summary"):
+        operation["summary"] = summary
     if description:
         operation["description"] = description
+    else:
+        operation.pop("description", None)
 
 
 if __name__ == "__main__":

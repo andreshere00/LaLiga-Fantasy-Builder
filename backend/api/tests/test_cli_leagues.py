@@ -218,3 +218,38 @@ def test_find_position_matches_nested_team() -> None:
     assert found is not None
     assert found["rank"] == 1
     assert found["points"] == 3
+
+
+def test_print_teams_uses_nested_manager_name(
+    capsys: pytest.CaptureFixture[str],
+) -> None:
+    # Arrange / Act
+    leagues_cli._print_teams(
+        [
+            {
+                "id": "99",
+                "name": "Mi Equipo",
+                "manager": {"id": "m1", "managerName": "Ana"},
+            }
+        ]
+    )
+
+    # Assert
+    out = capsys.readouterr().out
+    assert "Ana" in out
+    assert "managerName" not in out
+
+
+def test_print_standing_uses_nested_manager_name(
+    capsys: pytest.CaptureFixture[str],
+) -> None:
+    # Arrange / Act
+    leagues_cli._print_standing(
+        [{"position": 1, "manager": {"managerName": "Luis"}, "points": 3}],
+        highlight_team_id=None,
+    )
+
+    # Assert
+    out = capsys.readouterr().out
+    assert "Luis" in out
+    assert "managerName" not in out

@@ -304,12 +304,7 @@ def _league_summary(league: dict[str, Any], standing: Any) -> dict[str, Any]:
     """Build a compact ranking summary for the caller's team."""
     team_id = _my_team_id(league)
     team = league.get("team") if isinstance(league.get("team"), dict) else {}
-    name = (
-        (team or {}).get("name")
-        or league.get("teamName")
-        or league.get("name")
-        or "unknown"
-    )
+    name = (team or {}).get("name") or league.get("teamName") or league.get("name") or "unknown"
     position = _find_position(standing, team_id)
     points = None
     if isinstance(team, dict):
@@ -333,12 +328,7 @@ def _find_position(standing: Any, team_id: Any) -> dict[str, Any] | None:
         return None
     for index, row in enumerate(rows, start=1):
         team = row.get("team") if isinstance(row.get("team"), dict) else {}
-        row_team_id = (
-            row.get("teamId")
-            or row.get("team_id")
-            or team.get("id")
-            or row.get("id")
-        )
+        row_team_id = row.get("teamId") or row.get("team_id") or team.get("id") or row.get("id")
         if row_team_id is not None and str(row_team_id) == str(team_id):
             rank = row.get("position") or row.get("rank") or index
             points = row.get("points") or row.get("livePoints")
@@ -376,14 +366,8 @@ def _print_report(report: dict[str, Any]) -> None:
             f"League: {summary.get('league_name') or entry.get('league_id')} "
             f"(id={entry.get('league_id')})"
         )
-        print(
-            f"  My team: {summary.get('team_name')} "
-            f"(id={summary.get('team_id')})"
-        )
-        print(
-            f"  Position: {summary.get('position')}  "
-            f"Points: {summary.get('points')}"
-        )
+        print(f"  My team: {summary.get('team_name')} " f"(id={summary.get('team_id')})")
+        print(f"  Position: {summary.get('position')}  " f"Points: {summary.get('points')}")
         print("  Overall standing:")
         _print_standing(entry.get("standing"), highlight_team_id=summary.get("team_id"))
         week = entry.get("week")
@@ -407,6 +391,16 @@ def _print_report(report: dict[str, Any]) -> None:
         print()
 
 
+def _manager_label(value: Any) -> str:
+    """Return a printable manager name from a string or object."""
+    if isinstance(value, dict):
+        name = value.get("managerName") or value.get("name")
+        return str(name) if name else ""
+    if isinstance(value, str):
+        return value
+    return ""
+
+
 def _print_standing(standing: Any, *, highlight_team_id: Any) -> None:
     """Print top standing rows."""
     rows = _standing_rows(standing)
@@ -420,19 +414,16 @@ def _print_standing(standing: Any, *, highlight_team_id: Any) -> None:
             row.get("name")
             or row.get("teamName")
             or team.get("name")
-            or row.get("manager")
+            or _manager_label(row.get("manager") or team.get("manager"))
             or "?"
         )
         points = row.get("points") or row.get("livePoints") or ""
-        row_team_id = (
-            row.get("teamId")
-            or row.get("team_id")
-            or team.get("id")
-            or row.get("id")
+        row_team_id = row.get("teamId") or row.get("team_id") or team.get("id") or row.get("id")
+        marker = (
+            " ← you"
+            if (highlight_team_id is not None and str(row_team_id) == str(highlight_team_id))
+            else ""
         )
-        marker = " ← you" if (
-            highlight_team_id is not None and str(row_team_id) == str(highlight_team_id)
-        ) else ""
         print(f"    {rank}. {name}  {points}{marker}")
     if len(rows) > 15:
         print(f"    … {len(rows) - 15} more")
@@ -455,7 +446,7 @@ def _print_teams(teams: Any) -> None:
             continue
         team_id = row.get("id") or row.get("teamId")
         name = row.get("name") or row.get("teamName") or "?"
-        manager = row.get("manager") or row.get("managerName") or ""
+        manager = _manager_label(row.get("manager")) or _manager_label(row.get("managerName"))
         suffix = f" — {manager}" if manager else ""
         print(f"    - {name} (id={team_id}){suffix}")
     if len(rows) > 20:
