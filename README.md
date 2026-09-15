@@ -42,7 +42,9 @@ uv run pair-laliga
 ## Auth flows
 
 1. App login: `GET /auth/login` → IdP → `GET /auth/callback` sets
-   `HttpOnly; Secure; SameSite=Strict` session cookie plus CSRF token.
+   `HttpOnly; Secure; SameSite` (default `Lax`, configurable via
+   `COOKIE_SAMESITE`) session cookie plus CSRF token. App ID tokens are
+   verified against `APP_OIDC_JWKS_URL` (signature, iss, aud, exp, nonce).
 2. Pairing: `POST /laliga/pairings` (session + CSRF) returns one-time
    `{pairing_id, secret, nonce}` valid for 10 minutes.
 3. Helper / `pair-laliga`: PKCE against LaLiga B2C, then complete pairing.

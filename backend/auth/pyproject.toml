@@ -8,11 +8,20 @@ authors = [
 ]
 requires-python = ">=3.12"
 dependencies = [
+    "asyncpg>=0.30.0",
     "cryptography>=44.0.0",
     "fastapi>=0.115.0",
     "httpx>=0.28.0",
+    "opentelemetry-api>=1.30.0",
+    "opentelemetry-exporter-otlp-proto-http>=1.30.0",
+    "opentelemetry-instrumentation-asyncpg>=0.51b0",
+    "opentelemetry-instrumentation-fastapi>=0.51b0",
+    "opentelemetry-instrumentation-httpx>=0.51b0",
+    "opentelemetry-instrumentation-redis>=0.51b0",
+    "opentelemetry-sdk>=1.30.0",
     "pydantic-settings>=2.7.0",
     "pyjwt[crypto]>=2.10.0",
+    "redis>=5.2.0",
     "uvicorn[standard]>=0.34.0",
 ]
 

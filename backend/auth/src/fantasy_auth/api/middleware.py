@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import logging
 import re
+import time
 import uuid
 from typing import Callable
 
@@ -11,6 +12,8 @@ from starlette.middleware.base import BaseHTTPMiddleware
 from starlette.requests import Request
 from starlette.responses import Response
 from starlette.types import ASGIApp
+
+from fantasy_auth.observability import current_trace_context
 
 logger = logging.getLogger("fantasy_auth")
 
@@ -65,7 +68,7 @@ class SecurityHeadersMiddleware(BaseHTTPMiddleware):
 
 
 class RedactedAccessLogMiddleware(BaseHTTPMiddleware):
-    """Log method/path/status without secrets."""
+    """Log method/path/status with OTEL correlation and without secrets."""
 
     async def dispatch(
         self,
@@ -81,20 +84,32 @@ class RedactedAccessLogMiddleware(BaseHTTPMiddleware):
         Returns:
             Downstream response.
         """
+        started = time.perf_counter()
         response = await call_next(request)
+        duration_ms = round((time.perf_counter() - started) * 1000, 2)
         request_id = getattr(request.state, "request_id", "-")
+        extra = {
+            "request_id": request_id,
+            "method": request.method,
+            "path": request.url.path,
+            "status": response.status_code,
+            "duration_ms": duration_ms,
+            **current_trace_context(),
+        }
         logger.info(
-            "request_id=%s method=%s path=%s status=%s",
+            "request_id=%s method=%s path=%s status=%s duration_ms=%s",
             request_id,
             request.method,
             request.url.path,
             response.status_code,
+            duration_ms,
+            extra=extra,
         )
         return response
 
 
 def install_cors(app: ASGIApp, origins: list[str]) -> None:
-    """Install strict CORS middleware on a FastAPI app.
+    """Install strict CORS middleware on a FastAPI application.
 
     Args:
         app: FastAPI application.

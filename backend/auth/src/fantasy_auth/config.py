@@ -1,8 +1,11 @@
 """Application settings loaded from environment variables."""
 
-from functools import lru_cache
+from __future__ import annotations
 
-from pydantic import Field
+from functools import lru_cache
+from typing import Literal
+
+from pydantic import Field, model_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
@@ -16,11 +19,14 @@ class Settings(BaseSettings):
         cookie_secure: Set Secure flag on session cookies.
         cookie_name: Name of the opaque session cookie.
         csrf_cookie_name: Name of the CSRF double-submit cookie.
+        cookie_samesite: SameSite policy for session/CSRF cookies.
         cors_origins: Allowed browser origins (exact match).
         session_ttl_seconds: Server-side session lifetime.
         pairing_ttl_seconds: One-time pairing lifetime.
         pairing_rate_limit_per_minute: Max complete attempts per IP.
         token_vault_key_base64: Base64-encoded 32-byte AES-GCM key.
+        database_url: Async Postgres DSN when not using memory stores.
+        redis_url: Redis DSN when not using memory stores.
         app_oidc_issuer: App identity provider issuer URL.
         app_oidc_client_id: App OIDC client ID.
         app_oidc_client_secret: App OIDC client secret (confidential).
@@ -36,6 +42,11 @@ class Settings(BaseSettings):
         laliga_fantasy_origin: Fantasy API origin.
         laliga_allow_id_token_fallback: Prefer id_token when access_token absent.
         refresh_skew_seconds: Refresh tokens this many seconds before exp.
+        otel_service_name: OpenTelemetry service name.
+        otel_exporter_otlp_endpoint: Optional OTLP collector endpoint.
+        log_level: Root log level.
+        log_json: Emit structured JSON logs when True.
+        migration_auto_apply: Apply SQL migrations on startup when True.
     """
 
     model_config = SettingsConfigDict(
@@ -51,6 +62,7 @@ class Settings(BaseSettings):
     cookie_secure: bool = True
     cookie_name: str = "fantasy_session"
     csrf_cookie_name: str = "fantasy_csrf"
+    cookie_samesite: Literal["lax", "strict", "none"] = "lax"
     cors_origins: list[str] = Field(default_factory=lambda: ["http://localhost:3000"])
 
     session_ttl_seconds: int = 86_400
@@ -61,6 +73,9 @@ class Settings(BaseSettings):
         default="",
         description="Base64-encoded 32-byte key for AES-GCM token vault",
     )
+
+    database_url: str = ""
+    redis_url: str = ""
 
     # App OIDC (own identity — not LaLiga)
     app_oidc_issuer: str = "https://idp.example.com/realms/fantasy"
@@ -91,6 +106,26 @@ class Settings(BaseSettings):
     laliga_allow_id_token_fallback: bool = False
 
     refresh_skew_seconds: int = 60
+
+    otel_service_name: str = "laliga-fantasy-builder-auth"
+    otel_exporter_otlp_endpoint: str | None = None
+    log_level: str = "INFO"
+    log_json: bool = True
+    migration_auto_apply: bool = False
+
+    @model_validator(mode="after")
+    def _validate_cookie_samesite(self) -> Settings:
+        """Reject SameSite=None without Secure cookies.
+
+        Returns:
+            Validated settings instance.
+
+        Raises:
+            ValueError: When SameSite=None is paired with insecure cookies.
+        """
+        if self.cookie_samesite == "none" and not self.cookie_secure:
+            raise ValueError("COOKIE_SAMESITE=none requires COOKIE_SECURE=true")
+        return self
 
     @property
     def laliga_authorize_url(self) -> str:

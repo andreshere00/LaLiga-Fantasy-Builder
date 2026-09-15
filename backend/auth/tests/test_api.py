@@ -17,6 +17,7 @@ from fantasy_auth.adapters.memory import (
     MemoryRateLimiter,
     MemorySessionStore,
 )
+from fantasy_auth.adapters.redis import MemoryRefreshLock
 from fantasy_auth.adapters.vault_aesgcm import AesGcmTokenVault
 from fantasy_auth.api.deps import AppContainer, set_container
 from fantasy_auth.application.credentials import CredentialProvider
@@ -66,14 +67,19 @@ async def _async_tokens(code: str, _verifier: str) -> dict[str, Any]:
     }
 
 
-def build_test_container() -> AppContainer:
+def build_test_container(
+    *,
+    cookie_samesite: str = "lax",
+) -> AppContainer:
     settings = Settings(
         use_memory_store=True,
         cookie_secure=False,
+        cookie_samesite=cookie_samesite,  # type: ignore[arg-type]
         cors_origins=[ORIGIN],
         token_vault_key_base64=base64.b64encode(b"t" * 32).decode(),
         app_oidc_client_id="app-client",
         laliga_allow_id_token_fallback=True,
+        log_json=False,
     )
     clock = FixedClock(NOW)
     session_store = MemorySessionStore()
@@ -81,6 +87,7 @@ def build_test_container() -> AppContainer:
     connection_repo = MemoryConnectionRepo()
     vault = AesGcmTokenVault.from_base64(settings.token_vault_key_base64)
     rate_limiter = MemoryRateLimiter()
+    refresh_lock = MemoryRefreshLock()
 
     sessions = SessionService(
         sessions=session_store,
@@ -116,6 +123,7 @@ def build_test_container() -> AppContainer:
         vault=vault,
         b2c=FakeB2C(),
         clock=clock,
+        refresh_lock=refresh_lock,
     )
     return AppContainer(
         settings=settings,
@@ -125,6 +133,7 @@ def build_test_container() -> AppContainer:
         rate_limiter=rate_limiter,
         clock=clock,
         session_store=session_store,
+        refresh_lock=refresh_lock,
     )
 
 
@@ -182,6 +191,15 @@ def test_health_ok(client: TestClient) -> None:
     assert response.headers["Referrer-Policy"] == "no-referrer"
 
 
+def test_health_ready_memory(client: TestClient) -> None:
+    # Arrange / Act
+    response = client.get("/health/ready")
+
+    # Assert
+    assert response.status_code == 200
+    assert response.json()["store"] == "memory"
+
+
 def test_auth_login_redirects_and_sets_cookies(client: TestClient) -> None:
     # Arrange / Act
     response = client.get("/auth/login", follow_redirects=False)
@@ -190,6 +208,8 @@ def test_auth_login_redirects_and_sets_cookies(client: TestClient) -> None:
     assert response.status_code == 302
     assert "fantasy_session" in response.cookies
     assert "fantasy_csrf" in response.cookies
+    set_cookie = ",".join(response.headers.get_list("set-cookie"))
+    assert "SameSite=lax" in set_cookie or "SameSite=Lax" in set_cookie
 
 
 def test_auth_callback_binds_user(
@@ -274,6 +294,34 @@ def test_complete_pairing_from_helper(
     assert "refresh_token" not in body
 
 
+def test_auth_logout_success(
+    client: TestClient,
+    container: AppContainer,
+) -> None:
+    # Arrange
+    session = asyncio.run(_seed_authenticated_session(container))
+
+    # Act
+    response = client.post(
+        "/auth/logout",
+        headers=_csrf_headers(session),
+        cookies=_auth_cookies(session),
+    )
+
+    # Assert
+    assert response.status_code == 200
+    assert asyncio.run(container.session_store.get(session.session_id)) is None
+
+
+def test_auth_logout_idempotent_without_session(client: TestClient) -> None:
+    # Arrange / Act
+    response = client.post("/auth/logout")
+
+    # Assert
+    assert response.status_code == 200
+    assert response.json()["ok"] is True
+
+
 # ---- Error paths ---- #
 
 
@@ -321,6 +369,44 @@ def test_me_unauthorized_without_session(client: TestClient) -> None:
     assert response.status_code == 401
 
 
+def test_auth_logout_requires_csrf(
+    client: TestClient,
+    container: AppContainer,
+) -> None:
+    # Arrange
+    session = asyncio.run(_seed_authenticated_session(container))
+
+    # Act
+    response = client.post(
+        "/auth/logout",
+        headers={"Origin": ORIGIN},
+        cookies=_auth_cookies(session),
+    )
+
+    # Assert
+    assert response.status_code == 401
+    assert asyncio.run(container.session_store.get(session.session_id)) is not None
+
+
+def test_auth_logout_rejects_bad_origin(
+    client: TestClient,
+    container: AppContainer,
+) -> None:
+    # Arrange
+    session = asyncio.run(_seed_authenticated_session(container))
+
+    # Act
+    response = client.post(
+        "/auth/logout",
+        headers=_csrf_headers(session, origin="https://evil.example"),
+        cookies=_auth_cookies(session),
+    )
+
+    # Assert
+    assert response.status_code == 401
+    assert asyncio.run(container.session_store.get(session.session_id)) is not None
+
+
 # ---- Edge cases ---- #
 
 
@@ -360,3 +446,18 @@ def test_delete_connection_unlinks(
     # Assert
     assert response.status_code == 200
     assert status.json()["linked"] is False
+
+
+def test_auth_login_sets_configured_samesite_strict() -> None:
+    # Arrange
+    container = build_test_container(cookie_samesite="strict")
+    app = create_app(settings=container.settings, container=container)
+    set_container(container)
+
+    # Act
+    with TestClient(app) as client:
+        response = client.get("/auth/login", follow_redirects=False)
+
+    # Assert
+    set_cookie = ",".join(response.headers.get_list("set-cookie"))
+    assert "SameSite=strict" in set_cookie or "SameSite=Strict" in set_cookie

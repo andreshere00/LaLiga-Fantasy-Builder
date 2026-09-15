@@ -7,6 +7,7 @@ import asyncio
 import json
 import subprocess
 import sys
+import webbrowser
 from pathlib import Path
 from typing import Any
 from urllib.parse import parse_qs, urlparse

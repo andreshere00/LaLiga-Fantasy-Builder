@@ -24,7 +24,7 @@ def _set_session_cookies(
         value=session_id,
         httponly=True,
         secure=settings.cookie_secure,
-        samesite="strict",
+        samesite=settings.cookie_samesite,
         max_age=settings.session_ttl_seconds,
         path="/",
     )
@@ -33,7 +33,7 @@ def _set_session_cookies(
         value=csrf_token,
         httponly=False,
         secure=settings.cookie_secure,
-        samesite="strict",
+        samesite=settings.cookie_samesite,
         max_age=settings.session_ttl_seconds,
         path="/",
     )
@@ -41,8 +41,13 @@ def _set_session_cookies(
 
 def _clear_session_cookies(response: Response) -> None:
     settings = get_container().settings
-    response.delete_cookie(settings.cookie_name, path="/")
-    response.delete_cookie(settings.csrf_cookie_name, path="/")
+    for key in (settings.cookie_name, settings.csrf_cookie_name):
+        response.delete_cookie(
+            key,
+            path="/",
+            secure=settings.cookie_secure,
+            samesite=settings.cookie_samesite,
+        )
 
 
 @router.get("/auth/login")
@@ -112,16 +117,16 @@ async def auth_logout(
 ) -> Response:
     """Delete the server-side session and clear cookies.
 
+    Requires CSRF when a session cookie is present. Without a session cookie
+    the call is an idempotent success.
+
     Note:
         B2C ``/logout`` must still be visited separately to clear SSO cookies.
     """
     container = get_container()
     session_id = request.cookies.get(container.settings.cookie_name)
     if session_id:
-        try:
-            await require_csrf(request, x_csrf_token)
-        except SessionError:
-            pass
+        await require_csrf(request, x_csrf_token)
         await container.sessions.logout(session_id)
     response = JSONResponse(content={"ok": True})
     _clear_session_cookies(response)

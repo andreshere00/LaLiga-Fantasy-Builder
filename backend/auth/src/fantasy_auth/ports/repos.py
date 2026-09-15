@@ -134,3 +134,25 @@ class RateLimiter(Protocol):
 
     async def allow(self, key: str, *, limit: int, window_seconds: int) -> bool:
         """Return True if the key is under the limit for the window."""
+
+
+class RefreshLock(Protocol):
+    """Distributed lock for per-user token refresh singleflight."""
+
+    async def acquire(self, user_id: str, *, ttl_seconds: int = 30) -> bool:
+        """Try to acquire the refresh lock for ``user_id``.
+
+        Args:
+            user_id: Application user ID.
+            ttl_seconds: Lock expiry to avoid deadlocks.
+
+        Returns:
+            True when the lock was acquired.
+        """
+
+    async def release(self, user_id: str) -> None:
+        """Release the refresh lock for ``user_id``.
+
+        Args:
+            user_id: Application user ID.
+        """

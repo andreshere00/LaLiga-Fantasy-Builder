@@ -8,15 +8,15 @@ from dataclasses import replace
 from fantasy_auth.domain.errors import InvalidGrant, NeedsReauth, OwnershipError
 from fantasy_auth.domain.tokens import is_expired, merge_refresh
 from fantasy_auth.ports.b2c import B2CClient
-from fantasy_auth.ports.repos import Clock, ConnectionRecord, ConnectionRepo
+from fantasy_auth.ports.repos import Clock, ConnectionRecord, ConnectionRepo, RefreshLock
 from fantasy_auth.ports.vault import TokenVault
 
 
 class CredentialProvider:
     """Provide a valid LaLiga bearer for an application user.
 
-    Ports ``refreshToken`` + ``inflightRefresh`` from authStore: concurrent
-    callers share one in-flight refresh per user via ``asyncio.Lock``.
+    Concurrent callers share one in-flight refresh per user via an
+    in-process ``asyncio.Lock`` plus an optional distributed ``RefreshLock``.
 
     Args:
         connections: Connection repository.
@@ -25,6 +25,7 @@ class CredentialProvider:
         clock: Injectable clock.
         refresh_skew_seconds: Seconds before expiry to refresh.
         allow_id_token_fallback: Fallback policy for refresh merge.
+        refresh_lock: Optional distributed lock for multi-replica refresh.
     """
 
     def __init__(
@@ -36,6 +37,7 @@ class CredentialProvider:
         clock: Clock,
         refresh_skew_seconds: int = 60,
         allow_id_token_fallback: bool = False,
+        refresh_lock: RefreshLock | None = None,
     ) -> None:
         self._connections = connections
         self._vault = vault
@@ -43,6 +45,7 @@ class CredentialProvider:
         self._clock = clock
         self._refresh_skew_seconds = refresh_skew_seconds
         self._allow_id_token_fallback = allow_id_token_fallback
+        self._refresh_lock = refresh_lock
         self._locks: dict[str, asyncio.Lock] = {}
 
     def _lock_for(self, user_id: str) -> asyncio.Lock:
@@ -77,6 +80,51 @@ class CredentialProvider:
             ):
                 return bundle.bearer()
 
+            return await self._refresh_and_return(user_id, connection)
+
+    async def retry_after_unauthorized(self, user_id: str) -> str:
+        """Force a single refresh after a Fantasy ``401`` and return bearer.
+
+        Args:
+            user_id: Application user ID.
+
+        Returns:
+            Fresh bearer token.
+
+        Raises:
+            NeedsReauth: When refresh fails permanently.
+        """
+        async with self._lock_for(user_id):
+            connection = await self._require_connection(user_id)
+            if connection.needs_reauth:
+                raise NeedsReauth(user_id)
+            return await self._refresh_and_return(user_id, connection)
+
+    async def _refresh_and_return(
+        self,
+        user_id: str,
+        connection: ConnectionRecord,
+    ) -> str:
+        acquired = True
+        if self._refresh_lock is not None:
+            acquired = await self._refresh_lock.acquire(user_id)
+            if not acquired:
+                # Another replica is refreshing; re-read after a short wait.
+                await asyncio.sleep(0.05)
+                connection = await self._require_connection(user_id)
+                if connection.needs_reauth:
+                    raise NeedsReauth(user_id)
+                bundle = self._vault.open(connection.sealed_blob)
+                if not is_expired(
+                    bundle,
+                    now=self._clock.now(),
+                    skew_seconds=self._refresh_skew_seconds,
+                ):
+                    return bundle.bearer()
+                raise NeedsReauth(user_id, "refresh_in_progress")
+
+        try:
+            bundle = self._vault.open(connection.sealed_blob)
             if not bundle.refresh_token:
                 await self._mark_needs_reauth(connection)
                 raise NeedsReauth(user_id)
@@ -109,54 +157,9 @@ class CredentialProvider:
             )
             await self._connections.save(updated)
             return new_bundle.bearer()
-
-    async def retry_after_unauthorized(self, user_id: str) -> str:
-        """Force a single refresh after a Fantasy ``401`` and return bearer.
-
-        Args:
-            user_id: Application user ID.
-
-        Returns:
-            Fresh bearer token.
-
-        Raises:
-            NeedsReauth: When refresh fails permanently.
-        """
-        async with self._lock_for(user_id):
-            connection = await self._require_connection(user_id)
-            if connection.needs_reauth:
-                raise NeedsReauth(user_id)
-
-            bundle = self._vault.open(connection.sealed_blob)
-            if not bundle.refresh_token:
-                await self._mark_needs_reauth(connection)
-                raise NeedsReauth(user_id)
-
-            try:
-                raw = await self._b2c.refresh(
-                    refresh_token=bundle.refresh_token,
-                    client_id=bundle.client_id,
-                    policy=bundle.policy,
-                    scope=bundle.scope,
-                )
-            except InvalidGrant:
-                await self._mark_needs_reauth(connection)
-                raise NeedsReauth(user_id) from None
-
-            new_bundle = merge_refresh(
-                bundle,
-                raw,
-                now=self._clock.now(),
-                allow_id_token_fallback=self._allow_id_token_fallback,
-            )
-            sealed = self._vault.seal(new_bundle)
-            updated = replace(
-                connection,
-                sealed_blob=sealed,
-                needs_reauth=False,
-            )
-            await self._connections.save(updated)
-            return new_bundle.bearer()
+        finally:
+            if self._refresh_lock is not None and acquired:
+                await self._refresh_lock.release(user_id)
 
     async def _require_connection(self, user_id: str) -> ConnectionRecord:
         connection = await self._connections.get(user_id)

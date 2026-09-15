@@ -3,13 +3,13 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
-from typing import Annotated
+from typing import Annotated, Any
 
 from fastapi import Cookie, Header, Request
 
 from fantasy_auth.adapters.b2c_httpx import HttpxB2CClient
 from fantasy_auth.adapters.fantasy_httpx import HttpxFantasyClient
-from fantasy_auth.adapters.jwks import B2CJwksValidator
+from fantasy_auth.adapters.jwks import AppOidcJwksValidator, B2CJwksValidator
 from fantasy_auth.adapters.memory import (
     MemoryConnectionRepo,
     MemoryPairingStore,
@@ -17,6 +17,7 @@ from fantasy_auth.adapters.memory import (
     MemorySessionStore,
     SystemClock,
 )
+from fantasy_auth.adapters.redis import MemoryRefreshLock
 from fantasy_auth.adapters.vault_aesgcm import AesGcmTokenVault
 from fantasy_auth.application.credentials import CredentialProvider
 from fantasy_auth.application.pairing import PairingService
@@ -24,7 +25,20 @@ from fantasy_auth.application.sessions import SessionService
 from fantasy_auth.config import Settings, get_settings
 from fantasy_auth.domain.errors import SessionError
 from fantasy_auth.domain.users import AppUser
-from fantasy_auth.ports.repos import SessionRecord
+from fantasy_auth.ports.repos import (
+    Clock,
+    ConnectionRepo,
+    PairingStore,
+    RateLimiter,
+    RefreshLock,
+    SessionRecord,
+    SessionStore,
+)
+from fantasy_auth.startup import (
+    log_vault_key_status,
+    resolve_vault_key,
+    validate_settings,
+)
 
 
 @dataclass
@@ -39,45 +53,83 @@ class AppContainer:
         rate_limiter: Rate limiter for pairing complete.
         clock: Clock implementation.
         session_store: Underlying session store (for cookie TTL).
+        pg_pool: Optional asyncpg pool (production).
+        redis: Optional Redis client (production).
+        refresh_lock: Refresh singleflight lock.
     """
 
     settings: Settings
     sessions: SessionService
     pairings: PairingService
     credentials: CredentialProvider
-    rate_limiter: MemoryRateLimiter
-    clock: SystemClock
-    session_store: MemorySessionStore
+    rate_limiter: RateLimiter
+    clock: Clock
+    session_store: SessionStore
+    refresh_lock: RefreshLock
+    pg_pool: Any | None = None
+    redis: Any | None = None
 
 
 _container: AppContainer | None = None
 
 
-def build_container(settings: Settings | None = None) -> AppContainer:
-    """Build a fully wired container (memory stores by default).
+def build_container(
+    settings: Settings | None = None,
+    *,
+    pg_pool: Any | None = None,
+    redis: Any | None = None,
+    session_store: SessionStore | None = None,
+    pairing_store: PairingStore | None = None,
+    connection_repo: ConnectionRepo | None = None,
+    rate_limiter: RateLimiter | None = None,
+    refresh_lock: RefreshLock | None = None,
+    oidc_validator: Any | None = None,
+) -> AppContainer:
+    """Build a fully wired container.
 
     Args:
         settings: Optional settings override.
+        pg_pool: Optional Postgres pool for production adapters.
+        redis: Optional Redis client for production adapters.
+        session_store: Optional session store override (tests).
+        pairing_store: Optional pairing store override (tests).
+        connection_repo: Optional connection repo override (tests).
+        rate_limiter: Optional rate limiter override (tests).
+        refresh_lock: Optional refresh lock override (tests).
+        oidc_validator: Optional app OIDC validator override (tests).
 
     Returns:
         Application container.
     """
     cfg = settings or get_settings()
+    validate_settings(cfg)
     clock = SystemClock()
-    session_store = MemorySessionStore()
-    pairing_store = MemoryPairingStore()
-    connection_repo = MemoryConnectionRepo()
-    rate_limiter = MemoryRateLimiter()
 
-    if not cfg.token_vault_key_base64:
-        # Dev fallback: deterministic key so the API can boot; production
-        # must set TOKEN_VAULT_KEY_BASE64.
-        import base64
-
-        vault_key = base64.b64encode(b"0" * 32).decode()
-    else:
-        vault_key = cfg.token_vault_key_base64
+    vault_key, used_dev_fallback = resolve_vault_key(cfg)
+    log_vault_key_status(used_dev_fallback=used_dev_fallback)
     vault = AesGcmTokenVault.from_base64(vault_key)
+
+    if cfg.use_memory_store:
+        resolved_sessions = session_store or MemorySessionStore()
+        resolved_pairings = pairing_store or MemoryPairingStore()
+        resolved_connections = connection_repo or MemoryConnectionRepo()
+        resolved_rate_limiter = rate_limiter or MemoryRateLimiter()
+        resolved_refresh_lock = refresh_lock or MemoryRefreshLock()
+    else:
+        if pg_pool is None or redis is None:
+            raise RuntimeError("production mode requires pg_pool and redis")
+        from fantasy_auth.adapters.postgres import (
+            PostgresConnectionRepo,
+            PostgresPairingStore,
+            PostgresSessionStore,
+        )
+        from fantasy_auth.adapters.redis import RedisRateLimiter, RedisRefreshLock
+
+        resolved_sessions = session_store or PostgresSessionStore(pg_pool)
+        resolved_pairings = pairing_store or PostgresPairingStore(pg_pool)
+        resolved_connections = connection_repo or PostgresConnectionRepo(pg_pool)
+        resolved_rate_limiter = rate_limiter or RedisRateLimiter(redis)
+        resolved_refresh_lock = refresh_lock or RedisRefreshLock(redis)
 
     b2c = HttpxB2CClient(
         client_id=cfg.laliga_client_id,
@@ -92,9 +144,13 @@ def build_container(settings: Settings | None = None) -> AppContainer:
         issuer=cfg.laliga_issuer,
     )
     fantasy = HttpxFantasyClient(origin=cfg.laliga_fantasy_origin)
+    resolved_oidc = oidc_validator or AppOidcJwksValidator(
+        jwks_url=cfg.app_oidc_jwks_url,
+        issuer=cfg.app_oidc_issuer,
+    )
 
     sessions = SessionService(
-        sessions=session_store,
+        sessions=resolved_sessions,
         clock=clock,
         session_ttl_seconds=cfg.session_ttl_seconds,
         authorize_url=cfg.app_oidc_authorize_url,
@@ -103,10 +159,11 @@ def build_container(settings: Settings | None = None) -> AppContainer:
         client_secret=cfg.app_oidc_client_secret,
         redirect_uri=cfg.app_oidc_redirect_uri,
         issuer=cfg.app_oidc_issuer,
+        oidc_validator=resolved_oidc,
     )
     pairings = PairingService(
-        pairings=pairing_store,
-        connections=connection_repo,
+        pairings=resolved_pairings,
+        connections=resolved_connections,
         vault=vault,
         jwks=jwks,
         fantasy=fantasy,
@@ -118,21 +175,25 @@ def build_container(settings: Settings | None = None) -> AppContainer:
         b2c=b2c,
     )
     credentials = CredentialProvider(
-        connections=connection_repo,
+        connections=resolved_connections,
         vault=vault,
         b2c=b2c,
         clock=clock,
         refresh_skew_seconds=cfg.refresh_skew_seconds,
         allow_id_token_fallback=cfg.laliga_allow_id_token_fallback,
+        refresh_lock=resolved_refresh_lock,
     )
     return AppContainer(
         settings=cfg,
         sessions=sessions,
         pairings=pairings,
         credentials=credentials,
-        rate_limiter=rate_limiter,
+        rate_limiter=resolved_rate_limiter,
         clock=clock,
-        session_store=session_store,
+        session_store=resolved_sessions,
+        refresh_lock=resolved_refresh_lock,
+        pg_pool=pg_pool,
+        redis=redis,
     )
 
 

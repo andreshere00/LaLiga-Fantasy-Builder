@@ -73,6 +73,28 @@ class ConnectionStatus:
     manager_name: str | None = None
 
 
+def extract_app_user_from_claims(claims: Mapping[str, Any]) -> AppUser:
+    """Map validated app IdP claims to an ``AppUser``.
+
+    Args:
+        claims: Decoded and verified JWT payload.
+
+    Returns:
+        Application user identity.
+
+    Raises:
+        ValueError: When ``sub`` is missing.
+    """
+    sub = claims.get("sub")
+    if not sub:
+        raise ValueError("id_token missing sub")
+    return AppUser(
+        user_id=str(sub),
+        email=str(claims["email"]) if claims.get("email") else None,
+        name=str(claims["name"]) if claims.get("name") else None,
+    )
+
+
 def extract_user_from_claims(claims: Mapping[str, Any]) -> LaligaUser:
     """Map validated JWT claims to a ``LaligaUser``.
 

@@ -23,6 +23,12 @@ From repo root, Keycloak:
 docker compose up -d
 ```
 
+Production-like local stack (Postgres + Redis + auth + optional OTEL):
+
+```bash
+docker compose --profile full up --build
+```
+
 ## Docker
 
 ```bash
@@ -30,8 +36,6 @@ docker compose up -d
 docker build -t laliga-fantasy-builder-auth -f backend/auth/Dockerfile backend/auth
 docker run --rm -p 8000:8000 --env-file backend/auth/.env laliga-fantasy-builder-auth
 ```
-
-Or via compose service `auth` (see root `docker-compose.yml`).
 
 ## Pair LaLiga
 
@@ -41,6 +45,11 @@ export FANTASY_CSRF='…'
 cd backend/auth
 uv run pair-laliga
 ```
+
+## Health
+
+- `GET /health` / `GET /health/live` — process liveness
+- `GET /health/ready` — Postgres + Redis when `USE_MEMORY_STORE=false`
 
 ## Tests
 
