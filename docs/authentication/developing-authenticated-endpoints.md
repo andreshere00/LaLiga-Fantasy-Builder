@@ -69,7 +69,7 @@ leagues (or feature) service. The service asks auth for a bearer and calls
 Fantasy. Auth uses its verified `sub` to select the connection.
 
 For leagues specifically, follow
-[Adding leagues endpoints](adding-leagues-endpoints.md).
+[Adding leagues endpoints](../api/leagues/adding-leagues-endpoints.md).
 
 ```python
 from typing import Any

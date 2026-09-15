@@ -2,7 +2,8 @@
 
 Use this guide when extending the Fantasy Builder API's leagues feature.
 General auth and LaLiga bearer rules live in
-[Developing authenticated endpoints](developing-authenticated-endpoints.md).
+[Developing authenticated endpoints](../../authentication/developing-authenticated-endpoints.md).
+OpenAPI/Swagger sync is described in [OpenAPI](../openapi.md).
 
 Leagues follow a controller–service–repository layout in `backend/api`:
 
@@ -11,7 +12,7 @@ api/leagues.py              # FastAPI controller
 services/leagues.py         # bearer fetch + repository orchestration
 repositories/leagues.py     # Fantasy path construction
 clients/laliga_fantasy.py   # shared authenticated GET client
-schemas/leagues.py          # probe / helper models
+schemas/leagues.py          # Pydantic / OpenAPI response models
 ```
 
 Upstream base path:
@@ -36,28 +37,31 @@ Upstream base path:
    - calls `credentials.get_laliga_bearer(internal_jwt)`;
    - forwards only `bearer_token` to the repository;
    - never logs or returns the bearer.
-4. **Add a controller route** in `fantasy_api.api.leagues`:
+4. **Add or extend a Pydantic response model** in
+   `fantasy_api.schemas.leagues` (prefer `FlexibleModel` /
+   `extra="allow"` for upstream fields).
+5. **Add a controller route** in `fantasy_api.api.leagues`:
    - call `get_current_user(authorization)` directly (same style as existing
      routes);
    - pass `internal_jwt` into the service;
-   - return upstream JSON as a thin proxy unless a dedicated response model is
-     required.
-5. **Container wiring** — `AppContainer.leagues_service` is already built in
+   - set `response_model=...`, `responses=ERROR_RESPONSES`, and parameter
+     descriptions so Swagger stays accurate.
+6. **Container wiring** — `AppContainer.leagues_service` is already built in
    `build_container`. Do not re-register the client for each new method.
-6. **Router registration** — keep new leagues routes on the existing
+7. **Router registration** — keep new leagues routes on the existing
    `leagues.router` included from `create_app()`.
-7. **Tests** — add cases in `backend/api/tests/test_leagues.py` using
+8. **Tests** — add cases in `backend/api/tests/test_leagues.py` using
    `httpx.MockTransport` for both auth bearer and Fantasy responses. Cover:
    - happy path URL and headers;
    - missing/invalid JWT;
    - `needs_reauth`;
    - Fantasy non-2xx mapped to `UpstreamError` categories;
    - bearer absent from the HTTP response body.
-8. **OpenAPI** — declare `response_model` (and path/header descriptions) on
-   the new route, then regenerate the committed schema:
+9. **OpenAPI** — regenerate the committed schema (also enforced by pre-commit):
 
 ```bash
-cd backend/api && uv run generate-openapi
+uv run poe generate-openapi
+# or: cd backend/api && uv run generate-openapi
 ```
 
 Swagger UI at `/docs` always reflects the same generator
@@ -70,7 +74,7 @@ def fantasy_handler(request: httpx.Request) -> httpx.Response:
     assert request.url.path == "/api/v1/competition/1/leagues/42/standing"
     assert request.headers["Authorization"] == "Bearer laliga-secret-token"
     assert request.headers["x-lang"] == "es"
-    return httpx.Response(200, json={"ok": True})
+    return httpx.Response(200, json=[{"position": 1, "points": 10}])
 ```
 
 Wire auth and Fantasy transports through the test container helper (see

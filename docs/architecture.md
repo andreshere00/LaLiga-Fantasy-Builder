@@ -82,7 +82,7 @@ Leagues reads use a controller–service–repository layout
 (`api/` → `services/` → `repositories/` → `clients/laliga_fantasy.py`) and
 proxy competition league resources under
 `/api/v1/competition/{id}/leagues/...`. See
-[Adding leagues endpoints](adding-leagues-endpoints.md).
+[Adding leagues endpoints](api/leagues/adding-leagues-endpoints.md).
 
 The API does not know how to open encrypted credentials or refresh LaLiga
 tokens.

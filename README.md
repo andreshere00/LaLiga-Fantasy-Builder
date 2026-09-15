@@ -13,12 +13,11 @@ Backend services are split so **auth can be deployed on its own**:
 
 ## Documentation
 
-- [`docs/authentication.md`](docs/authentication.md) — authentication flows
-  and security contract
+- [`docs/README.md`](docs/README.md) — documentation index
+- [`docs/authentication/`](docs/authentication/) — auth flows and endpoint patterns
+- [`docs/api/`](docs/api/) — Fantasy Builder API, OpenAPI/Swagger, leagues
 - [`docs/architecture.md`](docs/architecture.md) — services, trust boundaries,
   persistence, and request flows
-- [`docs/developing-authenticated-endpoints.md`](docs/developing-authenticated-endpoints.md)
-  — patterns and tests for future endpoints
 
 ## Quick start (auth service)
 

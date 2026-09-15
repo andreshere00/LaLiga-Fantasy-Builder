@@ -49,9 +49,10 @@ Leagues endpoints are a thin authenticated proxy of LaLiga Fantasy. Layout:
 `api/leagues.py` → `services/leagues.py` → `repositories/leagues.py` →
 `clients/laliga_fantasy.py`.
 
-See [`docs/adding-leagues-endpoints.md`](../../docs/adding-leagues-endpoints.md)
-for extending leagues. Use `uv run fantasy-leagues` for a local CLI summary
-(ranking, week standing, activity, teams).
+See [`docs/api/leagues/`](../../docs/api/leagues/) for leagues docs and
+[`docs/api/openapi.md`](../../docs/api/openapi.md) for OpenAPI/Swagger.
+Use `uv run fantasy-leagues` for a local CLI summary (ranking, week standing,
+activity, teams).
 
 ## Live connectivity check
 
@@ -109,6 +110,9 @@ cd backend/api
 uv run generate-openapi                 # writes ./openapi.json
 uv run generate-openapi --stdout        # print only
 ```
+
+From the repo root, pre-commit runs the same generation via
+`uv run poe generate-openapi` when API sources change.
 
 Programmatic API: `fantasy_api.openapi.generate_openapi()` /
 `build_openapi_schema(app)`.

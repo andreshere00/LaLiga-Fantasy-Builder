@@ -44,20 +44,8 @@ skip_empty = true
 
 [tool.basedpyright]
 executionEnvironments = [
-    {
-        root = "backend/api",
-        extraPaths = ["src"],
-        venvPath = "backend/api",
-        venv = ".venv",
-        pythonVersion = "3.14",
-    },
-    {
-        root = "backend/auth",
-        extraPaths = ["src"],
-        venvPath = "backend/auth",
-        venv = ".venv",
-        pythonVersion = "3.12",
-    },
+    { root = "backend/api", extraPaths = ["src"], venvPath = "backend/api", venv = ".venv", pythonVersion = "3.14" },
+    { root = "backend/auth", extraPaths = ["src"], venvPath = "backend/auth", venv = ".venv", pythonVersion = "3.12" },
 ]
 
 [tool.poe.tasks.install]
@@ -96,3 +84,7 @@ uv run --directory backend/api pytest
   --cov-report=term-missing
   --cov-fail-under=90
 """
+
+[tool.poe.tasks.generate-openapi]
+help = "Regenerate backend/api/openapi.json from FastAPI routes and schemas"
+cmd = "bash scripts/generate-openapi.sh"
