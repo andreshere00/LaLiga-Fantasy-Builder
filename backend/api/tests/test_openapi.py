@@ -55,6 +55,13 @@ def test_build_openapi_schema_includes_documented_paths() -> None:
     )
     assert week_param["description"] == "Matchweek number."
     assert "última jornada" not in week_param["description"]
+    assert week_param["schema"].get("minimum") == 1
+    page_param = next(
+        param
+        for param in paths["/leagues/{league_id}/activity/{page}"]["get"]["parameters"]
+        if param["name"] == "page"
+    )
+    assert page_param["schema"].get("minimum") == 0
 
 
 def test_generate_openapi_writes_file(tmp_path: Path) -> None:

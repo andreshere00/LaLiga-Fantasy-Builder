@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from typing import Any
+from urllib.parse import quote
 
 from fantasy_api.clients.laliga_fantasy import LaligaFantasyClient
 
@@ -50,7 +51,7 @@ class LeaguesRepository:
         Returns:
             Upstream JSON for ``GET {CMP}/leagues/{leagueId}/standing``.
         """
-        path = f"{self._base_path}/{league_id}/standing"
+        path = f"{self._base_path}/{_segment(league_id)}/standing"
         return await self._client.get_json(path, bearer_token)
 
     async def get_standing_by_week(
@@ -69,7 +70,7 @@ class LeaguesRepository:
         Returns:
             Upstream JSON for ``GET {CMP}/leagues/{leagueId}/standing/{week}``.
         """
-        path = f"{self._base_path}/{league_id}/standing/{week}"
+        path = f"{self._base_path}/{_segment(league_id)}/standing/{week}"
         return await self._client.get_json(path, bearer_token)
 
     async def get_activity(
@@ -88,7 +89,7 @@ class LeaguesRepository:
         Returns:
             Upstream JSON for ``GET {CMP}/leagues/{leagueId}/activity/{page}``.
         """
-        path = f"{self._base_path}/{league_id}/activity/{page}"
+        path = f"{self._base_path}/{_segment(league_id)}/activity/{page}"
         return await self._client.get_json(path, bearer_token)
 
     async def list_teams(self, bearer_token: str, league_id: str) -> Any:
@@ -101,7 +102,7 @@ class LeaguesRepository:
         Returns:
             Upstream JSON for ``GET {CMP}/leagues/{leagueId}/teams``.
         """
-        path = f"{self._base_path}/{league_id}/teams"
+        path = f"{self._base_path}/{_segment(league_id)}/teams"
         return await self._client.get_json(path, bearer_token)
 
     async def get_team(
@@ -120,5 +121,10 @@ class LeaguesRepository:
         Returns:
             Upstream JSON for ``GET {CMP}/leagues/{leagueId}/teams/{teamId}``.
         """
-        path = f"{self._base_path}/{league_id}/teams/{team_id}"
+        path = f"{self._base_path}/{_segment(league_id)}/teams/{_segment(team_id)}"
         return await self._client.get_json(path, bearer_token)
+
+
+def _segment(value: str) -> str:
+    """Percent-encode a path identifier so it cannot change the upstream path."""
+    return quote(str(value), safe="")

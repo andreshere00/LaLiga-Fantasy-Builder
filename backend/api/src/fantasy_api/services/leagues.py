@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from collections.abc import Awaitable, Callable
 from typing import Any
 
 from fantasy_api.clients.auth_credentials import AuthCredentialsClient
@@ -24,10 +25,15 @@ class LeaguesService:
         self._credentials = credentials
         self._repository = repository
 
-    async def _bearer(self, internal_jwt: str) -> str:
-        """Resolve a short-lived LaLiga bearer for the JWT subject."""
-        bundle = await self._credentials.get_laliga_bearer(internal_jwt)
-        return bundle.bearer_token
+    async def _call[T](
+        self,
+        internal_jwt: str,
+        method: Callable[..., Awaitable[T]],
+        *args: object,
+    ) -> T:
+        """Fetch a bearer and invoke a repository method."""
+        bearer = (await self._credentials.get_laliga_bearer(internal_jwt)).bearer_token
+        return await method(bearer, *args)
 
     async def list_leagues(self, internal_jwt: str) -> Any:
         """Return competition leagues for the authenticated LaLiga user.
@@ -38,8 +44,7 @@ class LeaguesService:
         Returns:
             Upstream leagues JSON.
         """
-        bearer = await self._bearer(internal_jwt)
-        return await self._repository.list_leagues(bearer)
+        return await self._call(internal_jwt, self._repository.list_leagues)
 
     async def get_standing(self, internal_jwt: str, league_id: str) -> Any:
         """Return overall standing for a league.
@@ -51,8 +56,7 @@ class LeaguesService:
         Returns:
             Upstream standing JSON.
         """
-        bearer = await self._bearer(internal_jwt)
-        return await self._repository.get_standing(bearer, league_id)
+        return await self._call(internal_jwt, self._repository.get_standing, league_id)
 
     async def get_standing_by_week(
         self,
@@ -70,8 +74,12 @@ class LeaguesService:
         Returns:
             Upstream standing JSON.
         """
-        bearer = await self._bearer(internal_jwt)
-        return await self._repository.get_standing_by_week(bearer, league_id, week)
+        return await self._call(
+            internal_jwt,
+            self._repository.get_standing_by_week,
+            league_id,
+            week,
+        )
 
     async def get_activity(
         self,
@@ -89,8 +97,12 @@ class LeaguesService:
         Returns:
             Upstream activity JSON.
         """
-        bearer = await self._bearer(internal_jwt)
-        return await self._repository.get_activity(bearer, league_id, page)
+        return await self._call(
+            internal_jwt,
+            self._repository.get_activity,
+            league_id,
+            page,
+        )
 
     async def list_teams(self, internal_jwt: str, league_id: str) -> Any:
         """Return teams in a league.
@@ -102,8 +114,7 @@ class LeaguesService:
         Returns:
             Upstream teams JSON.
         """
-        bearer = await self._bearer(internal_jwt)
-        return await self._repository.list_teams(bearer, league_id)
+        return await self._call(internal_jwt, self._repository.list_teams, league_id)
 
     async def get_team(
         self,
@@ -121,5 +132,9 @@ class LeaguesService:
         Returns:
             Upstream team JSON.
         """
-        bearer = await self._bearer(internal_jwt)
-        return await self._repository.get_team(bearer, league_id, team_id)
+        return await self._call(
+            internal_jwt,
+            self._repository.get_team,
+            league_id,
+            team_id,
+        )

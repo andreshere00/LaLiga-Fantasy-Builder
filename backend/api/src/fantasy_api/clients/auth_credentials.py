@@ -43,7 +43,11 @@ class AuthCredentialsClient:
     ) -> None:
         self._base_url = base_url.rstrip("/")
         self._service_token = service_token
-        self._transport = transport
+        self._http = httpx.AsyncClient(transport=transport, timeout=30.0)
+
+    async def aclose(self) -> None:
+        """Close the shared HTTP client."""
+        await self._http.aclose()
 
     async def get_laliga_bearer(self, internal_jwt: str) -> LaligaBearer:
         """Request a LaLiga bearer for the JWT subject.
@@ -64,11 +68,7 @@ class AuthCredentialsClient:
             "X-Service-Token": self._service_token,
             "Accept": "application/json",
         }
-        async with httpx.AsyncClient(
-            transport=self._transport,
-            timeout=30.0,
-        ) as client:
-            response = await client.get(url, headers=headers)
+        response = await self._http.get(url, headers=headers)
 
         if response.status_code == 401:
             body = _safe_json(response)

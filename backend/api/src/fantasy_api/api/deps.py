@@ -42,6 +42,11 @@ class AppContainer:
     laliga_client: LaligaFantasyClient
     leagues_service: LeaguesService
 
+    async def aclose(self) -> None:
+        """Close process-lifetime HTTP clients."""
+        await self.credentials.aclose()
+        await self.laliga_client.aclose()
+
 
 _container: AppContainer | None = None
 

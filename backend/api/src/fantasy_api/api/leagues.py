@@ -119,7 +119,7 @@ async def get_standing(
 )
 async def get_standing_by_week(
     league_id: str = Path(description="Fantasy league identifier."),
-    week: int = Path(description="Matchweek number."),
+    week: int = Path(ge=1, description="Matchweek number."),
     authorization: str | None = Header(
         default=None,
         description="Bearer internal JWT issued by auth ``POST /auth/token``.",
@@ -153,7 +153,7 @@ async def get_standing_by_week(
 )
 async def get_activity(
     league_id: str = Path(description="Fantasy league identifier."),
-    page: int = Path(description="Activity page index (typically starts at 0)."),
+    page: int = Path(ge=0, description="Activity page index (typically starts at 0)."),
     authorization: str | None = Header(
         default=None,
         description="Bearer internal JWT issued by auth ``POST /auth/token``.",

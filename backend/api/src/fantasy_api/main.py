@@ -24,7 +24,10 @@ async def _lifespan(app: FastAPI) -> AsyncIterator[None]:
         container = build_container(app.state.settings)
         app.state.container = container
     set_container(container)
-    yield
+    try:
+        yield
+    finally:
+        await container.aclose()
 
 
 def create_app(

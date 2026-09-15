@@ -26,7 +26,11 @@ class LaligaFantasyClient:
         transport: httpx.AsyncBaseTransport | None = None,
     ) -> None:
         self._origin = origin.rstrip("/")
-        self._transport = transport
+        self._http = httpx.AsyncClient(transport=transport, timeout=30.0)
+
+    async def aclose(self) -> None:
+        """Close the shared HTTP client."""
+        await self._http.aclose()
 
     async def get_json(self, path: str, bearer_token: str) -> Any:
         """Perform an authenticated GET and return the JSON body.
@@ -47,11 +51,7 @@ class LaligaFantasyClient:
             "Accept": "application/json",
             "x-lang": "es",
         }
-        async with httpx.AsyncClient(
-            transport=self._transport,
-            timeout=30.0,
-        ) as client:
-            response = await client.get(url, headers=headers)
+        response = await self._http.get(url, headers=headers)
 
         if response.status_code == 401:
             raise UpstreamError(

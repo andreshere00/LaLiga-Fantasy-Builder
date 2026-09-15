@@ -480,6 +480,7 @@
             "required": true,
             "schema": {
               "type": "integer",
+              "minimum": 1,
               "description": "Matchweek number.",
               "title": "Week"
             },
@@ -592,6 +593,7 @@
             "required": true,
             "schema": {
               "type": "integer",
+              "minimum": 0,
               "description": "Activity page index (typically starts at 0).",
               "title": "Page"
             },
@@ -1269,17 +1271,6 @@
               }
             ],
             "title": "Issecondround"
-          },
-          "token": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Token"
           },
           "description": {
             "anyOf": [

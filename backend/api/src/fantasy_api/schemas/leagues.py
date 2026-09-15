@@ -113,7 +113,7 @@ class FantasyLeague(FlexibleModel):
     config: LeagueConfig | None = None
     isDuplicated: bool | None = None
     isSecondRound: bool | None = None
-    token: str | None = None
+    token: str | None = Field(default=None, exclude=True)
     description: str | None = None
     premium: bool | None = None
     team: LeagueTeamSummary | None = None

@@ -207,6 +207,32 @@ def test_list_leagues_proxies_upstream_json(
     assert LALIGA_BEARER not in response.text
 
 
+def test_list_leagues_omits_join_token(
+    rsa_pems: tuple[str, str],
+) -> None:
+    # Arrange
+    private_pem, public_pem = rsa_pems
+    token = mint_internal_jwt(private_pem)
+    payload = [{"id": "lg-1", "name": "Liga", "token": "join-secret"}]
+
+    def fantasy_handler(request: httpx.Request) -> httpx.Response:
+        return httpx.Response(200, json=payload)
+
+    with make_client(public_pem, fantasy_handler) as client:
+        # Act
+        response = client.get(
+            "/leagues",
+            headers={"Authorization": f"Bearer {token}"},
+        )
+
+    # Assert
+    assert response.status_code == 200
+    body = response.json()
+    assert body[0]["id"] == "lg-1"
+    assert "token" not in body[0]
+    assert "join-secret" not in response.text
+
+
 @pytest.mark.parametrize(
     ("path", "expected_suffix", "upstream", "expected"),
     [
@@ -297,6 +323,30 @@ async def test_laliga_fantasy_client_get_json_returns_body() -> None:
 
 
 @pytest.mark.asyncio
+async def test_laliga_fantasy_client_get_json_reuses_http_client() -> None:
+    # Arrange
+    calls = 0
+
+    def handler(_request: httpx.Request) -> httpx.Response:
+        nonlocal calls
+        calls += 1
+        return httpx.Response(200, json={"n": calls})
+
+    client = LaligaFantasyClient(
+        origin=FANTASY_ORIGIN,
+        transport=httpx.MockTransport(handler),
+    )
+
+    # Act
+    first = await client.get_json("/one", "tok")
+    second = await client.get_json("/two", "tok")
+
+    # Assert
+    assert first == {"n": 1}
+    assert second == {"n": 2}
+
+
+@pytest.mark.asyncio
 async def test_leagues_repository_list_leagues_builds_competition_path() -> None:
     # Arrange
     seen: dict[str, str] = {}
@@ -321,6 +371,34 @@ async def test_leagues_repository_list_leagues_builds_competition_path() -> None
     assert data == [{"id": 1}]
     assert seen["url"] == f"{FANTASY_ORIGIN}/api/v1/competition/1/leagues"
     assert seen["authorization"] == "Bearer tok"
+
+
+@pytest.mark.asyncio
+async def test_leagues_repository_get_standing_encodes_path_ids() -> None:
+    # Arrange
+    seen: list[str] = []
+
+    def handler(request: httpx.Request) -> httpx.Response:
+        seen.append(request.url.raw_path.decode())
+        return httpx.Response(200, json=[])
+
+    repo = LeaguesRepository(
+        LaligaFantasyClient(
+            origin=FANTASY_ORIGIN,
+            transport=httpx.MockTransport(handler),
+        ),
+        competition_id=1,
+    )
+
+    # Act
+    await repo.get_standing("tok", "a/b")
+    await repo.get_team("tok", "x y", "t?z")
+
+    # Assert
+    assert seen == [
+        "/api/v1/competition/1/leagues/a%2Fb/standing",
+        "/api/v1/competition/1/leagues/x%20y/teams/t%3Fz",
+    ]
 
 
 # ---- Error paths ---- #
@@ -636,3 +714,37 @@ def test_list_leagues_rejects_jwt_with_invalid_standard_claims(
     assert response.status_code == 401
     assert response.json()["error"] == "unauthorized"
     assert LALIGA_BEARER not in response.text
+
+
+def test_standing_by_week_rejects_non_positive_week(
+    rsa_pems: tuple[str, str],
+) -> None:
+    # Arrange
+    _private_pem, public_pem = rsa_pems
+
+    def fantasy_handler(_request: httpx.Request) -> httpx.Response:
+        raise AssertionError("Fantasy must not be called for invalid week")
+
+    with make_client(public_pem, fantasy_handler) as client:
+        # Act
+        response = client.get("/leagues/1/standing/0")
+
+    # Assert
+    assert response.status_code == 422
+
+
+def test_activity_rejects_negative_page(
+    rsa_pems: tuple[str, str],
+) -> None:
+    # Arrange
+    _private_pem, public_pem = rsa_pems
+
+    def fantasy_handler(_request: httpx.Request) -> httpx.Response:
+        raise AssertionError("Fantasy must not be called for invalid page")
+
+    with make_client(public_pem, fantasy_handler) as client:
+        # Act
+        response = client.get("/leagues/1/activity/-1")
+
+    # Assert
+    assert response.status_code == 422

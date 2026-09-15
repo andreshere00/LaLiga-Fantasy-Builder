@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import time
 from collections.abc import Iterator
-from unittest.mock import MagicMock, patch
+from unittest.mock import AsyncMock, MagicMock, patch
 
 import httpx
 import jwt
@@ -330,6 +330,7 @@ def test_create_app_lifespan_builds_container_when_missing() -> None:
     settings = _test_settings()
     fake_container = MagicMock(spec=AppContainer)
     fake_container.settings = settings
+    fake_container.aclose = AsyncMock()
 
     with patch(
         "fantasy_api.main.build_container",
