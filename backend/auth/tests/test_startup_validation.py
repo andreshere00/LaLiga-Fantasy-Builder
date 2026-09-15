@@ -6,7 +6,6 @@ import base64
 import logging
 
 import pytest
-
 from fantasy_auth.config import Settings
 from fantasy_auth.startup import (
     StartupError,
@@ -14,7 +13,6 @@ from fantasy_auth.startup import (
     resolve_vault_key,
     validate_settings,
 )
-
 
 # ---- Happy path ---- #
 
@@ -118,5 +116,3 @@ def test_validate_settings_requires_internal_jwt_in_production() -> None:
     # Act / Assert
     with pytest.raises(StartupError, match="INTERNAL_JWT_PRIVATE_KEY_PEM"):
         validate_settings(settings)
-
-

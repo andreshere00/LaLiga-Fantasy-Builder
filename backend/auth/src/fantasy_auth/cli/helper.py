@@ -33,8 +33,7 @@ def main(argv: list[str] | None = None) -> int:
     """
     parser = argparse.ArgumentParser(
         description=(
-            "LaLiga Fantasy Builder — local PKCE pairing helper for "
-            "LaLiga B2C authorization"
+            "LaLiga Fantasy Builder — local PKCE pairing helper for " "LaLiga B2C authorization"
         ),
     )
     parser.add_argument("--pairing", required=True, help="Pairing ID from the BFF")
@@ -138,9 +137,7 @@ def main(argv: list[str] | None = None) -> int:
         "refresh_token_expires_in": bundle.refresh_token_expires_in,
     }
 
-    complete_url = (
-        f"{args.api_base.rstrip('/')}/laliga/pairings/{args.pairing}/complete"
-    )
+    complete_url = f"{args.api_base.rstrip('/')}/laliga/pairings/{args.pairing}/complete"
     payload = {"secret": args.secret, "token_response": token_response}
     with httpx.Client(timeout=30.0) as client:
         response = client.post(complete_url, json=payload)

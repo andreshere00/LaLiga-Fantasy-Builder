@@ -6,9 +6,9 @@ from fastapi import APIRouter, Header, Request
 from pydantic import BaseModel, Field
 
 from fantasy_auth.api.deps import (
+    get_container,
     require_internal_user,
     require_service_token,
-    get_container,
 )
 
 router = APIRouter(tags=["internal"])
@@ -44,7 +44,5 @@ async def get_laliga_bearer(
     del request
     require_service_token(x_service_token)
     user = await require_internal_user(authorization)
-    bearer, expires_at = await get_container().credentials.get_valid_bearer(
-        user.user_id
-    )
+    bearer, expires_at = await get_container().credentials.get_valid_bearer(user.user_id)
     return LaligaBearerResponse(bearer_token=bearer, expires_at=expires_at)

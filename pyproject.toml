@@ -15,6 +15,83 @@ dev = [
     "black>=26.5.1",
     "mypy>=2.3.1",
     "poethepoet>=0.48.0",
+    "pre-commit>=4.6.2",
     "pytest>=9.1.1",
+    "pytest-cov>=7.1.0",
     "ruff>=0.16.7",
 ]
+
+[tool.black]
+line-length = 100
+target-version = ["py314"]
+
+[tool.ruff]
+line-length = 100
+target-version = "py314"
+src = ["backend", "main.py"]
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "UP", "B"]
+
+[tool.coverage.run]
+branch = true
+source = ["src"]
+
+[tool.coverage.report]
+show_missing = true
+skip_empty = true
+
+[tool.basedpyright]
+executionEnvironments = [
+    {
+        root = "backend/api",
+        extraPaths = ["src"],
+        venvPath = "backend/api",
+        venv = ".venv",
+        pythonVersion = "3.14",
+    },
+    {
+        root = "backend/auth",
+        extraPaths = ["src"],
+        venvPath = "backend/auth",
+        venv = ".venv",
+        pythonVersion = "3.12",
+    },
+]
+
+[tool.poe.tasks.install]
+help = "Install root and backend deps, then enable git pre-commit hooks"
+shell = """
+uv sync --group dev
+uv sync --directory backend/auth --group dev
+uv sync --directory backend/api --group dev
+uv run pre-commit install
+"""
+
+[tool.poe.tasks.lint]
+help = "Lint Python sources with ruff"
+cmd = "ruff check backend main.py"
+
+[tool.poe.tasks.format]
+help = "Format Python sources with black"
+cmd = "black backend main.py"
+
+[tool.poe.tasks.test]
+help = "Run backend tests with coverage (fail under 90%)"
+sequence = ["_test-auth", "_test-api"]
+
+[tool.poe.tasks._test-auth]
+cmd = """
+uv run --directory backend/auth pytest
+  --cov=src
+  --cov-report=term-missing
+  --cov-fail-under=90
+"""
+
+[tool.poe.tasks._test-api]
+cmd = """
+uv run --directory backend/api pytest
+  --cov=src
+  --cov-report=term-missing
+  --cov-fail-under=90
+"""

@@ -1,0 +1,28 @@
+# Pre-commit hooks for linting, formatting, and coverage-gated tests.
+# Install once with: uv run poe install  (or: uv run pre-commit install)
+default_language_version:
+  python: python3.14
+
+repos:
+  - repo: local
+    hooks:
+      - id: lint
+        name: lint (ruff)
+        entry: uv run ruff check --fix backend main.py
+        language: system
+        pass_filenames: false
+        types: [python]
+
+      - id: format
+        name: format (black)
+        entry: uv run poe format
+        language: system
+        pass_filenames: false
+        types: [python]
+
+      - id: test
+        name: test (pytest, ≥90% coverage)
+        entry: uv run poe test
+        language: system
+        pass_filenames: false
+        types: [python]

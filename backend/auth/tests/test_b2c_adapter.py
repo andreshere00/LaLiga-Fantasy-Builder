@@ -6,19 +6,14 @@ from urllib.parse import parse_qs, urlparse
 
 import httpx
 import pytest
-
 from fantasy_auth.adapters.b2c_httpx import HttpxB2CClient
 from fantasy_auth.adapters.pkce import generate_verifier, s256_challenge
 from fantasy_auth.domain.errors import InvalidGrant, ProviderError
 
 CLIENT_ID = "af88bcff-1157-40a0-b579-030728aacf0b"
 POLICY = "B2C_1A_5ULAIP_PARAMETRIZED_SIGNIN"
-TOKEN_URL = (
-    "https://login.laliga.es/laligadspprob2c.onmicrosoft.com/oauth2/v2.0/token"
-)
-AUTHORIZE_URL = (
-    "https://login.laliga.es/laligadspprob2c.onmicrosoft.com/oauth2/v2.0/authorize"
-)
+TOKEN_URL = "https://login.laliga.es/laligadspprob2c.onmicrosoft.com/oauth2/v2.0/token"
+AUTHORIZE_URL = "https://login.laliga.es/laligadspprob2c.onmicrosoft.com/oauth2/v2.0/authorize"
 NOW = 1_700_000_000
 
 

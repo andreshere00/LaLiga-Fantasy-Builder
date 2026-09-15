@@ -91,12 +91,8 @@ class Settings(BaseSettings):
     app_oidc_authorize_url: str = (
         "https://idp.example.com/realms/fantasy/protocol/openid-connect/auth"
     )
-    app_oidc_token_url: str = (
-        "https://idp.example.com/realms/fantasy/protocol/openid-connect/token"
-    )
-    app_oidc_jwks_url: str = (
-        "https://idp.example.com/realms/fantasy/protocol/openid-connect/certs"
-    )
+    app_oidc_token_url: str = "https://idp.example.com/realms/fantasy/protocol/openid-connect/token"
+    app_oidc_jwks_url: str = "https://idp.example.com/realms/fantasy/protocol/openid-connect/certs"
 
     # LaLiga B2C
     laliga_client_id: str = "af88bcff-1157-40a0-b579-030728aacf0b"
@@ -104,9 +100,7 @@ class Settings(BaseSettings):
     laliga_base_url: str = (
         "https://login.laliga.es/laligadspprob2c.onmicrosoft.com/oauth2/v2.0/token"
     )
-    laliga_issuer: str = (
-        "https://login.laliga.es/335316eb-f606-4361-bb86-35a7edcdcec1/v2.0/"
-    )
+    laliga_issuer: str = "https://login.laliga.es/335316eb-f606-4361-bb86-35a7edcdcec1/v2.0/"
     laliga_redirect_uri: str = "authredirect://com.lfp.laligafantasy"
     laliga_fantasy_origin: str = "https://fantasy-api.llt-services.com"
     laliga_allow_id_token_fallback: bool = False

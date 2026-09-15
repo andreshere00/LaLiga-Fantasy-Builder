@@ -3,13 +3,13 @@
 from __future__ import annotations
 
 import time
+from dataclasses import replace
 from typing import Any
 
 import jwt
 import pytest
 from cryptography.hazmat.primitives import serialization
 from cryptography.hazmat.primitives.asymmetric import rsa
-
 from fantasy_auth.adapters.jwks import StaticJwksValidator
 from fantasy_auth.adapters.memory import (
     FixedClock,
@@ -19,8 +19,14 @@ from fantasy_auth.adapters.memory import (
 from fantasy_auth.adapters.vault_aesgcm import AesGcmTokenVault
 from fantasy_auth.application.credentials import CredentialProvider
 from fantasy_auth.application.pairing import PairingService
-from fantasy_auth.domain.errors import NeedsReauth, PairingError, ValidationError
+from fantasy_auth.domain.errors import (
+    NeedsReauth,
+    OwnershipError,
+    PairingError,
+    ValidationError,
+)
 from fantasy_auth.domain.tokens import TokenBundle
+from fantasy_auth.ports.repos import ConnectionRecord
 
 ISSUER = "https://login.laliga.es/335316eb-f606-4361-bb86-35a7edcdcec1/v2.0/"
 CLIENT_ID = "af88bcff-1157-40a0-b579-030728aacf0b"
@@ -427,6 +433,231 @@ async def test_credential_provider_marks_needs_reauth_on_invalid_grant(
     stored = await connections.get("u1")
     assert stored is not None
     assert stored.needs_reauth is True
+
+
+@pytest.mark.asyncio
+async def test_get_valid_bearer_needs_reauth_already_true_raises(
+    rsa_keys: tuple[bytes, bytes],
+) -> None:
+    # Arrange
+    private_pem, public_pem = rsa_keys
+    service, _p, connections, vault = build_pairing_service(
+        private_pem=private_pem,
+        public_pem=public_pem,
+    )
+    created = await service.create_pairing("u1")
+    id_token = mint_token(private_pem, nonce=created.nonce)
+    await service.complete_pairing(
+        pairing_id=created.pairing_id,
+        secret=created.secret,
+        token_response={
+            "access_token": "a",
+            "id_token": id_token,
+            "refresh_token": "r",
+            "expires_in": 3600,
+        },
+    )
+    stored = await connections.get("u1")
+    assert stored is not None
+    await connections.save(replace(stored, needs_reauth=True))
+    provider = CredentialProvider(
+        connections=connections,
+        vault=vault,
+        b2c=FakeB2C(),
+        clock=FixedClock(NOW),
+        refresh_skew_seconds=60,
+    )
+
+    # Act / Assert
+    with pytest.raises(NeedsReauth):
+        await provider.get_valid_bearer_token("u1")
+
+
+@pytest.mark.asyncio
+async def test_retry_after_unauthorized_forces_refresh(
+    rsa_keys: tuple[bytes, bytes],
+) -> None:
+    # Arrange
+    private_pem, public_pem = rsa_keys
+    service, _p, connections, vault = build_pairing_service(
+        private_pem=private_pem,
+        public_pem=public_pem,
+    )
+    created = await service.create_pairing("u1")
+    id_token = mint_token(private_pem, nonce=created.nonce)
+    await service.complete_pairing(
+        pairing_id=created.pairing_id,
+        secret=created.secret,
+        token_response={
+            "access_token": "still-valid",
+            "id_token": id_token,
+            "refresh_token": "r",
+            "expires_in": 3600,
+        },
+    )
+    b2c = FakeB2C()
+    provider = CredentialProvider(
+        connections=connections,
+        vault=vault,
+        b2c=b2c,
+        clock=FixedClock(NOW),
+        refresh_skew_seconds=60,
+    )
+
+    # Act
+    bearer = await provider.retry_after_unauthorized("u1")
+
+    # Assert
+    assert bearer == "refreshed-id"
+    assert b2c.calls == 1
+
+
+@pytest.mark.asyncio
+async def test_refresh_lock_not_acquired_raises_refresh_in_progress(
+    rsa_keys: tuple[bytes, bytes],
+) -> None:
+    # Arrange
+    private_pem, public_pem = rsa_keys
+    clock = FixedClock(NOW)
+    service, _p, connections, vault = build_pairing_service(
+        private_pem=private_pem,
+        public_pem=public_pem,
+        clock=clock,
+    )
+    created = await service.create_pairing("u1")
+    id_token = mint_token(private_pem, nonce=created.nonce)
+    await service.complete_pairing(
+        pairing_id=created.pairing_id,
+        secret=created.secret,
+        token_response={
+            "access_token": "old",
+            "id_token": id_token,
+            "refresh_token": "r",
+            "expires_in": 10,
+        },
+    )
+
+    class HeldLock:
+        async def acquire(self, user_id: str, *, ttl_seconds: int = 30) -> bool:
+            del user_id, ttl_seconds
+            return False
+
+        async def release(self, user_id: str) -> None:
+            del user_id
+
+    b2c = FakeB2C()
+    provider = CredentialProvider(
+        connections=connections,
+        vault=vault,
+        b2c=b2c,
+        clock=clock,
+        refresh_skew_seconds=60,
+        refresh_lock=HeldLock(),  # type: ignore[arg-type]
+    )
+
+    # Act / Assert
+    with pytest.raises(NeedsReauth) as exc:
+        await provider.get_valid_bearer_token("u1")
+    assert "refresh_in_progress" in str(exc.value)
+    assert b2c.calls == 0
+
+
+@pytest.mark.asyncio
+async def test_refresh_without_refresh_token_marks_needs_reauth(
+    rsa_keys: tuple[bytes, bytes],
+) -> None:
+    # Arrange
+    private_pem, public_pem = rsa_keys
+    clock = FixedClock(NOW)
+    service, _p, connections, vault = build_pairing_service(
+        private_pem=private_pem,
+        public_pem=public_pem,
+        clock=clock,
+    )
+    created = await service.create_pairing("u1")
+    id_token = mint_token(private_pem, nonce=created.nonce)
+    await service.complete_pairing(
+        pairing_id=created.pairing_id,
+        secret=created.secret,
+        token_response={
+            "access_token": "old",
+            "id_token": id_token,
+            "refresh_token": "r",
+            "expires_in": 10,
+        },
+    )
+    stored = await connections.get("u1")
+    assert stored is not None
+    sealed = vault.seal(
+        TokenBundle(
+            access_token="old",
+            id_token=id_token,
+            refresh_token=None,
+            expires_on=NOW + 10,
+            expires_in=10,
+            client_id=CLIENT_ID,
+            policy=POLICY,
+            scope=SCOPE,
+        )
+    )
+    await connections.save(replace(stored, sealed_blob=sealed))
+    b2c = FakeB2C()
+    provider = CredentialProvider(
+        connections=connections,
+        vault=vault,
+        b2c=b2c,
+        clock=clock,
+        refresh_skew_seconds=60,
+    )
+
+    # Act / Assert
+    with pytest.raises(NeedsReauth):
+        await provider.get_valid_bearer_token("u1")
+    updated = await connections.get("u1")
+    assert updated is not None
+    assert updated.needs_reauth is True
+    assert b2c.calls == 0
+
+
+@pytest.mark.asyncio
+async def test_get_valid_bearer_ownership_mismatch_raises(
+    rsa_keys: tuple[bytes, bytes],
+) -> None:
+    # Arrange
+    _private_pem, public_pem = rsa_keys
+    _service, _p, connections, vault = build_pairing_service(
+        private_pem=_private_pem,
+        public_pem=public_pem,
+    )
+    sealed = vault.seal(
+        TokenBundle(
+            access_token="a",
+            expires_on=NOW + 3600,
+            expires_in=3600,
+            client_id=CLIENT_ID,
+            policy=POLICY,
+            scope=SCOPE,
+            refresh_token="r",
+        )
+    )
+    connections._connections["u1"] = ConnectionRecord(  # noqa: SLF001
+        user_id="other-user",
+        sealed_blob=sealed,
+        policy=POLICY,
+        client_id=CLIENT_ID,
+        scope=SCOPE,
+    )
+    provider = CredentialProvider(
+        connections=connections,
+        vault=vault,
+        b2c=FakeB2C(),
+        clock=FixedClock(NOW),
+        refresh_skew_seconds=60,
+    )
+
+    # Act / Assert
+    with pytest.raises(OwnershipError):
+        await provider.get_valid_bearer_token("u1")
 
 
 # ---- Edge cases ---- #

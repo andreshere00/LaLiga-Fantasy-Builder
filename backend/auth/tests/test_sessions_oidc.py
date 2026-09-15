@@ -3,18 +3,19 @@
 from __future__ import annotations
 
 import time
+from dataclasses import replace
 from typing import Any
 
 import jwt
 import pytest
 from cryptography.hazmat.primitives import serialization
 from cryptography.hazmat.primitives.asymmetric import rsa
-
 from fantasy_auth.adapters.jwks import StaticAppOidcValidator
 from fantasy_auth.adapters.memory import FixedClock, MemorySessionStore
 from fantasy_auth.application.sessions import SessionService
-from fantasy_auth.domain.errors import ValidationError
+from fantasy_auth.domain.errors import SessionError, ValidationError
 from fantasy_auth.domain.users import AppUser
+from fantasy_auth.ports.repos import SessionRecord
 
 ISSUER = "http://localhost:8080/realms/fantasy-builder"
 CLIENT_ID = "laliga-fantasy-builder"
@@ -291,3 +292,184 @@ async def test_complete_login_rejects_missing_id_token(
             state=session.oidc_state or "",
         )
     assert exc.value.category == "missing_id_token"
+
+
+@pytest.mark.asyncio
+async def test_complete_login_rejects_state_mismatch(
+    rsa_keys: tuple[bytes, bytes],
+) -> None:
+    # Arrange
+    _private_pem, public_pem = rsa_keys
+    service, store = build_session_service(public_pem=public_pem)
+    start = await service.start_login()
+    session = await store.get(start.session_id)
+    assert session is not None
+
+    # Act / Assert
+    with pytest.raises(SessionError, match="state mismatch"):
+        await service.complete_login(
+            session_id=start.session_id,
+            code="unused",
+            state="wrong-state",
+        )
+
+
+@pytest.mark.asyncio
+async def test_complete_login_rejects_missing_verifier(
+    rsa_keys: tuple[bytes, bytes],
+) -> None:
+    # Arrange
+    _private_pem, public_pem = rsa_keys
+    service, store = build_session_service(public_pem=public_pem)
+    start = await service.start_login()
+    session = await store.get(start.session_id)
+    assert session is not None
+    await store.save(replace(session, oidc_code_verifier=None))
+
+    # Act / Assert
+    with pytest.raises(SessionError, match="missing code_verifier"):
+        await service.complete_login(
+            session_id=start.session_id,
+            code="unused",
+            state=session.oidc_state or "",
+        )
+
+
+@pytest.mark.asyncio
+async def test_get_me_returns_authenticated_view(
+    rsa_keys: tuple[bytes, bytes],
+) -> None:
+    # Arrange
+    private_pem, public_pem = rsa_keys
+    service, store = build_session_service(public_pem=public_pem)
+    start = await service.start_login()
+    session = await store.get(start.session_id)
+    assert session is not None
+    id_token = mint_id_token(private_pem, nonce=session.oidc_nonce)
+    view = await service.complete_login(
+        session_id=start.session_id,
+        code=id_token,
+        state=session.oidc_state or "",
+    )
+
+    # Act
+    me = await service.get_me(start.session_id)
+
+    # Assert
+    assert me.user == view.user
+    assert me.csrf_token == view.csrf_token
+
+
+@pytest.mark.asyncio
+async def test_get_me_expired_session_raises(
+    rsa_keys: tuple[bytes, bytes],
+) -> None:
+    # Arrange
+    private_pem, public_pem = rsa_keys
+    clock = FixedClock(NOW)
+    service, store = build_session_service(public_pem=public_pem, clock=clock)
+    start = await service.start_login()
+    session = await store.get(start.session_id)
+    assert session is not None
+    id_token = mint_id_token(private_pem, nonce=session.oidc_nonce)
+    await service.complete_login(
+        session_id=start.session_id,
+        code=id_token,
+        state=session.oidc_state or "",
+    )
+    clock.advance(3601)
+
+    # Act / Assert
+    with pytest.raises(SessionError, match="session expired"):
+        await service.get_me(start.session_id)
+    assert await store.get(start.session_id) is None
+
+
+@pytest.mark.asyncio
+async def test_complete_login_no_validator_raises_misconfigured(
+    rsa_keys: tuple[bytes, bytes],
+) -> None:
+    # Arrange
+    _private_pem, _public_pem = rsa_keys
+    clock = FixedClock(NOW)
+    store = MemorySessionStore()
+
+    async def exchanger(code: str, _verifier: str) -> dict[str, Any]:
+        return {"id_token": code, "access_token": "unused"}
+
+    service = SessionService(
+        sessions=store,
+        clock=clock,
+        session_ttl_seconds=3600,
+        authorize_url="http://idp/auth",
+        token_url="http://idp/token",
+        client_id=CLIENT_ID,
+        client_secret="",
+        redirect_uri="http://localhost:8000/auth/callback",
+        issuer=ISSUER,
+        oidc_validator=None,
+        token_exchanger=exchanger,
+    )
+    start = await service.start_login()
+    session = await store.get(start.session_id)
+    assert session is not None
+
+    # Act / Assert
+    with pytest.raises(ValidationError) as exc:
+        await service.complete_login(
+            session_id=start.session_id,
+            code="any-token",
+            state=session.oidc_state or "",
+        )
+    assert exc.value.category == "oidc_misconfigured"
+
+
+# ---- Edge cases ---- #
+
+
+@pytest.mark.asyncio
+async def test_logout_deletes_session(rsa_keys: tuple[bytes, bytes]) -> None:
+    # Arrange
+    private_pem, public_pem = rsa_keys
+    service, store = build_session_service(public_pem=public_pem)
+    start = await service.start_login()
+    session = await store.get(start.session_id)
+    assert session is not None
+    id_token = mint_id_token(private_pem, nonce=session.oidc_nonce)
+    await service.complete_login(
+        session_id=start.session_id,
+        code=id_token,
+        state=session.oidc_state or "",
+    )
+
+    # Act
+    await service.logout(start.session_id)
+
+    # Assert
+    assert await store.get(start.session_id) is None
+
+
+@pytest.mark.asyncio
+async def test_require_user_returns_bound_user(
+    rsa_keys: tuple[bytes, bytes],
+) -> None:
+    # Arrange
+    private_pem, public_pem = rsa_keys
+    service, store = build_session_service(public_pem=public_pem)
+    start = await service.start_login()
+    session = await store.get(start.session_id)
+    assert session is not None
+    id_token = mint_id_token(private_pem, nonce=session.oidc_nonce)
+    await service.complete_login(
+        session_id=start.session_id,
+        code=id_token,
+        state=session.oidc_state or "",
+    )
+
+    # Act
+    user, record = await service.require_user(start.session_id)
+
+    # Assert
+    assert user.user_id == "app-user-1"
+    assert record.session_id == start.session_id
+    assert isinstance(record, SessionRecord)

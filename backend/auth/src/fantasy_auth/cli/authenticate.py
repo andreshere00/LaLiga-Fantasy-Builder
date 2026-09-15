@@ -220,9 +220,7 @@ def _run(command: list[str], *, cwd: Path) -> None:
     try:
         subprocess.run(command, cwd=cwd, check=True)
     except subprocess.CalledProcessError as exc:
-        raise SetupError(
-            f"command failed ({exc.returncode}): {' '.join(command)}"
-        ) from exc
+        raise SetupError(f"command failed ({exc.returncode}): {' '.join(command)}") from exc
 
 
 def _start_auth_server(
@@ -239,9 +237,7 @@ def _start_auth_server(
         {
             "USE_MEMORY_STORE": "true",
             "COOKIE_SECURE": "false",
-            "TOKEN_VAULT_KEY_BASE64": base64.b64encode(
-                secrets.token_bytes(32)
-            ).decode(),
+            "TOKEN_VAULT_KEY_BASE64": base64.b64encode(secrets.token_bytes(32)).decode(),
         }
     )
     print(f"Starting local auth service on port {port}...", file=sys.stderr)
@@ -285,9 +281,7 @@ def _wait_for_health(
     deadline = time.monotonic() + timeout_seconds
     while time.monotonic() < deadline:
         if process.poll() is not None:
-            raise SetupError(
-                f"auth server exited before becoming healthy ({process.returncode})"
-            )
+            raise SetupError(f"auth server exited before becoming healthy ({process.returncode})")
         if _is_healthy(api_base):
             return
         time.sleep(0.25)

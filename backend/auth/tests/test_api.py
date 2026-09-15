@@ -5,12 +5,11 @@ from __future__ import annotations
 import asyncio
 import base64
 import time
+from collections.abc import Iterator
 from dataclasses import replace
-from typing import Any, Iterator
+from typing import Any
 
 import pytest
-from fastapi.testclient import TestClient
-
 from fantasy_auth.adapters.internal_jwt import Rs256InternalJwt, generate_dev_rsa_keypair
 from fantasy_auth.adapters.memory import (
     FixedClock,
@@ -30,6 +29,7 @@ from fantasy_auth.config import Settings
 from fantasy_auth.domain.users import AppUser
 from fantasy_auth.main import create_app
 from fantasy_auth.ports.repos import SessionRecord
+from fastapi.testclient import TestClient
 
 NOW = int(time.time())
 ORIGIN = "http://localhost:3000"

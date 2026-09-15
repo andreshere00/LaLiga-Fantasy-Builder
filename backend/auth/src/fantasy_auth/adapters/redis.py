@@ -97,9 +97,7 @@ class RedisRefreshLock:
             await self._redis.delete(self._key(user_id))
             return
         current = await self._redis.get(self._key(user_id))
-        if current == token or (
-            isinstance(current, bytes) and current.decode() == token
-        ):
+        if current == token or (isinstance(current, bytes) and current.decode() == token):
             await self._redis.delete(self._key(user_id))
 
 

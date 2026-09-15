@@ -29,17 +29,14 @@ async def apply_migrations(pool: asyncpg.Pool) -> list[str]:
             if not locked:
                 return applied
 
-            await conn.execute(
-                """
+            await conn.execute("""
                 CREATE TABLE IF NOT EXISTS schema_migrations (
                     version TEXT PRIMARY KEY,
                     applied_at TIMESTAMPTZ NOT NULL DEFAULT now()
                 )
-                """
-            )
+                """)
             existing = {
-                row["version"]
-                for row in await conn.fetch("SELECT version FROM schema_migrations")
+                row["version"] for row in await conn.fetch("SELECT version FROM schema_migrations")
             }
             for path in sorted(MIGRATIONS_DIR.glob("*.sql")):
                 version = path.name

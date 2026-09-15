@@ -2,8 +2,9 @@
 
 from __future__ import annotations
 
+from collections.abc import Mapping
 from dataclasses import dataclass, replace
-from typing import Any, Mapping
+from typing import Any
 from uuid import uuid4
 
 import httpx
@@ -260,9 +261,7 @@ class SessionService:
         async with httpx.AsyncClient(timeout=30.0) as client:
             response = await client.post(self._token_url, data=data)
         if not response.is_success:
-            raise ValidationError(
-                f"app idp token exchange failed: {response.status_code}"
-            )
+            raise ValidationError(f"app idp token exchange failed: {response.status_code}")
         return response.json()
 
     async def _user_from_validated_id_token(

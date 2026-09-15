@@ -29,8 +29,7 @@ def main(argv: list[str] | None = None) -> int:
     """
     parser = argparse.ArgumentParser(
         description=(
-            "LaLiga Fantasy Builder — create pairing and complete LaLiga PKCE "
-            "in one command"
+            "LaLiga Fantasy Builder — create pairing and complete LaLiga PKCE " "in one command"
         ),
     )
     parser.add_argument(
@@ -91,8 +90,7 @@ def main(argv: list[str] | None = None) -> int:
         return 1
 
     print(
-        f"Pairing created: {pairing['pairing_id']} "
-        f"(expires_at={pairing['expires_at']})",
+        f"Pairing created: {pairing['pairing_id']} " f"(expires_at={pairing['expires_at']})",
         file=sys.stderr,
     )
 

@@ -62,9 +62,7 @@ def configure_logging(settings: Settings) -> None:
     if settings.log_json:
         handler.setFormatter(JsonFormatter())
     else:
-        handler.setFormatter(
-            logging.Formatter("%(levelname)s %(name)s %(message)s")
-        )
+        handler.setFormatter(logging.Formatter("%(levelname)s %(name)s %(message)s"))
     root.addHandler(handler)
     root.setLevel(settings.log_level.upper())
 

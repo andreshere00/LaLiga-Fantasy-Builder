@@ -2,14 +2,20 @@
 
 from __future__ import annotations
 
+from collections.abc import AsyncIterator
 from contextlib import asynccontextmanager
-from typing import Any, AsyncIterator
+from typing import Any
 
 from fastapi import FastAPI, Request
 from fastapi.responses import JSONResponse
 
 from fantasy_auth.api import auth, internal_auth, internal_credentials, pairings
-from fantasy_auth.api.deps import AppContainer, build_container, set_container
+from fantasy_auth.api.deps import (
+    AppContainer,
+    build_container,
+    get_container,
+    set_container,
+)
 from fantasy_auth.api.middleware import (
     RedactedAccessLogMiddleware,
     SecurityHeadersMiddleware,

@@ -183,10 +183,7 @@ class B2CJwksValidator:
         Returns:
             Discovery endpoint URL.
         """
-        return (
-            f"{self._discovery_base}/v2.0/.well-known/openid-configuration"
-            f"?p={policy}"
-        )
+        return f"{self._discovery_base}/v2.0/.well-known/openid-configuration" f"?p={policy}"
 
     def _get_jwks_client(self, policy: str) -> PyJWKClient:
         if policy not in self._jwks_clients:
