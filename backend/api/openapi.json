@@ -480,10 +480,10 @@
             "required": true,
             "schema": {
               "type": "integer",
-              "description": "Matchweek number (última jornada when known).",
+              "description": "Matchweek number.",
               "title": "Week"
             },
-            "description": "Matchweek number (última jornada when known)."
+            "description": "Matchweek number."
           },
           {
             "name": "authorization",

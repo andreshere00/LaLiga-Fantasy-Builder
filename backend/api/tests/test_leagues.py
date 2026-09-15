@@ -48,17 +48,24 @@ def rsa_pems() -> tuple[str, str]:
     return private_pem, public_pem
 
 
-def mint_internal_jwt(private_pem: str, *, sub: str = "app-user-1") -> str:
+def mint_internal_jwt(
+    private_pem: str,
+    *,
+    sub: str = "app-user-1",
+    issuer: str = ISSUER,
+    audience: str = AUDIENCE,
+    ttl_seconds: int = 300,
+) -> str:
     now = int(time.time())
     return jwt.encode(
         {
             "sub": sub,
             "email": "u@example.com",
             "name": "User",
-            "iss": ISSUER,
-            "aud": AUDIENCE,
+            "iss": issuer,
+            "aud": audience,
             "iat": now,
-            "exp": now + 300,
+            "exp": now + ttl_seconds,
         },
         private_pem,
         algorithm="RS256",
@@ -589,3 +596,43 @@ def test_standing_route_rejects_invalid_jwt(
     # Assert
     assert response.status_code == 401
     assert response.json()["error"] == "unauthorized"
+
+
+@pytest.mark.parametrize(
+    ("issuer", "audience", "ttl_seconds"),
+    [
+        (ISSUER, AUDIENCE, -60),
+        ("https://wrong-issuer.example", AUDIENCE, 300),
+        (ISSUER, "not-fantasy-api", 300),
+    ],
+    ids=["expired", "wrong_issuer", "wrong_audience"],
+)
+def test_list_leagues_rejects_jwt_with_invalid_standard_claims(
+    rsa_pems: tuple[str, str],
+    issuer: str,
+    audience: str,
+    ttl_seconds: int,
+) -> None:
+    # Arrange
+    private_pem, public_pem = rsa_pems
+    token = mint_internal_jwt(
+        private_pem,
+        issuer=issuer,
+        audience=audience,
+        ttl_seconds=ttl_seconds,
+    )
+
+    def fantasy_handler(_request: httpx.Request) -> httpx.Response:
+        return httpx.Response(200, json=[])
+
+    with make_client(public_pem, fantasy_handler) as client:
+        # Act
+        response = client.get(
+            "/leagues",
+            headers={"Authorization": f"Bearer {token}"},
+        )
+
+    # Assert
+    assert response.status_code == 401
+    assert response.json()["error"] == "unauthorized"
+    assert LALIGA_BEARER not in response.text

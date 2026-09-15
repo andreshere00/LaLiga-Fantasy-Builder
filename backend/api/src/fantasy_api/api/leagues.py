@@ -119,7 +119,7 @@ async def get_standing(
 )
 async def get_standing_by_week(
     league_id: str = Path(description="Fantasy league identifier."),
-    week: int = Path(description="Matchweek number (última jornada when known)."),
+    week: int = Path(description="Matchweek number."),
     authorization: str | None = Header(
         default=None,
         description="Bearer internal JWT issued by auth ``POST /auth/token``.",

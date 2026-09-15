@@ -48,6 +48,13 @@ def test_build_openapi_schema_includes_documented_paths() -> None:
     assert "Args:" not in leagues_description
     assert "Returns:" not in leagues_description
     assert "503" in paths["/leagues"]["get"]["responses"]
+    week_param = next(
+        param
+        for param in paths["/leagues/{league_id}/standing/{week}"]["get"]["parameters"]
+        if param["name"] == "week"
+    )
+    assert week_param["description"] == "Matchweek number."
+    assert "última jornada" not in week_param["description"]
 
 
 def test_generate_openapi_writes_file(tmp_path: Path) -> None:
