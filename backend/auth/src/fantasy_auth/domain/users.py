@@ -2,8 +2,9 @@
 
 from __future__ import annotations
 
+from collections.abc import Mapping
 from dataclasses import dataclass, replace
-from typing import Any, Mapping
+from typing import Any
 
 
 @dataclass(frozen=True, slots=True)
@@ -73,6 +74,28 @@ class ConnectionStatus:
     manager_name: str | None = None
 
 
+def extract_app_user_from_claims(claims: Mapping[str, Any]) -> AppUser:
+    """Map validated app IdP claims to an ``AppUser``.
+
+    Args:
+        claims: Decoded and verified JWT payload.
+
+    Returns:
+        Application user identity.
+
+    Raises:
+        ValueError: When ``sub`` is missing.
+    """
+    sub = claims.get("sub")
+    if not sub:
+        raise ValueError("id_token missing sub")
+    return AppUser(
+        user_id=str(sub),
+        email=str(claims["email"]) if claims.get("email") else None,
+        name=str(claims["name"]) if claims.get("name") else None,
+    )
+
+
 def extract_user_from_claims(claims: Mapping[str, Any]) -> LaligaUser:
     """Map validated JWT claims to a ``LaligaUser``.
 
@@ -111,11 +134,7 @@ def merge_jwt_with_profile(
     Returns:
         Merged LaLiga user with Fantasy profile fields.
     """
-    manager_id = (
-        api_user.get("id")
-        or api_user.get("userId")
-        or api_user.get("managerId")
-    )
+    manager_id = api_user.get("id") or api_user.get("userId") or api_user.get("managerId")
     username = (
         api_user.get("username")
         or api_user.get("managerName")
@@ -147,18 +166,10 @@ def merge_jwt_with_profile(
             if (api_user.get("avatar") or api_user.get("profileImage"))
             else jwt_user.avatar
         ),
-        email=jwt_user.email or (
-            str(api_user["email"]) if api_user.get("email") else None
-        ),
-        name=(
-            str(manager_name)
-            if manager_name
-            else jwt_user.name
-        ),
-        given_name=jwt_user.given_name or (
-            str(api_user["firstName"]) if api_user.get("firstName") else None
-        ),
-        family_name=jwt_user.family_name or (
-            str(api_user["lastName"]) if api_user.get("lastName") else None
-        ),
+        email=jwt_user.email or (str(api_user["email"]) if api_user.get("email") else None),
+        name=(str(manager_name) if manager_name else jwt_user.name),
+        given_name=jwt_user.given_name
+        or (str(api_user["firstName"]) if api_user.get("firstName") else None),
+        family_name=jwt_user.family_name
+        or (str(api_user["lastName"]) if api_user.get("lastName") else None),
     )

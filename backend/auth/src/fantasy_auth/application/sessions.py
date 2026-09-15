@@ -2,15 +2,17 @@
 
 from __future__ import annotations
 
+from collections.abc import Mapping
 from dataclasses import dataclass, replace
-from typing import Any, Mapping
+from typing import Any
 from uuid import uuid4
 
 import httpx
 
 from fantasy_auth.adapters.pkce import generate_state, generate_verifier, s256_challenge
 from fantasy_auth.domain.errors import SessionError, ValidationError
-from fantasy_auth.domain.users import AppUser
+from fantasy_auth.domain.users import AppUser, extract_app_user_from_claims
+from fantasy_auth.ports.identity import AppOidcValidator
 from fantasy_auth.ports.repos import Clock, SessionRecord, SessionStore
 
 
@@ -45,7 +47,7 @@ class SessionView:
 class SessionService:
     """Manage opaque app sessions backed by an external OIDC provider.
 
-    For hermetic tests, inject ``token_exchanger`` and ``claims_validator``
+    For hermetic tests, inject ``token_exchanger`` and ``claims_from_tokens``
     callables instead of hitting a real IdP.
 
     Args:
@@ -57,9 +59,10 @@ class SessionService:
         client_id: App OIDC client ID.
         client_secret: App OIDC client secret.
         redirect_uri: Registered callback.
-        issuer: Expected issuer (informational for fake mode).
+        issuer: Expected issuer.
+        oidc_validator: JWKS-backed ID token validator (required in production).
         token_exchanger: Optional async ``(code, verifier) -> token JSON``.
-        claims_from_tokens: Optional ``token JSON -> AppUser``.
+        claims_from_tokens: Optional ``token JSON -> AppUser`` (tests only).
     """
 
     def __init__(
@@ -74,6 +77,7 @@ class SessionService:
         client_secret: str,
         redirect_uri: str,
         issuer: str,
+        oidc_validator: AppOidcValidator | None = None,
         token_exchanger: Any = None,
         claims_from_tokens: Any = None,
     ) -> None:
@@ -86,6 +90,7 @@ class SessionService:
         self._client_secret = client_secret
         self._redirect_uri = redirect_uri
         self._issuer = issuer
+        self._oidc_validator = oidc_validator
         self._token_exchanger = token_exchanger
         self._claims_from_tokens = claims_from_tokens
 
@@ -168,7 +173,10 @@ class SessionService:
         if self._claims_from_tokens is not None:
             user = self._claims_from_tokens(tokens)
         else:
-            user = self._user_from_id_token(tokens)
+            user = await self._user_from_validated_id_token(
+                tokens,
+                nonce=session.oidc_nonce,
+            )
 
         now = self._clock.now()
         updated = replace(
@@ -253,41 +261,43 @@ class SessionService:
         async with httpx.AsyncClient(timeout=30.0) as client:
             response = await client.post(self._token_url, data=data)
         if not response.is_success:
-            raise ValidationError(
-                f"app idp token exchange failed: {response.status_code}"
-            )
+            raise ValidationError(f"app idp token exchange failed: {response.status_code}")
         return response.json()
 
-    def _user_from_id_token(self, tokens: Mapping[str, Any]) -> AppUser:
-        """Best-effort decode without signature check for placeholder IdP.
+    async def _user_from_validated_id_token(
+        self,
+        tokens: Mapping[str, Any],
+        *,
+        nonce: str | None,
+    ) -> AppUser:
+        """Validate the ID token against JWKS and extract the app user.
 
-        Production should validate against ``app_oidc_jwks_url``. Tests inject
-        ``claims_from_tokens`` instead.
+        Args:
+            tokens: Token endpoint JSON response.
+            nonce: Expected OIDC nonce from the pending session.
+
+        Returns:
+            Authenticated application user.
+
+        Raises:
+            ValidationError: Missing ID token or JWT validation failure.
         """
-        import base64
-        import json
-
+        if self._oidc_validator is None:
+            raise ValidationError(
+                "app OIDC validator not configured",
+                category="oidc_misconfigured",
+            )
         id_token = tokens.get("id_token")
         if not id_token or not isinstance(id_token, str):
-            sub = tokens.get("sub") or tokens.get("user_id")
-            if not sub:
-                raise ValidationError("missing id_token / sub")
-            return AppUser(
-                user_id=str(sub),
-                email=tokens.get("email"),
-                name=tokens.get("name"),
-            )
+            raise ValidationError("missing id_token", category="missing_id_token")
 
-        parts = id_token.split(".")
-        if len(parts) < 2:
-            raise ValidationError("malformed id_token")
-        padded = parts[1] + "=" * (-len(parts[1]) % 4)
-        payload = json.loads(base64.urlsafe_b64decode(padded))
-        sub = payload.get("sub")
-        if not sub:
-            raise ValidationError("id_token missing sub")
-        return AppUser(
-            user_id=str(sub),
-            email=payload.get("email"),
-            name=payload.get("name"),
+        claims = await self._oidc_validator.validate(
+            id_token,
+            audience=self._client_id,
+            issuer=self._issuer,
+            nonce=nonce,
         )
+        try:
+            return extract_app_user_from_claims(claims)
+        except ValueError as exc:
+            raise ValidationError(str(exc), category="jwt_invalid") from exc

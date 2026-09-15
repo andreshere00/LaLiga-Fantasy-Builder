@@ -5,11 +5,20 @@ Monorepo for **LaLiga Fantasy Builder** (`laliga_fantasy_builder`).
 Backend services are split so **auth can be deployed on its own**:
 
 - [`backend/auth/`](backend/auth/) — authentication / LaLiga pairing service (`fantasy_auth`)
-- [`backend/api/`](backend/api/) — *(future)* main application API
+- [`backend/api/`](backend/api/) — main application API (`fantasy_api`; internal JWT consumer)
 - [`frontend/`](frontend/) — Bun + TypeScript (reserved)
 - [`docker/`](docker/) — Keycloak realm import
 - [`assets/`](assets/) — public LALIGA snapshots / fixtures
 - [`cli/`](cli/) — helper notes (CLIs ship from `backend/auth` via uv)
+
+## Documentation
+
+- [`docs/authentication.md`](docs/authentication.md) — authentication flows
+  and security contract
+- [`docs/architecture.md`](docs/architecture.md) — services, trust boundaries,
+  persistence, and request flows
+- [`docs/developing-authenticated-endpoints.md`](docs/developing-authenticated-endpoints.md)
+  — patterns and tests for future endpoints
 
 ## Quick start (auth service)
 
@@ -32,6 +41,24 @@ Optional: build/run auth in Docker (`docker compose --profile full up --build`).
 
 ## Pair LaLiga
 
+Automated local setup and pairing:
+
+```bash
+./scripts/authenticate-laliga.sh
+```
+
+Equivalent CLI command from `backend/auth`:
+
+```bash
+uv run authenticate-laliga
+```
+
+Both commands start the local prerequisites, open application login, run the
+LaLiga PKCE helper, and verify the connection. Browser login and consent remain
+interactive; the CLI securely prompts for the session and CSRF cookie values.
+
+Manual pairing against an already-running auth service:
+
 ```bash
 export FANTASY_SESSION='…'
 export FANTASY_CSRF='…'
@@ -42,11 +69,15 @@ uv run pair-laliga
 ## Auth flows
 
 1. App login: `GET /auth/login` → IdP → `GET /auth/callback` sets
-   `HttpOnly; Secure; SameSite=Strict` session cookie plus CSRF token.
+   `HttpOnly; Secure; SameSite` (default `Lax`, configurable via
+   `COOKIE_SAMESITE`) session cookie plus CSRF token. App ID tokens are
+   verified against `APP_OIDC_JWKS_URL` (signature, iss, aud, exp, nonce).
 2. Pairing: `POST /laliga/pairings` (session + CSRF) returns one-time
    `{pairing_id, secret, nonce}` valid for 10 minutes.
 3. Helper / `pair-laliga`: PKCE against LaLiga B2C, then complete pairing.
 4. Backend verifies JWKS, confirms `GET /api/v4/user/me`, seals tokens (AES-GCM).
+5. Cross-service: browser `POST /auth/token` → internal JWT; Fantasy API verifies
+   JWKS and calls `GET /internal/laliga/bearer` with JWT + `X-Service-Token`.
 
 No LALIGA passwords or ROPC. Prefer `access_token`; `id_token` fallback via
 `LALIGA_ALLOW_ID_TOKEN_FALLBACK=true`.

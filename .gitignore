@@ -46,3 +46,7 @@ htmlcov/
 
 # Local secrets / one-off OAuth callbacks
 tmp/
+
+# Skills
+.cursor/
+.claude/

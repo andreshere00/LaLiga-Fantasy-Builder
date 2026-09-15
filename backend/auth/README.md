@@ -23,6 +23,12 @@ From repo root, Keycloak:
 docker compose up -d
 ```
 
+Production-like local stack (Postgres + Redis + auth + optional OTEL):
+
+```bash
+docker compose --profile full up --build
+```
+
 ## Docker
 
 ```bash
@@ -31,9 +37,34 @@ docker build -t laliga-fantasy-builder-auth -f backend/auth/Dockerfile backend/a
 docker run --rm -p 8000:8000 --env-file backend/auth/.env laliga-fantasy-builder-auth
 ```
 
-Or via compose service `auth` (see root `docker-compose.yml`).
-
 ## Pair LaLiga
+
+From the repository root, use the automated script:
+
+```bash
+./scripts/authenticate-laliga.sh
+```
+
+Or run its CLI directly:
+
+```bash
+cd backend/auth
+uv run authenticate-laliga
+```
+
+The command creates `.env` when missing, starts local Keycloak, synchronizes
+dependencies, starts auth when needed, opens application login, performs the
+LaLiga PKCE pairing, and verifies `/laliga/connection`.
+
+The browser login and consent screens cannot be safely automated. After app
+login, copy `fantasy_session` and `fantasy_csrf` from browser developer tools
+when prompted. Cookie values are read without terminal echo.
+
+When the command starts an in-memory auth server, it keeps that process alive
+after pairing so the connection remains available. Press `Ctrl+C` to stop it.
+Use `--no-keep-server` only when the connection is persisted elsewhere.
+
+To pair against an auth service that is already running:
 
 ```bash
 export FANTASY_SESSION='…'
@@ -41,6 +72,16 @@ export FANTASY_CSRF='…'
 cd backend/auth
 uv run pair-laliga
 ```
+
+## Health
+
+- `GET /health` / `GET /health/live` — process liveness
+- `GET /health/ready` — Postgres + Redis when `USE_MEMORY_STORE=false`
+- `GET /.well-known/jwks.json` — public keys for internal JWT verification
+- `POST /auth/token` — session+CSRF → short-lived internal JWT
+- `GET /internal/laliga/bearer` — private; JWT + `X-Service-Token` → LaLiga bearer
+
+`/internal/*` must not be exposed on the public internet.
 
 ## Tests
 

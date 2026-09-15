@@ -5,15 +5,13 @@ from __future__ import annotations
 from typing import Any
 
 import pytest
-
 from fantasy_auth.domain.tokens import (
+    TokenBundle,
     calculate_expiry,
     is_expired,
     merge_refresh,
     normalize_bundle,
-    TokenBundle,
 )
-
 
 NOW = 1_700_000_000
 CLIENT_ID = "af88bcff-1157-40a0-b579-030728aacf0b"

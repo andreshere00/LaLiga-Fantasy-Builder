@@ -2,9 +2,9 @@
 
 from __future__ import annotations
 
+from collections.abc import Mapping
 from dataclasses import dataclass, replace
-from typing import Any, Mapping
-
+from typing import Any
 
 DEFAULT_TTL_SECONDS = 86_400
 DEFAULT_REFRESH_SKEW_SECONDS = 60
@@ -157,9 +157,7 @@ def normalize_bundle(
         access_token=str(access),
         id_token=str(id_token) if id_token else None,
         refresh_token=(
-            str(token_or_data["refresh_token"])
-            if token_or_data.get("refresh_token")
-            else None
+            str(token_or_data["refresh_token"]) if token_or_data.get("refresh_token") else None
         ),
         token_type=str(token_or_data.get("token_type") or "Bearer"),
         expires_in=expires_in,
