@@ -116,7 +116,7 @@ class Settings(BaseSettings):
     # Cross-service internal JWT + service credential
     internal_jwt_issuer: str = "https://auth.fantasy-builder.local"
     internal_jwt_audience: str = "fantasy-api"
-    internal_jwt_ttl_seconds: int = 300
+    internal_jwt_ttl_seconds: int = 900
     internal_jwt_private_key_pem: str = ""
     internal_jwt_public_key_pem: str = ""
     internal_service_token: str = ""

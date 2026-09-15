@@ -1,0 +1,401 @@
+{
+  "leagues": [
+    {
+      "league_id": "string",
+      "league": {
+        "id": "string",
+        "access": "string",
+        "type": {
+          "id": "string",
+          "canBeDuplicated": "boolean",
+          "sponsorId": "integer",
+          "prizeInformation": {
+            "title": "string",
+            "description": "string"
+          }
+        },
+        "managersNumber": "integer",
+        "name": "string",
+        "config": {
+          "features": {
+            "buyoutClause": "boolean"
+          },
+          "premiumFeatures": {
+            "formations": "boolean",
+            "captain": "boolean",
+            "bench": "boolean",
+            "loan": "boolean",
+            "ideal": "boolean",
+            "coach": "boolean"
+          },
+          "premiumConfigurations": {
+            "loan": {
+              "duration": "integer",
+              "maxLoans": "integer",
+              "enableConclude": "boolean",
+              "minPercentage": "number"
+            },
+            "ideal": {
+              "reward": "integer"
+            }
+          }
+        },
+        "isDuplicated": "boolean",
+        "isSecondRound": "boolean",
+        "token": "string",
+        "description": "string",
+        "premium": "boolean",
+        "team": {
+          "id": "integer",
+          "money": "integer",
+          "teamPoints": "integer",
+          "playersNumber": "integer",
+          "teamValue": "integer",
+          "canPunctuate": "boolean",
+          "position": "integer",
+          "previousPosition": "integer",
+          "isAdmin": "boolean"
+        }
+      },
+      "summary": {
+        "league_name": "string",
+        "team_id": "integer",
+        "team_name": "string",
+        "position": "integer",
+        "points": "integer",
+        "standing_entry": {
+          "rank": "integer",
+          "points": "integer",
+          "row": {
+            "position": "integer",
+            "previousPosition": "integer",
+            "points": "integer",
+            "livePoints": "integer",
+            "team": {
+              "managerWarned": "boolean",
+              "id": "string",
+              "managerId": "integer",
+              "banned": "boolean",
+              "teamValue": "integer",
+              "teamPoints": "integer",
+              "manager": {
+                "id": "string",
+                "managerName": "string",
+                "avatar": "string"
+              },
+              "isAdmin": "boolean"
+            }
+          }
+        }
+      },
+      "standing": [
+        {
+          "livePoints": "integer",
+          "points": "integer",
+          "position": "integer",
+          "previousPosition": "integer",
+          "team": {
+            "banned": "boolean",
+            "id": "string",
+            "isAdmin": "boolean",
+            "manager": {
+              "id": "string",
+              "managerName": "string",
+              "avatar": "string"
+            },
+            "managerId": "integer",
+            "managerWarned": "boolean",
+            "teamMoney": "null",
+            "teamPoints": "integer",
+            "teamValue": "integer"
+          }
+        }
+      ],
+      "week": "null",
+      "week_standing": "null",
+      "activity_page": "integer",
+      "activity": [
+        {
+          "activityTypeId": "integer",
+          "amount": "integer",
+          "createdAt": "string",
+          "id": "string",
+          "playerMasterId": "integer",
+          "user1Id": "integer",
+          "user2Id": "integer",
+          "weekNumber": "integer"
+        }
+      ],
+      "teams": [
+        {
+          "banned": "boolean",
+          "fixturePoints": "integer",
+          "id": "string",
+          "loanedPlayers": [],
+          "manager": {
+            "id": "string",
+            "managerName": "string",
+            "avatar": "string"
+          },
+          "managerId": "integer",
+          "players": [
+            {
+              "buyoutClause": "integer",
+              "buyoutClauseLockedEndTime": "string",
+              "manager": {
+                "id": "string",
+                "managerName": "string",
+                "avatar": "string"
+              },
+              "playerMarket": {
+                "id": "string",
+                "expirationDate": "string",
+                "numberOfOffers": "integer",
+                "directOffer": "boolean"
+              },
+              "playerMaster": {
+                "averagePoints": [
+                  "number",
+                  "integer"
+                ],
+                "id": "string",
+                "images": {
+                  "transparent": {
+                    "256x256": "string"
+                  }
+                },
+                "lastSeasonPoints": "integer",
+                "lastStats": [
+                  {
+                    "stats": {
+                      "mins_played": [
+                        "integer"
+                      ],
+                      "goals": [
+                        "integer"
+                      ],
+                      "goal_assist": [
+                        "integer"
+                      ],
+                      "offtarget_att_assist": [
+                        "integer"
+                      ],
+                      "pen_area_entries": [
+                        "integer"
+                      ],
+                      "penalty_won": [
+                        "integer"
+                      ],
+                      "penalty_save": [
+                        "integer"
+                      ],
+                      "saves": [
+                        "integer"
+                      ],
+                      "effective_clearance": [
+                        "integer"
+                      ],
+                      "penalty_failed": [
+                        "integer"
+                      ],
+                      "own_goals": [
+                        "integer"
+                      ],
+                      "goals_conceded": [
+                        "integer"
+                      ],
+                      "yellow_card": [
+                        "integer"
+                      ],
+                      "second_yellow_card": [
+                        "integer"
+                      ],
+                      "red_card": [
+                        "integer"
+                      ],
+                      "total_scoring_att": [
+                        "integer"
+                      ],
+                      "won_contest": [
+                        "integer"
+                      ],
+                      "ball_recovery": [
+                        "integer"
+                      ],
+                      "poss_lost_all": [
+                        "integer"
+                      ],
+                      "penalty_conceded": [
+                        "integer"
+                      ],
+                      "marca_points": [
+                        "integer"
+                      ]
+                    },
+                    "weekNumber": "integer",
+                    "totalPoints": "integer"
+                  }
+                ],
+                "marketValue": "integer",
+                "name": "string",
+                "nickname": "string",
+                "playerStatus": "string",
+                "points": "integer",
+                "positionId": "integer",
+                "slug": "string",
+                "teamId": "integer",
+                "weekPoints": "integer"
+              },
+              "playerTeamId": "string"
+            }
+          ],
+          "position": "integer",
+          "previousPosition": "integer",
+          "startingWeek": "string",
+          "teamMoney": "integer",
+          "teamPoints": "integer",
+          "teamValue": "integer"
+        }
+      ],
+      "my_team_id": "integer",
+      "my_team": {
+        "players": [
+          {
+            "buyoutClause": "integer",
+            "buyoutClauseLockedEndTime": "string",
+            "isShielded": "boolean",
+            "manager": {
+              "id": "string",
+              "managerName": "string",
+              "avatar": "string"
+            },
+            "managerId": "integer",
+            "playerMarket": {
+              "id": "string",
+              "salePrice": "integer",
+              "expirationDate": "string",
+              "numberOfOffers": "integer",
+              "directOffer": "boolean"
+            },
+            "playerMaster": {
+              "averagePoints": [
+                "number",
+                "integer"
+              ],
+              "id": "string",
+              "images": {
+                "transparent": {
+                  "256x256": "string"
+                }
+              },
+              "lastSeasonPoints": "integer",
+              "lastStats": [
+                {
+                  "stats": {
+                    "mins_played": [
+                      "integer"
+                    ],
+                    "goals": [
+                      "integer"
+                    ],
+                    "goal_assist": [
+                      "integer"
+                    ],
+                    "offtarget_att_assist": [
+                      "integer"
+                    ],
+                    "pen_area_entries": [
+                      "integer"
+                    ],
+                    "penalty_won": [
+                      "integer"
+                    ],
+                    "penalty_save": [
+                      "integer"
+                    ],
+                    "saves": [
+                      "integer"
+                    ],
+                    "effective_clearance": [
+                      "integer"
+                    ],
+                    "penalty_failed": [
+                      "integer"
+                    ],
+                    "own_goals": [
+                      "integer"
+                    ],
+                    "goals_conceded": [
+                      "integer"
+                    ],
+                    "yellow_card": [
+                      "integer"
+                    ],
+                    "second_yellow_card": [
+                      "integer"
+                    ],
+                    "red_card": [
+                      "integer"
+                    ],
+                    "total_scoring_att": [
+                      "integer"
+                    ],
+                    "won_contest": [
+                      "integer"
+                    ],
+                    "ball_recovery": [
+                      "integer"
+                    ],
+                    "poss_lost_all": [
+                      "integer"
+                    ],
+                    "penalty_conceded": [
+                      "integer"
+                    ],
+                    "marca_points": [
+                      "integer"
+                    ]
+                  },
+                  "weekNumber": "integer",
+                  "totalPoints": "integer",
+                  "isInIdealFormation": "boolean"
+                }
+              ],
+              "marketValue": "integer",
+              "name": "string",
+              "nickname": "string",
+              "playerStatus": "string",
+              "points": "integer",
+              "positionId": "integer",
+              "slug": "string",
+              "team": {
+                "id": "string",
+                "name": "string",
+                "slug": "string",
+                "assets": "string",
+                "badgeColor": "string",
+                "badgeWhite": "string"
+              }
+            },
+            "playerTeamId": "string"
+          }
+        ],
+        "loanedPlayers": [],
+        "teamMoney": "integer",
+        "playersNumber": "integer",
+        "id": "string",
+        "managerId": "integer",
+        "startingWeek": "string",
+        "banned": "boolean",
+        "teamValue": "integer",
+        "teamPoints": "integer",
+        "position": "integer",
+        "manager": {
+          "id": "string",
+          "managerName": "string",
+          "avatar": "string"
+        }
+      }
+    }
+  ]
+}

@@ -44,7 +44,7 @@ def build_service(private_pem: str, public_pem: str) -> InternalTokenService:
         public_key_pem=public_pem,
         issuer=ISSUER,
         audience=AUDIENCE,
-        ttl_seconds=300,
+        ttl_seconds=900,
     )
     return InternalTokenService(
         issuer=adapter,
@@ -68,8 +68,8 @@ def test_issue_for_user_returns_verifiable_jwt(rsa_pems: tuple[str, str]) -> Non
 
     # Assert
     assert issued.token_type == "Bearer"
-    assert issued.expires_in == 300
-    assert issued.expires_at == NOW + 300
+    assert issued.expires_in == 900
+    assert issued.expires_at == NOW + 900
     assert resolved == user
     jwks = service.public_jwks()
     assert "keys" in jwks

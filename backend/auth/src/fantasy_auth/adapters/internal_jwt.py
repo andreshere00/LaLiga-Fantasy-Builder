@@ -64,7 +64,7 @@ class Rs256InternalJwt:
         public_key_pem: str,
         issuer: str,
         audience: str,
-        ttl_seconds: int = 300,
+        ttl_seconds: int = 900,
         key_id: str | None = None,
     ) -> None:
         self._private_key = serialization.load_pem_private_key(

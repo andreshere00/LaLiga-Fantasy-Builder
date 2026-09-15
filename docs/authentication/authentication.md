@@ -99,7 +99,7 @@ The response contains:
 {
   "access_token": "<internal-jwt>",
   "token_type": "Bearer",
-  "expires_in": 300,
+  "expires_in": 900,
   "expires_at": 1770000000
 }
 ```

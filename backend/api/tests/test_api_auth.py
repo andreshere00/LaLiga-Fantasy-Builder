@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import time
 from collections.abc import Iterator
-from unittest.mock import MagicMock, patch
+from unittest.mock import AsyncMock, MagicMock, patch
 
 import httpx
 import jwt
@@ -19,19 +19,23 @@ from fantasy_api.api.deps import (
     set_container,
 )
 from fantasy_api.clients.auth_credentials import AuthCredentialsClient
+from fantasy_api.clients.laliga_fantasy import LaligaFantasyClient
 from fantasy_api.config import Settings, get_settings
 from fantasy_api.domain.errors import NeedsReauthError, UnauthorizedError, UpstreamError
 from fantasy_api.main import create_app, run
+from fantasy_api.repositories.leagues import LeaguesRepository
 from fantasy_api.security.internal_jwt import (
     InternalJwtValidator,
     StaticInternalJwtValidator,
 )
+from fantasy_api.services.leagues import LeaguesService
 from fastapi import FastAPI
 from fastapi.testclient import TestClient
 
 ISSUER = "https://auth.fantasy-builder.local"
 AUDIENCE = "fantasy-api"
 SERVICE_TOKEN = "api-service-token"
+FANTASY_ORIGIN = "https://fantasy.test"
 
 
 @pytest.fixture
@@ -53,17 +57,24 @@ def rsa_pems() -> tuple[str, str]:
     return private_pem, public_pem
 
 
-def mint_internal_jwt(private_pem: str, *, sub: str = "app-user-1") -> str:
+def mint_internal_jwt(
+    private_pem: str,
+    *,
+    sub: str = "app-user-1",
+    issuer: str = ISSUER,
+    audience: str = AUDIENCE,
+    ttl_seconds: int = 300,
+) -> str:
     now = int(time.time())
     return jwt.encode(
         {
             "sub": sub,
             "email": "u@example.com",
             "name": "User",
-            "iss": ISSUER,
-            "aud": AUDIENCE,
+            "iss": issuer,
+            "aud": audience,
             "iat": now,
-            "exp": now + 300,
+            "exp": now + ttl_seconds,
         },
         private_pem,
         algorithm="RS256",
@@ -74,6 +85,7 @@ def build_api_container(
     public_pem: str,
     *,
     transport: httpx.MockTransport | None = None,
+    fantasy_transport: httpx.MockTransport | None = None,
 ) -> AppContainer:
     settings = Settings(
         auth_jwks_url="http://auth.test/jwks",
@@ -81,6 +93,8 @@ def build_api_container(
         internal_jwt_audience=AUDIENCE,
         auth_internal_base_url="http://auth.test",
         internal_service_token=SERVICE_TOKEN,
+        laliga_fantasy_origin=FANTASY_ORIGIN,
+        laliga_competition_id=1,
         log_json=False,
     )
     validator = StaticInternalJwtValidator(
@@ -93,10 +107,23 @@ def build_api_container(
         service_token=SERVICE_TOKEN,
         transport=transport,
     )
+    laliga_client = LaligaFantasyClient(
+        origin=settings.laliga_fantasy_origin,
+        transport=fantasy_transport,
+    )
+    leagues_service = LeaguesService(
+        credentials,
+        LeaguesRepository(
+            laliga_client,
+            competition_id=settings.laliga_competition_id,
+        ),
+    )
     return AppContainer(
         settings=settings,
         jwt_validator=validator,
         credentials=credentials,
+        laliga_client=laliga_client,
+        leagues_service=leagues_service,
     )
 
 
@@ -107,6 +134,8 @@ def _test_settings() -> Settings:
         internal_jwt_audience=AUDIENCE,
         auth_internal_base_url="http://auth.test",
         internal_service_token=SERVICE_TOKEN,
+        laliga_fantasy_origin=FANTASY_ORIGIN,
+        laliga_competition_id=1,
         log_json=False,
     )
 
@@ -227,6 +256,8 @@ def test_build_container_defaults_wires_services() -> None:
     assert container.settings is settings
     assert isinstance(container.jwt_validator, InternalJwtValidator)
     assert isinstance(container.credentials, AuthCredentialsClient)
+    assert isinstance(container.laliga_client, LaligaFantasyClient)
+    assert isinstance(container.leagues_service, LeaguesService)
 
 
 def test_get_container_when_unset_builds_default() -> None:
@@ -299,6 +330,7 @@ def test_create_app_lifespan_builds_container_when_missing() -> None:
     settings = _test_settings()
     fake_container = MagicMock(spec=AppContainer)
     fake_container.settings = settings
+    fake_container.aclose = AsyncMock()
 
     with patch(
         "fantasy_api.main.build_container",
@@ -349,6 +381,39 @@ def test_me_rejects_bad_signature(
 def test_me_rejects_empty_bearer_token(client: TestClient) -> None:
     # Arrange / Act
     response = client.get("/me", headers={"Authorization": "Bearer "})
+
+    # Assert
+    assert response.status_code == 401
+    assert response.json()["error"] == "unauthorized"
+
+
+@pytest.mark.parametrize(
+    ("issuer", "audience", "ttl_seconds"),
+    [
+        (ISSUER, AUDIENCE, -60),
+        ("https://wrong-issuer.example", AUDIENCE, 300),
+        (ISSUER, "not-fantasy-api", 300),
+    ],
+    ids=["expired", "wrong_issuer", "wrong_audience"],
+)
+def test_me_rejects_jwt_with_invalid_standard_claims(
+    client: TestClient,
+    rsa_pems: tuple[str, str],
+    issuer: str,
+    audience: str,
+    ttl_seconds: int,
+) -> None:
+    # Arrange
+    private_pem, _public_pem = rsa_pems
+    token = mint_internal_jwt(
+        private_pem,
+        issuer=issuer,
+        audience=audience,
+        ttl_seconds=ttl_seconds,
+    )
+
+    # Act
+    response = client.get("/me", headers={"Authorization": f"Bearer {token}"})
 
     # Assert
     assert response.status_code == 401
@@ -466,6 +531,30 @@ async def test_credentials_client_401_non_json_raises_upstream(
     with pytest.raises(UpstreamError, match="auth unauthorized") as exc_info:
         await client.get_laliga_bearer(token)
     assert exc_info.value.status_code == 401
+
+
+@pytest.mark.asyncio
+async def test_credentials_client_200_non_json_raises_upstream(
+    rsa_pems: tuple[str, str],
+) -> None:
+    # Arrange
+    private_pem, _public_pem = rsa_pems
+
+    def handler(request: httpx.Request) -> httpx.Response:
+        return httpx.Response(200, text="<html>nope</html>")
+
+    client = AuthCredentialsClient(
+        base_url="http://auth.test",
+        service_token=SERVICE_TOKEN,
+        transport=httpx.MockTransport(handler),
+    )
+    token = mint_internal_jwt(private_pem)
+
+    # Act / Assert
+    with pytest.raises(UpstreamError, match="auth response was not JSON") as exc_info:
+        await client.get_laliga_bearer(token)
+    assert exc_info.value.status_code == 502
+    assert exc_info.value.category == "auth_error"
 
 
 def test_internal_jwt_validator_pyjwt_error_raises_unauthorized() -> None:

@@ -1,4 +1,4 @@
-# Pre-commit hooks for linting, formatting, and coverage-gated tests.
+# Pre-commit hooks for linting, formatting, OpenAPI, and coverage-gated tests.
 # Install once with: uv run poe install  (or: uv run pre-commit install)
 default_language_version:
   python: python3.14
@@ -19,6 +19,16 @@ repos:
         language: system
         pass_filenames: false
         types: [python]
+
+      - id: generate-openapi
+        name: generate OpenAPI documentation
+        entry: uv run poe generate-openapi
+        language: system
+        pass_filenames: false
+        files: >-
+          ^(backend/api/src/fantasy_api/(api/|schemas/|openapi\.py|main\.py|config\.py)
+          |backend/api/openapi\.json
+          |backend/api/pyproject\.toml)$
 
       - id: test
         name: test (pytest, ≥90% coverage)

@@ -1,13 +1,32 @@
 # LaLiga Fantasy Builder documentation
 
-This directory describes the authentication model and backend architecture.
+This directory describes authentication, architecture, and the application API.
 
-- [Authentication](authentication.md) — identities, credentials, login,
-  pairing, token exchange, and security rules.
+## Index
+
+### Architecture
+
 - [Architecture](architecture.md) — service boundaries, trust boundaries,
-  persistence, and request flows.
-- [Developing authenticated endpoints](developing-authenticated-endpoints.md)
-  — patterns for adding protected API, auth, and LaLiga-backed endpoints.
+  persistence, and request flows
+
+### Authentication (`docs/authentication/`)
+
+- [Authentication](authentication/authentication.md) — identities, credentials,
+  login, pairing, token exchange, and security rules
+- [Developing authenticated endpoints](authentication/developing-authenticated-endpoints.md)
+  — patterns for protected API, auth, and LaLiga-backed endpoints
+
+### Application API (`docs/api/`)
+
+- [API overview](api/README.md) — Fantasy Builder API index
+- [OpenAPI / Swagger](api/openapi.md) — schema generation and Swagger sync
+- [Leagues](api/leagues/README.md) — league routes and identifiers
+- [Adding leagues endpoints](api/leagues/adding-leagues-endpoints.md) —
+  controller–service–repository checklist
+
+Committed OpenAPI document:
+[`backend/api/openapi.json`](../backend/api/openapi.json)
+(regenerate with `uv run generate-openapi` in `backend/api`).
 
 ## Service ownership
 
