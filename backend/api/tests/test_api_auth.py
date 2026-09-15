@@ -19,19 +19,23 @@ from fantasy_api.api.deps import (
     set_container,
 )
 from fantasy_api.clients.auth_credentials import AuthCredentialsClient
+from fantasy_api.clients.laliga_fantasy import LaligaFantasyClient
 from fantasy_api.config import Settings, get_settings
 from fantasy_api.domain.errors import NeedsReauthError, UnauthorizedError, UpstreamError
 from fantasy_api.main import create_app, run
+from fantasy_api.repositories.leagues import LeaguesRepository
 from fantasy_api.security.internal_jwt import (
     InternalJwtValidator,
     StaticInternalJwtValidator,
 )
+from fantasy_api.services.leagues import LeaguesService
 from fastapi import FastAPI
 from fastapi.testclient import TestClient
 
 ISSUER = "https://auth.fantasy-builder.local"
 AUDIENCE = "fantasy-api"
 SERVICE_TOKEN = "api-service-token"
+FANTASY_ORIGIN = "https://fantasy.test"
 
 
 @pytest.fixture
@@ -74,6 +78,7 @@ def build_api_container(
     public_pem: str,
     *,
     transport: httpx.MockTransport | None = None,
+    fantasy_transport: httpx.MockTransport | None = None,
 ) -> AppContainer:
     settings = Settings(
         auth_jwks_url="http://auth.test/jwks",
@@ -81,6 +86,8 @@ def build_api_container(
         internal_jwt_audience=AUDIENCE,
         auth_internal_base_url="http://auth.test",
         internal_service_token=SERVICE_TOKEN,
+        laliga_fantasy_origin=FANTASY_ORIGIN,
+        laliga_competition_id=1,
         log_json=False,
     )
     validator = StaticInternalJwtValidator(
@@ -93,10 +100,23 @@ def build_api_container(
         service_token=SERVICE_TOKEN,
         transport=transport,
     )
+    laliga_client = LaligaFantasyClient(
+        origin=settings.laliga_fantasy_origin,
+        transport=fantasy_transport,
+    )
+    leagues_service = LeaguesService(
+        credentials,
+        LeaguesRepository(
+            laliga_client,
+            competition_id=settings.laliga_competition_id,
+        ),
+    )
     return AppContainer(
         settings=settings,
         jwt_validator=validator,
         credentials=credentials,
+        laliga_client=laliga_client,
+        leagues_service=leagues_service,
     )
 
 
@@ -107,6 +127,8 @@ def _test_settings() -> Settings:
         internal_jwt_audience=AUDIENCE,
         auth_internal_base_url="http://auth.test",
         internal_service_token=SERVICE_TOKEN,
+        laliga_fantasy_origin=FANTASY_ORIGIN,
+        laliga_competition_id=1,
         log_json=False,
     )
 
@@ -227,6 +249,8 @@ def test_build_container_defaults_wires_services() -> None:
     assert container.settings is settings
     assert isinstance(container.jwt_validator, InternalJwtValidator)
     assert isinstance(container.credentials, AuthCredentialsClient)
+    assert isinstance(container.laliga_client, LaligaFantasyClient)
+    assert isinstance(container.leagues_service, LeaguesService)
 
 
 def test_get_container_when_unset_builds_default() -> None:

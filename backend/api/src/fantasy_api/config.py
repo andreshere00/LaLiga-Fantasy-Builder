@@ -20,6 +20,8 @@ class Settings(BaseSettings):
         internal_jwt_audience: Expected JWT audience.
         auth_internal_base_url: Auth service base URL for private calls.
         internal_service_token: Shared ``X-Service-Token`` secret.
+        laliga_fantasy_origin: LaLiga Fantasy API origin.
+        laliga_competition_id: Competition id used in Fantasy paths.
         log_level: Root log level.
         log_json: Emit JSON logs when True.
     """
@@ -39,6 +41,9 @@ class Settings(BaseSettings):
     internal_jwt_audience: str = "fantasy-api"
     auth_internal_base_url: str = "http://localhost:8000"
     internal_service_token: str = ""
+
+    laliga_fantasy_origin: str = "https://fantasy-api.llt-services.com"
+    laliga_competition_id: int = 1
 
     log_level: str = "INFO"
     log_json: bool = True

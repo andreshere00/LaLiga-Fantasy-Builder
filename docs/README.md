@@ -8,6 +8,8 @@ This directory describes the authentication model and backend architecture.
   persistence, and request flows.
 - [Developing authenticated endpoints](developing-authenticated-endpoints.md)
   — patterns for adding protected API, auth, and LaLiga-backed endpoints.
+- [Adding leagues endpoints](adding-leagues-endpoints.md) — controller–
+  service–repository checklist for Fantasy leagues routes.
 
 ## Service ownership
 

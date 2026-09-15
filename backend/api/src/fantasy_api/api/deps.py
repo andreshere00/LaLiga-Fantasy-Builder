@@ -8,10 +8,13 @@ from typing import Annotated, Any, Protocol
 from fastapi import Header
 
 from fantasy_api.clients.auth_credentials import AuthCredentialsClient
+from fantasy_api.clients.laliga_fantasy import LaligaFantasyClient
 from fantasy_api.config import Settings, get_settings
 from fantasy_api.domain.errors import UnauthorizedError
 from fantasy_api.domain.users import AppUser, extract_app_user_from_claims
+from fantasy_api.repositories.leagues import LeaguesRepository
 from fantasy_api.security.internal_jwt import InternalJwtValidator
+from fantasy_api.services.leagues import LeaguesService
 
 
 class TokenValidator(Protocol):
@@ -29,11 +32,15 @@ class AppContainer:
         settings: Loaded settings.
         jwt_validator: Internal JWT validator.
         credentials: Auth credentials client.
+        laliga_client: LaLiga Fantasy HTTP client.
+        leagues_service: Leagues application service.
     """
 
     settings: Settings
     jwt_validator: TokenValidator
     credentials: AuthCredentialsClient
+    laliga_client: LaligaFantasyClient
+    leagues_service: LeaguesService
 
 
 _container: AppContainer | None = None
@@ -44,6 +51,8 @@ def build_container(
     *,
     jwt_validator: TokenValidator | None = None,
     credentials: AuthCredentialsClient | None = None,
+    laliga_client: LaligaFantasyClient | None = None,
+    leagues_service: LeaguesService | None = None,
 ) -> AppContainer:
     """Build the API container.
 
@@ -51,6 +60,8 @@ def build_container(
         settings: Optional settings override.
         jwt_validator: Optional validator override (tests).
         credentials: Optional credentials client override (tests).
+        laliga_client: Optional Fantasy client override (tests).
+        leagues_service: Optional leagues service override (tests).
 
     Returns:
         Wired container.
@@ -61,14 +72,26 @@ def build_container(
         issuer=cfg.internal_jwt_issuer,
         audience=cfg.internal_jwt_audience,
     )
-    client = credentials or AuthCredentialsClient(
+    creds = credentials or AuthCredentialsClient(
         base_url=cfg.auth_internal_base_url,
         service_token=cfg.internal_service_token,
+    )
+    fantasy = laliga_client or LaligaFantasyClient(
+        origin=cfg.laliga_fantasy_origin,
+    )
+    service = leagues_service or LeaguesService(
+        creds,
+        LeaguesRepository(
+            fantasy,
+            competition_id=cfg.laliga_competition_id,
+        ),
     )
     return AppContainer(
         settings=cfg,
         jwt_validator=validator,
-        credentials=client,
+        credentials=creds,
+        laliga_client=fantasy,
+        leagues_service=service,
     )
 
 

@@ -64,46 +64,49 @@ nothing. Do not first load by ID and compare after exposing resource details.
 
 ## API endpoint that calls LaLiga Fantasy
 
-After validating the caller, forward the raw internal JWT only to the auth
-credentials client. Auth uses its verified `sub` to select the connection.
+After validating the caller, forward the raw internal JWT only through the
+leagues (or feature) service. The service asks auth for a bearer and calls
+Fantasy. Auth uses its verified `sub` to select the connection.
+
+For leagues specifically, follow
+[Adding leagues endpoints](adding-leagues-endpoints.md).
 
 ```python
+from typing import Any
+
 from fastapi import APIRouter, Header
-from pydantic import BaseModel
 
 from fantasy_api.api.deps import get_container, get_current_user
 
-router = APIRouter(prefix="/laliga", tags=["laliga"])
+router = APIRouter(tags=["leagues"])
 
 
-class LaligaTeamResponse(BaseModel):
-    """Current user's LaLiga team."""
-
-    team_id: str
-    name: str
-
-
-@router.get("/team", response_model=LaligaTeamResponse)
-async def get_laliga_team(
+@router.get("/leagues/{league_id}/teams/{team_id}")
+async def get_team(
+    league_id: str,
+    team_id: str,
     authorization: str | None = Header(default=None),
-) -> LaligaTeamResponse:
-    """Return the authenticated user's LaLiga team.
+) -> Any:
+    """Return a Fantasy team roster for the authenticated caller.
 
     Args:
+        league_id: Fantasy league identifier.
+        team_id: Fantasy team identifier.
         authorization: Auth-issued internal Bearer JWT.
 
     Returns:
-        Current LaLiga team.
+        Upstream team JSON.
 
     Raises:
         NeedsReauthError: When the user must pair LaLiga again.
         UpstreamError: When auth or LaLiga is unavailable.
     """
     _user, internal_jwt = await get_current_user(authorization)
-    credentials = get_container().credentials
-    bearer = await credentials.get_laliga_bearer(internal_jwt)
-    data = await laliga_client.get_team(bearer.bearer_token)
-    return LaligaTeamResponse.model_validate(data)
+    return await get_container().leagues_service.get_team(
+        internal_jwt,
+        league_id,
+        team_id,
+    )
 ```
 
 Rules for LaLiga-backed endpoints:
