@@ -15,6 +15,7 @@ from fantasy_auth.domain.tokens import TokenBundle
 
 REDIRECT = "authredirect://com.lfp.laligafantasy"
 STATE = "expected-state"
+LONG_CODE = "x" * 120
 
 
 def _ns(**overrides: Any) -> argparse.Namespace:
@@ -119,14 +120,97 @@ def test_read_callback_via_clipboard_uses_pbpaste(
 ) -> None:
     # Arrange
     monkeypatch.setattr(helper.sys.stdin, "readline", lambda: "\n")
-    monkeypatch.setattr(helper, "_pbpaste", lambda: " clip-cb ")
+    monkeypatch.setattr(
+        helper,
+        "_pbpaste",
+        lambda: f" {REDIRECT}/?state=s&code={'x' * 120} ",
+    )
     args = _ns(clipboard=True)
 
     # Act
     result = helper._read_callback(args, redirect_uri=REDIRECT)
 
     # Assert
-    assert result == "clip-cb"
+    assert result.startswith(REDIRECT)
+    assert len(result) > 100
+
+
+def test_read_callback_via_clipboard_falls_back_to_file(
+    monkeypatch: pytest.MonkeyPatch,
+    tmp_path: Path,
+) -> None:
+    # Arrange
+    fallback = tmp_path / "laliga-callback.txt"
+    callback = f"{REDIRECT}/?state=s&code={'y' * 120}"
+    fallback.write_text(callback, encoding="utf-8")
+    monkeypatch.setattr(helper, "DEFAULT_CALLBACK_FILE", fallback)
+    monkeypatch.setattr(helper.sys.stdin, "readline", lambda: "\n")
+    monkeypatch.setattr(helper, "_pbpaste", lambda: "")
+    args = _ns(clipboard=True)
+
+    # Act
+    result = helper._read_callback(args, redirect_uri=REDIRECT)
+
+    # Assert
+    assert result == callback
+
+
+def test_callback_looks_complete_rejects_short_code() -> None:
+    # Arrange
+    short = f"{REDIRECT}/?state=s&code=short"
+
+    # Act
+    result = helper._callback_looks_complete(short, redirect_uri=REDIRECT)
+
+    # Assert
+    assert result is False
+
+
+def test_extract_authredirect_duplicate_url_keeps_first_only() -> None:
+    # Arrange
+    first = f"{REDIRECT}/?state=s&code=first-token"
+    second = f"{REDIRECT}/?state=s&code=second-token"
+    raw = first + second
+
+    # Act
+    result = helper._extract_authredirect(raw, redirect_uri=REDIRECT)
+
+    # Assert
+    assert result == first
+    assert "second-token" not in result
+
+
+def test_main_rejects_incomplete_callback(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    # Arrange
+    settings = SimpleNamespace(
+        laliga_redirect_uri=REDIRECT,
+        laliga_client_id="client",
+        laliga_signin_policy="policy",
+        laliga_base_url="https://login.example/token",
+        laliga_authorize_url="https://login.example/authorize",
+        laliga_allow_id_token_fallback=False,
+    )
+    monkeypatch.setattr(helper, "get_settings", lambda: settings)
+    monkeypatch.setattr(helper, "generate_verifier", lambda: "v")
+    monkeypatch.setattr(helper, "s256_challenge", lambda _v: "c")
+    monkeypatch.setattr(helper, "generate_state", lambda: STATE)
+    fake_b2c = MagicMock()
+    fake_b2c.build_authorize_url.return_value = "https://auth.example"
+    monkeypatch.setattr(helper, "HttpxB2CClient", lambda **_k: fake_b2c)
+    monkeypatch.setattr(helper.webbrowser, "open", lambda _u: None)
+    monkeypatch.setattr(
+        helper,
+        "_read_callback",
+        lambda *_a, **_k: f"{REDIRECT}/?state={STATE}&code=short",
+    )
+
+    # Act
+    code = helper.main(["--pairing", "p", "--secret", "s"])
+
+    # Assert
+    assert code == 1
 
 
 def test_read_callback_via_stdin_returns_line(
@@ -193,7 +277,7 @@ def test_main_happy_path_posts_complete(
     monkeypatch.setattr(
         helper,
         "_read_callback",
-        lambda _a, *, redirect_uri: f"{REDIRECT}/?state={STATE}&code=auth-code",
+        lambda _a, *, redirect_uri: f"{REDIRECT}/?state={STATE}&code={LONG_CODE}",
     )
 
     post_response = MagicMock()
@@ -416,7 +500,7 @@ def test_main_exchange_fail_returns_one(
     monkeypatch.setattr(
         helper,
         "_read_callback",
-        lambda *_a, **_k: f"{REDIRECT}/?state={STATE}&code=c",
+        lambda *_a, **_k: f"{REDIRECT}/?state={STATE}&code={LONG_CODE}",
     )
 
     # Act
@@ -460,7 +544,7 @@ def test_main_complete_http_fail_returns_one(
     monkeypatch.setattr(
         helper,
         "_read_callback",
-        lambda *_a, **_k: f"{REDIRECT}/?state={STATE}&code=c",
+        lambda *_a, **_k: f"{REDIRECT}/?state={STATE}&code={LONG_CODE}",
     )
 
     fail = MagicMock()

@@ -7,6 +7,7 @@ import asyncio
 import json
 import subprocess
 import sys
+import tempfile
 import webbrowser
 from pathlib import Path
 from typing import Any
@@ -101,6 +102,13 @@ def main(argv: list[str] | None = None) -> int:
 
     # Allow accidental Google-search wrappers: extract authredirect://… if present.
     callback = _extract_authredirect(callback, redirect_uri=redirect_uri)
+    if not _callback_looks_complete(callback, redirect_uri=redirect_uri):
+        print(
+            "Callback URL looks incomplete (truncated paste?). "
+            "Use --callback-file and save the URL with: pbpaste > /tmp/laliga-callback.txt",
+            file=sys.stderr,
+        )
+        return 1
 
     parsed = _parse_callback(callback, expected_state=state)
     if parsed.get("error"):
@@ -111,6 +119,7 @@ def main(argv: list[str] | None = None) -> int:
         print("Callback missing code", file=sys.stderr)
         return 1
 
+    print("Exchanging authorization code with LaLiga...", file=sys.stderr)
     try:
         bundle = asyncio.run(
             b2c.exchange_code(
@@ -139,6 +148,7 @@ def main(argv: list[str] | None = None) -> int:
 
     complete_url = f"{args.api_base.rstrip('/')}/laliga/pairings/{args.pairing}/complete"
     payload = {"secret": args.secret, "token_response": token_response}
+    print("Completing pairing with auth service...", file=sys.stderr)
     with httpx.Client(timeout=30.0) as client:
         response = client.post(complete_url, json=payload)
     if not response.is_success:
@@ -175,14 +185,7 @@ def _read_callback(args: argparse.Namespace, *, redirect_uri: str) -> str:
         return path.read_text(encoding="utf-8").strip()
 
     if args.clipboard:
-        print(
-            f"\n1) Open the authorize URL above and sign in to LaLiga\n"
-            f"2) Copy the full callback URL (starts with {redirect_uri})\n"
-            f"3) Press Enter here to read the macOS clipboard",
-            file=sys.stderr,
-        )
-        sys.stdin.readline()
-        return _pbpaste().strip()
+        return _read_callback_from_clipboard(redirect_uri=redirect_uri)
 
     print(
         f"\nPrefer --clipboard or --callback-file for long URLs.\n"
@@ -190,6 +193,80 @@ def _read_callback(args: argparse.Namespace, *, redirect_uri: str) -> str:
         file=sys.stderr,
     )
     return sys.stdin.readline().strip()
+
+
+DEFAULT_CALLBACK_FILE = Path(tempfile.gettempdir()) / "laliga-callback.txt"
+
+
+def _read_callback_from_clipboard(*, redirect_uri: str) -> str:
+    """Read the callback from macOS clipboard after the user confirms copy."""
+    fallback_file = DEFAULT_CALLBACK_FILE
+    print(
+        f"\n1) Open the authorize URL above and sign in to LaLiga\n"
+        f"2) Copy the full callback URL (starts with {redirect_uri})\n"
+        f"3) Press Enter here when copied — do NOT paste into this terminal\n"
+        f"   Fallback: pbpaste > {fallback_file} then press Enter",
+        file=sys.stderr,
+    )
+    sys.stdin.readline()
+    callback = _pbpaste().strip()
+    if _looks_like_callback(callback, redirect_uri=redirect_uri):
+        print(f"Callback captured from clipboard ({len(callback)} chars)", file=sys.stderr)
+        return callback
+
+    if fallback_file.is_file():
+        callback = fallback_file.read_text(encoding="utf-8").strip()
+        if _looks_like_callback(callback, redirect_uri=redirect_uri):
+            print(
+                f"Callback captured from {fallback_file} ({len(callback)} chars)",
+                file=sys.stderr,
+            )
+            return callback
+
+    print(
+        "Could not read a callback from the clipboard or fallback file.\n"
+        "Paste the URL below, then press Enter:",
+        file=sys.stderr,
+    )
+    return _read_terminal_callback(redirect_uri=redirect_uri)
+
+
+def _read_terminal_callback(*, redirect_uri: str) -> str:
+    """Read a callback URL pasted into the terminal (single or wrapped lines)."""
+    lines: list[str] = []
+    while True:
+        line = sys.stdin.readline()
+        if not line:
+            break
+        if line == "\n" and lines:
+            break
+        lines.append(line.rstrip("\n"))
+        combined = "".join(lines).strip()
+        if _callback_looks_complete(combined, redirect_uri=redirect_uri):
+            print(f"Callback captured from terminal ({len(combined)} chars)", file=sys.stderr)
+            return combined
+    return "".join(lines).strip()
+
+
+def _callback_looks_complete(value: str, *, redirect_uri: str) -> bool:
+    """Return whether a callback URL likely contains a full authorization code."""
+    if not _looks_like_callback(value, redirect_uri=redirect_uri):
+        return False
+    cleaned = _extract_authredirect(value, redirect_uri=redirect_uri)
+    query = cleaned.split("?", 1)[-1] if "?" in cleaned else cleaned
+    params = {k: v[0] for k, v in parse_qs(query).items()}
+    if params.get("error"):
+        return True
+    code = params.get("code", "")
+    return len(code) >= 100
+
+
+def _looks_like_callback(value: str, *, redirect_uri: str) -> bool:
+    """Return whether text appears to contain a LaLiga authredirect callback."""
+    stripped = value.strip()
+    return bool(stripped) and (
+        redirect_uri in stripped or "authredirect://" in stripped
+    )
 
 
 def _pbpaste() -> str:
@@ -228,7 +305,9 @@ def _extract_authredirect(raw: str, *, redirect_uri: str) -> str:
     if idx < 0:
         return raw.strip()
     chunk = raw[idx:].strip()
-    # Stop at whitespace/quotes if the paste included extra junk.
+    duplicate_at = chunk.find(marker, len(marker))
+    if duplicate_at > 0:
+        chunk = chunk[:duplicate_at]
     for sep in (" ", "\t", "\n", "\r", '"', "'", "<", ">"):
         if sep in chunk:
             chunk = chunk.split(sep, 1)[0]

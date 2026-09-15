@@ -70,7 +70,10 @@ def main(argv: list[str] | None = None) -> int:
     )
     args = parser.parse_args(argv)
 
-    if not args.session or not args.csrf:
+    session = _normalize_cookie(args.session)
+    csrf = _normalize_cookie(args.csrf)
+
+    if not session or not csrf:
         print(
             "Missing session cookies. Export them first:\n"
             "  export FANTASY_SESSION='…'   # fantasy_session cookie\n"
@@ -82,8 +85,8 @@ def main(argv: list[str] | None = None) -> int:
 
     pairing = _create_pairing(
         api_base=args.api_base,
-        session=args.session,
-        csrf=args.csrf,
+        session=session,
+        csrf=csrf,
         origin=args.origin,
     )
     if pairing is None:
@@ -112,6 +115,13 @@ def main(argv: list[str] | None = None) -> int:
         helper_argv.append("--clipboard")
 
     return laliga_helper.main(helper_argv)
+
+
+def _normalize_cookie(value: str | None) -> str:
+    """Strip whitespace and accidental line breaks from cookie values."""
+    if not value:
+        return ""
+    return value.replace("\r", "").replace("\n", "").strip()
 
 
 def _create_pairing(

@@ -11,6 +11,17 @@ from fantasy_auth.cli import pair as pair_cli
 # ---- Happy path ---- #
 
 
+def test_normalize_cookie_strips_newlines() -> None:
+    # Arrange
+    raw = "\ncd2b75d1-737a-4391-85ab-1abdcc02a0a0\n"
+
+    # Act
+    result = pair_cli._normalize_cookie(raw)
+
+    # Assert
+    assert result == "cd2b75d1-737a-4391-85ab-1abdcc02a0a0"
+
+
 def test_create_pairing_200_returns_fields() -> None:
     # Arrange
     body = {
