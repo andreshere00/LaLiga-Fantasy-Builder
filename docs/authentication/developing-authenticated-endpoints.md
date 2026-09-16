@@ -70,6 +70,10 @@ Fantasy. Auth uses its verified `sub` to select the connection.
 
 For leagues specifically, follow
 [Adding leagues endpoints](../api/leagues/adding-leagues-endpoints.md).
+For players, follow
+[Adding players endpoints](../api/players/adding-players-endpoints.md)
+(catalog and market-value are public Fantasy reads and must not request a
+bearer).
 
 ```python
 from typing import Any

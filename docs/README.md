@@ -23,6 +23,9 @@ This directory describes authentication, architecture, and the application API.
 - [Leagues](api/leagues/README.md) — league routes and identifiers
 - [Adding leagues endpoints](api/leagues/adding-leagues-endpoints.md) —
   controller–service–repository checklist
+- [Players](api/players/README.md) — catalog, market value, league card
+- [Adding players endpoints](api/players/adding-players-endpoints.md) —
+  public vs authenticated CRS checklist
 
 Committed OpenAPI document:
 [`backend/api/openapi.json`](../backend/api/openapi.json)

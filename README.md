@@ -15,7 +15,8 @@ Backend services are split so **auth can be deployed on its own**:
 
 - [`docs/README.md`](docs/README.md) — documentation index
 - [`docs/authentication/`](docs/authentication/) — auth flows and endpoint patterns
-- [`docs/api/`](docs/api/) — Fantasy Builder API, OpenAPI/Swagger, leagues
+- [`docs/api/`](docs/api/) — Fantasy Builder API, OpenAPI/Swagger, leagues,
+  players
 - [`docs/architecture.md`](docs/architecture.md) — services, trust boundaries,
   persistence, and request flows
 
