@@ -36,13 +36,24 @@ def test_build_openapi_schema_includes_documented_paths() -> None:
     assert "/leagues/{league_id}/activity/{page}" in paths
     assert "/leagues/{league_id}/teams" in paths
     assert "/leagues/{league_id}/teams/{team_id}" in paths
+    assert "/players" in paths
+    assert "/player/{player_id}/market-value" in paths
+    assert "/player/{player_id}/league/{league_id}" in paths
     assert "/health" in paths
     assert schema["components"]["securitySchemes"]["HTTPBearer"]["scheme"] == "bearer"
     assert "MeResponse" in schema["components"]["schemas"]
     assert "FantasyLeague" in schema["components"]["schemas"]
     assert "StandingRow" in schema["components"]["schemas"]
+    assert "CatalogPlayer" in schema["components"]["schemas"]
+    assert "MarketValuePoint" in schema["components"]["schemas"]
+    assert "LeaguePlayerCard" in schema["components"]["schemas"]
     assert "ErrorResponse" in schema["components"]["schemas"]
     assert paths["/leagues"]["get"]["security"] == [{"HTTPBearer": []}]
+    assert "security" not in paths["/players"]["get"]
+    assert "security" not in paths["/player/{player_id}/market-value"]["get"]
+    assert paths["/player/{player_id}/league/{league_id}"]["get"]["security"] == [
+        {"HTTPBearer": []}
+    ]
     assert "summary" in paths["/leagues"]["get"]
     leagues_description = paths["/leagues"]["get"].get("description", "")
     assert "Args:" not in leagues_description

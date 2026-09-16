@@ -43,16 +43,24 @@ uv run uvicorn fantasy_api.main:app --reload --port 8001
 | `GET` | `/leagues/{league_id}/activity/{page}` | Paginated activity (`page` usually starts at `0`) |
 | `GET` | `/leagues/{league_id}/teams` | Teams/managers |
 | `GET` | `/leagues/{league_id}/teams/{team_id}` | Team roster and clauses |
+| `GET` | `/players` | Public player catalog (no JWT) |
+| `GET` | `/player/{player_id}/market-value` | Public market-value history (no JWT) |
+| `GET` | `/player/{player_id}/league/{league_id}` | League-scoped player card |
 
 Leagues endpoints are a thin authenticated proxy of LaLiga Fantasy. Layout:
 
 `api/leagues.py` → `services/leagues.py` → `repositories/leagues.py` →
 `clients/laliga_fantasy.py`.
 
-See [`docs/api/leagues/`](../../docs/api/leagues/) for leagues docs and
+Players mix public catalog/market-value reads with an authenticated league
+card: `api/players.py` → `services/players.py` → `repositories/players.py`.
+
+See [`docs/api/leagues/`](../../docs/api/leagues/) and
+[`docs/api/players/`](../../docs/api/players/) for feature docs and
 [`docs/api/openapi.md`](../../docs/api/openapi.md) for OpenAPI/Swagger.
 Use `uv run fantasy-leagues` for a local CLI summary (ranking, week standing,
-activity, teams).
+activity, teams). Use `uv run fantasy-players` for catalog, market value, and
+an optional league card.
 
 ## Live connectivity check
 
@@ -92,6 +100,25 @@ uv run fantasy-leagues --league-id 123 --week 5 --json
 Requires auth on `:8000` and this API on `:8001` (overridable with
 `--auth-base` / `--api-base`). If week is omitted, the CLI tries to infer
 the current/última jornada from the leagues or standing payload.
+
+## CLI: fantasy-players
+
+Fetches the public player catalog and, with `--player-id`, market-value
+history. With `--league-id`, also fetches the authenticated league-scoped
+card.
+
+```bash
+cd backend/api
+uv sync --all-extras
+
+uv run fantasy-players
+uv run fantasy-players --player-id 68
+uv run fantasy-players --player-id 68 --league-id 123 --jwt "$INTERNAL_JWT"
+uv run fantasy-players --player-id 68 --json
+```
+
+`--league-id` requires `--jwt` / `INTERNAL_JWT` or `FANTASY_SESSION` +
+`FANTASY_CSRF`. Catalog and market-value do not.
 
 ## OpenAPI / Swagger
 

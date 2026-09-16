@@ -15,7 +15,8 @@ With the API running on port 8001:
 | Raw OpenAPI JSON | http://localhost:8001/openapi.json |
 
 Protected operations declare **HTTP Bearer** security (internal JWT,
-audience `fantasy-api`).
+audience `fantasy-api`). Public player catalog and market-value operations
+do not.
 
 ## What drives the schema
 
@@ -31,6 +32,7 @@ Important modules:
 
 - [`backend/api/src/fantasy_api/schemas/common.py`](../../backend/api/src/fantasy_api/schemas/common.py)
 - [`backend/api/src/fantasy_api/schemas/leagues.py`](../../backend/api/src/fantasy_api/schemas/leagues.py)
+- [`backend/api/src/fantasy_api/schemas/players.py`](../../backend/api/src/fantasy_api/schemas/players.py)
 - [`backend/api/src/fantasy_api/openapi.py`](../../backend/api/src/fantasy_api/openapi.py)
 
 ## Regenerate the committed document

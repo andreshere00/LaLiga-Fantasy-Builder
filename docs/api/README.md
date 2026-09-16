@@ -7,6 +7,9 @@ Application API docs for `backend/api` (`fantasy_api`).
 - [Leagues](leagues/README.md) — league routes, ranking, activity, teams
 - [Adding leagues endpoints](leagues/adding-leagues-endpoints.md) — CRS
   checklist for new league reads
+- [Players](players/README.md) — catalog, market value, league-scoped card
+- [Adding players endpoints](players/adding-players-endpoints.md) — CRS
+  checklist for public and authenticated player reads
 
 Auth and pairing live under [Authentication](../authentication/authentication.md).
 Cross-cutting endpoint patterns:
@@ -32,12 +35,13 @@ backend/api/src/fantasy_api/
 ├── clients/        # auth credentials + LaligaFantasyClient
 ├── schemas/        # Pydantic request/response models (OpenAPI source)
 ├── openapi.py      # generate_openapi / build_openapi_schema
-└── cli/            # fantasy-leagues helper CLI
+├── cli/            # fantasy-leagues / fantasy-players helper CLIs
 ```
 
 ## Authentication for API calls
 
 1. Log in at auth (`POST /auth/token` with session + CSRF) to get an internal JWT.
-2. Call this API with `Authorization: Bearer <internal JWT>`.
-3. LaLiga-backed routes fetch a short-lived Fantasy bearer from auth
+2. Call protected API routes with `Authorization: Bearer <internal JWT>`.
+3. LaLiga-backed **private** routes fetch a short-lived Fantasy bearer from auth
    (`GET /internal/laliga/bearer`); the bearer is never returned to clients.
+   Public `/players` and `/player/{id}/market-value` skip this step.

@@ -84,6 +84,11 @@ proxy competition league resources under
 `/api/v1/competition/{id}/leagues/...`. See
 [Adding leagues endpoints](api/leagues/adding-leagues-endpoints.md).
 
+Players use the same layout. Catalog and market-value are public Fantasy
+reads (no LaLiga bearer). The league-scoped player card is authenticated
+like leagues. See
+[Adding players endpoints](api/players/adding-players-endpoints.md).
+
 The API does not know how to open encrypted credentials or refresh LaLiga
 tokens.
 
@@ -96,9 +101,11 @@ double-submit CSRF and allowed origins.
 
 ### Public browser-to-API boundary
 
-API routes accept an internal Bearer JWT. They do not accept auth cookies.
-Because authentication is in the `Authorization` header rather than ambient
-cookies, API routes do not use the auth service's CSRF mechanism.
+API routes that need an application identity accept an internal Bearer JWT.
+They do not accept auth cookies. Public player catalog and market-value
+routes call Fantasy without a bearer. Because authentication (when required)
+is in the `Authorization` header rather than ambient cookies, API routes do
+not use the auth service's CSRF mechanism.
 
 ### Private API-to-auth boundary
 
@@ -114,9 +121,9 @@ route directly.
 
 ### Auth-to-LaLiga boundary
 
-Only auth communicates with LaLiga B2C for pairing and refresh. Both auth and
-API may call LaLiga Fantasy, but the API gets only the current short-lived
-bearer required for that call.
+Both auth and API may call LaLiga Fantasy. Private API calls get only the
+current short-lived bearer required for that call. Public player catalog and
+market-value reads omit the bearer.
 
 ## Main request flows
 

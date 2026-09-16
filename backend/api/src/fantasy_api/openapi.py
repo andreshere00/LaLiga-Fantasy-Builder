@@ -40,6 +40,13 @@ OPENAPI_TAGS: list[dict[str, str]] = [
             "Thin authenticated proxies of competition league resources."
         ),
     },
+    {
+        "name": "players",
+        "description": (
+            "LaLiga Fantasy player catalog and market-value (public) plus "
+            "league-scoped player cards (authenticated)."
+        ),
+    },
 ]
 
 ERROR_RESPONSES: dict[int | str, dict[str, Any]] = {
@@ -181,12 +188,20 @@ def main(argv: list[str] | None = None) -> int:
     return 0
 
 
+_PUBLIC_PATH_PREFIXES: tuple[str, ...] = ("/health", "/docs", "/redoc", "/openapi.json")
+_PUBLIC_EXACT_PATHS: frozenset[str] = frozenset(
+    {
+        "/players",
+        "/player/{player_id}/market-value",
+    }
+)
+
+
 def _apply_bearer_security(schema: dict[str, Any]) -> None:
     """Mark protected paths as requiring HTTP Bearer auth."""
-    public_prefixes = ("/health", "/docs", "/redoc", "/openapi.json")
     paths = schema.get("paths", {})
     for path, methods in paths.items():
-        if path.startswith(public_prefixes):
+        if path.startswith(_PUBLIC_PATH_PREFIXES) or path in _PUBLIC_EXACT_PATHS:
             continue
         if not isinstance(methods, dict):
             continue
