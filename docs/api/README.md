@@ -7,6 +7,9 @@ Application API docs for `backend/api` (`fantasy_api`).
 - [Leagues](leagues/README.md) — league routes, ranking, activity, teams
 - [Adding leagues endpoints](leagues/adding-leagues-endpoints.md) — CRS
   checklist for new league reads
+- [Teams](teams/README.md) — team money and lineup routes
+- [Adding teams endpoints](teams/adding-teams-endpoints.md) — CRS checklist
+  for team money/lineup
 
 Auth and pairing live under [Authentication](../authentication/authentication.md).
 Cross-cutting endpoint patterns:
@@ -34,6 +37,10 @@ backend/api/src/fantasy_api/
 ├── openapi.py      # generate_openapi / build_openapi_schema
 └── cli/            # fantasy-leagues helper CLI
 ```
+
+Leagues and teams share path encoding (`repositories/paths.py`), bearer
+orchestration (`services/laliga.py`), and payload helpers
+(`schemas/payload.py`, `api/payload.py`).
 
 ## Authentication for API calls
 

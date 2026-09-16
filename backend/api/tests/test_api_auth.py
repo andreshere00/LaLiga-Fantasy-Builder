@@ -24,11 +24,13 @@ from fantasy_api.config import Settings, get_settings
 from fantasy_api.domain.errors import NeedsReauthError, UnauthorizedError, UpstreamError
 from fantasy_api.main import create_app, run
 from fantasy_api.repositories.leagues import LeaguesRepository
+from fantasy_api.repositories.teams import TeamsRepository
 from fantasy_api.security.internal_jwt import (
     InternalJwtValidator,
     StaticInternalJwtValidator,
 )
 from fantasy_api.services.leagues import LeaguesService
+from fantasy_api.services.teams import TeamsService
 from fastapi import FastAPI
 from fastapi.testclient import TestClient
 
@@ -118,12 +120,20 @@ def build_api_container(
             competition_id=settings.laliga_competition_id,
         ),
     )
+    teams_service = TeamsService(
+        credentials,
+        TeamsRepository(
+            laliga_client,
+            competition_id=settings.laliga_competition_id,
+        ),
+    )
     return AppContainer(
         settings=settings,
         jwt_validator=validator,
         credentials=credentials,
         laliga_client=laliga_client,
         leagues_service=leagues_service,
+        teams_service=teams_service,
     )
 
 
@@ -258,6 +268,7 @@ def test_build_container_defaults_wires_services() -> None:
     assert isinstance(container.credentials, AuthCredentialsClient)
     assert isinstance(container.laliga_client, LaligaFantasyClient)
     assert isinstance(container.leagues_service, LeaguesService)
+    assert isinstance(container.teams_service, TeamsService)
 
 
 def test_get_container_when_unset_builds_default() -> None:

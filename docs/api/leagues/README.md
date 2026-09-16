@@ -64,10 +64,13 @@ uv run fantasy-leagues --jwt "$INTERNAL_JWT"
 
 ```text
 api/leagues.py
-  → services/leagues.py          # get_laliga_bearer + repo calls
+  → services/leagues.py          # with_laliga_bearer + repo calls
     → repositories/leagues.py  # path builder
       → clients/laliga_fantasy.py
 ```
+
+Shared helpers with teams: `repositories/paths.py`, `services/laliga.py`,
+`schemas/payload.py`, `api/payload.py`.
 
 See [Architecture](../../architecture.md) for the end-to-end auth → API →
 Fantasy flow.

@@ -9,11 +9,18 @@ Leagues follow a controller–service–repository layout in `backend/api`:
 
 ```text
 api/leagues.py              # FastAPI controller
-services/leagues.py         # bearer fetch + repository orchestration
+services/leagues.py         # with_laliga_bearer + repository orchestration
 repositories/leagues.py     # Fantasy path construction
-clients/laliga_fantasy.py   # shared authenticated GET client
+clients/laliga_fantasy.py   # shared authenticated GET/PUT client
 schemas/leagues.py          # Pydantic / OpenAPI response models
 ```
+
+Shared glue (also used by teams):
+
+- `fantasy_api.repositories.paths` — `segment`, `competition_path`
+- `fantasy_api.services.laliga` — `with_laliga_bearer`
+- `fantasy_api.schemas.payload` — `as_object`, `as_object_list`
+- `fantasy_api.api.payload` — `parse_payload`, `as_model_list`
 
 Upstream base path:
 
@@ -30,12 +37,12 @@ Upstream base path:
    `GET {CMP}/leagues/{leagueId}/market`).
 2. **Add a repository method** in
    `fantasy_api.repositories.leagues.LeaguesRepository` that builds the path
-   and calls `LaligaFantasyClient.get_json`.
+   with `competition_path` (or the repo helper) and calls
+   `LaligaFantasyClient.get_json`.
 3. **Add a service method** in `fantasy_api.services.leagues.LeaguesService`
    that:
    - accepts `internal_jwt` (and path params);
-   - calls `credentials.get_laliga_bearer(internal_jwt)`;
-   - forwards only `bearer_token` to the repository;
+   - calls `with_laliga_bearer(...)`;
    - never logs or returns the bearer.
 4. **Add or extend a Pydantic response model** in
    `fantasy_api.schemas.leagues` (prefer `FlexibleModel` /

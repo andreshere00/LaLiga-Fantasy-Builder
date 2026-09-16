@@ -23,6 +23,9 @@ This directory describes authentication, architecture, and the application API.
 - [Leagues](api/leagues/README.md) — league routes and identifiers
 - [Adding leagues endpoints](api/leagues/adding-leagues-endpoints.md) —
   controller–service–repository checklist
+- [Teams](api/teams/README.md) — team money and lineup routes
+- [Adding teams endpoints](api/teams/adding-teams-endpoints.md) —
+  controller–service–repository checklist for teams
 
 Committed OpenAPI document:
 [`backend/api/openapi.json`](../backend/api/openapi.json)

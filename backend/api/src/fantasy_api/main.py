@@ -9,7 +9,7 @@ from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 
-from fantasy_api.api import leagues, me
+from fantasy_api.api import leagues, me, teams
 from fantasy_api.api.deps import AppContainer, build_container, set_container
 from fantasy_api.config import Settings, get_settings
 from fantasy_api.domain.errors import NeedsReauthError, UnauthorizedError, UpstreamError
@@ -60,11 +60,12 @@ def create_app(
         CORSMiddleware,
         allow_origins=cfg.cors_origins,
         allow_credentials=True,
-        allow_methods=["GET", "POST", "DELETE", "OPTIONS"],
+        allow_methods=["GET", "POST", "PUT", "DELETE", "OPTIONS"],
         allow_headers=["Authorization", "Content-Type", "X-Request-Id"],
     )
     app.include_router(me.router)
     app.include_router(leagues.router)
+    app.include_router(teams.router)
     attach_openapi(app)
 
     @app.get(

@@ -36,13 +36,21 @@ def test_build_openapi_schema_includes_documented_paths() -> None:
     assert "/leagues/{league_id}/activity/{page}" in paths
     assert "/leagues/{league_id}/teams" in paths
     assert "/leagues/{league_id}/teams/{team_id}" in paths
+    assert "/teams/{team_id}/money" in paths
+    assert "/teams/{team_id}/lineup" in paths
+    assert "/teams/{team_id}/lineup/week/{week}" in paths
+    assert "put" in paths["/teams/{team_id}/lineup"]
     assert "/health" in paths
     assert schema["components"]["securitySchemes"]["HTTPBearer"]["scheme"] == "bearer"
     assert "MeResponse" in schema["components"]["schemas"]
     assert "FantasyLeague" in schema["components"]["schemas"]
     assert "StandingRow" in schema["components"]["schemas"]
+    assert "TeamMoney" in schema["components"]["schemas"]
+    assert "TeamLineup" in schema["components"]["schemas"]
+    assert "LineupWrite" in schema["components"]["schemas"]
     assert "ErrorResponse" in schema["components"]["schemas"]
     assert paths["/leagues"]["get"]["security"] == [{"HTTPBearer": []}]
+    assert paths["/teams/{team_id}/money"]["get"]["security"] == [{"HTTPBearer": []}]
     assert "summary" in paths["/leagues"]["get"]
     leagues_description = paths["/leagues"]["get"].get("description", "")
     assert "Args:" not in leagues_description
@@ -56,6 +64,12 @@ def test_build_openapi_schema_includes_documented_paths() -> None:
     assert week_param["description"] == "Matchweek number."
     assert "última jornada" not in week_param["description"]
     assert week_param["schema"].get("minimum") == 1
+    lineup_week_param = next(
+        param
+        for param in paths["/teams/{team_id}/lineup/week/{week}"]["get"]["parameters"]
+        if param["name"] == "week"
+    )
+    assert lineup_week_param["schema"].get("minimum") == 1
     page_param = next(
         param
         for param in paths["/leagues/{league_id}/activity/{page}"]["get"]["parameters"]

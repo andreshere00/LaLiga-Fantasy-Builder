@@ -65,11 +65,14 @@ nothing. Do not first load by ID and compare after exposing resource details.
 ## API endpoint that calls LaLiga Fantasy
 
 After validating the caller, forward the raw internal JWT only through the
-leagues (or feature) service. The service asks auth for a bearer and calls
-Fantasy. Auth uses its verified `sub` to select the connection.
+feature service (leagues, teams, or similar). The service asks auth for a
+bearer and calls Fantasy. Auth uses its verified `sub` to select the
+connection.
 
 For leagues specifically, follow
 [Adding leagues endpoints](../api/leagues/adding-leagues-endpoints.md).
+For team money and lineup, follow
+[Adding teams endpoints](../api/teams/adding-teams-endpoints.md).
 
 ```python
 from typing import Any
@@ -171,7 +174,13 @@ async def update_preferences(
     return {"ok": True}
 ```
 
-When adding `PUT` or `PATCH`, also add that method to the auth CORS allow-list.
+When adding `PUT` or `PATCH` on auth browser routes, also add that method to
+the auth CORS allow-list.
+
+When adding `PUT` (or other write methods) on Fantasy Builder API routes that
+browsers call with a Bearer JWT, add that method to the **API** CORS
+allow-list in `backend/api` (`create_app`). Auth CORS stays separate because
+API writes do not use session cookies.
 
 ## Auth internal endpoint
 
