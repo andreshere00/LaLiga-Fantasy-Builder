@@ -27,12 +27,8 @@ audience `fantasy-api`).
 | `fantasy_api.schemas.*` | Pydantic models registered as components |
 | `fantasy_api.openapi.build_openapi_schema` | Tags, Bearer scheme, shared errors |
 
-Important modules:
-
-- [`backend/api/src/fantasy_api/schemas/common.py`](../../backend/api/src/fantasy_api/schemas/common.py)
-- [`backend/api/src/fantasy_api/schemas/leagues.py`](../../backend/api/src/fantasy_api/schemas/leagues.py)
-- [`backend/api/src/fantasy_api/schemas/teams.py`](../../backend/api/src/fantasy_api/schemas/teams.py)
-- [`backend/api/src/fantasy_api/openapi.py`](../../backend/api/src/fantasy_api/openapi.py)
+Pydantic models live under `fantasy_api.schemas`. Generation:
+`fantasy_api.openapi.build_openapi_schema`.
 
 ## Regenerate the committed document
 

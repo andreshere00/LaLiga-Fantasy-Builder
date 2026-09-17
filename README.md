@@ -15,7 +15,7 @@ Backend services are split so **auth can be deployed on its own**:
 
 - [`docs/README.md`](docs/README.md) — documentation index
 - [`docs/authentication/`](docs/authentication/) — auth flows and endpoint patterns
-- [`docs/api/`](docs/api/) — Fantasy Builder API, OpenAPI/Swagger, leagues
+- [`docs/api/`](docs/api/) — Fantasy Builder API, OpenAPI/Swagger, features
 - [`docs/architecture.md`](docs/architecture.md) — services, trust boundaries,
   persistence, and request flows
 
@@ -40,46 +40,16 @@ Optional: build/run auth in Docker (`docker compose --profile full up --build`).
 
 ## Pair LaLiga
 
-Automated local setup and pairing:
+Preferred (Keycloak login automated; LaLiga consent in your browser):
 
 ```bash
-./scripts/authenticate-laliga.sh
-```
-
-Equivalent CLI command from `backend/auth`:
-
-```bash
-uv run authenticate-laliga
-```
-
-Both commands start the local prerequisites, open application login, run the
-LaLiga PKCE helper, and verify the connection. Browser login and consent remain
-interactive; the CLI securely prompts for the session and CSRF cookie values.
-
-Manual pairing against an already-running auth service:
-
-```bash
-export FANTASY_SESSION='…'
-export FANTASY_CSRF='…'
 cd backend/auth
-uv run pair-laliga
+uv run fantasy-browser-session --exports
 ```
 
-## Auth flows
-
-1. App login: `GET /auth/login` → IdP → `GET /auth/callback` sets
-   `HttpOnly; Secure; SameSite` (default `Lax`, configurable via
-   `COOKIE_SAMESITE`) session cookie plus CSRF token. App ID tokens are
-   verified against `APP_OIDC_JWKS_URL` (signature, iss, aud, exp, nonce).
-2. Pairing: `POST /laliga/pairings` (session + CSRF) returns one-time
-   `{pairing_id, secret, nonce}` valid for 10 minutes.
-3. Helper / `pair-laliga`: PKCE against LaLiga B2C, then complete pairing.
-4. Backend verifies JWKS, confirms `GET /api/v4/user/me`, seals tokens (AES-GCM).
-5. Cross-service: browser `POST /auth/token` → internal JWT; Fantasy API verifies
-   JWKS and calls `GET /internal/laliga/bearer` with JWT + `X-Service-Token`.
-
-No LALIGA passwords or ROPC. Prefer `access_token`; `id_token` fallback via
-`LALIGA_ALLOW_ID_TOKEN_FALLBACK=true`.
+Cookie-prompt alternative: `./scripts/authenticate-laliga.sh`. Details:
+[`backend/auth/README.md`](backend/auth/README.md) and
+[Authentication](docs/authentication/authentication.md).
 
 ## Why auth is separate
 

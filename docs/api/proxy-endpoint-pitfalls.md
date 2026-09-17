@@ -24,8 +24,7 @@ is the wrong type.
 
 ### Pattern in code
 
-Reuse the shared helpers in `fantasy_api.schemas` (leagues module today;
-extract to `schemas/payload.py` when a third domain needs them):
+Reuse `fantasy_api.schemas.payload`:
 
 | Helper | Use when |
 |--------|----------|
@@ -181,7 +180,6 @@ Optional follow-ups (lower noise per PR): shared `conftest.py` for
 
 ## Related docs
 
-- [Adding leagues endpoints](leagues/adding-leagues-endpoints.md)
+- [Adding endpoints](adding-endpoints.md)
 - [OpenAPI / Swagger](openapi.md)
 - [Developing authenticated endpoints](../authentication/developing-authenticated-endpoints.md)
-- Agent skill: `.cursor/skills/developing-endpoints/SKILL.md`

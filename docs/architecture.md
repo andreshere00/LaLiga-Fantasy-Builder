@@ -94,7 +94,7 @@ backend/api/src/fantasy_api/
 ├── domain/           # AppUser, UpstreamError, …
 ├── security/         # Internal JWT validation
 ├── openapi.py        # OpenAPI generation and ERROR_RESPONSES
-└── cli/              # fantasy-leagues, fantasy-teams (local dev helpers)
+└── cli/              # fantasy-leagues, fantasy-teams, fantasy-players
 ```
 
 Process-lifetime wiring lives in `api/deps.py` (`AppContainer`): one shared
@@ -115,13 +115,9 @@ do not share a generic proxy class.
 
 `{CMP}` = `{LALIGA_FANTASY_ORIGIN}/api/v1/competition/{LALIGA_COMPETITION_ID}`.
 
-Guides:
-
-- [Adding leagues endpoints](api/leagues/adding-leagues-endpoints.md)
-- [Adding teams endpoints](api/teams/adding-teams-endpoints.md)
-- [Adding players endpoints](api/players/adding-players-endpoints.md)
-- [Proxy endpoint pitfalls](api/proxy-endpoint-pitfalls.md) — fail-closed
-  proxy rules, read/write schemas, OpenAPI, CLI, and test expectations
+Guides: [Adding endpoints](api/adding-endpoints.md),
+[feature READMEs](api/README.md),
+[Proxy endpoint pitfalls](api/proxy-endpoint-pitfalls.md).
 
 #### Shared proxy building blocks
 
@@ -142,10 +138,12 @@ upstream JSON into empty `{}` or `[]` — see the pitfalls doc.
 
 #### Helper CLIs
 
-`fantasy-leagues`, `fantasy-teams`, and `fantasy-players` are not part of the runtime API. They
-exchange session cookies for an internal JWT (or accept `--jwt`; players public reads need no JWT) and call local
-API routes for manual exploration. Shared flags and token exchange live in
-`cli/common.py`.
+`fantasy-leagues`, `fantasy-teams`, and `fantasy-players` are not part of the
+runtime API. They exchange session cookies for an internal JWT (or accept
+`--jwt`; players public reads need no JWT) and call local API routes. Shared
+flags and token exchange live in `cli/common.py`.
+
+Automated login: `fantasy-browser-session` in `backend/auth`.
 
 ## Trust boundaries
 

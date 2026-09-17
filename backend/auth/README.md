@@ -1,8 +1,8 @@
 # LaLiga Fantasy Builder — Auth service
 
 Standalone FastAPI service for **application identity** (Keycloak/OIDC) and
-**LaLiga Fantasy delegation** (pairing + sealed B2C tokens). Deploy this
-service independently from the future main API / frontend.
+**LaLiga Fantasy delegation** (pairing + sealed B2C tokens). Deploy it
+independently from `backend/api`.
 
 Python package import path: `fantasy_auth`.
 

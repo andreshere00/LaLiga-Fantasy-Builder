@@ -1,13 +1,7 @@
 # Authentication documentation
 
-Auth BFF (`backend/auth`) docs:
-
-- [Authentication](authentication.md) — identities, credentials, login,
-  pairing, token exchange, and security rules
+- [Authentication](authentication.md) — identities, login, pairing, tokens
 - [Developing authenticated endpoints](developing-authenticated-endpoints.md)
-  — when to add routes in auth vs API, CSRF, internal JWT, LaLiga bearer rules
+  — auth vs API, CSRF, internal JWT
 
-Related:
-
-- [API documentation](../api/README.md)
-- [Architecture](../architecture.md)
+Related: [API](../api/README.md), [Architecture](../architecture.md).
