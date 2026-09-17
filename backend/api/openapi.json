@@ -890,6 +890,416 @@
         ]
       }
     },
+    "/teams/{team_id}/money": {
+      "get": {
+        "tags": [
+          "teams"
+        ],
+        "summary": "Get team cash and investment",
+        "description": "Rival teams often return empty or sparse payloads.",
+        "operationId": "get_money_teams__team_id__money_get",
+        "parameters": [
+          {
+            "name": "team_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "description": "Fantasy team identifier.",
+              "title": "Team Id"
+            },
+            "description": "Fantasy team identifier."
+          },
+          {
+            "name": "authorization",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Bearer internal JWT issued by auth ``POST /auth/token``.",
+              "title": "Authorization"
+            },
+            "description": "Bearer internal JWT issued by auth ``POST /auth/token``."
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TeamMoney"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized or LaLiga re-auth required.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "502": {
+            "description": "Auth or Fantasy upstream failure.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Fantasy upstream unavailable.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ]
+      }
+    },
+    "/teams/{team_id}/lineup": {
+      "get": {
+        "tags": [
+          "teams"
+        ],
+        "summary": "Get current team lineup",
+        "operationId": "get_lineup_teams__team_id__lineup_get",
+        "parameters": [
+          {
+            "name": "team_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "description": "Fantasy team identifier.",
+              "title": "Team Id"
+            },
+            "description": "Fantasy team identifier."
+          },
+          {
+            "name": "authorization",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Bearer internal JWT issued by auth ``POST /auth/token``.",
+              "title": "Authorization"
+            },
+            "description": "Bearer internal JWT issued by auth ``POST /auth/token``."
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TeamLineup"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized or LaLiga re-auth required.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "502": {
+            "description": "Auth or Fantasy upstream failure.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Fantasy upstream unavailable.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ]
+      },
+      "put": {
+        "tags": [
+          "teams"
+        ],
+        "summary": "Replace the current team lineup",
+        "description": "Slot identifiers are ``playerTeamId`` values from the roster, not master\n``playerId`` values.",
+        "operationId": "put_lineup_teams__team_id__lineup_put",
+        "parameters": [
+          {
+            "name": "team_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "description": "Fantasy team identifier.",
+              "title": "Team Id"
+            },
+            "description": "Fantasy team identifier."
+          },
+          {
+            "name": "authorization",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Bearer internal JWT issued by auth ``POST /auth/token``.",
+              "title": "Authorization"
+            },
+            "description": "Bearer internal JWT issued by auth ``POST /auth/token``."
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/LineupWrite"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TeamLineup"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized or LaLiga re-auth required.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "502": {
+            "description": "Auth or Fantasy upstream failure.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Fantasy upstream unavailable.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ]
+      }
+    },
+    "/teams/{team_id}/lineup/week/{week}": {
+      "get": {
+        "tags": [
+          "teams"
+        ],
+        "summary": "Get team lineup for a matchweek",
+        "operationId": "get_lineup_by_week_teams__team_id__lineup_week__week__get",
+        "parameters": [
+          {
+            "name": "team_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "description": "Fantasy team identifier.",
+              "title": "Team Id"
+            },
+            "description": "Fantasy team identifier."
+          },
+          {
+            "name": "week",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "description": "Matchweek number.",
+              "title": "Week"
+            },
+            "description": "Matchweek number."
+          },
+          {
+            "name": "authorization",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Bearer internal JWT issued by auth ``POST /auth/token``.",
+              "title": "Authorization"
+            },
+            "description": "Bearer internal JWT issued by auth ``POST /auth/token``."
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TeamLineup"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized or LaLiga re-auth required.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "502": {
+            "description": "Auth or Fantasy upstream failure.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Fantasy upstream unavailable.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ]
+      }
+    },
     "/health/live": {
       "get": {
         "tags": [
@@ -1783,6 +2193,233 @@
         ],
         "title": "LeaguesProbeResponse",
         "description": "Redacted connectivity probe for Fantasy leagues."
+      },
+      "LineupFormation": {
+        "properties": {
+          "goalkeeper": {
+            "anyOf": [
+              {
+                "items": {},
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Goalkeeper"
+          },
+          "defender": {
+            "anyOf": [
+              {
+                "items": {},
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Defender"
+          },
+          "midfield": {
+            "anyOf": [
+              {
+                "items": {},
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Midfield"
+          },
+          "striker": {
+            "anyOf": [
+              {
+                "items": {},
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Striker"
+          },
+          "coach": {
+            "anyOf": [
+              {
+                "items": {},
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Coach"
+          },
+          "captain": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Captain"
+          },
+          "bench": {
+            "anyOf": [
+              {
+                "additionalProperties": true,
+                "type": "object"
+              },
+              {
+                "items": {},
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Bench"
+          },
+          "tacticalFormation": {
+            "anyOf": [
+              {
+                "items": {
+                  "type": "integer"
+                },
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Tacticalformation"
+          }
+        },
+        "additionalProperties": true,
+        "type": "object",
+        "title": "LineupFormation",
+        "description": "Formation block nested under a Fantasy lineup response."
+      },
+      "LineupWrite": {
+        "properties": {
+          "goalkeeper": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "integer"
+              }
+            ],
+            "title": "Goalkeeper"
+          },
+          "defender": {
+            "items": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "integer"
+                }
+              ]
+            },
+            "type": "array",
+            "title": "Defender"
+          },
+          "midfield": {
+            "items": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "integer"
+                }
+              ]
+            },
+            "type": "array",
+            "title": "Midfield"
+          },
+          "striker": {
+            "items": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "integer"
+                }
+              ]
+            },
+            "type": "array",
+            "title": "Striker"
+          },
+          "tactical_formation": {
+            "items": {
+              "type": "integer"
+            },
+            "type": "array",
+            "title": "Tactical Formation"
+          },
+          "coach": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Coach"
+          },
+          "captain": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Captain"
+          },
+          "bench": {
+            "anyOf": [
+              {
+                "additionalProperties": true,
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Bench"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "goalkeeper",
+          "defender",
+          "midfield",
+          "striker",
+          "tactical_formation"
+        ],
+        "title": "LineupWrite",
+        "description": "Request body for ``PUT /teams/{teamId}/lineup``.\n\nSlot values are ``playerTeamId`` roster identifiers, not master\n``playerId`` values. All base lineup slots are required because Fantasy\ntreats PUT as a full replace. Premium leagues may also send ``coach``,\n``captain``, and ``bench`` (unverified unofficial-client fields)."
       },
       "LoanPremiumConfig": {
         "properties": {
@@ -2775,6 +3412,79 @@
         "title": "TeamDetail",
         "description": "Team roster and clauses from ``GET /leagues/{id}/teams/{teamId}``."
       },
+      "TeamLineup": {
+        "properties": {
+          "formation": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/LineupFormation"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "teamId": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Teamid"
+          },
+          "weekNumber": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Weeknumber"
+          }
+        },
+        "additionalProperties": true,
+        "type": "object",
+        "title": "TeamLineup",
+        "description": "Current or weekly lineup from Fantasy team lineup endpoints."
+      },
+      "TeamMoney": {
+        "properties": {
+          "teamMoney": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Teammoney"
+          },
+          "teamInvestment": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Teaminvestment"
+          }
+        },
+        "additionalProperties": true,
+        "type": "object",
+        "title": "TeamMoney",
+        "description": "Cash and investment from ``GET /teams/{teamId}/money``.\n\nRival teams often return empty or sparse objects; fields may be absent."
+      },
       "ValidationError": {
         "properties": {
           "loc": {
@@ -2837,6 +3547,10 @@
     {
       "name": "leagues",
       "description": "LaLiga Fantasy league reads (standing, activity, teams). Thin authenticated proxies of competition league resources."
+    },
+    {
+      "name": "teams",
+      "description": "LaLiga Fantasy team money and lineup reads/writes. Thin authenticated proxies of competition team resources."
     }
   ]
 }

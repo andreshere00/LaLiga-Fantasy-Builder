@@ -84,6 +84,11 @@ proxy competition league resources under
 `/api/v1/competition/{id}/leagues/...`. See
 [Adding leagues endpoints](api/leagues/adding-leagues-endpoints.md).
 
+Team money and lineup use the same CRS layout under
+`/api/v1/competition/{id}/teams/...`, sharing path encoding, bearer fetch,
+and payload helpers with leagues. See
+[Adding teams endpoints](api/teams/adding-teams-endpoints.md).
+
 The API does not know how to open encrypted credentials or refresh LaLiga
 tokens.
 

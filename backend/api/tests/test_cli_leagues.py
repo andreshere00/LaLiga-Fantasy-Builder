@@ -3,24 +3,11 @@
 from __future__ import annotations
 
 import json
-from typing import Any
 
 import httpx
 import pytest
+from cli_http_stub import patch_httpx_client
 from fantasy_api.cli import leagues as leagues_cli
-
-
-def _handler_map(routes: dict[tuple[str, str], Any]):
-    def handler(request: httpx.Request) -> httpx.Response:
-        key = (request.method, request.url.path)
-        if key not in routes:
-            return httpx.Response(404, json={"error": f"missing {key}"})
-        payload = routes[key]
-        if callable(payload):
-            return payload(request)
-        return httpx.Response(200, json=payload)
-
-    return handler
 
 
 # ---- Happy path ---- #
@@ -51,16 +38,7 @@ def test_main_with_jwt_prints_position(
         ("GET", "/leagues/42/teams"): [{"id": "99", "name": "Mi Equipo"}],
         ("GET", "/leagues/42/teams/99"): {"id": "99", "players": []},
     }
-
-    transport = httpx.MockTransport(_handler_map(routes))
-    real_client = httpx.Client
-
-    def client_factory(*args: Any, **kwargs: Any) -> httpx.Client:
-        kwargs["transport"] = transport
-        kwargs.pop("timeout", None)
-        return real_client(*args, timeout=30.0, **kwargs)
-
-    monkeypatch.setattr(leagues_cli.httpx, "Client", client_factory)
+    patch_httpx_client(monkeypatch, routes)
 
     # Act
     code = leagues_cli.main(
@@ -89,15 +67,7 @@ def test_main_json_mode_returns_aggregated_payload(
         ("GET", "/leagues/1/teams"): [],
         ("GET", "/leagues/1/teams/2"): {"id": 2},
     }
-    transport = httpx.MockTransport(_handler_map(routes))
-    real_client = httpx.Client
-
-    def client_factory(*args: Any, **kwargs: Any) -> httpx.Client:
-        kwargs["transport"] = transport
-        kwargs.pop("timeout", None)
-        return real_client(*args, timeout=30.0, **kwargs)
-
-    monkeypatch.setattr(leagues_cli.httpx, "Client", client_factory)
+    patch_httpx_client(monkeypatch, routes)
 
     # Act
     code = leagues_cli.main(
@@ -125,15 +95,7 @@ def test_exchange_token_then_fetch(
             return httpx.Response(200, json=[])
         return httpx.Response(404)
 
-    transport = httpx.MockTransport(handler)
-    real_client = httpx.Client
-
-    def client_factory(*args: Any, **kwargs: Any) -> httpx.Client:
-        kwargs["transport"] = transport
-        kwargs.pop("timeout", None)
-        return real_client(*args, timeout=30.0, **kwargs)
-
-    monkeypatch.setattr(leagues_cli.httpx, "Client", client_factory)
+    patch_httpx_client(monkeypatch, handler)
 
     # Act
     code = leagues_cli.main(
@@ -173,21 +135,13 @@ def test_main_needs_reauth_returns_1(
     capsys: pytest.CaptureFixture[str],
 ) -> None:
     # Arrange
-    def handler(request: httpx.Request) -> httpx.Response:
+    def handler(_request: httpx.Request) -> httpx.Response:
         return httpx.Response(
             401,
             json={"error": "needs_reauth", "detail": "no_laliga_connection"},
         )
 
-    transport = httpx.MockTransport(handler)
-    real_client = httpx.Client
-
-    def client_factory(*args: Any, **kwargs: Any) -> httpx.Client:
-        kwargs["transport"] = transport
-        kwargs.pop("timeout", None)
-        return real_client(*args, timeout=30.0, **kwargs)
-
-    monkeypatch.setattr(leagues_cli.httpx, "Client", client_factory)
+    patch_httpx_client(monkeypatch, handler)
 
     # Act
     code = leagues_cli.main(["--jwt", "tok", "--api-base", "http://api.test"])

@@ -31,6 +31,7 @@ Important modules:
 
 - [`backend/api/src/fantasy_api/schemas/common.py`](../../backend/api/src/fantasy_api/schemas/common.py)
 - [`backend/api/src/fantasy_api/schemas/leagues.py`](../../backend/api/src/fantasy_api/schemas/leagues.py)
+- [`backend/api/src/fantasy_api/schemas/teams.py`](../../backend/api/src/fantasy_api/schemas/teams.py)
 - [`backend/api/src/fantasy_api/openapi.py`](../../backend/api/src/fantasy_api/openapi.py)
 
 ## Regenerate the committed document

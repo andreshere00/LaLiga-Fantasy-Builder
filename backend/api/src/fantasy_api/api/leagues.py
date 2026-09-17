@@ -2,14 +2,10 @@
 
 from __future__ import annotations
 
-from collections.abc import Callable
-from typing import Any
-
 from fastapi import APIRouter, Header, Path
-from pydantic import BaseModel
 
 from fantasy_api.api.deps import get_container, get_current_user
-from fantasy_api.domain.errors import UpstreamError
+from fantasy_api.api.payload import as_model_list, parse_payload
 from fantasy_api.openapi import ERROR_RESPONSES
 from fantasy_api.schemas.leagues import (
     ActivityItem,
@@ -18,10 +14,9 @@ from fantasy_api.schemas.leagues import (
     LeagueTeam,
     StandingRow,
     TeamDetail,
-    as_object,
-    as_object_list,
     summarize_leagues_payload,
 )
+from fantasy_api.schemas.payload import as_object
 
 router = APIRouter(tags=["leagues"])
 
@@ -48,7 +43,7 @@ async def leagues_probe(
     """
     _user, internal_jwt = await get_current_user(authorization)
     data = await get_container().leagues_service.list_leagues(internal_jwt)
-    league_count, league_ids = _parse_payload(summarize_leagues_payload, data)
+    league_count, league_ids = parse_payload(summarize_leagues_payload, data)
     return LeaguesProbeResponse(
         ok=True,
         league_count=league_count,
@@ -79,7 +74,7 @@ async def list_leagues(
     """
     _user, internal_jwt = await get_current_user(authorization)
     data = await get_container().leagues_service.list_leagues(internal_jwt)
-    return _as_model_list(data, FantasyLeague)
+    return as_model_list(data, FantasyLeague)
 
 
 @router.get(
@@ -107,7 +102,7 @@ async def get_standing(
     """
     _user, internal_jwt = await get_current_user(authorization)
     data = await get_container().leagues_service.get_standing(internal_jwt, league_id)
-    return _as_model_list(data, StandingRow)
+    return as_model_list(data, StandingRow)
 
 
 @router.get(
@@ -141,7 +136,7 @@ async def get_standing_by_week(
         league_id,
         week,
     )
-    return _as_model_list(data, StandingRow)
+    return as_model_list(data, StandingRow)
 
 
 @router.get(
@@ -175,7 +170,7 @@ async def get_activity(
         league_id,
         page,
     )
-    return _as_model_list(data, ActivityItem)
+    return as_model_list(data, ActivityItem)
 
 
 @router.get(
@@ -203,7 +198,7 @@ async def list_teams(
     """
     _user, internal_jwt = await get_current_user(authorization)
     data = await get_container().leagues_service.list_teams(internal_jwt, league_id)
-    return _as_model_list(data, LeagueTeam)
+    return as_model_list(data, LeagueTeam)
 
 
 @router.get(
@@ -237,35 +232,4 @@ async def get_team(
         league_id,
         team_id,
     )
-    return TeamDetail.model_validate(_parse_payload(as_object, data))
-
-
-def _as_model_list[TModel: BaseModel](
-    data: object,
-    model: type[TModel],
-) -> list[TModel]:
-    """Coerce upstream JSON into a list of Pydantic models.
-
-    Args:
-        data: Upstream payload (list or wrapped object).
-        model: Target model class.
-
-    Returns:
-        Validated model list.
-
-    Raises:
-        UpstreamError: When the payload is not a collection of objects.
-    """
-    return [model.model_validate(item) for item in _parse_payload(as_object_list, data)]
-
-
-def _parse_payload[T](parser: Callable[[Any], T], data: object) -> T:
-    """Run a payload parser and map shape errors to UpstreamError."""
-    try:
-        return parser(data)
-    except ValueError as exc:
-        raise UpstreamError(
-            "fantasy payload had an unexpected shape",
-            status_code=502,
-            category="fantasy_error",
-        ) from exc
+    return TeamDetail.model_validate(parse_payload(as_object, data))

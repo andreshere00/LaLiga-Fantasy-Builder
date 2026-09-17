@@ -4,11 +4,19 @@ from __future__ import annotations
 
 import argparse
 import json
-import os
 import sys
 from typing import Any
 
 import httpx
+
+from fantasy_api.cli.common import (
+    add_common_cli_args,
+    api_get,
+    as_league_list,
+    league_id,
+    my_team_id,
+    resolve_jwt,
+)
 
 
 def main(argv: list[str] | None = None) -> int:
@@ -33,36 +41,7 @@ def main(argv: list[str] | None = None) -> int:
             "week standing, activity, and teams via the local API"
         ),
     )
-    parser.add_argument(
-        "--auth-base",
-        default=os.environ.get("FANTASY_AUTH_BASE", "http://localhost:8000"),
-        help="Auth service base URL",
-    )
-    parser.add_argument(
-        "--api-base",
-        default=os.environ.get("FANTASY_API_BASE", "http://localhost:8001"),
-        help="Fantasy Builder API base URL",
-    )
-    parser.add_argument(
-        "--session",
-        default=os.environ.get("FANTASY_SESSION") or os.environ.get("SESSION"),
-        help="fantasy_session cookie (or env FANTASY_SESSION)",
-    )
-    parser.add_argument(
-        "--csrf",
-        default=os.environ.get("FANTASY_CSRF") or os.environ.get("CSRF"),
-        help="CSRF token (or env FANTASY_CSRF)",
-    )
-    parser.add_argument(
-        "--jwt",
-        default=os.environ.get("INTERNAL_JWT"),
-        help="Internal JWT (skips /auth/token when set)",
-    )
-    parser.add_argument(
-        "--origin",
-        default=os.environ.get("FANTASY_ORIGIN", "http://localhost:3000"),
-        help="Origin header for auth CSRF checks",
-    )
+    add_common_cli_args(parser)
     parser.add_argument(
         "--league-id",
         default=None,
@@ -87,33 +66,15 @@ def main(argv: list[str] | None = None) -> int:
     )
     args = parser.parse_args(argv)
 
-    jwt = _normalize(args.jwt)
-    if not jwt:
-        session = _normalize(args.session)
-        csrf = _normalize(args.csrf)
-        if not session or not csrf:
-            print(
-                "Missing credentials. Provide --jwt / INTERNAL_JWT, or:\n"
-                "  export FANTASY_SESSION='…'\n"
-                "  export FANTASY_CSRF='…'\n"
-                "Then re-run: uv run fantasy-leagues",
-                file=sys.stderr,
-            )
-            return 1
-        jwt = _exchange_token(
-            auth_base=args.auth_base,
-            session=session,
-            csrf=csrf,
-            origin=args.origin,
-        )
-        if jwt is None:
-            return 1
+    jwt = resolve_jwt(args, command="fantasy-leagues")
+    if jwt is None:
+        return 1
 
     try:
         report = _build_report(
             api_base=args.api_base,
             jwt=jwt,
-            league_id=args.league_id,
+            league_filter=args.league_id,
             week=args.week,
             activity_page=args.activity_page,
         )
@@ -131,107 +92,47 @@ def main(argv: list[str] | None = None) -> int:
     return 0
 
 
-def _normalize(value: str | None) -> str:
-    """Strip whitespace and accidental line breaks."""
-    if not value:
-        return ""
-    return value.replace("\r", "").replace("\n", "").strip()
-
-
-def _exchange_token(
-    *,
-    auth_base: str,
-    session: str,
-    csrf: str,
-    origin: str,
-) -> str | None:
-    """POST /auth/token and return the internal JWT."""
-    url = f"{auth_base.rstrip('/')}/auth/token"
-    headers = {"Origin": origin, "X-CSRF-Token": csrf}
-    with httpx.Client(
-        timeout=30.0,
-        cookies={"fantasy_session": session, "fantasy_csrf": csrf},
-    ) as client:
-        response = client.post(url, headers=headers)
-    if response.status_code == 401:
-        print(
-            "Unauthorized — session expired or CSRF mismatch. "
-            "Re-login at /auth/login and copy fresh cookies.",
-            file=sys.stderr,
-        )
-        return None
-    if not response.is_success:
-        print(
-            f"Token exchange failed: {response.status_code} {response.text}",
-            file=sys.stderr,
-        )
-        return None
-    token = response.json().get("access_token")
-    if not token:
-        print("Token exchange response missing access_token", file=sys.stderr)
-        return None
-    return str(token)
-
-
-def _api_get(api_base: str, path: str, jwt: str) -> Any:
-    """GET a Fantasy Builder API path with the internal JWT."""
-    url = f"{api_base.rstrip('/')}{path}"
-    headers = {"Authorization": f"Bearer {jwt}", "Accept": "application/json"}
-    with httpx.Client(timeout=60.0) as client:
-        response = client.get(url, headers=headers)
-    if response.status_code == 401:
-        body = _safe_json(response)
-        error = body.get("error") or "unauthorized"
-        detail = body.get("detail") or response.text
-        raise RuntimeError(f"API {path} → {error}: {detail}")
-    if not response.is_success:
-        raise RuntimeError(
-            f"API {path} failed: {response.status_code} {response.text[:300]}",
-        )
-    return response.json()
-
-
 def _build_report(
     *,
     api_base: str,
     jwt: str,
-    league_id: str | None,
+    league_filter: str | None,
     week: int | None,
     activity_page: int,
 ) -> dict[str, Any]:
     """Fetch leagues and per-league detail payloads."""
-    leagues_payload = _api_get(api_base, "/leagues", jwt)
-    leagues = _as_league_list(leagues_payload)
-    if league_id:
-        leagues = [item for item in leagues if str(_league_id(item)) == str(league_id)]
+    leagues_payload = api_get(api_base, "/leagues", jwt)
+    leagues = as_league_list(leagues_payload)
+    if league_filter:
+        leagues = [item for item in leagues if str(league_id(item)) == str(league_filter)]
         if not leagues:
-            raise RuntimeError(f"League id {league_id!r} not found in /leagues")
+            raise RuntimeError(f"League id {league_filter!r} not found in /leagues")
 
     league_reports: list[dict[str, Any]] = []
     for item in leagues:
-        lid = _league_id(item)
+        lid = league_id(item)
         if lid is None:
             continue
         lid_str = str(lid)
-        standing = _api_get(api_base, f"/leagues/{lid_str}/standing", jwt)
+        standing = api_get(api_base, f"/leagues/{lid_str}/standing", jwt)
         inferred_week = week if week is not None else _infer_week(item, standing)
         week_standing = None
         if inferred_week is not None:
-            week_standing = _api_get(
+            week_standing = api_get(
                 api_base,
                 f"/leagues/{lid_str}/standing/{inferred_week}",
                 jwt,
             )
-        activity = _api_get(
+        activity = api_get(
             api_base,
             f"/leagues/{lid_str}/activity/{activity_page}",
             jwt,
         )
-        teams = _api_get(api_base, f"/leagues/{lid_str}/teams", jwt)
-        team_id = _my_team_id(item)
+        teams = api_get(api_base, f"/leagues/{lid_str}/teams", jwt)
+        team_id = my_team_id(item)
         my_team = None
         if team_id is not None:
-            my_team = _api_get(
+            my_team = api_get(
                 api_base,
                 f"/leagues/{lid_str}/teams/{team_id}",
                 jwt,
@@ -253,31 +154,6 @@ def _build_report(
         )
 
     return {"leagues": league_reports}
-
-
-def _as_league_list(payload: Any) -> list[dict[str, Any]]:
-    """Normalize /leagues payload to a list of objects."""
-    if isinstance(payload, list):
-        return [item for item in payload if isinstance(item, dict)]
-    if isinstance(payload, dict):
-        nested = payload.get("leagues")
-        if isinstance(nested, list):
-            return [item for item in nested if isinstance(item, dict)]
-        return [payload]
-    return []
-
-
-def _league_id(item: dict[str, Any]) -> Any:
-    """Extract league id from a leagues list item."""
-    return item.get("id") or item.get("leagueId") or item.get("league_id")
-
-
-def _my_team_id(item: dict[str, Any]) -> Any:
-    """Extract the caller's team id from a leagues list item."""
-    team = item.get("team")
-    if isinstance(team, dict):
-        return team.get("id") or team.get("teamId")
-    return item.get("teamId") or item.get("team_id")
 
 
 def _infer_week(league: dict[str, Any], standing: Any) -> int | None:
@@ -302,7 +178,7 @@ def _infer_week(league: dict[str, Any], standing: Any) -> int | None:
 
 def _league_summary(league: dict[str, Any], standing: Any) -> dict[str, Any]:
     """Build a compact ranking summary for the caller's team."""
-    team_id = _my_team_id(league)
+    team_id = my_team_id(league)
     team = league.get("team") if isinstance(league.get("team"), dict) else {}
     name = (team or {}).get("name") or league.get("teamName") or league.get("name") or "unknown"
     position = _find_position(standing, team_id)
@@ -327,7 +203,8 @@ def _find_position(standing: Any, team_id: Any) -> dict[str, Any] | None:
     if team_id is None:
         return None
     for index, row in enumerate(rows, start=1):
-        team = row.get("team") if isinstance(row.get("team"), dict) else {}
+        raw_team = row.get("team")
+        team: dict[str, Any] = raw_team if isinstance(raw_team, dict) else {}
         row_team_id = row.get("teamId") or row.get("team_id") or team.get("id") or row.get("id")
         if row_team_id is not None and str(row_team_id) == str(team_id):
             rank = row.get("position") or row.get("rank") or index
@@ -409,7 +286,8 @@ def _print_standing(standing: Any, *, highlight_team_id: Any) -> None:
         return
     for index, row in enumerate(rows[:15], start=1):
         rank = row.get("position") or row.get("rank") or index
-        team = row.get("team") if isinstance(row.get("team"), dict) else {}
+        raw_team = row.get("team")
+        team: dict[str, Any] = raw_team if isinstance(raw_team, dict) else {}
         name = (
             row.get("name")
             or row.get("teamName")
@@ -494,15 +372,6 @@ def _count(payload: Any) -> int:
     if isinstance(payload, dict) and isinstance(payload.get("teams"), list):
         return len(payload["teams"])
     return 0
-
-
-def _safe_json(response: httpx.Response) -> dict[str, Any]:
-    """Parse JSON object or return empty dict."""
-    try:
-        data = response.json()
-    except Exception:
-        return {}
-    return data if isinstance(data, dict) else {}
 
 
 if __name__ == "__main__":

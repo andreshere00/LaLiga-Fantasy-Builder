@@ -43,16 +43,26 @@ uv run uvicorn fantasy_api.main:app --reload --port 8001
 | `GET` | `/leagues/{league_id}/activity/{page}` | Paginated activity (`page` usually starts at `0`) |
 | `GET` | `/leagues/{league_id}/teams` | Teams/managers |
 | `GET` | `/leagues/{league_id}/teams/{team_id}` | Team roster and clauses |
+| `GET` | `/teams/{team_id}/money` | Team cash and investment |
+| `GET` | `/teams/{team_id}/lineup` | Current lineup |
+| `GET` | `/teams/{team_id}/lineup/week/{week}` | Lineup for a matchweek |
+| `PUT` | `/teams/{team_id}/lineup` | Replace current lineup |
 
 Leagues endpoints are a thin authenticated proxy of LaLiga Fantasy. Layout:
 
 `api/leagues.py` → `services/leagues.py` → `repositories/leagues.py` →
 `clients/laliga_fantasy.py`.
 
-See [`docs/api/leagues/`](../../docs/api/leagues/) for leagues docs and
+Teams money/lineup use the same CRS pattern under `{CMP}/teams/...`:
+
+`api/teams.py` → `services/teams.py` → `repositories/teams.py` →
+`clients/laliga_fantasy.py`.
+
+See [`docs/api/leagues/`](../../docs/api/leagues/) and
+[`docs/api/teams/`](../../docs/api/teams/) for feature docs and
 [`docs/api/openapi.md`](../../docs/api/openapi.md) for OpenAPI/Swagger.
 Use `uv run fantasy-leagues` for a local CLI summary (ranking, week standing,
-activity, teams).
+activity, teams) and `uv run fantasy-teams` for money and lineup.
 
 ## Live connectivity check
 
@@ -92,6 +102,29 @@ uv run fantasy-leagues --league-id 123 --week 5 --json
 Requires auth on `:8000` and this API on `:8001` (overridable with
 `--auth-base` / `--api-base`). If week is omitted, the CLI tries to infer
 the current/última jornada from the leagues or standing payload.
+
+## CLI: fantasy-teams
+
+Fetches team money, current lineup, and optional week lineup via this API.
+Resolves `team_id` from `GET /leagues` unless `--team-id` is set.
+
+```bash
+cd backend/api
+uv sync --all-extras
+
+# Option A — session cookies (exchanges /auth/token for you)
+export FANTASY_SESSION='…'
+export FANTASY_CSRF='…'
+uv run fantasy-teams
+
+# Option B — already minted JWT
+export INTERNAL_JWT='…'
+uv run fantasy-teams --jwt "$INTERNAL_JWT"
+
+# Useful flags
+uv run fantasy-teams --team-id 99 --week 5 --json
+uv run fantasy-teams --league-id 42 --week 5
+```
 
 ## OpenAPI / Swagger
 

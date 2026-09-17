@@ -13,8 +13,10 @@ from fantasy_api.config import Settings, get_settings
 from fantasy_api.domain.errors import UnauthorizedError
 from fantasy_api.domain.users import AppUser, extract_app_user_from_claims
 from fantasy_api.repositories.leagues import LeaguesRepository
+from fantasy_api.repositories.teams import TeamsRepository
 from fantasy_api.security.internal_jwt import InternalJwtValidator
 from fantasy_api.services.leagues import LeaguesService
+from fantasy_api.services.teams import TeamsService
 
 
 class TokenValidator(Protocol):
@@ -34,6 +36,7 @@ class AppContainer:
         credentials: Auth credentials client.
         laliga_client: LaLiga Fantasy HTTP client.
         leagues_service: Leagues application service.
+        teams_service: Teams application service.
     """
 
     settings: Settings
@@ -41,6 +44,7 @@ class AppContainer:
     credentials: AuthCredentialsClient
     laliga_client: LaligaFantasyClient
     leagues_service: LeaguesService
+    teams_service: TeamsService
 
     async def aclose(self) -> None:
         """Close process-lifetime HTTP clients."""
@@ -58,6 +62,7 @@ def build_container(
     credentials: AuthCredentialsClient | None = None,
     laliga_client: LaligaFantasyClient | None = None,
     leagues_service: LeaguesService | None = None,
+    teams_service: TeamsService | None = None,
 ) -> AppContainer:
     """Build the API container.
 
@@ -67,6 +72,7 @@ def build_container(
         credentials: Optional credentials client override (tests).
         laliga_client: Optional Fantasy client override (tests).
         leagues_service: Optional leagues service override (tests).
+        teams_service: Optional teams service override (tests).
 
     Returns:
         Wired container.
@@ -84,9 +90,16 @@ def build_container(
     fantasy = laliga_client or LaligaFantasyClient(
         origin=cfg.laliga_fantasy_origin,
     )
-    service = leagues_service or LeaguesService(
+    leagues = leagues_service or LeaguesService(
         creds,
         LeaguesRepository(
+            fantasy,
+            competition_id=cfg.laliga_competition_id,
+        ),
+    )
+    teams = teams_service or TeamsService(
+        creds,
+        TeamsRepository(
             fantasy,
             competition_id=cfg.laliga_competition_id,
         ),
@@ -96,7 +109,8 @@ def build_container(
         jwt_validator=validator,
         credentials=creds,
         laliga_client=fantasy,
-        leagues_service=service,
+        leagues_service=leagues,
+        teams_service=teams,
     )
 
 

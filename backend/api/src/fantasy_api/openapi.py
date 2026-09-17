@@ -40,6 +40,13 @@ OPENAPI_TAGS: list[dict[str, str]] = [
             "Thin authenticated proxies of competition league resources."
         ),
     },
+    {
+        "name": "teams",
+        "description": (
+            "LaLiga Fantasy team money and lineup reads/writes. "
+            "Thin authenticated proxies of competition team resources."
+        ),
+    },
 ]
 
 ERROR_RESPONSES: dict[int | str, dict[str, Any]] = {
