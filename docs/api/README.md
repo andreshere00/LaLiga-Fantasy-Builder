@@ -10,6 +10,9 @@ Application API docs for `backend/api` (`fantasy_api`).
 - [Teams](teams/README.md) — team money and lineup routes
 - [Adding teams endpoints](teams/adding-teams-endpoints.md) — CRS checklist
   for team money/lineup
+- [Players](players/README.md) — player catalog, market value, league cards
+- [Adding players endpoints](players/adding-players-endpoints.md) — CRS checklist
+  for mixed public/authenticated player reads
 - [Proxy endpoint pitfalls](proxy-endpoint-pitfalls.md) — review learnings
   (fail-closed proxy, read/write schemas, OpenAPI, CLI, tests)
 
@@ -37,12 +40,13 @@ backend/api/src/fantasy_api/
 ├── clients/        # auth credentials + LaligaFantasyClient
 ├── schemas/        # Pydantic request/response models (OpenAPI source)
 ├── openapi.py      # generate_openapi / build_openapi_schema
-└── cli/            # fantasy-leagues / fantasy-teams helper CLIs
+└── cli/            # fantasy-leagues / fantasy-teams / fantasy-players helper CLIs
 ```
 
-Leagues and teams share path encoding (`repositories/paths.py`), bearer
-orchestration (`services/laliga.py`), and payload helpers
-(`schemas/payload.py`, `api/payload.py`).
+Leagues, teams, and players share path encoding (`repositories/paths.py`),
+bearer orchestration (`services/laliga.py`), and payload helpers
+(`schemas/payload.py`, `api/payload.py`). Players catalog and market value are
+public (no JWT, no LaLiga bearer); the league player card is authenticated.
 
 ## Authentication for API calls
 

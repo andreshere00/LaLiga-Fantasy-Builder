@@ -47,6 +47,9 @@ uv run uvicorn fantasy_api.main:app --reload --port 8001
 | `GET` | `/teams/{team_id}/lineup` | Current lineup |
 | `GET` | `/teams/{team_id}/lineup/week/{week}` | Lineup for a matchweek |
 | `PUT` | `/teams/{team_id}/lineup` | Replace current lineup |
+| `GET` | `/players` | Player catalog (public, no JWT) |
+| `GET` | `/players/{player_id}/market-value` | Market-value history (public, no JWT) |
+| `GET` | `/players/{player_id}/league/{league_id}` | League-contextual player card |
 
 Leagues endpoints are a thin authenticated proxy of LaLiga Fantasy. Layout:
 
@@ -58,11 +61,19 @@ Teams money/lineup use the same CRS pattern under `{CMP}/teams/...`:
 `api/teams.py` → `services/teams.py` → `repositories/teams.py` →
 `clients/laliga_fantasy.py`.
 
-See [`docs/api/leagues/`](../../docs/api/leagues/) and
-[`docs/api/teams/`](../../docs/api/teams/) for feature docs and
+Players use the same CRS pattern with mixed auth (public catalog/market value,
+authenticated league card):
+
+`api/players.py` → `services/players.py` → `repositories/players.py` →
+`clients/laliga_fantasy.py`.
+
+See [`docs/api/leagues/`](../../docs/api/leagues/),
+[`docs/api/teams/`](../../docs/api/teams/), and
+[`docs/api/players/`](../../docs/api/players/) for feature docs and
 [`docs/api/openapi.md`](../../docs/api/openapi.md) for OpenAPI/Swagger.
 Use `uv run fantasy-leagues` for a local CLI summary (ranking, week standing,
-activity, teams) and `uv run fantasy-teams` for money and lineup.
+activity, teams), `uv run fantasy-teams` for money and lineup, and
+`uv run fantasy-players` for catalog, market value, and league cards.
 
 ## Live connectivity check
 

@@ -12,6 +12,7 @@ _COLLECTION_WRAPPER_KEYS: tuple[str, ...] = (
     "activity",
     "items",
     "data",
+    "players",
 )
 
 

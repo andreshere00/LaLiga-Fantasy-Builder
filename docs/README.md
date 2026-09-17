@@ -6,8 +6,8 @@ This directory describes authentication, architecture, and the application API.
 
 ### Architecture
 
-- [Architecture](architecture.md) — service boundaries, trust boundaries,
-  persistence, and request flows
+- [Architecture](architecture.md) — services, CRS proxy layout, trust
+  boundaries, error model, CI, and request flows
 
 ### Authentication (`docs/authentication/`)
 
@@ -26,8 +26,11 @@ This directory describes authentication, architecture, and the application API.
 - [Teams](api/teams/README.md) — team money and lineup routes
 - [Adding teams endpoints](api/teams/adding-teams-endpoints.md) —
   controller–service–repository checklist for teams
+- [Players](api/players/README.md) — player catalog, market value, league cards
+- [Adding players endpoints](api/players/adding-players-endpoints.md) —
+  controller–service–repository checklist for players (mixed public/auth)
 - [Proxy endpoint pitfalls](api/proxy-endpoint-pitfalls.md) — avoid repeat
-  review findings on LaLiga-backed routes (leagues, teams, …)
+  review findings on LaLiga-backed routes (leagues, teams, players, …)
 
 Committed OpenAPI document:
 [`backend/api/openapi.json`](../backend/api/openapi.json)

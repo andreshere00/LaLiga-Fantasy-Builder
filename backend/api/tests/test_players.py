@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-import json
 import time
 from collections.abc import Callable
 
@@ -97,7 +96,7 @@ def _auth_needs_reauth_handler(request: httpx.Request) -> httpx.Response:
     )
 
 
-def build_teams_container(
+def build_players_container(
     public_pem: str,
     *,
     fantasy_handler: httpx.MockTransport | None = None,
@@ -155,23 +154,16 @@ def build_teams_container(
     )
 
 
-def _valid_lineup_payload() -> dict[str, object]:
-    return {
-        "goalkeeper": "pt-1",
-        "defender": ["pt-2", "pt-3", "pt-4", "pt-5"],
-        "midfield": ["pt-6", "pt-7", "pt-8"],
-        "striker": ["pt-9", "pt-10", "pt-11"],
-        "tactical_formation": [4, 3, 3],
-    }
-
-
 def make_client(
     public_pem: str,
     fantasy_handler: Callable[[httpx.Request], httpx.Response],
+    *,
+    auth_handler: httpx.MockTransport | None = None,
 ) -> TestClient:
-    container = build_teams_container(
+    container = build_players_container(
         public_pem,
         fantasy_handler=httpx.MockTransport(fantasy_handler),
+        auth_handler=auth_handler,
     )
     app = create_app(settings=container.settings, container=container)
     set_container(container)
@@ -181,35 +173,58 @@ def make_client(
 # ---- Happy path ---- #
 
 
-@pytest.mark.parametrize(
-    ("path", "expected_suffix", "upstream", "expected"),
-    [
-        (
-            "/teams/99/money",
-            "/api/v1/competition/1/teams/99/money",
-            {"teamMoney": 1_000_000, "teamInvestment": 50_000},
-            {"teamMoney": 1_000_000, "teamInvestment": 50_000},
-        ),
-        (
-            "/teams/99/lineup",
-            "/api/v1/competition/1/teams/99/lineup",
-            {"formation": {"tacticalFormation": [4, 3, 3]}},
-            {"formation": {"tacticalFormation": [4, 3, 3]}},
-        ),
-        (
-            "/teams/99/lineup/week/5",
-            "/api/v1/competition/1/teams/99/lineup/week/5",
-            {"weekNumber": 5, "formation": {"goalkeeper": []}},
-            {"weekNumber": 5},
-        ),
-    ],
-)
-def test_team_get_routes_proxy_expected_fantasy_paths(
+def test_list_players_public_proxies_catalog_without_bearer(
     rsa_pems: tuple[str, str],
-    path: str,
-    expected_suffix: str,
-    upstream: object,
-    expected: object,
+) -> None:
+    # Arrange
+    _private_pem, public_pem = rsa_pems
+
+    def fantasy_handler(request: httpx.Request) -> httpx.Response:
+        assert request.method == "GET"
+        assert request.url.path == "/api/v1/competition/1/players"
+        assert "Authorization" not in request.headers
+        assert request.headers["x-lang"] == "es"
+        return httpx.Response(
+            200, json=[{"id": "1", "nickname": "Lamine", "marketValue": 50}]
+        )
+
+    with make_client(public_pem, fantasy_handler) as client:
+        # Act
+        response = client.get("/players")
+
+    # Assert
+    assert response.status_code == 200
+    assert response.json() == [
+        {"id": "1", "nickname": "Lamine", "marketValue": 50}
+    ]
+
+
+def test_get_market_value_public_proxies_history_without_bearer(
+    rsa_pems: tuple[str, str],
+) -> None:
+    # Arrange
+    _private_pem, public_pem = rsa_pems
+
+    def fantasy_handler(request: httpx.Request) -> httpx.Response:
+        assert request.method == "GET"
+        assert request.url.path == "/api/v1/competition/1/player/7/market-value"
+        assert "Authorization" not in request.headers
+        assert request.headers["x-lang"] == "es"
+        return httpx.Response(
+            200, json=[{"date": "2026-09-01", "marketValue": 100}]
+        )
+
+    with make_client(public_pem, fantasy_handler) as client:
+        # Act
+        response = client.get("/players/7/market-value")
+
+    # Assert
+    assert response.status_code == 200
+    assert response.json() == [{"date": "2026-09-01", "marketValue": 100}]
+
+
+def test_get_league_player_authenticated_proxies_with_bearer(
+    rsa_pems: tuple[str, str],
 ) -> None:
     # Arrange
     private_pem, public_pem = rsa_pems
@@ -217,160 +232,50 @@ def test_team_get_routes_proxy_expected_fantasy_paths(
 
     def fantasy_handler(request: httpx.Request) -> httpx.Response:
         assert request.method == "GET"
-        assert request.url.path == expected_suffix
+        assert request.url.path == "/api/v1/competition/1/player/7/league/42"
         assert request.headers["Authorization"] == f"Bearer {LALIGA_BEARER}"
         assert request.headers["x-lang"] == "es"
-        return httpx.Response(200, json=upstream)
+        return httpx.Response(
+            200, json={"playerTeamId": "pt-1", "playerMaster": {"id": "7"}}
+        )
 
     with make_client(public_pem, fantasy_handler) as client:
         # Act
-        response = client.get(path, headers={"Authorization": f"Bearer {token}"})
+        response = client.get(
+            "/players/7/league/42",
+            headers={"Authorization": f"Bearer {token}"},
+        )
 
     # Assert
     assert response.status_code == 200
-    body = response.json()
-    for key, value in expected.items():
-        assert body[key] == value
+    assert response.json()["playerTeamId"] == "pt-1"
     assert LALIGA_BEARER not in response.text
 
 
-def test_put_lineup_proxies_json_body(
+def test_list_players_wrapped_payload_returns_rows(
     rsa_pems: tuple[str, str],
 ) -> None:
     # Arrange
-    private_pem, public_pem = rsa_pems
-    token = mint_internal_jwt(private_pem)
-    payload = _valid_lineup_payload()
+    _private_pem, public_pem = rsa_pems
 
     def fantasy_handler(request: httpx.Request) -> httpx.Response:
-        assert request.method == "PUT"
-        assert request.url.path == "/api/v1/competition/1/teams/99/lineup"
-        assert request.headers["Authorization"] == f"Bearer {LALIGA_BEARER}"
-        assert request.headers["Content-Type"] == "application/json"
-        assert request.headers["x-lang"] == "es"
-        assert json.loads(request.content.decode()) == payload
-        return httpx.Response(200, json={"formation": {"tacticalFormation": [4, 3, 3]}})
+        return httpx.Response(200, json={"players": [{"id": "9"}]})
 
     with make_client(public_pem, fantasy_handler) as client:
         # Act
-        response = client.put(
-            "/teams/99/lineup",
-            headers={"Authorization": f"Bearer {token}"},
-            json=payload,
-        )
+        response = client.get("/players")
 
     # Assert
     assert response.status_code == 200
-    assert response.json()["formation"]["tacticalFormation"] == [4, 3, 3]
-    assert LALIGA_BEARER not in response.text
-
-
-def test_put_lineup_empty_success_body_returns_empty_object(
-    rsa_pems: tuple[str, str],
-) -> None:
-    # Arrange
-    private_pem, public_pem = rsa_pems
-    token = mint_internal_jwt(private_pem)
-
-    def fantasy_handler(request: httpx.Request) -> httpx.Response:
-        assert request.method == "PUT"
-        return httpx.Response(204)
-
-    with make_client(public_pem, fantasy_handler) as client:
-        # Act
-        response = client.put(
-            "/teams/99/lineup",
-            headers={"Authorization": f"Bearer {token}"},
-            json=_valid_lineup_payload(),
-        )
-
-    # Assert
-    assert response.status_code == 200
-    assert response.json() == {}
-    assert LALIGA_BEARER not in response.text
-
-
-def test_put_lineup_rejects_extra_keys(
-    rsa_pems: tuple[str, str],
-) -> None:
-    # Arrange
-    private_pem, public_pem = rsa_pems
-    token = mint_internal_jwt(private_pem)
-
-    def fantasy_handler(_request: httpx.Request) -> httpx.Response:
-        raise AssertionError("Fantasy must not be called for invalid body")
-
-    payload = {**_valid_lineup_payload(), "unexpected": "value"}
-
-    with make_client(public_pem, fantasy_handler) as client:
-        # Act
-        response = client.put(
-            "/teams/99/lineup",
-            headers={"Authorization": f"Bearer {token}"},
-            json=payload,
-        )
-
-    # Assert
-    assert response.status_code == 422
-
-
-def test_put_lineup_rejects_incomplete_body(
-    rsa_pems: tuple[str, str],
-) -> None:
-    # Arrange
-    private_pem, public_pem = rsa_pems
-    token = mint_internal_jwt(private_pem)
-
-    def fantasy_handler(_request: httpx.Request) -> httpx.Response:
-        raise AssertionError("Fantasy must not be called for incomplete body")
-
-    with make_client(public_pem, fantasy_handler) as client:
-        # Act
-        response = client.put(
-            "/teams/99/lineup",
-            headers={"Authorization": f"Bearer {token}"},
-            json={"goalkeeper": "pt-1"},
-        )
-
-    # Assert
-    assert response.status_code == 422
+    assert response.json() == [{"id": "9"}]
 
 
 @pytest.mark.asyncio
-async def test_teams_repository_get_money_encodes_path_ids() -> None:
-    # Arrange
-    seen: list[str] = []
-
-    def handler(request: httpx.Request) -> httpx.Response:
-        seen.append(request.url.raw_path.decode())
-        return httpx.Response(200, json={})
-
-    repo = TeamsRepository(
-        LaligaFantasyClient(
-            origin=FANTASY_ORIGIN,
-            transport=httpx.MockTransport(handler),
-        ),
-        competition_id=1,
-    )
-
-    # Act
-    await repo.get_money("tok", "t?z")
-    await repo.get_lineup("tok", "a/b")
-
-    # Assert
-    assert seen == [
-        "/api/v1/competition/1/teams/t%3Fz/money",
-        "/api/v1/competition/1/teams/a%2Fb/lineup",
-    ]
-
-
-@pytest.mark.asyncio
-async def test_laliga_fantasy_client_put_json_returns_body() -> None:
+async def test_laliga_fantasy_client_get_json_without_bearer_omits_header() -> None:
     # Arrange
     def handler(request: httpx.Request) -> httpx.Response:
-        assert request.method == "PUT"
-        assert request.headers["Content-Type"] == "application/json"
-        assert json.loads(request.content.decode()) == {"goalkeeper": "1"}
+        assert "Authorization" not in request.headers
+        assert request.headers["x-lang"] == "es"
         return httpx.Response(200, json={"ok": True})
 
     client = LaligaFantasyClient(
@@ -379,64 +284,71 @@ async def test_laliga_fantasy_client_put_json_returns_body() -> None:
     )
 
     # Act
-    data = await client.put_json(
-        "/api/v1/competition/1/teams/1/lineup",
-        "tok",
-        {
-            "goalkeeper": "1",
-        },
-    )
+    data = await client.get_json("/api/v1/competition/1/players")
 
     # Assert
     assert data == {"ok": True}
 
 
 @pytest.mark.asyncio
-async def test_laliga_fantasy_client_put_json_empty_body_returns_object() -> None:
+async def test_players_repository_encodes_path_ids() -> None:
     # Arrange
-    client = LaligaFantasyClient(
-        origin=FANTASY_ORIGIN,
-        transport=httpx.MockTransport(lambda _r: httpx.Response(204)),
+    seen: list[str] = []
+
+    def handler(request: httpx.Request) -> httpx.Response:
+        seen.append(request.url.raw_path.decode())
+        return httpx.Response(200, json={})
+
+    repo = PlayersRepository(
+        LaligaFantasyClient(
+            origin=FANTASY_ORIGIN,
+            transport=httpx.MockTransport(handler),
+        ),
+        competition_id=1,
     )
 
     # Act
-    data = await client.put_json("/x", "tok", {"a": 1})
+    await repo.get_market_value("a/b")
+    await repo.get_league_player("tok", "p?1", "l/2")
 
     # Assert
-    assert data == {}
+    assert seen == [
+        "/api/v1/competition/1/player/a%2Fb/market-value",
+        "/api/v1/competition/1/player/p%3F1/league/l%2F2",
+    ]
 
 
 # ---- Error paths ---- #
 
 
-def test_get_money_rejects_missing_bearer(
+def test_get_league_player_rejects_missing_jwt(
     rsa_pems: tuple[str, str],
 ) -> None:
     # Arrange
     _private_pem, public_pem = rsa_pems
 
     def fantasy_handler(_request: httpx.Request) -> httpx.Response:
-        return httpx.Response(200, json={})
+        raise AssertionError("Fantasy must not be called without JWT")
 
     with make_client(public_pem, fantasy_handler) as client:
         # Act
-        response = client.get("/teams/99/money")
+        response = client.get("/players/7/league/42")
 
     # Assert
     assert response.status_code == 401
     assert response.json()["error"] == "unauthorized"
 
 
-def test_get_money_maps_needs_reauth(
+def test_get_league_player_maps_needs_reauth(
     rsa_pems: tuple[str, str],
 ) -> None:
     # Arrange
     private_pem, public_pem = rsa_pems
     token = mint_internal_jwt(private_pem)
-    container = build_teams_container(
+    container = build_players_container(
         public_pem,
         fantasy_handler=httpx.MockTransport(
-            lambda _r: httpx.Response(200, json={}),
+            lambda _r: httpx.Response(200, json={})
         ),
         auth_handler=httpx.MockTransport(_auth_needs_reauth_handler),
     )
@@ -446,7 +358,7 @@ def test_get_money_maps_needs_reauth(
     with TestClient(app) as client:
         # Act
         response = client.get(
-            "/teams/99/money",
+            "/players/7/league/42",
             headers={"Authorization": f"Bearer {token}"},
         )
 
@@ -456,7 +368,7 @@ def test_get_money_maps_needs_reauth(
     assert LALIGA_BEARER not in response.text
 
 
-def test_get_lineup_maps_fantasy_unauthorized(
+def test_get_league_player_maps_fantasy_unauthorized(
     rsa_pems: tuple[str, str],
 ) -> None:
     # Arrange
@@ -469,7 +381,7 @@ def test_get_lineup_maps_fantasy_unauthorized(
     with make_client(public_pem, fantasy_handler) as client:
         # Act
         response = client.get(
-            "/teams/99/lineup",
+            "/players/7/league/42",
             headers={"Authorization": f"Bearer {token}"},
         )
 
@@ -477,25 +389,20 @@ def test_get_lineup_maps_fantasy_unauthorized(
     assert response.status_code == 401
     assert response.json()["error"] == "fantasy_unauthorized"
     assert "nope" not in response.text
-    assert LALIGA_BEARER not in response.text
 
 
-def test_get_money_maps_fantasy_server_error(
+def test_list_players_maps_fantasy_server_error(
     rsa_pems: tuple[str, str],
 ) -> None:
     # Arrange
-    private_pem, public_pem = rsa_pems
-    token = mint_internal_jwt(private_pem)
+    _private_pem, public_pem = rsa_pems
 
     def fantasy_handler(_request: httpx.Request) -> httpx.Response:
         return httpx.Response(503, text="upstream detail")
 
     with make_client(public_pem, fantasy_handler) as client:
         # Act
-        response = client.get(
-            "/teams/99/money",
-            headers={"Authorization": f"Bearer {token}"},
-        )
+        response = client.get("/players")
 
     # Assert
     assert response.status_code == 503
@@ -503,7 +410,43 @@ def test_get_money_maps_fantasy_server_error(
     assert "upstream detail" not in response.text
 
 
-def test_get_money_rejects_non_object_payload(
+def test_list_players_rejects_non_list_payload(
+    rsa_pems: tuple[str, str],
+) -> None:
+    # Arrange
+    _private_pem, public_pem = rsa_pems
+
+    def fantasy_handler(_request: httpx.Request) -> httpx.Response:
+        return httpx.Response(200, json=42)
+
+    with make_client(public_pem, fantasy_handler) as client:
+        # Act
+        response = client.get("/players")
+
+    # Assert
+    assert response.status_code == 502
+    assert response.json()["error"] == "fantasy_error"
+
+
+def test_get_market_value_rejects_non_json_body(
+    rsa_pems: tuple[str, str],
+) -> None:
+    # Arrange
+    _private_pem, public_pem = rsa_pems
+
+    def fantasy_handler(_request: httpx.Request) -> httpx.Response:
+        return httpx.Response(200, text="<html>nope</html>")
+
+    with make_client(public_pem, fantasy_handler) as client:
+        # Act
+        response = client.get("/players/7/market-value")
+
+    # Assert
+    assert response.status_code == 502
+    assert response.json()["error"] == "fantasy_error"
+
+
+def test_get_league_player_rejects_non_object_payload(
     rsa_pems: tuple[str, str],
 ) -> None:
     # Arrange
@@ -511,12 +454,12 @@ def test_get_money_rejects_non_object_payload(
     token = mint_internal_jwt(private_pem)
 
     def fantasy_handler(_request: httpx.Request) -> httpx.Response:
-        return httpx.Response(200, json=[{"teamMoney": 1}])
+        return httpx.Response(200, json=[{"playerTeamId": "pt-1"}])
 
     with make_client(public_pem, fantasy_handler) as client:
         # Act
         response = client.get(
-            "/teams/99/money",
+            "/players/7/league/42",
             headers={"Authorization": f"Bearer {token}"},
         )
 
@@ -534,59 +477,29 @@ async def test_laliga_fantasy_client_get_json_empty_body_raises_upstream() -> No
     )
 
     # Act / Assert
-    with pytest.raises(UpstreamError, match="fantasy response was not JSON") as exc_info:
-        await client.get_json("/x", "tok")
-    assert exc_info.value.status_code == 502
-    assert exc_info.value.category == "fantasy_error"
-
-
-@pytest.mark.asyncio
-async def test_laliga_fantasy_client_put_json_raises_upstream_on_401() -> None:
-    # Arrange
-    client = LaligaFantasyClient(
-        origin=FANTASY_ORIGIN,
-        transport=httpx.MockTransport(lambda _r: httpx.Response(401)),
-    )
-
-    # Act / Assert
-    with pytest.raises(UpstreamError) as exc_info:
-        await client.put_json("/x", "tok", {"a": 1})
-    assert exc_info.value.status_code == 401
-    assert exc_info.value.category == "fantasy_unauthorized"
-
-
-@pytest.mark.asyncio
-async def test_laliga_fantasy_client_put_json_raises_upstream_on_invalid_json() -> None:
-    # Arrange
-    client = LaligaFantasyClient(
-        origin=FANTASY_ORIGIN,
-        transport=httpx.MockTransport(
-            lambda _r: httpx.Response(200, text="<html>nope</html>"),
-        ),
-    )
-
-    # Act / Assert
-    with pytest.raises(UpstreamError, match="fantasy response was not JSON") as exc_info:
-        await client.put_json("/x", "tok", {"a": 1})
-    assert exc_info.value.status_code == 502
-    assert exc_info.value.category == "fantasy_error"
+    with pytest.raises(UpstreamError, match="fantasy response was not JSON"):
+        await client.get_json("/api/v1/competition/1/players")
 
 
 # ---- Edge cases ---- #
 
 
-def test_lineup_by_week_rejects_non_positive_week(
+def test_list_players_public_ignores_invalid_jwt(
     rsa_pems: tuple[str, str],
 ) -> None:
     # Arrange
     _private_pem, public_pem = rsa_pems
 
-    def fantasy_handler(_request: httpx.Request) -> httpx.Response:
-        raise AssertionError("Fantasy must not be called for invalid week")
+    def fantasy_handler(request: httpx.Request) -> httpx.Response:
+        assert "Authorization" not in request.headers
+        return httpx.Response(200, json=[{"id": "1"}])
 
     with make_client(public_pem, fantasy_handler) as client:
         # Act
-        response = client.get("/teams/99/lineup/week/0")
+        response = client.get(
+            "/players", headers={"Authorization": "Bearer invalid"}
+        )
 
     # Assert
-    assert response.status_code == 422
+    assert response.status_code == 200
+    assert response.json() == [{"id": "1"}]
