@@ -17,7 +17,16 @@ from fantasy_api.cli.common import (
     league_id,
     my_team_id,
     normalize,
+    path_segment,
 )
+
+
+def _parse_week(value: str) -> int:
+    """Parse a matchweek number (must be >= 1)."""
+    week = int(value)
+    if week < 1:
+        raise argparse.ArgumentTypeError("week must be >= 1")
+    return week
 
 
 def main(argv: list[str] | None = None) -> int:
@@ -84,9 +93,9 @@ def main(argv: list[str] | None = None) -> int:
     )
     parser.add_argument(
         "--week",
-        type=int,
+        type=_parse_week,
         default=None,
-        help="Also fetch lineup for this matchweek",
+        help="Also fetch lineup for this matchweek (>= 1)",
     )
     parser.add_argument(
         "--json",
@@ -157,7 +166,7 @@ def _build_report(
     )
     team_reports: list[dict[str, Any]] = []
     for target in targets:
-        tid = str(target["team_id"])
+        tid = path_segment(target["team_id"])
         money = api_get(api_base, f"/teams/{tid}/money", jwt)
         lineup = api_get(api_base, f"/teams/{tid}/lineup", jwt)
         week_lineup = None

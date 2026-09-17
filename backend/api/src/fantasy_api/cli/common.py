@@ -2,8 +2,10 @@
 
 from __future__ import annotations
 
+import json
 import sys
 from typing import Any
+from urllib.parse import quote
 
 import httpx
 
@@ -90,11 +92,16 @@ def api_get(api_base: str, path: str, jwt: str) -> Any:
     return response.json()
 
 
+def path_segment(value: str | int) -> str:
+    """Percent-encode a path segment for Fantasy Builder API paths."""
+    return quote(str(value), safe="")
+
+
 def safe_json(response: httpx.Response) -> dict[str, Any]:
     """Parse a JSON object response or return an empty dict."""
     try:
         data = response.json()
-    except Exception:
+    except json.JSONDecodeError:
         return {}
     return data if isinstance(data, dict) else {}
 

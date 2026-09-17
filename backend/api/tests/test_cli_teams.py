@@ -292,6 +292,84 @@ def test_main_league_filter_not_found_returns_1(
 # ---- Edge cases ---- #
 
 
+def test_main_rejects_non_positive_week(
+    capsys: pytest.CaptureFixture[str],
+) -> None:
+    # Arrange / Act / Assert
+    with pytest.raises(SystemExit) as exc_info:
+        teams_cli.main(
+            ["--jwt", "tok", "--api-base", "http://api.test", "--week", "0"],
+        )
+    assert exc_info.value.code == 2
+    assert "week must be >= 1" in capsys.readouterr().err
+
+
+def test_main_encodes_team_id_in_api_paths(
+    monkeypatch: pytest.MonkeyPatch,
+    capsys: pytest.CaptureFixture[str],
+) -> None:
+    # Arrange
+    seen_paths: list[str] = []
+
+    def handler(request: httpx.Request) -> httpx.Response:
+        raw_path = request.url.raw_path.decode()
+        seen_paths.append(raw_path)
+        if raw_path == "/teams/a%2Fb/money":
+            return httpx.Response(200, json={"teamMoney": 1})
+        if raw_path == "/teams/a%2Fb/lineup":
+            return httpx.Response(200, json={})
+        return httpx.Response(404)
+
+    transport = httpx.MockTransport(handler)
+    real_client = httpx.Client
+
+    def client_factory(*args: Any, **kwargs: Any) -> httpx.Client:
+        kwargs["transport"] = transport
+        kwargs.pop("timeout", None)
+        return real_client(*args, timeout=30.0, **kwargs)
+
+    monkeypatch.setattr(cli_common.httpx, "Client", client_factory)
+
+    # Act
+    code = teams_cli.main(
+        [
+            "--jwt",
+            "tok",
+            "--api-base",
+            "http://api.test",
+            "--team-id",
+            "a/b",
+        ],
+    )
+
+    # Assert
+    assert code == 0
+    assert seen_paths == ["/teams/a%2Fb/money", "/teams/a%2Fb/lineup"]
+    assert "teamMoney=1" in capsys.readouterr().out
+
+
+def test_safe_json_returns_empty_dict_for_invalid_json() -> None:
+    # Arrange
+    response = httpx.Response(401, text="not-json")
+
+    # Act
+    data = cli_common.safe_json(response)
+
+    # Assert
+    assert data == {}
+
+
+def test_safe_json_returns_empty_dict_for_non_object_json() -> None:
+    # Arrange
+    response = httpx.Response(401, json=["not", "a", "dict"])
+
+    # Act
+    data = cli_common.safe_json(response)
+
+    # Assert
+    assert data == {}
+
+
 def test_print_lineup_summarizes_player_nicknames(
     capsys: pytest.CaptureFixture[str],
 ) -> None:
