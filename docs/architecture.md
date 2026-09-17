@@ -76,21 +76,74 @@ adapters/     HTTP, JWKS, JWT, Postgres, Redis, and AES-GCM implementations
 - derives the current user exclusively from the verified `sub`;
 - requests short-lived LaLiga bearers through the private auth interface;
 - calls LaLiga Fantasy on behalf of that verified user;
-- maps auth failures into stable API errors.
+- maps auth and upstream failures into stable API errors;
+- exposes OpenAPI/Swagger from committed `backend/api/openapi.json`.
 
-Leagues reads use a controller–service–repository layout
-(`api/` → `services/` → `repositories/` → `clients/laliga_fantasy.py`) and
-proxy competition league resources under
-`/api/v1/competition/{id}/leagues/...`. See
-[Adding leagues endpoints](api/leagues/adding-leagues-endpoints.md).
+The API does not open encrypted credentials, refresh LaLiga tokens, or accept
+auth session cookies.
 
-Team money and lineup use the same CRS layout under
-`/api/v1/competition/{id}/teams/...`, sharing path encoding, bearer fetch,
-and payload helpers with leagues. See
-[Adding teams endpoints](api/teams/adding-teams-endpoints.md).
+#### Module layout
 
-The API does not know how to open encrypted credentials or refresh LaLiga
-tokens.
+```text
+backend/api/src/fantasy_api/
+├── api/              # FastAPI controllers (leagues, teams, me, …)
+├── services/         # JWT → LaLiga bearer → repository orchestration
+├── repositories/     # Upstream path construction (per domain)
+├── clients/          # AuthCredentialsClient, LaligaFantasyClient
+├── schemas/          # Pydantic models (OpenAPI source)
+├── domain/           # AppUser, UpstreamError, …
+├── security/         # Internal JWT validation
+├── openapi.py        # OpenAPI generation and ERROR_RESPONSES
+└── cli/              # fantasy-leagues, fantasy-teams, fantasy-players
+```
+
+Process-lifetime wiring lives in `api/deps.py` (`AppContainer`): one shared
+`LaligaFantasyClient` and `AuthCredentialsClient` per worker, closed on
+shutdown.
+
+#### LaLiga proxy domains
+
+LaLiga-backed features follow the same **controller → service → repository →
+client** (CRS) stack. Each domain gets its own service and repository; they
+do not share a generic proxy class.
+
+| Domain | Public prefix | Upstream prefix | Methods |
+|--------|---------------|-----------------|---------|
+| Leagues | `/leagues/...` | `{CMP}/leagues/...` | GET (reads) |
+| Teams | `/teams/...` | `{CMP}/teams/...` | GET + PUT (lineup write) |
+| Players | `/players/...` | `{CMP}/players`, `{CMP}/player/...` | GET (catalog + market value public; league card authenticated) |
+
+`{CMP}` = `{LALIGA_FANTASY_ORIGIN}/api/v1/competition/{LALIGA_COMPETITION_ID}`.
+
+Guides: [Adding endpoints](api/adding-endpoints.md),
+[feature READMEs](api/README.md),
+[Proxy endpoint pitfalls](api/proxy-endpoint-pitfalls.md).
+
+#### Shared proxy building blocks
+
+Cross-domain helpers (extend these rather than duplicating logic):
+
+| Module | Role |
+|--------|------|
+| `services/laliga.py` | `with_laliga_bearer(credentials, jwt, repo_method, …)` |
+| `repositories/paths.py` | Percent-encode path segments; build `{CMP}/…` paths |
+| `schemas/payload.py` | `as_object`, `as_object_list` — fail on unexpected JSON shape |
+| `api/payload.py` | Map parser `ValueError` → `UpstreamError` (502) |
+| `clients/laliga_fantasy.py` | GET (optional bearer for public reads)/PUT; JSON errors → `UpstreamError` |
+| `schemas/common.FlexibleModel` | Read models with `extra="allow"` for upstream passthrough |
+
+Write routes use **separate** request models (`extra="forbid"`, required fields
+for full-replace upstream semantics). Read routes must not silently coerce bad
+upstream JSON into empty `{}` or `[]` — see the pitfalls doc.
+
+#### Helper CLIs
+
+`fantasy-leagues`, `fantasy-teams`, and `fantasy-players` are not part of the
+runtime API. They exchange session cookies for an internal JWT (or accept
+`--jwt`; players public reads need no JWT) and call local API routes. Shared
+flags and token exchange live in `cli/common.py`.
+
+Automated login: `fantasy-browser-session` in `backend/auth`.
 
 ## Trust boundaries
 
@@ -214,12 +267,52 @@ Auth produces stable categories:
 - pairing categories such as replay, expiry, or rate limit;
 - provider categories without leaking upstream response bodies.
 
-The API maps invalid internal JWTs to `unauthorized`, maps LaLiga relinking to
-`needs_reauth`, and treats other auth failures as upstream errors.
+The API maps outcomes through `fantasy_api.domain.errors` and global handlers
+in `main.py`. Responses use a stable `{ "error", "detail" }` body; upstream
+Fantasy or auth bodies are never forwarded verbatim.
+
+| API `error` | Typical cause | HTTP |
+|-------------|---------------|------|
+| `unauthorized` | Missing/invalid internal JWT | 401 |
+| `needs_reauth` | No LaLiga connection or refresh failed | 401 |
+| `fantasy_unauthorized` | Fantasy rejected the bearer | 401 |
+| `fantasy_error` | Fantasy non-2xx, non-JSON body, or unexpected payload shape | 502 / forwarded status (e.g. 503) |
+
+Validation errors on request bodies (unknown JSON keys, missing required write
+fields) return **422** before any upstream call.
+
+Resource ownership for mutations (e.g. which `team_id` a JWT may update) is
+enforced by LaLiga Fantasy unless the feature docs state an explicit API-side
+check. Clients should obtain ids from authenticated list routes (e.g.
+`GET /leagues`).
+
+## Quality gates and OpenAPI
+
+Local and CI checks keep the monorepo consistent:
+
+- **Pre-commit** (repo root): ruff, black, OpenAPI regeneration when API
+  routes/schemas change, pytest with ≥90% coverage on `backend/auth` and
+  `backend/api`.
+- **GitHub Actions** (`.github/workflows/ci.yml`): same lint and test pipeline
+  on push to `main` and on pull requests.
+
+OpenAPI is generated from route `response_model`, `ERROR_RESPONSES`, and
+Pydantic schemas (`fantasy_api.openapi.build_openapi_schema`). The committed
+`backend/api/openapi.json` must match the generator before merge. See
+[OpenAPI / Swagger](api/openapi.md).
 
 ## Deployment constraints
 
 - Auth and API are independently deployable.
+- Each service ships a multi-stage Dockerfile on `python:3.14-slim-trixie`
+  (`backend/auth/Dockerfile`, `backend/api/Dockerfile`): dependencies are
+  installed with uv in a builder stage; the runtime image contains only the
+  virtualenv, application source, and a non-root `uvicorn` process (no uv,
+  no compiler toolchain).
+- Local Docker: `docker compose --profile apps up --build` runs Keycloak, auth,
+  and API; `--profile full` adds Postgres, Redis, and OTEL for production-like
+  persistence. Compose sets internal OIDC URLs (`keycloak:8080`) for auth while
+  browser-facing issuer/redirect URLs stay on `localhost`.
 - API and auth share a private network for `/internal/*`.
 - Only public auth routes and intended API routes should be exposed by ingress.
 - JWT private keys, the vault key, and the service token belong in a secret

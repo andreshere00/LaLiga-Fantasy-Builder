@@ -27,12 +27,8 @@ audience `fantasy-api`).
 | `fantasy_api.schemas.*` | Pydantic models registered as components |
 | `fantasy_api.openapi.build_openapi_schema` | Tags, Bearer scheme, shared errors |
 
-Important modules:
-
-- [`backend/api/src/fantasy_api/schemas/common.py`](../../backend/api/src/fantasy_api/schemas/common.py)
-- [`backend/api/src/fantasy_api/schemas/leagues.py`](../../backend/api/src/fantasy_api/schemas/leagues.py)
-- [`backend/api/src/fantasy_api/schemas/teams.py`](../../backend/api/src/fantasy_api/schemas/teams.py)
-- [`backend/api/src/fantasy_api/openapi.py`](../../backend/api/src/fantasy_api/openapi.py)
+Pydantic models live under `fantasy_api.schemas`. Generation:
+`fantasy_api.openapi.build_openapi_schema`.
 
 ## Regenerate the committed document
 
@@ -89,6 +85,9 @@ response models.
 5. Run `uv run generate-openapi` (or rely on the pre-commit hook) and commit
    `openapi.json` if it changed.
 6. Confirm the operation appears under http://localhost:8001/docs.
+
+For proxy-specific Swagger mistakes (docstring leakage, missing 503, CLI text in
+`Path` descriptions), see [Proxy endpoint pitfalls](proxy-endpoint-pitfalls.md).
 
 ## Sample response shapes
 

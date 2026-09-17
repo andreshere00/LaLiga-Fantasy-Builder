@@ -15,6 +15,7 @@ Routes = dict[tuple[str, str], Any]
 
 def handler_map(routes: Routes) -> RouteHandler:
     """Build a mock transport handler from method/path → response mappings."""
+
     def handler(request: httpx.Request) -> httpx.Response:
         key = (request.method, request.url.path)
         if key not in routes:

@@ -1,8 +1,8 @@
 # LaLiga Fantasy Builder — Auth service
 
 Standalone FastAPI service for **application identity** (Keycloak/OIDC) and
-**LaLiga Fantasy delegation** (pairing + sealed B2C tokens). Deploy this
-service independently from the future main API / frontend.
+**LaLiga Fantasy delegation** (pairing + sealed B2C tokens). Deploy it
+independently from `backend/api`.
 
 Python package import path: `fantasy_auth`.
 
@@ -23,13 +23,30 @@ From repo root, Keycloak:
 docker compose up -d
 ```
 
-Production-like local stack (Postgres + Redis + auth + optional OTEL):
+Docker stack from repo root (Keycloak + auth + API):
+
+```bash
+cp .env.example .env
+docker compose --profile apps up --build
+```
+
+Production-like stack (Postgres + Redis + auth + OTEL). Set in `.env` before
+`--profile full`:
+
+- `USE_MEMORY_STORE=false`
+- `TOKEN_VAULT_KEY_BASE64` — `openssl rand -base64 32`
+- `INTERNAL_JWT_PRIVATE_KEY_PEM` / `INTERNAL_JWT_PUBLIC_KEY_PEM`
+- `INTERNAL_SERVICE_TOKEN`
+- `MIGRATION_AUTO_APPLY=true` (or pass via Compose)
 
 ```bash
 docker compose --profile full up --build
 ```
 
-## Docker
+## Docker image
+
+Multi-stage build on `python:3.14-slim-trixie` (uv in builder only, non-root
+runtime):
 
 ```bash
 # from repo root
@@ -72,6 +89,37 @@ export FANTASY_CSRF='…'
 cd backend/auth
 uv run pair-laliga
 ```
+
+## Browser session (Playwright)
+
+Local Keycloak login (`demo` / `demo`) can be driven by Chromium so you do not
+copy cookies by hand. When the vault is empty, pairing opens your **default
+browser** so you can sign in to LaLiga with Google. The native
+`authredirect://` callback is captured by a small helper app — do not copy or
+paste it. macOS may ask to open **LaligaAuthredirect**; choose Open.
+
+```bash
+cd backend/auth
+uv sync --extra browser
+uv run playwright install chromium
+
+# Auth on :8000, API on :8001, Keycloak on :8080
+uv run fantasy-browser-session --exports
+uv run fantasy-browser-session --player-id 3277 --json
+uv run fantasy-browser-session leagues-analysis --json
+uv run fantasy-browser-session teams-analysis --json
+```
+
+From the repo root: `./scripts/fantasy-browser-session.sh leagues-analysis`.
+
+`leagues-analysis` calls `GET /leagues`, standing (overall and week), activity,
+teams, and a squad. `teams-analysis` calls `GET /teams/{id}/money`, current
+lineup, and week lineup. `--put-lineup` is optional and must point at a real
+JSON file plus a real `--team-id` (not a placeholder). `--week` defaults to
+the jornada inferred from `/leagues`. `--headless` hides the Keycloak window.
+LaLiga pairing uses your normal browser. `--no-pair` skips LaLiga if you only
+need a JWT. `--exports` prints `FANTASY_SESSION` / `FANTASY_CSRF` /
+`INTERNAL_JWT` for curl.
 
 ## Health
 

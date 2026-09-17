@@ -40,6 +40,9 @@ def test_build_openapi_schema_includes_documented_paths() -> None:
     assert "/teams/{team_id}/lineup" in paths
     assert "/teams/{team_id}/lineup/week/{week}" in paths
     assert "put" in paths["/teams/{team_id}/lineup"]
+    assert "/players" in paths
+    assert "/players/{player_id}/market-value" in paths
+    assert "/players/{player_id}/league/{league_id}" in paths
     assert "/health" in paths
     assert schema["components"]["securitySchemes"]["HTTPBearer"]["scheme"] == "bearer"
     assert "MeResponse" in schema["components"]["schemas"]
@@ -48,9 +51,20 @@ def test_build_openapi_schema_includes_documented_paths() -> None:
     assert "TeamMoney" in schema["components"]["schemas"]
     assert "TeamLineup" in schema["components"]["schemas"]
     assert "LineupWrite" in schema["components"]["schemas"]
+    assert "CatalogPlayer" in schema["components"]["schemas"]
+    assert "PlayerMarketValue" in schema["components"]["schemas"]
+    assert "LeaguePlayer" in schema["components"]["schemas"]
     assert "ErrorResponse" in schema["components"]["schemas"]
     assert paths["/leagues"]["get"]["security"] == [{"HTTPBearer": []}]
     assert paths["/teams/{team_id}/money"]["get"]["security"] == [{"HTTPBearer": []}]
+    assert "security" not in paths["/players"]["get"]
+    assert "security" not in paths["/players/{player_id}/market-value"]["get"]
+    assert paths["/players/{player_id}/league/{league_id}"]["get"]["security"] == [
+        {"HTTPBearer": []}
+    ]
+    assert "401" not in paths["/players"]["get"]["responses"]
+    assert "401" not in paths["/players/{player_id}/market-value"]["get"]["responses"]
+    assert "401" in paths["/players/{player_id}/league/{league_id}"]["get"]["responses"]
     assert "summary" in paths["/leagues"]["get"]
     leagues_description = paths["/leagues"]["get"].get("description", "")
     assert "Args:" not in leagues_description
