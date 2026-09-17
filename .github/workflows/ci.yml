@@ -24,6 +24,12 @@ jobs:
       - name: Lint
         run: uv run poe lint
 
+      - name: Format
+        run: uv run black --check --diff backend main.py
+
+      - name: OpenAPI
+        run: uv run poe generate-openapi
+
       - name: Test
         run: uv run poe test
 

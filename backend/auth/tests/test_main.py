@@ -3,7 +3,9 @@
 from __future__ import annotations
 
 import base64
+import sys
 from collections.abc import Iterator
+from types import ModuleType, SimpleNamespace
 from typing import Any
 from unittest.mock import AsyncMock, MagicMock
 
@@ -74,6 +76,52 @@ async def test_create_runtime_resources_memory_returns_none_none() -> None:
     # Assert
     assert pool is None
     assert redis is None
+
+
+@pytest.mark.asyncio
+async def test_create_runtime_resources_postgres_applies_migrations(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    # Arrange
+    settings = _memory_settings(
+        use_memory_store=False,
+        database_url="postgresql://x",
+        redis_url="redis://x",
+        migration_auto_apply=True,
+    )
+    fake_asyncpg = ModuleType("asyncpg")
+    fake_asyncpg.create_pool = AsyncMock(return_value="pool")  # type: ignore[attr-defined]
+    fake_redis_mod = ModuleType("redis.asyncio")
+    redis_client = MagicMock()
+    redis_client.ping = AsyncMock()
+    fake_redis_mod.Redis = SimpleNamespace(  # type: ignore[attr-defined]
+        from_url=lambda *_a, **_k: redis_client
+    )
+    monkeypatch.setitem(sys.modules, "asyncpg", fake_asyncpg)
+    monkeypatch.setitem(sys.modules, "redis.asyncio", fake_redis_mod)
+    apply = AsyncMock()
+    monkeypatch.setattr("fantasy_auth.migrate.apply_migrations", apply)
+
+    # Act
+    pool, redis = await _create_runtime_resources(settings)
+
+    # Assert
+    assert pool == "pool"
+    assert redis is redis_client
+    apply.assert_awaited_once_with("pool")
+
+
+def test_lifespan_without_prebuilt_container_uses_memory_store() -> None:
+    # Arrange
+    app = create_app(settings=_memory_settings())
+
+    # Act
+    with TestClient(app) as client:
+        response = client.get("/health/ready")
+
+    # Assert
+    assert response.status_code == 200
+    assert response.json() == {"status": "ok", "store": "memory"}
 
 
 def test_health_ready_memory_path(client: TestClient) -> None:
@@ -176,9 +224,7 @@ def test_getattr_app_returns_fastapi(
     monkeypatch.setattr(
         main_mod,
         "create_app",
-        lambda: create_app(
-            settings=container.settings, container=container
-        ),
+        lambda: create_app(settings=container.settings, container=container),
     )
 
     # Act

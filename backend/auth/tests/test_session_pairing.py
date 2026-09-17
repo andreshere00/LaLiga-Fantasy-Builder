@@ -67,9 +67,7 @@ def test_capture_authredirect_darwin_uses_macos_helper(
 ) -> None:
     # Arrange
     monkeypatch.setattr(pairing.sys, "platform", "darwin")
-    callback = (
-        "authredirect://com.lfp.laligafantasy/?state=s&code=" + ("x" * 120)
-    )
+    callback = "authredirect://com.lfp.laligafantasy/?state=s&code=" + ("x" * 120)
     monkeypatch.setattr(
         pairing.authredirect_macos,
         "capture_authredirect_macos",

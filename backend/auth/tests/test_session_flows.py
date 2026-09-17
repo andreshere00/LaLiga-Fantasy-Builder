@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+import runpy
+
 import httpx
 import pytest
 from fantasy_auth.cli import browser_session as cli
@@ -389,3 +391,18 @@ def test_main_without_flow_prints_ready_message(
     # Assert
     assert code == 0
     assert "Session ready" in capsys.readouterr().err
+
+
+def test_browser_session_main_module_exits_zero(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    # Arrange
+    monkeypatch.setattr(cli, "main", lambda argv=None: 0)
+
+    # Act / Assert
+    with pytest.raises(SystemExit) as exc_info:
+        runpy.run_module(
+            "fantasy_auth.cli.browser_session.__main__",
+            run_name="__main__",
+        )
+    assert exc_info.value.code == 0

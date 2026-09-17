@@ -220,9 +220,7 @@ def test_compile_handler_app_writes_plist_and_stamp(
     with (app / "Contents" / "Info.plist").open("rb") as handle:
         info = macos.plistlib.load(handle)
     assert info["CFBundleIdentifier"] == macos.BUNDLE_ID
-    assert (tmp_path / macos.STAMP_NAME).read_text(encoding="utf-8") == str(
-        callback.resolve()
-    )
+    assert (tmp_path / macos.STAMP_NAME).read_text(encoding="utf-8") == str(callback.resolve())
 
 
 def test_compile_handler_app_osacompile_failure_raises(

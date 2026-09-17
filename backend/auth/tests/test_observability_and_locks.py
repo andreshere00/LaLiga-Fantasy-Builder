@@ -166,17 +166,13 @@ def test_configure_tracing_enabled_with_fake_otel(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     # Arrange
-    settings = _settings(
-        otel_exporter_otlp_endpoint="http://otel:4318/v1/traces"
-    )
+    settings = _settings(otel_exporter_otlp_endpoint="http://otel:4318/v1/traces")
 
     fake_trace = ModuleType("opentelemetry.trace")
     fake_trace.set_tracer_provider = MagicMock()  # type: ignore[attr-defined]
     fake_trace.get_tracer = MagicMock()  # type: ignore[attr-defined]
 
-    fake_exporter_mod = ModuleType(
-        "opentelemetry.exporter.otlp.proto.http.trace_exporter"
-    )
+    fake_exporter_mod = ModuleType("opentelemetry.exporter.otlp.proto.http.trace_exporter")
     fake_exporter_mod.OTLPSpanExporter = MagicMock(  # type: ignore[attr-defined]
         return_value=MagicMock()
     )
@@ -216,9 +212,7 @@ def test_configure_tracing_enabled_with_fake_otel(
     modules = {
         "opentelemetry": fake_otel,
         "opentelemetry.trace": fake_trace,
-        "opentelemetry.exporter.otlp.proto.http.trace_exporter": (
-            fake_exporter_mod
-        ),
+        "opentelemetry.exporter.otlp.proto.http.trace_exporter": (fake_exporter_mod),
         "opentelemetry.sdk.resources": fake_resources,
         "opentelemetry.sdk.trace": fake_sdk_trace,
         "opentelemetry.sdk.trace.export": fake_export,
@@ -290,9 +284,7 @@ def test_configure_tracing_import_error_path(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     # Arrange
-    settings = _settings(
-        otel_exporter_otlp_endpoint="http://otel:4318/v1/traces"
-    )
+    settings = _settings(otel_exporter_otlp_endpoint="http://otel:4318/v1/traces")
 
     real_import = __import__
 
@@ -314,16 +306,12 @@ def test_configure_tracing_instrumentor_except_passes(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     # Arrange
-    settings = _settings(
-        otel_exporter_otlp_endpoint="http://otel:4318/v1/traces"
-    )
+    settings = _settings(otel_exporter_otlp_endpoint="http://otel:4318/v1/traces")
 
     fake_trace = ModuleType("opentelemetry.trace")
     fake_trace.set_tracer_provider = MagicMock()  # type: ignore[attr-defined]
 
-    fake_exporter_mod = ModuleType(
-        "opentelemetry.exporter.otlp.proto.http.trace_exporter"
-    )
+    fake_exporter_mod = ModuleType("opentelemetry.exporter.otlp.proto.http.trace_exporter")
     fake_exporter_mod.OTLPSpanExporter = MagicMock(return_value=MagicMock())  # type: ignore[attr-defined]
 
     fake_resources = ModuleType("opentelemetry.sdk.resources")
@@ -363,9 +351,7 @@ def test_configure_tracing_instrumentor_except_passes(
     for name, mod in {
         "opentelemetry": fake_otel,
         "opentelemetry.trace": fake_trace,
-        "opentelemetry.exporter.otlp.proto.http.trace_exporter": (
-            fake_exporter_mod
-        ),
+        "opentelemetry.exporter.otlp.proto.http.trace_exporter": (fake_exporter_mod),
         "opentelemetry.sdk.resources": fake_resources,
         "opentelemetry.sdk.trace": fake_sdk_trace,
         "opentelemetry.sdk.trace.export": fake_export,
@@ -388,6 +374,44 @@ def test_configure_tracing_instrumentor_except_passes(
 
 def test_current_trace_context_without_otel_is_empty() -> None:
     # Arrange / Act / Assert
-    assert current_trace_context() == {} or isinstance(
-        current_trace_context(), dict
-    )
+    assert current_trace_context() == {} or isinstance(current_trace_context(), dict)
+
+
+def test_current_trace_context_valid_span_returns_ids(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    # Arrange
+    fake_trace = ModuleType("opentelemetry.trace")
+    context = SimpleNamespace(is_valid=True, trace_id=1, span_id=2)
+    span = SimpleNamespace(get_span_context=lambda: context)
+    fake_trace.get_current_span = lambda: span  # type: ignore[attr-defined]
+    fake_otel = ModuleType("opentelemetry")
+    fake_otel.trace = fake_trace  # type: ignore[attr-defined]
+    monkeypatch.setitem(sys.modules, "opentelemetry", fake_otel)
+    monkeypatch.setitem(sys.modules, "opentelemetry.trace", fake_trace)
+
+    # Act
+    result = current_trace_context()
+
+    # Assert
+    assert result["trace_id"] == format(1, "032x")
+    assert result["span_id"] == format(2, "016x")
+
+
+def test_current_trace_context_exception_returns_empty(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    # Arrange
+    fake_trace = ModuleType("opentelemetry.trace")
+
+    def boom() -> None:
+        raise RuntimeError("otel down")
+
+    fake_trace.get_current_span = boom  # type: ignore[attr-defined]
+    fake_otel = ModuleType("opentelemetry")
+    fake_otel.trace = fake_trace  # type: ignore[attr-defined]
+    monkeypatch.setitem(sys.modules, "opentelemetry", fake_otel)
+    monkeypatch.setitem(sys.modules, "opentelemetry.trace", fake_trace)
+
+    # Act / Assert
+    assert current_trace_context() == {}
