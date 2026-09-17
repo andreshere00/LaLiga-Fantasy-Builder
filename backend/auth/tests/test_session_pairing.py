@@ -10,7 +10,6 @@ from fantasy_auth.cli.browser_session import pairing
 from fantasy_auth.cli.browser_session.errors import BrowserSessionError
 from fantasy_auth.cli.browser_session.playwright_capture import header_location
 
-
 # ---- Happy path ---- #
 
 

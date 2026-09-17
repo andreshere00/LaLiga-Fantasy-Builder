@@ -4,8 +4,8 @@ from __future__ import annotations
 
 import httpx
 import pytest
-from fantasy_auth.cli.browser_session.http import connection_linked, exchange_token
 from fantasy_auth.cli.browser_session.errors import BrowserSessionError
+from fantasy_auth.cli.browser_session.http import connection_linked, exchange_token
 
 
 def _token_handler(request: httpx.Request) -> httpx.Response:

@@ -10,7 +10,6 @@ from cli_http_stub import patch_httpx_client
 from fantasy_api.cli import common as cli_common
 from fantasy_api.cli import teams as teams_cli
 
-
 # ---- Happy path ---- #
 
 

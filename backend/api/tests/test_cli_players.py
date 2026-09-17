@@ -7,7 +7,6 @@ import pytest
 from cli_http_stub import patch_httpx_client
 from fantasy_api.cli import players as players_cli
 
-
 # ---- Happy path ---- #
 
 

@@ -8,6 +8,7 @@ from types import ModuleType, SimpleNamespace
 from typing import Any
 from unittest.mock import MagicMock
 
+import fantasy_auth.observability as observability
 import pytest
 from fantasy_auth.config import Settings
 from fantasy_auth.observability import (
@@ -19,7 +20,6 @@ from fantasy_auth.observability import (
     current_trace_context,
     get_tracer,
 )
-import fantasy_auth.observability as observability
 
 
 @pytest.fixture(autouse=True)
