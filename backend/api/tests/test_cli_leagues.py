@@ -7,6 +7,7 @@ from typing import Any
 
 import httpx
 import pytest
+from fantasy_api.cli import common as cli_common
 from fantasy_api.cli import leagues as leagues_cli
 
 
@@ -17,7 +18,10 @@ def _handler_map(routes: dict[tuple[str, str], Any]):
             return httpx.Response(404, json={"error": f"missing {key}"})
         payload = routes[key]
         if callable(payload):
-            return payload(request)
+            response = payload(request)
+            if not isinstance(response, httpx.Response):
+                raise TypeError("route handler must return httpx.Response")
+            return response
         return httpx.Response(200, json=payload)
 
     return handler
@@ -60,7 +64,7 @@ def test_main_with_jwt_prints_position(
         kwargs.pop("timeout", None)
         return real_client(*args, timeout=30.0, **kwargs)
 
-    monkeypatch.setattr(leagues_cli.httpx, "Client", client_factory)
+    monkeypatch.setattr(cli_common.httpx, "Client", client_factory)
 
     # Act
     code = leagues_cli.main(
@@ -97,7 +101,7 @@ def test_main_json_mode_returns_aggregated_payload(
         kwargs.pop("timeout", None)
         return real_client(*args, timeout=30.0, **kwargs)
 
-    monkeypatch.setattr(leagues_cli.httpx, "Client", client_factory)
+    monkeypatch.setattr(cli_common.httpx, "Client", client_factory)
 
     # Act
     code = leagues_cli.main(
@@ -133,7 +137,7 @@ def test_exchange_token_then_fetch(
         kwargs.pop("timeout", None)
         return real_client(*args, timeout=30.0, **kwargs)
 
-    monkeypatch.setattr(leagues_cli.httpx, "Client", client_factory)
+    monkeypatch.setattr(cli_common.httpx, "Client", client_factory)
 
     # Act
     code = leagues_cli.main(
@@ -187,7 +191,7 @@ def test_main_needs_reauth_returns_1(
         kwargs.pop("timeout", None)
         return real_client(*args, timeout=30.0, **kwargs)
 
-    monkeypatch.setattr(leagues_cli.httpx, "Client", client_factory)
+    monkeypatch.setattr(cli_common.httpx, "Client", client_factory)
 
     # Act
     code = leagues_cli.main(["--jwt", "tok", "--api-base", "http://api.test"])

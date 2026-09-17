@@ -66,6 +66,15 @@ curl -sS -X PUT \
   "http://localhost:8001/teams/${TEAM_ID}/lineup"
 ```
 
+CLI summary (money, current lineup, optional week lineup):
+
+```bash
+cd backend/api
+uv run fantasy-teams --jwt "$INTERNAL_JWT"
+# or session cookies: FANTASY_SESSION + FANTASY_CSRF
+uv run fantasy-teams --team-id "$TEAM_ID" --week 5 --json
+```
+
 ## Architecture
 
 ```text

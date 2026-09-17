@@ -35,7 +35,7 @@ backend/api/src/fantasy_api/
 ├── clients/        # auth credentials + LaligaFantasyClient
 ├── schemas/        # Pydantic request/response models (OpenAPI source)
 ├── openapi.py      # generate_openapi / build_openapi_schema
-└── cli/            # fantasy-leagues helper CLI
+└── cli/            # fantasy-leagues / fantasy-teams helper CLIs
 ```
 
 Leagues and teams share path encoding (`repositories/paths.py`), bearer
