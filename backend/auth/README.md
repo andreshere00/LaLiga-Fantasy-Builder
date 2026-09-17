@@ -73,6 +73,37 @@ cd backend/auth
 uv run pair-laliga
 ```
 
+## Browser session (Playwright)
+
+Local Keycloak login (`demo` / `demo`) can be driven by Chromium so you do not
+copy cookies by hand. When the vault is empty, pairing opens your **default
+browser** so you can sign in to LaLiga with Google. The native
+`authredirect://` callback is captured by a small helper app — do not copy or
+paste it. macOS may ask to open **LaligaAuthredirect**; choose Open.
+
+```bash
+cd backend/auth
+uv sync --extra browser
+uv run playwright install chromium
+
+# Auth on :8000, API on :8001, Keycloak on :8080
+uv run fantasy-browser-session --exports
+uv run fantasy-browser-session --player-id 3277 --json
+uv run fantasy-browser-session leagues-analysis --json
+uv run fantasy-browser-session teams-analysis --json
+```
+
+From the repo root: `./scripts/fantasy-browser-session.sh leagues-analysis`.
+
+`leagues-analysis` calls `GET /leagues`, standing (overall and week), activity,
+teams, and a squad. `teams-analysis` calls `GET /teams/{id}/money`, current
+lineup, and week lineup. `--put-lineup` is optional and must point at a real
+JSON file plus a real `--team-id` (not a placeholder). `--week` defaults to
+the jornada inferred from `/leagues`. `--headless` hides the Keycloak window.
+LaLiga pairing uses your normal browser. `--no-pair` skips LaLiga if you only
+need a JWT. `--exports` prints `FANTASY_SESSION` / `FANTASY_CSRF` /
+`INTERNAL_JWT` for curl.
+
 ## Health
 
 - `GET /health` / `GET /health/live` — process liveness

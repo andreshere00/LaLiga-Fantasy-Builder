@@ -155,6 +155,19 @@ def test_read_callback_via_clipboard_falls_back_to_file(
     assert result == callback
 
 
+def test_pick_complete_callback_full_code_returns_cleaned() -> None:
+    # Arrange
+    raw = f"noise {REDIRECT}/?state=s&code={LONG_CODE} trailing"
+
+    # Act
+    result = helper.pick_complete_callback(raw, redirect_uri=REDIRECT)
+
+    # Assert
+    assert result is not None
+    assert result.startswith(REDIRECT)
+    assert LONG_CODE in result
+
+
 def test_callback_looks_complete_rejects_short_code() -> None:
     # Arrange
     short = f"{REDIRECT}/?state=s&code=short"
@@ -586,6 +599,17 @@ def test_parse_callback_bare_query_string_without_question() -> None:
 
     # Assert
     assert result["code"] == "bare"
+
+
+def test_pick_complete_callback_https_url_returns_none() -> None:
+    # Arrange
+    raw = "https://login.laliga.es/oauth2/v2.0/authorize?code=short"
+
+    # Act
+    result = helper.pick_complete_callback(raw, redirect_uri=REDIRECT)
+
+    # Assert
+    assert result is None
 
 
 def test_parse_callback_url_with_query_in_path_split() -> None:

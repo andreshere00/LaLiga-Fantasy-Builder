@@ -74,6 +74,9 @@ See [`docs/api/leagues/`](../../docs/api/leagues/),
 Use `uv run fantasy-leagues` for a local CLI summary (ranking, week standing,
 activity, teams), `uv run fantasy-teams` for money and lineup, and
 `uv run fantasy-players` for catalog, market value, and league cards.
+To log in with Playwright and pair LaLiga first, from `backend/auth` run
+`uv run fantasy-browser-session leagues-analysis` or
+`uv run fantasy-browser-session teams-analysis`.
 
 ## Live connectivity check
 

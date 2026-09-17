@@ -9,6 +9,7 @@ import subprocess
 import sys
 import tempfile
 import webbrowser
+from dataclasses import dataclass
 from pathlib import Path
 from typing import Any
 from urllib.parse import parse_qs, urlparse
@@ -18,6 +19,166 @@ import httpx
 from fantasy_auth.adapters.b2c_httpx import HttpxB2CClient
 from fantasy_auth.adapters.pkce import generate_state, generate_verifier, s256_challenge
 from fantasy_auth.config import get_settings
+
+
+class PairingHelperError(RuntimeError):
+    """PKCE callback, token exchange, or pairing complete failed."""
+
+
+@dataclass
+class PkceAuthorizeSession:
+    """PKCE verifier/state plus the B2C authorize URL."""
+
+    authorize_url: str
+    verifier: str
+    state: str
+    nonce: str
+    redirect_uri: str
+    b2c: HttpxB2CClient
+
+
+def start_pkce_session(
+    *,
+    nonce: str | None = None,
+    redirect_uri: str | None = None,
+) -> PkceAuthorizeSession:
+    """Build a PKCE authorize URL for LaLiga B2C.
+
+    Args:
+        nonce: Pairing nonce from the BFF (defaults to a fresh state).
+        redirect_uri: Override for the native redirect URI.
+
+    Returns:
+        Authorize URL and secrets needed to complete the code exchange.
+    """
+    settings = get_settings()
+    resolved_redirect = redirect_uri or settings.laliga_redirect_uri
+    verifier = generate_verifier()
+    challenge = s256_challenge(verifier)
+    state = generate_state()
+    used_nonce = nonce or state
+    b2c = HttpxB2CClient(
+        client_id=settings.laliga_client_id,
+        signin_policy=settings.laliga_signin_policy,
+        token_base_url=settings.laliga_base_url,
+        authorize_url=settings.laliga_authorize_url,
+        allow_id_token_fallback=settings.laliga_allow_id_token_fallback,
+    )
+    authorize_url = b2c.build_authorize_url(
+        redirect_uri=resolved_redirect,
+        code_challenge=challenge,
+        state=state,
+        nonce=used_nonce,
+    )
+    return PkceAuthorizeSession(
+        authorize_url=authorize_url,
+        verifier=verifier,
+        state=state,
+        nonce=used_nonce,
+        redirect_uri=resolved_redirect,
+        b2c=b2c,
+    )
+
+
+def pick_complete_callback(candidate: str, *, redirect_uri: str) -> str | None:
+    """Return a cleaned authredirect URL when it looks complete.
+
+    Args:
+        candidate: Raw navigation or request URL.
+        redirect_uri: Expected native redirect prefix.
+
+    Returns:
+        Clean callback URL, or None when the candidate is not complete.
+    """
+    if not candidate:
+        return None
+    cleaned = _extract_authredirect(candidate, redirect_uri=redirect_uri)
+    if _callback_looks_complete(cleaned, redirect_uri=redirect_uri):
+        return cleaned
+    return None
+
+
+def complete_pairing_from_callback(
+    *,
+    callback: str,
+    pairing_id: str,
+    secret: str,
+    expected_state: str,
+    verifier: str,
+    redirect_uri: str,
+    api_base: str,
+    b2c: HttpxB2CClient,
+) -> dict[str, Any]:
+    """Exchange the B2C code and POST pairing complete.
+
+    Args:
+        callback: Full ``authredirect://`` URL from B2C.
+        pairing_id: Pairing id from POST /laliga/pairings.
+        secret: One-time pairing secret.
+        expected_state: PKCE state that must match the callback.
+        verifier: PKCE code_verifier used to build the authorize URL.
+        redirect_uri: Native redirect URI used at authorize time.
+        api_base: Auth service origin.
+        b2c: B2C client used for the token exchange.
+
+    Returns:
+        JSON body from POST /laliga/pairings/{id}/complete.
+
+    Raises:
+        PairingHelperError: When the callback, exchange, or complete fails.
+    """
+    callback = _extract_authredirect(callback, redirect_uri=redirect_uri)
+    if not _callback_looks_complete(callback, redirect_uri=redirect_uri):
+        raise PairingHelperError(
+            "Callback URL looks incomplete (truncated paste?). "
+            "Use --callback-file and save the URL with: "
+            "pbpaste > /tmp/laliga-callback.txt",
+        )
+    parsed = _parse_callback(callback, expected_state=expected_state)
+    if parsed.get("error"):
+        raise PairingHelperError(f"B2C error: {parsed['error']}")
+    code = parsed.get("code")
+    if not code:
+        raise PairingHelperError("Callback missing code")
+
+    print("Exchanging authorization code with LaLiga...", file=sys.stderr)
+    try:
+        bundle = asyncio.run(
+            b2c.exchange_code(
+                code=code,
+                code_verifier=verifier,
+                redirect_uri=redirect_uri,
+            )
+        )
+    except Exception as exc:
+        raise PairingHelperError(f"Token exchange failed: {exc}") from exc
+
+    token_response = {
+        "access_token": bundle.access_token,
+        "id_token": bundle.id_token,
+        "refresh_token": bundle.refresh_token,
+        "token_type": bundle.token_type,
+        "expires_in": bundle.expires_in,
+        "expires_on": bundle.expires_on,
+        "client_id": bundle.client_id,
+        "policy": bundle.policy,
+        "scope": bundle.scope,
+        "id_token_expires_in": bundle.id_token_expires_in,
+        "refresh_token_expires_in": bundle.refresh_token_expires_in,
+    }
+    complete_url = f"{api_base.rstrip('/')}/laliga/pairings/{pairing_id}/complete"
+    payload = {"secret": secret, "token_response": token_response}
+    print("Completing pairing with auth service...", file=sys.stderr)
+    with httpx.Client(timeout=30.0) as client:
+        response = client.post(complete_url, json=payload)
+    if not response.is_success:
+        raise PairingHelperError(
+            f"Complete failed: {response.status_code} {response.text}",
+        )
+    body = response.json()
+    if not isinstance(body, dict):
+        raise PairingHelperError("Complete returned a non-object JSON body")
+    return body
 
 
 def main(argv: list[str] | None = None) -> int:
@@ -66,99 +227,40 @@ def main(argv: list[str] | None = None) -> int:
     )
     args = parser.parse_args(argv)
 
-    settings = get_settings()
-    redirect_uri = args.redirect_uri or settings.laliga_redirect_uri
-    verifier = generate_verifier()
-    challenge = s256_challenge(verifier)
-    state = generate_state()
-    nonce = args.nonce or state
-
-    b2c = HttpxB2CClient(
-        client_id=settings.laliga_client_id,
-        signin_policy=settings.laliga_signin_policy,
-        token_base_url=settings.laliga_base_url,
-        authorize_url=settings.laliga_authorize_url,
-        allow_id_token_fallback=settings.laliga_allow_id_token_fallback,
-    )
-    authorize_url = b2c.build_authorize_url(
-        redirect_uri=redirect_uri,
-        code_challenge=challenge,
-        state=state,
-        nonce=nonce,
-    )
+    pkce = start_pkce_session(nonce=args.nonce, redirect_uri=args.redirect_uri)
 
     print("Open this URL in a browser and sign in:", file=sys.stderr)
-    print(authorize_url, file=sys.stderr)
-    print(f"\nExpected state (must match callback): {state}", file=sys.stderr)
+    print(pkce.authorize_url, file=sys.stderr)
+    print(
+        f"\nExpected state (must match callback): {pkce.state}",
+        file=sys.stderr,
+    )
     try:
-        webbrowser.open(authorize_url)
-    except Exception:
+        webbrowser.open(pkce.authorize_url)
+    except webbrowser.Error:
         pass
 
-    callback = _read_callback(args, redirect_uri=redirect_uri)
+    callback = _read_callback(args, redirect_uri=pkce.redirect_uri)
     if not callback:
         print("No callback URL provided", file=sys.stderr)
         return 1
 
-    # Allow accidental Google-search wrappers: extract authredirect://… if present.
-    callback = _extract_authredirect(callback, redirect_uri=redirect_uri)
-    if not _callback_looks_complete(callback, redirect_uri=redirect_uri):
-        print(
-            "Callback URL looks incomplete (truncated paste?). "
-            "Use --callback-file and save the URL with: pbpaste > /tmp/laliga-callback.txt",
-            file=sys.stderr,
-        )
-        return 1
-
-    parsed = _parse_callback(callback, expected_state=state)
-    if parsed.get("error"):
-        print(f"B2C error: {parsed['error']}", file=sys.stderr)
-        return 1
-    code = parsed.get("code")
-    if not code:
-        print("Callback missing code", file=sys.stderr)
-        return 1
-
-    print("Exchanging authorization code with LaLiga...", file=sys.stderr)
     try:
-        bundle = asyncio.run(
-            b2c.exchange_code(
-                code=code,
-                code_verifier=verifier,
-                redirect_uri=redirect_uri,
-            )
+        result = complete_pairing_from_callback(
+            callback=callback,
+            pairing_id=args.pairing,
+            secret=args.secret,
+            expected_state=pkce.state,
+            verifier=pkce.verifier,
+            redirect_uri=pkce.redirect_uri,
+            api_base=args.api_base,
+            b2c=pkce.b2c,
         )
-    except Exception as exc:
-        print(f"Token exchange failed: {exc}", file=sys.stderr)
+    except PairingHelperError as exc:
+        print(str(exc), file=sys.stderr)
         return 1
 
-    token_response = {
-        "access_token": bundle.access_token,
-        "id_token": bundle.id_token,
-        "refresh_token": bundle.refresh_token,
-        "token_type": bundle.token_type,
-        "expires_in": bundle.expires_in,
-        "expires_on": bundle.expires_on,
-        "client_id": bundle.client_id,
-        "policy": bundle.policy,
-        "scope": bundle.scope,
-        "id_token_expires_in": bundle.id_token_expires_in,
-        "refresh_token_expires_in": bundle.refresh_token_expires_in,
-    }
-
-    complete_url = f"{args.api_base.rstrip('/')}/laliga/pairings/{args.pairing}/complete"
-    payload = {"secret": args.secret, "token_response": token_response}
-    print("Completing pairing with auth service...", file=sys.stderr)
-    with httpx.Client(timeout=30.0) as client:
-        response = client.post(complete_url, json=payload)
-    if not response.is_success:
-        print(
-            f"Complete failed: {response.status_code} {response.text}",
-            file=sys.stderr,
-        )
-        return 1
-
-    print(json.dumps(response.json(), indent=2))
+    print(json.dumps(result, indent=2))
     return 0
 
 
