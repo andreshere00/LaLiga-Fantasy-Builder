@@ -2,12 +2,86 @@
 
 from __future__ import annotations
 
+import argparse
 import json
+import os
 import sys
 from typing import Any
 from urllib.parse import quote
 
 import httpx
+
+DEFAULT_AUTH_BASE = "http://localhost:8000"
+DEFAULT_API_BASE = "http://localhost:8001"
+DEFAULT_ORIGIN = "http://localhost:3000"
+
+
+def add_common_cli_args(parser: argparse.ArgumentParser) -> None:
+    """Register shared auth/API flags used by Fantasy Builder CLIs."""
+    parser.add_argument(
+        "--auth-base",
+        default=os.environ.get("FANTASY_AUTH_BASE", DEFAULT_AUTH_BASE),
+        help="Auth service base URL",
+    )
+    parser.add_argument(
+        "--api-base",
+        default=os.environ.get("FANTASY_API_BASE", DEFAULT_API_BASE),
+        help="Fantasy Builder API base URL",
+    )
+    parser.add_argument(
+        "--session",
+        default=os.environ.get("FANTASY_SESSION") or os.environ.get("SESSION"),
+        help="fantasy_session cookie (or env FANTASY_SESSION)",
+    )
+    parser.add_argument(
+        "--csrf",
+        default=os.environ.get("FANTASY_CSRF") or os.environ.get("CSRF"),
+        help="CSRF token (or env FANTASY_CSRF)",
+    )
+    parser.add_argument(
+        "--jwt",
+        default=os.environ.get("INTERNAL_JWT"),
+        help="Internal JWT (skips /auth/token when set)",
+    )
+    parser.add_argument(
+        "--origin",
+        default=os.environ.get("FANTASY_ORIGIN", DEFAULT_ORIGIN),
+        help="Origin header for auth CSRF checks",
+    )
+
+
+def resolve_jwt(args: argparse.Namespace, *, command: str) -> str | None:
+    """Return an internal JWT from ``args`` or exchange session cookies.
+
+    Args:
+        args: Parsed CLI namespace with jwt/session/csrf/auth-base/origin.
+        command: CLI name shown in missing-credentials help (e.g. ``fantasy-teams``).
+
+    Returns:
+        Internal JWT, or ``None`` when credentials are missing or exchange fails.
+    """
+    jwt = normalize(args.jwt)
+    if jwt:
+        return jwt
+
+    session = normalize(args.session)
+    csrf = normalize(args.csrf)
+    if not session or not csrf:
+        print(
+            "Missing credentials. Provide --jwt / INTERNAL_JWT, or:\n"
+            "  export FANTASY_SESSION='…'\n"
+            "  export FANTASY_CSRF='…'\n"
+            f"Then re-run: uv run {command}",
+            file=sys.stderr,
+        )
+        return None
+
+    return exchange_token(
+        auth_base=args.auth_base,
+        session=session,
+        csrf=csrf,
+        origin=args.origin,
+    )
 
 
 def normalize(value: str | None) -> str:

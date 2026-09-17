@@ -4,19 +4,18 @@ from __future__ import annotations
 
 import argparse
 import json
-import os
 import sys
 from typing import Any
 
 import httpx
 
 from fantasy_api.cli.common import (
+    add_common_cli_args,
     api_get,
     as_league_list,
-    exchange_token,
     league_id,
     my_team_id,
-    normalize,
+    resolve_jwt,
 )
 
 
@@ -42,36 +41,7 @@ def main(argv: list[str] | None = None) -> int:
             "week standing, activity, and teams via the local API"
         ),
     )
-    parser.add_argument(
-        "--auth-base",
-        default=os.environ.get("FANTASY_AUTH_BASE", "http://localhost:8000"),
-        help="Auth service base URL",
-    )
-    parser.add_argument(
-        "--api-base",
-        default=os.environ.get("FANTASY_API_BASE", "http://localhost:8001"),
-        help="Fantasy Builder API base URL",
-    )
-    parser.add_argument(
-        "--session",
-        default=os.environ.get("FANTASY_SESSION") or os.environ.get("SESSION"),
-        help="fantasy_session cookie (or env FANTASY_SESSION)",
-    )
-    parser.add_argument(
-        "--csrf",
-        default=os.environ.get("FANTASY_CSRF") or os.environ.get("CSRF"),
-        help="CSRF token (or env FANTASY_CSRF)",
-    )
-    parser.add_argument(
-        "--jwt",
-        default=os.environ.get("INTERNAL_JWT"),
-        help="Internal JWT (skips /auth/token when set)",
-    )
-    parser.add_argument(
-        "--origin",
-        default=os.environ.get("FANTASY_ORIGIN", "http://localhost:3000"),
-        help="Origin header for auth CSRF checks",
-    )
+    add_common_cli_args(parser)
     parser.add_argument(
         "--league-id",
         default=None,
@@ -96,28 +66,9 @@ def main(argv: list[str] | None = None) -> int:
     )
     args = parser.parse_args(argv)
 
-    jwt = normalize(args.jwt)
-    if not jwt:
-        session = normalize(args.session)
-        csrf = normalize(args.csrf)
-        if not session or not csrf:
-            print(
-                "Missing credentials. Provide --jwt / INTERNAL_JWT, or:\n"
-                "  export FANTASY_SESSION='…'\n"
-                "  export FANTASY_CSRF='…'\n"
-                "Then re-run: uv run fantasy-leagues",
-                file=sys.stderr,
-            )
-            return 1
-        token = exchange_token(
-            auth_base=args.auth_base,
-            session=session,
-            csrf=csrf,
-            origin=args.origin,
-        )
-        if token is None:
-            return 1
-        jwt = token
+    jwt = resolve_jwt(args, command="fantasy-leagues")
+    if jwt is None:
+        return 1
 
     try:
         report = _build_report(
@@ -252,7 +203,8 @@ def _find_position(standing: Any, team_id: Any) -> dict[str, Any] | None:
     if team_id is None:
         return None
     for index, row in enumerate(rows, start=1):
-        team = row.get("team") if isinstance(row.get("team"), dict) else {}
+        raw_team = row.get("team")
+        team: dict[str, Any] = raw_team if isinstance(raw_team, dict) else {}
         row_team_id = row.get("teamId") or row.get("team_id") or team.get("id") or row.get("id")
         if row_team_id is not None and str(row_team_id) == str(team_id):
             rank = row.get("position") or row.get("rank") or index
@@ -334,7 +286,8 @@ def _print_standing(standing: Any, *, highlight_team_id: Any) -> None:
         return
     for index, row in enumerate(rows[:15], start=1):
         rank = row.get("position") or row.get("rank") or index
-        team = row.get("team") if isinstance(row.get("team"), dict) else {}
+        raw_team = row.get("team")
+        team: dict[str, Any] = raw_team if isinstance(raw_team, dict) else {}
         name = (
             row.get("name")
             or row.get("teamName")

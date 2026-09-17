@@ -3,43 +3,12 @@
 from __future__ import annotations
 
 import json
-from typing import Any
 
 import httpx
 import pytest
+from cli_http_stub import patch_httpx_client
 from fantasy_api.cli import common as cli_common
 from fantasy_api.cli import teams as teams_cli
-
-
-def _handler_map(routes: dict[tuple[str, str], Any]):
-    def handler(request: httpx.Request) -> httpx.Response:
-        key = (request.method, request.url.path)
-        if key not in routes:
-            return httpx.Response(404, json={"error": f"missing {key}"})
-        payload = routes[key]
-        if callable(payload):
-            response = payload(request)
-            if not isinstance(response, httpx.Response):
-                raise TypeError("route handler must return httpx.Response")
-            return response
-        return httpx.Response(200, json=payload)
-
-    return handler
-
-
-def _patch_client(
-    monkeypatch: pytest.MonkeyPatch,
-    routes: dict[tuple[str, str], Any],
-) -> None:
-    transport = httpx.MockTransport(_handler_map(routes))
-    real_client = httpx.Client
-
-    def client_factory(*args: Any, **kwargs: Any) -> httpx.Client:
-        kwargs["transport"] = transport
-        kwargs.pop("timeout", None)
-        return real_client(*args, timeout=30.0, **kwargs)
-
-    monkeypatch.setattr(cli_common.httpx, "Client", client_factory)
 
 
 # ---- Happy path ---- #
@@ -76,7 +45,7 @@ def test_main_with_jwt_prints_money_and_lineup(
             "formation": {"tacticalFormation": [3, 5, 2]},
         },
     }
-    _patch_client(monkeypatch, routes)
+    patch_httpx_client(monkeypatch, routes)
 
     # Act
     code = teams_cli.main(
@@ -107,15 +76,7 @@ def test_main_with_explicit_team_id_skips_leagues(
             return httpx.Response(200, json={})
         return httpx.Response(404)
 
-    transport = httpx.MockTransport(handler)
-    real_client = httpx.Client
-
-    def client_factory(*args: Any, **kwargs: Any) -> httpx.Client:
-        kwargs["transport"] = transport
-        kwargs.pop("timeout", None)
-        return real_client(*args, timeout=30.0, **kwargs)
-
-    monkeypatch.setattr(cli_common.httpx, "Client", client_factory)
+    patch_httpx_client(monkeypatch, handler)
 
     # Act
     code = teams_cli.main(
@@ -144,7 +105,7 @@ def test_main_json_mode_returns_aggregated_payload(
         ("GET", "/teams/2/lineup"): {"formation": {}},
         ("GET", "/teams/2/lineup/week/3"): {"weekNumber": 3},
     }
-    _patch_client(monkeypatch, routes)
+    patch_httpx_client(monkeypatch, routes)
 
     # Act
     code = teams_cli.main(
@@ -190,15 +151,7 @@ def test_exchange_token_then_fetch(
             return httpx.Response(200, json={})
         return httpx.Response(404)
 
-    transport = httpx.MockTransport(handler)
-    real_client = httpx.Client
-
-    def client_factory(*args: Any, **kwargs: Any) -> httpx.Client:
-        kwargs["transport"] = transport
-        kwargs.pop("timeout", None)
-        return real_client(*args, timeout=30.0, **kwargs)
-
-    monkeypatch.setattr(cli_common.httpx, "Client", client_factory)
+    patch_httpx_client(monkeypatch, handler)
 
     # Act
     code = teams_cli.main(
@@ -238,21 +191,13 @@ def test_main_needs_reauth_returns_1(
     capsys: pytest.CaptureFixture[str],
 ) -> None:
     # Arrange
-    def handler(request: httpx.Request) -> httpx.Response:
+    def handler(_request: httpx.Request) -> httpx.Response:
         return httpx.Response(
             401,
             json={"error": "needs_reauth", "detail": "no_laliga_connection"},
         )
 
-    transport = httpx.MockTransport(handler)
-    real_client = httpx.Client
-
-    def client_factory(*args: Any, **kwargs: Any) -> httpx.Client:
-        kwargs["transport"] = transport
-        kwargs.pop("timeout", None)
-        return real_client(*args, timeout=30.0, **kwargs)
-
-    monkeypatch.setattr(cli_common.httpx, "Client", client_factory)
+    patch_httpx_client(monkeypatch, handler)
 
     # Act
     code = teams_cli.main(
@@ -270,7 +215,7 @@ def test_main_league_filter_not_found_returns_1(
 ) -> None:
     # Arrange
     routes = {("GET", "/leagues"): [{"id": "42", "team": {"id": "99"}}]}
-    _patch_client(monkeypatch, routes)
+    patch_httpx_client(monkeypatch, routes)
 
     # Act
     code = teams_cli.main(
@@ -320,15 +265,7 @@ def test_main_encodes_team_id_in_api_paths(
             return httpx.Response(200, json={})
         return httpx.Response(404)
 
-    transport = httpx.MockTransport(handler)
-    real_client = httpx.Client
-
-    def client_factory(*args: Any, **kwargs: Any) -> httpx.Client:
-        kwargs["transport"] = transport
-        kwargs.pop("timeout", None)
-        return real_client(*args, timeout=30.0, **kwargs)
-
-    monkeypatch.setattr(cli_common.httpx, "Client", client_factory)
+    patch_httpx_client(monkeypatch, handler)
 
     # Act
     code = teams_cli.main(
