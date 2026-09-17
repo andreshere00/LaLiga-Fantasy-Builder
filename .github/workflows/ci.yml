@@ -26,3 +26,14 @@ jobs:
 
       - name: Test
         run: uv run poe test
+
+  docker:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Build auth image
+        run: docker build -f backend/auth/Dockerfile backend/auth
+
+      - name: Build API image
+        run: docker build -f backend/api/Dockerfile backend/api

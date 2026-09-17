@@ -36,7 +36,18 @@ uv run uvicorn fantasy_auth.main:app --reload --port 8000
 - App login: http://localhost:8000/auth/login (`demo` / `demo` on local Keycloak)
 - Admin: http://localhost:8080 (`admin` / `admin`)
 
-Optional: build/run auth in Docker (`docker compose --profile full up --build`).
+Docker (Keycloak + auth + API on slim Python 3.14 images):
+
+```bash
+cp backend/auth/.env.example backend/auth/.env
+cp backend/api/.env.example backend/api/.env
+docker compose --profile apps up --build
+```
+
+- Auth: http://localhost:8000 — API: http://localhost:8001/docs
+- Production-like stack (Postgres + Redis + OTEL): set `USE_MEMORY_STORE=false`,
+  vault key, and JWT PEMs in `backend/auth/.env`, then
+  `docker compose --profile full up --build`
 
 ## Pair LaLiga
 

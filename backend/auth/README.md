@@ -23,13 +23,30 @@ From repo root, Keycloak:
 docker compose up -d
 ```
 
-Production-like local stack (Postgres + Redis + auth + optional OTEL):
+Docker stack from repo root (Keycloak + auth + API):
+
+```bash
+cp .env.example .env
+docker compose --profile apps up --build
+```
+
+Production-like stack (Postgres + Redis + auth + OTEL). Set in `.env` before
+`--profile full`:
+
+- `USE_MEMORY_STORE=false`
+- `TOKEN_VAULT_KEY_BASE64` — `openssl rand -base64 32`
+- `INTERNAL_JWT_PRIVATE_KEY_PEM` / `INTERNAL_JWT_PUBLIC_KEY_PEM`
+- `INTERNAL_SERVICE_TOKEN`
+- `MIGRATION_AUTO_APPLY=true` (or pass via Compose)
 
 ```bash
 docker compose --profile full up --build
 ```
 
-## Docker
+## Docker image
+
+Multi-stage build on `python:3.14-slim-trixie` (uv in builder only, non-root
+runtime):
 
 ```bash
 # from repo root

@@ -23,6 +23,25 @@ uv sync --all-extras
 uv run uvicorn fantasy_api.main:app --reload --port 8001
 ```
 
+## Docker
+
+From repo root (with auth on the same Compose network):
+
+```bash
+cp backend/api/.env.example backend/api/.env
+docker compose --profile apps up --build
+```
+
+Standalone image (multi-stage `python:3.14-slim-trixie`, non-root):
+
+```bash
+docker build -t laliga-fantasy-builder-api -f backend/api/Dockerfile backend/api
+docker run --rm -p 8001:8001 --env-file backend/api/.env laliga-fantasy-builder-api
+```
+
+Set `AUTH_JWKS_URL` and `AUTH_INTERNAL_BASE_URL` to a reachable auth instance
+when not using Compose defaults.
+
 | Variable | Default | Purpose |
 |----------|---------|---------|
 | `LALIGA_FANTASY_ORIGIN` | `https://fantasy-api.llt-services.com` | Fantasy origin |

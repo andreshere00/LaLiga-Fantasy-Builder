@@ -304,6 +304,15 @@ Pydantic schemas (`fantasy_api.openapi.build_openapi_schema`). The committed
 ## Deployment constraints
 
 - Auth and API are independently deployable.
+- Each service ships a multi-stage Dockerfile on `python:3.14-slim-trixie`
+  (`backend/auth/Dockerfile`, `backend/api/Dockerfile`): dependencies are
+  installed with uv in a builder stage; the runtime image contains only the
+  virtualenv, application source, and a non-root `uvicorn` process (no uv,
+  no compiler toolchain).
+- Local Docker: `docker compose --profile apps up --build` runs Keycloak, auth,
+  and API; `--profile full` adds Postgres, Redis, and OTEL for production-like
+  persistence. Compose sets internal OIDC URLs (`keycloak:8080`) for auth while
+  browser-facing issuer/redirect URLs stay on `localhost`.
 - API and auth share a private network for `/internal/*`.
 - Only public auth routes and intended API routes should be exposed by ingress.
 - JWT private keys, the vault key, and the service token belong in a secret

@@ -80,20 +80,24 @@ services:
     env_file:
       - ./backend/auth/.env
     environment:
-      USE_MEMORY_STORE: "false"
+      APP_OIDC_TOKEN_URL: http://keycloak:8080/realms/fantasy-builder/protocol/openid-connect/token
+      APP_OIDC_JWKS_URL: http://keycloak:8080/realms/fantasy-builder/protocol/openid-connect/certs
       DATABASE_URL: postgresql://fantasy:fantasy@postgres:5432/fantasy_auth
       REDIS_URL: redis://redis:6379/0
-      MIGRATION_AUTO_APPLY: "true"
-      OTEL_EXPORTER_OTLP_ENDPOINT: http://otel-collector:4318/v1/traces
+      MIGRATION_AUTO_APPLY: ${MIGRATION_AUTO_APPLY:-false}
+      OTEL_EXPORTER_OTLP_ENDPOINT: ${OTEL_EXPORTER_OTLP_ENDPOINT:-}
       INTERNAL_SERVICE_TOKEN: ${INTERNAL_SERVICE_TOKEN:-dev-service-token}
     depends_on:
       keycloak:
-        condition: service_started
+        condition: service_healthy
       postgres:
         condition: service_healthy
+        required: false
       redis:
         condition: service_healthy
+        required: false
     profiles:
+      - apps
       - full
     networks:
       - public
@@ -115,8 +119,9 @@ services:
       INTERNAL_SERVICE_TOKEN: ${INTERNAL_SERVICE_TOKEN:-dev-service-token}
     depends_on:
       auth:
-        condition: service_started
+        condition: service_healthy
     profiles:
+      - apps
       - full
     networks:
       - public
