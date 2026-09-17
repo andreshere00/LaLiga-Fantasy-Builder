@@ -26,6 +26,8 @@ This directory describes authentication, architecture, and the application API.
 - [Teams](api/teams/README.md) — team money and lineup routes
 - [Adding teams endpoints](api/teams/adding-teams-endpoints.md) —
   controller–service–repository checklist for teams
+- [Proxy endpoint pitfalls](api/proxy-endpoint-pitfalls.md) — avoid repeat
+  review findings on LaLiga-backed routes (leagues, teams, …)
 
 Committed OpenAPI document:
 [`backend/api/openapi.json`](../backend/api/openapi.json)

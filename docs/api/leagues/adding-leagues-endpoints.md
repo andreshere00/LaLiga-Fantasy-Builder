@@ -109,3 +109,10 @@ returns the LaLiga bearer.
 - Fantasy `401` currently maps to `fantasy_unauthorized`. A single
   retry-after-unauthorized via auth is a follow-up; do not add unbounded
   retries in the API.
+
+## Before you merge
+
+Cross-feature review learnings (unexpected upstream shape, JSON errors, OpenAPI
+drift, CLI parity, write-path contracts) live in
+[Proxy endpoint pitfalls](../proxy-endpoint-pitfalls.md). Run its **Pre-merge
+checklist** for every new LaLiga proxy, not only leagues.

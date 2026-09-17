@@ -10,6 +10,8 @@ Application API docs for `backend/api` (`fantasy_api`).
 - [Teams](teams/README.md) — team money and lineup routes
 - [Adding teams endpoints](teams/adding-teams-endpoints.md) — CRS checklist
   for team money/lineup
+- [Proxy endpoint pitfalls](proxy-endpoint-pitfalls.md) — review learnings
+  (fail-closed proxy, read/write schemas, OpenAPI, CLI, tests)
 
 Auth and pairing live under [Authentication](../authentication/authentication.md).
 Cross-cutting endpoint patterns:

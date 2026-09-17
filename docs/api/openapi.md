@@ -90,6 +90,9 @@ response models.
    `openapi.json` if it changed.
 6. Confirm the operation appears under http://localhost:8001/docs.
 
+For proxy-specific Swagger mistakes (docstring leakage, missing 503, CLI text in
+`Path` descriptions), see [Proxy endpoint pitfalls](proxy-endpoint-pitfalls.md).
+
 ## Sample response shapes
 
 Captured Fantasy payloads used to refine schemas:
