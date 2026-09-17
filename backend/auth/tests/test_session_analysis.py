@@ -5,6 +5,7 @@ from __future__ import annotations
 from typing import Any
 
 import pytest
+from fantasy_auth.cli.browser_session.errors import BrowserSessionError
 from fantasy_auth.cli.session_analysis import (
     fetch_leagues_analysis,
     fetch_teams_analysis,
@@ -129,7 +130,7 @@ def test_fetch_leagues_analysis_missing_league_raises() -> None:
     _, get_json = _recorder({"/leagues": [{"id": "1"}]})
 
     # Act / Assert
-    with pytest.raises(RuntimeError, match="not found"):
+    with pytest.raises(BrowserSessionError, match="not found"):
         fetch_leagues_analysis(
             get_json=get_json,
             league_filter="missing",
@@ -143,7 +144,7 @@ def test_fetch_teams_analysis_put_without_team_id_raises() -> None:
     _, get_json = _recorder({"/leagues": [{"id": "1", "team": {"id": "9"}}]})
 
     # Act / Assert
-    with pytest.raises(RuntimeError, match="requires --team-id"):
+    with pytest.raises(BrowserSessionError, match="requires --team-id"):
         fetch_teams_analysis(
             get_json=get_json,
             team_id=None,

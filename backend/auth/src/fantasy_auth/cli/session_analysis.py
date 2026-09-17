@@ -6,6 +6,8 @@ from collections.abc import Callable
 from typing import Any
 from urllib.parse import quote
 
+from fantasy_auth.cli.browser_session.errors import BrowserSessionError
+
 GetJson = Callable[[str], Any]
 PutJson = Callable[[str, Any], Any]
 
@@ -31,7 +33,7 @@ def fetch_leagues_analysis(
         Aggregated JSON for one or more leagues.
 
     Raises:
-        RuntimeError: When the requested league is missing.
+        BrowserSessionError: When the requested league is missing.
     """
     leagues = _as_league_list(get_json("/leagues"))
     if league_filter:
@@ -39,7 +41,7 @@ def fetch_leagues_analysis(
             item for item in leagues if str(_league_id(item)) == str(league_filter)
         ]
         if not leagues:
-            raise RuntimeError(f"League id {league_filter!r} not found in /leagues")
+            raise BrowserSessionError(f"League id {league_filter!r} not found in /leagues")
 
     reports: list[dict[str, Any]] = []
     for item in leagues:
@@ -100,7 +102,7 @@ def fetch_teams_analysis(
         Aggregated JSON for one or more teams.
 
     Raises:
-        RuntimeError: When team ids cannot be resolved or PUT is unsafe.
+        BrowserSessionError: When team ids cannot be resolved or PUT is unsafe.
     """
     leagues = _as_league_list(get_json("/leagues"))
     inferred_week = week if week is not None else _infer_week_from_leagues(leagues)
@@ -111,9 +113,9 @@ def fetch_teams_analysis(
     )
     if put_lineup_body is not None:
         if team_id is None:
-            raise RuntimeError("PUT /teams/{id}/lineup requires --team-id")
+            raise BrowserSessionError("PUT /teams/{id}/lineup requires --team-id")
         if put_json is None:
-            raise RuntimeError("PUT lineup is not configured")
+            raise BrowserSessionError("PUT lineup is not configured")
 
     reports: list[dict[str, Any]] = []
     for target in targets:
@@ -197,7 +199,7 @@ def _team_targets(
             item for item in leagues if str(_league_id(item)) == str(league_filter)
         ]
         if not selected:
-            raise RuntimeError(f"League id {league_filter!r} not found in /leagues")
+            raise BrowserSessionError(f"League id {league_filter!r} not found in /leagues")
 
     targets: list[dict[str, Any]] = []
     for item in selected:
@@ -212,7 +214,7 @@ def _team_targets(
             }
         )
     if not targets:
-        raise RuntimeError(
+        raise BrowserSessionError(
             "No team id found. Pass --team-id, or ensure /leagues embeds team.id",
         )
     return targets
