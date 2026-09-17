@@ -135,6 +135,58 @@ def test_read_callback_via_clipboard_uses_pbpaste(
     assert len(result) > 100
 
 
+def test_read_callback_clipboard_falls_back_to_terminal(
+    monkeypatch: pytest.MonkeyPatch,
+    tmp_path: Path,
+) -> None:
+    # Arrange
+    monkeypatch.setattr(helper, "DEFAULT_CALLBACK_FILE", tmp_path / "missing.txt")
+    monkeypatch.setattr(helper, "_pbpaste", lambda: "not-a-callback")
+    lines = iter(
+        [
+            "\n",
+            f"{REDIRECT}/?state=s&code={LONG_CODE}\n",
+        ]
+    )
+    monkeypatch.setattr(helper.sys.stdin, "readline", lambda: next(lines))
+    args = _ns(clipboard=True)
+
+    # Act
+    result = helper._read_callback(args, redirect_uri=REDIRECT)
+
+    # Assert
+    assert LONG_CODE in result
+
+
+def test_read_terminal_callback_joins_wrapped_lines(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    # Arrange
+    callback = f"{REDIRECT}/?state=s&code={LONG_CODE}"
+    chunks = iter([callback[:50] + "\n", callback[50:] + "\n"])
+    monkeypatch.setattr(helper.sys.stdin, "readline", lambda: next(chunks, ""))
+
+    # Act
+    result = helper._read_terminal_callback(redirect_uri=REDIRECT)
+
+    # Assert
+    assert result == callback
+
+
+def test_read_terminal_callback_blank_line_stops(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    # Arrange
+    lines = iter(["partial\n", "\n"])
+    monkeypatch.setattr(helper.sys.stdin, "readline", lambda: next(lines, ""))
+
+    # Act
+    result = helper._read_terminal_callback(redirect_uri=REDIRECT)
+
+    # Assert
+    assert result == "partial"
+
+
 def test_read_callback_via_clipboard_falls_back_to_file(
     monkeypatch: pytest.MonkeyPatch,
     tmp_path: Path,

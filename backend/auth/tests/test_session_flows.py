@@ -5,10 +5,12 @@ from __future__ import annotations
 import httpx
 import pytest
 from fantasy_auth.cli import browser_session as cli
+from fantasy_auth.cli.browser_session.errors import BrowserSessionError
 from fantasy_auth.cli.browser_session.flows import (
     fetch_league_player,
     first_league_id,
     run_leagues_analysis,
+    run_teams_analysis,
 )
 
 
@@ -266,6 +268,30 @@ def test_main_placeholder_team_id_fails_before_login(
     assert code == 1
 
 
+def test_main_http_error_returns_1(
+    monkeypatch: pytest.MonkeyPatch,
+    capsys: pytest.CaptureFixture[str],
+) -> None:
+    # Arrange
+    monkeypatch.setattr(
+        cli,
+        "login_with_playwright",
+        lambda *_args, **_kwargs: ("sess", "csrf"),
+    )
+
+    def boom(**_kwargs: object) -> str:
+        raise httpx.ConnectError("down")
+
+    monkeypatch.setattr(cli, "exchange_token", boom)
+
+    # Act
+    code = cli.main(["--json"])
+
+    # Assert
+    assert code == 1
+    assert "HTTP error" in capsys.readouterr().err
+
+
 def test_main_unlinked_with_no_pair_fails(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
@@ -292,3 +318,74 @@ def test_first_league_id_empty_payload_returns_none() -> None:
     # Arrange / Act / Assert
     assert first_league_id([]) is None
     assert first_league_id("nope") is None
+    assert first_league_id({"leagues": [{"league_id": "7"}]}) == "7"
+    assert first_league_id(["skip", {"id": "1"}]) == "1"
+
+
+def test_fetch_league_player_without_league_raises() -> None:
+    # Arrange
+    transport = httpx.MockTransport(lambda _r: httpx.Response(200, json=[]))
+
+    # Act / Assert
+    with pytest.raises(BrowserSessionError, match="No league id"):
+        fetch_league_player(
+            api_base="http://api.test",
+            jwt="jwt",
+            player_id="7",
+            league_id=None,
+            transport=transport,
+        )
+
+
+def test_run_teams_analysis_uses_api_transport() -> None:
+    # Arrange
+    def handler(request: httpx.Request) -> httpx.Response:
+        if request.url.path == "/leagues":
+            return httpx.Response(200, json=[{"id": "1", "team": {"id": "9"}}])
+        return httpx.Response(200, json={"ok": True})
+
+    # Act
+    report = run_teams_analysis(
+        api_base="http://api.test",
+        jwt="jwt",
+        team_id="9",
+        league_id=None,
+        week=1,
+        put_lineup=None,
+        transport=httpx.MockTransport(handler),
+    )
+
+    # Assert
+    assert report["teams"][0]["team_id"] == "9"
+
+
+def test_main_exports_and_print_jwt(
+    monkeypatch: pytest.MonkeyPatch,
+    capsys: pytest.CaptureFixture[str],
+) -> None:
+    # Arrange
+    _patch_session(monkeypatch)
+
+    # Act
+    code = cli.main(["--json", "--exports", "--print-jwt"])
+
+    # Assert
+    assert code == 0
+    captured = capsys.readouterr()
+    assert "export INTERNAL_JWT=" in captured.err
+    assert "access_token" in captured.out
+
+
+def test_main_without_flow_prints_ready_message(
+    monkeypatch: pytest.MonkeyPatch,
+    capsys: pytest.CaptureFixture[str],
+) -> None:
+    # Arrange
+    _patch_session(monkeypatch)
+
+    # Act
+    code = cli.main([])
+
+    # Assert
+    assert code == 0
+    assert "Session ready" in capsys.readouterr().err

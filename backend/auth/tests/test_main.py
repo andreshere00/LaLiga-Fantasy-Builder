@@ -15,6 +15,7 @@ from fantasy_auth.domain.errors import (
     AuthError,
     NeedsReauth,
     OwnershipError,
+    PairingError,
     ProviderError,
     ValidationError,
 )
@@ -255,6 +256,10 @@ def test_exception_handlers_map_domain_errors(
     async def reauth() -> None:
         raise NeedsReauth("u-1")
 
+    @app.get("/_test/pairing")
+    async def pairing_limited() -> None:
+        raise PairingError("slow", category="rate_limited")
+
     # Act / Assert
     assert client.get("/_test/ownership").status_code == 403
     assert client.get("/_test/validation").json()["error"] == "jwt_invalid"
@@ -262,6 +267,7 @@ def test_exception_handlers_map_domain_errors(
     assert client.get("/_test/auth").json()["error"] == "auth_error"
     assert client.get("/_test/startup").status_code == 503
     assert client.get("/_test/reauth").json()["error"] == "needs_reauth"
+    assert client.get("/_test/pairing").status_code == 429
 
 
 # ---- Edge cases ---- #

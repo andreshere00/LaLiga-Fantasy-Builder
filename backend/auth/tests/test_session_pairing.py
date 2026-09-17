@@ -136,6 +136,69 @@ def test_capture_authredirect_handler_error_falls_back_to_playwright(
     assert result == "authredirect://ok"
 
 
+def test_pair_laliga_complete_helper_error_raises(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    # Arrange
+    monkeypatch.setattr(
+        pairing,
+        "_create_pairing",
+        lambda **_kwargs: {
+            "pairing_id": "pair-1",
+            "secret": "sec-1",
+            "nonce": "nonce-1",
+            "expires_at": "1",
+        },
+    )
+    pkce = laliga_helper.PkceAuthorizeSession(
+        authorize_url="https://login.example/authorize",
+        verifier="verifier",
+        state="state",
+        nonce="nonce-1",
+        redirect_uri="authredirect://com.lfp.laligafantasy",
+        b2c=MagicMock(),
+    )
+    monkeypatch.setattr(laliga_helper, "start_pkce_session", lambda **_: pkce)
+
+    def boom(**_kwargs: object) -> dict[str, object]:
+        raise laliga_helper.PairingHelperError("bad callback")
+
+    monkeypatch.setattr(laliga_helper, "complete_pairing_from_callback", boom)
+
+    # Act / Assert
+    with pytest.raises(BrowserSessionError, match="bad callback"):
+        pairing.pair_laliga_with_playwright(
+            auth_base="http://auth.test",
+            origin="http://localhost:8000",
+            session="sess",
+            csrf="csrf",
+            capture_fn=lambda _url: "authredirect://cb",
+        )
+
+
+def test_capture_authredirect_timeout_wraps_macos_error(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    # Arrange
+    monkeypatch.setattr(pairing.sys, "platform", "darwin")
+
+    def boom(*_args: object, **_kwargs: object) -> str:
+        raise pairing.authredirect_macos.AuthredirectTimeoutError("Timed out")
+
+    monkeypatch.setattr(
+        pairing.authredirect_macos,
+        "capture_authredirect_macos",
+        boom,
+    )
+
+    # Act / Assert
+    with pytest.raises(BrowserSessionError, match="Timed out"):
+        pairing.capture_authredirect(
+            "https://login.example/authorize",
+            redirect_uri="authredirect://com.lfp.laligafantasy",
+        )
+
+
 # ---- Edge cases ---- #
 
 

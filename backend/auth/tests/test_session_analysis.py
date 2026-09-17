@@ -122,6 +122,47 @@ def test_fetch_teams_analysis_put_lineup_with_team_id_posts_body() -> None:
     assert "/teams/99/lineup/week/2" in seen
 
 
+def test_fetch_leagues_analysis_skips_items_without_id() -> None:
+    # Arrange
+    payloads = {
+        "/leagues": [
+            {"name": "no-id"},
+            {"id": "42", "team": {"id": "9"}},
+        ]
+    }
+    seen, get_json = _recorder(payloads)
+
+    # Act
+    report = fetch_leagues_analysis(
+        get_json=get_json,
+        league_filter=None,
+        week=1,
+        activity_page=0,
+    )
+
+    # Assert
+    assert [item["league_id"] for item in report["leagues"]] == ["42"]
+    assert "/leagues/42/standing" in seen
+
+
+def test_fetch_leagues_analysis_nested_leagues_payload() -> None:
+    # Arrange
+    payloads = {"/leagues": {"leagues": [{"id": "7", "teamId": "3"}]}}
+    seen, get_json = _recorder(payloads)
+
+    # Act
+    report = fetch_leagues_analysis(
+        get_json=get_json,
+        league_filter=None,
+        week=1,
+        activity_page=0,
+    )
+
+    # Assert
+    assert report["leagues"][0]["team_id"] == "3"
+    assert "/leagues/7/teams/3" in seen
+
+
 # ---- Error paths ---- #
 
 
@@ -155,6 +196,49 @@ def test_fetch_teams_analysis_put_without_team_id_raises() -> None:
         )
 
 
+def test_fetch_teams_analysis_put_without_client_raises() -> None:
+    # Arrange
+    _, get_json = _recorder({"/leagues": []})
+
+    # Act / Assert
+    with pytest.raises(BrowserSessionError, match="not configured"):
+        fetch_teams_analysis(
+            get_json=get_json,
+            team_id="99",
+            league_filter=None,
+            week=None,
+            put_lineup_body={"goalkeeper": 1},
+        )
+
+
+def test_fetch_teams_analysis_league_filter_not_found_raises() -> None:
+    # Arrange
+    _, get_json = _recorder({"/leagues": [{"id": "1", "team": {"id": "9"}}]})
+
+    # Act / Assert
+    with pytest.raises(BrowserSessionError, match="not found"):
+        fetch_teams_analysis(
+            get_json=get_json,
+            team_id=None,
+            league_filter="missing",
+            week=None,
+        )
+
+
+def test_fetch_teams_analysis_without_embedded_team_raises() -> None:
+    # Arrange
+    _, get_json = _recorder({"/leagues": [{"id": "1"}]})
+
+    # Act / Assert
+    with pytest.raises(BrowserSessionError, match="No team id found"):
+        fetch_teams_analysis(
+            get_json=get_json,
+            team_id=None,
+            league_filter=None,
+            week=None,
+        )
+
+
 # ---- Edge cases ---- #
 
 
@@ -164,6 +248,27 @@ def test_infer_week_numeric_string_returns_int() -> None:
 
     # Assert
     assert week == 7
+
+
+def test_infer_week_ignores_non_dict_standing() -> None:
+    # Arrange / Act / Assert
+    assert infer_week({"week": 2}, "not-a-dict") == 2
+
+
+def test_fetch_leagues_analysis_scalar_payload_returns_empty() -> None:
+    # Arrange
+    _, get_json = _recorder({"/leagues": "nope"})
+
+    # Act
+    report = fetch_leagues_analysis(
+        get_json=get_json,
+        league_filter=None,
+        week=None,
+        activity_page=0,
+    )
+
+    # Assert
+    assert report == {"leagues": []}
 
 
 def test_fetch_leagues_analysis_encodes_slash_ids() -> None:
