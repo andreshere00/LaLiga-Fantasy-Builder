@@ -43,10 +43,14 @@ All require `Authorization: Bearer <internal JWT>`. Models live in
   investment (`teamInvestment`) for the caller's own team. Rival teams often
   return empty or sparse objects.
 - **Lineup write:** Slot values in the PUT body are `playerTeamId` identifiers.
-  Observed base body fields: `goalkeeper`, `defender`, `midfield`, `striker`,
-  `tactical_formation`. Premium leagues may also send `coach`, `captain`, and
-  `bench`. These shapes are documented from unofficial 26/27 clients, not an
-  official Fantasy schema.
+  All base slots (`goalkeeper`, `defender`, `midfield`, `striker`,
+  `tactical_formation`) are required because Fantasy treats PUT as a full
+  replace. Unknown JSON keys are rejected with 422. Premium leagues may also
+  send optional `coach`, `captain`, and `bench`. These shapes are documented
+  from unofficial 26/27 clients, not an official Fantasy schema.
+- **Lineup ownership:** This API does not verify that `team_id` belongs to the
+  JWT user before PUT. Ownership is delegated to LaLiga Fantasy; obtain
+  `team_id` from `GET /leagues` for your own team.
 - There is no teams connectivity probe; obtain `team_id` from leagues first.
 
 ## Local try-out

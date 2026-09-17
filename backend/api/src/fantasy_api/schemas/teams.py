@@ -4,6 +4,8 @@ from __future__ import annotations
 
 from typing import Any
 
+from pydantic import BaseModel, ConfigDict
+
 from fantasy_api.schemas.common import FlexibleModel
 
 
@@ -38,19 +40,22 @@ class TeamLineup(FlexibleModel):
     weekNumber: int | None = None
 
 
-class LineupWrite(FlexibleModel):
+class LineupWrite(BaseModel):
     """Request body for ``PUT /teams/{teamId}/lineup``.
 
     Slot values are ``playerTeamId`` roster identifiers, not master
-    ``playerId`` values. Premium leagues may also send ``coach``, ``captain``,
-    and ``bench``.
+    ``playerId`` values. All base lineup slots are required because Fantasy
+    treats PUT as a full replace. Premium leagues may also send ``coach``,
+    ``captain``, and ``bench`` (unverified unofficial-client fields).
     """
 
-    goalkeeper: str | int | None = None
-    defender: list[str | int] | None = None
-    midfield: list[str | int] | None = None
-    striker: list[str | int] | None = None
-    tactical_formation: list[int] | None = None
+    model_config = ConfigDict(extra="forbid")
+
+    goalkeeper: str | int
+    defender: list[str | int]
+    midfield: list[str | int]
+    striker: list[str | int]
+    tactical_formation: list[int]
     coach: str | int | None = None
     captain: str | int | None = None
     bench: dict[str, Any] | None = None

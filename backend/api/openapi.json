@@ -2315,88 +2315,57 @@
               },
               {
                 "type": "integer"
-              },
-              {
-                "type": "null"
               }
             ],
             "title": "Goalkeeper"
           },
           "defender": {
-            "anyOf": [
-              {
-                "items": {
-                  "anyOf": [
-                    {
-                      "type": "string"
-                    },
-                    {
-                      "type": "integer"
-                    }
-                  ]
+            "items": {
+              "anyOf": [
+                {
+                  "type": "string"
                 },
-                "type": "array"
-              },
-              {
-                "type": "null"
-              }
-            ],
+                {
+                  "type": "integer"
+                }
+              ]
+            },
+            "type": "array",
             "title": "Defender"
           },
           "midfield": {
-            "anyOf": [
-              {
-                "items": {
-                  "anyOf": [
-                    {
-                      "type": "string"
-                    },
-                    {
-                      "type": "integer"
-                    }
-                  ]
+            "items": {
+              "anyOf": [
+                {
+                  "type": "string"
                 },
-                "type": "array"
-              },
-              {
-                "type": "null"
-              }
-            ],
+                {
+                  "type": "integer"
+                }
+              ]
+            },
+            "type": "array",
             "title": "Midfield"
           },
           "striker": {
-            "anyOf": [
-              {
-                "items": {
-                  "anyOf": [
-                    {
-                      "type": "string"
-                    },
-                    {
-                      "type": "integer"
-                    }
-                  ]
+            "items": {
+              "anyOf": [
+                {
+                  "type": "string"
                 },
-                "type": "array"
-              },
-              {
-                "type": "null"
-              }
-            ],
+                {
+                  "type": "integer"
+                }
+              ]
+            },
+            "type": "array",
             "title": "Striker"
           },
           "tactical_formation": {
-            "anyOf": [
-              {
-                "items": {
-                  "type": "integer"
-                },
-                "type": "array"
-              },
-              {
-                "type": "null"
-              }
-            ],
+            "items": {
+              "type": "integer"
+            },
+            "type": "array",
             "title": "Tactical Formation"
           },
           "coach": {
@@ -2440,10 +2409,17 @@
             "title": "Bench"
           }
         },
-        "additionalProperties": true,
+        "additionalProperties": false,
         "type": "object",
+        "required": [
+          "goalkeeper",
+          "defender",
+          "midfield",
+          "striker",
+          "tactical_formation"
+        ],
         "title": "LineupWrite",
-        "description": "Request body for ``PUT /teams/{teamId}/lineup``.\n\nSlot values are ``playerTeamId`` roster identifiers, not master\n``playerId`` values. Premium leagues may also send ``coach``, ``captain``,\nand ``bench``."
+        "description": "Request body for ``PUT /teams/{teamId}/lineup``.\n\nSlot values are ``playerTeamId`` roster identifiers, not master\n``playerId`` values. All base lineup slots are required because Fantasy\ntreats PUT as a full replace. Premium leagues may also send ``coach``,\n``captain``, and ``bench`` (unverified unofficial-client fields)."
       },
       "LoanPremiumConfig": {
         "properties": {

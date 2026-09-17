@@ -116,7 +116,13 @@ class LaligaFantasyClient:
                 category="fantasy_error",
             )
         if not response.content:
-            return {}
+            if method == "PUT" or response.status_code == 204:
+                return {}
+            raise UpstreamError(
+                "fantasy response was not JSON",
+                status_code=502,
+                category="fantasy_error",
+            )
         try:
             return response.json()
         except json.JSONDecodeError as exc:

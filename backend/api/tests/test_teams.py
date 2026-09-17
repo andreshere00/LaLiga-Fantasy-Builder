@@ -146,6 +146,16 @@ def build_teams_container(
     )
 
 
+def _valid_lineup_payload() -> dict[str, object]:
+    return {
+        "goalkeeper": "pt-1",
+        "defender": ["pt-2", "pt-3", "pt-4", "pt-5"],
+        "midfield": ["pt-6", "pt-7", "pt-8"],
+        "striker": ["pt-9", "pt-10", "pt-11"],
+        "tactical_formation": [4, 3, 3],
+    }
+
+
 def make_client(
     public_pem: str,
     fantasy_handler: Callable[[httpx.Request], httpx.Response],
@@ -221,13 +231,7 @@ def test_put_lineup_proxies_json_body(
     # Arrange
     private_pem, public_pem = rsa_pems
     token = mint_internal_jwt(private_pem)
-    payload = {
-        "goalkeeper": "pt-1",
-        "defender": ["pt-2", "pt-3", "pt-4", "pt-5"],
-        "midfield": ["pt-6", "pt-7", "pt-8"],
-        "striker": ["pt-9", "pt-10", "pt-11"],
-        "tactical_formation": [4, 3, 3],
-    }
+    payload = _valid_lineup_payload()
 
     def fantasy_handler(request: httpx.Request) -> httpx.Response:
         assert request.method == "PUT"
@@ -268,13 +272,59 @@ def test_put_lineup_empty_success_body_returns_empty_object(
         response = client.put(
             "/teams/99/lineup",
             headers={"Authorization": f"Bearer {token}"},
-            json={"goalkeeper": "pt-1"},
+            json=_valid_lineup_payload(),
         )
 
     # Assert
     assert response.status_code == 200
     assert response.json() == {}
     assert LALIGA_BEARER not in response.text
+
+
+def test_put_lineup_rejects_extra_keys(
+    rsa_pems: tuple[str, str],
+) -> None:
+    # Arrange
+    private_pem, public_pem = rsa_pems
+    token = mint_internal_jwt(private_pem)
+
+    def fantasy_handler(_request: httpx.Request) -> httpx.Response:
+        raise AssertionError("Fantasy must not be called for invalid body")
+
+    payload = {**_valid_lineup_payload(), "unexpected": "value"}
+
+    with make_client(public_pem, fantasy_handler) as client:
+        # Act
+        response = client.put(
+            "/teams/99/lineup",
+            headers={"Authorization": f"Bearer {token}"},
+            json=payload,
+        )
+
+    # Assert
+    assert response.status_code == 422
+
+
+def test_put_lineup_rejects_incomplete_body(
+    rsa_pems: tuple[str, str],
+) -> None:
+    # Arrange
+    private_pem, public_pem = rsa_pems
+    token = mint_internal_jwt(private_pem)
+
+    def fantasy_handler(_request: httpx.Request) -> httpx.Response:
+        raise AssertionError("Fantasy must not be called for incomplete body")
+
+    with make_client(public_pem, fantasy_handler) as client:
+        # Act
+        response = client.put(
+            "/teams/99/lineup",
+            headers={"Authorization": f"Bearer {token}"},
+            json={"goalkeeper": "pt-1"},
+        )
+
+    # Assert
+    assert response.status_code == 422
 
 
 @pytest.mark.asyncio
@@ -464,6 +514,21 @@ def test_get_money_rejects_non_object_payload(
     # Assert
     assert response.status_code == 502
     assert response.json()["error"] == "fantasy_error"
+
+
+@pytest.mark.asyncio
+async def test_laliga_fantasy_client_get_json_empty_body_raises_upstream() -> None:
+    # Arrange
+    client = LaligaFantasyClient(
+        origin=FANTASY_ORIGIN,
+        transport=httpx.MockTransport(lambda _r: httpx.Response(200)),
+    )
+
+    # Act / Assert
+    with pytest.raises(UpstreamError, match="fantasy response was not JSON") as exc_info:
+        await client.get_json("/x", "tok")
+    assert exc_info.value.status_code == 502
+    assert exc_info.value.category == "fantasy_error"
 
 
 @pytest.mark.asyncio
