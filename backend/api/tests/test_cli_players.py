@@ -40,9 +40,7 @@ def test_main_with_player_id_fetches_market_value(
     # Arrange
     routes = {
         ("GET", "/players"): [{"id": "7"}],
-        ("GET", "/players/7/market-value"): [
-            {"date": "2026-09-01", "marketValue": 100}
-        ],
+        ("GET", "/players/7/market-value"): [{"date": "2026-09-01", "marketValue": 100}],
     }
     patch_httpx_client(monkeypatch, routes)
 

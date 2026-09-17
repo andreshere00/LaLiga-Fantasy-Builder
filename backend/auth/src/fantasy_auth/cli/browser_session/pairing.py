@@ -55,8 +55,7 @@ def pair_laliga_with_playwright(
     if pairing is None:
         raise BrowserSessionError("Create pairing failed")
     print(
-        f"Pairing created: {pairing['pairing_id']} "
-        f"(expires_at={pairing['expires_at']})",
+        f"Pairing created: {pairing['pairing_id']} " f"(expires_at={pairing['expires_at']})",
         file=sys.stderr,
     )
     pkce = laliga_helper.start_pkce_session(nonce=pairing["nonce"])

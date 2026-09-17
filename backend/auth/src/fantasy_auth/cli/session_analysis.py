@@ -37,9 +37,7 @@ def fetch_leagues_analysis(
     """
     leagues = _as_league_list(get_json("/leagues"))
     if league_filter:
-        leagues = [
-            item for item in leagues if str(_league_id(item)) == str(league_filter)
-        ]
+        leagues = [item for item in leagues if str(_league_id(item)) == str(league_filter)]
         if not leagues:
             raise BrowserSessionError(f"League id {league_filter!r} not found in /leagues")
 
@@ -195,9 +193,7 @@ def _team_targets(
 
     selected = leagues
     if league_filter:
-        selected = [
-            item for item in leagues if str(_league_id(item)) == str(league_filter)
-        ]
+        selected = [item for item in leagues if str(_league_id(item)) == str(league_filter)]
         if not selected:
             raise BrowserSessionError(f"League id {league_filter!r} not found in /leagues")
 

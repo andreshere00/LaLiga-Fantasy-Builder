@@ -105,9 +105,7 @@ def _build_report(
             raise RuntimeError("League card requires --jwt or session credentials")
         lid = path_segment(league_id)
         report["league_id"] = league_id
-        report["league_player"] = api_get(
-            api_base, f"/players/{pid}/league/{lid}", jwt
-        )
+        report["league_player"] = api_get(api_base, f"/players/{pid}/league/{lid}", jwt)
     return report
 
 

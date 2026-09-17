@@ -59,10 +59,7 @@ def parse_args(argv: list[str] | None = None) -> argparse.Namespace:
     parser.add_argument(
         "--headless",
         action="store_true",
-        help=(
-            "Run Keycloak Chromium without a window "
-            "(LaLiga pairing still opens a window)"
-        ),
+        help=("Run Keycloak Chromium without a window " "(LaLiga pairing still opens a window)"),
     )
     parser.add_argument(
         "--no-pair",

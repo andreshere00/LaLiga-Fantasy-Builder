@@ -184,9 +184,7 @@ def test_list_players_public_proxies_catalog_without_bearer(
         assert request.url.path == "/api/v1/competition/1/players"
         assert "Authorization" not in request.headers
         assert request.headers["x-lang"] == "es"
-        return httpx.Response(
-            200, json=[{"id": "1", "nickname": "Lamine", "marketValue": 50}]
-        )
+        return httpx.Response(200, json=[{"id": "1", "nickname": "Lamine", "marketValue": 50}])
 
     with make_client(public_pem, fantasy_handler) as client:
         # Act
@@ -194,9 +192,7 @@ def test_list_players_public_proxies_catalog_without_bearer(
 
     # Assert
     assert response.status_code == 200
-    assert response.json() == [
-        {"id": "1", "nickname": "Lamine", "marketValue": 50}
-    ]
+    assert response.json() == [{"id": "1", "nickname": "Lamine", "marketValue": 50}]
 
 
 def test_get_market_value_public_proxies_history_without_bearer(
@@ -210,9 +206,7 @@ def test_get_market_value_public_proxies_history_without_bearer(
         assert request.url.path == "/api/v1/competition/1/player/7/market-value"
         assert "Authorization" not in request.headers
         assert request.headers["x-lang"] == "es"
-        return httpx.Response(
-            200, json=[{"date": "2026-09-01", "marketValue": 100}]
-        )
+        return httpx.Response(200, json=[{"date": "2026-09-01", "marketValue": 100}])
 
     with make_client(public_pem, fantasy_handler) as client:
         # Act
@@ -235,9 +229,7 @@ def test_get_league_player_authenticated_proxies_with_bearer(
         assert request.url.path == "/api/v1/competition/1/player/7/league/42"
         assert request.headers["Authorization"] == f"Bearer {LALIGA_BEARER}"
         assert request.headers["x-lang"] == "es"
-        return httpx.Response(
-            200, json={"playerTeamId": "pt-1", "playerMaster": {"id": "7"}}
-        )
+        return httpx.Response(200, json={"playerTeamId": "pt-1", "playerMaster": {"id": "7"}})
 
     with make_client(public_pem, fantasy_handler) as client:
         # Act
@@ -347,9 +339,7 @@ def test_get_league_player_maps_needs_reauth(
     token = mint_internal_jwt(private_pem)
     container = build_players_container(
         public_pem,
-        fantasy_handler=httpx.MockTransport(
-            lambda _r: httpx.Response(200, json={})
-        ),
+        fantasy_handler=httpx.MockTransport(lambda _r: httpx.Response(200, json={})),
         auth_handler=httpx.MockTransport(_auth_needs_reauth_handler),
     )
     app = create_app(settings=container.settings, container=container)
@@ -496,9 +486,7 @@ def test_list_players_public_ignores_invalid_jwt(
 
     with make_client(public_pem, fantasy_handler) as client:
         # Act
-        response = client.get(
-            "/players", headers={"Authorization": "Bearer invalid"}
-        )
+        response = client.get("/players", headers={"Authorization": "Bearer invalid"})
 
     # Assert
     assert response.status_code == 200

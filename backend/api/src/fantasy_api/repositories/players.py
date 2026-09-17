@@ -62,7 +62,5 @@ class PlayersRepository:
         Returns:
             Upstream JSON for ``GET {CMP}/player/{playerId}/league/{leagueId}``.
         """
-        path = competition_path(
-            self._competition_id, "player", player_id, "league", league_id
-        )
+        path = competition_path(self._competition_id, "player", player_id, "league", league_id)
         return await self._client.get_json(path, bearer_token)

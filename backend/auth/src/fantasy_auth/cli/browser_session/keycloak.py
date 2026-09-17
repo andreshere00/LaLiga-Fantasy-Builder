@@ -46,9 +46,7 @@ def login_with_playwright(
                 "Timed out waiting for Keycloak login or /auth/callback. "
                 "Is Keycloak on :8080 and auth on :8000?",
             ) from exc
-        cookies = {
-            cookie["name"]: cookie["value"] for cookie in context.cookies()
-        }
+        cookies = {cookie["name"]: cookie["value"] for cookie in context.cookies()}
         browser.close()
 
     session = cookies.get("fantasy_session") or ""
