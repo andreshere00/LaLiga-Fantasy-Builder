@@ -277,42 +277,61 @@ def test_create_listing_forwards_player_team_id(rsa_pems: tuple[str, str]) -> No
 
 
 @pytest.mark.parametrize(
-    ("api_path", "method", "upstream_suffix", "kwargs"),
+    (
+        "api_path",
+        "method",
+        "upstream_suffix",
+        "upstream_method",
+        "upstream_body",
+        "kwargs",
+    ),
     [
         (
             f"/market/leagues/{LEAGUE_ID}/mk-1/bids/bd-1",
             "put",
             "/market/mk-1/bid/bd-1",
+            "PUT",
+            {"money": 100},
             {"json": {"money": 100}},
         ),
         (
             f"/market/leagues/{LEAGUE_ID}/mk-1/offers/of-1/accept",
             "post",
             "/offer/of-1/accept",
+            "POST",
+            {"offerMoney": 200},
             {"json": {"offerMoney": 200}},
         ),
         (
             f"/market/leagues/{LEAGUE_ID}/mk-1/offers/of-1/reject",
             "post",
             "/offer/of-1/reject",
+            "POST",
+            None,
             {},
         ),
         (
             f"/market/leagues/{LEAGUE_ID}/mk-1",
             "delete",
             "/market/mk-1/delete",
+            "DELETE",
+            None,
             {},
         ),
         (
             f"/market/leagues/{LEAGUE_ID}/direct-offers",
             "post",
             "/market/direct-offer",
+            "POST",
+            {"playerId": "pt-1", "money": 300},
             {"json": {"playerId": "pt-1", "money": 300}},
         ),
         (
             f"/market/leagues/{LEAGUE_ID}/mk-1/offers/of-1",
             "delete",
             "/offer/of-1/cancel",
+            "DELETE",
+            None,
             {},
         ),
     ],
@@ -322,6 +341,8 @@ def test_market_mutations_proxy_upstream_paths(
     api_path: str,
     method: str,
     upstream_suffix: str,
+    upstream_method: str,
+    upstream_body: dict[str, object] | None,
     kwargs: dict[str, object],
 ) -> None:
     _private_pem, public_pem = rsa_pems
@@ -329,7 +350,12 @@ def test_market_mutations_proxy_upstream_paths(
 
     def handler(request: httpx.Request) -> httpx.Response:
         _assert_fantasy_auth(request)
+        assert request.method == upstream_method
         assert upstream_suffix in request.url.raw_path.decode()
+        if upstream_body is None:
+            assert not request.content
+        else:
+            assert json.loads(request.content.decode()) == upstream_body
         return httpx.Response(204)
 
     with make_client(public_pem, handler) as client:
@@ -414,6 +440,44 @@ def test_get_market_maps_fantasy_401(rsa_pems: tuple[str, str]) -> None:
 
     assert response.status_code == 401
     assert LALIGA_BEARER not in response.text
+
+
+def test_get_market_rejects_non_object_payload(rsa_pems: tuple[str, str]) -> None:
+    _private_pem, public_pem = rsa_pems
+    token = mint_internal_jwt(_private_pem)
+
+    def handler(_request: httpx.Request) -> httpx.Response:
+        return httpx.Response(200, json=[{"marketPlayers": []}])
+
+    with make_client(public_pem, handler) as client:
+        response = client.get(
+            f"/market/leagues/{LEAGUE_ID}",
+            headers={"Authorization": f"Bearer {token}"},
+        )
+
+    assert response.status_code == 502
+
+
+def test_get_market_history_accepts_wrapped_data_list(
+    rsa_pems: tuple[str, str],
+) -> None:
+    _private_pem, public_pem = rsa_pems
+    token = mint_internal_jwt(_private_pem)
+    upstream = {"data": [{"id": "h1"}, {"id": "h2"}]}
+
+    def handler(request: httpx.Request) -> httpx.Response:
+        _assert_fantasy_auth(request)
+        assert request.url.path.endswith("/market/history")
+        return httpx.Response(200, json=upstream)
+
+    with make_client(public_pem, handler) as client:
+        response = client.get(
+            f"/market/leagues/{LEAGUE_ID}/history",
+            headers={"Authorization": f"Bearer {token}"},
+        )
+
+    assert response.status_code == 200
+    assert response.json() == [{"id": "h1"}, {"id": "h2"}]
 
 
 def test_get_market_history_rejects_non_list_payload(

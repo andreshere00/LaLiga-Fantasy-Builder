@@ -26,7 +26,15 @@ class MarketService:
         self._repository = repository
 
     async def get_market(self, internal_jwt: str, league_id: str) -> Any:
-        """Return the current league market snapshot."""
+        """Return the current league market snapshot.
+
+        Args:
+            internal_jwt: Auth-issued internal access token.
+            league_id: Fantasy league identifier.
+
+        Returns:
+            Upstream market JSON.
+        """
         return await with_laliga_bearer(
             self._credentials,
             internal_jwt,
@@ -35,7 +43,15 @@ class MarketService:
         )
 
     async def get_market_history(self, internal_jwt: str, league_id: str) -> Any:
-        """Return league market history."""
+        """Return league market history.
+
+        Args:
+            internal_jwt: Auth-issued internal access token.
+            league_id: Fantasy league identifier.
+
+        Returns:
+            Upstream market history JSON.
+        """
         return await with_laliga_bearer(
             self._credentials,
             internal_jwt,
@@ -49,7 +65,16 @@ class MarketService:
         league_id: str,
         player_team_id: str,
     ) -> Any:
-        """Return offers on an owned squad entry."""
+        """Return offers on an owned squad entry.
+
+        Args:
+            internal_jwt: Auth-issued internal access token.
+            league_id: Fantasy league identifier.
+            player_team_id: Squad-entry identifier (``playerTeamId``).
+
+        Returns:
+            Upstream offers JSON.
+        """
         return await with_laliga_bearer(
             self._credentials,
             internal_jwt,
@@ -65,7 +90,17 @@ class MarketService:
         market_id: str,
         body: dict[str, Any],
     ) -> Any:
-        """Create a bid on a market listing."""
+        """Create a bid on a market listing.
+
+        Args:
+            internal_jwt: Auth-issued internal access token.
+            league_id: Fantasy league identifier.
+            market_id: Market listing identifier.
+            body: Bid write payload.
+
+        Returns:
+            Upstream mutation JSON (may be empty).
+        """
         return await with_laliga_bearer(
             self._credentials,
             internal_jwt,
@@ -83,7 +118,18 @@ class MarketService:
         bid_id: str,
         body: dict[str, Any],
     ) -> Any:
-        """Modify an existing bid."""
+        """Modify an existing bid.
+
+        Args:
+            internal_jwt: Auth-issued internal access token.
+            league_id: Fantasy league identifier.
+            market_id: Market listing identifier.
+            bid_id: Bid identifier.
+            body: Bid write payload.
+
+        Returns:
+            Upstream mutation JSON (may be empty).
+        """
         return await with_laliga_bearer(
             self._credentials,
             internal_jwt,
@@ -101,7 +147,17 @@ class MarketService:
         market_id: str,
         bid_id: str,
     ) -> Any:
-        """Cancel a bid."""
+        """Cancel a bid.
+
+        Args:
+            internal_jwt: Auth-issued internal access token.
+            league_id: Fantasy league identifier.
+            market_id: Market listing identifier.
+            bid_id: Bid identifier.
+
+        Returns:
+            Upstream mutation JSON (may be empty).
+        """
         return await with_laliga_bearer(
             self._credentials,
             internal_jwt,
@@ -117,7 +173,16 @@ class MarketService:
         league_id: str,
         body: dict[str, Any],
     ) -> Any:
-        """List a player for sale."""
+        """List a player for sale.
+
+        Args:
+            internal_jwt: Auth-issued internal access token.
+            league_id: Fantasy league identifier.
+            body: Listing write payload.
+
+        Returns:
+            Upstream mutation JSON (may be empty).
+        """
         return await with_laliga_bearer(
             self._credentials,
             internal_jwt,
@@ -132,7 +197,16 @@ class MarketService:
         league_id: str,
         market_id: str,
     ) -> Any:
-        """Withdraw a market listing."""
+        """Withdraw a market listing.
+
+        Args:
+            internal_jwt: Auth-issued internal access token.
+            league_id: Fantasy league identifier.
+            market_id: Market listing identifier.
+
+        Returns:
+            Upstream mutation JSON (may be empty).
+        """
         return await with_laliga_bearer(
             self._credentials,
             internal_jwt,
@@ -149,7 +223,18 @@ class MarketService:
         offer_id: str,
         body: dict[str, Any],
     ) -> Any:
-        """Accept an offer on a listing."""
+        """Accept an offer on a listing.
+
+        Args:
+            internal_jwt: Auth-issued internal access token.
+            league_id: Fantasy league identifier.
+            market_id: Market listing identifier.
+            offer_id: Offer identifier.
+            body: Accept-offer write payload.
+
+        Returns:
+            Upstream mutation JSON (may be empty).
+        """
         return await with_laliga_bearer(
             self._credentials,
             internal_jwt,
@@ -167,7 +252,17 @@ class MarketService:
         market_id: str,
         offer_id: str,
     ) -> Any:
-        """Reject an offer on a listing."""
+        """Reject an offer on a listing.
+
+        Args:
+            internal_jwt: Auth-issued internal access token.
+            league_id: Fantasy league identifier.
+            market_id: Market listing identifier.
+            offer_id: Offer identifier.
+
+        Returns:
+            Upstream mutation JSON (may be empty).
+        """
         return await with_laliga_bearer(
             self._credentials,
             internal_jwt,
@@ -183,7 +278,16 @@ class MarketService:
         league_id: str,
         body: dict[str, Any],
     ) -> Any:
-        """Send a direct offer to another manager."""
+        """Send a direct offer to another manager.
+
+        Args:
+            internal_jwt: Auth-issued internal access token.
+            league_id: Fantasy league identifier.
+            body: Direct-offer write payload.
+
+        Returns:
+            Upstream mutation JSON (may be empty).
+        """
         return await with_laliga_bearer(
             self._credentials,
             internal_jwt,
@@ -199,7 +303,17 @@ class MarketService:
         market_id: str,
         offer_id: str,
     ) -> Any:
-        """Cancel an offer."""
+        """Cancel an offer.
+
+        Args:
+            internal_jwt: Auth-issued internal access token.
+            league_id: Fantasy league identifier.
+            market_id: Market listing identifier.
+            offer_id: Offer identifier.
+
+        Returns:
+            Upstream mutation JSON (may be empty).
+        """
         return await with_laliga_bearer(
             self._credentials,
             internal_jwt,

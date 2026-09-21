@@ -119,6 +119,50 @@ def test_fetch_market_analysis_hits_market_routes() -> None:
     assert report["leagues"][0]["offers"] == {"ok": seen[-1]}
 
 
+def test_fetch_market_analysis_without_offers_skips_offers_route() -> None:
+    payloads = {"/leagues": [{"id": "42", "name": "Liga"}]}
+    seen, get_json = _recorder(payloads)
+
+    report = fetch_market_analysis(
+        get_json=get_json,
+        league_filter=None,
+        player_team_id=None,
+    )
+
+    assert seen == [
+        "/leagues",
+        "/market/leagues/42",
+        "/market/leagues/42/history",
+    ]
+    assert report["leagues"][0]["offers"] is None
+
+
+def test_fetch_market_analysis_missing_league_raises() -> None:
+    _, get_json = _recorder({"/leagues": [{"id": "1"}]})
+
+    with pytest.raises(BrowserSessionError, match="not found"):
+        fetch_market_analysis(
+            get_json=get_json,
+            league_filter="missing",
+            player_team_id=None,
+        )
+
+
+def test_fetch_market_analysis_encodes_slash_ids() -> None:
+    payloads = {"/leagues": [{"id": "a/b", "name": "Liga"}]}
+    seen, get_json = _recorder(payloads)
+
+    fetch_market_analysis(
+        get_json=get_json,
+        league_filter=None,
+        player_team_id="p/t",
+    )
+
+    assert "/market/leagues/a%2Fb" in seen
+    assert "/market/leagues/a%2Fb/history" in seen
+    assert "/market/leagues/a%2Fb/player-teams/p%2Ft/offers" in seen
+
+
 def test_fetch_teams_analysis_put_lineup_with_team_id_posts_body() -> None:
     # Arrange
     payloads = {"/leagues": []}
