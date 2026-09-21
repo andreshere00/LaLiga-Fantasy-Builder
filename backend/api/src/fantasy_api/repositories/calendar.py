@@ -56,7 +56,7 @@ class CalendarRepository:
             week: Matchweek number.
 
         Returns:
-            Upstream JSON for ``GET {ORIGIN}/stats/v1/competition/1/stats/week/{week}``.
+            Upstream JSON for ``GET /stats/v1/competition/{id}/stats/week/{week}``.
         """
         path = stats_week_path(self._competition_id, week)
         return await self._client.get_public_json(path)

@@ -55,6 +55,29 @@ def test_main_with_jwt_prints_matchweek_summary(
     assert "Stats matches: 1" in out
 
 
+def test_main_with_explicit_week_labels_current_matchday_window(
+    monkeypatch: pytest.MonkeyPatch,
+    capsys: pytest.CaptureFixture[str],
+) -> None:
+    routes = {
+        ("GET", "/calendar/current"): CURRENT,
+        ("GET", "/calendar/weeks/5"): FIXTURES,
+        ("GET", "/calendar/weeks/5/stats"): STATS,
+    }
+    patch_httpx_client(monkeypatch, routes)
+
+    code = calendar_cli.main(
+        ["--jwt", "tok", "--api-base", "http://api.test", "--week", "5"],
+    )
+
+    assert code == 0
+    out = capsys.readouterr().out
+    assert out.startswith("Matchweek 5\n")
+    assert "Current matchday (week 8):" in out
+    assert "2026-10-09T21:00:00+02:00" in out
+    assert "Matchweek 5\n  Window:" not in out
+
+
 def test_main_json_mode_returns_aggregated_payload(
     monkeypatch: pytest.MonkeyPatch,
     capsys: pytest.CaptureFixture[str],
@@ -90,3 +113,22 @@ def test_main_missing_jwt_returns_1(
 
     assert code == 1
     assert "Missing credentials" in capsys.readouterr().err
+
+
+def test_main_current_missing_week_number_returns_1(
+    monkeypatch: pytest.MonkeyPatch,
+    capsys: pytest.CaptureFixture[str],
+) -> None:
+    routes = {
+        ("GET", "/calendar/current"): {
+            "openingWeekDate": "2026-10-09T21:00:00+02:00",
+            "closingWeekDate": "2026-10-13T03:00:00+02:00",
+            "isLive": False,
+        },
+    }
+    patch_httpx_client(monkeypatch, routes)
+
+    code = calendar_cli.main(["--jwt", "tok", "--api-base", "http://api.test"])
+
+    assert code == 1
+    assert "Could not infer week" in capsys.readouterr().err

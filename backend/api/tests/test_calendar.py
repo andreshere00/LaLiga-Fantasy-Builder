@@ -275,10 +275,13 @@ async def test_laliga_fantasy_client_get_public_json_omits_authorization() -> No
         origin=FANTASY_ORIGIN,
         transport=httpx.MockTransport(handler),
     )
-    data = await client.get_public_json(
-        "/api/v1/competition/1/calendar",
-        params={"weekNumber": 2},
-    )
+    try:
+        data = await client.get_public_json(
+            "/api/v1/competition/1/calendar",
+            params={"weekNumber": 2},
+        )
+    finally:
+        await client.aclose()
 
     assert data == {"ok": True}
     assert seen["authorization"] is None
@@ -294,14 +297,15 @@ async def test_calendar_repository_get_fixtures_builds_path_and_params() -> None
         seen["weekNumber"] = request.url.params.get("weekNumber", "")
         return httpx.Response(200, json=[])
 
-    repo = CalendarRepository(
-        LaligaFantasyClient(
-            origin=FANTASY_ORIGIN,
-            transport=httpx.MockTransport(handler),
-        ),
-        competition_id=1,
+    laliga_client = LaligaFantasyClient(
+        origin=FANTASY_ORIGIN,
+        transport=httpx.MockTransport(handler),
     )
-    await repo.get_fixtures(5)
+    repo = CalendarRepository(laliga_client, competition_id=1)
+    try:
+        await repo.get_fixtures(5)
+    finally:
+        await laliga_client.aclose()
 
     assert seen["path"] == "/api/v1/competition/1/calendar"
     assert seen["weekNumber"] == "5"
@@ -385,6 +389,34 @@ def test_get_current_week_unexpected_shape_returns_502(rsa_pems: tuple[str, str]
     with make_client(public_pem, fantasy_handler) as client:
         response = client.get(
             "/calendar/current",
+            headers={"Authorization": f"Bearer {token}"},
+        )
+
+    assert response.status_code == 502
+    assert response.json()["error"] == "fantasy_error"
+
+
+def test_get_week_stats_nested_validation_error_returns_502(
+    rsa_pems: tuple[str, str],
+) -> None:
+    private_pem, public_pem = rsa_pems
+    token = mint_internal_jwt(private_pem)
+    bad_stats = [
+        {
+            "id": 24,
+            "local": {
+                "id": 49,
+                "players": "not-a-list",
+            },
+        }
+    ]
+
+    def fantasy_handler(_request: httpx.Request) -> httpx.Response:
+        return httpx.Response(200, json=bad_stats)
+
+    with make_client(public_pem, fantasy_handler) as client:
+        response = client.get(
+            "/calendar/weeks/3/stats",
             headers={"Authorization": f"Bearer {token}"},
         )
 
