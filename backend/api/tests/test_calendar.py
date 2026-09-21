@@ -2,11 +2,9 @@
 
 from __future__ import annotations
 
-import time
 from collections.abc import Callable
 
 import httpx
-import jwt
 import pytest
 from cryptography.hazmat.primitives import serialization
 from cryptography.hazmat.primitives.asymmetric import rsa
@@ -16,14 +14,17 @@ from fantasy_api.config import Settings
 from fantasy_api.main import create_app
 from fantasy_api.repositories.calendar import CalendarRepository
 from fantasy_api.repositories.leagues import LeaguesRepository
+from fantasy_api.repositories.market import MarketRepository
 from fantasy_api.repositories.players import PlayersRepository
 from fantasy_api.repositories.teams import TeamsRepository
 from fantasy_api.security.internal_jwt import StaticInternalJwtValidator
 from fantasy_api.services.calendar import CalendarService
 from fantasy_api.services.leagues import LeaguesService
+from fantasy_api.services.market import MarketService
 from fantasy_api.services.players import PlayersService
 from fantasy_api.services.teams import TeamsService
 from fastapi.testclient import TestClient
+from jwt_mint import mint_internal_jwt
 
 ISSUER = "https://auth.fantasy-builder.local"
 AUDIENCE = "fantasy-api"
@@ -105,27 +106,6 @@ def rsa_pems() -> tuple[str, str]:
     return private_pem, public_pem
 
 
-def mint_internal_jwt(
-    private_pem: str,
-    *,
-    sub: str = "app-user-1",
-) -> str:
-    now = int(time.time())
-    return jwt.encode(
-        {
-            "sub": sub,
-            "email": "u@example.com",
-            "name": "User",
-            "iss": ISSUER,
-            "aud": AUDIENCE,
-            "iat": now,
-            "exp": now + 300,
-        },
-        private_pem,
-        algorithm="RS256",
-    )
-
-
 def _auth_must_not_run(_request: httpx.Request) -> httpx.Response:
     raise AssertionError("auth credentials client must not be called for calendar")
 
@@ -180,6 +160,10 @@ def build_calendar_container(
             credentials,
             PlayersRepository(laliga_client, competition_id=1),
         ),
+        market_service=MarketService(
+            credentials,
+            MarketRepository(laliga_client, competition_id=1),
+        ),
     )
 
 
@@ -207,7 +191,11 @@ def _assert_public_fantasy_headers(request: httpx.Request) -> None:
 
 def test_get_current_week_proxies_upstream_json(rsa_pems: tuple[str, str]) -> None:
     private_pem, public_pem = rsa_pems
-    token = mint_internal_jwt(private_pem)
+    token = mint_internal_jwt(
+        private_pem,
+        issuer=ISSUER,
+        audience=AUDIENCE,
+    )
 
     def fantasy_handler(request: httpx.Request) -> httpx.Response:
         _assert_public_fantasy_headers(request)
@@ -227,7 +215,11 @@ def test_get_current_week_proxies_upstream_json(rsa_pems: tuple[str, str]) -> No
 
 def test_get_fixtures_proxies_week_number_query(rsa_pems: tuple[str, str]) -> None:
     private_pem, public_pem = rsa_pems
-    token = mint_internal_jwt(private_pem)
+    token = mint_internal_jwt(
+        private_pem,
+        issuer=ISSUER,
+        audience=AUDIENCE,
+    )
 
     def fantasy_handler(request: httpx.Request) -> httpx.Response:
         _assert_public_fantasy_headers(request)
@@ -250,7 +242,11 @@ def test_get_fixtures_proxies_week_number_query(rsa_pems: tuple[str, str]) -> No
 
 def test_get_week_stats_proxies_stats_path(rsa_pems: tuple[str, str]) -> None:
     private_pem, public_pem = rsa_pems
-    token = mint_internal_jwt(private_pem)
+    token = mint_internal_jwt(
+        private_pem,
+        issuer=ISSUER,
+        audience=AUDIENCE,
+    )
 
     def fantasy_handler(request: httpx.Request) -> httpx.Response:
         _assert_public_fantasy_headers(request)
@@ -352,7 +348,11 @@ def test_get_fixtures_fantasy_error_maps_upstream_error(
     rsa_pems: tuple[str, str],
 ) -> None:
     private_pem, public_pem = rsa_pems
-    token = mint_internal_jwt(private_pem)
+    token = mint_internal_jwt(
+        private_pem,
+        issuer=ISSUER,
+        audience=AUDIENCE,
+    )
 
     def fantasy_handler(_request: httpx.Request) -> httpx.Response:
         return httpx.Response(503, json={"detail": "upstream secret"})
@@ -370,7 +370,11 @@ def test_get_fixtures_fantasy_error_maps_upstream_error(
 
 def test_get_week_stats_non_json_200_returns_502(rsa_pems: tuple[str, str]) -> None:
     private_pem, public_pem = rsa_pems
-    token = mint_internal_jwt(private_pem)
+    token = mint_internal_jwt(
+        private_pem,
+        issuer=ISSUER,
+        audience=AUDIENCE,
+    )
 
     def fantasy_handler(_request: httpx.Request) -> httpx.Response:
         return httpx.Response(200, content=b"not-json")
@@ -387,7 +391,11 @@ def test_get_week_stats_non_json_200_returns_502(rsa_pems: tuple[str, str]) -> N
 
 def test_get_current_week_unexpected_shape_returns_502(rsa_pems: tuple[str, str]) -> None:
     private_pem, public_pem = rsa_pems
-    token = mint_internal_jwt(private_pem)
+    token = mint_internal_jwt(
+        private_pem,
+        issuer=ISSUER,
+        audience=AUDIENCE,
+    )
 
     def fantasy_handler(_request: httpx.Request) -> httpx.Response:
         return httpx.Response(200, json=["not", "an", "object"])
@@ -406,7 +414,11 @@ def test_get_week_stats_nested_validation_error_returns_502(
     rsa_pems: tuple[str, str],
 ) -> None:
     private_pem, public_pem = rsa_pems
-    token = mint_internal_jwt(private_pem)
+    token = mint_internal_jwt(
+        private_pem,
+        issuer=ISSUER,
+        audience=AUDIENCE,
+    )
     bad_stats = [
         {
             "id": 24,
@@ -432,7 +444,11 @@ def test_get_week_stats_nested_validation_error_returns_502(
 
 def test_get_fixtures_unexpected_shape_returns_502(rsa_pems: tuple[str, str]) -> None:
     private_pem, public_pem = rsa_pems
-    token = mint_internal_jwt(private_pem)
+    token = mint_internal_jwt(
+        private_pem,
+        issuer=ISSUER,
+        audience=AUDIENCE,
+    )
 
     def fantasy_handler(_request: httpx.Request) -> httpx.Response:
         return httpx.Response(200, json=[1, 2, 3])
@@ -454,7 +470,11 @@ def test_get_fixtures_week_zero_returns_422_without_fantasy_call(
     rsa_pems: tuple[str, str],
 ) -> None:
     private_pem, public_pem = rsa_pems
-    token = mint_internal_jwt(private_pem)
+    token = mint_internal_jwt(
+        private_pem,
+        issuer=ISSUER,
+        audience=AUDIENCE,
+    )
 
     def fantasy_handler(_request: httpx.Request) -> httpx.Response:
         raise AssertionError("fantasy must not be called for week=0")

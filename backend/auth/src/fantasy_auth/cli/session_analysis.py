@@ -141,6 +141,60 @@ def fetch_teams_analysis(
     return {"teams": reports}
 
 
+def fetch_market_analysis(
+    *,
+    get_json: GetJson,
+    league_filter: str | None,
+    player_team_id: str | None,
+) -> dict[str, Any]:
+    """GET league market snapshot, history, and optional squad-entry offers.
+
+    Args:
+        get_json: Authenticated GET against the local Fantasy Builder API.
+        league_filter: Optional league id to keep (default: all leagues).
+        player_team_id: Optional squad-entry id for offers (read-only).
+
+    Returns:
+        Aggregated market JSON for one or more leagues.
+
+    Raises:
+        BrowserSessionError: When the requested league is missing.
+    """
+    leagues = _as_league_list(get_json("/leagues"))
+    if league_filter:
+        leagues = [item for item in leagues if str(_league_id(item)) == str(league_filter)]
+        if not leagues:
+            raise BrowserSessionError(
+                f"League id {league_filter!r} not found in /leagues",
+            )
+
+    reports: list[dict[str, Any]] = []
+    for item in leagues:
+        lid = _league_id(item)
+        if lid is None:
+            continue
+        lid_path = _segment(lid)
+        market = get_json(f"/market/leagues/{lid_path}")
+        history = get_json(f"/market/leagues/{lid_path}/history")
+        offers = None
+        if player_team_id is not None:
+            pt_path = _segment(player_team_id)
+            offers = get_json(
+                f"/market/leagues/{lid_path}/player-teams/{pt_path}/offers",
+            )
+        reports.append(
+            {
+                "league_id": lid,
+                "league": item,
+                "market": market,
+                "history": history,
+                "player_team_id": player_team_id,
+                "offers": offers,
+            }
+        )
+    return {"leagues": reports}
+
+
 def infer_week(league: dict[str, Any], standing: Any) -> int | None:
     """Infer the current/last matchweek from league or standing payloads."""
     sources: list[Any] = [league]

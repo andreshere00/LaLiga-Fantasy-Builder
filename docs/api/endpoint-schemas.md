@@ -587,6 +587,256 @@ Each item:
 | `visitorScore` | integer | no |  |
 
 
+## Tag: `market`
+
+LaLiga Fantasy league market, bids, listings, and offers. Thin authenticated proxies of competition league market resources.
+
+### `GET` `/market/leagues/{league_id}`
+
+Get current league market
+
+**Security:** HTTP Bearer (internal JWT)
+
+#### Inputs
+
+| Source | Name | Type | Required | Constraints | Description |
+|--------|------|------|----------|-------------|-------------|
+| path | `league_id` | string | yes |  | Fantasy league identifier. |
+
+#### Outputs
+
+**HTTP 200:** `MarketSnapshot`
+
+
+
+### `POST` `/market/leagues/{league_id}/direct-offers`
+
+Send a direct offer to another manager
+
+**Security:** HTTP Bearer (internal JWT)
+
+#### Inputs
+
+| Source | Name | Type | Required | Constraints | Description |
+|--------|------|------|----------|-------------|-------------|
+| path | `league_id` | string | yes |  | Fantasy league identifier. |
+| body | `playerId` | string | yes |  |  |
+| body | `money` | integer | yes |  |  |
+
+#### Outputs
+
+**HTTP 200:** `MarketMutationResult`
+
+
+
+### `GET` `/market/leagues/{league_id}/history`
+
+Get league market history
+
+**Security:** HTTP Bearer (internal JWT)
+
+#### Inputs
+
+| Source | Name | Type | Required | Constraints | Description |
+|--------|------|------|----------|-------------|-------------|
+| path | `league_id` | string | yes |  | Fantasy league identifier. |
+
+#### Outputs
+
+**HTTP 200:** array of `MarketHistoryEntry`
+
+Each item:
+
+| Field | Type | Required | Description |
+|-------|------|----------|-------------|
+| `id` | string | no |  |
+
+
+### `POST` `/market/leagues/{league_id}/listings`
+
+List a player for sale
+
+**Security:** HTTP Bearer (internal JWT)
+
+#### Inputs
+
+| Source | Name | Type | Required | Constraints | Description |
+|--------|------|------|----------|-------------|-------------|
+| path | `league_id` | string | yes |  | Fantasy league identifier. |
+| body | `playerId` | string | yes |  |  |
+| body | `salePrice` | integer | yes |  |  |
+
+#### Outputs
+
+**HTTP 200:** `MarketMutationResult`
+
+
+
+### `GET` `/market/leagues/{league_id}/player-teams/{player_team_id}/offers`
+
+Get offers on an owned squad entry
+
+**Security:** HTTP Bearer (internal JWT)
+
+#### Inputs
+
+| Source | Name | Type | Required | Constraints | Description |
+|--------|------|------|----------|-------------|-------------|
+| path | `league_id` | string | yes |  | Fantasy league identifier. |
+| path | `player_team_id` | string | yes |  | Squad-entry id (``playerTeamId``), not master ``playerId``. |
+
+#### Outputs
+
+**HTTP 200:** `PlayerTeamOffers`
+
+| Field | Type | Required | Description |
+|-------|------|----------|-------------|
+| `offers` | array[FlexibleModel] | no |  |
+
+Full nested fields: [`PlayerTeamOffers`](#playerteamoffers).
+
+
+### `DELETE` `/market/leagues/{league_id}/{market_id}`
+
+Withdraw a market listing
+
+**Security:** HTTP Bearer (internal JWT)
+
+#### Inputs
+
+| Source | Name | Type | Required | Constraints | Description |
+|--------|------|------|----------|-------------|-------------|
+| path | `league_id` | string | yes |  | Fantasy league identifier. |
+| path | `market_id` | string | yes |  | Market listing identifier. |
+
+#### Outputs
+
+**HTTP 200:** `MarketMutationResult`
+
+
+
+### `POST` `/market/leagues/{league_id}/{market_id}/bids`
+
+Create a bid on a market listing
+
+**Security:** HTTP Bearer (internal JWT)
+
+#### Inputs
+
+| Source | Name | Type | Required | Constraints | Description |
+|--------|------|------|----------|-------------|-------------|
+| path | `league_id` | string | yes |  | Fantasy league identifier. |
+| path | `market_id` | string | yes |  | Market listing identifier. |
+| body | `money` | integer | yes |  |  |
+
+#### Outputs
+
+**HTTP 200:** `MarketMutationResult`
+
+
+
+### `PUT` `/market/leagues/{league_id}/{market_id}/bids/{bid_id}`
+
+Modify a bid
+
+**Security:** HTTP Bearer (internal JWT)
+
+#### Inputs
+
+| Source | Name | Type | Required | Constraints | Description |
+|--------|------|------|----------|-------------|-------------|
+| path | `league_id` | string | yes |  | Fantasy league identifier. |
+| path | `market_id` | string | yes |  | Market listing identifier. |
+| path | `bid_id` | string | yes |  | Bid identifier. |
+| body | `money` | integer | yes |  |  |
+
+#### Outputs
+
+**HTTP 200:** `MarketMutationResult`
+
+
+
+### `DELETE` `/market/leagues/{league_id}/{market_id}/bids/{bid_id}`
+
+Cancel a bid
+
+**Security:** HTTP Bearer (internal JWT)
+
+#### Inputs
+
+| Source | Name | Type | Required | Constraints | Description |
+|--------|------|------|----------|-------------|-------------|
+| path | `league_id` | string | yes |  | Fantasy league identifier. |
+| path | `market_id` | string | yes |  | Market listing identifier. |
+| path | `bid_id` | string | yes |  | Bid identifier. |
+
+#### Outputs
+
+**HTTP 200:** `MarketMutationResult`
+
+
+
+### `DELETE` `/market/leagues/{league_id}/{market_id}/offers/{offer_id}`
+
+Cancel an offer
+
+**Security:** HTTP Bearer (internal JWT)
+
+#### Inputs
+
+| Source | Name | Type | Required | Constraints | Description |
+|--------|------|------|----------|-------------|-------------|
+| path | `league_id` | string | yes |  | Fantasy league identifier. |
+| path | `market_id` | string | yes |  | Market listing identifier. |
+| path | `offer_id` | string | yes |  | Offer identifier. |
+
+#### Outputs
+
+**HTTP 200:** `MarketMutationResult`
+
+
+
+### `POST` `/market/leagues/{league_id}/{market_id}/offers/{offer_id}/accept`
+
+Accept an offer on a listing
+
+**Security:** HTTP Bearer (internal JWT)
+
+#### Inputs
+
+| Source | Name | Type | Required | Constraints | Description |
+|--------|------|------|----------|-------------|-------------|
+| path | `league_id` | string | yes |  | Fantasy league identifier. |
+| path | `market_id` | string | yes |  | Market listing identifier. |
+| path | `offer_id` | string | yes |  | Offer identifier. |
+| body | `offerMoney` | integer | yes |  |  |
+
+#### Outputs
+
+**HTTP 200:** `MarketMutationResult`
+
+
+
+### `POST` `/market/leagues/{league_id}/{market_id}/offers/{offer_id}/reject`
+
+Reject an offer on a listing
+
+**Security:** HTTP Bearer (internal JWT)
+
+#### Inputs
+
+| Source | Name | Type | Required | Constraints | Description |
+|--------|------|------|----------|-------------|-------------|
+| path | `league_id` | string | yes |  | Fantasy league identifier. |
+| path | `market_id` | string | yes |  | Market listing identifier. |
+| path | `offer_id` | string | yes |  | Offer identifier. |
+
+#### Outputs
+
+**HTTP 200:** `MarketMutationResult`
+
+
+
 ## Tag: `players`
 
 LaLiga Fantasy player catalog, market value, and league cards. Catalog and market value are public; league cards are authenticated.
@@ -685,6 +935,12 @@ Each item:
 
 Nested models referenced by the operations above. All Fantasy proxy models use `extra: allow` in Pydantic — additional upstream fields may appear at runtime without being listed here.
 
+### `AcceptOfferWrite`
+
+| Field | Type | Required | Description |
+|-------|------|----------|-------------|
+| `offerMoney` | integer | yes |  |
+
 ### `ActivityItem`
 
 | Field | Type | Required | Description |
@@ -700,6 +956,12 @@ Nested models referenced by the operations above. All Fantasy proxy models use `
 | `msg` | string | no |  |
 | `message` | string | no |  |
 | `description` | string | no |  |
+
+### `BidWrite`
+
+| Field | Type | Required | Description |
+|-------|------|----------|-------------|
+| `money` | integer | yes |  |
 
 ### `CatalogPlayer`
 
@@ -743,6 +1005,13 @@ Nested models referenced by the operations above. All Fantasy proxy models use `
 | `openingWeekDate` | string | no |  |
 | `closingWeekDate` | string | no |  |
 
+### `DirectOfferWrite`
+
+| Field | Type | Required | Description |
+|-------|------|----------|-------------|
+| `playerId` | string | yes |  |
+| `money` | integer | yes |  |
+
 ### `ErrorResponse`
 
 | Field | Type | Required | Description |
@@ -780,6 +1049,10 @@ Nested models referenced by the operations above. All Fantasy proxy models use `
 | `localScore` | integer | no |  |
 | `visitorScore` | integer | no |  |
 | `featured` | boolean | no |  |
+
+### `FlexibleModel`
+
+Type: `object`
 
 ### `HealthResponse`
 
@@ -903,6 +1176,13 @@ Nested models referenced by the operations above. All Fantasy proxy models use `
 | `captain` | string | no |  |
 | `bench` | object | no |  |
 
+### `ListingWrite`
+
+| Field | Type | Required | Description |
+|-------|------|----------|-------------|
+| `playerId` | string | yes |  |
+| `salePrice` | integer | yes |  |
+
 ### `LoanPremiumConfig`
 
 | Field | Type | Required | Description |
@@ -919,6 +1199,20 @@ Nested models referenced by the operations above. All Fantasy proxy models use `
 | `id` | string | no |  |
 | `managerName` | string | no |  |
 | `avatar` | string | no |  |
+
+### `MarketHistoryEntry`
+
+| Field | Type | Required | Description |
+|-------|------|----------|-------------|
+| `id` | string | no |  |
+
+### `MarketMutationResult`
+
+Type: `object`
+
+### `MarketSnapshot`
+
+Type: `object`
 
 ### `MatchPlayer`
 
@@ -1006,6 +1300,12 @@ Nested models referenced by the operations above. All Fantasy proxy models use `
 | `totalPoints` | integer | no |  |
 | `isInIdealFormation` | boolean | no |  |
 | `stats` | object | no |  |
+
+### `PlayerTeamOffers`
+
+| Field | Type | Required | Description |
+|-------|------|----------|-------------|
+| `offers` | array[FlexibleModel] | no |  |
 
 ### `PremiumConfigurations`
 

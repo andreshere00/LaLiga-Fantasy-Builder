@@ -94,7 +94,7 @@ backend/api/src/fantasy_api/
 ├── domain/           # AppUser, UpstreamError, …
 ├── security/         # Internal JWT validation
 ├── openapi.py        # OpenAPI generation and ERROR_RESPONSES
-└── cli/              # fantasy-leagues, fantasy-teams, fantasy-players, fantasy-calendar
+└── cli/              # fantasy-leagues, fantasy-teams, fantasy-players, fantasy-calendar, fantasy-market
 ```
 
 Process-lifetime wiring lives in `api/deps.py` (`AppContainer`): one shared
@@ -113,6 +113,7 @@ do not share a generic proxy class.
 | Teams | `/teams/...` | `{CMP}/teams/...` | GET + PUT (lineup write) |
 | Players | `/players/...` | `{CMP}/players`, `{CMP}/player/...` | GET (catalog + market value public; league card authenticated) |
 | Calendar | `/calendar/...` | `{CMP}/week/...`, `{CMP}/calendar`, stats host | GET (internal JWT; public upstream via `get_public_json`) |
+| Market | `/market/...` | `{CMP}/league/{leagueId}/market/...` | GET + POST/PUT/DELETE (reads High; mutations Medium) |
 
 `{CMP}` = `{LALIGA_FANTASY_ORIGIN}/api/v1/competition/{LALIGA_COMPETITION_ID}`.
 
@@ -132,7 +133,7 @@ Cross-domain helpers (extend these rather than duplicating logic):
 | `repositories/paths.py` | Percent-encode path segments; build `{CMP}/…` paths |
 | `schemas/payload.py` | `as_object`, `as_object_list` — fail on unexpected JSON shape |
 | `api/payload.py` | Map parser `ValueError` → `UpstreamError` (502) |
-| `clients/laliga_fantasy.py` | GET (optional bearer for public reads)/PUT; JSON errors → `UpstreamError` |
+| `clients/laliga_fantasy.py` | GET/PUT/POST/DELETE; JSON errors → `UpstreamError` |
 | `schemas/common.FlexibleModel` | Read models with `extra="allow"` for upstream passthrough |
 
 Write routes use **separate** request models (`extra="forbid"`, required fields
@@ -141,7 +142,8 @@ upstream JSON into empty `{}` or `[]` — see the pitfalls doc.
 
 #### Helper CLIs
 
-`fantasy-leagues`, `fantasy-teams`, `fantasy-players`, and `fantasy-calendar`
+`fantasy-leagues`, `fantasy-teams`, `fantasy-players`, `fantasy-calendar`, and
+`fantasy-market`
 are not part of the runtime API. They exchange session cookies for an internal
 JWT (or accept `--jwt`; players public reads need no JWT) and call local API
 routes. Shared flags and token exchange live in `cli/common.py`.

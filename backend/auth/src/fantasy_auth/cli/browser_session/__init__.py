@@ -17,6 +17,7 @@ from fantasy_auth.cli.browser_session.errors import BrowserSessionError
 from fantasy_auth.cli.browser_session.flows import (
     fetch_league_player,
     run_leagues_analysis,
+    run_market_analysis,
     run_teams_analysis,
 )
 from fantasy_auth.cli.browser_session.http import connection_linked, exchange_token
@@ -28,6 +29,7 @@ _connection_linked = connection_linked
 _fetch_league_player = fetch_league_player
 _run_leagues_analysis = run_leagues_analysis
 _run_teams_analysis = run_teams_analysis
+_run_market_analysis = run_market_analysis
 
 
 def main(argv: list[str] | None = None) -> int:
@@ -136,6 +138,13 @@ def _run_requested(args: Any, *, jwt: str, linked: bool) -> dict[str, Any]:
             week=args.week,
             put_lineup=args.put_lineup,
         )
+    elif args.flow == "market-analysis":
+        report["market_analysis"] = _run_market_analysis(
+            api_base=args.api_base,
+            jwt=jwt,
+            league_id=args.league_id,
+            player_team_id=getattr(args, "player_team_id", None),
+        )
     if args.player_id:
         report["league_player"] = _fetch_league_player(
             api_base=args.api_base,
@@ -168,6 +177,6 @@ def _render(
     print(
         "Session ready. JWT minted. "
         f"LaLiga linked={report['linked']}. "
-        "Pass --player-id, leagues-analysis, or teams-analysis.",
+        "Pass --player-id, leagues-analysis, teams-analysis, or market-analysis.",
         file=sys.stderr,
     )

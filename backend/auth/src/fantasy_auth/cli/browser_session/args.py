@@ -100,6 +100,17 @@ def parse_args(argv: list[str] | None = None) -> argparse.Namespace:
         default=None,
         help="JSON file for PUT /teams/{id}/lineup (requires --team-id)",
     )
+    market = subparsers.add_parser(
+        "market-analysis",
+        help="GET league market snapshot and history (read-only)",
+    )
+    market.add_argument("--league-id", default=None)
+    market.add_argument(
+        "--player-team-id",
+        default=None,
+        help="Squad-entry id; also fetch offers on that roster slot",
+    )
+    market.add_argument("--json", action="store_true")
     return parser.parse_args(argv)
 
 

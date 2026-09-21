@@ -93,6 +93,46 @@ class LaligaFantasyClient:
         """
         return await self._request_json("PUT", path, bearer_token, body=body)
 
+    async def post_json(
+        self,
+        path: str,
+        bearer_token: str,
+        body: dict[str, Any] | None = None,
+    ) -> Any:
+        """Perform an authenticated POST with an optional JSON body.
+
+        Args:
+            path: Absolute path under the Fantasy origin (must start with ``/``).
+            bearer_token: LaLiga B2C bearer token.
+            body: Optional JSON-serializable request body.
+
+        Returns:
+            Parsed JSON body, or ``{}`` when the response has an empty body.
+
+        Raises:
+            UpstreamError: On non-OK or non-JSON responses (no body leak).
+        """
+        return await self._request_json("POST", path, bearer_token, body=body)
+
+    async def delete_json(
+        self,
+        path: str,
+        bearer_token: str,
+    ) -> Any:
+        """Perform an authenticated DELETE.
+
+        Args:
+            path: Absolute path under the Fantasy origin (must start with ``/``).
+            bearer_token: LaLiga B2C bearer token.
+
+        Returns:
+            Parsed JSON body, or ``{}`` when the response has an empty body.
+
+        Raises:
+            UpstreamError: On non-OK or non-JSON responses (no body leak).
+        """
+        return await self._request_json("DELETE", path, bearer_token)
+
     async def _request_json(
         self,
         method: str,
@@ -105,11 +145,11 @@ class LaligaFantasyClient:
         """Send a Fantasy request and parse JSON.
 
         Args:
-            method: HTTP method (``GET`` or ``PUT``).
+            method: HTTP method (``GET``, ``PUT``, ``POST``, or ``DELETE``).
             path: Absolute path under the Fantasy origin.
             bearer_token: LaLiga B2C bearer token (``None`` for public reads).
-            body: Optional JSON body (PUT).
-            params: Optional query parameters (GET).
+            body: Optional JSON body (``PUT`` / ``POST``).
+            params: Optional query parameters (``GET``).
 
         Returns:
             Parsed JSON, or ``{}`` for an empty successful body.
@@ -146,7 +186,7 @@ class LaligaFantasyClient:
                 category="fantasy_error",
             )
         if not response.content:
-            if method == "PUT" or response.status_code == 204:
+            if method in ("PUT", "POST", "DELETE") or response.status_code == 204:
                 return {}
             raise UpstreamError(
                 "fantasy response was not JSON",

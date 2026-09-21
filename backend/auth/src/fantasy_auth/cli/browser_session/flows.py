@@ -12,6 +12,7 @@ from fantasy_auth.cli.browser_session.errors import BrowserSessionError
 from fantasy_auth.cli.browser_session.http import FantasyClient
 from fantasy_auth.cli.session_analysis import (
     fetch_leagues_analysis,
+    fetch_market_analysis,
     fetch_teams_analysis,
 )
 
@@ -115,6 +116,34 @@ def run_teams_analysis(
         league_filter=league_id,
         week=week,
         put_lineup_body=load_put_lineup(put_lineup),
+    )
+
+
+def run_market_analysis(
+    *,
+    api_base: str,
+    jwt: str,
+    league_id: str | None,
+    player_team_id: str | None,
+    transport: httpx.BaseTransport | None = None,
+) -> dict[str, Any]:
+    """Fetch the market analysis bundle via the local API (GET only).
+
+    Args:
+        api_base: Fantasy Builder API origin.
+        jwt: Internal JWT.
+        league_id: Optional league filter.
+        player_team_id: Optional squad-entry id for offers.
+        transport: Optional httpx transport (tests).
+
+    Returns:
+        Aggregated market JSON.
+    """
+    api = FantasyClient(base_url=api_base, jwt=jwt, transport=transport)
+    return fetch_market_analysis(
+        get_json=api.get_json,
+        league_filter=league_id,
+        player_team_id=player_team_id,
     )
 
 

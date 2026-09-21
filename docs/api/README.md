@@ -7,7 +7,8 @@ Application API docs for `backend/api` (`fantasy_api`).
 - [Endpoint schemas](endpoint-schemas.md) — generated input/output reference
   for every API route
 - [Leagues](leagues/README.md) · [Teams](teams/README.md) ·
-  [Players](players/README.md) · [Calendar](calendar/README.md)
+  [Players](players/README.md) · [Calendar](calendar/README.md) ·
+  [Market](market/README.md)
 - [Proxy endpoint pitfalls](proxy-endpoint-pitfalls.md)
 
 Auth: [Authentication](../authentication/authentication.md),

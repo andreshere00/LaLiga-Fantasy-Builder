@@ -18,11 +18,13 @@ from fantasy_api.domain.errors import UpstreamError
 from fantasy_api.main import create_app
 from fantasy_api.repositories.calendar import CalendarRepository
 from fantasy_api.repositories.leagues import LeaguesRepository
+from fantasy_api.repositories.market import MarketRepository
 from fantasy_api.repositories.players import PlayersRepository
 from fantasy_api.repositories.teams import TeamsRepository
 from fantasy_api.security.internal_jwt import StaticInternalJwtValidator
 from fantasy_api.services.calendar import CalendarService
 from fantasy_api.services.leagues import LeaguesService
+from fantasy_api.services.market import MarketService
 from fantasy_api.services.players import PlayersService
 from fantasy_api.services.teams import TeamsService
 from fastapi.testclient import TestClient
@@ -155,6 +157,13 @@ def build_players_container(
         ),
         calendar_service=CalendarService(
             CalendarRepository(
+                laliga_client,
+                competition_id=settings.laliga_competition_id,
+            ),
+        ),
+        market_service=MarketService(
+            credentials,
+            MarketRepository(
                 laliga_client,
                 competition_id=settings.laliga_competition_id,
             ),

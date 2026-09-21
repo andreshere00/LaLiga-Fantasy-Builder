@@ -8,6 +8,7 @@ import pytest
 from fantasy_auth.cli.browser_session.errors import BrowserSessionError
 from fantasy_auth.cli.session_analysis import (
     fetch_leagues_analysis,
+    fetch_market_analysis,
     fetch_teams_analysis,
     infer_week,
 )
@@ -94,6 +95,28 @@ def test_fetch_teams_analysis_resolved_team_hits_money_and_lineup() -> None:
     ]
     assert report["teams"][0]["week"] == 3
     assert report["teams"][0]["put_lineup"] is None
+
+
+def test_fetch_market_analysis_hits_market_routes() -> None:
+    payloads = {
+        "/leagues": [{"id": "42", "name": "Liga"}],
+    }
+    seen, get_json = _recorder(payloads)
+
+    report = fetch_market_analysis(
+        get_json=get_json,
+        league_filter=None,
+        player_team_id="pt-1",
+    )
+
+    assert seen == [
+        "/leagues",
+        "/market/leagues/42",
+        "/market/leagues/42/history",
+        "/market/leagues/42/player-teams/pt-1/offers",
+    ]
+    assert report["leagues"][0]["league_id"] == "42"
+    assert report["leagues"][0]["offers"] == {"ok": seen[-1]}
 
 
 def test_fetch_teams_analysis_put_lineup_with_team_id_posts_body() -> None:
