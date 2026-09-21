@@ -135,7 +135,7 @@ def _handler_app_ready(app_path: Path, callback_path: Path) -> bool:
         with plist_path.open("rb") as handle:
             info = plistlib.load(handle)
         stamp = stamp_path.read_text(encoding="utf-8").strip()
-    except OSError, plistlib.InvalidFileException:
+    except (OSError, plistlib.InvalidFileException):
         return False
     if info.get("CFBundleIdentifier") != BUNDLE_ID:
         return False
