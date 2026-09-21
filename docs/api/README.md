@@ -4,8 +4,10 @@ Application API docs for `backend/api` (`fantasy_api`).
 
 - [Adding endpoints](adding-endpoints.md) — availability/auth, CRS, CLI
 - [OpenAPI / Swagger](openapi.md)
+- [Endpoint schemas](endpoint-schemas.md) — generated input/output reference
+  for every API route
 - [Leagues](leagues/README.md) · [Teams](teams/README.md) ·
-  [Players](players/README.md)
+  [Players](players/README.md) · [Calendar](calendar/README.md)
 - [Proxy endpoint pitfalls](proxy-endpoint-pitfalls.md)
 
 Auth: [Authentication](../authentication/authentication.md),
@@ -19,9 +21,11 @@ Auth: [Authentication](../authentication/authentication.md),
 | Committed schema | [`backend/api/openapi.json`](../../backend/api/openapi.json) |
 | Service README | [`backend/api/README.md`](../../backend/api/README.md) |
 
-Leagues, teams, and players share `repositories/paths.py`,
-`services/laliga.py`, and payload helpers. Players catalog and market value
-are public; the league card is authenticated.
+Leagues, teams, players, and calendar share `repositories/paths.py` and payload
+helpers where applicable. Players catalog and market value are public upstream;
+calendar matchday reads are public upstream but still require an internal JWT
+at the API boundary. League, team, and player league-card routes exchange a
+LaLiga bearer.
 
 Callers mint an internal JWT via `POST /auth/token`, then send
 `Authorization: Bearer <jwt>`. Authenticated local login:

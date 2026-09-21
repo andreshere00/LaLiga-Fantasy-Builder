@@ -12,7 +12,7 @@ Auth vs API ownership, CSRF, and JWT `sub` scoping:
 Contract pitfalls:
 [Proxy endpoint pitfalls](proxy-endpoint-pitfalls.md).
 Feature notes: [leagues](leagues/README.md), [teams](teams/README.md),
-[players](players/README.md).
+[players](players/README.md), [calendar](calendar/README.md).
 
 ---
 

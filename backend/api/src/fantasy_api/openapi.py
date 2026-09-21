@@ -25,9 +25,10 @@ API_DESCRIPTION = """
 LaLiga Fantasy Builder API.
 
 Authenticated callers send an **internal JWT** minted by the auth service
-(``POST /auth/token``). LaLiga-backed routes exchange that JWT for a short-lived
-Fantasy bearer via auth's private credential endpoint; bearers are never
-returned to clients.
+(``POST /auth/token``). League and team routes exchange that JWT for a
+short-lived Fantasy bearer via auth's private credential endpoint; bearers are
+never returned to clients. Calendar reads call public upstream Fantasy resources
+and omit the LaLiga bearer while still requiring the internal JWT.
 """.strip()
 
 OPENAPI_TAGS: list[dict[str, str]] = [
@@ -45,6 +46,13 @@ OPENAPI_TAGS: list[dict[str, str]] = [
         "description": (
             "LaLiga Fantasy team money and lineup reads/writes. "
             "Thin authenticated proxies of competition team resources."
+        ),
+    },
+    {
+        "name": "calendar",
+        "description": (
+            "Matchday calendar and stats (public Fantasy reads). "
+            "Requires an internal JWT; upstream calls omit the LaLiga bearer."
         ),
     },
     {

@@ -9,7 +9,7 @@ from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 
-from fantasy_api.api import leagues, me, players, teams
+from fantasy_api.api import calendar, leagues, me, players, teams
 from fantasy_api.api.deps import AppContainer, build_container, set_container
 from fantasy_api.config import Settings, get_settings
 from fantasy_api.domain.errors import NeedsReauthError, UnauthorizedError, UpstreamError
@@ -66,6 +66,7 @@ def create_app(
     app.include_router(me.router)
     app.include_router(leagues.router)
     app.include_router(teams.router)
+    app.include_router(calendar.router)
     app.include_router(players.router)
     attach_openapi(app)
 

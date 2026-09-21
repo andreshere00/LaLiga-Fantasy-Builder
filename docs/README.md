@@ -11,8 +11,10 @@
 - [Adding endpoints](api/adding-endpoints.md) — documentation review, CRS,
   CLI with automated authentication
 - [OpenAPI / Swagger](api/openapi.md)
+- [Endpoint schemas](api/endpoint-schemas.md) — generated I/O reference for
+  all API routes
 - [Leagues](api/leagues/README.md) · [Teams](api/teams/README.md) ·
-  [Players](api/players/README.md)
+  [Players](api/players/README.md) · [Calendar](api/calendar/README.md)
 - [Proxy endpoint pitfalls](api/proxy-endpoint-pitfalls.md)
 
 Committed OpenAPI: [`backend/api/openapi.json`](../backend/api/openapi.json)

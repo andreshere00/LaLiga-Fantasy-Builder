@@ -5,6 +5,7 @@ from __future__ import annotations
 from pathlib import Path
 
 import pytest
+from fantasy_api.endpoint_schemas_doc import generate_endpoint_schemas_doc
 from fantasy_api.main import create_app
 from fantasy_api.openapi import (
     build_openapi_schema,
@@ -39,6 +40,9 @@ def test_build_openapi_schema_includes_documented_paths() -> None:
     assert "/teams/{team_id}/money" in paths
     assert "/teams/{team_id}/lineup" in paths
     assert "/teams/{team_id}/lineup/week/{week}" in paths
+    assert "/calendar/current" in paths
+    assert "/calendar/weeks/{week}" in paths
+    assert "/calendar/weeks/{week}/stats" in paths
     assert "put" in paths["/teams/{team_id}/lineup"]
     assert "/players" in paths
     assert "/players/{player_id}/market-value" in paths
@@ -51,12 +55,22 @@ def test_build_openapi_schema_includes_documented_paths() -> None:
     assert "TeamMoney" in schema["components"]["schemas"]
     assert "TeamLineup" in schema["components"]["schemas"]
     assert "LineupWrite" in schema["components"]["schemas"]
+    assert "CurrentWeek" in schema["components"]["schemas"]
+    assert "Fixture" in schema["components"]["schemas"]
+    assert "MatchStats" in schema["components"]["schemas"]
     assert "CatalogPlayer" in schema["components"]["schemas"]
     assert "PlayerMarketValue" in schema["components"]["schemas"]
     assert "LeaguePlayer" in schema["components"]["schemas"]
     assert "ErrorResponse" in schema["components"]["schemas"]
     assert paths["/leagues"]["get"]["security"] == [{"HTTPBearer": []}]
     assert paths["/teams/{team_id}/money"]["get"]["security"] == [{"HTTPBearer": []}]
+    assert paths["/calendar/current"]["get"]["security"] == [{"HTTPBearer": []}]
+    calendar_week_param = next(
+        param
+        for param in paths["/calendar/weeks/{week}"]["get"]["parameters"]
+        if param["name"] == "week"
+    )
+    assert calendar_week_param["schema"].get("minimum") == 1
     assert "security" not in paths["/players"]["get"]
     assert "security" not in paths["/players/{player_id}/market-value"]["get"]
     assert paths["/players/{player_id}/league/{league_id}"]["get"]["security"] == [
@@ -90,6 +104,21 @@ def test_build_openapi_schema_includes_documented_paths() -> None:
         if param["name"] == "page"
     )
     assert page_param["schema"].get("minimum") == 0
+
+
+def test_generate_endpoint_schemas_doc_lists_all_public_routes() -> None:
+    # Arrange
+    schema = build_openapi_schema(create_app())
+
+    # Act
+    markdown = generate_endpoint_schemas_doc(schema)
+
+    # Assert
+    assert "### `GET` `/calendar/current`" in markdown
+    assert "### `PUT` `/teams/{team_id}/lineup`" in markdown
+    assert "`LineupWrite`" in markdown
+    assert "## Component schemas" in markdown
+    assert "| `local` | MatchSide |" in markdown
 
 
 def test_generate_openapi_writes_file(tmp_path: Path) -> None:

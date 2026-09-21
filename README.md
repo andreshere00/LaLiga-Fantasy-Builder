@@ -41,6 +41,7 @@ routes need a paired LaLiga account.
 Docker (Keycloak + auth + API):
 
 ```bash
+cp .env.template .env
 cp backend/auth/.env.example backend/auth/.env
 cp backend/api/.env.example backend/api/.env
 docker compose --profile apps up --build
