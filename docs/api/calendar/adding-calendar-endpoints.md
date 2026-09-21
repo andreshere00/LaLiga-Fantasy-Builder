@@ -28,12 +28,17 @@ the upstream call omits `Authorization`.
    with `competition_path` / `stats_week_path` and calls
    `LaligaFantasyClient.get_public_json`.
 3. **Add a service method** in `fantasy_api.services.calendar.CalendarService`
-   that delegates to the repository (no `AuthCredentialsClient`).
+   that delegates to the repository (no `AuthCredentialsClient`). Keep
+   `CalendarService` as the CRS seam even when the method is a one-liner so
+   new calendar routes do not accumulate repository calls in the controller.
 4. **Add or extend a Pydantic response model** in
    `fantasy_api.schemas.calendar` (prefer `FlexibleModel` /
    `extra="allow"` for upstream fields).
 5. **Add a controller route** in `fantasy_api.api.calendar`:
    - call `get_current_user(authorization)` (JWT gate only);
+   - call `get_container().calendar_service`, not the repository;
+   - for matchweek path params, validate with `Path(ge=1, ...)` on the route
+     (do not duplicate week checks in the service);
    - set `response_model=...`, `responses=ERROR_RESPONSES`, and parameter
      descriptions so Swagger stays accurate.
 6. **Container wiring** — `AppContainer.calendar_service` is built in

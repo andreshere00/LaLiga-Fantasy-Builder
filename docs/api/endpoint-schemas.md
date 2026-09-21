@@ -210,15 +210,15 @@ Each item:
 |-------|------|----------|-------------|
 | `id` | string | no |  |
 | `access` | string | no |  |
-| `type` | object | no | Fantasy league type metadata. |
+| `type` | LeagueType | no | Fantasy league type metadata. |
 | `managersNumber` | integer | no |  |
 | `name` | string | no |  |
-| `config` | object | no | League configuration. |
+| `config` | LeagueConfig | no | League configuration. |
 | `isDuplicated` | boolean | no |  |
 | `isSecondRound` | boolean | no |  |
 | `description` | string | no |  |
 | `premium` | boolean | no |  |
-| `team` | object | no | Caller's team summary embedded in a league object. |
+| `team` | LeagueTeamSummary | no | Caller's team summary embedded in a league object. |
 
 
 ### `GET` `/leagues/{league_id}/activity/{page}`
@@ -279,7 +279,7 @@ Each item:
 | `previousPosition` | integer | no |  |
 | `points` | integer | no |  |
 | `livePoints` | integer | no |  |
-| `team` | object | no | Team row nested under standing. |
+| `team` | StandingTeam | no | Team row nested under standing. |
 | `teamId` | string | no |  |
 | `name` | string | no |  |
 
@@ -309,7 +309,7 @@ Each item:
 | `previousPosition` | integer | no |  |
 | `points` | integer | no |  |
 | `livePoints` | integer | no |  |
-| `team` | object | no | Team row nested under standing. |
+| `team` | StandingTeam | no | Team row nested under standing. |
 | `teamId` | string | no |  |
 | `name` | string | no |  |
 
@@ -344,7 +344,7 @@ Each item:
 | `teamMoney` | integer | no |  |
 | `teamPoints` | integer | no |  |
 | `teamValue` | integer | no |  |
-| `manager` | object | no | Manager identity. |
+| `manager` | Manager | no | Manager identity. |
 | `players` | array[SquadPlayer] | no |  |
 | `loanedPlayers` | array[any] | no |  |
 
@@ -377,7 +377,7 @@ Get team roster and clauses
 | `playersNumber` | integer | no |  |
 | `teamValue` | integer | no |  |
 | `teamPoints` | integer | no |  |
-| `manager` | object | no | Manager identity. |
+| `manager` | Manager | no | Manager identity. |
 | `players` | array[SquadPlayer] | no |  |
 | `loanedPlayers` | array[any] | no |  |
 
@@ -406,7 +406,7 @@ Get current team lineup
 
 | Field | Type | Required | Description |
 |-------|------|----------|-------------|
-| `formation` | object | no | Formation block nested under a Fantasy lineup response. |
+| `formation` | LineupFormation | no | Formation block nested under a Fantasy lineup response. |
 | `teamId` | string | no |  |
 | `weekNumber` | integer | no |  |
 
@@ -439,7 +439,7 @@ Replace the current team lineup
 
 | Field | Type | Required | Description |
 |-------|------|----------|-------------|
-| `formation` | object | no | Formation block nested under a Fantasy lineup response. |
+| `formation` | LineupFormation | no | Formation block nested under a Fantasy lineup response. |
 | `teamId` | string | no |  |
 | `weekNumber` | integer | no |  |
 
@@ -465,7 +465,7 @@ Get team lineup for a matchweek
 
 | Field | Type | Required | Description |
 |-------|------|----------|-------------|
-| `formation` | object | no | Formation block nested under a Fantasy lineup response. |
+| `formation` | LineupFormation | no | Formation block nested under a Fantasy lineup response. |
 | `teamId` | string | no |  |
 | `weekNumber` | integer | no |  |
 
@@ -580,8 +580,8 @@ Each item:
 |-------|------|----------|-------------|
 | `id` | integer | no |  |
 | `date` | string | no |  |
-| `local` | object | no | Home or away side in matchweek stats. |
-| `visitor` | object | no | Home or away side in matchweek stats. |
+| `local` | MatchSide | no | Home or away side in matchweek stats. |
+| `visitor` | MatchSide | no | Home or away side in matchweek stats. |
 | `matchState` | integer | no |  |
 | `localScore` | integer | no |  |
 | `visitorScore` | integer | no |  |
@@ -642,15 +642,15 @@ Nested models referenced by the operations above. All Fantasy proxy models use `
 |-------|------|----------|-------------|
 | `id` | string | no |  |
 | `access` | string | no |  |
-| `type` | object (`type`) | no | Fantasy league type metadata. |
+| `type` | LeagueType | no | Fantasy league type metadata. |
 | `managersNumber` | integer | no |  |
 | `name` | string | no |  |
-| `config` | object (`config`) | no | League configuration. |
+| `config` | LeagueConfig | no | League configuration. |
 | `isDuplicated` | boolean | no |  |
 | `isSecondRound` | boolean | no |  |
 | `description` | string | no |  |
 | `premium` | boolean | no |  |
-| `team` | object (`team`) | no | Caller's team summary embedded in a league object. |
+| `team` | LeagueTeamSummary | no | Caller's team summary embedded in a league object. |
 
 ### `Fixture`
 
@@ -691,9 +691,9 @@ Nested models referenced by the operations above. All Fantasy proxy models use `
 
 | Field | Type | Required | Description |
 |-------|------|----------|-------------|
-| `features` | object (`features`) | no | League feature flags. |
-| `premiumFeatures` | object (`premiumFeatures`) | no | Premium feature toggles. |
-| `premiumConfigurations` | object (`premiumConfigurations`) | no | Premium configuration block. |
+| `features` | LeagueFeatures | no | League feature flags. |
+| `premiumFeatures` | PremiumFeatures | no | Premium feature toggles. |
+| `premiumConfigurations` | PremiumConfigurations | no | Premium configuration block. |
 
 ### `LeagueFeatures`
 
@@ -715,7 +715,7 @@ Nested models referenced by the operations above. All Fantasy proxy models use `
 | `teamMoney` | integer | no |  |
 | `teamPoints` | integer | no |  |
 | `teamValue` | integer | no |  |
-| `manager` | object (`manager`) | no | Manager identity. |
+| `manager` | Manager | no | Manager identity. |
 | `players` | array[SquadPlayer] | no |  |
 | `loanedPlayers` | array[any] | no |  |
 
@@ -740,7 +740,7 @@ Nested models referenced by the operations above. All Fantasy proxy models use `
 | `id` | string | no |  |
 | `canBeDuplicated` | boolean | no |  |
 | `sponsorId` | integer | no |  |
-| `prizeInformation` | object (`prizeInformation`) | no | League prize copy. |
+| `prizeInformation` | PrizeInformation | no | League prize copy. |
 
 ### `LeaguesProbeResponse`
 
@@ -820,8 +820,8 @@ Nested models referenced by the operations above. All Fantasy proxy models use `
 |-------|------|----------|-------------|
 | `id` | integer | no |  |
 | `date` | string | no |  |
-| `local` | object (`local`) | no | Home or away side in matchweek stats. |
-| `visitor` | object (`visitor`) | no | Home or away side in matchweek stats. |
+| `local` | MatchSide | no | Home or away side in matchweek stats. |
+| `visitor` | MatchSide | no | Home or away side in matchweek stats. |
 | `matchState` | integer | no |  |
 | `localScore` | integer | no |  |
 | `visitorScore` | integer | no |  |
@@ -862,7 +862,7 @@ Nested models referenced by the operations above. All Fantasy proxy models use `
 | `averagePoints` | number | no |  |
 | `images` | object | no |  |
 | `lastStats` | array[PlayerStatWeek] | no |  |
-| `team` | object (`team`) | no | Real-world club metadata on a player. |
+| `team` | ClubTeam | no | Real-world club metadata on a player. |
 
 ### `PlayerStatWeek`
 
@@ -877,8 +877,8 @@ Nested models referenced by the operations above. All Fantasy proxy models use `
 
 | Field | Type | Required | Description |
 |-------|------|----------|-------------|
-| `loan` | object (`loan`) | no | Loan premium configuration. |
-| `ideal` | object (`ideal`) | no | Ideal lineup premium configuration. |
+| `loan` | LoanPremiumConfig | no | Loan premium configuration. |
+| `ideal` | IdealPremiumConfig | no | Ideal lineup premium configuration. |
 
 ### `PremiumFeatures`
 
@@ -907,9 +907,9 @@ Nested models referenced by the operations above. All Fantasy proxy models use `
 | `buyoutClauseLockedEndTime` | string | no |  |
 | `isShielded` | boolean | no |  |
 | `managerId` | integer | no |  |
-| `manager` | object (`manager`) | no | Manager identity. |
-| `playerMarket` | object (`playerMarket`) | no | Market listing for a player on a team. |
-| `playerMaster` | object (`playerMaster`) | no | Master player card. |
+| `manager` | Manager | no | Manager identity. |
+| `playerMarket` | PlayerMarket | no | Market listing for a player on a team. |
+| `playerMaster` | PlayerMaster | no | Master player card. |
 
 ### `StandingRow`
 
@@ -919,7 +919,7 @@ Nested models referenced by the operations above. All Fantasy proxy models use `
 | `previousPosition` | integer | no |  |
 | `points` | integer | no |  |
 | `livePoints` | integer | no |  |
-| `team` | object (`team`) | no | Team row nested under standing. |
+| `team` | StandingTeam | no | Team row nested under standing. |
 | `teamId` | string | no |  |
 | `name` | string | no |  |
 
@@ -935,7 +935,7 @@ Nested models referenced by the operations above. All Fantasy proxy models use `
 | `teamValue` | integer | no |  |
 | `teamPoints` | integer | no |  |
 | `teamMoney` | integer | no |  |
-| `manager` | object (`manager`) | no | Manager identity. |
+| `manager` | Manager | no | Manager identity. |
 
 ### `TeamDetail`
 
@@ -950,7 +950,7 @@ Nested models referenced by the operations above. All Fantasy proxy models use `
 | `playersNumber` | integer | no |  |
 | `teamValue` | integer | no |  |
 | `teamPoints` | integer | no |  |
-| `manager` | object (`manager`) | no | Manager identity. |
+| `manager` | Manager | no | Manager identity. |
 | `players` | array[SquadPlayer] | no |  |
 | `loanedPlayers` | array[any] | no |  |
 
@@ -958,7 +958,7 @@ Nested models referenced by the operations above. All Fantasy proxy models use `
 
 | Field | Type | Required | Description |
 |-------|------|----------|-------------|
-| `formation` | object (`formation`) | no | Formation block nested under a Fantasy lineup response. |
+| `formation` | LineupFormation | no | Formation block nested under a Fantasy lineup response. |
 | `teamId` | string | no |  |
 | `weekNumber` | integer | no |  |
 

@@ -356,16 +356,13 @@ def _render_component_schema(
     if not resolved.get("properties"):
         lines.append(f"Type: `{_schema_type_label(schema, components)}`")
         return lines
-    lines.extend(_properties_table(resolved, components, expand_refs=True))
+    lines.extend(_properties_table(resolved, components))
     return lines
 
 
 def _properties_table(
     schema: dict[str, Any],
     components: dict[str, Any],
-    *,
-    expand_refs: bool = False,
-    depth: int = 0,
 ) -> list[str]:
     """Markdown table of object properties."""
     props = schema.get("properties") or {}
@@ -378,10 +375,7 @@ def _properties_table(
     ]
     for field, field_schema in props.items():
         resolved = _resolve_schema(field_schema, components)
-        if expand_refs and depth < 2 and resolved.get("properties"):
-            type_label = f"object (`{field}`)"
-        else:
-            type_label = _schema_type_label(field_schema, components)
+        type_label = _schema_type_label(field_schema, components)
         lines.append(
             "| "
             + " | ".join(
@@ -430,10 +424,39 @@ def _resolve_schema(schema: dict[str, Any], components: dict[str, Any]) -> dict[
     return schema
 
 
-def _schema_type_label(schema: dict[str, Any], components: dict[str, Any]) -> str:
-    """Human-readable type for a JSON schema fragment."""
+def _named_component_type(schema: dict[str, Any]) -> str | None:
+    """Return a component schema name for direct or nullable ``$ref`` arms."""
     if "$ref" in schema:
         return schema["$ref"].split("/")[-1]
+    for key in ("anyOf", "oneOf"):
+        options = schema.get(key)
+        if not isinstance(options, list):
+            continue
+        labels: list[str] = []
+        for option in options:
+            if not isinstance(option, dict) or option.get("type") == "null":
+                continue
+            if "$ref" in option:
+                labels.append(option["$ref"].split("/")[-1])
+            elif option.get("type") == "array":
+                items = option.get("items") or {}
+                if "$ref" in items:
+                    ref_name = items["$ref"].split("/")[-1]
+                    labels.append(f"array[{ref_name}]")
+                else:
+                    return None
+            else:
+                return None
+        if len(labels) == 1:
+            return labels[0]
+    return None
+
+
+def _schema_type_label(schema: dict[str, Any], components: dict[str, Any]) -> str:
+    """Human-readable type for a JSON schema fragment."""
+    named = _named_component_type(schema)
+    if named:
+        return named
     resolved = _resolve_schema(schema, components)
     if "$ref" in resolved:
         return resolved["$ref"].split("/")[-1]

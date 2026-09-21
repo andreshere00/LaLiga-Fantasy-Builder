@@ -104,6 +104,7 @@ def test_generate_endpoint_schemas_doc_lists_all_public_routes() -> None:
     assert "### `PUT` `/teams/{team_id}/lineup`" in markdown
     assert "`LineupWrite`" in markdown
     assert "## Component schemas" in markdown
+    assert "| `local` | MatchSide |" in markdown
 
 
 def test_generate_openapi_writes_file(tmp_path: Path) -> None:
