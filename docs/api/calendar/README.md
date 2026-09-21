@@ -43,24 +43,103 @@ All require `Authorization: Bearer <internal JWT>`. Models live in
 
 ## Local try-out
 
+### Prerequisites
+
+1. **Auth** on port **8000** (for example `./scripts/authenticate-laliga.sh` or
+   `uv run uvicorn fantasy_auth.main:app --port 8000` in `backend/auth`).
+2. **API** on port **8001** (`uv run uvicorn fantasy_api.main:app --reload --port 8001`
+   in `backend/api`).
+3. An **internal JWT** (`INTERNAL_JWT`) from `POST /auth/token` after app login
+   (see [API README](../../../backend/api/README.md)). Calendar routes do **not**
+   require LaLiga pairing for the upstream call, but the API still validates the
+   JWT.
+
+Check the API is up:
+
 ```bash
-curl -sS -H "Authorization: Bearer ${INTERNAL_JWT}" \
-  http://localhost:8001/calendar/current
-
-curl -sS -H "Authorization: Bearer ${INTERNAL_JWT}" \
-  http://localhost:8001/calendar/weeks/8
-
-curl -sS -H "Authorization: Bearer ${INTERNAL_JWT}" \
-  http://localhost:8001/calendar/weeks/8/stats
+curl -sS http://localhost:8001/health
 ```
 
-CLI:
+### End-to-end curl flow
+
+Use the current matchweek from `/calendar/current`, then fixtures and stats for
+that week:
+
+```bash
+curl -sS -H "Authorization: Bearer ${INTERNAL_JWT}" \
+  http://localhost:8001/calendar/current | jq
+
+WEEK=$(curl -sS -H "Authorization: Bearer ${INTERNAL_JWT}" \
+  http://localhost:8001/calendar/current | jq -r '.weekNumber')
+
+curl -sS -H "Authorization: Bearer ${INTERNAL_JWT}" \
+  "http://localhost:8001/calendar/weeks/${WEEK}" | jq
+
+curl -sS -H "Authorization: Bearer ${INTERNAL_JWT}" \
+  "http://localhost:8001/calendar/weeks/${WEEK}/stats" | jq '.[0] | keys'
+```
+
+### Sample responses (verified locally)
+
+`GET /calendar/current` (matchweek 8):
+
+```json
+{
+  "isLive": false,
+  "nextWeek": 9,
+  "previousWeek": 7,
+  "weekNumber": 8,
+  "openingWeekDate": "2026-10-09T21:00:00+02:00",
+  "closingWeekDate": "2026-10-13T03:00:00+02:00"
+}
+```
+
+`GET /calendar/weeks/8` returns ten fixtures. One item (scheduled match,
+`matchState` `1`; null scores are omitted from the JSON because of
+`response_model_exclude_none`):
+
+```json
+{
+  "id": "71",
+  "matchDate": "2026-10-11T16:15:00+02:00",
+  "date": "2026-10-11T16:15:00+02:00",
+  "time": "2026-10-11T16:15:00+02:00",
+  "localId": 16,
+  "visitorId": 26,
+  "matchState": 1,
+  "featured": false
+}
+```
+
+`GET /calendar/weeks/8/stats` returns one object per match. Top-level keys on
+the first match:
+
+```json
+["date", "id", "local", "matchState", "visitor"]
+```
+
+Each `local` / `visitor` side includes club metadata and a `players` array with
+`weekPoints` (master `playerId` in `id`). Use `jq` for full payloads; stats
+responses are large (~100KB+).
+
+### CLI
 
 ```bash
 cd backend/api
-uv run fantasy-calendar --jwt "$INTERNAL_JWT"
-uv run fantasy-calendar --week 5 --json
+uv run fantasy-calendar --jwt "$INTERNAL_JWT" --api-base http://localhost:8001
+uv run fantasy-calendar --jwt "$INTERNAL_JWT" --week 8 --json
 ```
+
+With session cookies instead of a JWT:
+
+```bash
+export FANTASY_SESSION='…'
+export FANTASY_CSRF='…'
+uv run fantasy-calendar --auth-base http://localhost:8000 --api-base http://localhost:8001
+```
+
+Interactive docs: http://localhost:8001/docs (tag **calendar**, Authorize with
+`Bearer <internal JWT>`).
 
 ## Architecture
 
