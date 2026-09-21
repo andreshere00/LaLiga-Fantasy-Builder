@@ -1,92 +1,83 @@
+# Values come from the repo-root `.env` (copy `.env.template`).
+# Container paths below are image contracts; host paths and service URLs are env.
+
 services:
   keycloak:
-    image: quay.io/keycloak/keycloak:26.2
-    command:
-      - start-dev
-      - --import-realm
+    image: ${KEYCLOAK_IMAGE}
+    command: [start-dev, --import-realm]
     environment:
-      KC_BOOTSTRAP_ADMIN_USERNAME: admin
-      KC_BOOTSTRAP_ADMIN_PASSWORD: admin
-      KC_HTTP_PORT: 8080
-      KC_HOSTNAME: localhost
-      KC_HOSTNAME_PORT: 8080
+      KC_BOOTSTRAP_ADMIN_USERNAME: ${KEYCLOAK_ADMIN_USERNAME}
+      KC_BOOTSTRAP_ADMIN_PASSWORD: ${KEYCLOAK_ADMIN_PASSWORD}
+      KC_HTTP_PORT: ${KEYCLOAK_HTTP_PORT}
+      KC_HOSTNAME: ${KEYCLOAK_HOSTNAME}
+      KC_HOSTNAME_PORT: ${KEYCLOAK_HOSTNAME_PORT}
       KC_HOSTNAME_STRICT: "false"
       KC_HOSTNAME_STRICT_HTTPS: "false"
     ports:
-      - "8080:8080"
+      - "${KEYCLOAK_PUBLISH_PORT}:${KEYCLOAK_HTTP_PORT}"
     volumes:
-      - ./docker/keycloak/realm-fantasy-builder.json:/opt/keycloak/data/import/realm-fantasy-builder.json:ro
+      - ${KEYCLOAK_REALM_IMPORT_PATH}:/opt/keycloak/data/import/realm-fantasy-builder.json:ro
     healthcheck:
-      test: ["CMD-SHELL", "exec 3<>/dev/tcp/127.0.0.1/8080"]
+      test: ["CMD-SHELL", "exec 3<>/dev/tcp/127.0.0.1/${KEYCLOAK_HTTP_PORT}"]
       interval: 5s
       timeout: 5s
       retries: 30
       start_period: 20s
-    networks:
-      - public
-      - internal
+    networks: [public, internal]
 
   postgres:
-    image: postgres:16-alpine
+    image: ${POSTGRES_IMAGE}
     environment:
-      POSTGRES_USER: fantasy
-      POSTGRES_PASSWORD: fantasy
-      POSTGRES_DB: fantasy_auth
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_DB: ${POSTGRES_DB}
     ports:
-      - "5432:5432"
+      - "${POSTGRES_PUBLISH_PORT}:${POSTGRES_PORT}"
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U fantasy -d fantasy_auth"]
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_DB}"]
       interval: 5s
       timeout: 5s
       retries: 20
-    profiles:
-      - full
-    networks:
-      - internal
+    profiles: [full]
+    networks: [internal]
 
   redis:
-    image: redis:7-alpine
+    image: ${REDIS_IMAGE}
     ports:
-      - "6379:6379"
+      - "${REDIS_PUBLISH_PORT}:${REDIS_PORT}"
     healthcheck:
       test: ["CMD", "redis-cli", "ping"]
       interval: 5s
       timeout: 3s
       retries: 20
-    profiles:
-      - full
-    networks:
-      - internal
+    profiles: [full]
+    networks: [internal]
 
   otel-collector:
-    image: otel/opentelemetry-collector-contrib:0.120.0
+    image: ${OTEL_COLLECTOR_IMAGE}
     command: ["--config=/etc/otel-collector-config.yaml"]
     volumes:
-      - ./docker/otel/collector-config.yaml:/etc/otel-collector-config.yaml:ro
+      - ${OTEL_COLLECTOR_CONFIG_PATH}:/etc/otel-collector-config.yaml:ro
     ports:
-      - "4318:4318"
-    profiles:
-      - full
-      - otel
-    networks:
-      - internal
+      - "${OTEL_COLLECTOR_HTTP_PORT}:${OTEL_COLLECTOR_HTTP_PORT}"
+    profiles: [full, otel]
+    networks: [internal]
 
   auth:
     build:
       context: ./backend/auth
       dockerfile: Dockerfile
     ports:
-      - "8000:8000"
-    env_file:
-      - ./backend/auth/.env
+      - "${AUTH_PUBLISH_PORT}:${AUTH_SERVICE_PORT}"
+    env_file: [./backend/auth/.env]
     environment:
-      APP_OIDC_TOKEN_URL: http://keycloak:8080/realms/fantasy-builder/protocol/openid-connect/token
-      APP_OIDC_JWKS_URL: http://keycloak:8080/realms/fantasy-builder/protocol/openid-connect/certs
-      DATABASE_URL: postgresql://fantasy:fantasy@postgres:5432/fantasy_auth
-      REDIS_URL: redis://redis:6379/0
-      MIGRATION_AUTO_APPLY: ${MIGRATION_AUTO_APPLY:-false}
-      OTEL_EXPORTER_OTLP_ENDPOINT: ${OTEL_EXPORTER_OTLP_ENDPOINT:-}
-      INTERNAL_SERVICE_TOKEN: ${INTERNAL_SERVICE_TOKEN:-dev-service-token}
+      APP_OIDC_TOKEN_URL: ${APP_OIDC_TOKEN_URL}
+      APP_OIDC_JWKS_URL: ${APP_OIDC_JWKS_URL}
+      DATABASE_URL: ${DATABASE_URL}
+      REDIS_URL: ${REDIS_URL}
+      MIGRATION_AUTO_APPLY: ${MIGRATION_AUTO_APPLY}
+      OTEL_EXPORTER_OTLP_ENDPOINT: ${OTEL_EXPORTER_OTLP_ENDPOINT}
+      INTERNAL_SERVICE_TOKEN: ${INTERNAL_SERVICE_TOKEN}
     depends_on:
       keycloak:
         condition: service_healthy
@@ -96,36 +87,27 @@ services:
       redis:
         condition: service_healthy
         required: false
-    profiles:
-      - apps
-      - full
-    networks:
-      - public
-      - internal
+    profiles: [apps, full]
+    networks: [public, internal]
 
   api:
     build:
       context: ./backend/api
       dockerfile: Dockerfile
     ports:
-      - "8001:8001"
-    env_file:
-      - ./backend/api/.env
+      - "${API_PUBLISH_PORT}:${API_SERVICE_PORT}"
+    env_file: [./backend/api/.env]
     environment:
-      AUTH_JWKS_URL: http://auth:8000/.well-known/jwks.json
-      AUTH_INTERNAL_BASE_URL: http://auth:8000
-      INTERNAL_JWT_ISSUER: https://auth.fantasy-builder.local
-      INTERNAL_JWT_AUDIENCE: fantasy-api
-      INTERNAL_SERVICE_TOKEN: ${INTERNAL_SERVICE_TOKEN:-dev-service-token}
+      AUTH_JWKS_URL: ${AUTH_JWKS_URL}
+      AUTH_INTERNAL_BASE_URL: ${AUTH_INTERNAL_BASE_URL}
+      INTERNAL_JWT_ISSUER: ${INTERNAL_JWT_ISSUER}
+      INTERNAL_JWT_AUDIENCE: ${INTERNAL_JWT_AUDIENCE}
+      INTERNAL_SERVICE_TOKEN: ${INTERNAL_SERVICE_TOKEN}
     depends_on:
       auth:
         condition: service_healthy
-    profiles:
-      - apps
-      - full
-    networks:
-      - public
-      - internal
+    profiles: [apps, full]
+    networks: [public, internal]
 
 networks:
   public:

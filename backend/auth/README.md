@@ -26,7 +26,8 @@ docker compose up -d
 Docker stack from repo root (Keycloak + auth + API):
 
 ```bash
-cp .env.example .env
+cp .env.template .env
+cp backend/auth/.env.example backend/auth/.env
 docker compose --profile apps up --build
 ```
 
