@@ -32,12 +32,12 @@ class LaligaFantasyClient:
         """Close the shared HTTP client."""
         await self._http.aclose()
 
-    async def get_json(self, path: str, bearer_token: str) -> Any:
-        """Perform an authenticated GET and return the JSON body.
+    async def get_json(self, path: str, bearer_token: str | None = None) -> Any:
+        """Perform a GET and return the JSON body.
 
         Args:
             path: Absolute path under the Fantasy origin (must start with ``/``).
-            bearer_token: LaLiga B2C bearer token.
+            bearer_token: Optional LaLiga B2C bearer token (public reads omit it).
 
         Returns:
             Parsed JSON body (object or array).
@@ -45,7 +45,7 @@ class LaligaFantasyClient:
         Raises:
             UpstreamError: On non-OK or non-JSON responses (no body leak).
         """
-        return await self._request_json("GET", path, bearer_token=bearer_token)
+        return await self._request_json("GET", path, bearer_token)
 
     async def get_public_json(
         self,
@@ -68,7 +68,7 @@ class LaligaFantasyClient:
         return await self._request_json(
             "GET",
             path,
-            bearer_token=None,
+            None,
             params=params,
         )
 
@@ -91,19 +91,14 @@ class LaligaFantasyClient:
         Raises:
             UpstreamError: On non-OK or non-JSON responses (no body leak).
         """
-        return await self._request_json(
-            "PUT",
-            path,
-            bearer_token=bearer_token,
-            body=body,
-        )
+        return await self._request_json("PUT", path, bearer_token, body=body)
 
     async def _request_json(
         self,
         method: str,
         path: str,
-        *,
         bearer_token: str | None,
+        *,
         body: dict[str, Any] | None = None,
         params: dict[str, str | int] | None = None,
     ) -> Any:
@@ -112,7 +107,7 @@ class LaligaFantasyClient:
         Args:
             method: HTTP method (``GET`` or ``PUT``).
             path: Absolute path under the Fantasy origin.
-            bearer_token: LaLiga B2C bearer token, or ``None`` for public reads.
+            bearer_token: LaLiga B2C bearer token (``None`` for public reads).
             body: Optional JSON body (PUT).
             params: Optional query parameters (GET).
 

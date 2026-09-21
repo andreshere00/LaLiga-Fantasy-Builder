@@ -1,50 +1,33 @@
 # LaLiga Fantasy Builder documentation
 
-This directory describes authentication, architecture, and the application API.
-
 ## Index
 
-### Architecture
-
-- [Architecture](architecture.md) — service boundaries, trust boundaries,
-  persistence, and request flows
-
-### Authentication (`docs/authentication/`)
-
-- [Authentication](authentication/authentication.md) — identities, credentials,
-  login, pairing, token exchange, and security rules
+- [Architecture](architecture.md) — services, CRS, trust boundaries, errors
+- [Authentication](authentication/authentication.md) — identities, login,
+  pairing, token exchange
 - [Developing authenticated endpoints](authentication/developing-authenticated-endpoints.md)
-  — patterns for protected API, auth, and LaLiga-backed endpoints
-
-### Application API (`docs/api/`)
-
-- [API overview](api/README.md) — Fantasy Builder API index
-- [OpenAPI / Swagger](api/openapi.md) — schema generation and Swagger sync
+  — auth vs API, CSRF, internal JWT
+- [API overview](api/README.md)
+- [Adding endpoints](api/adding-endpoints.md) — documentation review, CRS,
+  CLI with automated authentication
+- [OpenAPI / Swagger](api/openapi.md)
 - [Endpoint schemas](api/endpoint-schemas.md) — generated I/O reference for
   all API routes
-- [Leagues](api/leagues/README.md) — league routes and identifiers
-- [Adding leagues endpoints](api/leagues/adding-leagues-endpoints.md) —
-  controller–service–repository checklist
-- [Teams](api/teams/README.md) — team money and lineup routes
-- [Adding teams endpoints](api/teams/adding-teams-endpoints.md) —
-  controller–service–repository checklist for teams
-- [Calendar](api/calendar/README.md) — matchday calendar and stats
-- [Adding calendar endpoints](api/calendar/adding-calendar-endpoints.md) —
-  CRS checklist for calendar reads
+- [Leagues](api/leagues/README.md) · [Teams](api/teams/README.md) ·
+  [Players](api/players/README.md) · [Calendar](api/calendar/README.md)
+- [Proxy endpoint pitfalls](api/proxy-endpoint-pitfalls.md)
 
-Committed OpenAPI document:
-[`backend/api/openapi.json`](../backend/api/openapi.json)
-(regenerate with `uv run generate-openapi` in `backend/api`).
+Committed OpenAPI: [`backend/api/openapi.json`](../backend/api/openapi.json)
+(`uv run generate-openapi` in `backend/api`).
 
 ## Service ownership
 
-`backend/auth` owns application login, browser sessions, CSRF protection,
-LaLiga pairing, delegated credentials, and internal JWT issuance.
+`backend/auth` owns login, sessions, CSRF, LaLiga pairing, delegated
+credentials, and internal JWT issuance.
 
 `backend/api` owns application features. It accepts auth-issued internal JWTs
 and requests short-lived LaLiga bearers from the private auth interface when
-an endpoint must call LaLiga Fantasy.
+a route must call Fantasy.
 
-The API must never receive the auth session cookie, vault encryption key,
-LaLiga refresh token, sealed token bundle, or a caller-provided user ID used
-for authorization.
+The API must never receive the auth session cookie, vault key, LaLiga refresh
+token, sealed bundle, or a caller-provided user ID used for authorization.

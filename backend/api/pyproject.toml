@@ -26,6 +26,7 @@ laliga-fantasy-builder-api = "fantasy_api.main:run"
 fantasy-leagues = "fantasy_api.cli.leagues:main"
 fantasy-teams = "fantasy_api.cli.teams:main"
 fantasy-calendar = "fantasy_api.cli.calendar:main"
+fantasy-players = "fantasy_api.cli.players:main"
 generate-openapi = "fantasy_api.openapi:main"
 generate-endpoint-schemas = "fantasy_api.endpoint_schemas_doc:main"
 

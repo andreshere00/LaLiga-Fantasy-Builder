@@ -1,18 +1,18 @@
 # LaLiga Fantasy Builder — API service
 
-Main application API. Authenticates callers with **internal JWTs** minted by
+Main application API. Authenticates callers with **internal JWTs** from
 [`../auth/`](../auth/) and fetches short-lived LaLiga bearers from auth’s
 private credential endpoint. Never opens the token vault.
 
 ## Contract
 
 1. Browser authenticates with auth cookies, then `POST /auth/token` (CSRF).
-2. Browser (or BFF) calls this API with `Authorization: Bearer <internal JWT>`.
+2. Caller sends `Authorization: Bearer <internal JWT>`.
 3. This API verifies the JWT against auth JWKS (`AUTH_JWKS_URL`).
-4. For league and team LaLiga calls, this API calls `GET /internal/laliga/bearer`
-   with the same JWT plus `X-Service-Token` (never exposed to the browser).
-   Calendar routes still require the internal JWT but call public upstream
-   Fantasy reads without exchanging a bearer.
+4. LaLiga routes call `GET /internal/laliga/bearer` with the same JWT plus
+   `X-Service-Token` (never exposed to the browser). Calendar routes still
+   require the internal JWT but call public upstream Fantasy reads without
+   exchanging a bearer.
 
 `/internal/*` on auth must stay on a private network.
 
@@ -25,11 +25,28 @@ uv sync --all-extras
 uv run uvicorn fantasy_api.main:app --reload --port 8001
 ```
 
-### Fantasy settings
+## Docker
+
+From repo root (with auth on the same Compose network):
+
+```bash
+cp backend/api/.env.example backend/api/.env
+docker compose --profile apps up --build
+```
+
+Standalone image (multi-stage `python:3.14-slim-trixie`, non-root):
+
+```bash
+docker build -t laliga-fantasy-builder-api -f backend/api/Dockerfile backend/api
+docker run --rm -p 8001:8001 --env-file backend/api/.env laliga-fantasy-builder-api
+```
+
+Set `AUTH_JWKS_URL` and `AUTH_INTERNAL_BASE_URL` to a reachable auth instance
+when not using Compose defaults.
 
 | Variable | Default | Purpose |
 |----------|---------|---------|
-| `LALIGA_FANTASY_ORIGIN` | `https://fantasy-api.llt-services.com` | Fantasy API origin |
+| `LALIGA_FANTASY_ORIGIN` | `https://fantasy-api.llt-services.com` | Fantasy origin |
 | `LALIGA_COMPETITION_ID` | `1` | Competition id in Fantasy paths |
 
 ## Routes
@@ -39,137 +56,40 @@ uv run uvicorn fantasy_api.main:app --reload --port 8001
 | `GET` | `/me` | App identity from internal JWT |
 | `GET` | `/laliga/credential-probe` | Auth bearer available (token redacted) |
 | `GET` | `/laliga/leagues-probe` | Fantasy leagues connectivity (redacted) |
-| `GET` | `/leagues` | Competition leagues |
-| `GET` | `/leagues/{league_id}/standing` | Overall standing |
-| `GET` | `/leagues/{league_id}/standing/{week}` | Week standing |
-| `GET` | `/leagues/{league_id}/activity/{page}` | Paginated activity (`page` usually starts at `0`) |
-| `GET` | `/leagues/{league_id}/teams` | Teams/managers |
-| `GET` | `/leagues/{league_id}/teams/{team_id}` | Team roster and clauses |
-| `GET` | `/teams/{team_id}/money` | Team cash and investment |
-| `GET` | `/teams/{team_id}/lineup` | Current lineup |
-| `GET` | `/teams/{team_id}/lineup/week/{week}` | Lineup for a matchweek |
-| `PUT` | `/teams/{team_id}/lineup` | Replace current lineup |
+| `GET` | `/leagues...` | See [leagues](../../docs/api/leagues/README.md) |
+| `GET`/`PUT` | `/teams...` | See [teams](../../docs/api/teams/README.md) |
+| `GET` | `/players...` | See [players](../../docs/api/players/README.md) (catalog/history public) |
 | `GET` | `/calendar/current` | Current matchday (public Fantasy read) |
 | `GET` | `/calendar/weeks/{week}` | Fixtures for a matchday |
 | `GET` | `/calendar/weeks/{week}/stats` | Matchday stats and week points |
 
-Leagues endpoints are a thin authenticated proxy of LaLiga Fantasy. Layout:
+CRS: `api/` → `services/` → `repositories/` → `clients/laliga_fantasy.py`.
+New routes: [Adding endpoints](../../docs/api/adding-endpoints.md).
+OpenAPI: http://localhost:8001/docs — regenerate with
+`cd backend/api && uv run generate-openapi` ([details](../../docs/api/openapi.md)).
 
-`api/leagues.py` → `services/leagues.py` → `repositories/leagues.py` →
-`clients/laliga_fantasy.py`.
-
-Teams money/lineup use the same CRS pattern under `{CMP}/teams/...`:
-
-`api/teams.py` → `services/teams.py` → `repositories/teams.py` →
-`clients/laliga_fantasy.py`.
-
-See [`docs/api/leagues/`](../../docs/api/leagues/),
-[`docs/api/teams/`](../../docs/api/teams/), and
-[`docs/api/calendar/`](../../docs/api/calendar/) for feature docs and
-[`docs/api/openapi.md`](../../docs/api/openapi.md) for OpenAPI/Swagger.
-Use `uv run fantasy-leagues` for a local CLI summary (ranking, week standing,
-activity, teams), `uv run fantasy-teams` for money and lineup, and
-`uv run fantasy-calendar` for matchday fixtures and stats.
-
-## Live connectivity check
-
-With auth running, a paired LaLiga connection, and an internal JWT:
+Probe (bearer must not appear):
 
 ```bash
-# After POST /auth/token against auth (port 8000):
 curl -sS -H "Authorization: Bearer ${INTERNAL_JWT}" \
   http://localhost:8001/laliga/leagues-probe
 ```
 
-Expected JSON shape: `{"ok": true, "league_count": N, "league_ids": [...]}`.
-The LaLiga bearer must never appear in the response.
+## CLI
 
-## CLI: fantasy-leagues
-
-Fetches leagues, overall standing (with your position), last-week standing,
-activity, teams, and your squad via this API.
+Requires auth on `:8000` and this API on `:8001` (`--auth-base` / `--api-base`).
+JWT via `--jwt` / `INTERNAL_JWT`, or `FANTASY_SESSION` + `FANTASY_CSRF`.
 
 ```bash
 cd backend/api
-uv sync --all-extras
-
-# Option A — session cookies (exchanges /auth/token for you)
-export FANTASY_SESSION='…'
-export FANTASY_CSRF='…'
-uv run fantasy-leagues
-
-# Option B — already minted JWT
-export INTERNAL_JWT='…'
-uv run fantasy-leagues --jwt "$INTERNAL_JWT"
-
-# Useful flags
 uv run fantasy-leagues --league-id 123 --week 5 --json
-```
-
-Requires auth on `:8000` and this API on `:8001` (overridable with
-`--auth-base` / `--api-base`). If week is omitted, the CLI tries to infer
-the current/última jornada from the leagues or standing payload.
-
-## CLI: fantasy-teams
-
-Fetches team money, current lineup, and optional week lineup via this API.
-Resolves `team_id` from `GET /leagues` unless `--team-id` is set.
-
-```bash
-cd backend/api
-uv sync --all-extras
-
-# Option A — session cookies (exchanges /auth/token for you)
-export FANTASY_SESSION='…'
-export FANTASY_CSRF='…'
-uv run fantasy-teams
-
-# Option B — already minted JWT
-export INTERNAL_JWT='…'
-uv run fantasy-teams --jwt "$INTERNAL_JWT"
-
-# Useful flags
-uv run fantasy-teams --team-id 99 --week 5 --json
-uv run fantasy-teams --league-id 42 --week 5
-```
-
-## CLI: fantasy-calendar
-
-Fetches current matchday metadata, fixtures, and stats for a week via this API.
-When `--week` is omitted, the week comes from `GET /calendar/current`.
-
-```bash
-cd backend/api
-uv sync --all-extras
-
-export INTERNAL_JWT='…'
-uv run fantasy-calendar --jwt "$INTERNAL_JWT"
+uv run fantasy-teams --team-id 99 --week 5
+uv run fantasy-players --player-id 7 --league-id 42
 uv run fantasy-calendar --week 8 --json
 ```
 
-## OpenAPI / Swagger
-
-While the API is running, interactive docs are at:
-
-- Swagger UI: http://localhost:8001/docs
-- ReDoc: http://localhost:8001/redoc
-- Live schema: http://localhost:8001/openapi.json
-
-Input/output models live under `src/fantasy_api/schemas/`. Route docstrings
-and `response_model` annotations drive the Swagger schema. Regenerate the
-committed document (same content as `/openapi.json`) with:
-
-```bash
-cd backend/api
-uv run generate-openapi                 # writes ./openapi.json
-uv run generate-openapi --stdout        # print only
-```
-
-From the repo root, pre-commit runs the same generation via
-`uv run poe generate-openapi` when API sources change.
-
-Programmatic API: `fantasy_api.openapi.generate_openapi()` /
-`build_openapi_schema(app)`.
+Automated Keycloak + LaLiga pairing (from `backend/auth`):
+`uv run fantasy-browser-session leagues-analysis`.
 
 ## Tests
 

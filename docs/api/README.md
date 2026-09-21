@@ -2,25 +2,16 @@
 
 Application API docs for `backend/api` (`fantasy_api`).
 
-- [OpenAPI / Swagger](openapi.md) — schema generation, Swagger UI, committed
-  `openapi.json`
+- [Adding endpoints](adding-endpoints.md) — availability/auth, CRS, CLI
+- [OpenAPI / Swagger](openapi.md)
 - [Endpoint schemas](endpoint-schemas.md) — generated input/output reference
-  for every API route (from `openapi.json`)
-- [Leagues](leagues/README.md) — league routes, ranking, activity, teams
-- [Adding leagues endpoints](leagues/adding-leagues-endpoints.md) — CRS
-  checklist for new league reads
-- [Teams](teams/README.md) — team money and lineup routes
-- [Adding teams endpoints](teams/adding-teams-endpoints.md) — CRS checklist
-  for team money/lineup
-- [Calendar](calendar/README.md) — matchday, fixtures, and stats routes
-- [Adding calendar endpoints](calendar/adding-calendar-endpoints.md) — CRS
-  checklist for public Fantasy reads behind the internal JWT
+  for every API route
+- [Leagues](leagues/README.md) · [Teams](teams/README.md) ·
+  [Players](players/README.md) · [Calendar](calendar/README.md)
+- [Proxy endpoint pitfalls](proxy-endpoint-pitfalls.md)
 
-Auth and pairing live under [Authentication](../authentication/authentication.md).
-Cross-cutting endpoint patterns:
+Auth: [Authentication](../authentication/authentication.md),
 [Developing authenticated endpoints](../authentication/developing-authenticated-endpoints.md).
-
-## Quick links
 
 | Resource | URL / path |
 |----------|------------|
@@ -30,26 +21,12 @@ Cross-cutting endpoint patterns:
 | Committed schema | [`backend/api/openapi.json`](../../backend/api/openapi.json) |
 | Service README | [`backend/api/README.md`](../../backend/api/README.md) |
 
-## Layout in code
+Leagues, teams, players, and calendar share `repositories/paths.py` and payload
+helpers where applicable. Players catalog and market value are public upstream;
+calendar matchday reads are public upstream but still require an internal JWT
+at the API boundary. League, team, and player league-card routes exchange a
+LaLiga bearer.
 
-```text
-backend/api/src/fantasy_api/
-├── api/            # FastAPI controllers (routes)
-├── services/       # use cases (JWT → LaLiga bearer → repository)
-├── repositories/   # Fantasy path construction
-├── clients/        # auth credentials + LaligaFantasyClient
-├── schemas/        # Pydantic request/response models (OpenAPI source)
-├── openapi.py      # generate_openapi / build_openapi_schema
-└── cli/            # fantasy-leagues / fantasy-teams / fantasy-calendar CLIs
-```
-
-Leagues and teams share path encoding (`repositories/paths.py`), bearer
-orchestration (`services/laliga.py`), and payload helpers
-(`schemas/payload.py`, `api/payload.py`).
-
-## Authentication for API calls
-
-1. Log in at auth (`POST /auth/token` with session + CSRF) to get an internal JWT.
-2. Call this API with `Authorization: Bearer <internal JWT>`.
-3. LaLiga-backed routes fetch a short-lived Fantasy bearer from auth
-   (`GET /internal/laliga/bearer`); the bearer is never returned to clients.
+Callers mint an internal JWT via `POST /auth/token`, then send
+`Authorization: Bearer <jwt>`. Authenticated local login:
+`uv run fantasy-browser-session` from `backend/auth`.

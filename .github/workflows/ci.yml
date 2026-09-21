@@ -24,5 +24,22 @@ jobs:
       - name: Lint
         run: uv run poe lint
 
+      - name: Format
+        run: uv run black --check --diff backend main.py
+
+      - name: OpenAPI
+        run: uv run poe generate-openapi
+
       - name: Test
         run: uv run poe test
+
+  docker:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Build auth image
+        run: docker build -f backend/auth/Dockerfile backend/auth
+
+      - name: Build API image
+        run: docker build -f backend/api/Dockerfile backend/api

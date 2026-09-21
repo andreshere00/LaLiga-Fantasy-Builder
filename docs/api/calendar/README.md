@@ -14,8 +14,10 @@ Upstream paths:
 
 ## Guides
 
-- [Adding calendar endpoints](adding-calendar-endpoints.md) — extend the CRS
-  stack and regenerate OpenAPI
+- [Adding endpoints](../adding-endpoints.md) — shared CRS checklist for new
+  routes
+- [Adding calendar endpoints](adding-calendar-endpoints.md) — calendar-specific
+  upstream paths and public-read notes
 - [OpenAPI / Swagger](../openapi.md) — schema and Swagger sync
 - [Developing authenticated endpoints](../../authentication/developing-authenticated-endpoints.md)
   — internal JWT gate (calendar skips the LaLiga bearer hop)

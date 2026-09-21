@@ -725,3 +725,34 @@ async def test_jwks_rejects_expired_token(rsa_keys: tuple[bytes, bytes]) -> None
     # Act / Assert
     with pytest.raises(ValidationError):
         await validator.validate(token, policy=POLICY, audience=CLIENT_ID)
+
+
+def test_vault_rejects_short_key() -> None:
+    # Arrange / Act / Assert
+    with pytest.raises(ValueError, match="32 bytes"):
+        AesGcmTokenVault(b"short")
+
+
+def test_vault_from_base64_rejects_empty_key() -> None:
+    # Arrange / Act / Assert
+    with pytest.raises(ValueError, match="required"):
+        AesGcmTokenVault.from_base64("")
+
+
+def test_vault_open_rejects_short_blob() -> None:
+    # Arrange
+    vault = AesGcmTokenVault(b"k" * 32)
+
+    # Act / Assert
+    with pytest.raises(ValueError, match="too short"):
+        vault.open(b"\x01short")
+
+
+def test_vault_open_rejects_unsupported_version() -> None:
+    # Arrange
+    vault = AesGcmTokenVault(b"k" * 32)
+    blob = bytes([9]) + b"\x00" * 40
+
+    # Act / Assert
+    with pytest.raises(ValueError, match="unsupported vault envelope version"):
+        vault.open(blob)

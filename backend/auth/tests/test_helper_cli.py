@@ -132,6 +132,58 @@ def test_read_callback_via_clipboard_uses_pbpaste(
     assert len(result) > 100
 
 
+def test_read_callback_clipboard_falls_back_to_terminal(
+    monkeypatch: pytest.MonkeyPatch,
+    tmp_path: Path,
+) -> None:
+    # Arrange
+    monkeypatch.setattr(helper, "DEFAULT_CALLBACK_FILE", tmp_path / "missing.txt")
+    monkeypatch.setattr(helper, "_pbpaste", lambda: "not-a-callback")
+    lines = iter(
+        [
+            "\n",
+            f"{REDIRECT}/?state=s&code={LONG_CODE}\n",
+        ]
+    )
+    monkeypatch.setattr(helper.sys.stdin, "readline", lambda: next(lines))
+    args = _ns(clipboard=True)
+
+    # Act
+    result = helper._read_callback(args, redirect_uri=REDIRECT)
+
+    # Assert
+    assert LONG_CODE in result
+
+
+def test_read_terminal_callback_joins_wrapped_lines(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    # Arrange
+    callback = f"{REDIRECT}/?state=s&code={LONG_CODE}"
+    chunks = iter([callback[:50] + "\n", callback[50:] + "\n"])
+    monkeypatch.setattr(helper.sys.stdin, "readline", lambda: next(chunks, ""))
+
+    # Act
+    result = helper._read_terminal_callback(redirect_uri=REDIRECT)
+
+    # Assert
+    assert result == callback
+
+
+def test_read_terminal_callback_blank_line_stops(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    # Arrange
+    lines = iter(["partial\n", "\n"])
+    monkeypatch.setattr(helper.sys.stdin, "readline", lambda: next(lines, ""))
+
+    # Act
+    result = helper._read_terminal_callback(redirect_uri=REDIRECT)
+
+    # Assert
+    assert result == "partial"
+
+
 def test_read_callback_via_clipboard_falls_back_to_file(
     monkeypatch: pytest.MonkeyPatch,
     tmp_path: Path,
@@ -150,6 +202,19 @@ def test_read_callback_via_clipboard_falls_back_to_file(
 
     # Assert
     assert result == callback
+
+
+def test_pick_complete_callback_full_code_returns_cleaned() -> None:
+    # Arrange
+    raw = f"noise {REDIRECT}/?state=s&code={LONG_CODE} trailing"
+
+    # Act
+    result = helper.pick_complete_callback(raw, redirect_uri=REDIRECT)
+
+    # Assert
+    assert result is not None
+    assert result.startswith(REDIRECT)
+    assert LONG_CODE in result
 
 
 def test_callback_looks_complete_rejects_short_code() -> None:
@@ -583,6 +648,17 @@ def test_parse_callback_bare_query_string_without_question() -> None:
 
     # Assert
     assert result["code"] == "bare"
+
+
+def test_pick_complete_callback_https_url_returns_none() -> None:
+    # Arrange
+    raw = "https://login.laliga.es/oauth2/v2.0/authorize?code=short"
+
+    # Act
+    result = helper.pick_complete_callback(raw, redirect_uri=REDIRECT)
+
+    # Assert
+    assert result is None
 
 
 def test_parse_callback_url_with_query_in_path_split() -> None:

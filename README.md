@@ -1,96 +1,90 @@
 # LaLiga Fantasy Builder
 
-Monorepo for **LaLiga Fantasy Builder** (`laliga_fantasy_builder`).
+Monorepo for a **LaLiga Fantasy** companion API: league tables, squads, team
+money and lineups, and a player catalog, proxied from Fantasy onto a stable
+OpenAPI surface.
 
-Backend services are split so **auth can be deployed on its own**:
+## What it offers
 
-- [`backend/auth/`](backend/auth/) — authentication / LaLiga pairing service (`fantasy_auth`)
-- [`backend/api/`](backend/api/) — main application API (`fantasy_api`; internal JWT consumer)
-- [`frontend/`](frontend/) — Bun + TypeScript (reserved)
-- [`docker/`](docker/) — Keycloak realm import
-- [`assets/`](assets/) — public LALIGA snapshots / fixtures
-- [`cli/`](cli/) — helper notes (CLIs ship from `backend/auth` via uv)
+| Area | You can |
+|------|---------|
+| **Leagues** | List your competitions, overall and week standings, activity, rival teams, and a squad |
+| **Teams** | Read cash/investment, current and matchweek lineup, and optionally replace a lineup |
+| **Players** | Browse the public catalog and market-value history; open a league-contextual player card |
+
+Interactive docs: http://localhost:8001/docs (Swagger) once the API is running.
+Feature notes: [leagues](docs/api/leagues/README.md),
+[teams](docs/api/teams/README.md), [players](docs/api/players/README.md).
+
+Local CLIs (call the API, not Fantasy directly):
+
+```bash
+cd backend/api
+uv run fantasy-leagues --json          # ranking, week standing, activity, squads
+uv run fantasy-teams --week 5          # money + lineup
+uv run fantasy-players --player-id 7   # catalog / market value (public)
+```
+
+Signed-in analysis (Keycloak demo user, then LaLiga consent in your browser):
+
+```bash
+cd backend/auth
+uv run fantasy-browser-session leagues-analysis --json
+uv run fantasy-browser-session teams-analysis --json
+```
+
+Catalog and market-value reads need no login. League, team, and league-card
+routes need a paired LaLiga account.
+
+## Quick start
+
+Docker (Keycloak + auth + API):
+
+```bash
+cp backend/auth/.env.example backend/auth/.env
+cp backend/api/.env.example backend/api/.env
+docker compose --profile apps up --build
+```
+
+- API: http://localhost:8001/docs
+- App login: http://localhost:8000/auth/login (`demo` / `demo`)
+- Keycloak admin: http://localhost:8080 (`admin` / `admin`)
+
+Production-like extras (Postgres, Redis, OTEL): set `USE_MEMORY_STORE=false`,
+vault key, and JWT PEMs in `backend/auth/.env`, then
+`docker compose --profile full up --build`.
+
+Without Compose, run both services with `uv` (Keycloak still via
+`docker compose up -d`):
+
+```bash
+cd backend/auth && uv sync --all-extras && uv run uvicorn fantasy_auth.main:app --reload --port 8000
+cd backend/api  && uv sync --all-extras && uv run uvicorn fantasy_api.main:app --reload --port 8001
+```
+
+Login and pairing details: [`backend/auth/README.md`](backend/auth/README.md).
+
+## Repository
+
+| Path | Role |
+|------|------|
+| [`backend/api/`](backend/api/) | Application API (`fantasy_api`) — leagues, teams, players |
+| [`backend/auth/`](backend/auth/) | Login, sessions, LaLiga pairing (deployable on its own) |
+| [`docs/`](docs/) | Architecture, API, and auth documentation |
+| [`docker/`](docker/) | Keycloak realm import |
+| [`assets/`](assets/) | Sample Fantasy payloads |
+| [`frontend/`](frontend/) | Reserved (Bun + TypeScript) |
 
 ## Documentation
 
-- [`docs/README.md`](docs/README.md) — documentation index
-- [`docs/authentication/`](docs/authentication/) — auth flows and endpoint patterns
-- [`docs/api/`](docs/api/) — Fantasy Builder API, OpenAPI/Swagger, leagues
-- [`docs/architecture.md`](docs/architecture.md) — services, trust boundaries,
-  persistence, and request flows
-
-## Quick start (auth service)
-
-```bash
-# IdP
-docker compose up -d
-
-# Auth API
-cd backend/auth
-cp .env.example .env
-export TOKEN_VAULT_KEY_BASE64=$(openssl rand -base64 32)
-uv sync --all-extras
-uv run uvicorn fantasy_auth.main:app --reload --port 8000
-```
-
-- App login: http://localhost:8000/auth/login (`demo` / `demo` on local Keycloak)
-- Admin: http://localhost:8080 (`admin` / `admin`)
-
-Optional: build/run auth in Docker (`docker compose --profile full up --build`).
-
-## Pair LaLiga
-
-Automated local setup and pairing:
-
-```bash
-./scripts/authenticate-laliga.sh
-```
-
-Equivalent CLI command from `backend/auth`:
-
-```bash
-uv run authenticate-laliga
-```
-
-Both commands start the local prerequisites, open application login, run the
-LaLiga PKCE helper, and verify the connection. Browser login and consent remain
-interactive; the CLI securely prompts for the session and CSRF cookie values.
-
-Manual pairing against an already-running auth service:
-
-```bash
-export FANTASY_SESSION='…'
-export FANTASY_CSRF='…'
-cd backend/auth
-uv run pair-laliga
-```
-
-## Auth flows
-
-1. App login: `GET /auth/login` → IdP → `GET /auth/callback` sets
-   `HttpOnly; Secure; SameSite` (default `Lax`, configurable via
-   `COOKIE_SAMESITE`) session cookie plus CSRF token. App ID tokens are
-   verified against `APP_OIDC_JWKS_URL` (signature, iss, aud, exp, nonce).
-2. Pairing: `POST /laliga/pairings` (session + CSRF) returns one-time
-   `{pairing_id, secret, nonce}` valid for 10 minutes.
-3. Helper / `pair-laliga`: PKCE against LaLiga B2C, then complete pairing.
-4. Backend verifies JWKS, confirms `GET /api/v4/user/me`, seals tokens (AES-GCM).
-5. Cross-service: browser `POST /auth/token` → internal JWT; Fantasy API verifies
-   JWKS and calls `GET /internal/laliga/bearer` with JWT + `X-Service-Token`.
-
-No LALIGA passwords or ROPC. Prefer `access_token`; `id_token` fallback via
-`LALIGA_ALLOW_ID_TOKEN_FALLBACK=true`.
-
-## Why auth is separate
-
-Auth is a BFF with different scaling, secrets, and release cadence than the
-main Fantasy Builder API. Keeping it under `backend/auth/` (same monorepo,
-own image) gives independent deploys without the overhead of a nested git
-repository. If you later need a fully separate remote, extract `backend/auth`
-to its own repo; the package boundary is already clean.
+- [`docs/README.md`](docs/README.md) — index
+- [`docs/api/`](docs/api/) — routes, OpenAPI, adding endpoints
+- [`docs/architecture.md`](docs/architecture.md) — services and request flows
+- [`docs/authentication/`](docs/authentication/) — how login and pairing work
 
 ## Tests
 
 ```bash
+cd backend/api && uv run pytest --cov=src --cov-report=term-missing --cov-fail-under=80
 cd backend/auth && uv run pytest
 ```

@@ -27,13 +27,15 @@ audience `fantasy-api`).
 | `fantasy_api.schemas.*` | Pydantic models registered as components |
 | `fantasy_api.openapi.build_openapi_schema` | Tags, Bearer scheme, shared errors |
 
-Important modules:
+Pydantic models live under `fantasy_api.schemas`. Generation:
+`fantasy_api.openapi.build_openapi_schema`.
 
-- [`backend/api/src/fantasy_api/schemas/common.py`](../../backend/api/src/fantasy_api/schemas/common.py)
-- [`backend/api/src/fantasy_api/schemas/leagues.py`](../../backend/api/src/fantasy_api/schemas/leagues.py)
-- [`backend/api/src/fantasy_api/schemas/teams.py`](../../backend/api/src/fantasy_api/schemas/teams.py)
-- [`backend/api/src/fantasy_api/schemas/calendar.py`](../../backend/api/src/fantasy_api/schemas/calendar.py)
-- [`backend/api/src/fantasy_api/openapi.py`](../../backend/api/src/fantasy_api/openapi.py)
+After regenerating `openapi.json`, refresh the human-readable route reference:
+
+```bash
+uv run poe generate-endpoint-schemas
+# or: cd backend/api && uv run generate-endpoint-schemas
+```
 
 ## Regenerate the committed document
 
@@ -93,6 +95,9 @@ response models.
    [`docs/api/endpoint-schemas.md`](endpoint-schemas.md) if it changed.
 7. Confirm the operation appears under http://localhost:8001/docs and in
    [Endpoint schemas](endpoint-schemas.md).
+
+For proxy-specific Swagger mistakes (docstring leakage, missing 503, CLI text in
+`Path` descriptions), see [Proxy endpoint pitfalls](proxy-endpoint-pitfalls.md).
 
 ## Sample response shapes
 

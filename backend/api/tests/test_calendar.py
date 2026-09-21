@@ -16,10 +16,12 @@ from fantasy_api.config import Settings
 from fantasy_api.main import create_app
 from fantasy_api.repositories.calendar import CalendarRepository
 from fantasy_api.repositories.leagues import LeaguesRepository
+from fantasy_api.repositories.players import PlayersRepository
 from fantasy_api.repositories.teams import TeamsRepository
 from fantasy_api.security.internal_jwt import StaticInternalJwtValidator
 from fantasy_api.services.calendar import CalendarService
 from fantasy_api.services.leagues import LeaguesService
+from fantasy_api.services.players import PlayersService
 from fantasy_api.services.teams import TeamsService
 from fastapi.testclient import TestClient
 
@@ -173,6 +175,10 @@ def build_calendar_container(
         ),
         calendar_service=CalendarService(
             CalendarRepository(laliga_client, competition_id=1),
+        ),
+        players_service=PlayersService(
+            credentials,
+            PlayersRepository(laliga_client, competition_id=1),
         ),
     )
 

@@ -587,6 +587,100 @@ Each item:
 | `visitorScore` | integer | no |  |
 
 
+## Tag: `players`
+
+LaLiga Fantasy player catalog, market value, and league cards. Catalog and market value are public; league cards are authenticated.
+
+### `GET` `/players`
+
+List competition players
+
+**Security:** none
+
+#### Inputs
+
+No path, query, or body parameters.
+
+#### Outputs
+
+**HTTP 200:** array of `CatalogPlayer`
+
+Each item:
+
+| Field | Type | Required | Description |
+|-------|------|----------|-------------|
+| `id` | string | no |  |
+| `nickname` | string | no |  |
+| `name` | string | no |  |
+| `slug` | string | no |  |
+| `positionId` | integer | no |  |
+| `teamId` | integer | no |  |
+| `team` | object | no |  |
+| `playerStatus` | string | no |  |
+| `points` | integer | no |  |
+| `averagePoints` | number | no |  |
+| `weekPoints` | any | no |  |
+| `marketValue` | integer | no |  |
+| `lastSeasonPoints` | integer | no |  |
+| `images` | object | no |  |
+| `lastStats` | array[any] | no |  |
+
+
+### `GET` `/players/{player_id}/league/{league_id}`
+
+Get player card contextualized to a league
+
+**Security:** HTTP Bearer (internal JWT)
+
+#### Inputs
+
+| Source | Name | Type | Required | Constraints | Description |
+|--------|------|------|----------|-------------|-------------|
+| path | `player_id` | string | yes |  | Master footballer identifier. |
+| path | `league_id` | string | yes |  | Fantasy league identifier. |
+
+#### Outputs
+
+**HTTP 200:** `LeaguePlayer`
+
+| Field | Type | Required | Description |
+|-------|------|----------|-------------|
+| `playerTeamId` | string | no |  |
+| `buyoutClause` | integer | no |  |
+| `buyoutClauseLockedEndTime` | string | no |  |
+| `isShielded` | boolean | no |  |
+| `managerId` | integer | no |  |
+| `manager` | object | no |  |
+| `playerMarket` | object | no |  |
+| `playerMaster` | object | no |  |
+
+Full nested fields: [`LeaguePlayer`](#leagueplayer).
+
+
+### `GET` `/players/{player_id}/market-value`
+
+Get player market-value history
+
+**Security:** none
+
+#### Inputs
+
+| Source | Name | Type | Required | Constraints | Description |
+|--------|------|------|----------|-------------|-------------|
+| path | `player_id` | string | yes |  | Master footballer identifier. |
+
+#### Outputs
+
+**HTTP 200:** array of `PlayerMarketValue`
+
+Each item:
+
+| Field | Type | Required | Description |
+|-------|------|----------|-------------|
+| `date` | string | no |  |
+| `marketValue` | integer | no |  |
+
+
 ## Component schemas
 
 Nested models referenced by the operations above. All Fantasy proxy models use `extra: allow` in Pydantic — additional upstream fields may appear at runtime without being listed here.
@@ -606,6 +700,26 @@ Nested models referenced by the operations above. All Fantasy proxy models use `
 | `msg` | string | no |  |
 | `message` | string | no |  |
 | `description` | string | no |  |
+
+### `CatalogPlayer`
+
+| Field | Type | Required | Description |
+|-------|------|----------|-------------|
+| `id` | string | no |  |
+| `nickname` | string | no |  |
+| `name` | string | no |  |
+| `slug` | string | no |  |
+| `positionId` | integer | no |  |
+| `teamId` | integer | no |  |
+| `team` | object | no |  |
+| `playerStatus` | string | no |  |
+| `points` | integer | no |  |
+| `averagePoints` | number | no |  |
+| `weekPoints` | any | no |  |
+| `marketValue` | integer | no |  |
+| `lastSeasonPoints` | integer | no |  |
+| `images` | object | no |  |
+| `lastStats` | array[any] | no |  |
 
 ### `ClubTeam`
 
@@ -700,6 +814,19 @@ Nested models referenced by the operations above. All Fantasy proxy models use `
 | Field | Type | Required | Description |
 |-------|------|----------|-------------|
 | `buyoutClause` | boolean | no |  |
+
+### `LeaguePlayer`
+
+| Field | Type | Required | Description |
+|-------|------|----------|-------------|
+| `playerTeamId` | string | no |  |
+| `buyoutClause` | integer | no |  |
+| `buyoutClauseLockedEndTime` | string | no |  |
+| `isShielded` | boolean | no |  |
+| `managerId` | integer | no |  |
+| `manager` | object | no |  |
+| `playerMarket` | object | no |  |
+| `playerMaster` | object | no |  |
 
 ### `LeagueTeam`
 
@@ -843,6 +970,13 @@ Nested models referenced by the operations above. All Fantasy proxy models use `
 | `expirationDate` | string | no |  |
 | `numberOfOffers` | integer | no |  |
 | `directOffer` | boolean | no |  |
+
+### `PlayerMarketValue`
+
+| Field | Type | Required | Description |
+|-------|------|----------|-------------|
+| `date` | string | no |  |
+| `marketValue` | integer | no |  |
 
 ### `PlayerMaster`
 

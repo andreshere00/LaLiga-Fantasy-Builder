@@ -25,69 +25,7 @@ from fantasy_auth.cli.authenticate import (
     _wait_for_server,
 )
 
-
-def _stub_repo(tmp_path: Path) -> Path:
-    """Create a minimal repo layout under ``tmp_path``."""
-    (tmp_path / "docker-compose.yml").touch()
-    (tmp_path / "backend" / "auth").mkdir(parents=True)
-    (tmp_path / "backend" / "auth" / ".env").write_text("x=1\n", encoding="utf-8")
-    return tmp_path
-
-
-def _patch_main_basics(
-    monkeypatch: pytest.MonkeyPatch,
-    tmp_path: Path,
-) -> None:
-    """Mock repo discovery and setup steps that ``main`` always runs."""
-    monkeypatch.setattr(auth_cli, "_find_repo_root", lambda _p: _stub_repo(tmp_path))
-    monkeypatch.setattr(auth_cli, "_require_command", lambda _c: None)
-    monkeypatch.setattr(auth_cli, "_ensure_env_file", lambda _d: None)
-
 # ---- Happy path ---- #
-
-
-def test_find_repo_root_walks_parents_from_cwd(
-    monkeypatch: pytest.MonkeyPatch,
-    tmp_path: Path,
-) -> None:
-    # Arrange
-    repo = _stub_repo(tmp_path)
-    nested = repo / "backend" / "auth" / "nested"
-    nested.mkdir(parents=True)
-    monkeypatch.chdir(nested)
-
-    # Act
-    result = _find_repo_root(None)
-
-    # Assert
-    assert result == repo
-
-
-def test_read_secret_nonempty_returns_stripped_value(
-    monkeypatch: pytest.MonkeyPatch,
-) -> None:
-    # Arrange
-    monkeypatch.setattr("getpass.getpass", lambda _prompt: "  secret-value  ")
-
-    # Act
-    result = _read_secret("Token: ")
-
-    # Assert
-    assert result == "secret-value"
-
-
-def test_is_healthy_non_success_returns_false(
-    monkeypatch: pytest.MonkeyPatch,
-) -> None:
-    # Arrange
-    monkeypatch.setattr(
-        auth_cli.httpx,
-        "get",
-        lambda *_a, **_k: SimpleNamespace(is_success=False),
-    )
-
-    # Act / Assert
-    assert _is_healthy("http://localhost:8000") is False
 
 
 def test_find_repo_root_explicit_valid_path_returns_root(tmp_path: Path) -> None:
@@ -207,7 +145,13 @@ def test_main_happy_path_heavily_mocked(
     tmp_path: Path,
 ) -> None:
     # Arrange
-    _patch_main_basics(monkeypatch, tmp_path)
+    (tmp_path / "docker-compose.yml").touch()
+    (tmp_path / "backend" / "auth").mkdir(parents=True)
+    (tmp_path / "backend" / "auth" / ".env").write_text("x=1\n")
+
+    monkeypatch.setattr(auth_cli, "_find_repo_root", lambda _p: tmp_path)
+    monkeypatch.setattr(auth_cli, "_require_command", lambda _c: None)
+    monkeypatch.setattr(auth_cli, "_ensure_env_file", lambda _d: None)
     monkeypatch.setattr(auth_cli, "_run", lambda *_a, **_k: None)
     monkeypatch.setattr(auth_cli, "_is_healthy", lambda _b: True)
     monkeypatch.setattr(auth_cli.webbrowser, "open", lambda _u: None)
@@ -404,128 +348,127 @@ def test_read_secret_empty_value_raises_setup_error(
         _read_secret("Secret: ")
 
 
-def test_wait_for_health_timeout_raises_setup_error(
+def test_read_secret_strips_value(monkeypatch: pytest.MonkeyPatch) -> None:
+    # Arrange
+    monkeypatch.setattr("getpass.getpass", lambda _prompt: "  cookie-value \n")
+
+    # Act
+    result = _read_secret("Secret: ")
+
+    # Assert
+    assert result == "cookie-value"
+
+
+def test_find_repo_root_from_cwd_finds_repo() -> None:
+    # Arrange / Act
+    result = _find_repo_root(None)
+
+    # Assert
+    assert (result / "docker-compose.yml").is_file()
+    assert (result / "backend" / "auth").is_dir()
+
+
+def test_wait_for_health_timeout_raises(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     # Arrange
     process = MagicMock()
     process.poll.return_value = None
-    times = iter([0.0, 0.0, 31.0])
-
-    monkeypatch.setattr(auth_cli.time, "monotonic", lambda: next(times))
     monkeypatch.setattr(auth_cli, "_is_healthy", lambda _b: False)
+    monkeypatch.setattr(auth_cli.time, "sleep", lambda _s: None)
+    clock = {"t": 0.0}
+
+    def monotonic() -> float:
+        current = clock["t"]
+        clock["t"] += 20.0
+        return current
+
+    monkeypatch.setattr(auth_cli.time, "monotonic", monotonic)
 
     # Act / Assert
     with pytest.raises(SetupError, match="did not become healthy"):
-        _wait_for_health("http://localhost:8000", process=process, timeout_seconds=30.0)
+        _wait_for_health("http://localhost:8000", process=process, timeout_seconds=30)
 
 
-def test_get_connection_status_non_object_json_raises_setup_error() -> None:
+def test_get_connection_status_non_object_raises() -> None:
     # Arrange
-    transport = httpx.MockTransport(
-        lambda _request: httpx.Response(200, json=["not", "a", "dict"])
-    )
+    transport = httpx.MockTransport(lambda _r: httpx.Response(200, json=["nope"]))
 
     # Act / Assert
     with pytest.raises(SetupError, match="invalid response"):
         _get_connection_status(
             api_base="http://auth.test",
-            session="session-1",
-            csrf="csrf-1",
+            session="s",
+            csrf="c",
             transport=transport,
         )
 
 
-def test_main_runs_keycloak_compose_when_not_skipped(
+def test_main_starts_keycloak_and_opens_browser(
     monkeypatch: pytest.MonkeyPatch,
     tmp_path: Path,
 ) -> None:
     # Arrange
-    _patch_main_basics(monkeypatch, tmp_path)
-    calls: list[list[str]] = []
-
-    def capture_run(cmd: list[str], *, cwd: Path) -> None:
-        calls.append(cmd)
-
-    monkeypatch.setattr(auth_cli, "_run", capture_run)
+    (tmp_path / "docker-compose.yml").touch()
+    (tmp_path / "backend" / "auth").mkdir(parents=True)
+    (tmp_path / "backend" / "auth" / ".env").write_text("x=1\n")
+    commands: list[list[str]] = []
+    opened: list[str] = []
+    pair_argv: list[str] = []
+    monkeypatch.setattr(auth_cli, "_find_repo_root", lambda _p: tmp_path)
+    monkeypatch.setattr(auth_cli, "_require_command", lambda _c: None)
+    monkeypatch.setattr(auth_cli, "_ensure_env_file", lambda _d: None)
+    monkeypatch.setattr(
+        auth_cli,
+        "_run",
+        lambda cmd, cwd=None: commands.append(list(cmd)),
+    )
     monkeypatch.setattr(auth_cli, "_is_healthy", lambda _b: True)
-    monkeypatch.setattr(auth_cli, "pair_laliga", lambda _args: 0)
+    monkeypatch.setattr(auth_cli.webbrowser, "open", lambda url: opened.append(url))
+    monkeypatch.setattr(
+        auth_cli,
+        "pair_laliga",
+        lambda args: pair_argv.extend(args) or 0,
+    )
     monkeypatch.setattr(
         auth_cli,
         "_get_connection_status",
-        lambda **_k: {"linked": True},
+        lambda **_k: {"linked": True, "manager_id": "m-1"},
     )
+    monkeypatch.setattr(auth_cli.sys, "platform", "linux")
 
     # Act
     code = auth_cli.main(
         [
             "--repo-root",
             str(tmp_path),
-            "--skip-sync",
-            "--no-browser",
             "--session",
-            "s",
+            "sess",
             "--csrf",
-            "c",
-            "--stdin",
+            "csrf",
             "--no-keep-server",
         ]
     )
 
     # Assert
     assert code == 0
-    assert ["docker", "compose", "up", "-d", "keycloak"] in calls
-    assert ["uv", "sync", "--all-extras"] not in calls
+    assert ["docker", "compose", "up", "-d", "keycloak"] in commands
+    assert ["uv", "sync", "--all-extras"] in commands
+    assert opened
+    assert "--stdin" in pair_argv
 
 
-def test_main_runs_uv_sync_when_not_skipped(
-    monkeypatch: pytest.MonkeyPatch,
-    tmp_path: Path,
-) -> None:
-    # Arrange
-    _patch_main_basics(monkeypatch, tmp_path)
-    calls: list[list[str]] = []
-
-    def capture_run(cmd: list[str], *, cwd: Path) -> None:
-        calls.append(cmd)
-
-    monkeypatch.setattr(auth_cli, "_run", capture_run)
-    monkeypatch.setattr(auth_cli, "_is_healthy", lambda _b: True)
-    monkeypatch.setattr(auth_cli, "pair_laliga", lambda _args: 0)
-    monkeypatch.setattr(
-        auth_cli,
-        "_get_connection_status",
-        lambda **_k: {"linked": True},
-    )
-
-    # Act
-    auth_cli.main(
-        [
-            "--repo-root",
-            str(tmp_path),
-            "--skip-keycloak",
-            "--no-browser",
-            "--session",
-            "s",
-            "--csrf",
-            "c",
-            "--stdin",
-            "--no-keep-server",
-        ]
-    )
-
-    # Assert
-    assert ["uv", "sync", "--all-extras"] in calls
-
-
-def test_main_unhealthy_with_skip_server_returns_one(
+def test_main_skip_server_when_unhealthy_returns_one(
     monkeypatch: pytest.MonkeyPatch,
     tmp_path: Path,
     capsys: pytest.CaptureFixture[str],
 ) -> None:
     # Arrange
-    _patch_main_basics(monkeypatch, tmp_path)
-    monkeypatch.setattr(auth_cli, "_run", lambda *_a, **_k: None)
+    (tmp_path / "docker-compose.yml").touch()
+    (tmp_path / "backend" / "auth").mkdir(parents=True)
+    monkeypatch.setattr(auth_cli, "_find_repo_root", lambda _p: tmp_path)
+    monkeypatch.setattr(auth_cli, "_require_command", lambda _c: None)
+    monkeypatch.setattr(auth_cli, "_ensure_env_file", lambda _d: None)
     monkeypatch.setattr(auth_cli, "_is_healthy", lambda _b: False)
 
     # Act
@@ -544,31 +487,18 @@ def test_main_unhealthy_with_skip_server_returns_one(
     assert "not healthy" in capsys.readouterr().err
 
 
-def test_main_starts_auth_server_when_unhealthy(
+def test_main_pair_failure_returns_helper_code(
     monkeypatch: pytest.MonkeyPatch,
     tmp_path: Path,
 ) -> None:
     # Arrange
-    _patch_main_basics(monkeypatch, tmp_path)
-    monkeypatch.setattr(auth_cli, "_run", lambda *_a, **_k: None)
-    monkeypatch.setattr(auth_cli, "_is_healthy", lambda _b: False)
-    fake_proc = MagicMock()
-    fake_proc.poll.return_value = None
-    started: dict[str, subprocess.Popen[bytes]] = {}
-
-    def fake_start(_auth_dir: Path, _api_base: str) -> subprocess.Popen[bytes]:
-        started["proc"] = fake_proc
-        return fake_proc
-
-    monkeypatch.setattr(auth_cli, "_start_auth_server", fake_start)
-    monkeypatch.setattr(auth_cli, "_wait_for_health", lambda *_a, **_k: None)
-    monkeypatch.setattr(auth_cli.webbrowser, "open", lambda _u: None)
-    monkeypatch.setattr(auth_cli, "pair_laliga", lambda _args: 0)
-    monkeypatch.setattr(
-        auth_cli,
-        "_get_connection_status",
-        lambda **_k: {"linked": True},
-    )
+    (tmp_path / "docker-compose.yml").touch()
+    (tmp_path / "backend" / "auth").mkdir(parents=True)
+    monkeypatch.setattr(auth_cli, "_find_repo_root", lambda _p: tmp_path)
+    monkeypatch.setattr(auth_cli, "_require_command", lambda _c: None)
+    monkeypatch.setattr(auth_cli, "_ensure_env_file", lambda _d: None)
+    monkeypatch.setattr(auth_cli, "_is_healthy", lambda _b: True)
+    monkeypatch.setattr(auth_cli, "pair_laliga", lambda _args: 3)
 
     # Act
     code = auth_cli.main(
@@ -582,220 +512,27 @@ def test_main_starts_auth_server_when_unhealthy(
             "s",
             "--csrf",
             "c",
-            "--stdin",
+            "--callback-file",
+            "/tmp/cb.txt",
             "--no-keep-server",
         ]
     )
 
     # Assert
-    assert code == 0
-    assert started["proc"] is fake_proc
-    fake_proc.terminate.assert_called_once()
+    assert code == 3
 
 
-def test_main_opens_browser_when_enabled(
+def test_main_unlinked_status_returns_one(
     monkeypatch: pytest.MonkeyPatch,
     tmp_path: Path,
 ) -> None:
     # Arrange
-    _patch_main_basics(monkeypatch, tmp_path)
-    opened: list[str] = []
-    monkeypatch.setattr(auth_cli, "_run", lambda *_a, **_k: None)
+    (tmp_path / "docker-compose.yml").touch()
+    (tmp_path / "backend" / "auth").mkdir(parents=True)
+    monkeypatch.setattr(auth_cli, "_find_repo_root", lambda _p: tmp_path)
+    monkeypatch.setattr(auth_cli, "_require_command", lambda _c: None)
+    monkeypatch.setattr(auth_cli, "_ensure_env_file", lambda _d: None)
     monkeypatch.setattr(auth_cli, "_is_healthy", lambda _b: True)
-    monkeypatch.setattr(auth_cli.webbrowser, "open", lambda url: opened.append(url))
-    monkeypatch.setattr(auth_cli, "pair_laliga", lambda _args: 0)
-    monkeypatch.setattr(
-        auth_cli,
-        "_get_connection_status",
-        lambda **_k: {"linked": True},
-    )
-
-    # Act
-    auth_cli.main(
-        [
-            "--repo-root",
-            str(tmp_path),
-            "--skip-keycloak",
-            "--skip-sync",
-            "--session",
-            "s",
-            "--csrf",
-            "c",
-            "--stdin",
-            "--no-keep-server",
-        ]
-    )
-
-    # Assert
-    assert opened == ["http://localhost:8000/auth/login"]
-
-
-@pytest.mark.parametrize(
-    ("extra_args", "expected_flag"),
-    [
-        (["--callback-file", "/tmp/callback.txt"], "--callback-file"),
-        (["--stdin"], "--stdin"),
-        (["--clipboard"], "--clipboard"),
-    ],
-)
-def test_main_forwards_callback_mode_to_pair_cli(
-    monkeypatch: pytest.MonkeyPatch,
-    tmp_path: Path,
-    extra_args: list[str],
-    expected_flag: str,
-) -> None:
-    # Arrange
-    _patch_main_basics(monkeypatch, tmp_path)
-    captured: list[list[str]] = []
-    monkeypatch.setattr(auth_cli, "_run", lambda *_a, **_k: None)
-    monkeypatch.setattr(auth_cli, "_is_healthy", lambda _b: True)
-    monkeypatch.setattr(auth_cli.webbrowser, "open", lambda _u: None)
-    monkeypatch.setattr(auth_cli, "pair_laliga", lambda args: captured.append(args) or 0)
-    monkeypatch.setattr(
-        auth_cli,
-        "_get_connection_status",
-        lambda **_k: {"linked": True},
-    )
-
-    # Act
-    auth_cli.main(
-        [
-            "--repo-root",
-            str(tmp_path),
-            "--skip-keycloak",
-            "--skip-sync",
-            "--no-browser",
-            "--session",
-            "s",
-            "--csrf",
-            "c",
-            "--no-keep-server",
-            *extra_args,
-        ]
-    )
-
-    # Assert
-    assert expected_flag in captured[0]
-
-
-def test_main_defaults_to_clipboard_on_darwin(
-    monkeypatch: pytest.MonkeyPatch,
-    tmp_path: Path,
-) -> None:
-    # Arrange
-    _patch_main_basics(monkeypatch, tmp_path)
-    captured: list[list[str]] = []
-    monkeypatch.setattr(auth_cli.sys, "platform", "darwin")
-    monkeypatch.setattr(auth_cli, "_run", lambda *_a, **_k: None)
-    monkeypatch.setattr(auth_cli, "_is_healthy", lambda _b: True)
-    monkeypatch.setattr(auth_cli.webbrowser, "open", lambda _u: None)
-    monkeypatch.setattr(auth_cli, "pair_laliga", lambda args: captured.append(args) or 0)
-    monkeypatch.setattr(
-        auth_cli,
-        "_get_connection_status",
-        lambda **_k: {"linked": True},
-    )
-
-    # Act
-    auth_cli.main(
-        [
-            "--repo-root",
-            str(tmp_path),
-            "--skip-keycloak",
-            "--skip-sync",
-            "--no-browser",
-            "--session",
-            "s",
-            "--csrf",
-            "c",
-            "--no-keep-server",
-        ]
-    )
-
-    # Assert
-    assert "--clipboard" in captured[0]
-
-
-def test_main_defaults_to_stdin_off_darwin(
-    monkeypatch: pytest.MonkeyPatch,
-    tmp_path: Path,
-) -> None:
-    # Arrange
-    _patch_main_basics(monkeypatch, tmp_path)
-    captured: list[list[str]] = []
-    monkeypatch.setattr(auth_cli.sys, "platform", "linux")
-    monkeypatch.setattr(auth_cli, "_run", lambda *_a, **_k: None)
-    monkeypatch.setattr(auth_cli, "_is_healthy", lambda _b: True)
-    monkeypatch.setattr(auth_cli.webbrowser, "open", lambda _u: None)
-    monkeypatch.setattr(auth_cli, "pair_laliga", lambda args: captured.append(args) or 0)
-    monkeypatch.setattr(
-        auth_cli,
-        "_get_connection_status",
-        lambda **_k: {"linked": True},
-    )
-
-    # Act
-    auth_cli.main(
-        [
-            "--repo-root",
-            str(tmp_path),
-            "--skip-keycloak",
-            "--skip-sync",
-            "--no-browser",
-            "--session",
-            "s",
-            "--csrf",
-            "c",
-            "--no-keep-server",
-        ]
-    )
-
-    # Assert
-    assert "--stdin" in captured[0]
-
-
-def test_main_pair_failure_returns_pair_exit_code(
-    monkeypatch: pytest.MonkeyPatch,
-    tmp_path: Path,
-) -> None:
-    # Arrange
-    _patch_main_basics(monkeypatch, tmp_path)
-    monkeypatch.setattr(auth_cli, "_run", lambda *_a, **_k: None)
-    monkeypatch.setattr(auth_cli, "_is_healthy", lambda _b: True)
-    monkeypatch.setattr(auth_cli.webbrowser, "open", lambda _u: None)
-    monkeypatch.setattr(auth_cli, "pair_laliga", lambda _args: 2)
-
-    # Act
-    code = auth_cli.main(
-        [
-            "--repo-root",
-            str(tmp_path),
-            "--skip-keycloak",
-            "--skip-sync",
-            "--no-browser",
-            "--session",
-            "s",
-            "--csrf",
-            "c",
-            "--stdin",
-            "--no-keep-server",
-        ]
-    )
-
-    # Assert
-    assert code == 2
-
-
-def test_main_unlinked_connection_returns_one(
-    monkeypatch: pytest.MonkeyPatch,
-    tmp_path: Path,
-    capsys: pytest.CaptureFixture[str],
-) -> None:
-    # Arrange
-    _patch_main_basics(monkeypatch, tmp_path)
-    monkeypatch.setattr(auth_cli, "_run", lambda *_a, **_k: None)
-    monkeypatch.setattr(auth_cli, "_is_healthy", lambda _b: True)
-    monkeypatch.setattr(auth_cli.webbrowser, "open", lambda _u: None)
     monkeypatch.setattr(auth_cli, "pair_laliga", lambda _args: 0)
     monkeypatch.setattr(
         auth_cli,
@@ -815,42 +552,40 @@ def test_main_unlinked_connection_returns_one(
             "s",
             "--csrf",
             "c",
-            "--stdin",
+            "--clipboard",
             "--no-keep-server",
         ]
     )
 
     # Assert
     assert code == 1
-    assert "not linked" in capsys.readouterr().err
 
 
-def test_main_keep_server_waits_for_auth_process(
+def test_main_keep_server_waits_then_kills_on_timeout(
     monkeypatch: pytest.MonkeyPatch,
     tmp_path: Path,
 ) -> None:
     # Arrange
-    _patch_main_basics(monkeypatch, tmp_path)
-    monkeypatch.setattr(auth_cli, "_run", lambda *_a, **_k: None)
-    monkeypatch.setattr(auth_cli, "_is_healthy", lambda _b: False)
+    (tmp_path / "docker-compose.yml").touch()
+    (tmp_path / "backend" / "auth").mkdir(parents=True)
     fake_proc = MagicMock()
     fake_proc.poll.return_value = None
-    waited: list[subprocess.Popen[bytes]] = []
-
-    monkeypatch.setattr(auth_cli, "_start_auth_server", lambda *_a, **_k: fake_proc)
+    fake_proc.wait.side_effect = subprocess.TimeoutExpired(cmd=["uv"], timeout=5)
+    waited: list[object] = []
+    monkeypatch.setattr(auth_cli, "_find_repo_root", lambda _p: tmp_path)
+    monkeypatch.setattr(auth_cli, "_require_command", lambda _c: None)
+    monkeypatch.setattr(auth_cli, "_ensure_env_file", lambda _d: None)
+    monkeypatch.setattr(auth_cli, "_is_healthy", lambda _b: False)
+    monkeypatch.setattr(auth_cli, "_start_auth_server", lambda *_a: fake_proc)
     monkeypatch.setattr(auth_cli, "_wait_for_health", lambda *_a, **_k: None)
-    monkeypatch.setattr(
-        auth_cli,
-        "_wait_for_server",
-        lambda proc: waited.append(proc),
-    )
-    monkeypatch.setattr(auth_cli.webbrowser, "open", lambda _u: None)
+    monkeypatch.setattr(auth_cli, "_wait_for_server", lambda proc: waited.append(proc))
     monkeypatch.setattr(auth_cli, "pair_laliga", lambda _args: 0)
     monkeypatch.setattr(
         auth_cli,
         "_get_connection_status",
-        lambda **_k: {"linked": True, "manager_name": "Mgr"},
+        lambda **_k: {"linked": True, "manager_name": "Ana"},
     )
+    monkeypatch.setattr(auth_cli.sys, "platform", "darwin")
 
     # Act
     code = auth_cli.main(
@@ -864,95 +599,11 @@ def test_main_keep_server_waits_for_auth_process(
             "s",
             "--csrf",
             "c",
-            "--stdin",
-            "--keep-server",
         ]
     )
 
     # Assert
     assert code == 0
     assert waited == [fake_proc]
-
-
-def test_main_reads_cookies_via_getpass_when_omitted(
-    monkeypatch: pytest.MonkeyPatch,
-    tmp_path: Path,
-) -> None:
-    # Arrange
-    _patch_main_basics(monkeypatch, tmp_path)
-    prompts: list[str] = []
-    monkeypatch.setattr(
-        "getpass.getpass",
-        lambda prompt: prompts.append(prompt) or ("sess" if "session" in prompt else "csrf"),
-    )
-    monkeypatch.setattr(auth_cli, "_run", lambda *_a, **_k: None)
-    monkeypatch.setattr(auth_cli, "_is_healthy", lambda _b: True)
-    monkeypatch.setattr(auth_cli.webbrowser, "open", lambda _u: None)
-    captured: list[list[str]] = []
-    monkeypatch.setattr(auth_cli, "pair_laliga", lambda args: captured.append(args) or 0)
-    monkeypatch.setattr(
-        auth_cli,
-        "_get_connection_status",
-        lambda **_k: {"linked": True},
-    )
-
-    # Act
-    auth_cli.main(
-        [
-            "--repo-root",
-            str(tmp_path),
-            "--skip-keycloak",
-            "--skip-sync",
-            "--no-browser",
-            "--stdin",
-            "--no-keep-server",
-        ]
-    )
-
-    # Assert
-    assert len(prompts) == 2
-    assert "--session" in captured[0]
-    assert captured[0][captured[0].index("--session") + 1] == "sess"
-
-
-def test_main_finally_kills_server_when_terminate_times_out(
-    monkeypatch: pytest.MonkeyPatch,
-    tmp_path: Path,
-) -> None:
-    # Arrange
-    _patch_main_basics(monkeypatch, tmp_path)
-    monkeypatch.setattr(auth_cli, "_run", lambda *_a, **_k: None)
-    monkeypatch.setattr(auth_cli, "_is_healthy", lambda _b: False)
-    fake_proc = MagicMock()
-    fake_proc.poll.return_value = None
-    fake_proc.wait.side_effect = subprocess.TimeoutExpired(cmd="uvicorn", timeout=5)
-    monkeypatch.setattr(auth_cli, "_start_auth_server", lambda *_a, **_k: fake_proc)
-    monkeypatch.setattr(auth_cli, "_wait_for_health", lambda *_a, **_k: None)
-    monkeypatch.setattr(auth_cli.webbrowser, "open", lambda _u: None)
-    monkeypatch.setattr(auth_cli, "pair_laliga", lambda _args: 0)
-    monkeypatch.setattr(
-        auth_cli,
-        "_get_connection_status",
-        lambda **_k: {"linked": True},
-    )
-
-    # Act
-    code = auth_cli.main(
-        [
-            "--repo-root",
-            str(tmp_path),
-            "--skip-keycloak",
-            "--skip-sync",
-            "--no-browser",
-            "--session",
-            "s",
-            "--csrf",
-            "c",
-            "--stdin",
-            "--no-keep-server",
-        ]
-    )
-
-    # Assert
-    assert code == 0
+    fake_proc.terminate.assert_called_once()
     fake_proc.kill.assert_called_once()

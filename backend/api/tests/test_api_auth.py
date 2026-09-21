@@ -25,6 +25,7 @@ from fantasy_api.domain.errors import NeedsReauthError, UnauthorizedError, Upstr
 from fantasy_api.main import create_app, run
 from fantasy_api.repositories.calendar import CalendarRepository
 from fantasy_api.repositories.leagues import LeaguesRepository
+from fantasy_api.repositories.players import PlayersRepository
 from fantasy_api.repositories.teams import TeamsRepository
 from fantasy_api.security.internal_jwt import (
     InternalJwtValidator,
@@ -32,6 +33,7 @@ from fantasy_api.security.internal_jwt import (
 )
 from fantasy_api.services.calendar import CalendarService
 from fantasy_api.services.leagues import LeaguesService
+from fantasy_api.services.players import PlayersService
 from fantasy_api.services.teams import TeamsService
 from fastapi import FastAPI
 from fastapi.testclient import TestClient
@@ -135,6 +137,13 @@ def build_api_container(
             competition_id=settings.laliga_competition_id,
         ),
     )
+    players_service = PlayersService(
+        credentials,
+        PlayersRepository(
+            laliga_client,
+            competition_id=settings.laliga_competition_id,
+        ),
+    )
     return AppContainer(
         settings=settings,
         jwt_validator=validator,
@@ -143,6 +152,7 @@ def build_api_container(
         leagues_service=leagues_service,
         teams_service=teams_service,
         calendar_service=calendar_service,
+        players_service=players_service,
     )
 
 

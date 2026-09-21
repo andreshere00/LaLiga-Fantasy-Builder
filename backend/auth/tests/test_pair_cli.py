@@ -212,3 +212,74 @@ def test_main_callback_file_forwards_to_helper(
     assert code == 0
     assert "--callback-file" in captured
     assert "/tmp/cb.txt" in captured
+
+
+def test_main_pairing_create_failed_returns_one(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    # Arrange
+    monkeypatch.setattr(pair_cli, "_create_pairing", lambda **_k: None)
+
+    # Act
+    code = pair_cli.main(["--session", "s", "--csrf", "c"])
+
+    # Assert
+    assert code == 1
+
+
+def test_main_stdin_does_not_add_clipboard(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    # Arrange
+    monkeypatch.setattr(
+        pair_cli,
+        "_create_pairing",
+        lambda **_k: {
+            "pairing_id": "p-1",
+            "secret": "s-1",
+            "nonce": "n-1",
+            "expires_at": "t",
+        },
+    )
+    captured: list[str] = []
+    monkeypatch.setattr(
+        pair_cli.laliga_helper,
+        "main",
+        lambda argv=None: captured.extend(argv or []) or 0,
+    )
+
+    # Act
+    code = pair_cli.main(
+        ["--session", "s", "--csrf", "c", "--stdin"],
+    )
+
+    # Assert
+    assert code == 0
+    assert "--clipboard" not in captured
+    assert "--callback-file" not in captured
+
+
+def test_create_pairing_http_error_returns_none(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    # Arrange
+    def handler(_request: httpx.Request) -> httpx.Response:
+        return httpx.Response(500, text="nope")
+
+    class TransportClient(httpx.Client):
+        def __init__(self, *args: Any, **kwargs: Any) -> None:
+            kwargs["transport"] = httpx.MockTransport(handler)
+            super().__init__(*args, **kwargs)
+
+    monkeypatch.setattr(pair_cli.httpx, "Client", TransportClient)
+
+    # Act
+    result = pair_cli._create_pairing(
+        api_base="http://auth.test",
+        session="sess",
+        csrf="csrf",
+        origin="http://localhost:8000",
+    )
+
+    # Assert
+    assert result is None

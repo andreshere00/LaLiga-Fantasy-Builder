@@ -375,3 +375,43 @@ def test_configure_tracing_instrumentor_except_passes(
 def test_current_trace_context_without_otel_is_empty() -> None:
     # Arrange / Act / Assert
     assert current_trace_context() == {} or isinstance(current_trace_context(), dict)
+
+
+def test_current_trace_context_valid_span_returns_ids(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    # Arrange
+    fake_trace = ModuleType("opentelemetry.trace")
+    context = SimpleNamespace(is_valid=True, trace_id=1, span_id=2)
+    span = SimpleNamespace(get_span_context=lambda: context)
+    fake_trace.get_current_span = lambda: span  # type: ignore[attr-defined]
+    fake_otel = ModuleType("opentelemetry")
+    fake_otel.trace = fake_trace  # type: ignore[attr-defined]
+    monkeypatch.setitem(sys.modules, "opentelemetry", fake_otel)
+    monkeypatch.setitem(sys.modules, "opentelemetry.trace", fake_trace)
+
+    # Act
+    result = current_trace_context()
+
+    # Assert
+    assert result["trace_id"] == format(1, "032x")
+    assert result["span_id"] == format(2, "016x")
+
+
+def test_current_trace_context_exception_returns_empty(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    # Arrange
+    fake_trace = ModuleType("opentelemetry.trace")
+
+    def boom() -> None:
+        raise RuntimeError("otel down")
+
+    fake_trace.get_current_span = boom  # type: ignore[attr-defined]
+    fake_otel = ModuleType("opentelemetry")
+    fake_otel.trace = fake_trace  # type: ignore[attr-defined]
+    monkeypatch.setitem(sys.modules, "opentelemetry", fake_otel)
+    monkeypatch.setitem(sys.modules, "opentelemetry.trace", fake_trace)
+
+    # Act / Assert
+    assert current_trace_context() == {}

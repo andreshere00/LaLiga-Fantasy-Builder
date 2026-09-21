@@ -1590,6 +1590,230 @@
         ]
       }
     },
+    "/players": {
+      "get": {
+        "tags": [
+          "players"
+        ],
+        "summary": "List competition players",
+        "description": "No internal JWT or LaLiga bearer is required.",
+        "operationId": "list_players_players_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/CatalogPlayer"
+                  },
+                  "type": "array",
+                  "title": "Response List Players Players Get"
+                }
+              }
+            }
+          },
+          "502": {
+            "description": "Auth or Fantasy upstream failure.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Fantasy upstream unavailable.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/players/{player_id}/market-value": {
+      "get": {
+        "tags": [
+          "players"
+        ],
+        "summary": "Get player market-value history",
+        "description": "No internal JWT or LaLiga bearer is required.",
+        "operationId": "get_market_value_players__player_id__market_value_get",
+        "parameters": [
+          {
+            "name": "player_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "description": "Master footballer identifier.",
+              "title": "Player Id"
+            },
+            "description": "Master footballer identifier."
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/PlayerMarketValue"
+                  },
+                  "title": "Response Get Market Value Players  Player Id  Market Value Get"
+                }
+              }
+            }
+          },
+          "502": {
+            "description": "Auth or Fantasy upstream failure.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Fantasy upstream unavailable.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/players/{player_id}/league/{league_id}": {
+      "get": {
+        "tags": [
+          "players"
+        ],
+        "summary": "Get player card contextualized to a league",
+        "description": "Path identifiers are master ``playerId`` values, not ``playerTeamId``\nsquad-entry identifiers.",
+        "operationId": "get_league_player_players__player_id__league__league_id__get",
+        "parameters": [
+          {
+            "name": "player_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "description": "Master footballer identifier.",
+              "title": "Player Id"
+            },
+            "description": "Master footballer identifier."
+          },
+          {
+            "name": "league_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "description": "Fantasy league identifier.",
+              "title": "League Id"
+            },
+            "description": "Fantasy league identifier."
+          },
+          {
+            "name": "authorization",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Bearer internal JWT issued by auth ``POST /auth/token``.",
+              "title": "Authorization"
+            },
+            "description": "Bearer internal JWT issued by auth ``POST /auth/token``."
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/LeaguePlayer"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized or LaLiga re-auth required.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "502": {
+            "description": "Auth or Fantasy upstream failure.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Fantasy upstream unavailable.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ]
+      }
+    },
     "/health/live": {
       "get": {
         "tags": [
@@ -1787,6 +2011,189 @@
         "type": "object",
         "title": "ActivityItem",
         "description": "One league activity feed item."
+      },
+      "CatalogPlayer": {
+        "properties": {
+          "id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Id"
+          },
+          "nickname": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Nickname"
+          },
+          "name": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Name"
+          },
+          "slug": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Slug"
+          },
+          "positionId": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Positionid"
+          },
+          "teamId": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Teamid"
+          },
+          "team": {
+            "anyOf": [
+              {
+                "additionalProperties": true,
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Team"
+          },
+          "playerStatus": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Playerstatus"
+          },
+          "points": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Points"
+          },
+          "averagePoints": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Averagepoints"
+          },
+          "weekPoints": {
+            "anyOf": [
+              {},
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Weekpoints"
+          },
+          "marketValue": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Marketvalue"
+          },
+          "lastSeasonPoints": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Lastseasonpoints"
+          },
+          "images": {
+            "anyOf": [
+              {
+                "additionalProperties": true,
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Images"
+          },
+          "lastStats": {
+            "anyOf": [
+              {
+                "items": {},
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Laststats"
+          }
+        },
+        "additionalProperties": true,
+        "type": "object",
+        "title": "CatalogPlayer",
+        "description": "Master player entry from ``GET /players``."
       },
       "ClubTeam": {
         "properties": {
@@ -2331,6 +2738,108 @@
         "type": "object",
         "title": "LeagueFeatures",
         "description": "League feature flags."
+      },
+      "LeaguePlayer": {
+        "properties": {
+          "playerTeamId": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Playerteamid"
+          },
+          "buyoutClause": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Buyoutclause"
+          },
+          "buyoutClauseLockedEndTime": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Buyoutclauselockedendtime"
+          },
+          "isShielded": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Isshielded"
+          },
+          "managerId": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Managerid"
+          },
+          "manager": {
+            "anyOf": [
+              {
+                "additionalProperties": true,
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Manager"
+          },
+          "playerMarket": {
+            "anyOf": [
+              {
+                "additionalProperties": true,
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Playermarket"
+          },
+          "playerMaster": {
+            "anyOf": [
+              {
+                "additionalProperties": true,
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Playermaster"
+          }
+        },
+        "additionalProperties": true,
+        "type": "object",
+        "title": "LeaguePlayer",
+        "description": "Player card contextualized to a league.\n\nPath identifiers are master ``playerId`` values; the response may include\nthe squad-entry ``playerTeamId`` alongside ownership and market blocks."
       },
       "LeagueTeam": {
         "properties": {
@@ -3319,6 +3828,36 @@
         "title": "PlayerMarket",
         "description": "Market listing for a player on a team."
       },
+      "PlayerMarketValue": {
+        "properties": {
+          "date": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Date"
+          },
+          "marketValue": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Marketvalue"
+          }
+        },
+        "additionalProperties": true,
+        "type": "object",
+        "title": "PlayerMarketValue",
+        "description": "One market-value history entry from ``GET /players/{id}/market-value``."
+      },
       "PlayerMaster": {
         "properties": {
           "id": {
@@ -4261,6 +4800,10 @@
     {
       "name": "calendar",
       "description": "Matchday calendar and stats (public Fantasy reads). Requires an internal JWT; upstream calls omit the LaLiga bearer."
+    },
+    {
+      "name": "players",
+      "description": "LaLiga Fantasy player catalog, market value, and league cards. Catalog and market value are public; league cards are authenticated."
     }
   ]
 }
