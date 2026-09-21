@@ -43,10 +43,7 @@ def test_extract_authredirect_clean_url_returns_as_is() -> None:
 
 def test_extract_authredirect_google_wrapper_extracts_url() -> None:
     # Arrange
-    wrapped = (
-        'https://www.google.com/search?q="'
-        f'{REDIRECT}/?state=abc&code=xyz" extra'
-    )
+    wrapped = 'https://www.google.com/search?q="' f'{REDIRECT}/?state=abc&code=xyz" extra'
 
     # Act
     result = helper._extract_authredirect(wrapped, redirect_uri=REDIRECT)

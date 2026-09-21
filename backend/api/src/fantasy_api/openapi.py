@@ -47,6 +47,13 @@ OPENAPI_TAGS: list[dict[str, str]] = [
             "Thin authenticated proxies of competition team resources."
         ),
     },
+    {
+        "name": "calendar",
+        "description": (
+            "Matchday calendar and stats (public Fantasy reads). "
+            "Requires an internal JWT; upstream calls omit the LaLiga bearer."
+        ),
+    },
 ]
 
 ERROR_RESPONSES: dict[int | str, dict[str, Any]] = {

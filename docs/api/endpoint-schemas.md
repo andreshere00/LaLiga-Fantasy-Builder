@@ -1,0 +1,970 @@
+# Fantasy Builder API — endpoint schemas
+
+Machine-readable source of truth: [`backend/api/openapi.json`](../../backend/api/openapi.json)
+(OpenAPI 3.1). Regenerate this file after route or schema changes:
+
+```bash
+cd backend/api
+uv run generate-openapi
+uv run generate-endpoint-schemas
+```
+
+From the repo root:
+
+```bash
+uv run poe generate-openapi
+uv run poe generate-endpoint-schemas
+```
+
+This document covers **`backend/api`** (port 8001). Auth service routes on port 8000
+are not included here.
+
+## Authentication (common input)
+
+| Location | Name | Type | Required | Description |
+|----------|------|------|----------|-------------|
+| Header | `Authorization` | string | Yes* | `Bearer <internal JWT>` from auth `POST /auth/token` |
+
+\* Not required for `/health`, `/health/live`, and `/health/ready`.
+
+## Error responses (common output)
+
+| HTTP | Schema | Body |
+|------|--------|------|
+| 401 | `ErrorResponse` | `error`, `detail` — unauthorized or `needs_reauth` |
+| 422 | `HTTPValidationError` | FastAPI validation (`detail` array) |
+| 502 | `ErrorResponse` | Auth or Fantasy upstream failure |
+| 503 | `ErrorResponse` | Fantasy upstream unavailable |
+
+Protected routes also declare these error shapes in OpenAPI; successful responses
+below omit repeated error tables.
+
+### ErrorResponse
+
+| Field | Type | Required | Description |
+|-------|------|----------|-------------|
+| `error` | string | yes | Machine-readable category |
+| `detail` | string | yes | Human-readable message (no tokens) |
+
+## Tag: `health`
+
+Liveness and readiness probes.
+
+### `GET` `/health`
+
+Liveness probe
+
+**Security:** none
+
+#### Inputs
+
+No path, query, or body parameters.
+
+#### Outputs
+
+**HTTP 200:** `HealthResponse`
+
+| Field | Type | Required | Description |
+|-------|------|----------|-------------|
+| `status` | string | yes |  |
+
+Full nested fields: [`HealthResponse`](#healthresponse).
+
+
+### `GET` `/health/live`
+
+Liveness probe
+
+**Security:** none
+
+#### Inputs
+
+No path, query, or body parameters.
+
+#### Outputs
+
+**HTTP 200:** `HealthResponse`
+
+| Field | Type | Required | Description |
+|-------|------|----------|-------------|
+| `status` | string | yes |  |
+
+Full nested fields: [`HealthResponse`](#healthresponse).
+
+
+### `GET` `/health/ready`
+
+Readiness probe
+
+**Security:** none
+
+#### Inputs
+
+No path, query, or body parameters.
+
+#### Outputs
+
+**HTTP 200:** `HealthResponse`
+
+| Field | Type | Required | Description |
+|-------|------|----------|-------------|
+| `status` | string | yes |  |
+
+Full nested fields: [`HealthResponse`](#healthresponse).
+
+
+## Tag: `me`
+
+Application identity and credential probes.
+
+### `GET` `/laliga/credential-probe`
+
+Probe LaLiga bearer availability
+
+**Security:** HTTP Bearer (internal JWT)
+
+#### Inputs
+
+No path, query, or body parameters.
+
+#### Outputs
+
+**HTTP 200:** `LaligaCredentialProbeResponse`
+
+| Field | Type | Required | Description |
+|-------|------|----------|-------------|
+| `user_id` | string | yes |  |
+| `has_bearer` | boolean | yes |  |
+| `expires_at` | integer | yes |  |
+
+Full nested fields: [`LaligaCredentialProbeResponse`](#laligacredentialproberesponse).
+
+
+### `GET` `/me`
+
+Get authenticated application user
+
+**Security:** HTTP Bearer (internal JWT)
+
+#### Inputs
+
+No path, query, or body parameters.
+
+#### Outputs
+
+**HTTP 200:** `MeResponse`
+
+| Field | Type | Required | Description |
+|-------|------|----------|-------------|
+| `user_id` | string | yes |  |
+| `email` | string | no |  |
+| `name` | string | no |  |
+
+Full nested fields: [`MeResponse`](#meresponse).
+
+
+## Tag: `leagues`
+
+LaLiga Fantasy league reads (standing, activity, teams). Thin authenticated proxies of competition league resources.
+
+### `GET` `/laliga/leagues-probe`
+
+Probe Fantasy leagues connectivity
+
+**Security:** HTTP Bearer (internal JWT)
+
+#### Inputs
+
+No path, query, or body parameters.
+
+#### Outputs
+
+**HTTP 200:** `LeaguesProbeResponse`
+
+| Field | Type | Required | Description |
+|-------|------|----------|-------------|
+| `ok` | boolean | yes |  |
+| `league_count` | integer | yes |  |
+| `league_ids` | array[any] | no |  |
+
+Full nested fields: [`LeaguesProbeResponse`](#leaguesproberesponse).
+
+
+### `GET` `/leagues`
+
+List competition leagues
+
+**Security:** HTTP Bearer (internal JWT)
+
+#### Inputs
+
+No path, query, or body parameters.
+
+#### Outputs
+
+**HTTP 200:** array of `FantasyLeague`
+
+Each item:
+
+| Field | Type | Required | Description |
+|-------|------|----------|-------------|
+| `id` | string | no |  |
+| `access` | string | no |  |
+| `type` | object | no | Fantasy league type metadata. |
+| `managersNumber` | integer | no |  |
+| `name` | string | no |  |
+| `config` | object | no | League configuration. |
+| `isDuplicated` | boolean | no |  |
+| `isSecondRound` | boolean | no |  |
+| `description` | string | no |  |
+| `premium` | boolean | no |  |
+| `team` | object | no | Caller's team summary embedded in a league object. |
+
+
+### `GET` `/leagues/{league_id}/activity/{page}`
+
+Get paginated league activity
+
+**Security:** HTTP Bearer (internal JWT)
+
+#### Inputs
+
+| Source | Name | Type | Required | Constraints | Description |
+|--------|------|------|----------|-------------|-------------|
+| path | `league_id` | string | yes |  | Fantasy league identifier. |
+| path | `page` | integer | yes | min=0 | Activity page index (typically starts at 0). |
+
+#### Outputs
+
+**HTTP 200:** array of `ActivityItem`
+
+Each item:
+
+| Field | Type | Required | Description |
+|-------|------|----------|-------------|
+| `id` | string | no |  |
+| `activityTypeId` | integer | no |  |
+| `amount` | integer | no |  |
+| `createdAt` | string | no |  |
+| `playerMasterId` | integer | no |  |
+| `user1Id` | integer | no |  |
+| `user2Id` | integer | no |  |
+| `weekNumber` | integer | no |  |
+| `msg` | string | no |  |
+| `message` | string | no |  |
+| `description` | string | no |  |
+
+
+### `GET` `/leagues/{league_id}/standing`
+
+Get overall league standing
+
+**Security:** HTTP Bearer (internal JWT)
+
+#### Inputs
+
+| Source | Name | Type | Required | Constraints | Description |
+|--------|------|------|----------|-------------|-------------|
+| path | `league_id` | string | yes |  | Fantasy league identifier. |
+
+#### Outputs
+
+**HTTP 200:** array of `StandingRow`
+
+Each item:
+
+| Field | Type | Required | Description |
+|-------|------|----------|-------------|
+| `position` | integer | no |  |
+| `previousPosition` | integer | no |  |
+| `points` | integer | no |  |
+| `livePoints` | integer | no |  |
+| `team` | object | no | Team row nested under standing. |
+| `teamId` | string | no |  |
+| `name` | string | no |  |
+
+
+### `GET` `/leagues/{league_id}/standing/{week}`
+
+Get league standing for a matchweek
+
+**Security:** HTTP Bearer (internal JWT)
+
+#### Inputs
+
+| Source | Name | Type | Required | Constraints | Description |
+|--------|------|------|----------|-------------|-------------|
+| path | `league_id` | string | yes |  | Fantasy league identifier. |
+| path | `week` | integer | yes | min=1 | Matchweek number. |
+
+#### Outputs
+
+**HTTP 200:** array of `StandingRow`
+
+Each item:
+
+| Field | Type | Required | Description |
+|-------|------|----------|-------------|
+| `position` | integer | no |  |
+| `previousPosition` | integer | no |  |
+| `points` | integer | no |  |
+| `livePoints` | integer | no |  |
+| `team` | object | no | Team row nested under standing. |
+| `teamId` | string | no |  |
+| `name` | string | no |  |
+
+
+### `GET` `/leagues/{league_id}/teams`
+
+List league teams and managers
+
+**Security:** HTTP Bearer (internal JWT)
+
+#### Inputs
+
+| Source | Name | Type | Required | Constraints | Description |
+|--------|------|------|----------|-------------|-------------|
+| path | `league_id` | string | yes |  | Fantasy league identifier. |
+
+#### Outputs
+
+**HTTP 200:** array of `LeagueTeam`
+
+Each item:
+
+| Field | Type | Required | Description |
+|-------|------|----------|-------------|
+| `id` | string | no |  |
+| `managerId` | integer | no |  |
+| `banned` | boolean | no |  |
+| `position` | integer | no |  |
+| `previousPosition` | integer | no |  |
+| `fixturePoints` | integer | no |  |
+| `startingWeek` | string | no |  |
+| `teamMoney` | integer | no |  |
+| `teamPoints` | integer | no |  |
+| `teamValue` | integer | no |  |
+| `manager` | object | no | Manager identity. |
+| `players` | array[SquadPlayer] | no |  |
+| `loanedPlayers` | array[any] | no |  |
+
+
+### `GET` `/leagues/{league_id}/teams/{team_id}`
+
+Get team roster and clauses
+
+**Security:** HTTP Bearer (internal JWT)
+
+#### Inputs
+
+| Source | Name | Type | Required | Constraints | Description |
+|--------|------|------|----------|-------------|-------------|
+| path | `league_id` | string | yes |  | Fantasy league identifier. |
+| path | `team_id` | string | yes |  | Fantasy team identifier. |
+
+#### Outputs
+
+**HTTP 200:** `TeamDetail`
+
+| Field | Type | Required | Description |
+|-------|------|----------|-------------|
+| `id` | string | no |  |
+| `managerId` | integer | no |  |
+| `banned` | boolean | no |  |
+| `position` | integer | no |  |
+| `startingWeek` | string | no |  |
+| `teamMoney` | integer | no |  |
+| `playersNumber` | integer | no |  |
+| `teamValue` | integer | no |  |
+| `teamPoints` | integer | no |  |
+| `manager` | object | no | Manager identity. |
+| `players` | array[SquadPlayer] | no |  |
+| `loanedPlayers` | array[any] | no |  |
+
+Full nested fields: [`TeamDetail`](#teamdetail).
+
+
+## Tag: `teams`
+
+LaLiga Fantasy team money and lineup reads/writes. Thin authenticated proxies of competition team resources.
+
+### `GET` `/teams/{team_id}/lineup`
+
+Get current team lineup
+
+**Security:** HTTP Bearer (internal JWT)
+
+#### Inputs
+
+| Source | Name | Type | Required | Constraints | Description |
+|--------|------|------|----------|-------------|-------------|
+| path | `team_id` | string | yes |  | Fantasy team identifier. |
+
+#### Outputs
+
+**HTTP 200:** `TeamLineup`
+
+| Field | Type | Required | Description |
+|-------|------|----------|-------------|
+| `formation` | object | no | Formation block nested under a Fantasy lineup response. |
+| `teamId` | string | no |  |
+| `weekNumber` | integer | no |  |
+
+Full nested fields: [`TeamLineup`](#teamlineup).
+
+
+### `PUT` `/teams/{team_id}/lineup`
+
+Replace the current team lineup
+
+**Security:** HTTP Bearer (internal JWT)
+
+#### Inputs
+
+| Source | Name | Type | Required | Constraints | Description |
+|--------|------|------|----------|-------------|-------------|
+| path | `team_id` | string | yes |  | Fantasy team identifier. |
+| body | `goalkeeper` | string | yes |  |  |
+| body | `defender` | array[string] | yes |  |  |
+| body | `midfield` | array[string] | yes |  |  |
+| body | `striker` | array[string] | yes |  |  |
+| body | `tactical_formation` | array[integer] | yes |  |  |
+| body | `coach` | string | no |  |  |
+| body | `captain` | string | no |  |  |
+| body | `bench` | object | no |  |  |
+
+#### Outputs
+
+**HTTP 200:** `TeamLineup`
+
+| Field | Type | Required | Description |
+|-------|------|----------|-------------|
+| `formation` | object | no | Formation block nested under a Fantasy lineup response. |
+| `teamId` | string | no |  |
+| `weekNumber` | integer | no |  |
+
+Full nested fields: [`TeamLineup`](#teamlineup).
+
+
+### `GET` `/teams/{team_id}/lineup/week/{week}`
+
+Get team lineup for a matchweek
+
+**Security:** HTTP Bearer (internal JWT)
+
+#### Inputs
+
+| Source | Name | Type | Required | Constraints | Description |
+|--------|------|------|----------|-------------|-------------|
+| path | `team_id` | string | yes |  | Fantasy team identifier. |
+| path | `week` | integer | yes | min=1 | Matchweek number. |
+
+#### Outputs
+
+**HTTP 200:** `TeamLineup`
+
+| Field | Type | Required | Description |
+|-------|------|----------|-------------|
+| `formation` | object | no | Formation block nested under a Fantasy lineup response. |
+| `teamId` | string | no |  |
+| `weekNumber` | integer | no |  |
+
+Full nested fields: [`TeamLineup`](#teamlineup).
+
+
+### `GET` `/teams/{team_id}/money`
+
+Get team cash and investment
+
+**Security:** HTTP Bearer (internal JWT)
+
+#### Inputs
+
+| Source | Name | Type | Required | Constraints | Description |
+|--------|------|------|----------|-------------|-------------|
+| path | `team_id` | string | yes |  | Fantasy team identifier. |
+
+#### Outputs
+
+**HTTP 200:** `TeamMoney`
+
+| Field | Type | Required | Description |
+|-------|------|----------|-------------|
+| `teamMoney` | integer | no |  |
+| `teamInvestment` | integer | no |  |
+
+Full nested fields: [`TeamMoney`](#teammoney).
+
+
+## Tag: `calendar`
+
+Matchday calendar and stats (public Fantasy reads). Requires an internal JWT; upstream calls omit the LaLiga bearer.
+
+### `GET` `/calendar/current`
+
+Get current matchday
+
+**Security:** HTTP Bearer (internal JWT)
+
+#### Inputs
+
+No path, query, or body parameters.
+
+#### Outputs
+
+**HTTP 200:** `CurrentWeek`
+
+| Field | Type | Required | Description |
+|-------|------|----------|-------------|
+| `isLive` | boolean | no |  |
+| `nextWeek` | integer | no |  |
+| `previousWeek` | integer | no |  |
+| `weekNumber` | integer | no |  |
+| `openingWeekDate` | string | no |  |
+| `closingWeekDate` | string | no |  |
+
+Full nested fields: [`CurrentWeek`](#currentweek).
+
+
+### `GET` `/calendar/weeks/{week}`
+
+Get fixtures for a matchday
+
+**Security:** HTTP Bearer (internal JWT)
+
+#### Inputs
+
+| Source | Name | Type | Required | Constraints | Description |
+|--------|------|------|----------|-------------|-------------|
+| path | `week` | integer | yes | min=1 | Matchweek number. |
+
+#### Outputs
+
+**HTTP 200:** array of `Fixture`
+
+Each item:
+
+| Field | Type | Required | Description |
+|-------|------|----------|-------------|
+| `id` | string | no |  |
+| `matchDate` | string | no |  |
+| `date` | string | no |  |
+| `time` | string | no |  |
+| `localId` | integer | no |  |
+| `visitorId` | integer | no |  |
+| `matchState` | integer | no |  |
+| `localScore` | integer | no |  |
+| `visitorScore` | integer | no |  |
+| `featured` | boolean | no |  |
+
+
+### `GET` `/calendar/weeks/{week}/stats`
+
+Get matchday statistics and results
+
+**Security:** HTTP Bearer (internal JWT)
+
+#### Inputs
+
+| Source | Name | Type | Required | Constraints | Description |
+|--------|------|------|----------|-------------|-------------|
+| path | `week` | integer | yes | min=1 | Matchweek number. |
+
+#### Outputs
+
+**HTTP 200:** array of `MatchStats`
+
+Each item:
+
+| Field | Type | Required | Description |
+|-------|------|----------|-------------|
+| `id` | integer | no |  |
+| `date` | string | no |  |
+| `local` | object | no | Home or away side in matchweek stats. |
+| `visitor` | object | no | Home or away side in matchweek stats. |
+| `matchState` | integer | no |  |
+| `localScore` | integer | no |  |
+| `visitorScore` | integer | no |  |
+
+
+## Component schemas
+
+Nested models referenced by the operations above. All Fantasy proxy models use `extra: allow` in Pydantic — additional upstream fields may appear at runtime without being listed here.
+
+### `ActivityItem`
+
+| Field | Type | Required | Description |
+|-------|------|----------|-------------|
+| `id` | string | no |  |
+| `activityTypeId` | integer | no |  |
+| `amount` | integer | no |  |
+| `createdAt` | string | no |  |
+| `playerMasterId` | integer | no |  |
+| `user1Id` | integer | no |  |
+| `user2Id` | integer | no |  |
+| `weekNumber` | integer | no |  |
+| `msg` | string | no |  |
+| `message` | string | no |  |
+| `description` | string | no |  |
+
+### `ClubTeam`
+
+| Field | Type | Required | Description |
+|-------|------|----------|-------------|
+| `id` | string | no |  |
+| `name` | string | no |  |
+| `slug` | string | no |  |
+| `assets` | string | no |  |
+| `badgeColor` | string | no |  |
+| `badgeWhite` | string | no |  |
+
+### `CurrentWeek`
+
+| Field | Type | Required | Description |
+|-------|------|----------|-------------|
+| `isLive` | boolean | no |  |
+| `nextWeek` | integer | no |  |
+| `previousWeek` | integer | no |  |
+| `weekNumber` | integer | no |  |
+| `openingWeekDate` | string | no |  |
+| `closingWeekDate` | string | no |  |
+
+### `ErrorResponse`
+
+| Field | Type | Required | Description |
+|-------|------|----------|-------------|
+| `error` | string | yes |  |
+| `detail` | string | yes |  |
+
+### `FantasyLeague`
+
+| Field | Type | Required | Description |
+|-------|------|----------|-------------|
+| `id` | string | no |  |
+| `access` | string | no |  |
+| `type` | object (`type`) | no | Fantasy league type metadata. |
+| `managersNumber` | integer | no |  |
+| `name` | string | no |  |
+| `config` | object (`config`) | no | League configuration. |
+| `isDuplicated` | boolean | no |  |
+| `isSecondRound` | boolean | no |  |
+| `description` | string | no |  |
+| `premium` | boolean | no |  |
+| `team` | object (`team`) | no | Caller's team summary embedded in a league object. |
+
+### `Fixture`
+
+| Field | Type | Required | Description |
+|-------|------|----------|-------------|
+| `id` | string | no |  |
+| `matchDate` | string | no |  |
+| `date` | string | no |  |
+| `time` | string | no |  |
+| `localId` | integer | no |  |
+| `visitorId` | integer | no |  |
+| `matchState` | integer | no |  |
+| `localScore` | integer | no |  |
+| `visitorScore` | integer | no |  |
+| `featured` | boolean | no |  |
+
+### `HealthResponse`
+
+| Field | Type | Required | Description |
+|-------|------|----------|-------------|
+| `status` | string | yes |  |
+
+### `IdealPremiumConfig`
+
+| Field | Type | Required | Description |
+|-------|------|----------|-------------|
+| `reward` | integer | no |  |
+
+### `LaligaCredentialProbeResponse`
+
+| Field | Type | Required | Description |
+|-------|------|----------|-------------|
+| `user_id` | string | yes |  |
+| `has_bearer` | boolean | yes |  |
+| `expires_at` | integer | yes |  |
+
+### `LeagueConfig`
+
+| Field | Type | Required | Description |
+|-------|------|----------|-------------|
+| `features` | object (`features`) | no | League feature flags. |
+| `premiumFeatures` | object (`premiumFeatures`) | no | Premium feature toggles. |
+| `premiumConfigurations` | object (`premiumConfigurations`) | no | Premium configuration block. |
+
+### `LeagueFeatures`
+
+| Field | Type | Required | Description |
+|-------|------|----------|-------------|
+| `buyoutClause` | boolean | no |  |
+
+### `LeagueTeam`
+
+| Field | Type | Required | Description |
+|-------|------|----------|-------------|
+| `id` | string | no |  |
+| `managerId` | integer | no |  |
+| `banned` | boolean | no |  |
+| `position` | integer | no |  |
+| `previousPosition` | integer | no |  |
+| `fixturePoints` | integer | no |  |
+| `startingWeek` | string | no |  |
+| `teamMoney` | integer | no |  |
+| `teamPoints` | integer | no |  |
+| `teamValue` | integer | no |  |
+| `manager` | object (`manager`) | no | Manager identity. |
+| `players` | array[SquadPlayer] | no |  |
+| `loanedPlayers` | array[any] | no |  |
+
+### `LeagueTeamSummary`
+
+| Field | Type | Required | Description |
+|-------|------|----------|-------------|
+| `id` | integer | no |  |
+| `money` | integer | no |  |
+| `teamPoints` | integer | no |  |
+| `playersNumber` | integer | no |  |
+| `teamValue` | integer | no |  |
+| `canPunctuate` | boolean | no |  |
+| `position` | integer | no |  |
+| `previousPosition` | integer | no |  |
+| `isAdmin` | boolean | no |  |
+
+### `LeagueType`
+
+| Field | Type | Required | Description |
+|-------|------|----------|-------------|
+| `id` | string | no |  |
+| `canBeDuplicated` | boolean | no |  |
+| `sponsorId` | integer | no |  |
+| `prizeInformation` | object (`prizeInformation`) | no | League prize copy. |
+
+### `LeaguesProbeResponse`
+
+| Field | Type | Required | Description |
+|-------|------|----------|-------------|
+| `ok` | boolean | yes |  |
+| `league_count` | integer | yes |  |
+| `league_ids` | array[any] | no |  |
+
+### `LineupFormation`
+
+| Field | Type | Required | Description |
+|-------|------|----------|-------------|
+| `goalkeeper` | array[any] | no |  |
+| `defender` | array[any] | no |  |
+| `midfield` | array[any] | no |  |
+| `striker` | array[any] | no |  |
+| `coach` | array[any] | no |  |
+| `captain` | string | no |  |
+| `bench` | object | no |  |
+| `tacticalFormation` | array[integer] | no |  |
+
+### `LineupWrite`
+
+| Field | Type | Required | Description |
+|-------|------|----------|-------------|
+| `goalkeeper` | string | yes |  |
+| `defender` | array[string] | yes |  |
+| `midfield` | array[string] | yes |  |
+| `striker` | array[string] | yes |  |
+| `tactical_formation` | array[integer] | yes |  |
+| `coach` | string | no |  |
+| `captain` | string | no |  |
+| `bench` | object | no |  |
+
+### `LoanPremiumConfig`
+
+| Field | Type | Required | Description |
+|-------|------|----------|-------------|
+| `duration` | integer | no |  |
+| `maxLoans` | integer | no |  |
+| `enableConclude` | boolean | no |  |
+| `minPercentage` | number | no |  |
+
+### `Manager`
+
+| Field | Type | Required | Description |
+|-------|------|----------|-------------|
+| `id` | string | no |  |
+| `managerName` | string | no |  |
+| `avatar` | string | no |  |
+
+### `MatchPlayer`
+
+| Field | Type | Required | Description |
+|-------|------|----------|-------------|
+| `id` | integer | no |  |
+| `images` | object | no |  |
+| `name` | string | no |  |
+| `nickname` | string | no |  |
+| `positionId` | integer | no |  |
+| `teamId` | integer | no |  |
+| `weekPoints` | integer | no |  |
+
+### `MatchSide`
+
+| Field | Type | Required | Description |
+|-------|------|----------|-------------|
+| `id` | integer | no |  |
+| `badgeColor` | string | no |  |
+| `mainName` | string | no |  |
+| `players` | array[MatchPlayer] | no |  |
+
+### `MatchStats`
+
+| Field | Type | Required | Description |
+|-------|------|----------|-------------|
+| `id` | integer | no |  |
+| `date` | string | no |  |
+| `local` | object (`local`) | no | Home or away side in matchweek stats. |
+| `visitor` | object (`visitor`) | no | Home or away side in matchweek stats. |
+| `matchState` | integer | no |  |
+| `localScore` | integer | no |  |
+| `visitorScore` | integer | no |  |
+
+### `MeResponse`
+
+| Field | Type | Required | Description |
+|-------|------|----------|-------------|
+| `user_id` | string | yes |  |
+| `email` | string | no |  |
+| `name` | string | no |  |
+
+### `PlayerMarket`
+
+| Field | Type | Required | Description |
+|-------|------|----------|-------------|
+| `id` | string | no |  |
+| `salePrice` | integer | no |  |
+| `expirationDate` | string | no |  |
+| `numberOfOffers` | integer | no |  |
+| `directOffer` | boolean | no |  |
+
+### `PlayerMaster`
+
+| Field | Type | Required | Description |
+|-------|------|----------|-------------|
+| `id` | string | no |  |
+| `name` | string | no |  |
+| `nickname` | string | no |  |
+| `slug` | string | no |  |
+| `points` | integer | no |  |
+| `weekPoints` | integer | no |  |
+| `marketValue` | integer | no |  |
+| `positionId` | integer | no |  |
+| `playerStatus` | string | no |  |
+| `teamId` | integer | no |  |
+| `lastSeasonPoints` | integer | no |  |
+| `averagePoints` | number | no |  |
+| `images` | object | no |  |
+| `lastStats` | array[PlayerStatWeek] | no |  |
+| `team` | object (`team`) | no | Real-world club metadata on a player. |
+
+### `PlayerStatWeek`
+
+| Field | Type | Required | Description |
+|-------|------|----------|-------------|
+| `weekNumber` | integer | no |  |
+| `totalPoints` | integer | no |  |
+| `isInIdealFormation` | boolean | no |  |
+| `stats` | object | no |  |
+
+### `PremiumConfigurations`
+
+| Field | Type | Required | Description |
+|-------|------|----------|-------------|
+| `loan` | object (`loan`) | no | Loan premium configuration. |
+| `ideal` | object (`ideal`) | no | Ideal lineup premium configuration. |
+
+### `PremiumFeatures`
+
+| Field | Type | Required | Description |
+|-------|------|----------|-------------|
+| `formations` | boolean | no |  |
+| `captain` | boolean | no |  |
+| `bench` | boolean | no |  |
+| `loan` | boolean | no |  |
+| `ideal` | boolean | no |  |
+| `coach` | boolean | no |  |
+
+### `PrizeInformation`
+
+| Field | Type | Required | Description |
+|-------|------|----------|-------------|
+| `title` | string | no |  |
+| `description` | string | no |  |
+
+### `SquadPlayer`
+
+| Field | Type | Required | Description |
+|-------|------|----------|-------------|
+| `playerTeamId` | string | no |  |
+| `buyoutClause` | integer | no |  |
+| `buyoutClauseLockedEndTime` | string | no |  |
+| `isShielded` | boolean | no |  |
+| `managerId` | integer | no |  |
+| `manager` | object (`manager`) | no | Manager identity. |
+| `playerMarket` | object (`playerMarket`) | no | Market listing for a player on a team. |
+| `playerMaster` | object (`playerMaster`) | no | Master player card. |
+
+### `StandingRow`
+
+| Field | Type | Required | Description |
+|-------|------|----------|-------------|
+| `position` | integer | no |  |
+| `previousPosition` | integer | no |  |
+| `points` | integer | no |  |
+| `livePoints` | integer | no |  |
+| `team` | object (`team`) | no | Team row nested under standing. |
+| `teamId` | string | no |  |
+| `name` | string | no |  |
+
+### `StandingTeam`
+
+| Field | Type | Required | Description |
+|-------|------|----------|-------------|
+| `id` | string | no |  |
+| `managerId` | integer | no |  |
+| `banned` | boolean | no |  |
+| `managerWarned` | boolean | no |  |
+| `isAdmin` | boolean | no |  |
+| `teamValue` | integer | no |  |
+| `teamPoints` | integer | no |  |
+| `teamMoney` | integer | no |  |
+| `manager` | object (`manager`) | no | Manager identity. |
+
+### `TeamDetail`
+
+| Field | Type | Required | Description |
+|-------|------|----------|-------------|
+| `id` | string | no |  |
+| `managerId` | integer | no |  |
+| `banned` | boolean | no |  |
+| `position` | integer | no |  |
+| `startingWeek` | string | no |  |
+| `teamMoney` | integer | no |  |
+| `playersNumber` | integer | no |  |
+| `teamValue` | integer | no |  |
+| `teamPoints` | integer | no |  |
+| `manager` | object (`manager`) | no | Manager identity. |
+| `players` | array[SquadPlayer] | no |  |
+| `loanedPlayers` | array[any] | no |  |
+
+### `TeamLineup`
+
+| Field | Type | Required | Description |
+|-------|------|----------|-------------|
+| `formation` | object (`formation`) | no | Formation block nested under a Fantasy lineup response. |
+| `teamId` | string | no |  |
+| `weekNumber` | integer | no |  |
+
+### `TeamMoney`
+
+| Field | Type | Required | Description |
+|-------|------|----------|-------------|
+| `teamMoney` | integer | no |  |
+| `teamInvestment` | integer | no |  |

@@ -8,6 +8,7 @@ from types import ModuleType, SimpleNamespace
 from typing import Any
 from unittest.mock import MagicMock
 
+import fantasy_auth.observability as observability
 import pytest
 from fantasy_auth.config import Settings
 from fantasy_auth.observability import (
@@ -19,7 +20,6 @@ from fantasy_auth.observability import (
     current_trace_context,
     get_tracer,
 )
-import fantasy_auth.observability as observability
 
 
 @pytest.fixture(autouse=True)
@@ -166,17 +166,13 @@ def test_configure_tracing_enabled_with_fake_otel(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     # Arrange
-    settings = _settings(
-        otel_exporter_otlp_endpoint="http://otel:4318/v1/traces"
-    )
+    settings = _settings(otel_exporter_otlp_endpoint="http://otel:4318/v1/traces")
 
     fake_trace = ModuleType("opentelemetry.trace")
     fake_trace.set_tracer_provider = MagicMock()  # type: ignore[attr-defined]
     fake_trace.get_tracer = MagicMock()  # type: ignore[attr-defined]
 
-    fake_exporter_mod = ModuleType(
-        "opentelemetry.exporter.otlp.proto.http.trace_exporter"
-    )
+    fake_exporter_mod = ModuleType("opentelemetry.exporter.otlp.proto.http.trace_exporter")
     fake_exporter_mod.OTLPSpanExporter = MagicMock(  # type: ignore[attr-defined]
         return_value=MagicMock()
     )
@@ -216,9 +212,7 @@ def test_configure_tracing_enabled_with_fake_otel(
     modules = {
         "opentelemetry": fake_otel,
         "opentelemetry.trace": fake_trace,
-        "opentelemetry.exporter.otlp.proto.http.trace_exporter": (
-            fake_exporter_mod
-        ),
+        "opentelemetry.exporter.otlp.proto.http.trace_exporter": (fake_exporter_mod),
         "opentelemetry.sdk.resources": fake_resources,
         "opentelemetry.sdk.trace": fake_sdk_trace,
         "opentelemetry.sdk.trace.export": fake_export,
@@ -290,9 +284,7 @@ def test_configure_tracing_import_error_path(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     # Arrange
-    settings = _settings(
-        otel_exporter_otlp_endpoint="http://otel:4318/v1/traces"
-    )
+    settings = _settings(otel_exporter_otlp_endpoint="http://otel:4318/v1/traces")
 
     real_import = __import__
 
@@ -314,16 +306,12 @@ def test_configure_tracing_instrumentor_except_passes(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     # Arrange
-    settings = _settings(
-        otel_exporter_otlp_endpoint="http://otel:4318/v1/traces"
-    )
+    settings = _settings(otel_exporter_otlp_endpoint="http://otel:4318/v1/traces")
 
     fake_trace = ModuleType("opentelemetry.trace")
     fake_trace.set_tracer_provider = MagicMock()  # type: ignore[attr-defined]
 
-    fake_exporter_mod = ModuleType(
-        "opentelemetry.exporter.otlp.proto.http.trace_exporter"
-    )
+    fake_exporter_mod = ModuleType("opentelemetry.exporter.otlp.proto.http.trace_exporter")
     fake_exporter_mod.OTLPSpanExporter = MagicMock(return_value=MagicMock())  # type: ignore[attr-defined]
 
     fake_resources = ModuleType("opentelemetry.sdk.resources")
@@ -363,9 +351,7 @@ def test_configure_tracing_instrumentor_except_passes(
     for name, mod in {
         "opentelemetry": fake_otel,
         "opentelemetry.trace": fake_trace,
-        "opentelemetry.exporter.otlp.proto.http.trace_exporter": (
-            fake_exporter_mod
-        ),
+        "opentelemetry.exporter.otlp.proto.http.trace_exporter": (fake_exporter_mod),
         "opentelemetry.sdk.resources": fake_resources,
         "opentelemetry.sdk.trace": fake_sdk_trace,
         "opentelemetry.sdk.trace.export": fake_export,
@@ -388,6 +374,4 @@ def test_configure_tracing_instrumentor_except_passes(
 
 def test_current_trace_context_without_otel_is_empty() -> None:
     # Arrange / Act / Assert
-    assert current_trace_context() == {} or isinstance(
-        current_trace_context(), dict
-    )
+    assert current_trace_context() == {} or isinstance(current_trace_context(), dict)

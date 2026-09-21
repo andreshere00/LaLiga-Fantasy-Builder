@@ -4,12 +4,17 @@ Application API docs for `backend/api` (`fantasy_api`).
 
 - [OpenAPI / Swagger](openapi.md) — schema generation, Swagger UI, committed
   `openapi.json`
+- [Endpoint schemas](endpoint-schemas.md) — generated input/output reference
+  for every API route (from `openapi.json`)
 - [Leagues](leagues/README.md) — league routes, ranking, activity, teams
 - [Adding leagues endpoints](leagues/adding-leagues-endpoints.md) — CRS
   checklist for new league reads
 - [Teams](teams/README.md) — team money and lineup routes
 - [Adding teams endpoints](teams/adding-teams-endpoints.md) — CRS checklist
   for team money/lineup
+- [Calendar](calendar/README.md) — matchday, fixtures, and stats routes
+- [Adding calendar endpoints](calendar/adding-calendar-endpoints.md) — CRS
+  checklist for public Fantasy reads behind the internal JWT
 
 Auth and pairing live under [Authentication](../authentication/authentication.md).
 Cross-cutting endpoint patterns:
@@ -35,7 +40,7 @@ backend/api/src/fantasy_api/
 ├── clients/        # auth credentials + LaligaFantasyClient
 ├── schemas/        # Pydantic request/response models (OpenAPI source)
 ├── openapi.py      # generate_openapi / build_openapi_schema
-└── cli/            # fantasy-leagues / fantasy-teams helper CLIs
+└── cli/            # fantasy-leagues / fantasy-teams / fantasy-calendar CLIs
 ```
 
 Leagues and teams share path encoding (`repositories/paths.py`), bearer

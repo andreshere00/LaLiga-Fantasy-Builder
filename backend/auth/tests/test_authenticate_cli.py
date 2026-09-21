@@ -315,9 +315,7 @@ def test_main_setup_error_returns_one(
     )
 
     # Act
-    code = auth_cli.main(
-        ["--repo-root", str(tmp_path), "--skip-keycloak", "--skip-sync"]
-    )
+    code = auth_cli.main(["--repo-root", str(tmp_path), "--skip-keycloak", "--skip-sync"])
 
     # Assert
     assert code == 1

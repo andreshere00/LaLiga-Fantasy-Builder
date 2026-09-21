@@ -45,7 +45,32 @@ class LaligaFantasyClient:
         Raises:
             UpstreamError: On non-OK or non-JSON responses (no body leak).
         """
-        return await self._request_json("GET", path, bearer_token)
+        return await self._request_json("GET", path, bearer_token=bearer_token)
+
+    async def get_public_json(
+        self,
+        path: str,
+        *,
+        params: dict[str, str | int] | None = None,
+    ) -> Any:
+        """Perform an unauthenticated GET and return the JSON body.
+
+        Args:
+            path: Absolute path under the Fantasy origin (must start with ``/``).
+            params: Optional query parameters.
+
+        Returns:
+            Parsed JSON body (object or array).
+
+        Raises:
+            UpstreamError: On non-OK or non-JSON responses (no body leak).
+        """
+        return await self._request_json(
+            "GET",
+            path,
+            bearer_token=None,
+            params=params,
+        )
 
     async def put_json(
         self,
@@ -66,23 +91,30 @@ class LaligaFantasyClient:
         Raises:
             UpstreamError: On non-OK or non-JSON responses (no body leak).
         """
-        return await self._request_json("PUT", path, bearer_token, body=body)
+        return await self._request_json(
+            "PUT",
+            path,
+            bearer_token=bearer_token,
+            body=body,
+        )
 
     async def _request_json(
         self,
         method: str,
         path: str,
-        bearer_token: str,
         *,
+        bearer_token: str | None,
         body: dict[str, Any] | None = None,
+        params: dict[str, str | int] | None = None,
     ) -> Any:
-        """Send an authenticated Fantasy request and parse JSON.
+        """Send a Fantasy request and parse JSON.
 
         Args:
             method: HTTP method (``GET`` or ``PUT``).
             path: Absolute path under the Fantasy origin.
-            bearer_token: LaLiga B2C bearer token.
+            bearer_token: LaLiga B2C bearer token, or ``None`` for public reads.
             body: Optional JSON body (PUT).
+            params: Optional query parameters (GET).
 
         Returns:
             Parsed JSON, or ``{}`` for an empty successful body.
@@ -91,12 +123,15 @@ class LaligaFantasyClient:
             UpstreamError: On non-OK or non-JSON responses (no body leak).
         """
         url = f"{self._origin}{path}"
-        headers = {
-            "Authorization": f"Bearer {bearer_token}",
+        headers: dict[str, str] = {
             "Accept": "application/json",
             "x-lang": "es",
         }
+        if bearer_token is not None:
+            headers["Authorization"] = f"Bearer {bearer_token}"
         request_kwargs: dict[str, Any] = {"headers": headers}
+        if params is not None:
+            request_kwargs["params"] = params
         if body is not None:
             headers["Content-Type"] = "application/json"
             request_kwargs["json"] = body

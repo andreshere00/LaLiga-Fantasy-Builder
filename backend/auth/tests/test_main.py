@@ -175,9 +175,7 @@ def test_getattr_app_returns_fastapi(
     monkeypatch.setattr(
         main_mod,
         "create_app",
-        lambda: create_app(
-            settings=container.settings, container=container
-        ),
+        lambda: create_app(settings=container.settings, container=container),
     )
 
     # Act

@@ -71,6 +71,13 @@ uv run poe generate-openapi
 # or: cd backend/api && uv run generate-openapi
 ```
 
+11. **Endpoint schemas** — regenerate [endpoint-schemas.md](../endpoint-schemas.md):
+
+```bash
+uv run poe generate-endpoint-schemas
+# or: cd backend/api && uv run generate-endpoint-schemas
+```
+
 Swagger UI at `/docs` always reflects the same generator
 (`fantasy_api.openapi.build_openapi_schema`).
 

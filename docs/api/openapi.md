@@ -32,6 +32,7 @@ Important modules:
 - [`backend/api/src/fantasy_api/schemas/common.py`](../../backend/api/src/fantasy_api/schemas/common.py)
 - [`backend/api/src/fantasy_api/schemas/leagues.py`](../../backend/api/src/fantasy_api/schemas/leagues.py)
 - [`backend/api/src/fantasy_api/schemas/teams.py`](../../backend/api/src/fantasy_api/schemas/teams.py)
+- [`backend/api/src/fantasy_api/schemas/calendar.py`](../../backend/api/src/fantasy_api/schemas/calendar.py)
 - [`backend/api/src/fantasy_api/openapi.py`](../../backend/api/src/fantasy_api/openapi.py)
 
 ## Regenerate the committed document
@@ -88,7 +89,10 @@ response models.
 4. Keep a Google-style docstring on the handler (`Args` / `Returns`).
 5. Run `uv run generate-openapi` (or rely on the pre-commit hook) and commit
    `openapi.json` if it changed.
-6. Confirm the operation appears under http://localhost:8001/docs.
+6. Run `uv run generate-endpoint-schemas` and commit
+   [`docs/api/endpoint-schemas.md`](endpoint-schemas.md) if it changed.
+7. Confirm the operation appears under http://localhost:8001/docs and in
+   [Endpoint schemas](endpoint-schemas.md).
 
 ## Sample response shapes
 

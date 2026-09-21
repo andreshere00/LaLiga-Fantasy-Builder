@@ -25,7 +25,9 @@ dev = [
 laliga-fantasy-builder-api = "fantasy_api.main:run"
 fantasy-leagues = "fantasy_api.cli.leagues:main"
 fantasy-teams = "fantasy_api.cli.teams:main"
+fantasy-calendar = "fantasy_api.cli.calendar:main"
 generate-openapi = "fantasy_api.openapi:main"
+generate-endpoint-schemas = "fantasy_api.endpoint_schemas_doc:main"
 
 [build-system]
 requires = ["uv_build>=0.11.29,<0.12.0"]

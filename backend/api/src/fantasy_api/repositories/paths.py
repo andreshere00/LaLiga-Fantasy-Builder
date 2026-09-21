@@ -30,3 +30,16 @@ def competition_path(competition_id: int, *parts: str | int) -> str:
     encoded = "/".join(segment(part) for part in parts)
     base = f"/api/v1/competition/{competition_id}"
     return f"{base}/{encoded}" if encoded else base
+
+
+def stats_week_path(competition_id: int, week: int) -> str:
+    """Build the matchweek stats path under ``/stats/v1/competition/{id}/stats/week/...``.
+
+    Args:
+        competition_id: Fantasy competition id (typically ``1``).
+        week: Matchweek number.
+
+    Returns:
+        Absolute path starting with ``/stats/v1/competition/...``.
+    """
+    return f"/stats/v1/competition/{competition_id}/stats/week/{segment(week)}"

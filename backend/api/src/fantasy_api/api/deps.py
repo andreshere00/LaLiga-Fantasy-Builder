@@ -12,9 +12,11 @@ from fantasy_api.clients.laliga_fantasy import LaligaFantasyClient
 from fantasy_api.config import Settings, get_settings
 from fantasy_api.domain.errors import UnauthorizedError
 from fantasy_api.domain.users import AppUser, extract_app_user_from_claims
+from fantasy_api.repositories.calendar import CalendarRepository
 from fantasy_api.repositories.leagues import LeaguesRepository
 from fantasy_api.repositories.teams import TeamsRepository
 from fantasy_api.security.internal_jwt import InternalJwtValidator
+from fantasy_api.services.calendar import CalendarService
 from fantasy_api.services.leagues import LeaguesService
 from fantasy_api.services.teams import TeamsService
 
@@ -37,6 +39,7 @@ class AppContainer:
         laliga_client: LaLiga Fantasy HTTP client.
         leagues_service: Leagues application service.
         teams_service: Teams application service.
+        calendar_service: Calendar application service.
     """
 
     settings: Settings
@@ -45,6 +48,7 @@ class AppContainer:
     laliga_client: LaligaFantasyClient
     leagues_service: LeaguesService
     teams_service: TeamsService
+    calendar_service: CalendarService
 
     async def aclose(self) -> None:
         """Close process-lifetime HTTP clients."""
@@ -63,6 +67,7 @@ def build_container(
     laliga_client: LaligaFantasyClient | None = None,
     leagues_service: LeaguesService | None = None,
     teams_service: TeamsService | None = None,
+    calendar_service: CalendarService | None = None,
 ) -> AppContainer:
     """Build the API container.
 
@@ -73,6 +78,7 @@ def build_container(
         laliga_client: Optional Fantasy client override (tests).
         leagues_service: Optional leagues service override (tests).
         teams_service: Optional teams service override (tests).
+        calendar_service: Optional calendar service override (tests).
 
     Returns:
         Wired container.
@@ -104,6 +110,12 @@ def build_container(
             competition_id=cfg.laliga_competition_id,
         ),
     )
+    calendar = calendar_service or CalendarService(
+        CalendarRepository(
+            fantasy,
+            competition_id=cfg.laliga_competition_id,
+        ),
+    )
     return AppContainer(
         settings=cfg,
         jwt_validator=validator,
@@ -111,6 +123,7 @@ def build_container(
         laliga_client=fantasy,
         leagues_service=leagues,
         teams_service=teams,
+        calendar_service=calendar,
     )
 
 

@@ -96,9 +96,7 @@ async def test_app_oidc_validate_happy_returns_claims(
     validator = AppOidcJwksValidator(jwks_url="https://idp/jwks", issuer=ISSUER)
 
     # Act
-    claims = await validator.validate(
-        token, audience=AUDIENCE, nonce="nonce-1"
-    )
+    claims = await validator.validate(token, audience=AUDIENCE, nonce="nonce-1")
 
     # Assert
     assert claims["sub"] == "user-1"
@@ -125,9 +123,7 @@ async def test_b2c_validate_happy_returns_claims(
     )
 
     # Act
-    claims = await validator.validate(
-        token, policy=POLICY, audience=AUDIENCE, nonce="n-1"
-    )
+    claims = await validator.validate(token, policy=POLICY, audience=AUDIENCE, nonce="n-1")
 
     # Assert
     assert claims["sub"] == "b2c-sub"
@@ -276,6 +272,4 @@ async def test_b2c_validate_nonce_mismatch_raises(
 
     # Act / Assert
     with pytest.raises(ValidationError, match="nonce mismatch"):
-        await validator.validate(
-            token, policy=POLICY, audience=AUDIENCE, nonce="b"
-        )
+        await validator.validate(token, policy=POLICY, audience=AUDIENCE, nonce="b")

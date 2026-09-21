@@ -126,8 +126,6 @@ def test_create_pairing_401_returns_none(
     def handler(_request: httpx.Request) -> httpx.Response:
         return httpx.Response(401, json={"error": "unauthorized"})
 
-    original = httpx.Client
-
     class TransportClient(httpx.Client):
         def __init__(self, *args: Any, **kwargs: Any) -> None:
             kwargs["transport"] = httpx.MockTransport(handler)

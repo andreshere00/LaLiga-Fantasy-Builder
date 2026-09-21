@@ -264,9 +264,7 @@ def _callback_looks_complete(value: str, *, redirect_uri: str) -> bool:
 def _looks_like_callback(value: str, *, redirect_uri: str) -> bool:
     """Return whether text appears to contain a LaLiga authredirect callback."""
     stripped = value.strip()
-    return bool(stripped) and (
-        redirect_uri in stripped or "authredirect://" in stripped
-    )
+    return bool(stripped) and (redirect_uri in stripped or "authredirect://" in stripped)
 
 
 def _pbpaste() -> str:

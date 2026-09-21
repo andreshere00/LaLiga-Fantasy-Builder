@@ -88,3 +88,7 @@ uv run --directory backend/api pytest
 [tool.poe.tasks.generate-openapi]
 help = "Regenerate backend/api/openapi.json from FastAPI routes and schemas"
 cmd = "bash scripts/generate-openapi.sh"
+
+[tool.poe.tasks.generate-endpoint-schemas]
+help = "Regenerate docs/api/endpoint-schemas.md from openapi.json"
+cmd = "uv run --directory backend/api generate-endpoint-schemas"

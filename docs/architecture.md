@@ -89,6 +89,10 @@ Team money and lineup use the same CRS layout under
 and payload helpers with leagues. See
 [Adding teams endpoints](api/teams/adding-teams-endpoints.md).
 
+Calendar matchday reads validate the internal JWT but call public Fantasy
+paths without a LaLiga bearer (`get_public_json`). See
+[Calendar API](api/calendar/README.md).
+
 The API does not know how to open encrypted credentials or refresh LaLiga
 tokens.
 

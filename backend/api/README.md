@@ -47,6 +47,9 @@ uv run uvicorn fantasy_api.main:app --reload --port 8001
 | `GET` | `/teams/{team_id}/lineup` | Current lineup |
 | `GET` | `/teams/{team_id}/lineup/week/{week}` | Lineup for a matchweek |
 | `PUT` | `/teams/{team_id}/lineup` | Replace current lineup |
+| `GET` | `/calendar/current` | Current matchday (public Fantasy read) |
+| `GET` | `/calendar/weeks/{week}` | Fixtures for a matchday |
+| `GET` | `/calendar/weeks/{week}/stats` | Matchday stats and week points |
 
 Leagues endpoints are a thin authenticated proxy of LaLiga Fantasy. Layout:
 
@@ -58,11 +61,13 @@ Teams money/lineup use the same CRS pattern under `{CMP}/teams/...`:
 `api/teams.py` → `services/teams.py` → `repositories/teams.py` →
 `clients/laliga_fantasy.py`.
 
-See [`docs/api/leagues/`](../../docs/api/leagues/) and
-[`docs/api/teams/`](../../docs/api/teams/) for feature docs and
+See [`docs/api/leagues/`](../../docs/api/leagues/),
+[`docs/api/teams/`](../../docs/api/teams/), and
+[`docs/api/calendar/`](../../docs/api/calendar/) for feature docs and
 [`docs/api/openapi.md`](../../docs/api/openapi.md) for OpenAPI/Swagger.
 Use `uv run fantasy-leagues` for a local CLI summary (ranking, week standing,
-activity, teams) and `uv run fantasy-teams` for money and lineup.
+activity, teams), `uv run fantasy-teams` for money and lineup, and
+`uv run fantasy-calendar` for matchday fixtures and stats.
 
 ## Live connectivity check
 
@@ -124,6 +129,20 @@ uv run fantasy-teams --jwt "$INTERNAL_JWT"
 # Useful flags
 uv run fantasy-teams --team-id 99 --week 5 --json
 uv run fantasy-teams --league-id 42 --week 5
+```
+
+## CLI: fantasy-calendar
+
+Fetches current matchday metadata, fixtures, and stats for a week via this API.
+When `--week` is omitted, the week comes from `GET /calendar/current`.
+
+```bash
+cd backend/api
+uv sync --all-extras
+
+export INTERNAL_JWT='…'
+uv run fantasy-calendar --jwt "$INTERNAL_JWT"
+uv run fantasy-calendar --week 8 --json
 ```
 
 ## OpenAPI / Swagger
