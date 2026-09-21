@@ -7,6 +7,9 @@ from typing import Any
 
 import jwt
 
+DEFAULT_TEST_ISSUER = "https://auth.fantasy-builder.local"
+DEFAULT_TEST_AUDIENCE = "fantasy-api"
+
 # Re-export for tests that simulate PyJWT validation failures.
 InvalidTokenError = jwt.InvalidTokenError
 
@@ -17,8 +20,8 @@ def mint_internal_jwt(
     sub: str = "app-user-1",
     email: str = "u@example.com",
     display_name: str = "User",
-    issuer: str,
-    audience: str,
+    issuer: str = DEFAULT_TEST_ISSUER,
+    audience: str = DEFAULT_TEST_AUDIENCE,
     ttl_seconds: int = 300,
 ) -> str:
     """Return a signed RS256 JWT for test callers."""

@@ -3,37 +3,24 @@
 from __future__ import annotations
 
 import json
-import time
 from collections.abc import Callable
 
 import httpx
-import jwt
 import pytest
 from cryptography.hazmat.primitives import serialization
 from cryptography.hazmat.primitives.asymmetric import rsa
-from fantasy_api.api.deps import AppContainer, set_container
-from fantasy_api.clients.auth_credentials import AuthCredentialsClient
+from fantasy_api.api.deps import set_container
 from fantasy_api.clients.laliga_fantasy import LaligaFantasyClient
-from fantasy_api.config import Settings
 from fantasy_api.main import create_app
-from fantasy_api.repositories.calendar import CalendarRepository
-from fantasy_api.repositories.leagues import LeaguesRepository
 from fantasy_api.repositories.market import MarketRepository
-from fantasy_api.repositories.players import PlayersRepository
-from fantasy_api.repositories.teams import TeamsRepository
-from fantasy_api.security.internal_jwt import StaticInternalJwtValidator
-from fantasy_api.services.calendar import CalendarService
-from fantasy_api.services.leagues import LeaguesService
-from fantasy_api.services.market import MarketService
-from fantasy_api.services.players import PlayersService
-from fantasy_api.services.teams import TeamsService
 from fastapi.testclient import TestClient
+from jwt_mint import mint_internal_jwt
+from test_container import (
+    TEST_FANTASY_ORIGIN as FANTASY_ORIGIN,
+    TEST_LALIGA_BEARER as LALIGA_BEARER,
+    build_test_container,
+)
 
-ISSUER = "https://auth.fantasy-builder.local"
-AUDIENCE = "fantasy-api"
-SERVICE_TOKEN = "api-service-token"
-FANTASY_ORIGIN = "https://fantasy.test"
-LALIGA_BEARER = "laliga-secret-token"
 LEAGUE_ID = "lg-1"
 
 
@@ -56,34 +43,6 @@ def rsa_pems() -> tuple[str, str]:
     return private_pem, public_pem
 
 
-def mint_internal_jwt(private_pem: str) -> str:
-    now = int(time.time())
-    return jwt.encode(
-        {
-            "sub": "app-user-1",
-            "email": "u@example.com",
-            "name": "User",
-            "iss": ISSUER,
-            "aud": AUDIENCE,
-            "iat": now,
-            "exp": now + 300,
-        },
-        private_pem,
-        algorithm="RS256",
-    )
-
-
-def _auth_ok_handler(_request: httpx.Request) -> httpx.Response:
-    return httpx.Response(
-        200,
-        json={
-            "bearer_token": LALIGA_BEARER,
-            "expires_at": int(time.time()) + 100,
-            "token_type": "Bearer",
-        },
-    )
-
-
 def _auth_needs_reauth_handler(_request: httpx.Request) -> httpx.Response:
     return httpx.Response(401, json={"error": "needs_reauth", "detail": "pair again"})
 
@@ -94,70 +53,13 @@ def _assert_fantasy_auth(request: httpx.Request) -> None:
     assert request.headers.get("x-lang") == "es"
 
 
-def build_market_container(
-    public_pem: str,
-    *,
-    fantasy_handler: httpx.MockTransport | None = None,
-    auth_handler: httpx.MockTransport | None = None,
-) -> AppContainer:
-    settings = Settings(
-        auth_jwks_url="http://auth.test/jwks",
-        internal_jwt_issuer=ISSUER,
-        internal_jwt_audience=AUDIENCE,
-        auth_internal_base_url="http://auth.test",
-        internal_service_token=SERVICE_TOKEN,
-        laliga_fantasy_origin=FANTASY_ORIGIN,
-        laliga_competition_id=1,
-        log_json=False,
-    )
-    credentials = AuthCredentialsClient(
-        base_url=settings.auth_internal_base_url,
-        service_token=SERVICE_TOKEN,
-        transport=auth_handler or httpx.MockTransport(_auth_ok_handler),
-    )
-    laliga_client = LaligaFantasyClient(
-        origin=settings.laliga_fantasy_origin,
-        transport=fantasy_handler,
-    )
-    cid = settings.laliga_competition_id
-    return AppContainer(
-        settings=settings,
-        jwt_validator=StaticInternalJwtValidator(
-            public_key_pem=public_pem,
-            issuer=ISSUER,
-            audience=AUDIENCE,
-        ),
-        credentials=credentials,
-        laliga_client=laliga_client,
-        leagues_service=LeaguesService(
-            credentials,
-            LeaguesRepository(laliga_client, competition_id=cid),
-        ),
-        teams_service=TeamsService(
-            credentials,
-            TeamsRepository(laliga_client, competition_id=cid),
-        ),
-        calendar_service=CalendarService(
-            CalendarRepository(laliga_client, competition_id=cid),
-        ),
-        players_service=PlayersService(
-            credentials,
-            PlayersRepository(laliga_client, competition_id=cid),
-        ),
-        market_service=MarketService(
-            credentials,
-            MarketRepository(laliga_client, competition_id=cid),
-        ),
-    )
-
-
 def make_client(
     public_pem: str,
     fantasy_handler: Callable[[httpx.Request], httpx.Response],
     *,
     auth_handler: httpx.MockTransport | None = None,
 ) -> TestClient:
-    container = build_market_container(
+    container = build_test_container(
         public_pem,
         fantasy_handler=httpx.MockTransport(fantasy_handler),
         auth_handler=auth_handler,
