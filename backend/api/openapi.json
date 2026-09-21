@@ -2,7 +2,7 @@
   "openapi": "3.1.0",
   "info": {
     "title": "LaLiga Fantasy Builder API",
-    "description": "LaLiga Fantasy Builder API.\n\nAuthenticated callers send an **internal JWT** minted by the auth service\n(``POST /auth/token``). LaLiga-backed routes exchange that JWT for a short-lived\nFantasy bearer via auth's private credential endpoint; bearers are never\nreturned to clients.",
+    "description": "LaLiga Fantasy Builder API.\n\nAuthenticated callers send an **internal JWT** minted by the auth service\n(``POST /auth/token``). League and team routes exchange that JWT for a\nshort-lived Fantasy bearer via auth's private credential endpoint; bearers are\nnever returned to clients. Calendar reads call public upstream Fantasy resources\nand omit the LaLiga bearer while still requiring the internal JWT.",
     "version": "0.1.0"
   },
   "paths": {

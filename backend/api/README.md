@@ -9,8 +9,10 @@ private credential endpoint. Never opens the token vault.
 1. Browser authenticates with auth cookies, then `POST /auth/token` (CSRF).
 2. Browser (or BFF) calls this API with `Authorization: Bearer <internal JWT>`.
 3. This API verifies the JWT against auth JWKS (`AUTH_JWKS_URL`).
-4. For LaLiga calls, this API calls `GET /internal/laliga/bearer` with the same
-   JWT plus `X-Service-Token` (never exposed to the browser).
+4. For league and team LaLiga calls, this API calls `GET /internal/laliga/bearer`
+   with the same JWT plus `X-Service-Token` (never exposed to the browser).
+   Calendar routes still require the internal JWT but call public upstream
+   Fantasy reads without exchanging a bearer.
 
 `/internal/*` on auth must stay on a private network.
 

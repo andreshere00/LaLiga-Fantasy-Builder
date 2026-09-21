@@ -105,17 +105,30 @@ def _build_report(
     }
 
 
-def _print_report(report: dict[str, Any]) -> None:
-    """Print a human-readable calendar summary."""
-    week = report["week"]
-    current = report["current"]
-    print(f"Matchweek {week}")
+def _print_matchday_window(current: dict[str, Any]) -> None:
+    """Print opening/closing dates and live flag for a matchday object."""
     opening = current.get("openingWeekDate")
     closing = current.get("closingWeekDate")
     if opening or closing:
         print(f"  Window: {opening or '?'} → {closing or '?'}")
     if current.get("isLive"):
         print("  Status: live")
+
+
+def _print_report(report: dict[str, Any]) -> None:
+    """Print a human-readable calendar summary."""
+    week = report["week"]
+    current = report["current"]
+    raw_current_week = current.get("weekNumber")
+    current_week = int(raw_current_week) if raw_current_week is not None else None
+    same_week = current_week is not None and week == current_week
+
+    print(f"Matchweek {week}")
+    if same_week:
+        _print_matchday_window(current)
+    elif current_week is not None:
+        print(f"\nCurrent matchday (week {current_week}):")
+        _print_matchday_window(current)
 
     fixtures = report.get("fixtures") or []
     print(f"\nFixtures ({len(fixtures)}):")

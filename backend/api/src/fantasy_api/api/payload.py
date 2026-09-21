@@ -5,7 +5,7 @@ from __future__ import annotations
 from collections.abc import Callable
 from typing import Any
 
-from pydantic import BaseModel
+from pydantic import BaseModel, ValidationError
 
 from fantasy_api.domain.errors import UpstreamError
 from fantasy_api.schemas.payload import as_object_list
@@ -50,4 +50,14 @@ def as_model_list[TModel: BaseModel](
     Raises:
         UpstreamError: When the payload is not a collection of objects.
     """
-    return [model.model_validate(item) for item in parse_payload(as_object_list, data)]
+    validated: list[TModel] = []
+    for item in parse_payload(as_object_list, data):
+        try:
+            validated.append(model.model_validate(item))
+        except ValidationError as exc:
+            raise UpstreamError(
+                "fantasy payload had an unexpected shape",
+                status_code=502,
+                category="fantasy_error",
+            ) from exc
+    return validated
