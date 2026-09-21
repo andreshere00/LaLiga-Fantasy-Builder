@@ -32,12 +32,12 @@ class LaligaFantasyClient:
         """Close the shared HTTP client."""
         await self._http.aclose()
 
-    async def get_json(self, path: str, bearer_token: str) -> Any:
-        """Perform an authenticated GET and return the JSON body.
+    async def get_json(self, path: str, bearer_token: str | None = None) -> Any:
+        """Perform a GET and return the JSON body.
 
         Args:
             path: Absolute path under the Fantasy origin (must start with ``/``).
-            bearer_token: LaLiga B2C bearer token.
+            bearer_token: Optional LaLiga B2C bearer token (public reads omit it).
 
         Returns:
             Parsed JSON body (object or array).
@@ -72,16 +72,16 @@ class LaligaFantasyClient:
         self,
         method: str,
         path: str,
-        bearer_token: str,
+        bearer_token: str | None,
         *,
         body: dict[str, Any] | None = None,
     ) -> Any:
-        """Send an authenticated Fantasy request and parse JSON.
+        """Send a Fantasy request and parse JSON.
 
         Args:
             method: HTTP method (``GET`` or ``PUT``).
             path: Absolute path under the Fantasy origin.
-            bearer_token: LaLiga B2C bearer token.
+            bearer_token: LaLiga B2C bearer token (``None`` for public reads).
             body: Optional JSON body (PUT).
 
         Returns:
@@ -92,10 +92,11 @@ class LaligaFantasyClient:
         """
         url = f"{self._origin}{path}"
         headers = {
-            "Authorization": f"Bearer {bearer_token}",
             "Accept": "application/json",
             "x-lang": "es",
         }
+        if bearer_token is not None:
+            headers["Authorization"] = f"Bearer {bearer_token}"
         request_kwargs: dict[str, Any] = {"headers": headers}
         if body is not None:
             headers["Content-Type"] = "application/json"

@@ -131,9 +131,7 @@ def test_build_container_production_with_fake_pool_redis(
     )
 
     # Act
-    container = deps.build_container(
-        settings, pg_pool=fake_pool, redis=fake_redis
-    )
+    container = deps.build_container(settings, pg_pool=fake_pool, redis=fake_redis)
 
     # Assert
     assert container.pg_pool is fake_pool
@@ -165,9 +163,7 @@ async def test_require_internal_user_valid_returns_user() -> None:
     issued = container.internal_tokens.issue_for_user(user)
 
     # Act
-    resolved = await deps.require_internal_user(
-        f"Bearer {issued.access_token}"
-    )
+    resolved = await deps.require_internal_user(f"Bearer {issued.access_token}")
 
     # Assert
     assert resolved.user_id == "u-1"

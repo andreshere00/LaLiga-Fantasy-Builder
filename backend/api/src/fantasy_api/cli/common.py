@@ -136,13 +136,13 @@ def exchange_token(
     return str(token)
 
 
-def api_get(api_base: str, path: str, jwt: str) -> Any:
-    """GET a Fantasy Builder API path with the internal JWT.
+def api_get(api_base: str, path: str, jwt: str | None = None) -> Any:
+    """GET a Fantasy Builder API path, optionally with the internal JWT.
 
     Args:
         api_base: API service base URL.
         path: Absolute API path (e.g. ``/leagues``).
-        jwt: Internal Bearer JWT.
+        jwt: Optional internal Bearer JWT (public routes omit it).
 
     Returns:
         Parsed JSON body.
@@ -151,7 +151,9 @@ def api_get(api_base: str, path: str, jwt: str) -> Any:
         RuntimeError: On non-success responses.
     """
     url = f"{api_base.rstrip('/')}{path}"
-    headers = {"Authorization": f"Bearer {jwt}", "Accept": "application/json"}
+    headers = {"Accept": "application/json"}
+    if jwt:
+        headers["Authorization"] = f"Bearer {jwt}"
     with httpx.Client(timeout=60.0) as client:
         response = client.get(url, headers=headers)
     if response.status_code == 401:
