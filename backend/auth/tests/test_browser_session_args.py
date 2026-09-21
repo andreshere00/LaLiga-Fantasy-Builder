@@ -47,6 +47,15 @@ def test_parse_args_leagues_analysis_accepts_positive_week() -> None:
     assert args.activity_page == 2
 
 
+def test_validate_analysis_args_market_player_team_requires_league_id() -> None:
+    args = parse_args(
+        ["market-analysis", "--player-team-id", "pt-9"],
+    )
+
+    with pytest.raises(BrowserSessionError, match="requires --league-id"):
+        validate_analysis_args(args)
+
+
 def test_validate_analysis_args_with_put_lineup_file_passes(tmp_path: Path) -> None:
     # Arrange
     path = tmp_path / "lineup.json"

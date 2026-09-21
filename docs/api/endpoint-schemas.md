@@ -689,11 +689,6 @@ Get offers on an owned squad entry
 
 **HTTP 200:** `PlayerTeamOffers`
 
-| Field | Type | Required | Description |
-|-------|------|----------|-------------|
-| `offers` | array[FlexibleModel] | no |  |
-
-Full nested fields: [`PlayerTeamOffers`](#playerteamoffers).
 
 
 ### `DELETE` `/market/leagues/{league_id}/{market_id}`
@@ -1050,10 +1045,6 @@ Nested models referenced by the operations above. All Fantasy proxy models use `
 | `visitorScore` | integer | no |  |
 | `featured` | boolean | no |  |
 
-### `FlexibleModel`
-
-Type: `object`
-
 ### `HealthResponse`
 
 | Field | Type | Required | Description |
@@ -1303,9 +1294,7 @@ Type: `object`
 
 ### `PlayerTeamOffers`
 
-| Field | Type | Required | Description |
-|-------|------|----------|-------------|
-| `offers` | array[FlexibleModel] | no |  |
+Type: `object`
 
 ### `PremiumConfigurations`
 

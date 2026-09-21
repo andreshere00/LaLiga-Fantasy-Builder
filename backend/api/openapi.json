@@ -4030,13 +4030,6 @@
         "title": "Fixture",
         "description": "Single fixture in a matchday calendar."
       },
-      "FlexibleModel": {
-        "properties": {},
-        "additionalProperties": true,
-        "type": "object",
-        "title": "FlexibleModel",
-        "description": "Base model that preserves unknown Fantasy fields in OpenAPI/docs."
-      },
       "HTTPValidationError": {
         "properties": {
           "detail": {
@@ -5583,22 +5576,7 @@
         "description": "Weekly stats block for a player."
       },
       "PlayerTeamOffers": {
-        "properties": {
-          "offers": {
-            "anyOf": [
-              {
-                "items": {
-                  "$ref": "#/components/schemas/FlexibleModel"
-                },
-                "type": "array"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Offers"
-          }
-        },
+        "properties": {},
         "additionalProperties": true,
         "type": "object",
         "title": "PlayerTeamOffers",

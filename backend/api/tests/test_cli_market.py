@@ -106,6 +106,8 @@ def test_main_with_player_team_id_fetches_offers(
             "tok",
             "--api-base",
             "http://api.test",
+            "--league-id",
+            "42",
             "--player-team-id",
             "pt-9",
             "--json",
@@ -128,6 +130,24 @@ def test_main_missing_credentials_returns_1(
 
     assert code == 1
     assert "Missing credentials" in capsys.readouterr().err
+
+
+def test_main_player_team_id_without_league_id_returns_1(
+    capsys: pytest.CaptureFixture[str],
+) -> None:
+    code = market_cli.main(
+        [
+            "--jwt",
+            "tok",
+            "--api-base",
+            "http://api.test",
+            "--player-team-id",
+            "pt-9",
+        ],
+    )
+
+    assert code == 1
+    assert "requires --league-id" in capsys.readouterr().err
 
 
 def test_main_unknown_league_id_returns_1(

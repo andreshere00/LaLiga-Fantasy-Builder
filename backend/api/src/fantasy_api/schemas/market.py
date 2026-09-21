@@ -20,8 +20,6 @@ class MarketHistoryEntry(FlexibleModel):
 class PlayerTeamOffers(FlexibleModel):
     """Offers on an owned squad entry."""
 
-    offers: list[FlexibleModel] | None = None
-
 
 class MarketMutationResult(FlexibleModel):
     """Response from market write endpoints (may be empty)."""

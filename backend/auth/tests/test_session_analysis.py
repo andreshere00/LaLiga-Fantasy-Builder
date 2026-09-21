@@ -105,7 +105,7 @@ def test_fetch_market_analysis_hits_market_routes() -> None:
 
     report = fetch_market_analysis(
         get_json=get_json,
-        league_filter=None,
+        league_filter="42",
         player_team_id="pt-1",
     )
 
@@ -148,13 +148,24 @@ def test_fetch_market_analysis_missing_league_raises() -> None:
         )
 
 
+def test_fetch_market_analysis_player_team_without_league_raises() -> None:
+    _, get_json = _recorder({"/leagues": [{"id": "1"}]})
+
+    with pytest.raises(BrowserSessionError, match="requires --league-id"):
+        fetch_market_analysis(
+            get_json=get_json,
+            league_filter=None,
+            player_team_id="pt-1",
+        )
+
+
 def test_fetch_market_analysis_encodes_slash_ids() -> None:
     payloads = {"/leagues": [{"id": "a/b", "name": "Liga"}]}
     seen, get_json = _recorder(payloads)
 
     fetch_market_analysis(
         get_json=get_json,
-        league_filter=None,
+        league_filter="a/b",
         player_team_id="p/t",
     )
 

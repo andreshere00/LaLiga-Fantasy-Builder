@@ -480,6 +480,24 @@ def test_get_market_history_accepts_wrapped_data_list(
     assert response.json() == [{"id": "h1"}, {"id": "h2"}]
 
 
+def test_get_market_history_rejects_invalid_row_shape(
+    rsa_pems: tuple[str, str],
+) -> None:
+    _private_pem, public_pem = rsa_pems
+    token = mint_internal_jwt(_private_pem)
+
+    def handler(_request: httpx.Request) -> httpx.Response:
+        return httpx.Response(200, json=[{"id": {"bad": True}}])
+
+    with make_client(public_pem, handler) as client:
+        response = client.get(
+            f"/market/leagues/{LEAGUE_ID}/history",
+            headers={"Authorization": f"Bearer {token}"},
+        )
+
+    assert response.status_code == 502
+
+
 def test_get_market_history_rejects_non_list_payload(
     rsa_pems: tuple[str, str],
 ) -> None:

@@ -158,8 +158,14 @@ def fetch_market_analysis(
         Aggregated market JSON for one or more leagues.
 
     Raises:
-        BrowserSessionError: When the requested league is missing.
+        BrowserSessionError: When the requested league is missing or offers
+            are requested without a league filter.
     """
+    if player_team_id is not None and not league_filter:
+        raise BrowserSessionError(
+            "--player-team-id requires --league-id. Squad-entry ids are "
+            "league-scoped; omit --player-team-id to fetch market for all leagues.",
+        )
     leagues = _as_league_list(get_json("/leagues"))
     if league_filter:
         leagues = [item for item in leagues if str(_league_id(item)) == str(league_filter)]

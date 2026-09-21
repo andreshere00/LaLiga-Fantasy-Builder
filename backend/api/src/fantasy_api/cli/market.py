@@ -50,7 +50,9 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument(
         "--player-team-id",
         default=None,
-        help="When set, also GET offers for this squad-entry id",
+        help=(
+            "Squad-entry id; also GET offers (requires --league-id)"
+        ),
     )
     parser.add_argument(
         "--json",
@@ -64,6 +66,10 @@ def main(argv: list[str] | None = None) -> int:
         return 1
 
     try:
+        _require_league_for_player_team(
+            league_filter=args.league_id,
+            player_team_id=args.player_team_id,
+        )
         report = _build_report(
             api_base=args.api_base,
             jwt=jwt,
@@ -84,6 +90,19 @@ def main(argv: list[str] | None = None) -> int:
     return 0
 
 
+def _require_league_for_player_team(
+    *,
+    league_filter: str | None,
+    player_team_id: str | None,
+) -> None:
+    """Ensure squad-entry offers are requested for a single league."""
+    if player_team_id is not None and not league_filter:
+        raise RuntimeError(
+            "--player-team-id requires --league-id. Squad-entry ids are "
+            "league-scoped; omit --player-team-id to fetch market for all leagues.",
+        )
+
+
 def _build_report(
     *,
     api_base: str,
@@ -92,6 +111,10 @@ def _build_report(
     player_team_id: str | None,
 ) -> dict[str, Any]:
     """Fetch market reads for one or more leagues."""
+    _require_league_for_player_team(
+        league_filter=league_filter,
+        player_team_id=player_team_id,
+    )
     leagues_payload = api_get(api_base, "/leagues", jwt=jwt)
     leagues = as_league_list(leagues_payload)
     if league_filter:

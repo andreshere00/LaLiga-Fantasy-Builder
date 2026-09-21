@@ -49,7 +49,7 @@ expects the **squad-entry id** (`playerTeamId`), not the master footballer id.
 ```bash
 cd backend/api
 uv run fantasy-market --league-id 123 --json
-uv run fantasy-market --player-team-id pt-9 --json
+uv run fantasy-market --league-id 123 --player-team-id pt-9 --json
 ```
 
 ```bash
