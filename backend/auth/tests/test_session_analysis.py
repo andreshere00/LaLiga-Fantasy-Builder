@@ -7,8 +7,8 @@ from typing import Any
 import pytest
 from fantasy_auth.cli.browser_session.errors import BrowserSessionError
 from fantasy_auth.cli.session_analysis import (
-    fetch_leagues_analysis,
     fetch_buyout_analysis,
+    fetch_leagues_analysis,
     fetch_market_analysis,
     fetch_teams_analysis,
     infer_week,
