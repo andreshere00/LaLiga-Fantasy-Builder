@@ -5,6 +5,7 @@ from __future__ import annotations
 import argparse
 import json
 import sys
+from typing import Any
 
 import httpx
 
@@ -66,6 +67,9 @@ def main(argv: list[str] | None = None) -> int:
     except httpx.HTTPError as exc:
         print(f"HTTP error: {exc}", file=sys.stderr)
         return 1
+    except RuntimeError as exc:
+        print(str(exc), file=sys.stderr)
+        return 1
 
     report = {
         "league_id": args.league_id,
@@ -75,5 +79,17 @@ def main(argv: list[str] | None = None) -> int:
     if args.json:
         print(json.dumps(report, ensure_ascii=False, indent=2))
     else:
-        print(json.dumps(shield, ensure_ascii=False, indent=2))
+        _print_shield(args.league_id, args.player_team_id, shield)
     return 0
+
+
+def _print_shield(league_id: str, player_team_id: str, shield: Any) -> None:
+    """Print a one-line shield summary."""
+    shielded = shield.get("isShielded") if isinstance(shield, dict) else None
+    if shielded is True:
+        state = "shielded"
+    elif shielded is False:
+        state = "not shielded"
+    else:
+        state = "status unknown"
+    print(f"League {league_id} squad entry {player_team_id}: {state}.")

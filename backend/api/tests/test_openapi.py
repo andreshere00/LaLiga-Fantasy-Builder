@@ -121,6 +121,19 @@ def test_generate_endpoint_schemas_doc_lists_all_public_routes() -> None:
     assert "| `local` | MatchSide |" in markdown
 
 
+def test_generate_endpoint_schemas_doc_shows_bounds_and_unions() -> None:
+    # Arrange
+    schema = build_openapi_schema(create_app())
+
+    # Act
+    markdown = generate_endpoint_schemas_doc(schema)
+
+    # Assert
+    assert "| body | `buyoutClause` | integer | yes | >0 |" in markdown
+    assert "string \\| integer" in markdown
+    assert "| path | `week` | integer | yes | min=1 |" in markdown
+
+
 def test_generate_openapi_writes_file(tmp_path: Path) -> None:
     # Arrange
     output = tmp_path / "openapi.json"

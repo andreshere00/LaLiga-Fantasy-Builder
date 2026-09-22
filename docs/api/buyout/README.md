@@ -39,9 +39,10 @@ forwards whatever the client supplies.
 - **Ownership:** this API does not verify that ids belong to the JWT user;
   Fantasy enforces access. Obtain ids from `GET /leagues`, team squads, or
   player league cards (`buyoutClause`, `isShielded` on reads).
-- **CLI:** `fantasy-buyout` and `fantasy-browser-session buyout-analysis` are
-  **read-only** (shield status only; no pay, increase, or activate in
-  automated flows).
+- **CLI:** `fantasy-buyout` prints a one-line shield summary. `--json` prints
+  the league id, squad-entry id, and shield body. `fantasy-browser-session
+  buyout-analysis` is **read-only** (shield status only; no pay, increase, or
+  activate in automated flows).
 
 ```bash
 cd backend/api
