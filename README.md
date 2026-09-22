@@ -11,10 +11,12 @@ OpenAPI surface.
 | **Leagues** | List your competitions, overall and week standings, activity, rival teams, and a squad |
 | **Teams** | Read cash/investment, current and matchweek lineup, and optionally replace a lineup |
 | **Players** | Browse the public catalog and market-value history; open a league-contextual player card |
+| **Market** | Read league market and history; manage bids, listings, and offers via API |
 
 Interactive docs: http://localhost:8001/docs (Swagger) once the API is running.
 Feature notes: [leagues](docs/api/leagues/README.md),
-[teams](docs/api/teams/README.md), [players](docs/api/players/README.md).
+[teams](docs/api/teams/README.md), [players](docs/api/players/README.md),
+[market](docs/api/market/README.md).
 
 Local CLIs (call the API, not Fantasy directly):
 
@@ -31,6 +33,7 @@ Signed-in analysis (Keycloak demo user, then LaLiga consent in your browser):
 cd backend/auth
 uv run fantasy-browser-session leagues-analysis --json
 uv run fantasy-browser-session teams-analysis --json
+uv run fantasy-browser-session market-analysis --json
 ```
 
 Catalog and market-value reads need no login. League, team, and league-card

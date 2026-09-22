@@ -45,7 +45,7 @@ plain text body, wrapped list (`{"data": [...]}`) on both HTTP routes and probes
 | Pitfall | Symptom | Fix |
 |---------|---------|-----|
 | Uncaught `JSONDecodeError` | FastAPI 500 instead of `UpstreamError` | Catch `json.JSONDecodeError` on every success path (`get_json`, `put_json`, …) |
-| Empty body on all methods | GET `{}` poisons list routes; fake rows via `as_object_list({})` | Return `{}` only for **PUT** or **HTTP 204**; GET with empty body → 502 |
+| Empty body on all methods | GET `{}` poisons list routes; fake rows via `as_object_list({})` | Return `{}` only for **PUT**, **POST**, **DELETE**, or **HTTP 204**; GET with empty body → 502 |
 | New client per request | High TLS/handshake cost when CLI hits many API routes | One `httpx.AsyncClient` per `LaligaFantasyClient` / `AuthCredentialsClient` instance (reuse in container) |
 
 Auth’s credentials client should follow the same JSON rules on success paths.

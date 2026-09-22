@@ -109,13 +109,16 @@ uv run fantasy-browser-session --exports
 uv run fantasy-browser-session --player-id 3277 --json
 uv run fantasy-browser-session leagues-analysis --json
 uv run fantasy-browser-session teams-analysis --json
+uv run fantasy-browser-session market-analysis --json
 ```
 
 From the repo root: `./scripts/fantasy-browser-session.sh leagues-analysis`.
 
 `leagues-analysis` calls `GET /leagues`, standing (overall and week), activity,
 teams, and a squad. `teams-analysis` calls `GET /teams/{id}/money`, current
-lineup, and week lineup. `--put-lineup` is optional and must point at a real
+lineup, and week lineup. `market-analysis` calls `GET /market/leagues/{id}`,
+history, and optional squad-entry offers (read-only). `--put-lineup` is optional
+and must point at a real
 JSON file plus a real `--team-id` (not a placeholder). `--week` defaults to
 the jornada inferred from `/leagues`. `--headless` hides the Keycloak window.
 LaLiga pairing uses your normal browser. `--no-pair` skips LaLiga if you only

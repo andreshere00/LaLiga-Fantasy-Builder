@@ -7,7 +7,6 @@ from collections.abc import Iterator
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import httpx
-import jwt
 import pytest
 from cryptography.hazmat.primitives import serialization
 from cryptography.hazmat.primitives.asymmetric import rsa
@@ -20,28 +19,29 @@ from fantasy_api.api.deps import (
 )
 from fantasy_api.clients.auth_credentials import AuthCredentialsClient
 from fantasy_api.clients.laliga_fantasy import LaligaFantasyClient
-from fantasy_api.config import Settings, get_settings
+from fantasy_api.config import get_settings
 from fantasy_api.domain.errors import NeedsReauthError, UnauthorizedError, UpstreamError
 from fantasy_api.main import create_app, run
-from fantasy_api.repositories.calendar import CalendarRepository
-from fantasy_api.repositories.leagues import LeaguesRepository
-from fantasy_api.repositories.players import PlayersRepository
-from fantasy_api.repositories.teams import TeamsRepository
 from fantasy_api.security.internal_jwt import (
     InternalJwtValidator,
-    StaticInternalJwtValidator,
 )
-from fantasy_api.services.calendar import CalendarService
 from fantasy_api.services.leagues import LeaguesService
-from fantasy_api.services.players import PlayersService
 from fantasy_api.services.teams import TeamsService
 from fastapi import FastAPI
 from fastapi.testclient import TestClient
-
-ISSUER = "https://auth.fantasy-builder.local"
-AUDIENCE = "fantasy-api"
-SERVICE_TOKEN = "api-service-token"
-FANTASY_ORIGIN = "https://fantasy.test"
+from jwt_mint import (
+    DEFAULT_TEST_AUDIENCE as AUDIENCE,
+)
+from jwt_mint import (
+    DEFAULT_TEST_ISSUER as ISSUER,
+)
+from jwt_mint import (
+    InvalidTokenError,
+    mint_internal_jwt,
+)
+from test_container import TEST_SERVICE_TOKEN as SERVICE_TOKEN
+from test_container import build_test_container
+from test_container import test_settings as _test_settings
 
 
 @pytest.fixture
@@ -63,112 +63,6 @@ def rsa_pems() -> tuple[str, str]:
     return private_pem, public_pem
 
 
-def mint_internal_jwt(
-    private_pem: str,
-    *,
-    sub: str = "app-user-1",
-    issuer: str = ISSUER,
-    audience: str = AUDIENCE,
-    ttl_seconds: int = 300,
-) -> str:
-    now = int(time.time())
-    return jwt.encode(
-        {
-            "sub": sub,
-            "email": "u@example.com",
-            "name": "User",
-            "iss": issuer,
-            "aud": audience,
-            "iat": now,
-            "exp": now + ttl_seconds,
-        },
-        private_pem,
-        algorithm="RS256",
-    )
-
-
-def build_api_container(
-    public_pem: str,
-    *,
-    transport: httpx.MockTransport | None = None,
-    fantasy_transport: httpx.MockTransport | None = None,
-) -> AppContainer:
-    settings = Settings(
-        auth_jwks_url="http://auth.test/jwks",
-        internal_jwt_issuer=ISSUER,
-        internal_jwt_audience=AUDIENCE,
-        auth_internal_base_url="http://auth.test",
-        internal_service_token=SERVICE_TOKEN,
-        laliga_fantasy_origin=FANTASY_ORIGIN,
-        laliga_competition_id=1,
-        log_json=False,
-    )
-    validator = StaticInternalJwtValidator(
-        public_key_pem=public_pem,
-        issuer=ISSUER,
-        audience=AUDIENCE,
-    )
-    credentials = AuthCredentialsClient(
-        base_url=settings.auth_internal_base_url,
-        service_token=SERVICE_TOKEN,
-        transport=transport,
-    )
-    laliga_client = LaligaFantasyClient(
-        origin=settings.laliga_fantasy_origin,
-        transport=fantasy_transport,
-    )
-    leagues_service = LeaguesService(
-        credentials,
-        LeaguesRepository(
-            laliga_client,
-            competition_id=settings.laliga_competition_id,
-        ),
-    )
-    teams_service = TeamsService(
-        credentials,
-        TeamsRepository(
-            laliga_client,
-            competition_id=settings.laliga_competition_id,
-        ),
-    )
-    calendar_service = CalendarService(
-        CalendarRepository(
-            laliga_client,
-            competition_id=settings.laliga_competition_id,
-        ),
-    )
-    players_service = PlayersService(
-        credentials,
-        PlayersRepository(
-            laliga_client,
-            competition_id=settings.laliga_competition_id,
-        ),
-    )
-    return AppContainer(
-        settings=settings,
-        jwt_validator=validator,
-        credentials=credentials,
-        laliga_client=laliga_client,
-        leagues_service=leagues_service,
-        teams_service=teams_service,
-        calendar_service=calendar_service,
-        players_service=players_service,
-    )
-
-
-def _test_settings() -> Settings:
-    return Settings(
-        auth_jwks_url="http://auth.test/jwks",
-        internal_jwt_issuer=ISSUER,
-        internal_jwt_audience=AUDIENCE,
-        auth_internal_base_url="http://auth.test",
-        internal_service_token=SERVICE_TOKEN,
-        laliga_fantasy_origin=FANTASY_ORIGIN,
-        laliga_competition_id=1,
-        log_json=False,
-    )
-
-
 @pytest.fixture
 def client(rsa_pems: tuple[str, str]) -> Iterator[TestClient]:
     _private_pem, public_pem = rsa_pems
@@ -185,9 +79,9 @@ def client(rsa_pems: tuple[str, str]) -> Iterator[TestClient]:
             },
         )
 
-    container = build_api_container(
+    container = build_test_container(
         public_pem,
-        transport=httpx.MockTransport(handler),
+        auth_handler=httpx.MockTransport(handler),
     )
     app = create_app(settings=container.settings, container=container)
     set_container(container)
@@ -204,7 +98,11 @@ def test_me_returns_user_from_jwt(
 ) -> None:
     # Arrange
     private_pem, _public_pem = rsa_pems
-    token = mint_internal_jwt(private_pem)
+    token = mint_internal_jwt(
+        private_pem,
+        issuer=ISSUER,
+        audience=AUDIENCE,
+    )
 
     # Act
     response = client.get("/me", headers={"Authorization": f"Bearer {token}"})
@@ -220,7 +118,11 @@ def test_credential_probe_fetches_bearer(
 ) -> None:
     # Arrange
     private_pem, _public_pem = rsa_pems
-    token = mint_internal_jwt(private_pem)
+    token = mint_internal_jwt(
+        private_pem,
+        issuer=ISSUER,
+        audience=AUDIENCE,
+    )
 
     # Act
     response = client.get(
@@ -249,7 +151,11 @@ def test_internal_jwt_validator_valid_token_returns_claims(
 ) -> None:
     # Arrange
     private_pem, public_pem = rsa_pems
-    token = mint_internal_jwt(private_pem)
+    token = mint_internal_jwt(
+        private_pem,
+        issuer=ISSUER,
+        audience=AUDIENCE,
+    )
     mock_signing_key = MagicMock()
     mock_signing_key.key = public_pem
     mock_client = MagicMock()
@@ -341,14 +247,14 @@ def test_getattr_app_creates_application(rsa_pems: tuple[str, str]) -> None:
 
     _private_pem, public_pem = rsa_pems
     settings = _test_settings()
-    container = build_api_container(public_pem)
+    container = build_test_container(public_pem)
 
     with (
         patch.object(main_mod, "get_settings", return_value=settings),
         patch.object(main_mod, "build_container", return_value=container),
     ):
         # Act
-        app = main_mod.__getattr__("app")
+        app = main_mod.__getattr__("app")  # pyright: ignore[reportCallIssue]
 
     # Assert
     assert isinstance(app, FastAPI)
@@ -399,7 +305,11 @@ def test_me_rejects_bad_signature(
         format=serialization.PrivateFormat.PKCS8,
         encryption_algorithm=serialization.NoEncryption(),
     ).decode()
-    token = mint_internal_jwt(other_pem)
+    token = mint_internal_jwt(
+        other_pem,
+        issuer=ISSUER,
+        audience=AUDIENCE,
+    )
 
     # Act
     response = client.get("/me", headers={"Authorization": f"Bearer {token}"})
@@ -456,7 +366,7 @@ async def test_get_current_user_missing_sub_raises_unauthorized(
 ) -> None:
     # Arrange
     _private_pem, public_pem = rsa_pems
-    container = build_api_container(public_pem)
+    container = build_test_container(public_pem)
     fake_validator = MagicMock()
     fake_validator.validate.return_value = {"email": "u@example.com"}
     container.jwt_validator = fake_validator
@@ -485,7 +395,11 @@ async def test_credentials_client_maps_needs_reauth(
         service_token=SERVICE_TOKEN,
         transport=httpx.MockTransport(handler),
     )
-    token = mint_internal_jwt(private_pem)
+    token = mint_internal_jwt(
+        private_pem,
+        issuer=ISSUER,
+        audience=AUDIENCE,
+    )
 
     # Act / Assert
     with pytest.raises(NeedsReauthError):
@@ -507,7 +421,11 @@ async def test_credentials_client_401_non_reauth_raises_upstream(
         service_token=SERVICE_TOKEN,
         transport=httpx.MockTransport(handler),
     )
-    token = mint_internal_jwt(private_pem)
+    token = mint_internal_jwt(
+        private_pem,
+        issuer=ISSUER,
+        audience=AUDIENCE,
+    )
 
     # Act / Assert
     with pytest.raises(UpstreamError, match="auth unauthorized") as exc_info:
@@ -531,7 +449,11 @@ async def test_credentials_client_5xx_raises_upstream(
         service_token=SERVICE_TOKEN,
         transport=httpx.MockTransport(handler),
     )
-    token = mint_internal_jwt(private_pem)
+    token = mint_internal_jwt(
+        private_pem,
+        issuer=ISSUER,
+        audience=AUDIENCE,
+    )
 
     # Act / Assert
     with pytest.raises(UpstreamError, match="auth credential request failed") as exc_info:
@@ -555,7 +477,11 @@ async def test_credentials_client_401_non_json_raises_upstream(
         service_token=SERVICE_TOKEN,
         transport=httpx.MockTransport(handler),
     )
-    token = mint_internal_jwt(private_pem)
+    token = mint_internal_jwt(
+        private_pem,
+        issuer=ISSUER,
+        audience=AUDIENCE,
+    )
 
     # Act / Assert
     with pytest.raises(UpstreamError, match="auth unauthorized") as exc_info:
@@ -578,7 +504,11 @@ async def test_credentials_client_200_non_json_raises_upstream(
         service_token=SERVICE_TOKEN,
         transport=httpx.MockTransport(handler),
     )
-    token = mint_internal_jwt(private_pem)
+    token = mint_internal_jwt(
+        private_pem,
+        issuer=ISSUER,
+        audience=AUDIENCE,
+    )
 
     # Act / Assert
     with pytest.raises(UpstreamError, match="auth response was not JSON") as exc_info:
@@ -590,7 +520,7 @@ async def test_credentials_client_200_non_json_raises_upstream(
 def test_internal_jwt_validator_pyjwt_error_raises_unauthorized() -> None:
     # Arrange
     mock_client = MagicMock()
-    mock_client.get_signing_key_from_jwt.side_effect = jwt.InvalidTokenError("bad jwt")
+    mock_client.get_signing_key_from_jwt.side_effect = InvalidTokenError("bad jwt")
 
     with patch(
         "fantasy_api.security.internal_jwt.PyJWKClient",
@@ -639,13 +569,17 @@ def test_credential_probe_needs_reauth_returns_http_401(
             json={"error": "needs_reauth", "detail": "no_laliga_connection"},
         )
 
-    container = build_api_container(
+    container = build_test_container(
         public_pem,
-        transport=httpx.MockTransport(handler),
+        auth_handler=httpx.MockTransport(handler),
     )
     app = create_app(settings=container.settings, container=container)
     set_container(container)
-    token = mint_internal_jwt(private_pem)
+    token = mint_internal_jwt(
+        private_pem,
+        issuer=ISSUER,
+        audience=AUDIENCE,
+    )
 
     # Act
     with TestClient(app) as test_client:
@@ -671,13 +605,17 @@ def test_credential_probe_upstream_error_returns_http_status(
     def handler(request: httpx.Request) -> httpx.Response:
         return httpx.Response(502, text="bad gateway")
 
-    container = build_api_container(
+    container = build_test_container(
         public_pem,
-        transport=httpx.MockTransport(handler),
+        auth_handler=httpx.MockTransport(handler),
     )
     app = create_app(settings=container.settings, container=container)
     set_container(container)
-    token = mint_internal_jwt(private_pem)
+    token = mint_internal_jwt(
+        private_pem,
+        issuer=ISSUER,
+        audience=AUDIENCE,
+    )
 
     # Act
     with TestClient(app) as test_client:
@@ -718,7 +656,11 @@ async def test_credentials_client_401_json_array_raises_upstream(
         service_token=SERVICE_TOKEN,
         transport=httpx.MockTransport(handler),
     )
-    token = mint_internal_jwt(private_pem)
+    token = mint_internal_jwt(
+        private_pem,
+        issuer=ISSUER,
+        audience=AUDIENCE,
+    )
 
     # Act / Assert
     with pytest.raises(UpstreamError, match="auth unauthorized"):

@@ -28,6 +28,15 @@ def test_load_put_lineup_reads_json_object(tmp_path: Path) -> None:
     assert payload == {"goalkeeper": []}
 
 
+def test_parse_args_market_analysis_accepts_player_team_id() -> None:
+    args = parse_args(
+        ["market-analysis", "--league-id", "42", "--player-team-id", "pt-9"],
+    )
+    assert args.flow == "market-analysis"
+    assert args.league_id == "42"
+    assert args.player_team_id == "pt-9"
+
+
 def test_parse_args_leagues_analysis_accepts_positive_week() -> None:
     # Arrange / Act
     args = parse_args(["leagues-analysis", "--week", "4", "--activity-page", "2"])
@@ -36,6 +45,15 @@ def test_parse_args_leagues_analysis_accepts_positive_week() -> None:
     assert args.flow == "leagues-analysis"
     assert args.week == 4
     assert args.activity_page == 2
+
+
+def test_validate_analysis_args_market_player_team_requires_league_id() -> None:
+    args = parse_args(
+        ["market-analysis", "--player-team-id", "pt-9"],
+    )
+
+    with pytest.raises(BrowserSessionError, match="requires --league-id"):
+        validate_analysis_args(args)
 
 
 def test_validate_analysis_args_with_put_lineup_file_passes(tmp_path: Path) -> None:

@@ -100,6 +100,17 @@ def parse_args(argv: list[str] | None = None) -> argparse.Namespace:
         default=None,
         help="JSON file for PUT /teams/{id}/lineup (requires --team-id)",
     )
+    market = subparsers.add_parser(
+        "market-analysis",
+        help="GET league market snapshot and history (read-only)",
+    )
+    market.add_argument("--league-id", default=None)
+    market.add_argument(
+        "--player-team-id",
+        default=None,
+        help="Squad-entry id; also fetch offers on that roster slot",
+    )
+    market.add_argument("--json", action="store_true")
     return parser.parse_args(argv)
 
 
@@ -118,6 +129,14 @@ def validate_analysis_args(args: argparse.Namespace) -> None:
             "--team-id looks like a placeholder. Omit it to use the team "
             "from GET /leagues, or pass your real Fantasy team id.",
         )
+    if getattr(args, "flow", None) == "market-analysis":
+        player_team_id = getattr(args, "player_team_id", None)
+        league_id = getattr(args, "league_id", None)
+        if player_team_id and not league_id:
+            raise BrowserSessionError(
+                "--player-team-id requires --league-id. Squad-entry ids are "
+                "league-scoped; omit --player-team-id for all leagues.",
+            )
     if not args.put_lineup:
         return
     if not team_id:

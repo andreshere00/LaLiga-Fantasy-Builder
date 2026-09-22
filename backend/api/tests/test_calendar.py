@@ -2,34 +2,27 @@
 
 from __future__ import annotations
 
-import time
 from collections.abc import Callable
 
 import httpx
-import jwt
 import pytest
 from cryptography.hazmat.primitives import serialization
 from cryptography.hazmat.primitives.asymmetric import rsa
-from fantasy_api.api.deps import AppContainer, set_container
+from fantasy_api.api.deps import set_container
 from fantasy_api.clients.laliga_fantasy import LaligaFantasyClient
-from fantasy_api.config import Settings
 from fantasy_api.main import create_app
 from fantasy_api.repositories.calendar import CalendarRepository
-from fantasy_api.repositories.leagues import LeaguesRepository
-from fantasy_api.repositories.players import PlayersRepository
-from fantasy_api.repositories.teams import TeamsRepository
-from fantasy_api.security.internal_jwt import StaticInternalJwtValidator
-from fantasy_api.services.calendar import CalendarService
-from fantasy_api.services.leagues import LeaguesService
-from fantasy_api.services.players import PlayersService
-from fantasy_api.services.teams import TeamsService
 from fastapi.testclient import TestClient
-
-ISSUER = "https://auth.fantasy-builder.local"
-AUDIENCE = "fantasy-api"
-SERVICE_TOKEN = "api-service-token"
-FANTASY_ORIGIN = "https://fantasy.test"
-LALIGA_BEARER = "laliga-secret-token"
+from jwt_mint import mint_internal_jwt
+from test_container import (
+    TEST_FANTASY_ORIGIN as FANTASY_ORIGIN,
+)
+from test_container import (
+    TEST_LALIGA_BEARER as LALIGA_BEARER,
+)
+from test_container import (
+    build_test_container,
+)
 
 CURRENT_WEEK = {
     "isLive": False,
@@ -105,91 +98,18 @@ def rsa_pems() -> tuple[str, str]:
     return private_pem, public_pem
 
 
-def mint_internal_jwt(
-    private_pem: str,
-    *,
-    sub: str = "app-user-1",
-) -> str:
-    now = int(time.time())
-    return jwt.encode(
-        {
-            "sub": sub,
-            "email": "u@example.com",
-            "name": "User",
-            "iss": ISSUER,
-            "aud": AUDIENCE,
-            "iat": now,
-            "exp": now + 300,
-        },
-        private_pem,
-        algorithm="RS256",
-    )
-
-
 def _auth_must_not_run(_request: httpx.Request) -> httpx.Response:
     raise AssertionError("auth credentials client must not be called for calendar")
-
-
-def build_calendar_container(
-    public_pem: str,
-    *,
-    fantasy_handler: httpx.MockTransport | None = None,
-) -> AppContainer:
-    from fantasy_api.clients.auth_credentials import AuthCredentialsClient
-
-    settings = Settings(
-        auth_jwks_url="http://auth.test/jwks",
-        internal_jwt_issuer=ISSUER,
-        internal_jwt_audience=AUDIENCE,
-        auth_internal_base_url="http://auth.test",
-        internal_service_token=SERVICE_TOKEN,
-        laliga_fantasy_origin=FANTASY_ORIGIN,
-        laliga_competition_id=1,
-        log_json=False,
-    )
-    credentials = AuthCredentialsClient(
-        base_url=settings.auth_internal_base_url,
-        service_token=SERVICE_TOKEN,
-        transport=httpx.MockTransport(_auth_must_not_run),
-    )
-    laliga_client = LaligaFantasyClient(
-        origin=settings.laliga_fantasy_origin,
-        transport=fantasy_handler,
-    )
-    return AppContainer(
-        settings=settings,
-        jwt_validator=StaticInternalJwtValidator(
-            public_key_pem=public_pem,
-            issuer=ISSUER,
-            audience=AUDIENCE,
-        ),
-        credentials=credentials,
-        laliga_client=laliga_client,
-        leagues_service=LeaguesService(
-            credentials,
-            LeaguesRepository(laliga_client, competition_id=1),
-        ),
-        teams_service=TeamsService(
-            credentials,
-            TeamsRepository(laliga_client, competition_id=1),
-        ),
-        calendar_service=CalendarService(
-            CalendarRepository(laliga_client, competition_id=1),
-        ),
-        players_service=PlayersService(
-            credentials,
-            PlayersRepository(laliga_client, competition_id=1),
-        ),
-    )
 
 
 def make_client(
     public_pem: str,
     fantasy_handler: Callable[[httpx.Request], httpx.Response],
 ) -> TestClient:
-    container = build_calendar_container(
+    container = build_test_container(
         public_pem,
         fantasy_handler=httpx.MockTransport(fantasy_handler),
+        auth_handler=httpx.MockTransport(_auth_must_not_run),
     )
     app = create_app(settings=container.settings, container=container)
     set_container(container)

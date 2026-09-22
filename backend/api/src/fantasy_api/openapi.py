@@ -62,6 +62,13 @@ OPENAPI_TAGS: list[dict[str, str]] = [
             "Catalog and market value are public; league cards are authenticated."
         ),
     },
+    {
+        "name": "market",
+        "description": (
+            "LaLiga Fantasy league market, bids, listings, and offers. "
+            "Thin authenticated proxies of competition league market resources."
+        ),
+    },
 ]
 
 ERROR_RESPONSES: dict[int | str, dict[str, Any]] = {
