@@ -258,6 +258,34 @@ def test_auth_callback_binds_user(
     assert "csrf_token" in body
 
 
+def test_auth_callback_html_accept_redirects_to_frontend_origin(
+    client: TestClient,
+    container: AppContainer,
+) -> None:
+    # Arrange
+    login = client.get("/auth/login", follow_redirects=False)
+    session_id = login.cookies["fantasy_session"]
+    session = asyncio.run(container.session_store.get(session_id))
+    assert session is not None
+    assert session.oidc_state is not None
+
+    # Act
+    response = client.get(
+        "/auth/callback",
+        params={"code": "abc", "state": session.oidc_state},
+        cookies=_auth_cookies(session),
+        headers={"Accept": "text/html"},
+        follow_redirects=False,
+    )
+
+    # Assert
+    assert response.status_code == 302
+    assert response.headers["location"] == "http://localhost:3000"
+    set_cookie = ",".join(response.headers.get_list("set-cookie"))
+    assert "fantasy_session=" in set_cookie
+    assert "fantasy_csrf=" in set_cookie
+
+
 def test_create_pairing_requires_csrf_and_returns_secret(
     client: TestClient,
     container: AppContainer,

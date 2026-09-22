@@ -1,0 +1,23 @@
+@font-face {
+  font-family: "At Aero";
+  src: local("At Aero");
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "At Aero";
+  src: local("At Aero Medium");
+  font-weight: 500;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "At Aero";
+  src: local("At Aero Bold");
+  font-weight: 700;
+  font-style: normal;
+  font-display: swap;
+}

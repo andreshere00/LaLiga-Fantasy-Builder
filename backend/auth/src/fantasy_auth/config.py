@@ -21,6 +21,7 @@ class Settings(BaseSettings):
         csrf_cookie_name: Name of the CSRF double-submit cookie.
         cookie_samesite: SameSite policy for session/CSRF cookies.
         cors_origins: Allowed browser origins (exact match).
+        frontend_origin: Browser app that receives the HTML login callback.
         session_ttl_seconds: Server-side session lifetime.
         pairing_ttl_seconds: One-time pairing lifetime.
         pairing_rate_limit_per_minute: Max complete attempts per IP.
@@ -70,6 +71,7 @@ class Settings(BaseSettings):
     csrf_cookie_name: str = "fantasy_csrf"
     cookie_samesite: Literal["lax", "strict", "none"] = "lax"
     cors_origins: list[str] = Field(default_factory=lambda: ["http://localhost:3000"])
+    frontend_origin: str = "http://localhost:3000"
 
     session_ttl_seconds: int = 86_400
     pairing_ttl_seconds: int = 600

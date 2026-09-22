@@ -87,7 +87,7 @@ Login and pairing details: [`backend/auth/README.md`](backend/auth/README.md).
 | [`docs/`](docs/) | Architecture, API, and auth documentation |
 | [`docker/`](docker/) | Keycloak realm import |
 | [`assets/`](assets/) | Sample Fantasy payloads |
-| [`frontend/`](frontend/) | Reserved (Bun + TypeScript) |
+| [`frontend/`](frontend/) | Lineup UI (Bun, Vite, React, TypeScript). `cd frontend && bun install && bun run dev` |
 
 ## Documentation
 

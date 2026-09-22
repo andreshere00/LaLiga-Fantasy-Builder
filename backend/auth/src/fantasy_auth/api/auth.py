@@ -39,6 +39,11 @@ def _set_session_cookies(
     )
 
 
+def _wants_html(accept: str | None) -> bool:
+    """Return True when the Accept header asks for HTML."""
+    return accept is not None and "text/html" in accept.lower()
+
+
 def _clear_session_cookies(response: Response) -> None:
     settings = get_container().settings
     for key in (settings.cookie_name, settings.csrf_cookie_name):
@@ -76,13 +81,17 @@ async def auth_callback(
 ) -> Response:
     """Complete app OIDC login from the IdP redirect.
 
+    Browsers (``Accept: text/html``) are sent to ``FRONTEND_ORIGIN`` after the
+    session cookies are set. Other clients still receive the JSON session view.
+
     Args:
         request: Incoming request (reads session cookie).
         code: Authorization code.
         state: OIDC state.
 
     Returns:
-        JSON session view with rotated CSRF cookie.
+        Redirect for HTML clients, otherwise a JSON session view. Both set the
+        rotated CSRF cookie.
     """
     container = get_container()
     session_id = request.cookies.get(container.settings.cookie_name)
@@ -101,7 +110,13 @@ async def auth_callback(
         },
         "csrf_token": view.csrf_token,
     }
-    response = JSONResponse(content=body)
+    if _wants_html(request.headers.get("accept")):
+        response: Response = RedirectResponse(
+            url=container.settings.frontend_origin,
+            status_code=302,
+        )
+    else:
+        response = JSONResponse(content=body)
     _set_session_cookies(
         response,
         session_id=session_id,
