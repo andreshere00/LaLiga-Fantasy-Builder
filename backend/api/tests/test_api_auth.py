@@ -19,24 +19,28 @@ from fantasy_api.api.deps import (
 )
 from fantasy_api.clients.auth_credentials import AuthCredentialsClient
 from fantasy_api.clients.laliga_fantasy import LaligaFantasyClient
-from fantasy_api.config import Settings, get_settings
-from fantasy_api.services.leagues import LeaguesService
-from fantasy_api.services.teams import TeamsService
+from fantasy_api.config import get_settings
 from fantasy_api.domain.errors import NeedsReauthError, UnauthorizedError, UpstreamError
 from fantasy_api.main import create_app, run
 from fantasy_api.security.internal_jwt import (
     InternalJwtValidator,
-    StaticInternalJwtValidator,
 )
+from fantasy_api.services.leagues import LeaguesService
+from fantasy_api.services.teams import TeamsService
 from fastapi import FastAPI
 from fastapi.testclient import TestClient
 from jwt_mint import (
     DEFAULT_TEST_AUDIENCE as AUDIENCE,
+)
+from jwt_mint import (
     DEFAULT_TEST_ISSUER as ISSUER,
+)
+from jwt_mint import (
     InvalidTokenError,
     mint_internal_jwt,
 )
-from test_container import TEST_SERVICE_TOKEN as SERVICE_TOKEN, build_test_container
+from test_container import TEST_SERVICE_TOKEN as SERVICE_TOKEN
+from test_container import build_test_container
 from test_container import test_settings as _test_settings
 
 

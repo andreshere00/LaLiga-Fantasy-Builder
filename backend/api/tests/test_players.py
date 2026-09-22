@@ -9,15 +9,19 @@ import pytest
 from cryptography.hazmat.primitives import serialization
 from cryptography.hazmat.primitives.asymmetric import rsa
 from fantasy_api.api.deps import set_container
+from fantasy_api.clients.laliga_fantasy import LaligaFantasyClient
 from fantasy_api.domain.errors import UpstreamError
 from fantasy_api.main import create_app
+from fantasy_api.repositories.players import PlayersRepository
 from fastapi.testclient import TestClient
 from jwt_mint import mint_internal_jwt
-from fantasy_api.clients.laliga_fantasy import LaligaFantasyClient
-from fantasy_api.repositories.players import PlayersRepository
 from test_container import (
     TEST_FANTASY_ORIGIN as FANTASY_ORIGIN,
+)
+from test_container import (
     TEST_LALIGA_BEARER as LALIGA_BEARER,
+)
+from test_container import (
     build_test_container,
 )
 

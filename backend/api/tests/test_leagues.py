@@ -15,12 +15,16 @@ from fantasy_api.main import create_app
 from fantasy_api.repositories.leagues import LeaguesRepository
 from fantasy_api.schemas.leagues import summarize_leagues_payload
 from fastapi.testclient import TestClient
-from jwt_mint import DEFAULT_TEST_AUDIENCE as AUDIENCE, DEFAULT_TEST_ISSUER as ISSUER
+from jwt_mint import DEFAULT_TEST_AUDIENCE as AUDIENCE
+from jwt_mint import DEFAULT_TEST_ISSUER as ISSUER
 from jwt_mint import mint_internal_jwt
 from test_container import (
     TEST_FANTASY_ORIGIN as FANTASY_ORIGIN,
+)
+from test_container import (
     TEST_LALIGA_BEARER as LALIGA_BEARER,
-    TEST_SERVICE_TOKEN as SERVICE_TOKEN,
+)
+from test_container import (
     build_test_container,
 )
 
