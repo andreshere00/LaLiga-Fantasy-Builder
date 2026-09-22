@@ -129,9 +129,10 @@ def validate_analysis_args(args: argparse.Namespace) -> None:
             "--team-id looks like a placeholder. Omit it to use the team "
             "from GET /leagues, or pass your real Fantasy team id.",
         )
-    if args.flow == "market-analysis":
+    if getattr(args, "flow", None) == "market-analysis":
         player_team_id = getattr(args, "player_team_id", None)
-        if player_team_id and not args.league_id:
+        league_id = getattr(args, "league_id", None)
+        if player_team_id and not league_id:
             raise BrowserSessionError(
                 "--player-team-id requires --league-id. Squad-entry ids are "
                 "league-scoped; omit --player-team-id for all leagues.",

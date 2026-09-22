@@ -50,9 +50,7 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument(
         "--player-team-id",
         default=None,
-        help=(
-            "Squad-entry id; also GET offers (requires --league-id)"
-        ),
+        help=("Squad-entry id; also GET offers (requires --league-id)"),
     )
     parser.add_argument(
         "--json",
