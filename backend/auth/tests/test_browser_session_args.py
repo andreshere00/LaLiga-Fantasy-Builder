@@ -43,9 +43,27 @@ def test_parse_args_buyout_analysis_requires_league_and_player_team() -> None:
     assert args.player_team_id == "pt-9"
 
 
-def test_validate_analysis_args_buyout_requires_player_team_id() -> None:
+def test_parse_args_buyout_analysis_missing_player_team_exits() -> None:
     with pytest.raises(SystemExit):
         parse_args(["buyout-analysis", "--league-id", "42"])
+
+
+def test_validate_analysis_args_buyout_empty_league_id_raises() -> None:
+    args = parse_args(
+        ["buyout-analysis", "--league-id", "", "--player-team-id", "pt-9"],
+    )
+
+    with pytest.raises(BrowserSessionError, match="league-id"):
+        validate_analysis_args(args)
+
+
+def test_validate_analysis_args_buyout_empty_player_team_id_raises() -> None:
+    args = parse_args(
+        ["buyout-analysis", "--league-id", "42", "--player-team-id", ""],
+    )
+
+    with pytest.raises(BrowserSessionError, match="player-team-id"):
+        validate_analysis_args(args)
 
 
 def test_parse_args_market_analysis_accepts_player_team_id() -> None:

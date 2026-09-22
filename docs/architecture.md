@@ -114,7 +114,7 @@ do not share a generic proxy class.
 | Players | `/players/...` | `{CMP}/players`, `{CMP}/player/...` | GET (catalog + market value public; league card authenticated) |
 | Calendar | `/calendar/...` | `{CMP}/week/...`, `{CMP}/calendar`, stats host | GET (internal JWT; public upstream via `get_public_json`) |
 | Market | `/market/...` | `{CMP}/league/{leagueId}/market/...` | GET + POST/PUT/DELETE (reads High; mutations Medium) |
-| Buyout | `/buyout/...` | `{CMP}/league/{leagueId}/buyout/...`, `.../shield/...` | GET + POST/PUT (Medium) |
+| Buyout | `/buyout/...` | `{CMP}/league/{leagueId}/buyout/...`, `.../player-team/.../check-shield`, `.../shield/player` | GET + POST/PUT (Medium) |
 
 `{CMP}` = `{LALIGA_FANTASY_ORIGIN}/api/v1/competition/{LALIGA_COMPETITION_ID}`.
 

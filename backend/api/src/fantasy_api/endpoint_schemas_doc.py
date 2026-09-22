@@ -52,10 +52,10 @@ below omit repeated error tables.
 
 ### ErrorResponse
 
-| Field | Type | Required | Description |
-|-------|------|----------|-------------|
-| `error` | string | yes | Machine-readable category |
-| `detail` | string | yes | Human-readable message (no tokens) |
+| Field | Type | Required | Constraints | Description |
+|-------|------|----------|-------------|-------------|
+| `error` | string | yes |  | Machine-readable category |
+| `detail` | string | yes |  | Human-readable message (no tokens) |
 
 """
 
@@ -226,9 +226,9 @@ def _render_operation(
                     [
                         row["source"],
                         f"`{row['name']}`",
-                        row["type"],
+                        _clean_text(row["type"]),
                         row["required"],
-                        row["constraints"],
+                        _clean_text(row["constraints"]),
                         row["description"],
                     ]
                 )
@@ -370,19 +370,19 @@ def _properties_table(
         return ["_(no properties)_"]
     required = set(schema.get("required") or [])
     lines = [
-        "| Field | Type | Required | Description |",
-        "|-------|------|----------|-------------|",
+        "| Field | Type | Required | Constraints | Description |",
+        "|-------|------|----------|-------------|-------------|",
     ]
     for field, field_schema in props.items():
         resolved = _resolve_schema(field_schema, components)
-        type_label = _schema_type_label(field_schema, components)
         lines.append(
             "| "
             + " | ".join(
                 [
                     f"`{field}`",
-                    type_label,
+                    _clean_text(_schema_type_label(field_schema, components)),
                     "yes" if field in required else "no",
+                    _clean_text(_schema_constraints(field_schema)),
                     _clean_text(
                         resolved.get("description") or field_schema.get("description") or ""
                     ),
@@ -457,6 +457,9 @@ def _schema_type_label(schema: dict[str, Any], components: dict[str, Any]) -> st
     named = _named_component_type(schema)
     if named:
         return named
+    union = _primitive_union_label(schema)
+    if union:
+        return union
     resolved = _resolve_schema(schema, components)
     if "$ref" in resolved:
         return resolved["$ref"].split("/")[-1]
@@ -471,16 +474,46 @@ def _schema_type_label(schema: dict[str, Any], components: dict[str, Any]) -> st
     return str(t or "any")
 
 
+def _primitive_union_label(schema: dict[str, Any]) -> str | None:
+    """Join primitive ``anyOf`` / ``oneOf`` arms, ignoring null."""
+    for key in ("anyOf", "oneOf"):
+        options = schema.get(key)
+        if not isinstance(options, list):
+            continue
+        labels: list[str] = []
+        for option in options:
+            if not isinstance(option, dict) or option.get("type") == "null":
+                continue
+            kind = option.get("type")
+            if not isinstance(kind, str) or kind in {"array", "object"}:
+                return None
+            labels.append(kind)
+        if len(labels) > 1:
+            return " | ".join(labels)
+    return None
+
+
 def _schema_constraints(schema: dict[str, Any]) -> str:
     """Format common JSON Schema constraints."""
     parts: list[str] = []
-    if "minimum" in schema:
-        parts.append(f"min={schema['minimum']}")
-    if "maximum" in schema:
-        parts.append(f"max={schema['maximum']}")
+    if "exclusiveMinimum" in schema:
+        parts.append(f">{_bound_label(schema['exclusiveMinimum'])}")
+    elif "minimum" in schema:
+        parts.append(f"min={_bound_label(schema['minimum'])}")
+    if "exclusiveMaximum" in schema:
+        parts.append(f"<{_bound_label(schema['exclusiveMaximum'])}")
+    elif "maximum" in schema:
+        parts.append(f"max={_bound_label(schema['maximum'])}")
     if schema.get("minLength") is not None:
         parts.append(f"minLength={schema['minLength']}")
     return ", ".join(parts)
+
+
+def _bound_label(value: object) -> str:
+    """Render a numeric bound without a trailing ``.0``."""
+    if isinstance(value, float) and value.is_integer():
+        return str(int(value))
+    return str(value)
 
 
 def _clean_text(value: str) -> str:
