@@ -8,6 +8,7 @@ import pytest
 from fantasy_auth.cli.browser_session.errors import BrowserSessionError
 from fantasy_auth.cli.session_analysis import (
     fetch_leagues_analysis,
+    fetch_buyout_analysis,
     fetch_market_analysis,
     fetch_teams_analysis,
     infer_week,
@@ -155,6 +156,44 @@ def test_fetch_market_analysis_player_team_without_league_raises() -> None:
         fetch_market_analysis(
             get_json=get_json,
             league_filter=None,
+            player_team_id="pt-1",
+        )
+
+
+def test_fetch_buyout_analysis_hits_shield_route() -> None:
+    seen, get_json = _recorder({})
+
+    report = fetch_buyout_analysis(
+        get_json=get_json,
+        league_id="42",
+        player_team_id="pt-1",
+    )
+
+    assert seen == ["/buyout/leagues/42/player-teams/pt-1/shield"]
+    assert report["league_id"] == "42"
+    assert report["player_team_id"] == "pt-1"
+    assert report["shield"] == {"ok": seen[0]}
+
+
+def test_fetch_buyout_analysis_encodes_slash_ids() -> None:
+    seen, get_json = _recorder({})
+
+    fetch_buyout_analysis(
+        get_json=get_json,
+        league_id="a/b",
+        player_team_id="p/t",
+    )
+
+    assert seen == ["/buyout/leagues/a%2Fb/player-teams/p%2Ft/shield"]
+
+
+def test_fetch_buyout_analysis_missing_league_raises() -> None:
+    _, get_json = _recorder({})
+
+    with pytest.raises(BrowserSessionError, match="league-id"):
+        fetch_buyout_analysis(
+            get_json=get_json,
+            league_id="",
             player_team_id="pt-1",
         )
 

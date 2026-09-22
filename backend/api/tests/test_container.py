@@ -11,12 +11,14 @@ from fantasy_api.clients.laliga_fantasy import LaligaFantasyClient
 from fantasy_api.config import Settings
 from fantasy_api.repositories.calendar import CalendarRepository
 from fantasy_api.repositories.leagues import LeaguesRepository
+from fantasy_api.repositories.buyout import BuyoutRepository
 from fantasy_api.repositories.market import MarketRepository
 from fantasy_api.repositories.players import PlayersRepository
 from fantasy_api.repositories.teams import TeamsRepository
 from fantasy_api.security.internal_jwt import StaticInternalJwtValidator
 from fantasy_api.services.calendar import CalendarService
 from fantasy_api.services.leagues import LeaguesService
+from fantasy_api.services.buyout import BuyoutService
 from fantasy_api.services.market import MarketService
 from fantasy_api.services.players import PlayersService
 from fantasy_api.services.teams import TeamsService
@@ -112,5 +114,9 @@ def build_test_container(
         market_service=MarketService(
             credentials,
             MarketRepository(laliga_client, competition_id=competition_id),
+        ),
+        buyout_service=BuyoutService(
+            credentials,
+            BuyoutRepository(laliga_client, competition_id=competition_id),
         ),
     )

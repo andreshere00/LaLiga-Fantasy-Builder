@@ -86,7 +86,7 @@ auth session cookies.
 
 ```text
 backend/api/src/fantasy_api/
-├── api/              # FastAPI controllers (leagues, teams, me, …)
+├── api/              # FastAPI controllers (leagues, teams, players, calendar, market, buyout, me)
 ├── services/         # JWT → LaLiga bearer → repository orchestration
 ├── repositories/     # Upstream path construction (per domain)
 ├── clients/          # AuthCredentialsClient, LaligaFantasyClient
@@ -94,7 +94,7 @@ backend/api/src/fantasy_api/
 ├── domain/           # AppUser, UpstreamError, …
 ├── security/         # Internal JWT validation
 ├── openapi.py        # OpenAPI generation and ERROR_RESPONSES
-└── cli/              # fantasy-leagues, fantasy-teams, fantasy-players, fantasy-calendar, fantasy-market
+└── cli/              # fantasy-leagues, fantasy-teams, fantasy-players, fantasy-calendar, fantasy-market, fantasy-buyout
 ```
 
 Process-lifetime wiring lives in `api/deps.py` (`AppContainer`): one shared
@@ -114,6 +114,7 @@ do not share a generic proxy class.
 | Players | `/players/...` | `{CMP}/players`, `{CMP}/player/...` | GET (catalog + market value public; league card authenticated) |
 | Calendar | `/calendar/...` | `{CMP}/week/...`, `{CMP}/calendar`, stats host | GET (internal JWT; public upstream via `get_public_json`) |
 | Market | `/market/...` | `{CMP}/league/{leagueId}/market/...` | GET + POST/PUT/DELETE (reads High; mutations Medium) |
+| Buyout | `/buyout/...` | `{CMP}/league/{leagueId}/buyout/...`, `.../shield/...` | GET + POST/PUT (Medium) |
 
 `{CMP}` = `{LALIGA_FANTASY_ORIGIN}/api/v1/competition/{LALIGA_COMPETITION_ID}`.
 
@@ -121,7 +122,7 @@ Guides: [Adding endpoints](api/adding-endpoints.md),
 [feature READMEs](api/README.md),
 [Proxy endpoint pitfalls](api/proxy-endpoint-pitfalls.md).
 
-Calendar details: [Calendar API](api/calendar/README.md).
+Feature notes for every domain: [API documentation](api/README.md).
 
 #### Shared proxy building blocks
 
@@ -142,8 +143,8 @@ upstream JSON into empty `{}` or `[]` — see the pitfalls doc.
 
 #### Helper CLIs
 
-`fantasy-leagues`, `fantasy-teams`, `fantasy-players`, `fantasy-calendar`, and
-`fantasy-market`
+`fantasy-leagues`, `fantasy-teams`, `fantasy-players`, `fantasy-calendar`,
+`fantasy-market`, and `fantasy-buyout`
 are not part of the runtime API. They exchange session cookies for an internal
 JWT (or accept `--jwt`; players public reads need no JWT) and call local API
 routes. Shared flags and token exchange live in `cli/common.py`.
@@ -295,16 +296,17 @@ check. Clients should obtain ids from authenticated list routes (e.g.
 
 Local and CI checks keep the monorepo consistent:
 
-- **Pre-commit** (repo root): ruff, black, OpenAPI regeneration when API
-  routes/schemas change, pytest with ≥90% coverage on `backend/auth` and
-  `backend/api`.
+- **Pre-commit** (repo root): ruff, black, OpenAPI and endpoint-schema
+  regeneration when API routes/schemas change, pytest with ≥90% coverage on
+  `backend/auth` and `backend/api`.
 - **GitHub Actions** (`.github/workflows/ci.yml`): same lint and test pipeline
   on push to `main` and on pull requests.
 
 OpenAPI is generated from route `response_model`, `ERROR_RESPONSES`, and
 Pydantic schemas (`fantasy_api.openapi.build_openapi_schema`). The committed
-`backend/api/openapi.json` must match the generator before merge. See
-[OpenAPI / Swagger](api/openapi.md).
+`backend/api/openapi.json` and generated
+[`docs/api/endpoint-schemas.md`](api/endpoint-schemas.md) must match the
+generators before merge. See [OpenAPI / Swagger](api/openapi.md).
 
 ## Deployment constraints
 

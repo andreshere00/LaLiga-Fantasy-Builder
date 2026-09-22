@@ -12,7 +12,8 @@ Auth vs API ownership, CSRF, and JWT `sub` scoping:
 Contract pitfalls:
 [Proxy endpoint pitfalls](proxy-endpoint-pitfalls.md).
 Feature notes: [leagues](leagues/README.md), [teams](teams/README.md),
-[players](players/README.md), [calendar](calendar/README.md).
+[players](players/README.md), [calendar](calendar/README.md),
+[market](market/README.md), [buyout](buyout/README.md).
 
 ---
 
@@ -109,10 +110,10 @@ New authenticated bundle: `session_analysis.py` + `browser_session/args.py` +
 | When | Update |
 |------|--------|
 | Any route | Feature README routes table (method, path, upstream, auth, model) |
-| New domain | Architecture domain table; `docs/api/README.md` index |
-| LaLiga proxy | Catalog “implemented in this repo” |
-| Analysis subcommand | `backend/auth/README.md` |
-| Always | `uv run poe generate-openapi` |
+| New domain | Architecture domain table; `docs/api/README.md` and root `README.md` |
+| LaLiga proxy | Feature README confidence note |
+| Analysis subcommand | `backend/auth/README.md` and `backend/api/README.md` |
+| Always | `uv run poe generate-openapi` and `uv run poe generate-endpoint-schemas` |
 
 Do not add a per-domain “adding-*-endpoints” how-to; unique notes belong in
 the feature README.
@@ -129,5 +130,5 @@ the feature README.
 - [ ] Container + router (new domain only)
 - [ ] Tests: URL/headers, JWT, needs_reauth, upstream errors, no bearer leak
 - [ ] Domain CLI + browser-session for authenticated use
-- [ ] Feature README, catalog/architecture if needed, OpenAPI
+- [ ] Feature README, architecture if needed, OpenAPI and endpoint-schemas
 ```

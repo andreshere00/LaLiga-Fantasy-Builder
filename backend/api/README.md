@@ -63,6 +63,7 @@ when not using Compose defaults.
 | `GET` | `/calendar/weeks/{week}` | Fixtures for a matchday |
 | `GET` | `/calendar/weeks/{week}/stats` | Matchday stats and week points |
 | `GET`/`POST`/… | `/market/...` | See [market](../../docs/api/market/README.md) |
+| `GET`/`POST`/`PUT` | `/buyout/...` | See [buyout](../../docs/api/buyout/README.md) |
 
 CRS: `api/` → `services/` → `repositories/` → `clients/laliga_fantasy.py`.
 New routes: [Adding endpoints](../../docs/api/adding-endpoints.md).
@@ -88,6 +89,7 @@ uv run fantasy-teams --team-id 99 --week 5
 uv run fantasy-players --player-id 7 --league-id 42
 uv run fantasy-calendar --week 8 --json
 uv run fantasy-market --league-id 123 --json
+uv run fantasy-buyout --league-id 123 --player-team-id pt-9 --json
 ```
 
 Automated Keycloak + LaLiga pairing (from `backend/auth`):

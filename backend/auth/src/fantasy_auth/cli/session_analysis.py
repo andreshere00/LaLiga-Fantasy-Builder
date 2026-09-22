@@ -201,6 +201,43 @@ def fetch_market_analysis(
     return {"leagues": reports}
 
 
+def fetch_buyout_analysis(
+    *,
+    get_json: GetJson,
+    league_id: str,
+    player_team_id: str,
+) -> dict[str, Any]:
+    """GET squad-entry shield status (read-only).
+
+    Args:
+        get_json: Authenticated GET against the local Fantasy Builder API.
+        league_id: Fantasy league identifier.
+        player_team_id: Squad-entry id (``playerTeamId``).
+
+    Returns:
+        Shield status JSON bundle.
+
+    Raises:
+        BrowserSessionError: When league or player-team ids are missing.
+    """
+    if not league_id:
+        raise BrowserSessionError("--league-id is required for buyout-analysis.")
+    if not player_team_id:
+        raise BrowserSessionError(
+            "--player-team-id is required for buyout-analysis.",
+        )
+    lid_path = _segment(league_id)
+    pt_path = _segment(player_team_id)
+    shield = get_json(
+        f"/buyout/leagues/{lid_path}/player-teams/{pt_path}/shield",
+    )
+    return {
+        "league_id": league_id,
+        "player_team_id": player_team_id,
+        "shield": shield,
+    }
+
+
 def infer_week(league: dict[str, Any], standing: Any) -> int | None:
     """Infer the current/last matchweek from league or standing payloads."""
     sources: list[Any] = [league]

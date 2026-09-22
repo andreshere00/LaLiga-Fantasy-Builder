@@ -110,6 +110,7 @@ uv run fantasy-browser-session --player-id 3277 --json
 uv run fantasy-browser-session leagues-analysis --json
 uv run fantasy-browser-session teams-analysis --json
 uv run fantasy-browser-session market-analysis --json
+uv run fantasy-browser-session buyout-analysis --league-id 123 --player-team-id pt-9 --json
 ```
 
 From the repo root: `./scripts/fantasy-browser-session.sh leagues-analysis`.
@@ -117,7 +118,9 @@ From the repo root: `./scripts/fantasy-browser-session.sh leagues-analysis`.
 `leagues-analysis` calls `GET /leagues`, standing (overall and week), activity,
 teams, and a squad. `teams-analysis` calls `GET /teams/{id}/money`, current
 lineup, and week lineup. `market-analysis` calls `GET /market/leagues/{id}`,
-history, and optional squad-entry offers (read-only). `--put-lineup` is optional
+history, and optional squad-entry offers (read-only).
+`buyout-analysis` calls `GET /buyout/leagues/{id}/player-teams/{id}/shield`
+(read-only; requires `--league-id` and `--player-team-id`). `--put-lineup` is optional
 and must point at a real
 JSON file plus a real `--team-id` (not a placeholder). `--week` defaults to
 the jornada inferred from `/leagues`. `--headless` hides the Keycloak window.

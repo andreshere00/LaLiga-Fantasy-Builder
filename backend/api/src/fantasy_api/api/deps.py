@@ -14,12 +14,14 @@ from fantasy_api.domain.errors import UnauthorizedError
 from fantasy_api.domain.users import AppUser, extract_app_user_from_claims
 from fantasy_api.repositories.calendar import CalendarRepository
 from fantasy_api.repositories.leagues import LeaguesRepository
+from fantasy_api.repositories.buyout import BuyoutRepository
 from fantasy_api.repositories.market import MarketRepository
 from fantasy_api.repositories.players import PlayersRepository
 from fantasy_api.repositories.teams import TeamsRepository
 from fantasy_api.security.internal_jwt import InternalJwtValidator
 from fantasy_api.services.calendar import CalendarService
 from fantasy_api.services.leagues import LeaguesService
+from fantasy_api.services.buyout import BuyoutService
 from fantasy_api.services.market import MarketService
 from fantasy_api.services.players import PlayersService
 from fantasy_api.services.teams import TeamsService
@@ -46,6 +48,7 @@ class AppContainer:
         calendar_service: Calendar application service.
         players_service: Players application service.
         market_service: Market application service.
+        buyout_service: Buyout application service.
     """
 
     settings: Settings
@@ -57,6 +60,7 @@ class AppContainer:
     calendar_service: CalendarService
     players_service: PlayersService
     market_service: MarketService
+    buyout_service: BuyoutService
 
     async def aclose(self) -> None:
         """Close process-lifetime HTTP clients."""
@@ -78,6 +82,7 @@ def build_container(
     calendar_service: CalendarService | None = None,
     players_service: PlayersService | None = None,
     market_service: MarketService | None = None,
+    buyout_service: BuyoutService | None = None,
 ) -> AppContainer:
     """Build the API container.
 
@@ -91,6 +96,7 @@ def build_container(
         calendar_service: Optional calendar service override (tests).
         players_service: Optional players service override (tests).
         market_service: Optional market service override (tests).
+        buyout_service: Optional buyout service override (tests).
 
     Returns:
         Wired container.
@@ -142,6 +148,13 @@ def build_container(
             competition_id=cfg.laliga_competition_id,
         ),
     )
+    buyout = buyout_service or BuyoutService(
+        creds,
+        BuyoutRepository(
+            fantasy,
+            competition_id=cfg.laliga_competition_id,
+        ),
+    )
     return AppContainer(
         settings=cfg,
         jwt_validator=validator,
@@ -152,6 +165,7 @@ def build_container(
         calendar_service=calendar,
         players_service=players,
         market_service=market,
+        buyout_service=buyout,
     )
 
 

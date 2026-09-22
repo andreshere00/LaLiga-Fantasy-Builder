@@ -4,4 +4,5 @@
 - [Developing authenticated endpoints](developing-authenticated-endpoints.md)
   — auth vs API, CSRF, internal JWT
 
-Related: [API](../api/README.md), [Architecture](../architecture.md).
+Related: [API](../api/README.md), [Architecture](../architecture.md),
+[AGENTS.md](../../AGENTS.md).

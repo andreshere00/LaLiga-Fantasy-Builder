@@ -3175,6 +3175,458 @@
         ]
       }
     },
+    "/buyout/leagues/{league_id}/player-teams/{player_team_id}/shield": {
+      "get": {
+        "tags": [
+          "buyout"
+        ],
+        "summary": "Check shield status for a squad entry",
+        "operationId": "check_shield_buyout_leagues__league_id__player_teams__player_team_id__shield_get",
+        "parameters": [
+          {
+            "name": "league_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "description": "Fantasy league identifier.",
+              "title": "League Id"
+            },
+            "description": "Fantasy league identifier."
+          },
+          {
+            "name": "player_team_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "description": "Squad-entry id (``playerTeamId``), not master ``playerId``.",
+              "title": "Player Team Id"
+            },
+            "description": "Squad-entry id (``playerTeamId``), not master ``playerId``."
+          },
+          {
+            "name": "authorization",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Bearer internal JWT issued by auth ``POST /auth/token``.",
+              "title": "Authorization"
+            },
+            "description": "Bearer internal JWT issued by auth ``POST /auth/token``."
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ShieldStatus"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized or LaLiga re-auth required.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "502": {
+            "description": "Auth or Fantasy upstream failure.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Fantasy upstream unavailable.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ]
+      }
+    },
+    "/buyout/leagues/{league_id}/player-teams/{player_team_id}/pay": {
+      "post": {
+        "tags": [
+          "buyout"
+        ],
+        "summary": "Pay a buyout clause",
+        "operationId": "pay_buyout_buyout_leagues__league_id__player_teams__player_team_id__pay_post",
+        "parameters": [
+          {
+            "name": "league_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "description": "Fantasy league identifier.",
+              "title": "League Id"
+            },
+            "description": "Fantasy league identifier."
+          },
+          {
+            "name": "player_team_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "description": "Squad-entry id (``playerTeamId``), not master ``playerId``.",
+              "title": "Player Team Id"
+            },
+            "description": "Squad-entry id (``playerTeamId``), not master ``playerId``."
+          },
+          {
+            "name": "authorization",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Bearer internal JWT issued by auth ``POST /auth/token``.",
+              "title": "Authorization"
+            },
+            "description": "Bearer internal JWT issued by auth ``POST /auth/token``."
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PayBuyoutWrite"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BuyoutMutationResult"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized or LaLiga re-auth required.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "502": {
+            "description": "Auth or Fantasy upstream failure.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Fantasy upstream unavailable.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ]
+      }
+    },
+    "/buyout/leagues/{league_id}/player-teams/{player_team_id}/increase": {
+      "post": {
+        "tags": [
+          "buyout"
+        ],
+        "summary": "Set or increase a buyout clause",
+        "operationId": "increase_buyout_buyout_leagues__league_id__player_teams__player_team_id__increase_post",
+        "parameters": [
+          {
+            "name": "league_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "description": "Fantasy league identifier.",
+              "title": "League Id"
+            },
+            "description": "Fantasy league identifier."
+          },
+          {
+            "name": "player_team_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "description": "Squad-entry id (``playerTeamId``), not master ``playerId``.",
+              "title": "Player Team Id"
+            },
+            "description": "Squad-entry id (``playerTeamId``), not master ``playerId``."
+          },
+          {
+            "name": "authorization",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Bearer internal JWT issued by auth ``POST /auth/token``.",
+              "title": "Authorization"
+            },
+            "description": "Bearer internal JWT issued by auth ``POST /auth/token``."
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/IncreaseBuyoutWrite"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BuyoutMutationResult"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized or LaLiga re-auth required.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "502": {
+            "description": "Auth or Fantasy upstream failure.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Fantasy upstream unavailable.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ]
+      }
+    },
+    "/buyout/leagues/{league_id}/shield": {
+      "put": {
+        "tags": [
+          "buyout"
+        ],
+        "summary": "Activate shielding for a squad entry",
+        "description": "``playerId`` in the body is the squad-entry id (``playerTeamId``).",
+        "operationId": "activate_shield_buyout_leagues__league_id__shield_put",
+        "parameters": [
+          {
+            "name": "league_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "description": "Fantasy league identifier.",
+              "title": "League Id"
+            },
+            "description": "Fantasy league identifier."
+          },
+          {
+            "name": "authorization",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Bearer internal JWT issued by auth ``POST /auth/token``.",
+              "title": "Authorization"
+            },
+            "description": "Bearer internal JWT issued by auth ``POST /auth/token``."
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ShieldWrite"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BuyoutMutationResult"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized or LaLiga re-auth required.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "502": {
+            "description": "Auth or Fantasy upstream failure.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Fantasy upstream unavailable.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ]
+      }
+    },
     "/health/live": {
       "get": {
         "tags": [
@@ -3404,6 +3856,13 @@
         ],
         "title": "BidWrite",
         "description": "Request body for bid create/update."
+      },
+      "BuyoutMutationResult": {
+        "properties": {},
+        "additionalProperties": true,
+        "type": "object",
+        "title": "BuyoutMutationResult",
+        "description": "Response from buyout write endpoints (may be empty)."
       },
       "CatalogPlayer": {
         "properties": {
@@ -4078,6 +4537,22 @@
         "type": "object",
         "title": "IdealPremiumConfig",
         "description": "Ideal lineup premium configuration."
+      },
+      "IncreaseBuyoutWrite": {
+        "properties": {
+          "buyoutClause": {
+            "type": "integer",
+            "exclusiveMinimum": 0.0,
+            "title": "Buyoutclause"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "buyoutClause"
+        ],
+        "title": "IncreaseBuyoutWrite",
+        "description": "Request body for setting or increasing a buyout clause."
       },
       "LaligaCredentialProbeResponse": {
         "properties": {
@@ -5250,6 +5725,22 @@
         "title": "MeResponse",
         "description": "Public view of the authenticated API caller."
       },
+      "PayBuyoutWrite": {
+        "properties": {
+          "buyoutClauseToPay": {
+            "type": "integer",
+            "exclusiveMinimum": 0.0,
+            "title": "Buyoutclausetopay"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "buyoutClauseToPay"
+        ],
+        "title": "PayBuyoutWrite",
+        "description": "Request body for paying a buyout clause."
+      },
       "PlayerMarket": {
         "properties": {
           "id": {
@@ -5713,6 +6204,45 @@
         "type": "object",
         "title": "PrizeInformation",
         "description": "League prize copy."
+      },
+      "ShieldStatus": {
+        "properties": {},
+        "additionalProperties": true,
+        "type": "object",
+        "title": "ShieldStatus",
+        "description": "Shield status from ``GET .../check-shield``."
+      },
+      "ShieldWrite": {
+        "properties": {
+          "playerId": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "integer"
+              }
+            ],
+            "title": "Playerid"
+          },
+          "rewardedAdType": {
+            "type": "string",
+            "title": "Rewardedadtype"
+          },
+          "rewardedAd": {
+            "type": "integer",
+            "title": "Rewardedad"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "playerId",
+          "rewardedAdType",
+          "rewardedAd"
+        ],
+        "title": "ShieldWrite",
+        "description": "Request body for ``PUT .../shield/player``.\n\n``playerId`` is the squad-entry id (``playerTeamId``), not the master\nfootballer id. Observed clients use ``rewardedAdType`` ``Blindaje`` and\n``rewardedAd`` ``1``."
       },
       "SquadPlayer": {
         "properties": {
@@ -6300,6 +6830,10 @@
     {
       "name": "market",
       "description": "LaLiga Fantasy league market, bids, listings, and offers. Thin authenticated proxies of competition league market resources."
+    },
+    {
+      "name": "buyout",
+      "description": "LaLiga Fantasy buyout clauses and player shielding. Thin authenticated proxies of competition league buyout resources."
     }
   ]
 }

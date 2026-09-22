@@ -8,7 +8,7 @@ Application API docs for `backend/api` (`fantasy_api`).
   for every API route
 - [Leagues](leagues/README.md) · [Teams](teams/README.md) ·
   [Players](players/README.md) · [Calendar](calendar/README.md) ·
-  [Market](market/README.md)
+  [Market](market/README.md) · [Buyout](buyout/README.md)
 - [Proxy endpoint pitfalls](proxy-endpoint-pitfalls.md)
 
 Auth: [Authentication](../authentication/authentication.md),
@@ -22,11 +22,13 @@ Auth: [Authentication](../authentication/authentication.md),
 | Committed schema | [`backend/api/openapi.json`](../../backend/api/openapi.json) |
 | Service README | [`backend/api/README.md`](../../backend/api/README.md) |
 
-Leagues, teams, players, and calendar share `repositories/paths.py` and payload
-helpers where applicable. Players catalog and market value are public upstream;
-calendar matchday reads are public upstream but still require an internal JWT
-at the API boundary. League, team, and player league-card routes exchange a
-LaLiga bearer.
+Leagues, teams, players, calendar, market, and buyout share
+`repositories/paths.py` and payload helpers where applicable. Players catalog
+and market value are public upstream; calendar matchday reads are public
+upstream but still require an internal JWT at the API boundary. League, team,
+player league-card, market, and buyout routes exchange a LaLiga bearer.
+Market and buyout mutations are medium-confidence community contracts.
+`fantasy-market` and `fantasy-buyout` stay read-only.
 
 Callers mint an internal JWT via `POST /auth/token`, then send
 `Authorization: Bearer <jwt>`. Authenticated local login:

@@ -111,6 +111,17 @@ def parse_args(argv: list[str] | None = None) -> argparse.Namespace:
         help="Squad-entry id; also fetch offers on that roster slot",
     )
     market.add_argument("--json", action="store_true")
+    buyout = subparsers.add_parser(
+        "buyout-analysis",
+        help="GET squad-entry shield status (read-only)",
+    )
+    buyout.add_argument("--league-id", required=True)
+    buyout.add_argument(
+        "--player-team-id",
+        required=True,
+        help="Squad-entry id (playerTeamId)",
+    )
+    buyout.add_argument("--json", action="store_true")
     return parser.parse_args(argv)
 
 
@@ -136,6 +147,13 @@ def validate_analysis_args(args: argparse.Namespace) -> None:
             raise BrowserSessionError(
                 "--player-team-id requires --league-id. Squad-entry ids are "
                 "league-scoped; omit --player-team-id for all leagues.",
+            )
+    if getattr(args, "flow", None) == "buyout-analysis":
+        if not getattr(args, "league_id", None):
+            raise BrowserSessionError("--league-id is required for buyout-analysis.")
+        if not getattr(args, "player_team_id", None):
+            raise BrowserSessionError(
+                "--player-team-id is required for buyout-analysis.",
             )
     if not args.put_lineup:
         return

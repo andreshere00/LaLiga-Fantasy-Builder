@@ -28,7 +28,9 @@ Models: `fantasy_api.schemas.players`. Catalog `weekPoints` stays untyped
 - Public reads send no `Authorization` upstream; a header on those routes is
   ignored.
 - League-card path ids are master `playerId` even when the body embeds
-  `playerTeamId`, buyout, shield, or market blocks.
+  `playerTeamId`, buyout, shield, or market blocks. Paying or raising a
+  clause and checking or activating a shield use
+  [Buyout](../buyout/README.md), keyed by `playerTeamId`.
 
 ```bash
 cd backend/api

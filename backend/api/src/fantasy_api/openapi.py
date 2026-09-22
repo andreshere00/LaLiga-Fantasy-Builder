@@ -69,6 +69,13 @@ OPENAPI_TAGS: list[dict[str, str]] = [
             "Thin authenticated proxies of competition league market resources."
         ),
     },
+    {
+        "name": "buyout",
+        "description": (
+            "LaLiga Fantasy buyout clauses and player shielding. "
+            "Thin authenticated proxies of competition league buyout resources."
+        ),
+    },
 ]
 
 ERROR_RESPONSES: dict[int | str, dict[str, Any]] = {

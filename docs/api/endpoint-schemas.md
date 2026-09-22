@@ -587,6 +587,90 @@ Each item:
 | `visitorScore` | integer | no |  |
 
 
+## Tag: `buyout`
+
+LaLiga Fantasy buyout clauses and player shielding. Thin authenticated proxies of competition league buyout resources.
+
+### `POST` `/buyout/leagues/{league_id}/player-teams/{player_team_id}/increase`
+
+Set or increase a buyout clause
+
+**Security:** HTTP Bearer (internal JWT)
+
+#### Inputs
+
+| Source | Name | Type | Required | Constraints | Description |
+|--------|------|------|----------|-------------|-------------|
+| path | `league_id` | string | yes |  | Fantasy league identifier. |
+| path | `player_team_id` | string | yes |  | Squad-entry id (``playerTeamId``), not master ``playerId``. |
+| body | `buyoutClause` | integer | yes |  |  |
+
+#### Outputs
+
+**HTTP 200:** `BuyoutMutationResult`
+
+
+
+### `POST` `/buyout/leagues/{league_id}/player-teams/{player_team_id}/pay`
+
+Pay a buyout clause
+
+**Security:** HTTP Bearer (internal JWT)
+
+#### Inputs
+
+| Source | Name | Type | Required | Constraints | Description |
+|--------|------|------|----------|-------------|-------------|
+| path | `league_id` | string | yes |  | Fantasy league identifier. |
+| path | `player_team_id` | string | yes |  | Squad-entry id (``playerTeamId``), not master ``playerId``. |
+| body | `buyoutClauseToPay` | integer | yes |  |  |
+
+#### Outputs
+
+**HTTP 200:** `BuyoutMutationResult`
+
+
+
+### `GET` `/buyout/leagues/{league_id}/player-teams/{player_team_id}/shield`
+
+Check shield status for a squad entry
+
+**Security:** HTTP Bearer (internal JWT)
+
+#### Inputs
+
+| Source | Name | Type | Required | Constraints | Description |
+|--------|------|------|----------|-------------|-------------|
+| path | `league_id` | string | yes |  | Fantasy league identifier. |
+| path | `player_team_id` | string | yes |  | Squad-entry id (``playerTeamId``), not master ``playerId``. |
+
+#### Outputs
+
+**HTTP 200:** `ShieldStatus`
+
+
+
+### `PUT` `/buyout/leagues/{league_id}/shield`
+
+Activate shielding for a squad entry
+
+**Security:** HTTP Bearer (internal JWT)
+
+#### Inputs
+
+| Source | Name | Type | Required | Constraints | Description |
+|--------|------|------|----------|-------------|-------------|
+| path | `league_id` | string | yes |  | Fantasy league identifier. |
+| body | `playerId` | string | yes |  |  |
+| body | `rewardedAdType` | string | yes |  |  |
+| body | `rewardedAd` | integer | yes |  |  |
+
+#### Outputs
+
+**HTTP 200:** `BuyoutMutationResult`
+
+
+
 ## Tag: `market`
 
 LaLiga Fantasy league market, bids, listings, and offers. Thin authenticated proxies of competition league market resources.
@@ -958,6 +1042,10 @@ Nested models referenced by the operations above. All Fantasy proxy models use `
 |-------|------|----------|-------------|
 | `money` | integer | yes |  |
 
+### `BuyoutMutationResult`
+
+Type: `object`
+
 ### `CatalogPlayer`
 
 | Field | Type | Required | Description |
@@ -1056,6 +1144,12 @@ Nested models referenced by the operations above. All Fantasy proxy models use `
 | Field | Type | Required | Description |
 |-------|------|----------|-------------|
 | `reward` | integer | no |  |
+
+### `IncreaseBuyoutWrite`
+
+| Field | Type | Required | Description |
+|-------|------|----------|-------------|
+| `buyoutClause` | integer | yes |  |
 
 ### `LaligaCredentialProbeResponse`
 
@@ -1246,6 +1340,12 @@ Type: `object`
 | `email` | string | no |  |
 | `name` | string | no |  |
 
+### `PayBuyoutWrite`
+
+| Field | Type | Required | Description |
+|-------|------|----------|-------------|
+| `buyoutClauseToPay` | integer | yes |  |
+
 ### `PlayerMarket`
 
 | Field | Type | Required | Description |
@@ -1320,6 +1420,18 @@ Type: `object`
 |-------|------|----------|-------------|
 | `title` | string | no |  |
 | `description` | string | no |  |
+
+### `ShieldStatus`
+
+Type: `object`
+
+### `ShieldWrite`
+
+| Field | Type | Required | Description |
+|-------|------|----------|-------------|
+| `playerId` | string | yes |  |
+| `rewardedAdType` | string | yes |  |
+| `rewardedAd` | integer | yes |  |
 
 ### `SquadPlayer`
 

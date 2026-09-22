@@ -14,8 +14,11 @@
 - [Endpoint schemas](api/endpoint-schemas.md) — generated I/O reference for
   all API routes
 - [Leagues](api/leagues/README.md) · [Teams](api/teams/README.md) ·
-  [Players](api/players/README.md) · [Calendar](api/calendar/README.md)
+  [Players](api/players/README.md) · [Calendar](api/calendar/README.md) ·
+  [Market](api/market/README.md) · [Buyout](api/buyout/README.md)
 - [Proxy endpoint pitfalls](api/proxy-endpoint-pitfalls.md)
+
+Agent instructions: [`AGENTS.md`](../AGENTS.md).
 
 Committed OpenAPI: [`backend/api/openapi.json`](../backend/api/openapi.json)
 (`uv run generate-openapi` in `backend/api`).

@@ -31,3 +31,6 @@ Error codes to handle on the API side: `unauthorized`, `needs_reauth`.
 
 Do **not** nest a second `.git` here unless you explicitly want a submodule;
 this monorepo already supports independent deploys per folder.
+
+Agent instructions: [`AGENTS.md`](../AGENTS.md). Feature routes:
+[API docs](../docs/api/README.md).
