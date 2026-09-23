@@ -1,140 +1,67 @@
-# LaLiga Fantasy Builder — Auth service
+# Auth service
 
-Standalone FastAPI service for **application identity** (Keycloak/OIDC) and
-**LaLiga Fantasy delegation** (pairing + sealed B2C tokens). Deploy it
-independently from `backend/api`.
+Application login (Keycloak) and the sealed LaLiga account. The browser flow
+is in [Architecture](../../docs/architecture.md#browser-login). Token rules
+are in [Authentication](../../docs/authentication/authentication.md).
 
-Python package import path: `fantasy_auth`.
+Package import path: `fantasy_auth`. Stack startup is the
+[root README](../../README.md).
 
 ## Local run
 
 ```bash
 cd backend/auth
 cp .env.example .env
-# set TOKEN_VAULT_KEY_BASE64=$(openssl rand -base64 32)
 uv sync --all-extras
 uv run uvicorn fantasy_auth.main:app --reload --port 8000
-# or: uv run laliga-fantasy-builder-auth
 ```
 
-From repo root, Keycloak:
+Keycloak, from the repo root: `docker compose up -d`.
+
+Standalone image:
 
 ```bash
-docker compose up -d
-```
-
-Docker stack from repo root (Keycloak + auth + API):
-
-```bash
-cp .env.template .env
-cp backend/auth/.env.example backend/auth/.env
-docker compose --profile apps up --build
-```
-
-Production-like stack (Postgres + Redis + auth + OTEL). Set in `.env` before
-`--profile full`:
-
-- `USE_MEMORY_STORE=false`
-- `TOKEN_VAULT_KEY_BASE64` — `openssl rand -base64 32`
-- `INTERNAL_JWT_PRIVATE_KEY_PEM` / `INTERNAL_JWT_PUBLIC_KEY_PEM`
-- `INTERNAL_SERVICE_TOKEN`
-- `MIGRATION_AUTO_APPLY=true` (or pass via Compose)
-
-```bash
-docker compose --profile full up --build
-```
-
-## Docker image
-
-Multi-stage build on `python:3.14-slim-trixie` (uv in builder only, non-root
-runtime):
-
-```bash
-# from repo root
 docker build -t laliga-fantasy-builder-auth -f backend/auth/Dockerfile backend/auth
 docker run --rm -p 8000:8000 --env-file backend/auth/.env laliga-fantasy-builder-auth
 ```
 
-## Pair LaLiga
+## Developer pairing CLIs
 
-From the repository root, use the automated script:
-
-```bash
-./scripts/authenticate-laliga.sh
-```
-
-Or run its CLI directly:
-
-```bash
-cd backend/auth
-uv run authenticate-laliga
-```
-
-The command creates `.env` when missing, starts local Keycloak, synchronizes
-dependencies, starts auth when needed, opens application login, performs the
-LaLiga PKCE pairing, and verifies `/laliga/connection`.
-
-The browser login and consent screens cannot be safely automated. After app
-login, copy `fantasy_session` and `fantasy_csrf` from browser developer tools
-when prompted. Cookie values are read without terminal echo.
-
-When the command starts an in-memory auth server, it keeps that process alive
-after pairing so the connection remains available. Press `Ctrl+C` to stop it.
-Use `--no-keep-server` only when the connection is persisted elsewhere.
-
-To pair against an auth service that is already running:
-
-```bash
-export FANTASY_SESSION='…'
-export FANTASY_CSRF='…'
-cd backend/auth
-uv run pair-laliga
-```
-
-## Browser session (Playwright)
-
-Local Keycloak login (`demo` / `demo`) can be driven by Chromium so you do not
-copy cookies by hand. When the vault is empty, pairing opens your **default
-browser** so you can sign in to LaLiga with Google. The native
-`authredirect://` callback is captured by a small helper app — do not copy or
-paste it. macOS may ask to open **LaligaAuthredirect**; choose Open.
+The app pairs LaLiga itself. These commands are for analysis and for
+registering the macOS `authredirect://` handler.
 
 ```bash
 cd backend/auth
 uv sync --extra browser
 uv run playwright install chromium
-
-# Auth on :8000, API on :8001, Keycloak on :8080
-uv run fantasy-browser-session --exports
-uv run fantasy-browser-session --player-id 3277 --json
 uv run fantasy-browser-session leagues-analysis --json
-uv run fantasy-browser-session teams-analysis --json
-uv run fantasy-browser-session market-analysis --json
-uv run fantasy-browser-session buyout-analysis --league-id 123 --player-team-id pt-9 --json
 ```
 
-From the repo root: `./scripts/fantasy-browser-session.sh leagues-analysis`.
-
-`leagues-analysis` calls `GET /leagues`, standing (overall and week), activity,
-teams, and a squad. `teams-analysis` calls `GET /teams/{id}/money`, current
-lineup, and week lineup. `market-analysis` calls `GET /market/leagues/{id}`,
-history, and optional squad-entry offers (read-only).
-`buyout-analysis` calls `GET /buyout/leagues/{id}/player-teams/{id}/shield`
-(read-only; requires `--league-id` and `--player-team-id`). `--put-lineup` is optional
-and must point at a real
-JSON file plus a real `--team-id` (not a placeholder). `--week` defaults to
-the jornada inferred from `/leagues`. `--headless` hides the Keycloak window.
-LaLiga pairing uses your normal browser. `--no-pair` skips LaLiga if you only
-need a JWT. `--exports` prints `FANTASY_SESSION` / `FANTASY_CSRF` /
+Allow LaligaAuthredirect if macOS asks. `--no-pair` skips LaLiga when you
+only need an internal JWT. `--exports` prints session cookies and
 `INTERNAL_JWT` for curl.
+
+`leagues-analysis`, `teams-analysis`, `market-analysis`, and
+`buyout-analysis` call the matching API reads. `fantasy-market` and
+`fantasy-buyout` stay read-only. `--put-lineup` needs a real JSON file and
+`--team-id`.
+
+Cookie-prompt alternative, from the repo root: `./scripts/authenticate-laliga.sh`.
+Against an auth process that is already up:
+
+```bash
+export FANTASY_SESSION='…'
+export FANTASY_CSRF='…'
+cd backend/auth && uv run pair-laliga
+```
 
 ## Health
 
-- `GET /health` / `GET /health/live` — process liveness
-- `GET /health/ready` — Postgres + Redis when `USE_MEMORY_STORE=false`
-- `GET /.well-known/jwks.json` — public keys for internal JWT verification
-- `POST /auth/token` — session+CSRF → short-lived internal JWT
-- `GET /internal/laliga/bearer` — private; JWT + `X-Service-Token` → LaLiga bearer
+- `GET /health` and `GET /health/live` — process liveness
+- `GET /health/ready` — Postgres and Redis when `USE_MEMORY_STORE=false`
+- `GET /.well-known/jwks.json` — internal JWT verification keys
+- `POST /auth/token` — session and CSRF to a short-lived internal JWT
+- `GET /internal/laliga/bearer` — private; JWT plus `X-Service-Token`
 
 `/internal/*` must not be exposed on the public internet.
 

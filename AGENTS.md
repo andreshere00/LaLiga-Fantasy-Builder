@@ -18,12 +18,14 @@ guides live under [`docs/`](docs/README.md).
 
 | Service | Path | Port | Owns |
 |---------|------|------|------|
+| Frontend | `frontend` | 3000 | Lineup UI. Proxies `/auth`, `/laliga`, and `/api` |
 | Auth | `backend/auth` | 8000 | Sessions, OIDC, LaLiga pairing, vault, internal JWT |
 | API | `backend/api` | 8001 | Features; LaLiga via private bearer exchange |
 
 ```text
-Browser → POST /auth/token (auth) → internal JWT
-Browser → route (api)              → validate JWT via auth JWKS
+Browser → frontend origin
+        → POST /auth/token (auth) → internal JWT in memory
+        → /api/... with Bearer JWT
 API     → GET /internal/laliga/bearer (auth, private) → LaLiga bearer
 API     → Fantasy upstream with bearer → JSON (no tokens)
 ```

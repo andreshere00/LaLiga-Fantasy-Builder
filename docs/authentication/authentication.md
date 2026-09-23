@@ -61,7 +61,11 @@ sequenceDiagram
     Auth->>IdP: Exchange code and verifier
     IdP-->>Auth: Signed ID token
     Auth->>Auth: Verify JWKS claims and nonce
-    Auth-->>Browser: User view and rotated CSRF
+    alt Browser asked for HTML
+        Auth-->>Browser: Redirect to the frontend, or to LaLiga if unlinked
+    else API client
+        Auth-->>Browser: JSON user view and rotated CSRF
+    end
 ```
 
 ## Browser session and CSRF rules
@@ -127,42 +131,28 @@ where possible.
 
 ## LaLiga pairing
 
-LaLiga access is optional. An authenticated browser creates a one-time pairing
-with `POST /laliga/pairings`, protected by session and CSRF.
+The browser flow is the diagram in
+[Architecture](../architecture.md#browser-login). Auth keeps the PKCE verifier
+and pairing secret on the session. `GET /laliga/login` repeats that hop for a
+session that is already signed in.
 
-For local development, prefer `fantasy-browser-session` (Keycloak login
-automated; LaLiga consent in your default browser; native `authredirect://`
-captured without paste). See [`backend/auth/README.md`](../../backend/auth/README.md).
+LaLiga returns to `authredirect://com.lfp.laligafantasy`, not to the frontend.
+The macOS URL handler posts that URL to
+`POST /laliga/pairings/complete-redirect`. Auth then:
 
-Cookie-prompt alternative:
+1. rate-limits the caller;
+2. matches `state` to the pending session;
+3. exchanges the code with B2C;
+4. atomically consumes the pairing;
+5. verifies the LaLiga JWT and nonce;
+6. confirms the manager through `GET /api/v4/user/me`;
+7. encrypts the bundle under the application user's `sub`.
 
-```bash
-./scripts/authenticate-laliga.sh
-# or: cd backend/auth && uv run authenticate-laliga
-```
+The handler opens `FRONTEND_ORIGIN`. The response has no tokens.
 
-That command creates `.env` when missing, starts Keycloak and auth if needed,
-opens `/auth/login`, prompts for `fantasy_session` / `fantasy_csrf`, runs PKCE
-pairing, and verifies `/laliga/connection`. Application login and LaLiga
-consent stay interactive. Clipboard/`--stdin`/`--callback-file` apply to that
-helper only.
-
-When the CLI starts auth, it uses an in-memory store and keeps the process
-alive by default. Stopping it removes the in-memory pairing state.
-
-Completion (`pair-laliga` / the pairing helper) performs LaLiga Authorization
-Code + PKCE and calls `POST /laliga/pairings/{pairing_id}/complete` with the
-one-time pairing secret.
-Auth:
-
-1. rate-limits completion attempts;
-2. atomically consumes the pairing;
-3. verifies the LaLiga JWT signature, issuer, audience, expiry, and nonce;
-4. confirms the manager through `GET /api/v4/user/me`;
-5. encrypts the token bundle with AES-GCM;
-6. stores it under the application user's `sub`.
-
-Raw LaLiga tokens are never returned to the browser.
+Developer CLIs still use `POST /laliga/pairings` and
+`POST /laliga/pairings/{id}/complete`. Those commands are in
+[`backend/auth/README.md`](../../backend/auth/README.md).
 
 ## Private credential contract
 

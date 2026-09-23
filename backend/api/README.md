@@ -1,20 +1,8 @@
-# LaLiga Fantasy Builder — API service
+# API service
 
-Main application API. Authenticates callers with **internal JWTs** from
-[`../auth/`](../auth/) and fetches short-lived LaLiga bearers from auth’s
-private credential endpoint. Never opens the token vault.
-
-## Contract
-
-1. Browser authenticates with auth cookies, then `POST /auth/token` (CSRF).
-2. Caller sends `Authorization: Bearer <internal JWT>`.
-3. This API verifies the JWT against auth JWKS (`AUTH_JWKS_URL`).
-4. LaLiga routes call `GET /internal/laliga/bearer` with the same JWT plus
-   `X-Service-Token` (never exposed to the browser). Calendar routes still
-   require the internal JWT but call public upstream Fantasy reads without
-   exchanging a bearer.
-
-`/internal/*` on auth must stay on a private network.
+Fantasy routes for the lineup app and the CLIs. Callers send an internal JWT
+from auth. LaLiga bearers are fetched in private and never returned.
+The request path is in [Architecture](../../docs/architecture.md).
 
 ## Local run
 
@@ -25,62 +13,42 @@ uv sync --all-extras
 uv run uvicorn fantasy_api.main:app --reload --port 8001
 ```
 
-## Docker
+From the repo root, with auth on the Compose network:
+`docker compose --profile apps up --build` ([root README](../../README.md)).
 
-From repo root (with auth on the same Compose network):
-
-```bash
-cp backend/api/.env.example backend/api/.env
-docker compose --profile apps up --build
-```
-
-Standalone image (multi-stage `python:3.14-slim-trixie`, non-root):
+Standalone image:
 
 ```bash
 docker build -t laliga-fantasy-builder-api -f backend/api/Dockerfile backend/api
 docker run --rm -p 8001:8001 --env-file backend/api/.env laliga-fantasy-builder-api
 ```
 
-Set `AUTH_JWKS_URL` and `AUTH_INTERNAL_BASE_URL` to a reachable auth instance
-when not using Compose defaults.
-
-| Variable | Default | Purpose |
-|----------|---------|---------|
-| `LALIGA_FANTASY_ORIGIN` | `https://fantasy-api.llt-services.com` | Fantasy origin |
-| `LALIGA_COMPETITION_ID` | `1` | Competition id in Fantasy paths |
+Set `AUTH_JWKS_URL` and `AUTH_INTERNAL_BASE_URL` when not using Compose.
+`LALIGA_FANTASY_ORIGIN` defaults to `https://fantasy-api.llt-services.com`.
+`LALIGA_COMPETITION_ID` defaults to `1`.
 
 ## Routes
 
 | Method | Path | Notes |
 |--------|------|-------|
-| `GET` | `/me` | App identity from internal JWT |
-| `GET` | `/laliga/credential-probe` | Auth bearer available (token redacted) |
-| `GET` | `/laliga/leagues-probe` | Fantasy leagues connectivity (redacted) |
-| `GET` | `/leagues...` | See [leagues](../../docs/api/leagues/README.md) |
-| `GET`/`PUT` | `/teams...` | See [teams](../../docs/api/teams/README.md) |
-| `GET` | `/players...` | See [players](../../docs/api/players/README.md) (catalog/history public) |
-| `GET` | `/calendar/current` | Current matchday (public Fantasy read) |
-| `GET` | `/calendar/weeks/{week}` | Fixtures for a matchday |
-| `GET` | `/calendar/weeks/{week}/stats` | Matchday stats and week points |
-| `GET`/`POST`/… | `/market/...` | See [market](../../docs/api/market/README.md) |
-| `GET`/`POST`/`PUT` | `/buyout/...` | See [buyout](../../docs/api/buyout/README.md) |
+| `GET` | `/me` | App identity from the internal JWT |
+| `GET` | `/laliga/credential-probe` | Bearer available, token redacted |
+| `GET` | `/laliga/leagues-probe` | Fantasy leagues connectivity, redacted |
+| `GET` | `/leagues...` | [leagues](../../docs/api/leagues/README.md) |
+| `GET`/`PUT` | `/teams...` | [teams](../../docs/api/teams/README.md) |
+| `GET` | `/players...` | [players](../../docs/api/players/README.md). Catalog and history are public |
+| `GET` | `/calendar/...` | Matchday, fixtures, stats. JWT required; Fantasy read is public |
+| `GET`/`POST`/… | `/market/...` | [market](../../docs/api/market/README.md) |
+| `GET`/`POST`/`PUT` | `/buyout/...` | [buyout](../../docs/api/buyout/README.md) |
 
-CRS: `api/` → `services/` → `repositories/` → `clients/laliga_fantasy.py`.
 New routes: [Adding endpoints](../../docs/api/adding-endpoints.md).
-OpenAPI: http://localhost:8001/docs — regenerate with
-`cd backend/api && uv run generate-openapi` ([details](../../docs/api/openapi.md)).
-
-Probe (bearer must not appear):
-
-```bash
-curl -sS -H "Authorization: Bearer ${INTERNAL_JWT}" \
-  http://localhost:8001/laliga/leagues-probe
-```
+Swagger: http://localhost:8001/docs. Regenerate with
+`uv run poe generate-openapi` ([details](../../docs/api/openapi.md)).
 
 ## CLI
 
-Requires auth on `:8000` and this API on `:8001` (`--auth-base` / `--api-base`).
-JWT via `--jwt` / `INTERNAL_JWT`, or `FANTASY_SESSION` + `FANTASY_CSRF`.
+Auth on port 8000 and this API on port 8001. Pass `--jwt` or
+`FANTASY_SESSION` and `FANTASY_CSRF`.
 
 ```bash
 cd backend/api
@@ -92,8 +60,8 @@ uv run fantasy-market --league-id 123 --json
 uv run fantasy-buyout --league-id 123 --player-team-id pt-9 --json
 ```
 
-Automated Keycloak + LaLiga pairing (from `backend/auth`):
-`uv run fantasy-browser-session leagues-analysis`.
+Signed-in analysis from auth: `uv run fantasy-browser-session leagues-analysis`.
+`fantasy-market` and `fantasy-buyout` are read-only.
 
 ## Tests
 

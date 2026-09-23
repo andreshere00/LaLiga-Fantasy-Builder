@@ -30,6 +30,7 @@ player league-card, market, and buyout routes exchange a LaLiga bearer.
 Market and buyout mutations are medium-confidence community contracts.
 `fantasy-market` and `fantasy-buyout` stay read-only.
 
-Callers mint an internal JWT via `POST /auth/token`, then send
-`Authorization: Bearer <jwt>`. Authenticated local login:
+Callers send `Authorization: Bearer <jwt>` minted by `POST /auth/token`.
+The lineup app does this after sign-in. For a terminal session, use
 `uv run fantasy-browser-session` from `backend/auth`.
+The system map is [Architecture](../architecture.md).
