@@ -2,7 +2,7 @@
 
 import { describe, expect, it, vi } from "vitest";
 
-import { AuthClient, refreshDelayMs, startLogin } from "./client";
+import { AuthClient, connectionReady, refreshDelayMs, startLaligaLogin, startLogin } from "./client";
 import { resolveGate } from "./gate";
 import { MemoryTokenStore } from "./tokenStore";
 import type { LaligaConnection, SessionView } from "./types";
@@ -34,9 +34,26 @@ describe("startLogin", () => {
     startLogin((url) => urls.push(url));
     expect(urls).toEqual(["/auth/login"]);
   });
+
+  it("startLaligaLogin_default_navigates_to_laliga_login", () => {
+    const urls: string[] = [];
+    startLaligaLogin((url) => urls.push(url));
+    expect(urls).toEqual(["/laliga/login"]);
+  });
 });
 
 describe("AuthClient", () => {
+  it("currentSession_bound_fetch_does_not_throw_illegal_invocation", async () => {
+    const store = new MemoryTokenStore();
+    const fetchFn = vi.fn(async function (this: unknown) {
+      if (this !== globalThis) throw new TypeError("Illegal invocation");
+      return json({ error: "unauthorized" }, 401);
+    });
+    const client = new AuthClient(fetchFn, store);
+
+    await expect(client.currentSession()).resolves.toBeNull();
+  });
+
   it("exchange_with_csrf_keeps_token_out_of_local_storage", async () => {
     const store = new MemoryTokenStore();
     const setItem = vi.spyOn(Storage.prototype, "setItem");
@@ -91,6 +108,12 @@ describe("AuthClient", () => {
 });
 
 describe("resolveGate", () => {
+  it("connectionReady_linked_without_reauth_leaves_the_gate", () => {
+    expect(connectionReady(LINKED)).toBe(true);
+    expect(connectionReady({ ...LINKED, linked: false })).toBe(false);
+    expect(connectionReady({ ...LINKED, needs_reauth: true })).toBe(false);
+  });
+
   it("resolveGate_api_needs_reauth_returns_reconnect_state", () => {
     expect(
       resolveGate({ session: SESSION, connection: LINKED, needsReauth: true }),

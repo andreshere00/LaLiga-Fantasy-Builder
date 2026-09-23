@@ -5,13 +5,16 @@ from __future__ import annotations
 from collections.abc import Mapping
 from dataclasses import dataclass
 from typing import Any
+from urllib.parse import parse_qs, urlparse
 from uuid import uuid4
 
 from fantasy_auth.adapters.pkce import (
     constant_time_equals,
     generate_pairing_secret,
     generate_state,
+    generate_verifier,
     hash_secret,
+    s256_challenge,
 )
 from fantasy_auth.domain.errors import OwnershipError, PairingError
 from fantasy_auth.domain.tokens import normalize_bundle
@@ -62,6 +65,25 @@ class PairingCompleted:
     profile: LaligaUser
 
 
+@dataclass(frozen=True, slots=True)
+class BrowserPairingStart:
+    """Authorize URL and secrets kept on the server session.
+
+    Attributes:
+        authorize_url: B2C URL to open in the browser.
+        pairing_id: Public pairing identifier.
+        secret: One-time pairing secret. Never return this to the browser.
+        code_verifier: PKCE verifier for the code exchange.
+        b2c_state: State echoed by the native callback.
+    """
+
+    authorize_url: str
+    pairing_id: str
+    secret: str
+    code_verifier: str
+    b2c_state: str
+
+
 class PairingService:
     """Create and complete one-time LaLiga pairings.
 
@@ -95,6 +117,7 @@ class PairingService:
         pairing_ttl_seconds: int = 600,
         allow_id_token_fallback: bool = False,
         b2c: B2CClient | None = None,
+        redirect_uri: str = "authredirect://com.lfp.laligafantasy",
     ) -> None:
         self._pairings = pairings
         self._connections = connections
@@ -108,6 +131,7 @@ class PairingService:
         self._pairing_ttl_seconds = pairing_ttl_seconds
         self._allow_id_token_fallback = allow_id_token_fallback
         self._b2c = b2c
+        self._redirect_uri = redirect_uri
 
     async def create_pairing(self, user_id: str) -> PairingCreated:
         """Issue a one-time pairing for the authenticated app user.
@@ -137,6 +161,92 @@ class PairingService:
             secret=secret,
             expires_at=expires_at,
             nonce=nonce,
+        )
+
+    async def begin_browser_login(self, user_id: str) -> BrowserPairingStart:
+        """Create a pairing and the B2C authorize URL for this app user.
+
+        Args:
+            user_id: Application user ID from the session.
+
+        Returns:
+            Authorize URL and server-side PKCE material.
+
+        Raises:
+            PairingError: When the B2C client is not configured.
+        """
+        created = await self.create_pairing(user_id)
+        if self._b2c is None:
+            raise PairingError("b2c client unavailable", category="provider")
+        verifier = generate_verifier()
+        state = generate_state()
+        authorize_url = self._b2c.build_authorize_url(
+            redirect_uri=self._redirect_uri,
+            code_challenge=s256_challenge(verifier),
+            state=state,
+            nonce=created.nonce,
+        )
+        return BrowserPairingStart(
+            authorize_url=authorize_url,
+            pairing_id=created.pairing_id,
+            secret=created.secret,
+            code_verifier=verifier,
+            b2c_state=state,
+        )
+
+    async def complete_browser_redirect(
+        self,
+        *,
+        callback: str,
+        pairing_id: str,
+        secret: str,
+        code_verifier: str,
+        expected_state: str,
+    ) -> PairingCompleted:
+        """Exchange a native callback and seal the tokens for the pairing.
+
+        Args:
+            callback: Full ``authredirect://`` URL.
+            pairing_id: Pending pairing id stored on the session.
+            secret: Pending pairing secret stored on the session.
+            code_verifier: PKCE verifier stored on the session.
+            expected_state: B2C state stored on the session.
+
+        Returns:
+            Completion result with the merged profile.
+
+        Raises:
+            PairingError: When the callback or token exchange is invalid.
+        """
+        params = _callback_params(callback, expected_state=expected_state)
+        if params.get("error"):
+            raise PairingError(str(params["error"]), category="pairing_callback")
+        code = params.get("code")
+        if not code or self._b2c is None:
+            raise PairingError("callback missing code", category="pairing_callback")
+        try:
+            bundle = await self._b2c.exchange_code(
+                code=code,
+                code_verifier=code_verifier,
+                redirect_uri=self._redirect_uri,
+            )
+        except Exception as exc:
+            raise PairingError("token exchange failed", category="provider") from exc
+        token_response = {
+            "access_token": bundle.access_token,
+            "id_token": bundle.id_token,
+            "refresh_token": bundle.refresh_token,
+            "token_type": bundle.token_type,
+            "expires_in": bundle.expires_in,
+            "expires_on": bundle.expires_on,
+            "client_id": bundle.client_id,
+            "policy": bundle.policy,
+            "scope": bundle.scope,
+        }
+        return await self.complete_pairing(
+            pairing_id=pairing_id,
+            secret=secret,
+            token_response=token_response,
         )
 
     async def complete_pairing(
@@ -249,3 +359,23 @@ class PairingService:
         if connection.user_id != user_id:
             raise OwnershipError()
         await self._connections.delete(user_id)
+
+
+def _callback_params(callback: str, *, expected_state: str) -> dict[str, str]:
+    """Read code and state from a native LaLiga callback URL.
+
+    Args:
+        callback: Full ``authredirect://`` URL.
+        expected_state: State stored on the application session.
+
+    Returns:
+        Query parameters, or ``{"error": ...}`` when state does not match.
+    """
+    parsed = urlparse(callback)
+    query = parsed.query
+    if not query and "?" in callback:
+        query = callback.split("?", 1)[1]
+    params = {key: values[0] for key, values in parse_qs(query).items() if values}
+    if params.get("state") != expected_state:
+        return {"error": "state mismatch"}
+    return params

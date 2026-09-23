@@ -10,7 +10,7 @@ import {
 } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 
-import { AuthClient, refreshDelayMs, startLogin } from "./client";
+import { AuthClient, connectionReady, refreshDelayMs, startLaligaLogin, startLogin } from "./client";
 import { resolveGate } from "./gate";
 import { MemoryTokenStore } from "./tokenStore";
 import type { AccessToken, AuthStatus, SessionUser } from "./types";
@@ -22,6 +22,7 @@ type AuthContextValue = {
   accessToken: string | null;
   notice: string | null;
   login: () => void;
+  connectLaliga: () => void;
   logout: () => Promise<void>;
   reload: () => Promise<void>;
   markNeedsReauth: () => void;
@@ -128,6 +129,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     startLogin();
   }, []);
 
+  const connectLaliga = useCallback(() => {
+    startLaligaLogin();
+  }, []);
+
   const logout = useCallback(async () => {
     const csrfToken = csrfRef.current;
     epochRef.current += 1;
@@ -153,6 +158,17 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     await loadRef.current(epoch);
   }, []);
 
+  useEffect(() => {
+    if (status === "ready") sessionStorage.removeItem("laliga-login-started");
+    if (status !== "unlinked" && status !== "needs-reauth") return;
+    const timer = window.setInterval(() => {
+      void client.connection().then((connection) => {
+        if (connectionReady(connection)) void reload();
+      }, () => undefined);
+    }, 3000);
+    return () => window.clearInterval(timer);
+  }, [status, client, reload]);
+
   const markNeedsReauth = useCallback(() => {
     setStatus((current) => (current === "needs-reauth" ? current : "needs-reauth"));
   }, []);
@@ -165,6 +181,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       accessToken,
       notice,
       login,
+      connectLaliga,
       logout,
       reload,
       markNeedsReauth,
@@ -176,6 +193,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       accessToken,
       notice,
       login,
+      connectLaliga,
       logout,
       reload,
       markNeedsReauth,

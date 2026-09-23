@@ -71,6 +71,7 @@ services:
       - "${AUTH_PUBLISH_PORT}:${AUTH_SERVICE_PORT}"
     env_file: [./backend/auth/.env]
     environment:
+      APP_OIDC_REDIRECT_URI: ${APP_OIDC_REDIRECT_URI:-http://localhost:3000/auth/callback}
       APP_OIDC_TOKEN_URL: ${APP_OIDC_TOKEN_URL:-http://keycloak:8080/realms/fantasy-builder/protocol/openid-connect/token}
       APP_OIDC_JWKS_URL: ${APP_OIDC_JWKS_URL:-http://keycloak:8080/realms/fantasy-builder/protocol/openid-connect/certs}
       FRONTEND_ORIGIN: ${FRONTEND_ORIGIN:-http://localhost:3000}

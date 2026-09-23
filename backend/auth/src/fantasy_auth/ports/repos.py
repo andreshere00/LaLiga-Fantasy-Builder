@@ -20,6 +20,10 @@ class SessionRecord:
         oidc_state: Pending OIDC state during login (optional).
         oidc_nonce: Pending OIDC nonce during login (optional).
         oidc_code_verifier: PKCE verifier for app IdP (optional).
+        laliga_pairing_id: Pending LaLiga pairing id (optional).
+        laliga_pairing_secret: Pending pairing secret, server-side only.
+        laliga_code_verifier: PKCE verifier for the LaLiga authorize hop.
+        laliga_b2c_state: B2C state used to match the native callback.
     """
 
     session_id: str
@@ -29,6 +33,10 @@ class SessionRecord:
     oidc_state: str | None = None
     oidc_nonce: str | None = None
     oidc_code_verifier: str | None = None
+    laliga_pairing_id: str | None = None
+    laliga_pairing_secret: str | None = None
+    laliga_code_verifier: str | None = None
+    laliga_b2c_state: str | None = None
 
 
 @dataclass(frozen=True, slots=True)
@@ -93,6 +101,16 @@ class SessionStore(Protocol):
 
     async def delete(self, session_id: str) -> None:
         """Delete a session (logout)."""
+
+    async def find_by_laliga_state(self, state: str) -> SessionRecord | None:
+        """Load the session waiting for this LaLiga B2C state.
+
+        Args:
+            state: ``state`` query value from the native callback.
+
+        Returns:
+            Matching session, or None.
+        """
 
 
 class PairingStore(Protocol):

@@ -111,8 +111,10 @@ async def auth_callback(
         "csrf_token": view.csrf_token,
     }
     if _wants_html(request.headers.get("accept")):
+        from fantasy_auth.api.pairings import browser_landing_url
+
         response: Response = RedirectResponse(
-            url=container.settings.frontend_origin,
+            url=await browser_landing_url(session_id),
             status_code=302,
         )
     else:

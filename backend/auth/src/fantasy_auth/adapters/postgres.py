@@ -22,6 +22,30 @@ def _from_dt(value: datetime) -> int:
     return int(value.timestamp())
 
 
+def _session_from_row(row: Any) -> SessionRecord:
+    """Build a session from a Postgres row, including optional LaLiga fields."""
+    user = None
+    if row["user_id"] is not None:
+        user = AppUser(
+            user_id=row["user_id"],
+            email=row["email"],
+            name=row["name"],
+        )
+    return SessionRecord(
+        session_id=row["session_id"],
+        user=user,
+        csrf_token=row["csrf_token"],
+        expires_at=_from_dt(row["expires_at"]),
+        oidc_state=row["oidc_state"],
+        oidc_nonce=row["oidc_nonce"],
+        oidc_code_verifier=row["oidc_code_verifier"],
+        laliga_pairing_id=row.get("laliga_pairing_id"),
+        laliga_pairing_secret=row.get("laliga_pairing_secret"),
+        laliga_code_verifier=row.get("laliga_code_verifier"),
+        laliga_b2c_state=row.get("laliga_b2c_state"),
+    )
+
+
 def _profile_to_json(profile: LaligaUser | None) -> str | None:
     if profile is None:
         return None
@@ -82,8 +106,10 @@ class PostgresSessionStore:
             """
             INSERT INTO sessions (
                 session_id, user_id, email, name, csrf_token, expires_at,
-                oidc_state, oidc_nonce, oidc_code_verifier
-            ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
+                oidc_state, oidc_nonce, oidc_code_verifier,
+                laliga_pairing_id, laliga_pairing_secret,
+                laliga_code_verifier, laliga_b2c_state
+            ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13)
             ON CONFLICT (session_id) DO UPDATE SET
                 user_id = EXCLUDED.user_id,
                 email = EXCLUDED.email,
@@ -92,7 +118,11 @@ class PostgresSessionStore:
                 expires_at = EXCLUDED.expires_at,
                 oidc_state = EXCLUDED.oidc_state,
                 oidc_nonce = EXCLUDED.oidc_nonce,
-                oidc_code_verifier = EXCLUDED.oidc_code_verifier
+                oidc_code_verifier = EXCLUDED.oidc_code_verifier,
+                laliga_pairing_id = EXCLUDED.laliga_pairing_id,
+                laliga_pairing_secret = EXCLUDED.laliga_pairing_secret,
+                laliga_code_verifier = EXCLUDED.laliga_code_verifier,
+                laliga_b2c_state = EXCLUDED.laliga_b2c_state
             """,
             session.session_id,
             user.user_id if user else None,
@@ -103,6 +133,10 @@ class PostgresSessionStore:
             session.oidc_state,
             session.oidc_nonce,
             session.oidc_code_verifier,
+            session.laliga_pairing_id,
+            session.laliga_pairing_secret,
+            session.laliga_code_verifier,
+            session.laliga_b2c_state,
         )
 
     async def get(self, session_id: str) -> SessionRecord | None:
@@ -120,22 +154,7 @@ class PostgresSessionStore:
         )
         if row is None:
             return None
-        user = None
-        if row["user_id"] is not None:
-            user = AppUser(
-                user_id=row["user_id"],
-                email=row["email"],
-                name=row["name"],
-            )
-        return SessionRecord(
-            session_id=row["session_id"],
-            user=user,
-            csrf_token=row["csrf_token"],
-            expires_at=_from_dt(row["expires_at"]),
-            oidc_state=row["oidc_state"],
-            oidc_nonce=row["oidc_nonce"],
-            oidc_code_verifier=row["oidc_code_verifier"],
-        )
+        return _session_from_row(row)
 
     async def delete(self, session_id: str) -> None:
         """Delete a session.
@@ -147,6 +166,25 @@ class PostgresSessionStore:
             "DELETE FROM sessions WHERE session_id = $1",
             session_id,
         )
+
+    async def find_by_laliga_state(self, state: str) -> SessionRecord | None:
+        """Load the session waiting for this LaLiga B2C state.
+
+        Args:
+            state: ``state`` query value from the native callback.
+
+        Returns:
+            Matching session, or None.
+        """
+        if not state:
+            return None
+        row = await self._pool.fetchrow(
+            "SELECT * FROM sessions WHERE laliga_b2c_state = $1",
+            state,
+        )
+        if row is None:
+            return None
+        return _session_from_row(row)
 
 
 class PostgresPairingStore:

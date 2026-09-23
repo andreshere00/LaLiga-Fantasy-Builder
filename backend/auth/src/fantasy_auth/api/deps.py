@@ -208,6 +208,7 @@ def build_container(
         pairing_ttl_seconds=cfg.pairing_ttl_seconds,
         allow_id_token_fallback=cfg.laliga_allow_id_token_fallback,
         b2c=b2c,
+        redirect_uri=cfg.laliga_redirect_uri,
     )
     credentials = CredentialProvider(
         connections=resolved_connections,

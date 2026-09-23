@@ -59,7 +59,7 @@ def test_handler_app_ready_matching_stamp_returns_true(tmp_path: Path) -> None:
     with plist.open("wb") as handle:
         macos.plistlib.dump({"CFBundleIdentifier": macos.BUNDLE_ID}, handle)
     (tmp_path / macos.STAMP_NAME).write_text(
-        str(callback.resolve()),
+        f"{callback.resolve()}|{macos.HANDLER_VERSION}",
         encoding="utf-8",
     )
 
@@ -220,7 +220,8 @@ def test_compile_handler_app_writes_plist_and_stamp(
     with (app / "Contents" / "Info.plist").open("rb") as handle:
         info = macos.plistlib.load(handle)
     assert info["CFBundleIdentifier"] == macos.BUNDLE_ID
-    assert (tmp_path / macos.STAMP_NAME).read_text(encoding="utf-8") == str(callback.resolve())
+    stamp = f"{callback.resolve()}|{macos.HANDLER_VERSION}"
+    assert (tmp_path / macos.STAMP_NAME).read_text(encoding="utf-8") == stamp
 
 
 def test_compile_handler_app_osacompile_failure_raises(

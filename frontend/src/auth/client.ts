@@ -2,6 +2,7 @@ import type { AccessToken, LaligaConnection, SessionView } from "./types";
 import { MemoryTokenStore } from "./tokenStore";
 
 export const LOGIN_PATH = "/auth/login";
+export const LALIGA_LOGIN_PATH = "/laliga/login";
 const REFRESH_SKEW_MS = 60_000;
 
 export type FetchLike = (input: string, init?: RequestInit) => Promise<Response>;
@@ -14,15 +15,24 @@ export function startLogin(navigate: (url: string) => void = defaultNavigate): v
   navigate(LOGIN_PATH);
 }
 
+export function startLaligaLogin(navigate: (url: string) => void = defaultNavigate): void {
+  navigate(LALIGA_LOGIN_PATH);
+}
+
+export function connectionReady(connection: LaligaConnection): boolean {
+  return connection.linked && !connection.needs_reauth;
+}
+
 function defaultNavigate(url: string): void {
   window.location.assign(url);
 }
 
 export class AuthClient {
-  constructor(
-    private readonly fetchFn: FetchLike,
-    private readonly store: MemoryTokenStore,
-  ) {}
+  private readonly fetchFn: FetchLike;
+
+  constructor(fetchFn: FetchLike, private readonly store: MemoryTokenStore) {
+    this.fetchFn = fetchFn.bind(globalThis);
+  }
 
   loginPath(): string {
     return LOGIN_PATH;

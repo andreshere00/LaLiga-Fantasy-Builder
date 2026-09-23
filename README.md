@@ -58,7 +58,10 @@ files from the templates, then builds and starts the `apps` profile:
 uv run poe up
 ```
 
-- App: http://localhost:3000 (`demo` / `demo`)
+- App: http://localhost:3000 (`demo` / `demo`). After Keycloak, an unlinked
+  account continues to LaLiga and returns here. The first time on a Mac, run
+  `cd backend/auth && uv run fantasy-browser-session` once and allow
+  LaligaAuthredirect if macOS asks, so `authredirect://` can come back to the app.
 - API: http://localhost:8001/docs
 - Keycloak admin: http://localhost:8080 (`admin` / `admin`)
 

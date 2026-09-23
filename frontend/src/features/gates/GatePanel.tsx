@@ -1,10 +1,11 @@
+import { useEffect } from "react";
 import type { AuthStatus } from "../../auth/types";
 import { useAuth } from "../../auth/AuthProvider";
 import "./GatePanel.css";
 
 const COPY: Record<
   Exclude<AuthStatus, "ready">,
-  { title: string; body: string; action?: "login" | "reload" }
+  { title: string; body: string; action?: "login" | "laliga" }
 > = {
   loading: {
     title: "Loading",
@@ -18,23 +19,32 @@ const COPY: Record<
   unlinked: {
     title: "Connect LaLiga",
     body:
-      "Your session is active, but league data needs a paired LaLiga account. " +
-      "Finish pairing with the auth helper, then check again. " +
-      "This app never receives a LaLiga token.",
-    action: "reload",
+      "Your session is active. Continue to LaLiga to link your account. " +
+      "You will return to this app when sign-in finishes.",
+    action: "laliga",
   },
   "needs-reauth": {
     title: "Reconnect LaLiga",
     body:
-      "LaLiga needs to be connected again before lineup data can load. " +
-      "Finish pairing with the auth helper, then check again.",
-    action: "reload",
+      "LaLiga needs to be connected again. Continue to LaLiga and you will " +
+      "return to this app when sign-in finishes.",
+    action: "laliga",
   },
 };
 
+const LALIGA_LOGIN_STARTED = "laliga-login-started";
+
 export function GatePanel({ status }: { status: Exclude<AuthStatus, "ready"> }) {
-  const { login, reload } = useAuth();
+  const { login, connectLaliga } = useAuth();
   const copy = COPY[status];
+
+  useEffect(() => {
+    if (copy.action !== "laliga") return;
+    if (sessionStorage.getItem(LALIGA_LOGIN_STARTED) === "1") return;
+    sessionStorage.setItem(LALIGA_LOGIN_STARTED, "1");
+    connectLaliga();
+  }, [connectLaliga, copy.action]);
+
   return (
     <section className="gate">
       <h1>{copy.title}</h1>
@@ -44,9 +54,9 @@ export function GatePanel({ status }: { status: Exclude<AuthStatus, "ready"> }) 
           Log in
         </button>
       ) : null}
-      {copy.action === "reload" ? (
-        <button type="button" onClick={() => void reload()}>
-          Check again
+      {copy.action === "laliga" ? (
+        <button type="button" onClick={connectLaliga}>
+          Connect LaLiga
         </button>
       ) : null}
     </section>
