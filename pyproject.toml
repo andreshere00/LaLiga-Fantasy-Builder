@@ -47,6 +47,15 @@ executionEnvironments = [
     { root = "backend/auth", extraPaths = ["src"], venvPath = "backend/auth", venv = ".venv", pythonVersion = "3.12" },
 ]
 
+[tool.poe.tasks.up]
+help = "Build and start Keycloak, auth, API, and the frontend"
+shell = """
+test -f .env || cp .env.template .env
+test -f backend/auth/.env || cp backend/auth/.env.example backend/auth/.env
+test -f backend/api/.env || cp backend/api/.env.example backend/api/.env
+docker compose --profile apps up --build
+"""
+
 [tool.poe.tasks.install]
 help = "Install root and backend deps, then enable git pre-commit hooks"
 shell = """

@@ -73,6 +73,7 @@ services:
     environment:
       APP_OIDC_TOKEN_URL: ${APP_OIDC_TOKEN_URL}
       APP_OIDC_JWKS_URL: ${APP_OIDC_JWKS_URL}
+      FRONTEND_ORIGIN: ${FRONTEND_ORIGIN:-http://localhost:3000}
       DATABASE_URL: ${DATABASE_URL}
       REDIS_URL: ${REDIS_URL}
       MIGRATION_AUTO_APPLY: ${MIGRATION_AUTO_APPLY}
@@ -105,6 +106,20 @@ services:
       INTERNAL_SERVICE_TOKEN: ${INTERNAL_SERVICE_TOKEN}
     depends_on:
       auth:
+        condition: service_healthy
+    profiles: [apps, full]
+    networks: [public, internal]
+
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    ports:
+      - "${FRONTEND_PUBLISH_PORT:-3000}:80"
+    depends_on:
+      auth:
+        condition: service_healthy
+      api:
         condition: service_healthy
     profiles: [apps, full]
     networks: [public, internal]

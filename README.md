@@ -51,17 +51,15 @@ and `fantasy-buyout` are read-only.
 
 ## Quick start
 
-Docker (Keycloak + auth + API):
+Docker (Keycloak + auth + API + frontend). `poe up` creates any missing env
+files from the templates, then builds and starts the `apps` profile:
 
 ```bash
-cp .env.template .env
-cp backend/auth/.env.example backend/auth/.env
-cp backend/api/.env.example backend/api/.env
-docker compose --profile apps up --build
+uv run poe up
 ```
 
+- App: http://localhost:3000 (`demo` / `demo`)
 - API: http://localhost:8001/docs
-- App login: http://localhost:8000/auth/login (`demo` / `demo`)
 - Keycloak admin: http://localhost:8080 (`admin` / `admin`)
 
 Production-like extras (Postgres, Redis, OTEL): set `USE_MEMORY_STORE=false`,
