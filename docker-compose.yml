@@ -14,9 +14,9 @@ services:
       KC_HOSTNAME_STRICT: "false"
       KC_HOSTNAME_STRICT_HTTPS: "false"
     ports:
-      - "${KEYCLOAK_PUBLISH_PORT}:${KEYCLOAK_HTTP_PORT}"
+      - "${KEYCLOAK_PUBLISH_PORT:-${KEYCLOAK_HTTP_PORT:-8080}}:${KEYCLOAK_HTTP_PORT:-8080}"
     volumes:
-      - ${KEYCLOAK_REALM_IMPORT_PATH}:/opt/keycloak/data/import/realm-fantasy-builder.json:ro
+      - ${KEYCLOAK_REALM_IMPORT_PATH:-${KEYCLOAK_REALM_IMPORT_HOST_PATH:-./docker/keycloak/realm-fantasy-builder.json}}:${KEYCLOAK_REALM_IMPORT_CONTAINER_PATH:-/opt/keycloak/data/import/realm-fantasy-builder.json}:ro
     healthcheck:
       test: ["CMD-SHELL", "exec 3<>/dev/tcp/127.0.0.1/${KEYCLOAK_HTTP_PORT}"]
       interval: 5s
@@ -57,7 +57,7 @@ services:
     image: ${OTEL_COLLECTOR_IMAGE}
     command: ["--config=/etc/otel-collector-config.yaml"]
     volumes:
-      - ${OTEL_COLLECTOR_CONFIG_PATH}:/etc/otel-collector-config.yaml:ro
+      - ${OTEL_COLLECTOR_CONFIG_PATH:-${OTEL_COLLECTOR_CONFIG_HOST_PATH:-./docker/otel/collector-config.yaml}}:${OTEL_COLLECTOR_CONFIG_CONTAINER_PATH:-/etc/otel-collector-config.yaml}:ro
     ports:
       - "${OTEL_COLLECTOR_HTTP_PORT}:${OTEL_COLLECTOR_HTTP_PORT}"
     profiles: [full, otel]
@@ -71,11 +71,11 @@ services:
       - "${AUTH_PUBLISH_PORT}:${AUTH_SERVICE_PORT}"
     env_file: [./backend/auth/.env]
     environment:
-      APP_OIDC_TOKEN_URL: ${APP_OIDC_TOKEN_URL}
-      APP_OIDC_JWKS_URL: ${APP_OIDC_JWKS_URL}
+      APP_OIDC_TOKEN_URL: ${APP_OIDC_TOKEN_URL:-http://keycloak:8080/realms/fantasy-builder/protocol/openid-connect/token}
+      APP_OIDC_JWKS_URL: ${APP_OIDC_JWKS_URL:-http://keycloak:8080/realms/fantasy-builder/protocol/openid-connect/certs}
       FRONTEND_ORIGIN: ${FRONTEND_ORIGIN:-http://localhost:3000}
-      DATABASE_URL: ${DATABASE_URL}
-      REDIS_URL: ${REDIS_URL}
+      DATABASE_URL: ${DATABASE_URL:-postgresql://${POSTGRES_USER:-fantasy}:${POSTGRES_PASSWORD:-fantasy}@${POSTGRES_HOST:-postgres}:${POSTGRES_PORT:-5432}/${POSTGRES_DB:-fantasy_auth}}
+      REDIS_URL: ${REDIS_URL:-redis://${REDIS_HOST:-redis}:${REDIS_PORT:-6379}/${REDIS_DB:-0}}
       MIGRATION_AUTO_APPLY: ${MIGRATION_AUTO_APPLY}
       OTEL_EXPORTER_OTLP_ENDPOINT: ${OTEL_EXPORTER_OTLP_ENDPOINT}
       INTERNAL_SERVICE_TOKEN: ${INTERNAL_SERVICE_TOKEN}
@@ -99,8 +99,8 @@ services:
       - "${API_PUBLISH_PORT}:${API_SERVICE_PORT}"
     env_file: [./backend/api/.env]
     environment:
-      AUTH_JWKS_URL: ${AUTH_JWKS_URL}
-      AUTH_INTERNAL_BASE_URL: ${AUTH_INTERNAL_BASE_URL}
+      AUTH_JWKS_URL: ${AUTH_JWKS_URL:-http://${AUTH_SERVICE_HOST:-auth}:${AUTH_SERVICE_PORT:-8000}/.well-known/jwks.json}
+      AUTH_INTERNAL_BASE_URL: ${AUTH_INTERNAL_BASE_URL:-http://${AUTH_SERVICE_HOST:-auth}:${AUTH_SERVICE_PORT:-8000}}
       INTERNAL_JWT_ISSUER: ${INTERNAL_JWT_ISSUER}
       INTERNAL_JWT_AUDIENCE: ${INTERNAL_JWT_AUDIENCE}
       INTERNAL_SERVICE_TOKEN: ${INTERNAL_SERVICE_TOKEN}
