@@ -1,5 +1,6 @@
 import { pointsLabel, possessiveName, scoreWeekLabel } from "../../api/mappers";
 import { PersonIcon } from "../shell/icons";
+import footballIconUrl from "../../assets/boxicons_football-filled.svg";
 import fieldUrl from "../../assets/football_field.svg";
 import { PlayerTile } from "./PlayerTile";
 import { useLineupBoard } from "./useLineupBoard";
@@ -45,40 +46,61 @@ export function LineupPage() {
         </p>
       ) : null}
       <div className="board">
-        <div className="column">
-          <div className="column-head controls-row">
-            <div>
-              <span className="field-label">Fixture</span>
-              <div className="pager">
-                <button
-                  type="button"
-                  aria-label="Previous fixture"
-                  disabled={board.week <= 1}
-                  onClick={() => board.goToWeek(board.week - 1)}
-                >
-                  ‹
-                </button>
-                <span>{board.week}</span>
-                <button
-                  type="button"
-                  aria-label="Next fixture"
-                  disabled={board.week >= board.maxWeek}
-                  onClick={() => board.goToWeek(board.week + 1)}
-                >
-                  ›
-                </button>
-              </div>
-            </div>
-            <div>
-              <span className="field-label">Score</span>
-              <div className="score-pill" aria-live="polite">
-                <span className="score-week">{scoreWeekLabel(board.week)}</span>
-                <span className="score-points">
-                  {scorePointsLabel(board.weekLoading, board.scorePoints)}
-                </span>
-              </div>
+        <div className="board-controls">
+          <div className="control-block">
+            <span className="field-label">Fixture</span>
+            <div className="pager">
+              <button
+                type="button"
+                aria-label="Previous fixture"
+                disabled={board.week <= 1}
+                onClick={() => board.goToWeek(board.week - 1)}
+              >
+                ‹
+              </button>
+              <span>{board.week}</span>
+              <button
+                type="button"
+                aria-label="Next fixture"
+                disabled={board.week >= board.maxWeek}
+                onClick={() => board.goToWeek(board.week + 1)}
+              >
+                ›
+              </button>
             </div>
           </div>
+          <div className="control-block">
+            <span className="field-label">Score</span>
+            <div className="score-pill" aria-live="polite">
+              <span className="score-week">{scoreWeekLabel(board.week)}</span>
+              <span className="score-points">
+                {scorePointsLabel(board.weekLoading, board.scorePoints)}
+              </span>
+            </div>
+          </div>
+          <div className="control-block formation-field">
+            <span className="field-label">Formation</span>
+            <p className="formation-value">{board.formation}</p>
+          </div>
+          <div className="control-block recommend">
+            <span className="field-label">Recommend lineup</span>
+            <button type="button" className="recommend-button">
+              <span className="recommend-button-text">{RECOMMEND_COPY}</span>
+              <img
+                className="recommend-button-icon"
+                src={footballIconUrl}
+                alt=""
+                aria-hidden="true"
+              />
+            </button>
+          </div>
+          <div className="control-block team-value">
+            <span className="field-label">Team value</span>
+            <div className="value-box">{board.teamValueLabel}</div>
+          </div>
+        </div>
+
+        <div className="column">
           <h2 className="column-title">Players</h2>
           <ul className="rank-list">
             {board.ranking.map((row) => {
@@ -106,16 +128,6 @@ export function LineupPage() {
         </div>
 
         <div className="column">
-          <div className="column-head controls-row center-controls">
-            <div className="formation-field">
-              <span className="field-label">Formation</span>
-              <p className="formation-value">{board.formation}</p>
-            </div>
-            <div className="recommend">
-              <span className="field-label">Recommend lineup</span>
-              <p className="recommend-copy">{RECOMMEND_COPY}</p>
-            </div>
-          </div>
           <div className="pitch">
             <img src={fieldUrl} alt="" />
             {board.lineupLoading ? <p className="pitch-note">Loading lineup…</p> : null}
@@ -143,10 +155,6 @@ export function LineupPage() {
         </div>
 
         <div className="column">
-          <div className="column-head team-value">
-            <span className="field-label">Team value</span>
-            <div className="value-box">{board.teamValueLabel}</div>
-          </div>
           <div className="squad-panel">
             <h2 className="column-title">{owner} team</h2>
             {board.squadLoading ? <p className="status-copy">Loading squad…</p> : null}
