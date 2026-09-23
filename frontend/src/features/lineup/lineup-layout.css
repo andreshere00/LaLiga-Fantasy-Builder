@@ -1,0 +1,40 @@
+/**
+ * Lineup layout profiles
+ *
+ * Sizing is viewport-relative so the board scales on desktop widths. The active
+ * profile is selected with data-layout-profile on .lineup-page (see LineupPage.tsx).
+ *
+ * Today: desktop-16-9 (~1920×1080 reference).
+ * Future: add e.g. [data-layout-profile="tablet"] or media-driven overrides that
+ * reassign the same --lineup-* custom properties below.
+ */
+
+.lineup-page {
+  --lineup-page-max: min(1240px, 92vw);
+  --lineup-page-padding-x: clamp(16px, 2.5vw, 28px);
+  --lineup-page-padding-bottom: clamp(24px, 4vw, 40px);
+
+  --lineup-board-gap: clamp(16px, 2vw, 28px);
+  --lineup-col-sidebar: clamp(220px, 14.6vw, 280px);
+  --lineup-col-squad: clamp(240px, 15.6vw, 300px);
+  --lineup-col-pitch-min: clamp(320px, 36vw, 560px);
+
+  --lineup-controls-gap: clamp(12px, 1.2vw, 18px);
+  --lineup-controls-min-height: clamp(72px, 7vw, 96px);
+  --lineup-control-height: clamp(36px, 2.6vw, 40px);
+  --lineup-pager-cell: var(--lineup-control-height);
+  --lineup-pager-width: calc(var(--lineup-pager-cell) * 3);
+  --lineup-score-cell: clamp(40px, 2.8vw, 48px);
+  --lineup-recommend-width: min(100%, clamp(220px, 22vw, 420px));
+  --lineup-value-min: clamp(120px, 12vw, 168px);
+  --lineup-recommend-font: clamp(11px, 0.72vw, 13px);
+  --lineup-recommend-icon: calc(var(--lineup-control-height) * 0.7);
+  --lineup-pitch-ratio: 611 / 761;
+  --lineup-value-font: clamp(15px, 1.1vw, 18px);
+  --lineup-label-font: clamp(12px, 0.85vw, 14px);
+  --lineup-control-radius: clamp(6px, 0.5vw, 8px);
+}
+
+.lineup-page[data-layout-profile="desktop-16-9"] {
+  /* Explicit desktop 16:9 reference; override tokens here when tuning this profile. */
+}

@@ -1,7 +1,11 @@
+@import "./lineup-layout.css";
+
 .lineup-page {
-  max-width: 1240px;
+  width: 100%;
+  max-width: var(--lineup-page-max);
   margin: 0 auto;
-  padding: 8px 28px 40px;
+  padding: 8px var(--lineup-page-padding-x) var(--lineup-page-padding-bottom);
+  box-sizing: border-box;
 }
 
 .lineup-title {
@@ -22,29 +26,63 @@
 }
 
 .board {
+  --lineup-columns:
+    var(--lineup-col-sidebar)
+    minmax(var(--lineup-col-pitch-min), 1fr)
+    var(--lineup-col-squad);
   display: grid;
-  grid-template-columns: 280px minmax(420px, 1fr) 300px;
-  gap: 28px;
-  align-items: start;
+  grid-template-columns: var(--lineup-columns);
+  gap: var(--lineup-board-gap);
+  align-items: stretch;
+}
+
+.column {
+  min-width: 0;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.column-pitch {
+  align-items: center;
 }
 
 .board-controls {
   grid-column: 1 / -1;
+  display: grid;
+  grid-template-columns: var(--lineup-columns);
+  align-items: end;
+  gap: var(--lineup-board-gap);
+  min-height: var(--lineup-controls-min-height);
+}
+
+.controls-cluster {
   display: flex;
-  flex-wrap: wrap;
   align-items: flex-end;
-  gap: 18px;
-  min-height: 96px;
+  gap: var(--lineup-controls-gap);
+  min-width: 0;
+}
+
+.controls-cluster-start {
+  justify-content: flex-start;
+}
+
+.controls-cluster-center {
+  justify-content: center;
+}
+
+.controls-cluster-end {
+  justify-content: flex-end;
 }
 
 .control-block {
-  flex: 0 0 auto;
+  min-width: 0;
 }
 
 .field-label {
   display: block;
   margin-bottom: 6px;
-  font-size: 14px;
+  font-size: var(--lineup-label-font);
   font-weight: 700;
 }
 
@@ -53,24 +91,30 @@
 .value-box,
 .select-wrap select {
   background: var(--white);
-  border-radius: 8px;
+  border-radius: var(--lineup-control-radius);
   box-shadow: 0 1px 2px rgb(0 0 0 / 8%);
 }
 
 .pager {
-  display: inline-flex;
-  align-items: center;
+  display: grid;
+  grid-template-columns: repeat(3, var(--lineup-pager-cell));
+  width: var(--lineup-pager-width);
   overflow: hidden;
 }
 
 .pager button,
 .pager span {
-  min-width: 36px;
-  height: 36px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: var(--lineup-pager-cell);
+  height: var(--lineup-control-height);
   border: 0;
   background: var(--white);
   font: inherit;
   font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  padding: 0;
 }
 
 .pager button {
@@ -92,9 +136,10 @@
 .score-points {
   display: grid;
   place-items: center;
-  min-width: 42px;
-  height: 36px;
-  padding: 0 12px;
+  width: var(--lineup-score-cell);
+  height: var(--lineup-control-height);
+  padding: 0;
+  font-variant-numeric: tabular-nums;
 }
 
 .score-points {
@@ -128,35 +173,46 @@
 }
 
 .recommend {
-  flex: 1 1 240px;
-  min-width: 0;
+  flex: 0 1 var(--lineup-recommend-width);
+  width: min(var(--lineup-recommend-width), 100%);
+  max-width: 100%;
+}
+
+.formation-value,
+.recommend-button,
+.value-box,
+.pager,
+.score-pill {
+  height: var(--lineup-control-height);
 }
 
 .formation-value {
   margin: 0;
-  padding: 8px 14px;
+  padding: 0 clamp(10px, 1vw, 14px);
   font-weight: 700;
   background: var(--white);
-  border-radius: 8px;
+  border-radius: var(--lineup-control-radius);
   box-shadow: 0 1px 2px rgb(0 0 0 / 8%);
-  display: inline-block;
+  display: inline-flex;
+  align-items: center;
+  font-variant-numeric: tabular-nums;
 }
 
 .recommend-button {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 12px;
+  gap: 8px;
   width: 100%;
   margin: 0;
   border: 0;
-  border-radius: 6px;
+  border-radius: var(--lineup-control-radius);
   background: var(--red);
   color: var(--white);
   font: inherit;
-  font-size: 13px;
-  line-height: 1.25;
-  padding: 8px 12px;
+  font-size: var(--lineup-recommend-font);
+  line-height: 1;
+  padding: 0 clamp(10px, 1vw, 12px);
   text-align: left;
   cursor: pointer;
 }
@@ -164,11 +220,14 @@
 .recommend-button-text {
   flex: 1;
   min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .recommend-button-icon {
-  width: 30px;
-  height: 30px;
+  width: var(--lineup-recommend-icon);
+  height: var(--lineup-recommend-icon);
   flex: 0 0 auto;
 }
 
@@ -176,15 +235,19 @@
   display: flex;
   flex-direction: column;
   align-items: flex-end;
-  margin-left: auto;
+  justify-self: end;
 }
 
 .value-box {
-  min-width: 148px;
-  padding: 10px 16px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-width: var(--lineup-value-min);
+  padding: 0 clamp(12px, 1.2vw, 16px);
   text-align: center;
   font-weight: 700;
-  font-size: 18px;
+  font-size: var(--lineup-value-font);
+  font-variant-numeric: tabular-nums;
 }
 
 .column-title {
@@ -265,29 +328,50 @@
 
 .pitch {
   position: relative;
+  width: 100%;
+  aspect-ratio: var(--lineup-pitch-ratio);
+  container-type: size;
+  container-name: pitch;
 }
 
 .pitch img {
   display: block;
   width: 100%;
-  height: auto;
+  height: 100%;
+  object-fit: fill;
 }
 
 .pitch-rows {
   position: absolute;
-  inset: 7% 4% 6%;
-  display: flex;
-  flex-direction: column;
-  justify-content: space-between;
+  inset: 0;
   pointer-events: none;
 }
 
 .pitch-row {
+  position: absolute;
+  left: 6%;
+  right: 6%;
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 8px;
-  min-height: 78px;
+  gap: 2cqw;
+  transform: translateY(-50%);
+}
+
+.pitch-row-goalkeeper {
+  top: 14%;
+}
+
+.pitch-row-defender {
+  top: 34%;
+}
+
+.pitch-row-midfield {
+  top: 54%;
+}
+
+.pitch-row-striker {
+  top: 76%;
 }
 
 .pitch-note {
@@ -308,29 +392,33 @@
 
 .pitch-tile {
   width: 64px;
-  height: 78px;
+  width: 11cqw;
+  aspect-ratio: 64 / 78;
+  height: auto;
+  flex: 0 0 auto;
 }
 
 .player-badge {
   position: absolute;
-  top: 6px;
-  right: 6px;
-  width: 12px;
-  height: 12px;
+  top: 8%;
+  right: 8%;
+  width: 18%;
+  height: 14%;
   background: #e6e6e6;
 }
 
 .player-name {
   position: absolute;
   left: 50%;
-  bottom: 8px;
+  bottom: 6%;
   transform: translateX(-50%);
-  max-width: 76px;
+  max-width: 92%;
   padding: 2px 4px;
   overflow: hidden;
   background: #f3f3f3;
   color: var(--black);
   font-size: 10px;
+  font-size: 2cqw;
   line-height: 1.2;
   text-overflow: ellipsis;
   white-space: nowrap;
@@ -342,13 +430,15 @@
   box-shadow: 0 0 0 1px var(--black);
 }
 
-.squad-panel {
-  max-height: 720px;
+.side-panel {
+  flex: 1;
+  min-height: 0;
   padding: 8px 12px 24px;
   overflow-y: auto;
   background: var(--white);
   border-radius: 10px;
 }
+
 
 .squad-panel::-webkit-scrollbar {
   width: 8px;
@@ -371,18 +461,43 @@
   height: 104px;
 }
 
+.squad-tile .player-badge {
+  top: 6px;
+  right: 6px;
+  width: 12px;
+  height: 12px;
+}
+
 .squad-tile .player-name {
   bottom: -16px;
   max-width: 100%;
+  font-size: 10px;
 }
 
+/* Narrow fallback until a dedicated layout profile exists. */
 @media (max-width: 1100px) {
+  .lineup-page[data-layout-profile="desktop-16-9"] {
+    --lineup-recommend-width: min(100%, clamp(240px, 17.5vw, 340px));
+  }
+
   .board {
     grid-template-columns: 1fr;
   }
 
+  .board-controls {
+    grid-template-columns: 1fr;
+  }
+
+  .controls-cluster-center,
+  .controls-cluster-end {
+    justify-content: flex-start;
+  }
+
+  .recommend {
+    width: 100%;
+  }
+
   .team-value {
     align-items: flex-start;
-    margin-left: 0;
   }
 }
