@@ -41,7 +41,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const csrfRef = useRef<string | null>(null);
   const timerRef = useRef<number | null>(null);
   const mountedRef = useRef(true);
-  const epochRef = useRef(0);
+  const generationRef = useRef(0);
+  const sessionAbortRef = useRef(new AbortController());
 
   const clearTimer = useCallback(() => {
     if (timerRef.current != null) {
@@ -50,80 +51,109 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   }, []);
 
-  const armRefreshRef = useRef<(csrfToken: string, token: AccessToken) => void>(() => {});
-  armRefreshRef.current = (csrfToken: string, token: AccessToken) => {
-    setAccessToken(token.access_token);
+  const invalidateSessionWork = useCallback(() => {
+    sessionAbortRef.current.abort();
+    sessionAbortRef.current = new AbortController();
+    generationRef.current += 1;
     clearTimer();
-    const delay = refreshDelayMs(token.expires_at, Date.now());
-    timerRef.current = window.setTimeout(() => {
-      void client.exchange(csrfToken).then(
-        (next) => armRefreshRef.current(csrfToken, next),
-        () => {
+    return {
+      generation: generationRef.current,
+      signal: sessionAbortRef.current.signal,
+    };
+  }, [clearTimer]);
+
+  const armRefresh = useCallback(
+    (csrfToken: string, token: AccessToken, refreshGeneration: number) => {
+      setAccessToken(token.access_token);
+      clearTimer();
+      const delay = refreshDelayMs(token.expires_at, Date.now());
+      timerRef.current = window.setTimeout(() => {
+        if (generationRef.current !== refreshGeneration) return;
+        const signal = sessionAbortRef.current.signal;
+        void client.exchange(csrfToken, { signal }).then(
+          (next) => {
+            if (generationRef.current !== refreshGeneration) {
+              client.clearToken();
+              return;
+            }
+            armRefresh(csrfToken, next, generationRef.current);
+          },
+          () => {
+            if (generationRef.current !== refreshGeneration) return;
+            client.clearToken();
+            if (!mountedRef.current) return;
+            setAccessToken(null);
+            setUser(null);
+            setManagerName(null);
+            setStatus("signed-out");
+          },
+        );
+      }, delay);
+    },
+    [clearTimer, client],
+  );
+
+  const load = useCallback(
+    async (generation: number, signal: AbortSignal) => {
+      const current = () => mountedRef.current && generationRef.current === generation;
+      setStatus("loading");
+      setNotice(null);
+      try {
+        const session = await client.currentSession({ signal });
+        if (!current()) return;
+        if (!session) {
           client.clearToken();
-          if (!mountedRef.current) return;
+          clearTimer();
           setAccessToken(null);
           setUser(null);
           setManagerName(null);
+          csrfRef.current = null;
           setStatus("signed-out");
-        },
-      );
-    }, delay);
-  };
-
-  const loadRef = useRef<(epoch: number) => Promise<void>>(async () => {});
-  loadRef.current = async (epoch: number) => {
-    const current = () => mountedRef.current && epochRef.current === epoch;
-    setStatus("loading");
-    setNotice(null);
-    try {
-      const session = await client.currentSession();
-      if (!current()) return;
-      if (!session) {
+          return;
+        }
+        setUser(session.user);
+        csrfRef.current = session.csrf_token;
+        const token = await client.exchange(session.csrf_token, { signal });
+        if (!current()) return;
+        armRefresh(session.csrf_token, token, generation);
+        try {
+          const connection = await client.connection({ signal });
+          if (!current()) return;
+          setManagerName(connection.manager_name);
+          setStatus(resolveGate({ session, connection, needsReauth: false }));
+        } catch {
+          if (!current()) return;
+          setStatus("unavailable");
+          setNotice("LaLiga connection could not be checked.");
+        }
+      } catch {
+        if (!current()) return;
+        if (signal.aborted) return;
         client.clearToken();
         clearTimer();
         setAccessToken(null);
-        setUser(null);
-        setManagerName(null);
-        csrfRef.current = null;
         setStatus("signed-out");
-        return;
+        setNotice("The auth service could not be reached.");
       }
-      setUser(session.user);
-      csrfRef.current = session.csrf_token;
-      const token = await client.exchange(session.csrf_token);
-      if (!current()) return;
-      armRefreshRef.current(session.csrf_token, token);
-      try {
-        const connection = await client.connection();
-        if (!current()) return;
-        setManagerName(connection.manager_name);
-        setStatus(resolveGate({ session, connection, needsReauth: false }));
-      } catch {
-        if (!current()) return;
-        setStatus("unlinked");
-        setNotice("LaLiga connection could not be checked.");
-      }
-    } catch {
-      if (!current()) return;
-      client.clearToken();
-      clearTimer();
-      setAccessToken(null);
-      setStatus("signed-out");
-      setNotice("The auth service could not be reached.");
-    }
-  };
+    },
+    [armRefresh, clearTimer, client],
+  );
+
+  const loadRef = useRef(load);
+  loadRef.current = load;
 
   useEffect(() => {
     mountedRef.current = true;
-    const epoch = epochRef.current + 1;
-    epochRef.current = epoch;
-    void loadRef.current(epoch);
+    const { generation, signal } = invalidateSessionWork();
+    void loadRef.current(generation, signal);
     return () => {
       mountedRef.current = false;
-      epochRef.current += 1;
+      generationRef.current += 1;
+      sessionAbortRef.current.abort();
+      sessionAbortRef.current = new AbortController();
       clearTimer();
     };
-  }, [clearTimer]);
+  }, [clearTimer, invalidateSessionWork]);
 
   const login = useCallback(() => {
     startLogin();
@@ -135,12 +165,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const logout = useCallback(async () => {
     const csrfToken = csrfRef.current;
-    epochRef.current += 1;
+    const { signal } = invalidateSessionWork();
     try {
-      if (csrfToken) await client.logout(csrfToken);
+      if (csrfToken) await client.logout(csrfToken, { signal });
       else client.clearToken();
       csrfRef.current = null;
-      clearTimer();
       queryClient.clear();
       setAccessToken(null);
       setUser(null);
@@ -149,24 +178,34 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       setStatus("signed-out");
     } catch {
       setNotice("Log out failed. Try again.");
+      const { generation, signal: reloadSignal } = invalidateSessionWork();
+      await load(generation, reloadSignal);
     }
-  }, [clearTimer, client, queryClient]);
+  }, [client, invalidateSessionWork, load, queryClient]);
 
   const reload = useCallback(async () => {
-    const epoch = epochRef.current + 1;
-    epochRef.current = epoch;
-    await loadRef.current(epoch);
-  }, []);
+    const { generation, signal } = invalidateSessionWork();
+    await load(generation, signal);
+  }, [invalidateSessionWork, load]);
 
   useEffect(() => {
-    if (status === "ready") sessionStorage.removeItem("laliga-login-started");
     if (status !== "unlinked" && status !== "needs-reauth") return;
+    const pollAbort = new AbortController();
+    let cancelled = false;
     const timer = window.setInterval(() => {
-      void client.connection().then((connection) => {
-        if (connectionReady(connection)) void reload();
-      }, () => undefined);
+      void client.connection({ signal: pollAbort.signal }).then(
+        (connection) => {
+          if (cancelled || pollAbort.signal.aborted) return;
+          if (connectionReady(connection)) void reload();
+        },
+        () => undefined,
+      );
     }, 3000);
-    return () => window.clearInterval(timer);
+    return () => {
+      cancelled = true;
+      pollAbort.abort();
+      window.clearInterval(timer);
+    };
   }, [status, client, reload]);
 
   const markNeedsReauth = useCallback(() => {

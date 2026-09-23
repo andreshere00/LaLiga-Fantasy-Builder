@@ -25,4 +25,4 @@ export type LaligaConnection = {
 
 export type GateStatus = "signed-out" | "unlinked" | "needs-reauth" | "ready";
 
-export type AuthStatus = GateStatus | "loading";
+export type AuthStatus = GateStatus | "loading" | "unavailable";

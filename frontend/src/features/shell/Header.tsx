@@ -24,8 +24,16 @@ export function Header() {
     const onKey = (event: KeyboardEvent) => {
       if (event.key === "Escape") setProfileOpen(false);
     };
+    const onPointerDown = (event: PointerEvent) => {
+      const root = profileRef.current;
+      if (root && !root.contains(event.target as Node)) setProfileOpen(false);
+    };
     window.addEventListener("keydown", onKey);
-    return () => window.removeEventListener("keydown", onKey);
+    window.addEventListener("pointerdown", onPointerDown);
+    return () => {
+      window.removeEventListener("keydown", onKey);
+      window.removeEventListener("pointerdown", onPointerDown);
+    };
   }, [profileOpen]);
 
   return (
@@ -83,14 +91,14 @@ export function Header() {
               type="button"
               className="profile-btn"
               aria-expanded={profileOpen}
-              aria-controls={profileOpen ? profileTitleId : undefined}
+              aria-controls={profileTitleId}
               onClick={() => setProfileOpen((open) => !open)}
             >
               <PersonIcon />
               Profile
             </button>
             {profileOpen ? (
-              <div className="profile-panel" id={profileTitleId} role="dialog">
+              <div className="profile-panel" id={profileTitleId}>
                 <p className="profile-name">{user?.name?.trim() || "Not signed in"}</p>
                 {user?.email ? <p>{user.email}</p> : null}
                 {managerName ? <p>{managerName}</p> : null}

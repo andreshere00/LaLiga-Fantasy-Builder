@@ -8,6 +8,12 @@ import "./LineupPage.css";
 const RECOMMEND_COPY =
   "Write your lineup preferences (e.g., give the captaincy to Raphinha)";
 
+function scorePointsLabel(weekLoading: boolean, points: number | null): string {
+  if (weekLoading) return "…";
+  if (points == null) return "—";
+  return String(points);
+}
+
 export function LineupPage() {
   const board = useLineupBoard();
   const owner = possessiveName(board.titleName);
@@ -65,62 +71,59 @@ export function LineupPage() {
             </div>
             <div>
               <span className="field-label">Score</span>
-              <div className="score-pill">
+              <div className="score-pill" aria-live="polite">
                 <span className="score-week">{scoreWeekLabel(board.week)}</span>
                 <span className="score-points">
-                  {board.scorePoints == null ? "—" : board.scorePoints}
+                  {scorePointsLabel(board.weekLoading, board.scorePoints)}
                 </span>
               </div>
             </div>
           </div>
           <h2 className="column-title">Players</h2>
-          <div className="rank-list" role="list">
+          <ul className="rank-list">
             {board.ranking.map((row) => {
               const active = row.teamId === board.selectedTeamId;
               return (
-                <button
-                  key={row.teamId}
-                  type="button"
-                  role="listitem"
-                  className={active ? "rank-row active" : "rank-row"}
-                  aria-current={active ? "true" : undefined}
-                  disabled={!row.selectable}
-                  onClick={() => board.selectTeam(row.teamId)}
-                >
-                  <span className="rank-position">{row.position ?? "—"}</span>
-                  <span className="avatar" aria-hidden="true">
-                    <PersonIcon />
-                  </span>
-                  <span className="rank-name">{row.name}</span>
-                  <span className="rank-points">{pointsLabel(row.points)}</span>
-                </button>
+                <li key={row.teamId}>
+                  <button
+                    type="button"
+                    className={active ? "rank-row active" : "rank-row"}
+                    aria-current={active ? "true" : undefined}
+                    disabled={!row.selectable}
+                    onClick={() => board.selectTeam(row.teamId)}
+                  >
+                    <span className="rank-position">{row.position ?? "—"}</span>
+                    <span className="avatar" aria-hidden="true">
+                      <PersonIcon />
+                    </span>
+                    <span className="rank-name">{row.name}</span>
+                    <span className="rank-points">{pointsLabel(row.points)}</span>
+                  </button>
+                </li>
               );
             })}
-          </div>
+          </ul>
         </div>
 
         <div className="column">
           <div className="column-head controls-row center-controls">
-            <label className="formation-field">
+            <div className="formation-field">
               <span className="field-label">Formation</span>
-              <span className="select-wrap">
-                <select
-                  aria-label="Formation"
-                  value={board.formation}
-                  onChange={() => undefined}
-                >
-                  <option value={board.formation}>{board.formation}</option>
-                </select>
-              </span>
-            </label>
+              <p className="formation-value">{board.formation}</p>
+            </div>
             <div className="recommend">
               <span className="field-label">Recommend lineup</span>
-              <textarea readOnly rows={2} aria-label="Recommend lineup" value={RECOMMEND_COPY} />
+              <p className="recommend-copy">{RECOMMEND_COPY}</p>
             </div>
           </div>
           <div className="pitch">
             <img src={fieldUrl} alt="" />
             {board.lineupLoading ? <p className="pitch-note">Loading lineup…</p> : null}
+            {board.lineupMessage ? (
+              <p className="pitch-note" role="alert">
+                {board.lineupMessage}
+              </p>
+            ) : null}
             {board.pitchEmpty ? <p className="pitch-note">Lineup unavailable</p> : null}
             <div className="pitch-rows">
               {board.groups.map((group) => (

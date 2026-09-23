@@ -1,12 +1,14 @@
-import { useEffect } from "react";
 import type { AuthStatus } from "../../auth/types";
 import { useAuth } from "../../auth/AuthProvider";
 import "./GatePanel.css";
 
-const COPY: Record<
-  Exclude<AuthStatus, "ready">,
-  { title: string; body: string; action?: "login" | "laliga" }
-> = {
+type GateCopy = {
+  title: string;
+  body: string;
+  action?: "login" | "laliga" | "retry";
+};
+
+const COPY: Record<Exclude<AuthStatus, "ready">, GateCopy> = {
   loading: {
     title: "Loading",
     body: "Checking your session.",
@@ -30,20 +32,16 @@ const COPY: Record<
       "return to this app when sign-in finishes.",
     action: "laliga",
   },
+  unavailable: {
+    title: "Connection check failed",
+    body: "LaLiga connection could not be checked. Try again or log out.",
+    action: "retry",
+  },
 };
 
-const LALIGA_LOGIN_STARTED = "laliga-login-started";
-
 export function GatePanel({ status }: { status: Exclude<AuthStatus, "ready"> }) {
-  const { login, connectLaliga } = useAuth();
+  const { login, connectLaliga, reload } = useAuth();
   const copy = COPY[status];
-
-  useEffect(() => {
-    if (copy.action !== "laliga") return;
-    if (sessionStorage.getItem(LALIGA_LOGIN_STARTED) === "1") return;
-    sessionStorage.setItem(LALIGA_LOGIN_STARTED, "1");
-    connectLaliga();
-  }, [connectLaliga, copy.action]);
 
   return (
     <section className="gate">
@@ -57,6 +55,11 @@ export function GatePanel({ status }: { status: Exclude<AuthStatus, "ready"> }) 
       {copy.action === "laliga" ? (
         <button type="button" onClick={connectLaliga}>
           Connect LaLiga
+        </button>
+      ) : null}
+      {copy.action === "retry" ? (
+        <button type="button" onClick={() => void reload()}>
+          Retry
         </button>
       ) : null}
     </section>

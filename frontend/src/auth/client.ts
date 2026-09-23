@@ -7,6 +7,10 @@ const REFRESH_SKEW_MS = 60_000;
 
 export type FetchLike = (input: string, init?: RequestInit) => Promise<Response>;
 
+export type AuthRequestOptions = {
+  signal?: AbortSignal;
+};
+
 export function refreshDelayMs(expiresAtSeconds: number, nowMs: number): number {
   return Math.max(expiresAtSeconds * 1000 - nowMs - REFRESH_SKEW_MS, 0);
 }
@@ -46,17 +50,18 @@ export class AuthClient {
     this.store.clear();
   }
 
-  async currentSession(): Promise<SessionView | null> {
+  async currentSession(options: AuthRequestOptions = {}): Promise<SessionView | null> {
     const response = await this.fetchFn("/auth/me", {
       credentials: "include",
       headers: { Accept: "application/json" },
+      signal: options.signal,
     });
     if (response.status === 401) return null;
     if (!response.ok) throw new Error("Unable to read the session");
     return (await response.json()) as SessionView;
   }
 
-  async exchange(csrfToken: string): Promise<AccessToken> {
+  async exchange(csrfToken: string, options: AuthRequestOptions = {}): Promise<AccessToken> {
     const response = await this.fetchFn("/auth/token", {
       method: "POST",
       credentials: "include",
@@ -64,14 +69,16 @@ export class AuthClient {
         Accept: "application/json",
         "X-CSRF-Token": csrfToken,
       },
+      signal: options.signal,
     });
     if (!response.ok) throw new Error("Unable to exchange the session");
     const token = (await response.json()) as AccessToken;
+    if (options.signal?.aborted) return token;
     this.store.set(token.access_token);
     return token;
   }
 
-  async logout(csrfToken: string): Promise<void> {
+  async logout(csrfToken: string, options: AuthRequestOptions = {}): Promise<void> {
     const response = await this.fetchFn("/auth/logout", {
       method: "POST",
       credentials: "include",
@@ -79,15 +86,17 @@ export class AuthClient {
         Accept: "application/json",
         "X-CSRF-Token": csrfToken,
       },
+      signal: options.signal,
     });
     if (!response.ok) throw new Error("Unable to log out");
     this.store.clear();
   }
 
-  async connection(): Promise<LaligaConnection> {
+  async connection(options: AuthRequestOptions = {}): Promise<LaligaConnection> {
     const response = await this.fetchFn("/laliga/connection", {
       credentials: "include",
       headers: { Accept: "application/json" },
+      signal: options.signal,
     });
     if (!response.ok) throw new Error("Unable to read the LaLiga connection");
     return (await response.json()) as LaligaConnection;

@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from "react";
-import { useQuery } from "@tanstack/react-query";
+import { keepPreviousData, useQuery } from "@tanstack/react-query";
 
 import { getJson, paths } from "../../api/client";
 import { ApiError, NeedsReauthError } from "../../api/errors";
@@ -38,6 +38,7 @@ export type LineupBoard = {
   maxWeek: number;
   goToWeek: (week: number) => void;
   scorePoints: number | null;
+  weekLoading: boolean;
   formation: string;
   teamValueLabel: string;
   groups: LineupGroup[];
@@ -49,6 +50,7 @@ export type LineupBoard = {
   lineupLoading: boolean;
   errorMessage: string | null;
   squadMessage: string | null;
+  lineupMessage: string | null;
   emptyLeague: boolean;
 };
 
@@ -73,30 +75,30 @@ function displayName(
 export function useLineupBoard(): LineupBoard {
   const { accessToken, managerName, markNeedsReauth } = useAuth();
   const { selected, isLoading: leaguesLoading, error: leaguesError } = useLeague();
-  const tokenRef = useRef(accessToken);
-  tokenRef.current = accessToken;
   const leagueKey = selected ? leagueId(selected) : "";
   const callerId = selected ? callerTeamId(selected) : null;
   const [pickedTeamId, setPickedTeamId] = useState<string | null>(null);
   const [requestedWeek, setRequestedWeek] = useState<number | null>(null);
-
-  useEffect(() => {
+  const previousLeagueKeyRef = useRef(leagueKey);
+  if (previousLeagueKeyRef.current !== leagueKey) {
+    previousLeagueKeyRef.current = leagueKey;
     setPickedTeamId(null);
     setRequestedWeek(null);
-  }, [leagueKey]);
+  }
 
   const enabled = leagueKey.length > 0 && accessToken != null;
+  const token = accessToken ?? "";
 
   const currentQuery = useQuery({
     queryKey: ["calendar", "current"],
     enabled: accessToken != null,
-    queryFn: () => getJson(paths.currentWeek(), tokenRef.current ?? ""),
+    queryFn: ({ signal }) => getJson(paths.currentWeek(), token, { signal }),
   });
 
   const standingQuery = useQuery({
     queryKey: ["standing", leagueKey],
     enabled,
-    queryFn: () => getJson(paths.standing(leagueKey), tokenRef.current ?? ""),
+    queryFn: ({ signal }) => getJson(paths.standing(leagueKey), token, { signal }),
   });
 
   const current = asCurrentWeek(currentQuery.data);
@@ -107,7 +109,8 @@ export function useLineupBoard(): LineupBoard {
   const weekQuery = useQuery({
     queryKey: ["standing", leagueKey, week],
     enabled: enabled && weekReady,
-    queryFn: () => getJson(paths.weekStanding(leagueKey, week), tokenRef.current ?? ""),
+    placeholderData: keepPreviousData,
+    queryFn: ({ signal }) => getJson(paths.weekStanding(leagueKey, week), token, { signal }),
   });
 
   const activeTeamId = pickedTeamId ?? callerId;
@@ -115,20 +118,14 @@ export function useLineupBoard(): LineupBoard {
   const teamQuery = useQuery({
     queryKey: ["team", leagueKey, activeTeamId],
     enabled: enabled && activeTeamId != null,
-    queryFn: () => getJson(paths.team(leagueKey, activeTeamId ?? ""), tokenRef.current ?? ""),
+    queryFn: ({ signal }) =>
+      getJson(paths.team(leagueKey, activeTeamId ?? ""), token, { signal }),
   });
 
   const lineupQuery = useQuery({
     queryKey: ["lineup", activeTeamId],
     enabled: activeTeamId != null && accessToken != null,
-    queryFn: async () => {
-      try {
-        return await getJson(paths.lineup(activeTeamId ?? ""), tokenRef.current ?? "");
-      } catch (error) {
-        if (error instanceof NeedsReauthError) throw error;
-        return null;
-      }
-    },
+    queryFn: ({ signal }) => getJson(paths.lineup(activeTeamId ?? ""), token, { signal }),
   });
 
   const needsReauth = [
@@ -151,6 +148,9 @@ export function useLineupBoard(): LineupBoard {
   const row = ranking.find((item) => item.teamId === activeTeamId);
   const isCaller = activeTeamId != null && activeTeamId === callerId;
 
+  const weekLoadError =
+    weekQuery.error && weekQuery.data === undefined ? weekQuery.error : null;
+
   return {
     titleName: displayName(row, isCaller, managerName),
     ranking,
@@ -164,6 +164,7 @@ export function useLineupBoard(): LineupBoard {
     maxWeek: upper,
     goToWeek: (next) => setRequestedWeek(clampWeek(next, upper)),
     scorePoints: activeTeamId ? weekPointsForTeam(weekRows, activeTeamId) : null,
+    weekLoading: weekQuery.isLoading,
     formation: formationLabel(tacticalOf(lineupQuery.data)),
     teamValueLabel: formatTeamValue(
       selectedTeamValue(ranking, activeTeamId, callerId, selected?.team?.teamValue),
@@ -175,10 +176,16 @@ export function useLineupBoard(): LineupBoard {
     isLoading: leaguesLoading || standingQuery.isLoading || currentQuery.isLoading,
     squadLoading: teamQuery.isLoading,
     lineupLoading: lineupQuery.isLoading,
-    errorMessage: failureMessage(leaguesError ?? standingQuery.error ?? currentQuery.error),
+    errorMessage: failureMessage(
+      leaguesError ?? standingQuery.error ?? currentQuery.error ?? weekLoadError,
+    ),
     squadMessage:
       teamQuery.error && !(teamQuery.error instanceof NeedsReauthError)
         ? "This squad could not be loaded."
+        : null,
+    lineupMessage:
+      lineupQuery.error && !(lineupQuery.error instanceof NeedsReauthError)
+        ? "This lineup could not be loaded."
         : null,
     emptyLeague: !leaguesLoading && !leaguesError && selected == null,
   };

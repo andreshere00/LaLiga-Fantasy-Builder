@@ -2,6 +2,11 @@ import { ApiError, NeedsReauthError } from "./errors";
 
 export type FetchLike = (input: string, init?: RequestInit) => Promise<Response>;
 
+export type GetJsonOptions = {
+  fetchFn?: FetchLike;
+  signal?: AbortSignal;
+};
+
 function segment(value: string): string {
   return encodeURIComponent(value);
 }
@@ -20,14 +25,16 @@ export const paths = {
 export async function getJson(
   path: string,
   token: string,
-  fetchFn: FetchLike = fetch,
+  options: GetJsonOptions = {},
 ): Promise<unknown> {
+  const fetchFn = options.fetchFn ?? fetch;
   const response = await fetchFn(path, {
     credentials: "omit",
     headers: {
       Accept: "application/json",
       Authorization: `Bearer ${token}`,
     },
+    signal: options.signal,
   });
   if (!response.ok) await throwForStatus(response);
   return response.json() as Promise<unknown>;

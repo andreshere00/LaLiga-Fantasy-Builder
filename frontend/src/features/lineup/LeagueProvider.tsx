@@ -3,7 +3,6 @@ import {
   useContext,
   useEffect,
   useMemo,
-  useRef,
   useState,
   type ReactNode,
 } from "react";
@@ -28,14 +27,13 @@ const LeagueContext = createContext<LeagueContextValue | null>(null);
 
 export function LeagueProvider({ children }: { children: ReactNode }) {
   const { status, accessToken, markNeedsReauth } = useAuth();
-  const tokenRef = useRef(accessToken);
-  tokenRef.current = accessToken;
   const [selectedId, setSelectedId] = useState<string | null>(null);
 
   const query = useQuery({
     queryKey: ["leagues"],
     enabled: status === "ready" && accessToken != null,
-    queryFn: async () => asLeagues(await getJson(paths.leagues(), tokenRef.current ?? "")),
+    queryFn: async ({ signal }) =>
+      asLeagues(await getJson(paths.leagues(), accessToken ?? "", { signal })),
   });
 
   useEffect(() => {
