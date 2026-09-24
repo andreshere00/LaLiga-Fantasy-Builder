@@ -24,6 +24,29 @@ a:focus-visible {
   outline-offset: 2px;
 }
 
+:focus:not(:focus-visible) {
+  outline: none;
+}
+
+.app-header :is(a, button):focus,
+.app-header :is(a, button):focus-visible,
+.lineup-page .board-controls :is(button, select):focus,
+.lineup-page .board-controls :is(button, select):focus-visible {
+  outline: none;
+}
+
+.lineup-page .board-controls select:focus,
+.lineup-page .board-controls select:focus-visible {
+  box-shadow: var(--shadow-surface);
+}
+
+.lineup-page .rank-row:focus,
+.lineup-page .rank-row:focus-visible,
+.lineup-page .player-tile.is-interactive:focus,
+.lineup-page .player-tile.is-interactive:focus-visible {
+  outline: none;
+}
+
 .app-main {
   min-height: calc(100vh - 90px);
 }

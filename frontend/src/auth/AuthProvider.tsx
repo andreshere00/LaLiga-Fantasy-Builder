@@ -19,6 +19,7 @@ type AuthContextValue = {
   status: AuthStatus;
   user: SessionUser | null;
   managerName: string | null;
+  managerAvatar: string | null;
   accessToken: string | null;
   notice: string | null;
   login: () => void;
@@ -36,6 +37,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [status, setStatus] = useState<AuthStatus>("loading");
   const [user, setUser] = useState<SessionUser | null>(null);
   const [managerName, setManagerName] = useState<string | null>(null);
+  const [managerAvatar, setManagerAvatar] = useState<string | null>(null);
   const [accessToken, setAccessToken] = useState<string | null>(null);
   const [notice, setNotice] = useState<string | null>(null);
   const csrfRef = useRef<string | null>(null);
@@ -85,6 +87,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
             setAccessToken(null);
             setUser(null);
             setManagerName(null);
+            setManagerAvatar(null);
             setStatus("signed-out");
           },
         );
@@ -107,6 +110,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           setAccessToken(null);
           setUser(null);
           setManagerName(null);
+          setManagerAvatar(null);
           csrfRef.current = null;
           setStatus("signed-out");
           return;
@@ -120,6 +124,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           const connection = await client.connection({ signal });
           if (!current()) return;
           setManagerName(connection.manager_name);
+          setManagerAvatar(connection.avatar?.trim() || null);
           setStatus(resolveGate({ session, connection, needsReauth: false }));
         } catch {
           if (!current()) return;
@@ -174,6 +179,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       setAccessToken(null);
       setUser(null);
       setManagerName(null);
+      setManagerAvatar(null);
       setNotice(null);
       setStatus("signed-out");
     } catch {
@@ -217,6 +223,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       status,
       user,
       managerName,
+      managerAvatar,
       accessToken,
       notice,
       login,
@@ -229,6 +236,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       status,
       user,
       managerName,
+      managerAvatar,
       accessToken,
       notice,
       login,

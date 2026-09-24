@@ -85,6 +85,7 @@ class FakeFantasy:
             "id": "mgr-1",
             "managerName": "El Manager",
             "email": "manager@example.com",
+            "avatar": "https://cdn.example/mgr.png",
         }
         self.calls: list[str] = []
 
@@ -178,11 +179,46 @@ async def test_complete_pairing_seals_tokens_and_returns_profile(
     assert result.user_id == "app-user-1"
     assert result.profile.user_id == "mgr-1"
     assert result.profile.manager_name == "El Manager"
+    assert result.profile.avatar == "https://cdn.example/mgr.png"
     stored = await connections.get("app-user-1")
     assert stored is not None
     opened = vault.open(stored.sealed_blob)
     assert opened.access_token == "access-1"
     assert opened.refresh_token == "refresh-1"
+
+
+@pytest.mark.asyncio
+async def test_get_status_linked_includes_profile_avatar(
+    rsa_keys: tuple[bytes, bytes],
+) -> None:
+    # Arrange
+    private_pem, public_pem = rsa_keys
+    service, *_rest = build_pairing_service(
+        private_pem=private_pem,
+        public_pem=public_pem,
+    )
+    created = await service.create_pairing("app-user-1")
+    id_token = mint_token(private_pem, nonce=created.nonce)
+    await service.complete_pairing(
+        pairing_id=created.pairing_id,
+        secret=created.secret,
+        token_response={
+            "access_token": "access-1",
+            "id_token": id_token,
+            "refresh_token": "refresh-1",
+            "expires_in": 3600,
+        },
+    )
+
+    # Act
+    linked = await service.get_status("app-user-1")
+    missing = await service.get_status("unknown")
+
+    # Assert
+    assert linked["linked"] is True
+    assert linked["avatar"] == "https://cdn.example/mgr.png"
+    assert missing["linked"] is False
+    assert missing["avatar"] is None
 
 
 @pytest.mark.asyncio

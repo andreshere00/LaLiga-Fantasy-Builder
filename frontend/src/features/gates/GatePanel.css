@@ -29,10 +29,12 @@
   font-weight: 700;
   cursor: pointer;
   box-shadow: var(--shadow-surface);
-  transition: background-color 0.12s ease, color 0.12s ease;
+  transition:
+    background-color var(--control-fill-duration) var(--control-fill-ease),
+    color var(--control-fill-duration) var(--control-fill-ease);
 }
 
-.gate button:active:not(:disabled) {
+.gate button:is(:hover, :active):not(:disabled) {
   background: var(--accent-press);
   color: var(--black);
 }

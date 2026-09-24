@@ -338,6 +338,7 @@ class PairingService:
                 "needs_reauth": False,
                 "manager_id": None,
                 "manager_name": None,
+                "avatar": None,
             }
         profile = connection.profile
         return {
@@ -345,6 +346,7 @@ class PairingService:
             "needs_reauth": connection.needs_reauth,
             "manager_id": profile.user_id if profile else None,
             "manager_name": profile.manager_name if profile else None,
+            "avatar": profile.avatar if profile else None,
         }
 
     async def unlink(self, user_id: str) -> None:

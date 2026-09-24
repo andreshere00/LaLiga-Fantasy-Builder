@@ -10,6 +10,9 @@ import {
   freeFormationCodesFromLineup,
   groupsFromLineup,
   lineupsAvailableFromLineup,
+  avatarsByTeamId,
+  managerAvatarUrl,
+  asLeagues,
   mapRanking,
   maxWeek,
   pointsLabel,
@@ -18,9 +21,12 @@ import {
   selectedTeamValue,
   catalogMediaByMasterId,
   enrichSquadMapFromLineup,
+  fixturePointsFromSlot,
   mediaFromLineupSlot,
   mediaFromPlayerMaster,
+  scoreTone,
   squadCards,
+  weekPointsByMasterId,
   weekPointsForTeam,
   type StandingRow,
 } from "./mappers";
@@ -32,7 +38,7 @@ const STANDING: StandingRow[] = [
     team: {
       id: "t-2",
       teamValue: 80_000,
-      manager: { managerName: "Opponent 1" },
+      manager: { managerName: "Opponent 1", avatar: "https://cdn.example/opp.png" },
     },
   },
   {
@@ -41,7 +47,7 @@ const STANDING: StandingRow[] = [
     team: {
       id: 7,
       teamValue: 100_000,
-      manager: { managerName: "Andreshere" },
+      manager: { managerName: "Andreshere", avatar: "https://cdn.example/mgr.png" },
     },
   },
 ];
@@ -58,7 +64,21 @@ describe("mapRanking", () => {
       points: 1200,
       teamValue: 100_000,
       selectable: true,
+      avatarUrl: "https://cdn.example/mgr.png",
     });
+    expect(ranking[1]?.avatarUrl).toBe("https://cdn.example/opp.png");
+  });
+});
+
+describe("asLeagues", () => {
+  it("asLeagues_wrapped_payload_returns_league_objects", () => {
+    const leagues = asLeagues({
+      leagues: [{ id: "1", name: "Estadio de Vallecas" }, { id: "2", name: "Other" }],
+    });
+    expect(leagues.map((league) => league.name)).toEqual([
+      "Estadio de Vallecas",
+      "Other",
+    ]);
   });
 });
 
@@ -102,6 +122,7 @@ describe("squadCards", () => {
         positionId: null,
         photoUrl: null,
         teamBadgeUrl: null,
+        fixturePoints: null,
       },
       {
         id: "pt-2",
@@ -110,6 +131,7 @@ describe("squadCards", () => {
         positionId: null,
         photoUrl: null,
         teamBadgeUrl: null,
+        fixturePoints: null,
       },
     ]);
   });
@@ -200,6 +222,56 @@ describe("mediaFromLineupSlot", () => {
   });
 });
 
+describe("fixture score", () => {
+  it("scoreTone_uses_laliga_traffic_light_bands", () => {
+    expect(scoreTone(4)).toBe("red");
+    expect(scoreTone(5)).toBe("yellow");
+    expect(scoreTone(9)).toBe("yellow");
+    expect(scoreTone(10)).toBe("green");
+  });
+
+  it("fixturePointsFromSlot_reads_week_points_on_slot", () => {
+    expect(fixturePointsFromSlot({ playerTeamId: "pt-1", weekPoints: 12 })).toBe(12);
+  });
+
+  it("fixturePointsFromSlot_reads_last_stats_for_requested_week", () => {
+    expect(
+      fixturePointsFromSlot(
+        {
+          playerMaster: {
+            lastStats: [
+              { weekNumber: 3, totalPoints: 2 },
+              { weekNumber: 7, totalPoints: 8 },
+            ],
+          },
+        },
+        { week: 7 },
+      ),
+    ).toBe(8);
+  });
+
+  it("weekPointsByMasterId_indexes_calendar_match_players", () => {
+    const map = weekPointsByMasterId([
+      {
+        local: { players: [{ id: "11", weekPoints: 6 }] },
+        visitor: { players: [{ id: 22, weekPoints: 0 }] },
+      },
+    ]);
+    expect(map.get("11")).toBe(6);
+    expect(map.get("22")).toBe(0);
+  });
+
+  it("fixturePointsFromSlot_falls_back_to_calendar_master_id", () => {
+    const pointsByMasterId = new Map([["77", 11]]);
+    expect(
+      fixturePointsFromSlot(
+        { playerMaster: { id: "77", nickname: "Former" } },
+        { week: 4, pointsByMasterId },
+      ),
+    ).toBe(11);
+  });
+});
+
 describe("enrichSquadMapFromLineup", () => {
   it("enrichSquadMapFromLineup_adds_former_lineup_players_not_on_roster", () => {
     const lineup = {
@@ -239,6 +311,48 @@ describe("mapper failures", () => {
 
   it("mapRanking_non_array_is_empty", () => {
     expect(mapRanking([])).toEqual([]);
+  });
+
+  it("mapRanking_missing_manager_avatar_is_null", () => {
+    const ranking = mapRanking([
+      { position: 1, points: 10, team: { id: "7", manager: { managerName: "A" } } },
+    ]);
+    expect(ranking[0]?.avatarUrl).toBeNull();
+  });
+
+  it("mapRanking_profile_image_fills_missing_avatar", () => {
+    const ranking = mapRanking([
+      {
+        position: 1,
+        team: { id: "7", manager: { profileImage: "https://cdn.example/alt.png" } },
+      },
+    ]);
+    expect(ranking[0]?.avatarUrl).toBe("https://cdn.example/alt.png");
+  });
+
+  it("mapRanking_team_lookup_fills_missing_standing_avatar", () => {
+    const ranking = mapRanking(
+      [{ position: 1, team: { id: "7", manager: { managerName: "A" } } }],
+      new Map([["7", "https://cdn.example/from-teams.png"]]),
+    );
+    expect(ranking[0]?.avatarUrl).toBe("https://cdn.example/from-teams.png");
+  });
+
+  it("managerAvatarUrl_nested_images_uses_transparent_size", () => {
+    expect(
+      managerAvatarUrl({
+        images: { transparent: { "128x128": "https://cdn.example/128.png" } },
+      }),
+    ).toBe("https://cdn.example/128.png");
+  });
+
+  it("avatarsByTeamId_indexes_manager_photos", () => {
+    const map = avatarsByTeamId([
+      { id: 7, manager: { avatar: "https://cdn.example/a.png" } },
+      { id: "8", manager: { managerName: "No photo" } },
+    ]);
+    expect(map.get("7")).toBe("https://cdn.example/a.png");
+    expect(map.has("8")).toBe(false);
   });
 });
 

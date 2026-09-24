@@ -6,14 +6,20 @@
 }
 
 .brand-bar {
+  display: block;
   background: var(--red);
   color: var(--white);
   text-align: center;
+  text-decoration: none;
   font-weight: 500;
   letter-spacing: 0.06em;
   font-size: var(--header-brand-font-size);
   line-height: 1.2;
   padding: clamp(8px, 0.95vw, 10px) 16px;
+}
+
+.brand-bar:visited {
+  color: var(--white);
 }
 
 .nav-bar {
@@ -26,17 +32,34 @@
   font-weight: 500;
 }
 
+.league-wrap {
+  position: relative;
+  display: flex;
+}
+
 .league-chip {
   display: flex;
   align-items: center;
   gap: 8px;
+  border: 0;
   padding: 0 clamp(12px, 1.4vw, 14px);
   background: var(--black);
   color: var(--white);
+  font: inherit;
   font-weight: 500;
   letter-spacing: 0.04em;
   text-transform: uppercase;
   font-size: var(--header-font-size);
+  cursor: pointer;
+  transition: background-color var(--control-fill-duration) var(--control-fill-ease);
+}
+
+.league-chip:is(:hover, :active, [aria-expanded="true"]):not(:disabled) {
+  background: var(--ink-press);
+}
+
+.league-chip:disabled {
+  cursor: default;
 }
 
 .trophy {
@@ -45,22 +68,58 @@
   flex: 0 0 auto;
 }
 
-.league-name,
-.league-select {
+.league-name {
   max-width: 240px;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
 
-.league-select {
-  background: transparent;
-  color: var(--white);
+.league-caret {
+  width: 0;
+  height: 0;
+  border-left: 4px solid transparent;
+  border-right: 4px solid transparent;
+  border-top: 5px solid currentColor;
+  flex: 0 0 auto;
+}
+
+.league-menu {
+  position: absolute;
+  top: calc(100% + 8px);
+  left: 0;
+  z-index: 3;
+  min-width: max(100%, 220px);
+  margin: 0;
+  padding: 6px 0;
+  list-style: none;
+  background: var(--white);
+  color: var(--black);
+  border-radius: 8px;
+  box-shadow: var(--shadow-surface);
+}
+
+.league-menu button {
+  display: block;
+  width: 100%;
   border: 0;
+  padding: 8px 14px;
+  background: transparent;
+  color: inherit;
   font: inherit;
   font-weight: 500;
   letter-spacing: 0.04em;
+  text-align: left;
   text-transform: uppercase;
+  cursor: pointer;
+}
+
+.league-menu button.is-active {
+  font-weight: 700;
+}
+
+.league-menu button:is(:hover, :active) {
+  background: var(--surface-press);
 }
 
 .nav-tabs {
@@ -73,12 +132,17 @@
 
 .nav-tab {
   display: inline-flex;
-  align-items: center;
+  align-items: stretch;
   min-height: clamp(24px, 4vw, 34px);
   background: var(--white);
   color: var(--ink);
   text-decoration: none;
   line-height: 1.2;
+  transition: background-color var(--control-fill-duration) var(--control-fill-ease);
+}
+
+.nav-tab:hover {
+  background-color: var(--surface-press);
 }
 
 .nav-tab.active,
@@ -87,24 +151,26 @@
 }
 
 .nav-tab-icon-wrap {
-  flex: 0 0 clamp(24px, 4vw, 34px);
-  width: clamp(24px, 4vw, 34px);
-  height: clamp(24px, 4vw, 34px);
-  overflow: hidden;
+  flex: 0 0 clamp(28px, 4vw, 38px);
+  display: grid;
+  place-items: center;
+  background: transparent;
 }
 
 .nav-tab-icon-wrap img {
   display: block;
-  height: 100%;
-  width: auto;
-  max-width: none;
+  width: clamp(20px, 3.2vw, 28px);
+  height: clamp(20px, 3.2vw, 28px);
 }
 
 .nav-tab-label {
+  display: flex;
+  align-items: center;
   padding: 0 clamp(8px, 1vw, 14px) 0 clamp(2px, 0.35vw, 4px);
   font-size: clamp(12px, 1.15vw, 16px);
   font-weight: 500;
   white-space: nowrap;
+  background: transparent;
 }
 
 .nav-tab.active .nav-tab-label,
@@ -146,16 +212,22 @@
 .logout-btn,
 .profile-btn {
   border: 0;
-  background: transparent;
+  background: var(--black);
+  color: var(--white);
   cursor: pointer;
   font: inherit;
   font-weight: 500;
   font-size: var(--header-font-size);
   white-space: nowrap;
+  transition: background-color var(--control-fill-duration) var(--control-fill-ease);
+}
+
+.logout-btn:is(:hover, :active):not(:disabled),
+.profile-btn:is(:hover, :active) {
+  background: var(--ink-press);
 }
 
 .logout-btn {
-  color: var(--red);
   padding: 0 clamp(14px, 1.75vw, 18px);
 }
 
@@ -173,14 +245,20 @@
   display: flex;
   align-items: center;
   gap: 6px;
-  background: var(--black);
-  color: var(--white);
   padding: 0 clamp(14px, 1.75vw, 18px);
 }
 
 .person {
   width: clamp(14px, 1.5vw, 16px);
   height: clamp(14px, 1.5vw, 16px);
+}
+
+.profile-btn-avatar {
+  width: clamp(16px, 1.8vw, 20px);
+  height: clamp(16px, 1.8vw, 20px);
+  border-radius: 50%;
+  object-fit: cover;
+  flex-shrink: 0;
 }
 
 .profile-panel {

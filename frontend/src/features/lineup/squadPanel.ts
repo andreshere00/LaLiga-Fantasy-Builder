@@ -1,6 +1,14 @@
 /** Squad panel shows up to this many players across paginated views. */
 export const SQUAD_DISPLAY_CAP = 24;
 
+/** Label for current squad size against the roster cap. */
+export function squadCountLabel(
+  count: number,
+  cap: number = SQUAD_DISPLAY_CAP,
+): string {
+  return `${count}/${cap} players`;
+}
+
 /** Players visible on one squad panel page (2×4 grid). */
 export const SQUAD_PAGE_SIZE = 8;
 

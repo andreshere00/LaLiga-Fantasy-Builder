@@ -3,6 +3,9 @@ import { ApiError, NeedsReauthError } from "../../api/errors";
 export const LINEUP_NOT_SET_MESSAGE =
   "The player has not set a lineup for this fixture yet";
 
+export const PAST_FIXTURE_LOCKED_MESSAGE =
+  "You cannot change players for fixtures that have already been played.";
+
 const LINEUP_LOAD_FAILED_MESSAGE = "This lineup could not be loaded.";
 
 /** User-facing copy for lineup fetch failures (404 → not set yet). */

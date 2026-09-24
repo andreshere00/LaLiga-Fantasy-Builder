@@ -57,7 +57,7 @@
   --lineup-formation-control-min: clamp(88px, 8vw, 120px);
   --lineup-pager-cell: var(--lineup-control-height);
   --lineup-pager-width: calc(var(--lineup-pager-cell) * 3);
-  --lineup-score-cell: clamp(40px, 2.8vw, 48px);
+  --lineup-score-cell: var(--lineup-pager-cell);
   --lineup-recommend-width: min(100%, clamp(280px, 22vw, 360px));
   --lineup-value-min: clamp(120px, 12vw, 168px);
   --lineup-control-icon: calc(var(--lineup-control-height) * 0.7);

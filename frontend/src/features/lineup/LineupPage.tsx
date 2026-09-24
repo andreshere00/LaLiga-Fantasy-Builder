@@ -2,11 +2,14 @@ import { useEffect, type CSSProperties } from "react";
 
 import { pointsLabel, possessiveName, scoreWeekLabel } from "../../api/mappers";
 import { PersonIcon, SearchIcon, WarningIcon } from "../shell/icons";
+import { ProfilePhoto } from "../shell/ProfilePhoto";
 import footballIconUrl from "../../assets/boxicons_football-filled.svg";
 import saveCartridgeIconUrl from "../../assets/save_cartridge.svg";
 import fieldUrl from "../../assets/football_field.svg";
 import { pitchRowGapFraction, pitchRows } from "./pitchLayout";
 import { SQUAD_PICKER_EMPTY_MESSAGE } from "./playerTileCopy";
+import { squadCountLabel } from "./squadPanel";
+import { PlayedFixtureNotice } from "./PlayedFixtureNotice";
 import { PlayerTile } from "./PlayerTile";
 import { useLineupBoard } from "./useLineupBoard";
 import "./LineupPage.css";
@@ -193,7 +196,7 @@ export function LineupPage() {
                       >
                         <span className="rank-position">{row.position ?? "—"}</span>
                         <span className="avatar" aria-hidden="true">
-                          <PersonIcon />
+                          <ProfilePhoto url={row.avatarUrl} fallback={<PersonIcon />} />
                         </span>
                         <span className="rank-name">{row.name}</span>
                         <span className="rank-points">{pointsLabel(row.points)}</span>
@@ -249,7 +252,12 @@ export function LineupPage() {
                                 empty={empty}
                                 photoUrl={player.photoUrl}
                                 teamBadgeUrl={player.teamBadgeUrl}
-                                interactive={board.editable}
+                                fixturePoints={
+                                  board.isPastFixture ? player.fixturePoints : null
+                                }
+                                interactive={
+                                  board.editable || (board.isPastFixture && !empty)
+                                }
                                 selected={selected}
                                 onSelect={() =>
                                   board.selectPitchPlayer(group.role, player.id)
@@ -268,8 +276,17 @@ export function LineupPage() {
         </div>
 
         <div className="column column-team">
-          <div className="side-panel side-panel-modal squad-panel">
-            <h2 className="column-title">{owner} squad</h2>
+          <div
+            className={
+              picking
+                ? "side-panel side-panel-modal squad-panel is-picking"
+                : "side-panel side-panel-modal squad-panel"
+            }
+          >
+            <h2 className="column-title">
+              {owner} squad
+              <span className="squad-count">{squadCountLabel(board.squad.length)}</span>
+            </h2>
             {board.squadLoading ? <p className="status-copy">Loading squad…</p> : null}
             {board.squadMessage ? (
               <p className="status-copy" role="alert">
@@ -315,6 +332,9 @@ export function LineupPage() {
                         variant="squad"
                         photoUrl={player.photoUrl}
                         teamBadgeUrl={player.teamBadgeUrl}
+                        fixturePoints={
+                          board.isPastFixture ? player.fixturePoints : null
+                        }
                         interactive={picking}
                         onSelect={
                           picking ? () => board.pickSquadPlayer(player.id) : undefined
@@ -352,6 +372,10 @@ export function LineupPage() {
           </div>
         </div>
       </div>
+      <PlayedFixtureNotice
+        open={board.pastFixtureNoticeOpen}
+        onClose={board.dismissPastFixtureNotice}
+      />
     </section>
   );
 }

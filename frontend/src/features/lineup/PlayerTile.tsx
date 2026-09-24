@@ -1,3 +1,4 @@
+import { scoreTone } from "../../api/mappers";
 import { WarningIcon } from "../shell/icons";
 import { NOT_SELECTED_PLAYER_LABEL } from "./playerTileCopy";
 
@@ -8,10 +9,20 @@ type PlayerTileProps = {
   empty?: boolean;
   photoUrl?: string | null;
   teamBadgeUrl?: string | null;
+  fixturePoints?: number | null;
   selected?: boolean;
   interactive?: boolean;
   onSelect?: () => void;
 };
+
+function ScoreBadge({ points }: { points: number }) {
+  const tone = scoreTone(points);
+  return (
+    <span className={`player-score-badge is-${tone}`} aria-hidden="true">
+      <span className="player-score-badge-value">{points}</span>
+    </span>
+  );
+}
 
 function TeamBadge({ url }: { url: string | null | undefined }) {
   if (!url) return null;
@@ -45,6 +56,7 @@ export function PlayerTile({
   empty = false,
   photoUrl = null,
   teamBadgeUrl = null,
+  fixturePoints = null,
   selected = false,
   interactive = false,
   onSelect,
@@ -60,11 +72,13 @@ export function PlayerTile({
     .filter(Boolean)
     .join(" ");
 
+  const scoreLabel =
+    fixturePoints == null ? "" : `, ${fixturePoints} points`;
   const label = empty
     ? NOT_SELECTED_PLAYER_LABEL
     : captain
-      ? `${name}, captain`
-      : name;
+      ? `${name}, captain${scoreLabel}`
+      : `${name}${scoreLabel}`;
 
   const body = empty ? (
     <>
@@ -84,6 +98,7 @@ export function PlayerTile({
     <>
       <div className="player-card-spacer" aria-hidden="true" />
       <PlayerPhoto url={photoUrl} />
+      {fixturePoints != null ? <ScoreBadge points={fixturePoints} /> : null}
       <TeamBadge url={teamBadgeUrl} />
       <div className="player-card-gap" aria-hidden="true" />
       <span className="player-name">

@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { keepPreviousData, useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 
 import { getJson, paths, putJson } from "../../api/client";
@@ -6,12 +6,14 @@ import { ApiError, NeedsReauthError } from "../../api/errors";
 import {
   asCurrentWeek,
   asStanding,
+  avatarsByTeamId,
   callerTeamId,
   catalogMediaByMasterId,
   captainFromLineup,
   clampWeek,
   defaultWeek,
   enrichSquadMapFromLineup,
+  weekPointsByMasterId,
   formatTeamValue,
   formationLabel,
   freeFormationCodesFromLineup,
@@ -93,6 +95,9 @@ export type LineupBoard = {
   saveDisabled: boolean;
   savePending: boolean;
   saveMessage: string | null;
+  isPastFixture: boolean;
+  pastFixtureNoticeOpen: boolean;
+  dismissPastFixtureNotice: () => void;
 };
 
 function failureMessage(error: unknown): string | null {
@@ -115,7 +120,7 @@ function displayName(
 
 export function useLineupBoard(): LineupBoard {
   const queryClient = useQueryClient();
-  const { accessToken, managerName, markNeedsReauth } = useAuth();
+  const { accessToken, managerName, managerAvatar, markNeedsReauth } = useAuth();
   const { selected, isLoading: leaguesLoading, error: leaguesError } = useLeague();
   const leagueKey = selected ? leagueId(selected) : "";
   const callerId = selected ? callerTeamId(selected) : null;
@@ -127,6 +132,7 @@ export function useLineupBoard(): LineupBoard {
   const draftSourceRef = useRef("");
   draftDirtyRef.current = draftDirty;
   const [pitchSelection, setPitchSelection] = useState<PitchSelection | null>(null);
+  const [pastFixtureNoticeOpen, setPastFixtureNoticeOpen] = useState(false);
   const [squadSearch, setSquadSearch] = useState("");
   const [squadPage, setSquadPage] = useState(0);
   const previousLeagueKeyRef = useRef(leagueKey);
@@ -135,6 +141,7 @@ export function useLineupBoard(): LineupBoard {
     setPickedTeamId(null);
     setRequestedWeek(null);
     setPitchSelection(null);
+    setPastFixtureNoticeOpen(false);
     setSquadSearch("");
   }
 
@@ -160,6 +167,13 @@ export function useLineupBoard(): LineupBoard {
     queryFn: ({ signal }) => getJson(paths.standing(leagueKey), token, { signal }),
   });
 
+  const teamsQuery = useQuery({
+    queryKey: ["league-teams", leagueKey],
+    enabled,
+    staleTime: 5 * 60 * 1000,
+    queryFn: ({ signal }) => getJson(paths.leagueTeams(leagueKey), token, { signal }),
+  });
+
   const current = asCurrentWeek(currentQuery.data);
   const upper = maxWeek(current);
   const nextWeek = upper;
@@ -183,6 +197,13 @@ export function useLineupBoard(): LineupBoard {
       getJson(paths.team(leagueKey, activeTeamId ?? ""), token, { signal }),
   });
 
+  const weekStatsQuery = useQuery({
+    queryKey: ["calendar", "stats", week],
+    enabled: accessToken != null && weekReady && !lineupUsesCurrent,
+    staleTime: 5 * 60 * 1000,
+    queryFn: ({ signal }) => getJson(paths.weekStats(week), token, { signal }),
+  });
+
   const lineupQuery = useQuery({
     queryKey: [
       "lineup",
@@ -203,11 +224,24 @@ export function useLineupBoard(): LineupBoard {
     () => catalogMediaByMasterId(catalogQuery.data),
     [catalogQuery.data],
   );
+  const pointsByMasterId = useMemo(
+    () => weekPointsByMasterId(weekStatsQuery.data),
+    [weekStatsQuery.data],
+  );
+  const scoreLookup = useMemo(
+    () =>
+      lineupUsesCurrent
+        ? undefined
+        : { week, pointsByMasterId },
+    [lineupUsesCurrent, week, pointsByMasterId],
+  );
 
   const lineupPayload =
     !lineupPending && lineupQuery.isSuccess ? lineupQuery.data : null;
   const serverGroups =
-    lineupPayload == null ? [] : groupsFromLineup(lineupPayload, catalogByMasterId);
+    lineupPayload == null
+      ? []
+      : groupsFromLineup(lineupPayload, catalogByMasterId, scoreLookup);
   const serverTactical = lineupPayload == null ? null : tacticalOf(lineupPayload);
   const captainId =
     lineupPayload == null ? null : captainFromLineup(lineupPayload);
@@ -215,7 +249,7 @@ export function useLineupBoard(): LineupBoard {
     if (lineupPending || activeTeamId == null || lineupQuery.data == null) {
       return;
     }
-    const groups = groupsFromLineup(lineupQuery.data, catalogByMasterId);
+    const groups = groupsFromLineup(lineupQuery.data, catalogByMasterId, scoreLookup);
     const tactical = tacticalOf(lineupQuery.data);
     const sourceKey = `${activeTeamId}:${week}`;
     if (sourceKey !== draftSourceRef.current) {
@@ -229,28 +263,52 @@ export function useLineupBoard(): LineupBoard {
     if (!draftDirtyRef.current) {
       setDraft(draftFromGroups(groups, tactical));
     }
-  }, [lineupPending, lineupQuery.data, activeTeamId, week, catalogByMasterId]);
+  }, [
+    lineupPending,
+    lineupQuery.data,
+    activeTeamId,
+    week,
+    catalogByMasterId,
+    scoreLookup,
+  ]);
 
   const needsReauth = [
     leaguesError,
     currentQuery.error,
     standingQuery.error,
+    teamsQuery.error,
     weekQuery.error,
     teamQuery.error,
     lineupQuery.error,
+    weekStatsQuery.error,
   ].some((error) => error instanceof NeedsReauthError);
 
   useEffect(() => {
     if (needsReauth) markNeedsReauth();
   }, [needsReauth, markNeedsReauth]);
 
-  const ranking = mapRanking(asStanding(standingQuery.data));
+  const avatarByTeamId = useMemo(() => {
+    const map = avatarsByTeamId(teamsQuery.data);
+    const fallback =
+      managerAvatar?.trim() ||
+      selected?.team?.manager?.avatar?.trim() ||
+      selected?.team?.manager?.profileImage?.trim() ||
+      null;
+    if (callerId && fallback && !map.has(callerId)) map.set(callerId, fallback);
+    return map;
+  }, [callerId, managerAvatar, selected, teamsQuery.data]);
+  const ranking = mapRanking(asStanding(standingQuery.data), avatarByTeamId);
   const weekRows = asStanding(weekQuery.data);
   const row = ranking.find((item) => item.teamId === activeTeamId);
   const isCaller = activeTeamId != null && activeTeamId === callerId;
   const editable = isCaller && lineupUsesCurrent;
 
-  const squad = squadCards(playersOf(teamQuery.data), captainId, catalogByMasterId);
+  const squad = squadCards(
+    playersOf(teamQuery.data),
+    captainId,
+    catalogByMasterId,
+    scoreLookup,
+  );
   const squadById = useMemo(
     () => new Map(squad.map((player) => [player.id, player])),
     [squad],
@@ -258,8 +316,13 @@ export function useLineupBoard(): LineupBoard {
 
   const pitchSquadById = useMemo(() => {
     if (lineupPayload == null) return squadById;
-    return enrichSquadMapFromLineup(squadById, lineupPayload, catalogByMasterId);
-  }, [lineupPayload, squadById, catalogByMasterId]);
+    return enrichSquadMapFromLineup(
+      squadById,
+      lineupPayload,
+      catalogByMasterId,
+      scoreLookup,
+    );
+  }, [lineupPayload, squadById, catalogByMasterId, scoreLookup]);
 
   const tacticalForDisplay =
     draft && editable ? draft.tactical : serverTactical;
@@ -333,6 +396,9 @@ export function useLineupBoard(): LineupBoard {
     saveMutation.error && !(saveMutation.error instanceof NeedsReauthError)
       ? "Lineup could not be saved."
       : null;
+  const dismissPastFixtureNotice = useCallback(() => {
+    setPastFixtureNoticeOpen(false);
+  }, []);
 
   return {
     titleName: displayName(row, isCaller, managerName),
@@ -342,6 +408,7 @@ export function useLineupBoard(): LineupBoard {
       if (ranking.some((item) => item.teamId === teamId && item.selectable)) {
         setPickedTeamId(teamId);
         setPitchSelection(null);
+        setPastFixtureNoticeOpen(false);
         setSquadSearch("");
       }
     },
@@ -350,6 +417,7 @@ export function useLineupBoard(): LineupBoard {
     goToWeek: (next) => {
       setRequestedWeek(clampWeek(next, upper));
       setPitchSelection(null);
+      setPastFixtureNoticeOpen(false);
       setSquadSearch("");
     },
     scorePoints: activeTeamId ? weekPointsForTeam(weekRows, activeTeamId) : null,
@@ -402,6 +470,10 @@ export function useLineupBoard(): LineupBoard {
     },
     pitchSelection,
     selectPitchPlayer: (role, playerId) => {
+      if (!lineupUsesCurrent) {
+        setPastFixtureNoticeOpen(true);
+        return;
+      }
       if (!editable) return;
       if (
         pitchSelection?.role === role &&
@@ -428,5 +500,8 @@ export function useLineupBoard(): LineupBoard {
       saveMutation.isPending,
     savePending: saveMutation.isPending,
     saveMessage,
+    isPastFixture: !lineupUsesCurrent,
+    pastFixtureNoticeOpen,
+    dismissPastFixtureNotice,
   };
 }

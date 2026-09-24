@@ -1,13 +1,21 @@
 import teamsMasterFile from "../../../assets/teams_master.json";
 
+export type ManagerInfo = {
+  managerName?: string | null;
+  avatar?: string | null;
+  profileImage?: string | null;
+};
+
 export type StandingRow = {
   position?: number | null;
   points?: number | null;
   teamId?: string | number | null;
+  manager?: ManagerInfo | null;
   team?: {
     id?: string | number | null;
     teamValue?: number | null;
-    manager?: { managerName?: string | null } | null;
+    avatar?: string | null;
+    manager?: ManagerInfo | null;
   } | null;
 };
 
@@ -16,6 +24,7 @@ export type RankingEntry = {
   selectable: boolean;
   position: number | null;
   name: string;
+  avatarUrl: string | null;
   points: number | null;
   teamValue: number | null;
 };
@@ -26,6 +35,7 @@ export type FantasyLeague = {
   team?: {
     id?: string | number | null;
     teamValue?: number | null;
+    manager?: ManagerInfo | null;
   } | null;
 };
 
@@ -45,6 +55,14 @@ export type LineupSlotView = {
   isEmpty?: boolean;
   photoUrl?: string | null;
   teamBadgeUrl?: string | null;
+  fixturePoints?: number | null;
+};
+
+export type ScoreTone = "red" | "yellow" | "green";
+
+export type FixtureScoreLookup = {
+  week: number | null;
+  pointsByMasterId?: ReadonlyMap<string, number>;
 };
 
 export type LineupRole = "goalkeeper" | "defender" | "midfield" | "striker";
@@ -61,6 +79,7 @@ export type SquadCard = {
   positionId: number | null;
   photoUrl: string | null;
   teamBadgeUrl: string | null;
+  fixturePoints?: number | null;
 };
 
 const LINEUP_ROLES: readonly LineupRole[] = [
@@ -91,9 +110,94 @@ function idText(value: unknown): string | null {
   return null;
 }
 
+function asFiniteNumber(value: unknown): number | null {
+  if (typeof value === "number" && Number.isFinite(value)) return value;
+  if (typeof value === "string" && value.trim().length > 0) {
+    const parsed = Number(value);
+    return Number.isFinite(parsed) ? parsed : null;
+  }
+  return null;
+}
+
+/** LaLiga Fantasy traffic-light scale for a matchweek score. */
+export function scoreTone(points: number): ScoreTone {
+  if (points >= 10) return "green";
+  if (points >= 5) return "yellow";
+  return "red";
+}
+
+export function weekPointsFromLastStats(master: unknown, week: number): number | null {
+  const record = asRecord(master);
+  const stats = record?.lastStats;
+  if (!Array.isArray(stats)) return null;
+  for (const entry of stats) {
+    const row = asRecord(entry);
+    if (!row) continue;
+    if (asFiniteNumber(row.weekNumber) !== week) continue;
+    return asFiniteNumber(row.totalPoints) ?? asFiniteNumber(row.weekPoints);
+  }
+  return null;
+}
+
+/** Index of master ``playerId`` → matchweek points from calendar stats. */
+export function weekPointsByMasterId(stats: unknown): Map<string, number> {
+  const map = new Map<string, number>();
+  if (!Array.isArray(stats)) return map;
+  for (const match of stats) {
+    const record = asRecord(match);
+    if (!record) continue;
+    for (const sideKey of ["local", "visitor"] as const) {
+      const side = asRecord(record[sideKey]);
+      const players = side?.players;
+      if (!Array.isArray(players)) continue;
+      for (const player of players) {
+        const row = asRecord(player);
+        const id = idText(row?.id);
+        const points = asFiniteNumber(row?.weekPoints);
+        if (id != null && points != null) map.set(id, points);
+      }
+    }
+  }
+  return map;
+}
+
+export function fixturePointsFromSlot(
+  slot: unknown,
+  lookup?: FixtureScoreLookup,
+): number | null {
+  const record = asRecord(slot);
+  if (!record) return null;
+  const master = asRecord(record.playerMaster);
+  const fromSlot =
+    asFiniteNumber(record.weekPoints) ??
+    asFiniteNumber(record.points) ??
+    asFiniteNumber(record.totalPoints);
+  if (fromSlot != null) return fromSlot;
+  const week = lookup?.week ?? null;
+  if (week != null) {
+    const fromHistory = weekPointsFromLastStats(master, week);
+    if (fromHistory != null) return fromHistory;
+  }
+  const masterId = masterIdFromLineupSlot(record, master);
+  if (masterId && lookup?.pointsByMasterId) {
+    return lookup.pointsByMasterId.get(masterId) ?? null;
+  }
+  return null;
+}
+
 export function asLeagues(value: unknown): FantasyLeague[] {
-  if (!Array.isArray(value)) return [];
-  return value.filter((item) => asRecord(item) != null) as FantasyLeague[];
+  if (Array.isArray(value)) {
+    return value.filter((item) => asRecord(item) != null) as FantasyLeague[];
+  }
+  const record = asRecord(value);
+  if (!record) return [];
+  for (const key of ["leagues", "data", "items"] as const) {
+    const nested = record[key];
+    if (Array.isArray(nested)) {
+      return nested.filter((item) => asRecord(item) != null) as FantasyLeague[];
+    }
+  }
+  return [];
 }
 
 export function leagueId(league: FantasyLeague): string {
@@ -130,7 +234,52 @@ export function teamIdOf(row: StandingRow): string {
   return "";
 }
 
-export function mapRanking(rows: readonly StandingRow[]): RankingEntry[] {
+/** Reads a manager photo URL from standing, teams, or nested image maps. */
+export function managerAvatarUrl(manager: unknown): string | null {
+  const record = asRecord(manager);
+  if (!record) return null;
+  return (
+    text(record.avatar) ??
+    text(record.profileImage) ??
+    text(record.photo) ??
+    text(record.imageUrl) ??
+    imageUrlFromRecord(record.avatar) ??
+    imageUrlFromRecord(record.images)
+  );
+}
+
+function imageUrlFromRecord(value: unknown): string | null {
+  const record = asRecord(value);
+  if (!record) return null;
+  const transparent = asRecord(record.transparent);
+  return (
+    text(record.url) ??
+    text(record.src) ??
+    text(record.avatar) ??
+    text(transparent?.["256x256"]) ??
+    text(transparent?.["128x128"]) ??
+    text(transparent?.["64x64"])
+  );
+}
+
+/** Indexes manager photos from ``GET /leagues/{id}/teams`` by team id. */
+export function avatarsByTeamId(teams: unknown): Map<string, string> {
+  const map = new Map<string, string>();
+  if (!Array.isArray(teams)) return map;
+  for (const team of teams) {
+    const record = asRecord(team);
+    if (!record) continue;
+    const id = idText(record.id);
+    const url = managerAvatarUrl(record.manager) ?? text(record.avatar);
+    if (id && url) map.set(id, url);
+  }
+  return map;
+}
+
+export function mapRanking(
+  rows: readonly StandingRow[],
+  avatarByTeamId?: ReadonlyMap<string, string>,
+): RankingEntry[] {
   return rows
     .map((row, index) => {
       const teamId = teamIdOf(row);
@@ -139,6 +288,11 @@ export function mapRanking(rows: readonly StandingRow[]): RankingEntry[] {
         selectable: teamId.length > 0,
         position: row.position ?? null,
         name: row.team?.manager?.managerName?.trim() || "Opponent",
+        avatarUrl:
+          (teamId ? (avatarByTeamId?.get(teamId) ?? null) : null) ??
+          managerAvatarUrl(row.team?.manager) ??
+          managerAvatarUrl(row.manager) ??
+          text(row.team?.avatar),
         points: row.points ?? null,
         teamValue: row.team?.teamValue ?? null,
       };
@@ -328,6 +482,7 @@ export function slotView(
   slot: unknown,
   index: number,
   catalogByMasterId?: ReadonlyMap<string, PlayerMedia>,
+  scoreLookup?: FixtureScoreLookup,
 ): LineupSlotView {
   const record = asRecord(slot);
   if (!record) {
@@ -338,7 +493,12 @@ export function slotView(
     text(master?.nickname) ?? text(master?.name) ?? text(record.nickname) ?? text(record.name);
   const id = idText(record.playerTeamId) ?? idText(record.id) ?? `slot-${index}`;
   const media = mediaFromLineupSlot(record, catalogByMasterId);
-  return { id, name: name ?? EMPTY_NAME, ...media };
+  return {
+    id,
+    name: name ?? EMPTY_NAME,
+    ...media,
+    fixturePoints: fixturePointsFromSlot(record, scoreLookup),
+  };
 }
 
 /** Merges lineup slot media into the squad map (keeps roster data when present). */
@@ -346,9 +506,10 @@ export function enrichSquadMapFromLineup(
   squadById: ReadonlyMap<string, SquadCard>,
   lineup: unknown,
   catalogByMasterId?: ReadonlyMap<string, PlayerMedia>,
+  scoreLookup?: FixtureScoreLookup,
 ): Map<string, SquadCard> {
   const merged = new Map(squadById);
-  for (const group of groupsFromLineup(lineup, catalogByMasterId)) {
+  for (const group of groupsFromLineup(lineup, catalogByMasterId, scoreLookup)) {
     for (const player of group.players) {
       if (!player.id || player.isEmpty) continue;
       const existing = merged.get(player.id);
@@ -360,6 +521,7 @@ export function enrichSquadMapFromLineup(
           positionId: null,
           photoUrl: player.photoUrl ?? null,
           teamBadgeUrl: player.teamBadgeUrl ?? null,
+          fixturePoints: player.fixturePoints ?? null,
         });
         continue;
       }
@@ -367,6 +529,7 @@ export function enrichSquadMapFromLineup(
         ...existing,
         photoUrl: existing.photoUrl ?? player.photoUrl ?? null,
         teamBadgeUrl: existing.teamBadgeUrl ?? player.teamBadgeUrl ?? null,
+        fixturePoints: existing.fixturePoints ?? player.fixturePoints ?? null,
       });
     }
   }
@@ -384,6 +547,7 @@ export function captainIdOf(value: unknown): string | null {
 export function lineupGroups(
   formation: unknown,
   catalogByMasterId?: ReadonlyMap<string, PlayerMedia>,
+  scoreLookup?: FixtureScoreLookup,
 ): LineupGroup[] {
   const record = asRecord(formation);
   if (!record) return [];
@@ -392,7 +556,9 @@ export function lineupGroups(
     const list = Array.isArray(slots) ? slots : [];
     return {
       role,
-      players: list.map((slot, index) => slotView(slot, index, catalogByMasterId)),
+      players: list.map((slot, index) =>
+        slotView(slot, index, catalogByMasterId, scoreLookup),
+      ),
     };
   });
 }
@@ -400,8 +566,9 @@ export function lineupGroups(
 export function groupsFromLineup(
   lineup: unknown,
   catalogByMasterId?: ReadonlyMap<string, PlayerMedia>,
+  scoreLookup?: FixtureScoreLookup,
 ): LineupGroup[] {
-  return lineupGroups(asRecord(lineup)?.formation, catalogByMasterId);
+  return lineupGroups(asRecord(lineup)?.formation, catalogByMasterId, scoreLookup);
 }
 
 export function tacticalOf(lineup: unknown): number[] | null {
@@ -420,6 +587,7 @@ export function squadCards(
   players: unknown,
   captainId: string | null,
   catalogByMasterId?: ReadonlyMap<string, PlayerMedia>,
+  scoreLookup?: FixtureScoreLookup,
 ): SquadCard[] {
   if (!Array.isArray(players)) return [];
   return players.map((player, index) => {
@@ -434,6 +602,13 @@ export function squadCards(
       catalogByMasterId,
       idText(master?.id),
     );
+    const masterId = idText(master?.id);
+    const week = scoreLookup?.week ?? null;
+    const fixturePoints =
+      (week != null ? weekPointsFromLastStats(master, week) : null) ??
+      (masterId && scoreLookup?.pointsByMasterId
+        ? (scoreLookup.pointsByMasterId.get(masterId) ?? null)
+        : null);
     return {
       id,
       name,
@@ -441,6 +616,7 @@ export function squadCards(
       positionId,
       photoUrl: media.photoUrl ?? fromCatalog?.photoUrl ?? null,
       teamBadgeUrl: media.teamBadgeUrl ?? fromCatalog?.teamBadgeUrl ?? null,
+      fixturePoints,
     };
   });
 }

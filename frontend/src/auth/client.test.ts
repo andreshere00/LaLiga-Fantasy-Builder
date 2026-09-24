@@ -17,6 +17,7 @@ const LINKED: LaligaConnection = {
   needs_reauth: false,
   manager_id: "mgr-1",
   manager_name: "Andreshere",
+  avatar: "https://cdn.example/mgr.png",
 };
 
 function json(body: unknown, status = 200): Response {

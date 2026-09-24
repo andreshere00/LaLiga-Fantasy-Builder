@@ -114,6 +114,23 @@ describe("lineupDraft", () => {
 // ---- Edge cases ---- //
 
 describe("groupsForPitchDisplay", () => {
+  it("groupsForPitchDisplay_keeps_fixture_points_from_lineup_slot", () => {
+    const groups = groupsForPitchDisplay(
+      [
+        {
+          role: "goalkeeper",
+          players: [{ id: "gk", name: "GK", fixturePoints: 7 }],
+        },
+        { role: "defender", players: [] },
+        { role: "midfield", players: [] },
+        { role: "striker", players: [] },
+      ],
+      [4, 4, 2],
+      new Map(),
+    );
+    expect(groups[0]?.players[0]?.fixturePoints).toBe(7);
+  });
+
   it("groupsForPitchDisplay_keeps_lineup_slots_when_squad_not_loaded", () => {
     const groups = groupsForPitchDisplay(groups442(), [4, 4, 2], new Map());
     const midfield = groups.find((group) => group.role === "midfield")?.players ?? [];

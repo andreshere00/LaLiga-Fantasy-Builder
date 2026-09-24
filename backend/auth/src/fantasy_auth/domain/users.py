@@ -66,12 +66,14 @@ class ConnectionStatus:
         needs_reauth: Whether refresh failed and re-pairing is required.
         manager_id: Fantasy manager ID when known.
         manager_name: Fantasy manager name when known.
+        avatar: Profile image URL when known.
     """
 
     linked: bool
     needs_reauth: bool = False
     manager_id: str | None = None
     manager_name: str | None = None
+    avatar: str | None = None
 
 
 def extract_app_user_from_claims(claims: Mapping[str, Any]) -> AppUser:

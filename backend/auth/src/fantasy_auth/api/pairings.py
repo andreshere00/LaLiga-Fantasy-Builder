@@ -39,6 +39,7 @@ class ConnectionStatusResponse(BaseModel):
     needs_reauth: bool = False
     manager_id: str | None = None
     manager_name: str | None = None
+    avatar: str | None = None
 
 
 @router.post("/laliga/pairings", response_model=PairingCreateResponse)
