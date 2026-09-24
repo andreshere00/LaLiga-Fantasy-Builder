@@ -1,40 +1,87 @@
 /**
  * Lineup layout profiles
  *
- * Sizing is viewport-relative so the board scales on desktop widths. The active
- * profile is selected with data-layout-profile on .lineup-page (see LineupPage.tsx).
- *
- * Today: desktop-16-9 (~1920×1080 reference).
- * Future: add e.g. [data-layout-profile="tablet"] or media-driven overrides that
- * reassign the same --lineup-* custom properties below.
+ * Desktop row: 1/20 margin, 22.5vw side panels, 40vw pitch, column gap from remainder.
  */
 
 .lineup-page {
-  --lineup-page-max: min(1240px, 92vw);
-  --lineup-page-padding-x: clamp(16px, 2.5vw, 28px);
-  --lineup-page-padding-bottom: clamp(24px, 4vw, 40px);
+  --lineup-page-max: none;
+  --lineup-page-padding-x: 5vw;
+  --lineup-col-side: 22.5vw;
+  --lineup-col-sidebar: var(--lineup-col-side);
+  --lineup-col-squad: var(--lineup-col-side);
+  --lineup-col-pitch: 40vw;
+  --lineup-gap-1-20: 5vw;
+  --lineup-board-col-gap: min(
+    var(--lineup-gap-1-20),
+    max(
+      0px,
+      calc(
+        (100vw - (2 * var(--lineup-page-padding-x)) - (2 * var(--lineup-col-side)) -
+          var(--lineup-col-pitch)) / 2
+      )
+    )
+  );
+  --lineup-side-panel-height: calc(var(--lineup-col-pitch) * 761 / 611);
+  --lineup-gap-vertical: calc(100vw / 40);
+  --lineup-controls-label-gap: clamp(6px, calc(100vw / 80), 14px);
+  --lineup-controls-bar-label-gap: calc(100vw / 60);
+  --lineup-controls-heading-size: clamp(15px, 1.2vw, 19px);
+  --lineup-board-row-gap: var(--lineup-gap-vertical);
+  --lineup-side-panel-title-gap: var(--lineup-gap-vertical);
+  --lineup-side-panel-section-gap: clamp(8px, calc(100vw / 60), 16px);
+  --lineup-squad-panel-section-gap: clamp(14px, calc(100vw / 38), 24px);
+  --lineup-squad-grid-gap: clamp(10px, calc(100vw / 50), 18px);
+  --lineup-side-panel-padding-x: clamp(10px, 1vw, 14px);
+  --lineup-squad-panel-padding-x: clamp(12px, 1.2vw, 18px);
+  --lineup-title-bottom-gap: var(--lineup-gap-vertical);
+  --lineup-side-panel-top: var(--lineup-gap-vertical);
+  --lineup-page-padding-top: calc(100vw / 40);
+  --lineup-page-padding-bottom: var(--lineup-gap-vertical);
 
-  --lineup-board-gap: clamp(16px, 2vw, 28px);
-  --lineup-col-sidebar: clamp(220px, 14.6vw, 280px);
-  --lineup-col-squad: clamp(240px, 15.6vw, 300px);
-  --lineup-col-pitch-min: clamp(320px, 36vw, 560px);
+  --lineup-tile-w: calc(var(--lineup-col-pitch) / 5);
+  /* player_card.svg viewBox 300×400 */
+  --player-card-ratio: 3 / 4;
+  --lineup-tile-h: calc(var(--lineup-tile-w) * 4 / 3);
+  --lineup-squad-tile-w: calc(var(--lineup-tile-w) * 0.8);
+  --lineup-squad-tile-h: calc(var(--lineup-squad-tile-w) * 4 / 3);
 
-  --lineup-controls-gap: clamp(12px, 1.2vw, 18px);
-  --lineup-controls-min-height: clamp(72px, 7vw, 96px);
+  --lineup-controls-gap: min(10vw, clamp(8px, 1vw, 14px));
+  --lineup-controls-bar-gap: calc(100vw / 32);
+  --lineup-controls-bar-padding-x: calc(100vw / 40);
+  --lineup-controls-bar-padding-bottom: calc(100vw / 40);
+  --lineup-controls-bar-padding-top: calc(100vw / 80);
+  --lineup-controls-bar-title-gap: calc(100vw / 50);
+  --lineup-controls-min-height: 0;
   --lineup-control-height: clamp(36px, 2.6vw, 40px);
+  --lineup-formation-control-min: clamp(88px, 8vw, 120px);
   --lineup-pager-cell: var(--lineup-control-height);
   --lineup-pager-width: calc(var(--lineup-pager-cell) * 3);
   --lineup-score-cell: clamp(40px, 2.8vw, 48px);
-  --lineup-recommend-width: min(100%, clamp(220px, 22vw, 420px));
+  --lineup-recommend-width: min(100%, clamp(280px, 22vw, 360px));
   --lineup-value-min: clamp(120px, 12vw, 168px);
-  --lineup-recommend-font: clamp(11px, 0.72vw, 13px);
-  --lineup-recommend-icon: calc(var(--lineup-control-height) * 0.7);
+  --lineup-control-icon: calc(var(--lineup-control-height) * 0.7);
   --lineup-pitch-ratio: 611 / 761;
-  --lineup-value-font: clamp(15px, 1.1vw, 18px);
-  --lineup-label-font: clamp(12px, 0.85vw, 14px);
-  --lineup-control-radius: clamp(6px, 0.5vw, 8px);
+  --lineup-pitch-line-gap: calc(100cqh / 40);
+  --lineup-control-radius: 0;
+
+  --lineup-font-title: clamp(17px, 1.85vw, 21px);
+  --lineup-font-large: clamp(18px, 1.55vw, 22px);
+  --lineup-font-medium: clamp(13px, 1vw, 16px);
+  --lineup-font-small: clamp(11px, 0.82vw, 13px);
 }
 
-.lineup-page[data-layout-profile="desktop-16-9"] {
-  /* Explicit desktop 16:9 reference; override tokens here when tuning this profile. */
+@media (max-width: 1099px), (max-aspect-ratio: 4/3) {
+  .lineup-page[data-layout-profile="desktop-16-9"] {
+    --lineup-page-padding-x: 5vw;
+    --lineup-col-side: min(22.5vw, 100%);
+    --lineup-col-sidebar: var(--lineup-col-side);
+    --lineup-col-squad: var(--lineup-col-side);
+    --lineup-col-pitch: min(40vw, 100%);
+    --lineup-board-col-gap: min(var(--lineup-gap-1-20), clamp(12px, 3vw, 24px));
+    --lineup-tile-w: min(calc(var(--lineup-col-pitch) / 5), 22vw);
+    --lineup-tile-h: calc(var(--lineup-tile-w) * 4 / 3);
+    --lineup-squad-tile-w: calc(var(--lineup-tile-w) * 0.8);
+    --lineup-squad-tile-h: calc(var(--lineup-squad-tile-w) * 4 / 3);
+  }
 }

@@ -1,3 +1,5 @@
+import teamsMasterFile from "../../../assets/teams_master.json";
+
 export type StandingRow = {
   position?: number | null;
   points?: number | null;
@@ -32,9 +34,17 @@ export type CurrentWeek = {
   weekNumber?: number | null;
 };
 
+export type PlayerMedia = {
+  photoUrl: string | null;
+  teamBadgeUrl: string | null;
+};
+
 export type LineupSlotView = {
   id: string;
   name: string;
+  isEmpty?: boolean;
+  photoUrl?: string | null;
+  teamBadgeUrl?: string | null;
 };
 
 export type LineupRole = "goalkeeper" | "defender" | "midfield" | "striker";
@@ -48,6 +58,9 @@ export type SquadCard = {
   id: string;
   name: string;
   captain: boolean;
+  positionId: number | null;
+  photoUrl: string | null;
+  teamBadgeUrl: string | null;
 };
 
 const LINEUP_ROLES: readonly LineupRole[] = [
@@ -157,8 +170,8 @@ export function scoreWeekLabel(week: number): string {
 }
 
 export function defaultWeek(current: CurrentWeek): number {
-  if (current.previousWeek != null && current.previousWeek >= 1) return current.previousWeek;
   if (current.weekNumber != null && current.weekNumber >= 1) return current.weekNumber;
+  if (current.previousWeek != null && current.previousWeek >= 1) return current.previousWeek;
   return 1;
 }
 
@@ -199,7 +212,123 @@ export function possessiveName(name: string | null | undefined): string {
   return `${trimmed}’s`;
 }
 
-export function slotView(slot: unknown, index: number): LineupSlotView {
+function teamBadgeUrlFromTeamRecord(team: unknown): string | null {
+  const record = asRecord(team);
+  if (!record) return null;
+  return text(record.badgeColor) ?? text(record.badgeWhite) ?? null;
+}
+
+function buildTeamBadgeByTeamIdMap(): ReadonlyMap<string, string> {
+  const map = new Map<string, string>();
+  if (!Array.isArray(teamsMasterFile)) return map;
+  for (const entry of teamsMasterFile) {
+    const record = asRecord(entry);
+    const badge = teamBadgeUrlFromTeamRecord(entry);
+    if (!badge) continue;
+    const id = idText(record?.id);
+    const dspId = idText(record?.dspId);
+    if (id) map.set(id, badge);
+    if (dspId) map.set(dspId, badge);
+  }
+  return map;
+}
+
+const TEAM_BADGE_BY_TEAM_ID = buildTeamBadgeByTeamIdMap();
+
+function teamBadgeFromTeamId(teamId: unknown): string | null {
+  const id = idText(teamId);
+  if (!id) return null;
+  return TEAM_BADGE_BY_TEAM_ID.get(id) ?? null;
+}
+
+function resolveTeamBadgeUrl(team: unknown, teamId: unknown): string | null {
+  const teamRecord = asRecord(team);
+  return (
+    teamBadgeUrlFromTeamRecord(team) ??
+    teamBadgeFromTeamId(teamId) ??
+    teamBadgeFromTeamId(teamRecord?.id) ??
+    null
+  );
+}
+
+export function mediaFromPlayerMaster(master: unknown): PlayerMedia {
+  const record = asRecord(master);
+  if (!record) return { photoUrl: null, teamBadgeUrl: null };
+  const images = asRecord(record.images);
+  const transparent = asRecord(images?.transparent);
+  const photoUrl =
+    text(transparent?.["256x256"]) ??
+    text(transparent?.["128x128"]) ??
+    text(transparent?.["64x64"]) ??
+    null;
+  const teamBadgeUrl = resolveTeamBadgeUrl(record.team, record.teamId);
+  return { photoUrl, teamBadgeUrl };
+}
+
+function masterIdFromLineupSlot(
+  record: Record<string, unknown>,
+  master: Record<string, unknown> | null,
+): string | null {
+  return (
+    idText(record.playerMasterId) ??
+    idText(master?.id) ??
+    idText(record.playerId)
+  );
+}
+
+function mediaFromCatalogEntry(
+  catalogByMasterId: ReadonlyMap<string, PlayerMedia> | undefined,
+  masterId: string | null,
+): PlayerMedia | null {
+  if (!masterId || !catalogByMasterId) return null;
+  return catalogByMasterId.get(masterId) ?? null;
+}
+
+/** Index of master ``playerId`` → photo and club crest from ``GET /players``. */
+export function catalogMediaByMasterId(catalog: unknown): Map<string, PlayerMedia> {
+  const map = new Map<string, PlayerMedia>();
+  if (!Array.isArray(catalog)) return map;
+  for (const entry of catalog) {
+    const record = asRecord(entry);
+    if (!record) continue;
+    const id = idText(record.id);
+    if (!id) continue;
+    map.set(id, mediaFromPlayerMaster(record));
+  }
+  return map;
+}
+
+/** Reads photo and club crest from a Fantasy lineup slot (week or current). */
+export function mediaFromLineupSlot(
+  slot: unknown,
+  catalogByMasterId?: ReadonlyMap<string, PlayerMedia>,
+): PlayerMedia {
+  const record = asRecord(slot);
+  if (!record) return { photoUrl: null, teamBadgeUrl: null };
+  const master = asRecord(record.playerMaster);
+  const fromMaster = mediaFromPlayerMaster(master);
+  const playerTeam = asRecord(record.playerTeam);
+  const fromCatalog = mediaFromCatalogEntry(
+    catalogByMasterId,
+    masterIdFromLineupSlot(record, master),
+  );
+  const teamBadgeUrl =
+    fromMaster.teamBadgeUrl ??
+    resolveTeamBadgeUrl(record.team, record.teamId) ??
+    resolveTeamBadgeUrl(playerTeam, playerTeam?.teamId) ??
+    resolveTeamBadgeUrl(playerTeam?.team, null) ??
+    fromCatalog?.teamBadgeUrl ??
+    resolveTeamBadgeUrl(null, master?.teamId) ??
+    null;
+  const photoUrl = fromMaster.photoUrl ?? fromCatalog?.photoUrl ?? null;
+  return { photoUrl, teamBadgeUrl };
+}
+
+export function slotView(
+  slot: unknown,
+  index: number,
+  catalogByMasterId?: ReadonlyMap<string, PlayerMedia>,
+): LineupSlotView {
   const record = asRecord(slot);
   if (!record) {
     return { id: idText(slot) ?? `slot-${index}`, name: EMPTY_NAME };
@@ -208,7 +337,40 @@ export function slotView(slot: unknown, index: number): LineupSlotView {
   const name =
     text(master?.nickname) ?? text(master?.name) ?? text(record.nickname) ?? text(record.name);
   const id = idText(record.playerTeamId) ?? idText(record.id) ?? `slot-${index}`;
-  return { id, name: name ?? EMPTY_NAME };
+  const media = mediaFromLineupSlot(record, catalogByMasterId);
+  return { id, name: name ?? EMPTY_NAME, ...media };
+}
+
+/** Merges lineup slot media into the squad map (keeps roster data when present). */
+export function enrichSquadMapFromLineup(
+  squadById: ReadonlyMap<string, SquadCard>,
+  lineup: unknown,
+  catalogByMasterId?: ReadonlyMap<string, PlayerMedia>,
+): Map<string, SquadCard> {
+  const merged = new Map(squadById);
+  for (const group of groupsFromLineup(lineup, catalogByMasterId)) {
+    for (const player of group.players) {
+      if (!player.id || player.isEmpty) continue;
+      const existing = merged.get(player.id);
+      if (!existing) {
+        merged.set(player.id, {
+          id: player.id,
+          name: player.name,
+          captain: false,
+          positionId: null,
+          photoUrl: player.photoUrl ?? null,
+          teamBadgeUrl: player.teamBadgeUrl ?? null,
+        });
+        continue;
+      }
+      merged.set(player.id, {
+        ...existing,
+        photoUrl: existing.photoUrl ?? player.photoUrl ?? null,
+        teamBadgeUrl: existing.teamBadgeUrl ?? player.teamBadgeUrl ?? null,
+      });
+    }
+  }
+  return merged;
 }
 
 export function captainIdOf(value: unknown): string | null {
@@ -219,22 +381,32 @@ export function captainIdOf(value: unknown): string | null {
   return idText(record.playerTeamId) ?? idText(record.id);
 }
 
-export function lineupGroups(formation: unknown): LineupGroup[] {
+export function lineupGroups(
+  formation: unknown,
+  catalogByMasterId?: ReadonlyMap<string, PlayerMedia>,
+): LineupGroup[] {
   const record = asRecord(formation);
   if (!record) return [];
   return LINEUP_ROLES.map((role) => {
     const slots = record[role];
     const list = Array.isArray(slots) ? slots : [];
-    return { role, players: list.map((slot, index) => slotView(slot, index)) };
+    return {
+      role,
+      players: list.map((slot, index) => slotView(slot, index, catalogByMasterId)),
+    };
   });
 }
 
-export function groupsFromLineup(lineup: unknown): LineupGroup[] {
-  return lineupGroups(asRecord(lineup)?.formation);
+export function groupsFromLineup(
+  lineup: unknown,
+  catalogByMasterId?: ReadonlyMap<string, PlayerMedia>,
+): LineupGroup[] {
+  return lineupGroups(asRecord(lineup)?.formation, catalogByMasterId);
 }
 
 export function tacticalOf(lineup: unknown): number[] | null {
-  const tactical = asRecord(asRecord(lineup)?.formation)?.tacticalFormation;
+  const formation = asRecord(asRecord(lineup)?.formation);
+  const tactical = formation?.tacticalFormation ?? formation?.tactical_formation;
   if (!Array.isArray(tactical) || tactical.length === 0) return null;
   if (!tactical.every((item) => typeof item === "number")) return null;
   return tactical;
@@ -244,14 +416,32 @@ export function captainFromLineup(lineup: unknown): string | null {
   return captainIdOf(asRecord(asRecord(lineup)?.formation)?.captain);
 }
 
-export function squadCards(players: unknown, captainId: string | null): SquadCard[] {
+export function squadCards(
+  players: unknown,
+  captainId: string | null,
+  catalogByMasterId?: ReadonlyMap<string, PlayerMedia>,
+): SquadCard[] {
   if (!Array.isArray(players)) return [];
   return players.map((player, index) => {
     const record = asRecord(player);
     const master = asRecord(record?.playerMaster);
     const id = idText(record?.playerTeamId) ?? `player-${index}`;
     const name = text(master?.nickname) ?? text(master?.name) ?? EMPTY_NAME;
-    return { id, name, captain: captainId != null && id === captainId };
+    const positionRaw = master?.positionId;
+    const positionId = typeof positionRaw === "number" ? positionRaw : null;
+    const media = mediaFromPlayerMaster(master);
+    const fromCatalog = mediaFromCatalogEntry(
+      catalogByMasterId,
+      idText(master?.id),
+    );
+    return {
+      id,
+      name,
+      captain: captainId != null && id === captainId,
+      positionId,
+      photoUrl: media.photoUrl ?? fromCatalog?.photoUrl ?? null,
+      teamBadgeUrl: media.teamBadgeUrl ?? fromCatalog?.teamBadgeUrl ?? null,
+    };
   });
 }
 
@@ -261,4 +451,54 @@ export function playersOf(team: unknown): unknown {
 
 export function hasPlayers(groups: readonly LineupGroup[]): boolean {
   return groups.some((group) => group.players.length > 0);
+}
+
+export type LineupsAvailable = {
+  free: string[];
+  premium: string[];
+};
+
+function stringFormationCodes(value: unknown): string[] {
+  if (!Array.isArray(value)) return [];
+  return value
+    .map((item) => {
+      if (typeof item === "string" && item.trim().length > 0) return item.trim();
+      if (Array.isArray(item) && item.length === 3 && item.every((n) => typeof n === "number")) {
+        return item.join(",");
+      }
+      return null;
+    })
+    .filter((item): item is string => item != null);
+}
+
+function lineupsAvailableRecord(value: unknown): LineupsAvailable | null {
+  const record = asRecord(value);
+  if (!record) return null;
+  const free = stringFormationCodes(record.free);
+  if (free.length === 0) return null;
+  return { free, premium: stringFormationCodes(record.premium) };
+}
+
+/** Parse free/premium formation codes from a lineup API payload when present. */
+export function lineupsAvailableFromLineup(lineup: unknown): LineupsAvailable | null {
+  const record = asRecord(lineup);
+  if (!record) return null;
+  const candidates = [
+    record.lineupsAvailable,
+    record.lineups_available,
+    record.availableLineups,
+    record.available_lineups,
+    record,
+  ];
+  for (const candidate of candidates) {
+    const parsed = lineupsAvailableRecord(candidate);
+    if (parsed) return parsed;
+  }
+  return null;
+}
+
+export function freeFormationCodesFromLineup(lineup: unknown): readonly string[] | null {
+  const available = lineupsAvailableFromLineup(lineup);
+  if (!available || available.free.length === 0) return null;
+  return available.free;
 }

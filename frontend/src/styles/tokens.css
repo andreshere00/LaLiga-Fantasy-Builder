@@ -5,9 +5,12 @@
   --red: #ff4b44;
   --red-soft: #ffc2bf;
   --white: #ffffff;
+  --surface-press: var(--gray);
+  --accent-press: var(--red-soft);
   --ink: #35353d;
   --tile: #2b2f36;
   --line: #d7d7d7;
+  --shadow-surface: 0 1px 3px rgb(0 0 0 / 14%);
   color: var(--black);
   background: var(--gray);
   font-family: "At Aero", sans-serif;

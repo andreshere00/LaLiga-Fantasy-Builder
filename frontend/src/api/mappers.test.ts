@@ -7,13 +7,19 @@ import {
   defaultWeek,
   formatTeamValue,
   formationLabel,
+  freeFormationCodesFromLineup,
   groupsFromLineup,
+  lineupsAvailableFromLineup,
   mapRanking,
   maxWeek,
   pointsLabel,
   possessiveName,
   scoreWeekLabel,
   selectedTeamValue,
+  catalogMediaByMasterId,
+  enrichSquadMapFromLineup,
+  mediaFromLineupSlot,
+  mediaFromPlayerMaster,
   squadCards,
   weekPointsForTeam,
   type StandingRow,
@@ -89,9 +95,133 @@ describe("squadCards", () => {
       "pt-1",
     );
     expect(cards).toEqual([
-      { id: "pt-1", name: "Raphinha", captain: true },
-      { id: "pt-2", name: "Unai Simón", captain: false },
+      {
+        id: "pt-1",
+        name: "Raphinha",
+        captain: true,
+        positionId: null,
+        photoUrl: null,
+        teamBadgeUrl: null,
+      },
+      {
+        id: "pt-2",
+        name: "Unai Simón",
+        captain: false,
+        positionId: null,
+        photoUrl: null,
+        teamBadgeUrl: null,
+      },
     ]);
+  });
+});
+
+describe("mediaFromPlayerMaster", () => {
+  it("mediaFromPlayerMaster_reads_photo_and_club_badge", () => {
+    expect(
+      mediaFromPlayerMaster({
+        images: { transparent: { "256x256": "https://example.test/player.png" } },
+        team: { badgeColor: "https://example.test/badge.png" },
+      }),
+    ).toEqual({
+      photoUrl: "https://example.test/player.png",
+      teamBadgeUrl: "https://example.test/badge.png",
+    });
+  });
+
+  it("mediaFromPlayerMaster_prefers_badge_color_for_full_crest", () => {
+    expect(
+      mediaFromPlayerMaster({
+        team: {
+          badgeWhite: "https://example.test/badge-white.png",
+          badgeColor: "https://example.test/badge-color.png",
+        },
+      }),
+    ).toEqual({
+      photoUrl: null,
+      teamBadgeUrl: "https://example.test/badge-color.png",
+    });
+  });
+});
+
+describe("catalogMediaByMasterId", () => {
+  it("catalogMediaByMasterId_indexes_master_player_media", () => {
+    const map = catalogMediaByMasterId([
+      {
+        id: 42,
+        team: { badgeColor: "https://example.test/catalog-badge.png" },
+      },
+    ]);
+    expect(map.get("42")?.teamBadgeUrl).toBe("https://example.test/catalog-badge.png");
+  });
+});
+
+describe("mediaFromLineupSlot", () => {
+  it("mediaFromLineupSlot_falls_back_to_catalog_by_master_id", () => {
+    const catalog = catalogMediaByMasterId([
+      {
+        id: "7",
+        team: { badgeColor: "https://example.test/catalog-badge.png" },
+      },
+    ]);
+    expect(
+      mediaFromLineupSlot(
+        {
+          playerTeamId: "pt-old",
+          playerMaster: { id: "7", nickname: "Former" },
+        },
+        catalog,
+      ).teamBadgeUrl,
+    ).toBe("https://example.test/catalog-badge.png");
+  });
+
+  it("mediaFromPlayerMaster_resolves_badge_from_team_id_via_teams_master", () => {
+    expect(
+      mediaFromPlayerMaster({
+        teamId: "2",
+        images: { transparent: { "256x256": "https://example.test/photo.png" } },
+      }).teamBadgeUrl,
+    ).toMatch(/atletico-de-madrid/);
+  });
+
+  it("mediaFromLineupSlot_reads_team_on_slot_when_master_has_no_team", () => {
+    expect(
+      mediaFromLineupSlot({
+        playerTeamId: "pt-9",
+        playerMaster: {
+          nickname: "Former",
+          images: { transparent: { "256x256": "https://example.test/p.png" } },
+        },
+        team: { badgeColor: "https://example.test/club.png" },
+      }),
+    ).toEqual({
+      photoUrl: "https://example.test/p.png",
+      teamBadgeUrl: "https://example.test/club.png",
+    });
+  });
+});
+
+describe("enrichSquadMapFromLineup", () => {
+  it("enrichSquadMapFromLineup_adds_former_lineup_players_not_on_roster", () => {
+    const lineup = {
+      formation: {
+        tacticalFormation: [4, 4, 2],
+        goalkeeper: [
+          {
+            playerTeamId: "old-gk",
+            playerMaster: { nickname: "Old GK" },
+            team: { badgeColor: "https://example.test/old-badge.png" },
+          },
+        ],
+        defender: [],
+        midfield: [],
+        striker: [],
+      },
+    };
+    const merged = enrichSquadMapFromLineup(new Map(), lineup);
+    expect(merged.get("old-gk")).toMatchObject({
+      name: "Old GK",
+      teamBadgeUrl: "https://example.test/old-badge.png",
+    });
   });
 });
 
@@ -115,11 +245,12 @@ describe("mapper failures", () => {
 // ---- Edge cases ---- //
 
 describe("matchday bounds", () => {
-  it("defaultWeek_previous_week_is_preferred", () => {
-    expect(defaultWeek({ previousWeek: 4, weekNumber: 5 })).toBe(4);
+  it("defaultWeek_opens_on_current_week_number", () => {
+    expect(defaultWeek({ previousWeek: 4, weekNumber: 5 })).toBe(5);
   });
 
-  it("defaultWeek_without_previous_uses_current_week", () => {
+  it("defaultWeek_without_current_uses_previous_week", () => {
+    expect(defaultWeek({ previousWeek: 4 })).toBe(4);
     expect(defaultWeek({ previousWeek: 0, weekNumber: 5 })).toBe(5);
     expect(defaultWeek({})).toBe(1);
     expect(maxWeek({ weekNumber: 5 })).toBe(5);
@@ -129,6 +260,26 @@ describe("matchday bounds", () => {
     expect(clampWeek(0, 8)).toBe(1);
     expect(clampWeek(9, 8)).toBe(8);
     expect(clampWeek(3, 8)).toBe(3);
+  });
+});
+
+describe("lineups available", () => {
+  it("lineupsAvailableFromLineup_reads_nested_free_list", () => {
+    const payload = {
+      lineupsAvailable: {
+        free: ["4,4,2", "3,4,3"],
+        premium: ["4,2,4"],
+      },
+    };
+    expect(lineupsAvailableFromLineup(payload)).toEqual({
+      free: ["4,4,2", "3,4,3"],
+      premium: ["4,2,4"],
+    });
+    expect(freeFormationCodesFromLineup(payload)).toEqual(["4,4,2", "3,4,3"]);
+  });
+
+  it("freeFormationCodesFromLineup_missing_payload_returns_null", () => {
+    expect(freeFormationCodesFromLineup({ formation: {} })).toBeNull();
   });
 });
 

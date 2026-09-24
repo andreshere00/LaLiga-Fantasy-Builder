@@ -4,6 +4,7 @@
   padding: 28px 24px;
   background: var(--white);
   border-radius: 12px;
+  box-shadow: var(--shadow-surface);
   text-align: center;
 }
 
@@ -27,4 +28,11 @@
   font: inherit;
   font-weight: 700;
   cursor: pointer;
+  box-shadow: var(--shadow-surface);
+  transition: background-color 0.12s ease, color 0.12s ease;
+}
+
+.gate button:active:not(:disabled) {
+  background: var(--accent-press);
+  color: var(--black);
 }

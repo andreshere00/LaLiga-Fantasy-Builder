@@ -17,10 +17,15 @@ export const paths = {
   weekStanding: (leagueId: string, week: number) =>
     `/api/leagues/${segment(leagueId)}/standing/${week}`,
   currentWeek: () => "/api/calendar/current",
+  playersCatalog: () => "/api/players",
   team: (leagueId: string, teamId: string) =>
     `/api/leagues/${segment(leagueId)}/teams/${segment(teamId)}`,
   lineup: (teamId: string) => `/api/teams/${segment(teamId)}/lineup`,
+  lineupWeek: (teamId: string, week: number) =>
+    `/api/teams/${segment(teamId)}/lineup/week/${week}`,
 };
+
+export type PutJsonOptions = GetJsonOptions;
 
 export async function getJson(
   path: string,
@@ -34,6 +39,28 @@ export async function getJson(
       Accept: "application/json",
       Authorization: `Bearer ${token}`,
     },
+    signal: options.signal,
+  });
+  if (!response.ok) await throwForStatus(response);
+  return response.json() as Promise<unknown>;
+}
+
+export async function putJson(
+  path: string,
+  token: string,
+  body: unknown,
+  options: PutJsonOptions = {},
+): Promise<unknown> {
+  const fetchFn = options.fetchFn ?? fetch;
+  const response = await fetchFn(path, {
+    method: "PUT",
+    credentials: "omit",
+    headers: {
+      Accept: "application/json",
+      Authorization: `Bearer ${token}`,
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify(body),
     signal: options.signal,
   });
   if (!response.ok) await throwForStatus(response);

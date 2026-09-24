@@ -4,6 +4,7 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
+    "dev:all": "bash ../scripts/dev-local.sh",
     "build": "tsc --noEmit && vite build",
     "preview": "vite preview",
     "test": "vitest run"

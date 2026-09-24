@@ -60,14 +60,24 @@ export function Header() {
           )}
         </div>
         <nav className="nav-tabs" aria-label="Sections">
-          <NavLink to="/" end className="nav-tab" aria-label="Alineación">
+          <NavLink to="/" end className="nav-tab">
             {({ isActive }) => (
-              <img src={isActive ? lineupActive : lineupIdle} alt="" />
+              <>
+                <span className="nav-tab-icon-wrap" aria-hidden="true">
+                  <img src={isActive ? lineupActive : lineupIdle} alt="" />
+                </span>
+                <span className="nav-tab-label">Lineup</span>
+              </>
             )}
           </NavLink>
-          <NavLink to="/market" className="nav-tab" aria-label="Mercado">
+          <NavLink to="/market" className="nav-tab">
             {({ isActive }) => (
-              <img src={isActive ? marketActive : marketIdle} alt="" />
+              <>
+                <span className="nav-tab-icon-wrap" aria-hidden="true">
+                  <img src={isActive ? marketActive : marketIdle} alt="" />
+                </span>
+                <span className="nav-tab-label">Market</span>
+              </>
             )}
           </NavLink>
         </nav>

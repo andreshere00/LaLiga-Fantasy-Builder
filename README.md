@@ -27,8 +27,23 @@ key, and the JWT PEMs in `backend/auth/.env`, then
 
 To run a service on the host instead of in Compose, use that service README:
 [auth](backend/auth/README.md), [API](backend/api/README.md). Keycloak still
-comes from `docker compose up -d`. The UI dev server is
-`cd frontend && bun install && bun run dev`.
+comes from `docker compose up -d keycloak`.
+
+**Auth, API, and frontend on the host (Vite HMR, no frontend container):**
+
+```bash
+docker compose up -d keycloak   # login
+uv run poe dev                  # from repo root
+```
+
+Equivalent from `frontend/` (uses Bun when installed, otherwise npm):
+
+```bash
+cd frontend && bun install && bun run dev:all
+# or: npm install && npm run dev:all
+```
+
+UI only (backend already running elsewhere): `cd frontend && bun run dev`.
 
 ## Repository
 
