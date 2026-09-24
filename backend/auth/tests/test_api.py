@@ -26,9 +26,10 @@ from fantasy_auth.application.internal_tokens import InternalTokenService
 from fantasy_auth.application.pairing import PairingService
 from fantasy_auth.application.sessions import SessionService
 from fantasy_auth.config import Settings
-from fantasy_auth.domain.users import AppUser
+from fantasy_auth.domain.tokens import TokenBundle
+from fantasy_auth.domain.users import AppUser, LaligaUser
 from fantasy_auth.main import create_app
-from fantasy_auth.ports.repos import SessionRecord
+from fantasy_auth.ports.repos import ConnectionRecord, SessionRecord
 from fastapi.testclient import TestClient
 
 NOW = int(time.time())
@@ -55,8 +56,18 @@ class FakeB2C:
     def build_authorize_url(self, **kwargs: Any) -> str:
         return "https://example/authorize"
 
-    async def exchange_code(self, **kwargs: Any) -> Any:
-        raise NotImplementedError
+    async def exchange_code(self, **kwargs: Any) -> TokenBundle:
+        del kwargs
+        return TokenBundle(
+            access_token="laliga-access",
+            id_token="laliga-id",
+            refresh_token="laliga-refresh",
+            expires_on=NOW + 3600,
+            expires_in=3600,
+            client_id="test-client",
+            policy="test-policy",
+            scope="openid offline_access",
+        )
 
     async def refresh(self, **kwargs: Any) -> dict[str, Any]:
         return {"access_token": "x", "expires_in": 100}
@@ -256,6 +267,141 @@ def test_auth_callback_binds_user(
     body = response.json()
     assert body["user"]["user_id"] == "app-user-42"
     assert "csrf_token" in body
+
+
+def test_auth_callback_html_unlinked_redirects_to_laliga(
+    client: TestClient,
+    container: AppContainer,
+) -> None:
+    # Arrange
+    login = client.get("/auth/login", follow_redirects=False)
+    session_id = login.cookies["fantasy_session"]
+    session = asyncio.run(container.session_store.get(session_id))
+    assert session is not None
+    assert session.oidc_state is not None
+
+    # Act
+    response = client.get(
+        "/auth/callback",
+        params={"code": "abc", "state": session.oidc_state},
+        cookies=_auth_cookies(session),
+        headers={"Accept": "text/html"},
+        follow_redirects=False,
+    )
+
+    # Assert
+    assert response.status_code == 302
+    assert response.headers["location"] == "https://example/authorize"
+    assert "secret" not in response.headers["location"]
+    set_cookie = ",".join(response.headers.get_list("set-cookie"))
+    assert "fantasy_session=" in set_cookie
+    assert "fantasy_csrf=" in set_cookie
+
+
+def test_auth_callback_html_linked_redirects_to_frontend_origin(
+    client: TestClient,
+    container: AppContainer,
+) -> None:
+    # Arrange
+    asyncio.run(
+        container.pairings._connections.save(
+            ConnectionRecord(
+                user_id="app-user-42",
+                sealed_blob=b"sealed",
+                policy="test-policy",
+                client_id="test-client",
+                scope="openid offline_access",
+                profile=LaligaUser(user_id="mgr-9", manager_name="TestMgr"),
+            )
+        )
+    )
+    login = client.get("/auth/login", follow_redirects=False)
+    session_id = login.cookies["fantasy_session"]
+    session = asyncio.run(container.session_store.get(session_id))
+    assert session is not None
+    assert session.oidc_state is not None
+
+    # Act
+    response = client.get(
+        "/auth/callback",
+        params={"code": "abc", "state": session.oidc_state},
+        cookies=_auth_cookies(session),
+        headers={"Accept": "text/html"},
+        follow_redirects=False,
+    )
+
+    # Assert
+    assert response.status_code == 302
+    assert response.headers["location"] == "http://localhost:3000"
+
+
+def test_laliga_login_without_session_is_unauthorized(client: TestClient) -> None:
+    # Arrange / Act
+    response = client.get("/laliga/login", follow_redirects=False)
+
+    # Assert
+    assert response.status_code == 401
+
+
+def test_laliga_login_redirects_to_b2c_without_leaking_secret(
+    client: TestClient,
+    container: AppContainer,
+) -> None:
+    # Arrange
+    session = asyncio.run(_seed_authenticated_session(container))
+
+    # Act
+    response = client.get(
+        "/laliga/login",
+        cookies=_auth_cookies(session),
+        follow_redirects=False,
+    )
+
+    # Assert
+    assert response.status_code == 302
+    assert response.headers["location"] == "https://example/authorize"
+    assert "secret" not in response.headers["location"]
+    stored = asyncio.run(container.session_store.get(session.session_id))
+    assert stored is not None
+    assert stored.laliga_pairing_secret
+    assert stored.laliga_b2c_state
+
+
+def test_complete_redirect_links_account_and_clears_pending_pkce(
+    client: TestClient,
+    container: AppContainer,
+) -> None:
+    # Arrange
+    session = asyncio.run(_seed_authenticated_session(container))
+    client.get(
+        "/laliga/login",
+        cookies=_auth_cookies(session),
+        follow_redirects=False,
+    )
+    stored = asyncio.run(container.session_store.get(session.session_id))
+    assert stored is not None
+    assert stored.laliga_b2c_state is not None
+    callback = "authredirect://com.lfp.laligafantasy" f"?code=abc&state={stored.laliga_b2c_state}"
+
+    # Act
+    response = client.post(
+        "/laliga/pairings/complete-redirect",
+        json={"callback": callback},
+    )
+
+    # Assert
+    assert response.status_code == 200
+    body = response.json()
+    assert body["ok"] is True
+    assert body["frontend_origin"] == "http://localhost:3000"
+    assert "secret" not in response.text
+    status = asyncio.run(container.pairings.get_status("app-user-42"))
+    assert status["linked"] is True
+    cleared = asyncio.run(container.session_store.get(session.session_id))
+    assert cleared is not None
+    assert cleared.laliga_pairing_secret is None
+    assert cleared.laliga_code_verifier is None
+    assert cleared.laliga_b2c_state is None
 
 
 def test_create_pairing_requires_csrf_and_returns_secret(

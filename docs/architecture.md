@@ -1,49 +1,99 @@
 # Architecture
 
+How to run the stack is in the [root README](../README.md). This page is the
+map of what each part owns.
+
 ## Repository layout
 
-The backend is split into independently deployable sibling services.
-
 ```text
-backend/
-├── auth/    Authentication, sessions, pairing, vault, token refresh
-└── api/     Fantasy Builder application endpoints
+frontend/          React lineup UI (Bun, Vite). Nginx in Docker.
+backend/auth/      Sessions, Keycloak login, LaLiga vault, internal JWT
+backend/api/       Fantasy features. Calls LaLiga with a bearer from auth
+docker/            Keycloak realm import and the OTEL collector config
 ```
 
-Supporting infrastructure:
+Local identity is Keycloak. Postgres and Redis are used when
+`USE_MEMORY_STORE=false` (`full` Compose profile). OpenTelemetry is optional.
 
-- Keycloak provides local application OIDC identity.
-- PostgreSQL persists sessions, pairings, and encrypted LaLiga connections.
-- Redis provides distributed rate limiting and refresh coordination.
-- OpenTelemetry exports auth traces.
+The browser talks only to the frontend origin (`http://localhost:3000`).
+Nginx proxies `/auth` and `/laliga` to auth and `/api` to the API. The React
+app keeps the internal JWT in memory.
 
 ## System context
 
 ```mermaid
 flowchart LR
     Browser[Browser]
-    IdP[ApplicationIdP]
-    Auth[AuthBFF]
-    Api[FantasyAPI]
+    Web[Frontend]
+    IdP[Keycloak]
+    Auth[Auth]
+    Api[API]
     Postgres[(PostgreSQL)]
     Redis[(Redis)]
     LaligaIdP[LaLigaB2C]
     LaligaApi[LaLigaFantasyAPI]
-    OTel[OTelCollector]
 
-    Browser -->|Login and session cookies| Auth
-    Browser -->|Internal Bearer JWT| Api
-    Auth -->|OIDC Code and PKCE| IdP
-    Auth -->|Sessions and encrypted connections| Postgres
-    Auth -->|Rate limits and refresh locks| Redis
-    Auth -->|Pairing and token refresh| LaligaIdP
-    Auth -->|Verify manager| LaligaApi
-    Api -->|Private credential request| Auth
+    Browser -->|Same origin| Web
+    Web -->|Session cookie| Auth
+    Web -->|Bearer JWT| Api
+    Auth -->|App OIDC| IdP
+    Auth -->|Pair and refresh| LaligaIdP
+    Auth -->|Confirm manager| LaligaApi
+    Api -->|Private bearer request| Auth
     Api -->|LaLiga bearer| LaligaApi
-    Auth -->|Traces| OTel
+    Auth --> Postgres
+    Auth --> Redis
 ```
 
+## Browser login
+
+Two identities stay separate. Keycloak is the application user. LaLiga is a
+delegated account stored only in the auth vault.
+
+```mermaid
+sequenceDiagram
+    participant Browser
+    participant Web as Frontend
+    participant Auth
+    participant Keycloak
+    participant Laliga as LaLigaB2C
+    participant Helper as AuthredirectHelper
+
+    Browser->>Web: Log in
+    Web->>Auth: GET /auth/login
+    Auth->>Keycloak: OIDC redirect
+    Keycloak->>Auth: GET /auth/callback
+    alt LaLiga not linked
+        Auth->>Laliga: B2C authorize
+        Laliga->>Helper: authredirect://
+        Helper->>Auth: POST /laliga/pairings/complete-redirect
+        Helper->>Browser: Open frontend origin
+    else Already linked
+        Auth->>Browser: Redirect to frontend origin
+    end
+```
+
+LaLiga's registered return address is `authredirect://com.lfp.laligafantasy`,
+not a browser URL. The macOS helper posts that callback to auth and opens the
+app. HTML clients are redirected; a request that does not ask for HTML still
+receives the JSON session view, which the CLIs use.
+
+`GET /laliga/login` starts the same LaLiga hop for a session that is already
+signed in. PKCE verifier and pairing secret stay on the server session.
+
+Token rules and CSRF are in
+[Authentication](authentication/authentication.md).
+
 ## Service responsibilities
+
+### Frontend
+
+`frontend/` is the lineup screen. It signs in through auth, keeps the internal
+JWT in memory, and reads leagues, standings, lineups, and squads from the API.
+Mercado is a placeholder. It does not call LaLiga and does not store tokens.
+
+In Docker, Nginx on port 3000 serves the built app and proxies `/auth`,
+`/laliga`, and `/api`. `bun run dev` does the same proxy for local UI work.
 
 ### Auth BFF
 
@@ -222,27 +272,12 @@ sequenceDiagram
     Api-->>Browser: Application response
 ```
 
-### LaLiga pairing
+### LaLiga pairing inside auth
 
-```mermaid
-sequenceDiagram
-    participant Browser
-    participant Auth
-    participant Helper
-    participant B2C as LaLigaB2C
-    participant Laliga as LaLigaFantasy
-
-    Browser->>Auth: POST /laliga/pairings with session and CSRF
-    Auth-->>Browser: Pairing ID, secret, nonce, expiry
-    Browser->>Helper: One-time pairing values
-    Helper->>B2C: Authorization Code plus PKCE
-    B2C-->>Helper: Token response
-    Helper->>Auth: POST /pairings/id/complete
-    Auth->>Auth: Consume pairing and verify JWT
-    Auth->>Laliga: GET /api/v4/user/me
-    Auth->>Auth: Encrypt and persist token bundle
-    Auth-->>Helper: Public manager profile
-```
+After the browser hop above, auth exchanges the authorization code, verifies
+the LaLiga JWT, confirms the manager with `GET /api/v4/user/me`, and seals
+the token bundle. The helper and the CLI complete route receive a public
+profile only. `POST /laliga/pairings` remains for those developer CLIs.
 
 ## Persistence and lifecycle
 
@@ -310,21 +345,18 @@ generators before merge. See [OpenAPI / Swagger](api/openapi.md).
 
 ## Deployment constraints
 
-- Auth and API are independently deployable.
-- Each service ships a multi-stage Dockerfile on `python:3.14-slim-trixie`
-  (`backend/auth/Dockerfile`, `backend/api/Dockerfile`): dependencies are
-  installed with uv in a builder stage; the runtime image contains only the
-  virtualenv, application source, and a non-root `uvicorn` process (no uv,
-  no compiler toolchain).
-- Local Docker: `docker compose --profile apps up --build` runs Keycloak, auth,
-  and API; `--profile full` adds Postgres, Redis, and OTEL for production-like
-  persistence. Compose sets internal OIDC URLs (`keycloak:8080`) for auth while
-  browser-facing issuer/redirect URLs stay on `localhost`.
+Run commands live in the [root README](../README.md).
+
+- Auth, API, and frontend each have their own image. Python services use
+  `python:3.14-slim-trixie` with uv only in the builder. The frontend image
+  builds with Bun and serves static files plus `/auth`, `/laliga`, and `/api`
+  proxies from Nginx.
+- Compose profile `apps` runs Keycloak, auth, API, and frontend. Profile
+  `full` adds Postgres, Redis, and OTEL. In-cluster OIDC URLs use
+  `keycloak:8080`. The browser still uses `localhost`.
 - API and auth share a private network for `/internal/*`.
-- Only public auth routes and intended API routes should be exposed by ingress.
 - JWT private keys, the vault key, and the service token belong in a secret
   manager, not source control.
-- Auth and API must use identical internal JWT issuer and audience values.
-- The API's `AUTH_JWKS_URL` must resolve to the auth JWKS endpoint.
-- Key rotation must keep old public keys available until all issued tokens
-  have expired.
+- Auth and API must use the same internal JWT issuer and audience.
+- `AUTH_JWKS_URL` must reach the auth JWKS endpoint.
+- Key rotation must keep old public keys until issued tokens expire.

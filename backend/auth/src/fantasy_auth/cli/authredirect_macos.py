@@ -15,6 +15,8 @@ BUNDLE_ID = "local.laliga.fantasy.authredirect"
 APP_NAME = "LaligaAuthredirect.app"
 CALLBACK_NAME = "callback.txt"
 STAMP_NAME = "handler.stamp"
+HANDLER_VERSION = "2"
+COMPLETE_SCRIPT_NAME = "complete_callback.py"
 LSREGISTER = (
     "/System/Library/Frameworks/CoreServices.framework/"
     "Frameworks/LaunchServices.framework/Support/lsregister"
@@ -120,6 +122,7 @@ def _prepare_macos_handler(support_dir: Path) -> None:
     """Compile and register the authredirect:// helper app."""
     callback_path = support_dir / CALLBACK_NAME
     app_path = support_dir / APP_NAME
+    _write_complete_script(support_dir / COMPLETE_SCRIPT_NAME)
     if not _handler_app_ready(app_path, callback_path):
         _compile_handler_app(app_path, callback_path)
     _register_handler_app(app_path)
@@ -139,7 +142,7 @@ def _handler_app_ready(app_path: Path, callback_path: Path) -> bool:
         return False
     if info.get("CFBundleIdentifier") != BUNDLE_ID:
         return False
-    return stamp == str(callback_path.expanduser().resolve())
+    return stamp == f"{callback_path.expanduser().resolve()}|{HANDLER_VERSION}"
 
 
 def _compile_handler_app(app_path: Path, callback_path: Path) -> None:
@@ -164,7 +167,10 @@ def _compile_handler_app(app_path: Path, callback_path: Path) -> None:
         ) from exc
     _patch_handler_plist(app_path)
     stamp = app_path.parent / STAMP_NAME
-    stamp.write_text(str(callback_path.expanduser().resolve()), encoding="utf-8")
+    stamp.write_text(
+        f"{callback_path.expanduser().resolve()}|{HANDLER_VERSION}",
+        encoding="utf-8",
+    )
     try:
         subprocess.run(
             ["codesign", "--force", "-s", "-", str(app_path)],
@@ -186,7 +192,8 @@ def _applescript_source(callback_path: Path) -> str:
         AppleScript source.
     """
     posix = callback_path.expanduser().resolve()
-    if '"' in str(posix):
+    script = posix.parent / COMPLETE_SCRIPT_NAME
+    if '"' in str(posix) or '"' in str(script):
         raise AuthredirectHandlerError("Callback path contains a quote")
     return (
         "on open location theURL\n"
@@ -196,9 +203,41 @@ def _applescript_source(callback_path: Path) -> str:
         "    set eof of fd to 0\n"
         "    write theURL to fd as «class utf8»\n"
         "    close access fd\n"
+        f'    do shell script "/usr/bin/python3 " & quoted form of "{script}"\n'
         "end open location\n"
         "on run\n"
         "end run\n"
+    )
+
+
+def _write_complete_script(path: Path) -> None:
+    """Write the helper that posts the callback and opens the frontend."""
+    path.write_text(
+        "\n".join(
+            [
+                "import json",
+                "import pathlib",
+                "import subprocess",
+                "import urllib.request",
+                "",
+                "callback = pathlib.Path(__file__).with_name('callback.txt')",
+                "url = callback.read_text(encoding='utf-8').strip()",
+                "body = json.dumps({'callback': url}).encode()",
+                "request = urllib.request.Request(",
+                "    'http://localhost:8000/laliga/pairings/complete-redirect',",
+                "    data=body,",
+                "    headers={'Content-Type': 'application/json'},",
+                ")",
+                "with urllib.request.urlopen(request, timeout=30) as response:",
+                "    payload = json.load(response)",
+                "    if response.status != 200:",
+                "        raise SystemExit(1)",
+                "origin = payload.get('frontend_origin') or 'http://localhost:3000'",
+                "subprocess.run(['open', origin], check=True)",
+                "",
+            ]
+        ),
+        encoding="utf-8",
     )
 
 

@@ -1,0 +1,47 @@
+@font-face {
+  font-family: "At Aero";
+  src: url("../assets/fonts/AtAero-Regular.otf") format("opentype");
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "At Aero";
+  src: url("../assets/fonts/AtAero-RegularItalic.otf") format("opentype");
+  font-weight: 400;
+  font-style: italic;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "At Aero";
+  src: url("../assets/fonts/AtAero-Medium.otf") format("opentype");
+  font-weight: 500;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "At Aero";
+  src: url("../assets/fonts/AtAero-MediumItalic.otf") format("opentype");
+  font-weight: 500;
+  font-style: italic;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "At Aero";
+  src: url("../assets/fonts/AtAero-Bold.otf") format("opentype");
+  font-weight: 700;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "At Aero";
+  src: url("../assets/fonts/AtAero-BoldItalic.otf") format("opentype");
+  font-weight: 700;
+  font-style: italic;
+  font-display: swap;
+}

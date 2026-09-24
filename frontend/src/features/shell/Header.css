@@ -1,0 +1,171 @@
+.app-header {
+  background: var(--white);
+}
+
+.brand-bar {
+  background: var(--red);
+  color: var(--white);
+  text-align: center;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  font-size: 22px;
+  line-height: 1.2;
+  padding: 12px 16px;
+}
+
+.nav-bar {
+  display: flex;
+  align-items: stretch;
+  min-height: 58px;
+  background: var(--white);
+  border-bottom: 1px solid var(--line);
+}
+
+.league-chip {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 0 18px;
+  background: var(--black);
+  color: var(--white);
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.trophy {
+  width: 22px;
+  height: 22px;
+  flex: 0 0 auto;
+}
+
+.league-name,
+.league-select {
+  max-width: 240px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.league-select {
+  background: transparent;
+  color: var(--white);
+  border: 0;
+  font: inherit;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.nav-tabs {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 0 20px;
+  flex: 1;
+}
+
+.nav-tab {
+  display: flex;
+  align-items: center;
+  line-height: 0;
+}
+
+.nav-tab img {
+  height: clamp(30px, 5vw, 42px);
+  width: auto;
+}
+
+@media (max-width: 760px) {
+  .brand-bar {
+    font-size: 18px;
+    letter-spacing: 0.04em;
+  }
+
+  .league-chip {
+    padding: 0 10px;
+    letter-spacing: 0.04em;
+  }
+
+  .nav-tabs {
+    gap: 4px;
+    padding: 0 8px;
+  }
+
+  .logout-btn {
+    padding: 0 10px;
+  }
+
+  .profile-btn {
+    padding: 0 12px;
+  }
+}
+
+.nav-actions {
+  display: flex;
+  align-items: stretch;
+  margin-left: auto;
+}
+
+.logout-btn,
+.profile-btn {
+  border: 0;
+  background: transparent;
+  cursor: pointer;
+  font-weight: 700;
+  font-size: 16px;
+  white-space: nowrap;
+}
+
+.logout-btn {
+  color: var(--red);
+  padding: 0 22px;
+}
+
+.logout-btn:disabled {
+  opacity: 0.6;
+  cursor: default;
+}
+
+.profile-wrap {
+  position: relative;
+  display: flex;
+}
+
+.profile-btn {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: var(--black);
+  color: var(--white);
+  padding: 0 22px;
+}
+
+.person {
+  width: 18px;
+  height: 18px;
+}
+
+.profile-panel {
+  position: absolute;
+  top: calc(100% + 8px);
+  right: 8px;
+  z-index: 3;
+  min-width: 220px;
+  padding: 12px 14px;
+  background: var(--white);
+  color: var(--black);
+  border-radius: 8px;
+  box-shadow: 0 8px 24px rgb(0 0 0 / 16%);
+  text-transform: none;
+  letter-spacing: 0;
+  font-weight: 500;
+}
+
+.profile-panel p {
+  margin: 0 0 6px;
+}
+
+.profile-name {
+  font-weight: 700;
+}

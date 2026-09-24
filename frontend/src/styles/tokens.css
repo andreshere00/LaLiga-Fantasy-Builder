@@ -1,0 +1,17 @@
+:root {
+  --black: #000000;
+  --cyan: #36fff2;
+  --gray: #e5e5e5;
+  --red: #ff4b44;
+  --red-soft: #ffc2bf;
+  --white: #ffffff;
+  --ink: #35353d;
+  --tile: #2b2f36;
+  --line: #d7d7d7;
+  color: var(--black);
+  background: var(--gray);
+  font-family: "At Aero", sans-serif;
+  font-synthesis: none;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+}

@@ -1,5 +1,8 @@
 # Developing authenticated endpoints
 
+Where each service sits: [Architecture](../architecture.md). This page is how
+to add a route without crossing the trust boundary.
+
 - Application features belong in `backend/api` — follow
   [Adding endpoints](../api/adding-endpoints.md).
 - Login, session, pairing, vault, and credentials belong in `backend/auth`.

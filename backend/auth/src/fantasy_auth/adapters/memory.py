@@ -85,6 +85,22 @@ class MemorySessionStore:
         """
         self._sessions.pop(session_id, None)
 
+    async def find_by_laliga_state(self, state: str) -> SessionRecord | None:
+        """Load the session waiting for this LaLiga B2C state.
+
+        Args:
+            state: ``state`` query value from the native callback.
+
+        Returns:
+            Matching session, or None.
+        """
+        if not state:
+            return None
+        for session in self._sessions.values():
+            if session.laliga_b2c_state == state:
+                return session
+        return None
+
 
 class MemoryPairingStore:
     """Dict-backed pairing store with atomic consume."""
