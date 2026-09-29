@@ -19,13 +19,25 @@ textarea {
 
 button:focus-visible,
 select:focus-visible,
-a:focus-visible {
+a:focus-visible,
+input:focus-visible {
   outline: 2px solid var(--cyan);
   outline-offset: 2px;
 }
 
+:focus:not(:focus-visible) {
+  outline: none;
+}
+
+.app-shell {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
 .app-main {
-  min-height: calc(100vh - 112px);
+  flex: 1 1 auto;
+  min-height: 0;
 }
 
 .notice {

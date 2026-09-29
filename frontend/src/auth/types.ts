@@ -21,6 +21,7 @@ export type LaligaConnection = {
   needs_reauth: boolean;
   manager_id: string | null;
   manager_name: string | null;
+  avatar: string | null;
 };
 
 export type GateStatus = "signed-out" | "unlinked" | "needs-reauth" | "ready";

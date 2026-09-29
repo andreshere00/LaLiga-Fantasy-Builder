@@ -7,8 +7,10 @@ import { GatePanel } from "../features/gates/GatePanel";
 import { LeagueProvider } from "../features/lineup/LeagueProvider";
 import { LineupPage } from "../features/lineup/LineupPage";
 import { MarketPage } from "../features/market/MarketPage";
+import { Footer } from "../features/shell/Footer";
 import { Header } from "../features/shell/Header";
 import { AppErrorBoundary } from "./AppErrorBoundary";
+import { ContactPage } from "./ContactPage";
 import { NotFoundPage } from "./NotFoundPage";
 
 const queryClient = new QueryClient({
@@ -35,14 +37,18 @@ export function App() {
         <BrowserRouter>
           <AppErrorBoundary>
             <LeagueProvider>
-              <Header />
-              <main className="app-main">
-                <Routes>
-                  <Route path="/" element={<LineupRoute />} />
-                  <Route path="/market" element={<MarketPage />} />
-                  <Route path="*" element={<NotFoundPage />} />
-                </Routes>
-              </main>
+              <div className="app-shell">
+                <Header />
+                <main className="app-main">
+                  <Routes>
+                    <Route path="/" element={<LineupRoute />} />
+                    <Route path="/market" element={<MarketPage />} />
+                    <Route path="/contact" element={<ContactPage />} />
+                    <Route path="*" element={<NotFoundPage />} />
+                  </Routes>
+                </main>
+                <Footer />
+              </div>
             </LeagueProvider>
           </AppErrorBoundary>
         </BrowserRouter>
