@@ -127,6 +127,23 @@ function displayName(
   return row?.name ?? managerName;
 }
 
+type StoredDraft = {
+  draft: LineupDraft;
+  dirty: boolean;
+};
+
+type SaveLineupVariables = {
+  leagueKey: string;
+  teamId: string;
+  week: number;
+  body: Record<string, unknown>;
+};
+
+/** Identity of the lineup a draft belongs to. */
+export function lineupSourceKey(leagueKey: string, teamId: string, week: number): string {
+  return `${leagueKey}:${teamId}:${week}`;
+}
+
 export function useLineupBoard(): LineupBoard {
   const queryClient = useQueryClient();
   const { accessToken, managerName, managerAvatar, markNeedsReauth } = useAuth();
@@ -135,17 +152,16 @@ export function useLineupBoard(): LineupBoard {
   const callerId = selected ? callerTeamId(selected) : null;
   const [pickedTeamId, setPickedTeamId] = useState<string | null>(null);
   const [requestedWeek, setRequestedWeek] = useState<number | null>(null);
-  const [draft, setDraft] = useState<LineupDraft | null>(null);
-  const [draftDirty, setDraftDirty] = useState(false);
-  const draftDirtyRef = useRef(false);
-  const draftSourceRef = useRef("");
-  draftDirtyRef.current = draftDirty;
+  const draftsRef = useRef(new Map<string, StoredDraft>());
+  const activeKeyRef = useRef("");
+  const [activeDraft, setActiveDraft] = useState<StoredDraft | null>(null);
   const [pitchSelection, setPitchSelection] = useState<PitchSelection | null>(null);
   const [pastFixtureNoticeOpen, setPastFixtureNoticeOpen] = useState(false);
   const [squadSearch, setSquadSearch] = useState("");
   const [squadPage, setSquadPage] = useState(0);
   const previousLeagueKeyRef = useRef(leagueKey);
-  if (previousLeagueKeyRef.current !== leagueKey) {
+  const leagueChanged = previousLeagueKeyRef.current !== leagueKey;
+  if (leagueChanged) {
     previousLeagueKeyRef.current = leagueKey;
     setPickedTeamId(null);
     setRequestedWeek(null);
@@ -186,7 +202,10 @@ export function useLineupBoard(): LineupBoard {
   const current = asCurrentWeek(currentQuery.data);
   const upper = maxWeek(current);
   const nextWeek = upper;
-  const week = clampWeek(requestedWeek ?? defaultWeek(current), upper);
+  const week = clampWeek(
+    leagueChanged ? defaultWeek(current) : (requestedWeek ?? defaultWeek(current)),
+    upper,
+  );
   const weekReady = currentQuery.isSuccess || currentQuery.isError;
   const lineupUsesCurrent = week === nextWeek;
 
@@ -197,7 +216,18 @@ export function useLineupBoard(): LineupBoard {
     queryFn: ({ signal }) => getJson(paths.weekStanding(leagueKey, week), token, { signal }),
   });
 
-  const activeTeamId = pickedTeamId ?? callerId;
+  const activeTeamId = leagueChanged ? callerId : (pickedTeamId ?? callerId);
+  const activeKey =
+    leagueKey.length > 0 && activeTeamId != null
+      ? lineupSourceKey(leagueKey, activeTeamId, week)
+      : "";
+  if (activeKeyRef.current !== activeKey) {
+    activeKeyRef.current = activeKey;
+    setActiveDraft(draftsRef.current.get(activeKey) ?? null);
+    setPitchSelection(null);
+    setPastFixtureNoticeOpen(false);
+    setSquadSearch("");
+  }
 
   const teamQuery = useQuery({
     queryKey: ["team", leagueKey, activeTeamId],
@@ -279,28 +309,24 @@ export function useLineupBoard(): LineupBoard {
   const captainId =
     lineupPayload == null ? null : captainFromLineup(lineupPayload);
   useEffect(() => {
-    if (lineupPending || activeTeamId == null || lineupQuery.data == null) {
-      return;
-    }
-    const groups = groupsFromLineup(lineupQuery.data, catalogByMasterId, scoreLookup);
-    const tactical = tacticalOf(lineupQuery.data);
-    const sourceKey = `${activeTeamId}:${week}`;
-    if (sourceKey !== draftSourceRef.current) {
-      draftSourceRef.current = sourceKey;
-      setDraft(draftFromGroups(groups, tactical));
-      setDraftDirty(false);
-      setPitchSelection(null);
-      setSquadSearch("");
-      return;
-    }
-    if (!draftDirtyRef.current) {
-      setDraft(draftFromGroups(groups, tactical));
-    }
+    if (lineupPending || activeTeamId == null || lineupQuery.data == null) return;
+    if (leagueKey.length === 0) return;
+    const sourceKey = lineupSourceKey(leagueKey, activeTeamId, week);
+    if (draftsRef.current.get(sourceKey)?.dirty) return;
+    const nextDraft = draftFromGroups(
+      groupsFromLineup(lineupQuery.data, catalogByMasterId, scoreLookup),
+      tacticalOf(lineupQuery.data),
+    );
+    if (!nextDraft) return;
+    const stored: StoredDraft = { draft: nextDraft, dirty: false };
+    draftsRef.current.set(sourceKey, stored);
+    if (activeKeyRef.current === sourceKey) setActiveDraft(stored);
   }, [
     lineupPending,
     lineupQuery.data,
     activeTeamId,
     week,
+    leagueKey,
     catalogByMasterId,
     scoreLookup,
   ]);
@@ -359,6 +385,8 @@ export function useLineupBoard(): LineupBoard {
   const row = ranking.find((item) => item.teamId === activeTeamId);
   const isCaller = activeTeamId != null && activeTeamId === callerId;
   const editable = isCaller && lineupUsesCurrent;
+  const draft = activeDraft?.draft ?? null;
+  const draftDirty = activeDraft?.dirty ?? false;
 
   const squad = squadCards(
     playersOf(teamQuery.data),
@@ -405,19 +433,23 @@ export function useLineupBoard(): LineupBoard {
   );
 
   const saveMutation = useMutation({
-    mutationFn: async () => {
-      if (!draft || !activeTeamId || !isDraftComplete(draft)) {
-        throw new ApiError(400, "incomplete_lineup");
-      }
-      return putJson(
-        paths.lineup(activeTeamId),
-        token,
-        lineupWriteBody(draft, captainId),
+    mutationFn: async (variables: SaveLineupVariables) =>
+      putJson(paths.lineup(variables.teamId), token, variables.body),
+    onSuccess: async (_data, variables) => {
+      await queryClient.invalidateQueries({
+        queryKey: ["lineup", variables.leagueKey, variables.teamId],
+      });
+      const sourceKey = lineupSourceKey(
+        variables.leagueKey,
+        variables.teamId,
+        variables.week,
       );
-    },
-    onSuccess: async () => {
-      setDraftDirty(false);
-      await queryClient.invalidateQueries({ queryKey: ["lineup", activeTeamId] });
+      const current = draftsRef.current.get(sourceKey);
+      if (current) {
+        const clean: StoredDraft = { draft: current.draft, dirty: false };
+        draftsRef.current.set(sourceKey, clean);
+        if (activeKeyRef.current === sourceKey) setActiveDraft(clean);
+      }
       setPitchSelection(null);
       setSquadSearch("");
     },
@@ -521,9 +553,15 @@ export function useLineupBoard(): LineupBoard {
     formationCode,
     formationOptions,
     setFormationCode: (code: string) => {
-      if (!draft || !editable) return;
-      setDraftDirty(true);
-      setDraft(applyFormationCode(draft, squad, code));
+      if (!draft || !editable || activeTeamId == null || leagueKey.length === 0) return;
+      const sourceKey = lineupSourceKey(leagueKey, activeTeamId, week);
+      if (activeKeyRef.current !== sourceKey) return;
+      const stored: StoredDraft = {
+        draft: applyFormationCode(draft, squad, code),
+        dirty: true,
+      };
+      draftsRef.current.set(sourceKey, stored);
+      setActiveDraft(stored);
     },
     pitchSelection,
     selectPitchPlayer: (role, playerId) => {
@@ -544,11 +582,29 @@ export function useLineupBoard(): LineupBoard {
     },
     pickSquadPlayer: (playerId: string) => {
       if (!draft || !editable || !pitchSelection) return;
-      setDraftDirty(true);
-      setDraft(applyPitchPick(draft, pitchSelection, playerId, squad));
+      if (activeTeamId == null || leagueKey.length === 0) return;
+      const sourceKey = lineupSourceKey(leagueKey, activeTeamId, week);
+      if (activeKeyRef.current !== sourceKey) return;
+      const stored: StoredDraft = {
+        draft: applyPitchPick(draft, pitchSelection, playerId, squad),
+        dirty: true,
+      };
+      draftsRef.current.set(sourceKey, stored);
+      setActiveDraft(stored);
       setPitchSelection(null);
     },
-    saveLineup: () => saveMutation.mutate(),
+    saveLineup: () => {
+      if (!draft || !draftDirty || !activeTeamId || leagueKey.length === 0) return;
+      if (!isDraftComplete(draft)) return;
+      const sourceKey = lineupSourceKey(leagueKey, activeTeamId, week);
+      if (activeKeyRef.current !== sourceKey) return;
+      saveMutation.mutate({
+        leagueKey,
+        teamId: activeTeamId,
+        week,
+        body: lineupWriteBody(draft, captainId),
+      });
+    },
     saveDisabled:
       !editable ||
       !draft ||

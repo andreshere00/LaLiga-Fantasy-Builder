@@ -81,6 +81,36 @@ describe("lineupDraft", () => {
     expect(isDraftComplete(next)).toBe(false);
   });
 
+  it("applyFormationCode_padded_line_with_bench_fills_holes", () => {
+    const withBench: SquadCard[] = [
+      ...squad,
+      { id: "d3", name: "D3", captain: false, positionId: 2, ...media },
+    ];
+    const draft = draftFromGroups(groups442(), [4, 4, 2])!;
+    const next = applyFormationCode(draft, withBench, "3,4,3");
+    expect(next.defender).toEqual(["d1", "d2", "d3"]);
+  });
+
+  it("applyFormationCode_hole_in_the_middle_fills_from_bench", () => {
+    const withBench: SquadCard[] = [
+      ...squad,
+      { id: "d3", name: "D3", captain: false, positionId: 2, ...media },
+    ];
+    const draft = draftFromGroups(groups442(), [4, 4, 2])!;
+    const next = applyFormationCode(
+      { ...draft, defender: ["d1", "", "d2", ""] },
+      withBench,
+      "3,4,3",
+    );
+    expect(next.defender).toEqual(["d1", "d2", "d3"]);
+  });
+
+  it("applyFormationCode_empty_goalkeeper_fills_from_squad", () => {
+    const draft = draftFromGroups(groups442(), [4, 4, 2])!;
+    const next = applyFormationCode({ ...draft, goalkeeper: [""] }, squad, "4,4,2");
+    expect(next.goalkeeper).toEqual(["gk"]);
+  });
+
   it("applyPitchPick_swaps_same_line_or_replaces_from_bench", () => {
     const draft = draftFromGroups(groups442(), [4, 4, 2])!;
     const swapped = applyPitchPick(

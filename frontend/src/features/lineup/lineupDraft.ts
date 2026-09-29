@@ -275,7 +275,7 @@ function fillLine(
   role: LineupRole,
   used: Set<string>,
 ): string[] {
-  const next = kept.slice(0, count);
+  const next = kept.filter(isFilledSlotId).slice(0, count);
   for (const id of next) used.add(id);
   while (next.length < count) {
     const pool = squadPoolForRole(squad, role, used);
