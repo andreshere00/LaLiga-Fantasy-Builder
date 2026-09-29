@@ -485,13 +485,30 @@
 .value-box {
   display: flex;
   align-items: center;
-  justify-content: center;
+  justify-content: space-between;
+  gap: 8px;
   min-width: var(--lineup-value-min);
   padding: 0 clamp(12px, 1.2vw, 16px);
-  text-align: center;
+  text-align: left;
   font-weight: 700;
   font-size: var(--lineup-font-large);
   font-variant-numeric: tabular-nums;
+}
+
+.value-box-text {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.value-box-icon {
+  width: var(--lineup-control-icon);
+  height: var(--lineup-control-icon);
+  flex: 0 0 auto;
+  object-fit: contain;
+  display: block;
 }
 
 .side-panel-modal > .column-title {
@@ -797,6 +814,11 @@
 .player-score-badge.is-green {
   background: var(--score-green);
   color: var(--white);
+}
+
+.player-score-badge.is-blue {
+  background: var(--score-blue);
+  color: var(--black);
 }
 
 .player-team-badge {
@@ -1147,29 +1169,47 @@
     --lineup-recommend-width: min(100%, clamp(160px, 40vw, 260px));
   }
 
+  .board-controls-bar,
+  .board-controls-bar.side-panel {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .board-controls {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: var(--lineup-gap-vertical, calc(100vw / 40));
+    grid-column: 1 / -1;
+    width: 100%;
+  }
+
   .board-controls .controls-zone {
     flex-wrap: wrap;
+    justify-content: center;
     row-gap: var(--lineup-gap-vertical, calc(100vw / 40));
+    width: auto;
+    max-width: 100%;
   }
 
   .board-controls .controls-zone-start,
   .board-controls .controls-zone-center,
   .board-controls .controls-zone-end {
-    grid-column: 1;
-    justify-self: stretch;
-    width: 100%;
+    grid-column: auto;
+    justify-self: center;
   }
 
   .board-controls .controls-zone-end .control-block {
-    align-items: flex-start;
+    width: auto;
+    max-width: 100%;
+    align-items: center;
   }
 
   .recommend {
-    width: 100%;
+    width: min(100%, var(--lineup-recommend-width));
   }
 
   .team-value {
-    align-items: flex-start;
+    align-items: center;
   }
 
   .column-players,
@@ -1178,9 +1218,32 @@
     width: 100%;
   }
 
-  .side-panel-modal {
+  .players-panel.side-panel-modal {
     height: auto;
     min-height: min(420px, 55vh);
-    max-height: min(420px, 55vh);
+    max-height: min(70vh, 560px);
+  }
+
+  .squad-panel.side-panel-modal {
+    height: auto;
+    min-height: 0;
+    max-height: none;
+  }
+
+  .squad-panel .squad-panel-scroll {
+    flex: 0 0 auto;
+    height: auto;
+    overflow: visible;
+  }
+
+  .squad-grid {
+    grid-template-rows: repeat(4, auto);
+    height: auto;
+  }
+
+  .squad-grid .squad-tile {
+    width: 100%;
+    height: auto;
+    max-height: none;
   }
 }

@@ -1,7 +1,7 @@
 .app-header {
   --header-font-size: clamp(13px, 1vw, 16px);
   --header-nav-min-height: clamp(36px, 4.6vw, 46px);
-  --header-brand-font-size: clamp(20px, 2.35vw, 28px);
+  --header-brand-font-size: clamp(18px, 2.1vw, 24px);
   background: var(--white);
 }
 
@@ -124,16 +124,17 @@
 
 .nav-tabs {
   display: flex;
-  align-items: center;
-  gap: 6px;
-  padding: 0 clamp(12px, 1.6vw, 16px);
+  align-items: stretch;
+  gap: 0;
+  padding: 0;
   flex: 1;
 }
 
 .nav-tab {
   display: inline-flex;
   align-items: stretch;
-  min-height: clamp(24px, 4vw, 34px);
+  align-self: stretch;
+  min-height: 100%;
   background: var(--white);
   color: var(--ink);
   text-decoration: none;
@@ -180,7 +181,7 @@
 
 @media (max-width: 760px) {
   .brand-bar {
-    font-size: clamp(17px, 4.8vw, 22px);
+    font-size: clamp(16px, 4.4vw, 20px);
     letter-spacing: 0.04em;
   }
 
@@ -190,8 +191,8 @@
   }
 
   .nav-tabs {
-    gap: 4px;
-    padding: 0 8px;
+    gap: 0;
+    padding: 0;
   }
 
   .logout-btn {

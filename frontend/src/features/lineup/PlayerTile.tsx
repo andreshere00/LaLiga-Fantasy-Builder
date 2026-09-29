@@ -10,13 +10,14 @@ type PlayerTileProps = {
   photoUrl?: string | null;
   teamBadgeUrl?: string | null;
   fixturePoints?: number | null;
+  isMvp?: boolean;
   selected?: boolean;
   interactive?: boolean;
   onSelect?: () => void;
 };
 
-function ScoreBadge({ points }: { points: number }) {
-  const tone = scoreTone(points);
+function ScoreBadge({ points, isMvp = false }: { points: number; isMvp?: boolean }) {
+  const tone = scoreTone(points, isMvp);
   return (
     <span className={`player-score-badge is-${tone}`} aria-hidden="true">
       <span className="player-score-badge-value">{points}</span>
@@ -57,6 +58,7 @@ export function PlayerTile({
   photoUrl = null,
   teamBadgeUrl = null,
   fixturePoints = null,
+  isMvp = false,
   selected = false,
   interactive = false,
   onSelect,
@@ -73,7 +75,11 @@ export function PlayerTile({
     .join(" ");
 
   const scoreLabel =
-    fixturePoints == null ? "" : `, ${fixturePoints} points`;
+    fixturePoints == null
+      ? ""
+      : isMvp
+        ? `, ${fixturePoints} points, MVP`
+        : `, ${fixturePoints} points`;
   const label = empty
     ? NOT_SELECTED_PLAYER_LABEL
     : captain
@@ -98,7 +104,9 @@ export function PlayerTile({
     <>
       <div className="player-card-spacer" aria-hidden="true" />
       <PlayerPhoto url={photoUrl} />
-      {fixturePoints != null ? <ScoreBadge points={fixturePoints} /> : null}
+      {fixturePoints != null ? (
+        <ScoreBadge points={fixturePoints} isMvp={isMvp} />
+      ) : null}
       <TeamBadge url={teamBadgeUrl} />
       <div className="player-card-gap" aria-hidden="true" />
       <span className="player-name">

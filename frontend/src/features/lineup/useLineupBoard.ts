@@ -1,5 +1,11 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { keepPreviousData, useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import {
+  keepPreviousData,
+  useMutation,
+  useQueries,
+  useQuery,
+  useQueryClient,
+} from "@tanstack/react-query";
 
 import { getJson, paths, putJson } from "../../api/client";
 import { ApiError, NeedsReauthError } from "../../api/errors";
@@ -13,7 +19,6 @@ import {
   clampWeek,
   defaultWeek,
   enrichSquadMapFromLineup,
-  weekPointsByMasterId,
   formatTeamValue,
   formationLabel,
   freeFormationCodesFromLineup,
@@ -23,9 +28,13 @@ import {
   mapRanking,
   maxWeek,
   playersOf,
+  teamIdOf,
+  withCallerAvatar,
   selectedTeamValue,
   squadCards,
   tacticalOf,
+  weekMvpMasterIds,
+  weekPointsByMasterId,
   weekPointsForTeam,
   type LineupGroup,
   type RankingEntry,
@@ -197,6 +206,26 @@ export function useLineupBoard(): LineupBoard {
       getJson(paths.team(leagueKey, activeTeamId ?? ""), token, { signal }),
   });
 
+  const standingTeamIds = useMemo(
+    () => [
+      ...new Set(
+        asStanding(standingQuery.data)
+          .map((row) => teamIdOf(row))
+          .filter((id) => id.length > 0),
+      ),
+    ],
+    [standingQuery.data],
+  );
+  const peerTeamQueries = useQueries({
+    queries: standingTeamIds.map((teamId) => ({
+      queryKey: ["team", leagueKey, teamId],
+      enabled: enabled && teamId.length > 0,
+      staleTime: 5 * 60 * 1000,
+      queryFn: ({ signal }: { signal: AbortSignal }) =>
+        getJson(paths.team(leagueKey, teamId), token, { signal }),
+    })),
+  });
+
   const weekStatsQuery = useQuery({
     queryKey: ["calendar", "stats", week],
     enabled: accessToken != null && weekReady && !lineupUsesCurrent,
@@ -228,12 +257,16 @@ export function useLineupBoard(): LineupBoard {
     () => weekPointsByMasterId(weekStatsQuery.data),
     [weekStatsQuery.data],
   );
+  const mvpByMasterId = useMemo(
+    () => weekMvpMasterIds(weekStatsQuery.data),
+    [weekStatsQuery.data],
+  );
   const scoreLookup = useMemo(
     () =>
       lineupUsesCurrent
         ? undefined
-        : { week, pointsByMasterId },
-    [lineupUsesCurrent, week, pointsByMasterId],
+        : { week, pointsByMasterId, mvpByMasterId },
+    [lineupUsesCurrent, week, pointsByMasterId, mvpByMasterId],
   );
 
   const lineupPayload =
@@ -279,6 +312,7 @@ export function useLineupBoard(): LineupBoard {
     teamsQuery.error,
     weekQuery.error,
     teamQuery.error,
+    ...peerTeamQueries.map((query) => query.error),
     lineupQuery.error,
     weekStatsQuery.error,
   ].some((error) => error instanceof NeedsReauthError);
@@ -289,15 +323,38 @@ export function useLineupBoard(): LineupBoard {
 
   const avatarByTeamId = useMemo(() => {
     const map = avatarsByTeamId(teamsQuery.data);
+    for (const query of peerTeamQueries) {
+      for (const [key, url] of avatarsByTeamId(query.data)) {
+        if (!map.has(key)) map.set(key, url);
+      }
+    }
     const fallback =
       managerAvatar?.trim() ||
       selected?.team?.manager?.avatar?.trim() ||
       selected?.team?.manager?.profileImage?.trim() ||
       null;
-    if (callerId && fallback && !map.has(callerId)) map.set(callerId, fallback);
+    if (fallback && callerId) map.set(callerId, fallback);
     return map;
-  }, [callerId, managerAvatar, selected, teamsQuery.data]);
-  const ranking = mapRanking(asStanding(standingQuery.data), avatarByTeamId);
+  }, [
+    callerId,
+    managerAvatar,
+    managerName,
+    peerTeamQueries,
+    selected,
+    teamsQuery.data,
+  ]);
+  const ranking = withCallerAvatar(
+    mapRanking(asStanding(standingQuery.data), avatarByTeamId),
+    {
+      teamId: callerId,
+      name: managerName,
+      avatar:
+        managerAvatar?.trim() ||
+        selected?.team?.manager?.avatar?.trim() ||
+        selected?.team?.manager?.profileImage?.trim() ||
+        null,
+    },
+  );
   const weekRows = asStanding(weekQuery.data);
   const row = ranking.find((item) => item.teamId === activeTeamId);
   const isCaller = activeTeamId != null && activeTeamId === callerId;

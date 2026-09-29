@@ -21,13 +21,16 @@ import {
   selectedTeamValue,
   catalogMediaByMasterId,
   enrichSquadMapFromLineup,
+  fixtureMvpFromSlot,
   fixturePointsFromSlot,
   mediaFromLineupSlot,
   mediaFromPlayerMaster,
   scoreTone,
   squadCards,
+  weekMvpMasterIds,
   weekPointsByMasterId,
   weekPointsForTeam,
+  withCallerAvatar,
   type StandingRow,
 } from "./mappers";
 
@@ -123,6 +126,7 @@ describe("squadCards", () => {
         photoUrl: null,
         teamBadgeUrl: null,
         fixturePoints: null,
+        isMvp: false,
       },
       {
         id: "pt-2",
@@ -132,6 +136,7 @@ describe("squadCards", () => {
         photoUrl: null,
         teamBadgeUrl: null,
         fixturePoints: null,
+        isMvp: false,
       },
     ]);
   });
@@ -223,11 +228,11 @@ describe("mediaFromLineupSlot", () => {
 });
 
 describe("fixture score", () => {
-  it("scoreTone_uses_laliga_traffic_light_bands", () => {
-    expect(scoreTone(4)).toBe("red");
-    expect(scoreTone(5)).toBe("yellow");
-    expect(scoreTone(9)).toBe("yellow");
-    expect(scoreTone(10)).toBe("green");
+  it("scoreTone_uses_sign_scale_and_mvp_blue", () => {
+    expect(scoreTone(-1)).toBe("red");
+    expect(scoreTone(0)).toBe("yellow");
+    expect(scoreTone(4)).toBe("green");
+    expect(scoreTone(10, true)).toBe("blue");
   });
 
   it("fixturePointsFromSlot_reads_week_points_on_slot", () => {
@@ -269,6 +274,42 @@ describe("fixture score", () => {
         { week: 4, pointsByMasterId },
       ),
     ).toBe(11);
+  });
+
+  it("weekMvpMasterIds_indexes_calendar_mvp_flag", () => {
+    const set = weekMvpMasterIds([
+      {
+        local: { players: [{ id: "11", weekPoints: 12, isMvp: true }] },
+        visitor: { players: [{ id: 22, weekPoints: 8, mvp: false }] },
+      },
+    ]);
+    expect(set.has("11")).toBe(true);
+    expect(set.has("22")).toBe(false);
+  });
+
+  it("fixtureMvpFromSlot_reads_last_stats_flag_for_week", () => {
+    expect(
+      fixtureMvpFromSlot(
+        {
+          playerMaster: {
+            lastStats: [
+              { weekNumber: 3, totalPoints: 2 },
+              { weekNumber: 7, totalPoints: 8, isMvp: true },
+            ],
+          },
+        },
+        { week: 7 },
+      ),
+    ).toBe(true);
+  });
+
+  it("fixtureMvpFromSlot_falls_back_to_calendar_master_id", () => {
+    expect(
+      fixtureMvpFromSlot(
+        { playerMaster: { id: "77", nickname: "Former" } },
+        { week: 4, mvpByMasterId: new Set(["77"]) },
+      ),
+    ).toBe(true);
   });
 });
 
@@ -353,6 +394,51 @@ describe("mapper failures", () => {
     ]);
     expect(map.get("7")).toBe("https://cdn.example/a.png");
     expect(map.has("8")).toBe(false);
+  });
+
+  it("avatarsByTeamId_player_manager_and_name_fill_lookup", () => {
+    const map = avatarsByTeamId({
+      teams: [
+        {
+          id: "9",
+          players: [
+            { manager: { managerName: "Kylian", avatar: "//cdn.example/k.png" } },
+          ],
+        },
+      ],
+    });
+    expect(map.get("9")).toBe("https://cdn.example/k.png");
+    expect(map.get("name:kylian")).toBe("https://cdn.example/k.png");
+  });
+
+  it("mapRanking_name_lookup_fills_missing_team_id_avatar", () => {
+    const ranking = mapRanking(
+      [{ position: 1, team: { id: "99", manager: { managerName: "Kylian" } } }],
+      new Map([["name:kylian", "https://cdn.example/k.png"]]),
+    );
+    expect(ranking[0]?.avatarUrl).toBe("https://cdn.example/k.png");
+  });
+
+  it("mapRanking_padded_team_id_uses_lookup", () => {
+    const ranking = mapRanking(
+      [{ position: 1, team: { id: "007", manager: { managerName: "A" } } }],
+      new Map([["7", "https://cdn.example/pad.png"]]),
+    );
+    expect(ranking[0]?.avatarUrl).toBe("https://cdn.example/pad.png");
+  });
+
+  it("withCallerAvatar_name_match_fills_missing_photo", () => {
+    const ranking = withCallerAvatar(
+      mapRanking([
+        { position: 1, team: { id: "99", manager: { managerName: "Kylian Mpalmé" } } },
+      ]),
+      {
+        teamId: "1",
+        name: "Kylian Mpalme",
+        avatar: "https://cdn.example/me.png",
+      },
+    );
+    expect(ranking[0]?.avatarUrl).toBe("https://cdn.example/me.png");
   });
 });
 

@@ -4,6 +4,7 @@ import { pointsLabel, possessiveName, scoreWeekLabel } from "../../api/mappers";
 import { PersonIcon, SearchIcon, WarningIcon } from "../shell/icons";
 import { ProfilePhoto } from "../shell/ProfilePhoto";
 import footballIconUrl from "../../assets/boxicons_football-filled.svg";
+import moneyBagIconUrl from "../../assets/money_bag.png";
 import saveCartridgeIconUrl from "../../assets/save_cartridge.svg";
 import fieldUrl from "../../assets/football_field.svg";
 import { pitchRowGapFraction, pitchRows } from "./pitchLayout";
@@ -171,7 +172,15 @@ export function LineupPage() {
             <div className="controls-zone controls-zone-end">
             <div className="control-block team-value">
               <span className="field-label">Team value</span>
-              <div className="value-box">{board.teamValueLabel}</div>
+              <div className="value-box">
+                <span className="value-box-text">{board.teamValueLabel}</span>
+                <img
+                  className="value-box-icon"
+                  src={moneyBagIconUrl}
+                  alt=""
+                  aria-hidden="true"
+                />
+              </div>
             </div>
             </div>
           </div>
@@ -255,6 +264,7 @@ export function LineupPage() {
                                 fixturePoints={
                                   board.isPastFixture ? player.fixturePoints : null
                                 }
+                                isMvp={board.isPastFixture && player.isMvp === true}
                                 interactive={
                                   board.editable || (board.isPastFixture && !empty)
                                 }
@@ -335,6 +345,7 @@ export function LineupPage() {
                         fixturePoints={
                           board.isPastFixture ? player.fixturePoints : null
                         }
+                        isMvp={board.isPastFixture && player.isMvp === true}
                         interactive={picking}
                         onSelect={
                           picking ? () => board.pickSquadPlayer(player.id) : undefined

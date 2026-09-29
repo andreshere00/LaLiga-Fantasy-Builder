@@ -77,11 +77,12 @@
     --lineup-col-side: min(22.5vw, 100%);
     --lineup-col-sidebar: var(--lineup-col-side);
     --lineup-col-squad: var(--lineup-col-side);
-    --lineup-col-pitch: min(40vw, 100%);
+    --lineup-col-pitch: min(90vw, 100%);
     --lineup-board-col-gap: min(var(--lineup-gap-1-20), clamp(12px, 3vw, 24px));
     --lineup-tile-w: min(calc(var(--lineup-col-pitch) / 5), 22vw);
     --lineup-tile-h: calc(var(--lineup-tile-w) * 4 / 3);
-    --lineup-squad-tile-w: calc(var(--lineup-tile-w) * 0.8);
+    --lineup-squad-tile-w: clamp(104px, 28vw, 148px);
     --lineup-squad-tile-h: calc(var(--lineup-squad-tile-w) * 4 / 3);
+    --lineup-value-min: clamp(148px, 42vw, 200px);
   }
 }

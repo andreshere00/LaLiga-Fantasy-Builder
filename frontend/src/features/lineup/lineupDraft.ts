@@ -141,6 +141,7 @@ function pitchSlotFromLineupAndSquad(
       photoUrl: card.photoUrl ?? slot.photoUrl ?? null,
       teamBadgeUrl: slot.teamBadgeUrl ?? card.teamBadgeUrl ?? null,
       fixturePoints: slot.fixturePoints ?? card.fixturePoints ?? null,
+      isMvp: slot.isMvp === true || card.isMvp === true,
     };
   }
   if (!slot.name?.trim()) {
@@ -152,6 +153,7 @@ function pitchSlotFromLineupAndSquad(
     photoUrl: slot.photoUrl ?? null,
     teamBadgeUrl: slot.teamBadgeUrl ?? null,
     fixturePoints: slot.fixturePoints ?? null,
+    isMvp: slot.isMvp === true,
   };
 }
 
