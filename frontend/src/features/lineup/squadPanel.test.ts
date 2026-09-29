@@ -2,12 +2,7 @@
 
 import { describe, expect, it } from "vitest";
 
-import {
-  SQUAD_DISPLAY_CAP,
-  SQUAD_PAGE_SIZE,
-  squadCountLabel,
-  squadPageSlice,
-} from "./squadPanel";
+import { SQUAD_PAGE_SIZE, squadCountLabel, squadPageSlice } from "./squadPanel";
 
 // ---- Happy path ---- //
 
@@ -17,11 +12,11 @@ describe("squadPageSlice", () => {
     expect(squadPageSlice(items, 0).pageItems).toHaveLength(SQUAD_PAGE_SIZE);
   });
 
-  it("squadPageSlice_caps_at_twenty_four_players", () => {
+  it("squadPageSlice_pages_every_player", () => {
     const items = Array.from({ length: 40 }, (_, index) => index);
-    const { pageCount, pageItems } = squadPageSlice(items, 2);
-    expect(pageCount).toBe(SQUAD_DISPLAY_CAP / SQUAD_PAGE_SIZE);
-    expect(pageItems).toHaveLength(SQUAD_DISPLAY_CAP - 2 * SQUAD_PAGE_SIZE);
+    const page = squadPageSlice(items, 3);
+    expect(page.pageCount).toBe(5);
+    expect(page.pageItems).toEqual([24, 25, 26, 27, 28, 29, 30, 31]);
   });
 
   it("squadPageSlice_clamps_page_index", () => {
@@ -31,5 +26,6 @@ describe("squadPageSlice", () => {
   it("squadCountLabel_count_against_cap", () => {
     expect(squadCountLabel(18)).toBe("18/24 players");
     expect(squadCountLabel(0, 24)).toBe("0/24 players");
+    expect(squadCountLabel(26)).toBe("26 players");
   });
 });

@@ -421,6 +421,14 @@ export function avatarsByTeamId(teams: unknown): Map<string, string> {
   return map;
 }
 
+/** Standing team ids that still need a squad fetch for a manager photo. */
+export function teamIdsMissingAvatars(
+  teamIds: readonly string[],
+  avatars: ReadonlyMap<string, string>,
+): string[] {
+  return teamIds.filter((teamId) => !avatarIdKeys(teamId).some((key) => avatars.has(key)));
+}
+
 function rankingAvatarUrl(
   row: StandingRow,
   avatarByTeamId?: ReadonlyMap<string, string>,

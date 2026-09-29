@@ -19,8 +19,11 @@ export function codeFromTactical(tactical: readonly number[] | null | undefined)
 
 export function formationSelectOptions(
   codes: readonly string[] = DEFAULT_FREE_FORMATION_CODES,
+  currentCode?: string | null,
 ): { value: string; label: string }[] {
-  return codes.map((code) => ({
+  const listed =
+    currentCode && !codes.includes(currentCode) ? [currentCode, ...codes] : codes;
+  return listed.map((code) => ({
     value: code,
     label: code.split(",").join("-"),
   }));

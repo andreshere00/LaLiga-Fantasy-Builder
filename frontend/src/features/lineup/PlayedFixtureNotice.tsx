@@ -1,4 +1,5 @@
 import { useEffect, useId, useRef } from "react";
+import { createPortal } from "react-dom";
 
 import { PAST_FIXTURE_LOCKED_MESSAGE } from "./lineupMessages";
 
@@ -13,17 +14,32 @@ export function PlayedFixtureNotice({ open, onClose }: PlayedFixtureNoticeProps)
 
   useEffect(() => {
     if (!open) return;
+    const previous =
+      document.activeElement instanceof HTMLElement ? document.activeElement : null;
+    const shell = document.querySelector(".app-shell");
     closeRef.current?.focus();
+    if (shell instanceof HTMLElement) shell.inert = true;
     const onKeyDown = (event: KeyboardEvent) => {
-      if (event.key === "Escape") onClose();
+      if (event.key === "Escape") {
+        event.preventDefault();
+        onClose();
+        return;
+      }
+      if (event.key !== "Tab") return;
+      event.preventDefault();
+      closeRef.current?.focus();
     };
     window.addEventListener("keydown", onKeyDown);
-    return () => window.removeEventListener("keydown", onKeyDown);
+    return () => {
+      if (shell instanceof HTMLElement) shell.inert = false;
+      window.removeEventListener("keydown", onKeyDown);
+      if (previous?.isConnected) previous.focus();
+    };
   }, [open, onClose]);
 
   if (!open) return null;
 
-  return (
+  return createPortal(
     <div className="played-fixture-notice" onClick={onClose}>
       <div
         className="played-fixture-notice-card"
@@ -45,6 +61,7 @@ export function PlayedFixtureNotice({ open, onClose }: PlayedFixtureNoticeProps)
           OK
         </button>
       </div>
-    </div>
+    </div>,
+    document.body,
   );
 }

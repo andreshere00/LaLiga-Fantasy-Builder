@@ -12,6 +12,7 @@ import {
   lineupsAvailableFromLineup,
   avatarsByTeamId,
   managerAvatarUrl,
+  teamIdsMissingAvatars,
   asLeagues,
   mapRanking,
   maxWeek,
@@ -394,6 +395,13 @@ describe("mapper failures", () => {
     ]);
     expect(map.get("7")).toBe("https://cdn.example/a.png");
     expect(map.has("8")).toBe(false);
+  });
+
+  it("teamIdsMissingAvatars_skips_ids_already_indexed", () => {
+    const map = avatarsByTeamId([
+      { id: 7, manager: { avatar: "https://cdn.example/a.png" } },
+    ]);
+    expect(teamIdsMissingAvatars(["7", "007", "8"], map)).toEqual(["8"]);
   });
 
   it("avatarsByTeamId_player_manager_and_name_fill_lookup", () => {

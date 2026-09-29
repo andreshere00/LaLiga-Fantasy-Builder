@@ -131,7 +131,7 @@ export function LineupPage() {
             <div className="control-block recommend">
               <span className="field-label">Build lineup</span>
               <div className="accent-control-shell">
-                <button type="button" className="recommend-button">
+                <button type="button" className="recommend-button" disabled>
                   <span className="recommend-button-text">{RECOMMEND_COPY}</span>
                   <img
                     className="recommend-button-icon"

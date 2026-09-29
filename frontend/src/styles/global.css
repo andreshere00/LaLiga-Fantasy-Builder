@@ -19,7 +19,8 @@ textarea {
 
 button:focus-visible,
 select:focus-visible,
-a:focus-visible {
+a:focus-visible,
+input:focus-visible {
   outline: 2px solid var(--cyan);
   outline-offset: 2px;
 }
@@ -32,27 +33,6 @@ a:focus-visible {
   min-height: 100vh;
   display: flex;
   flex-direction: column;
-}
-
-.app-header :is(a, button):focus,
-.app-header :is(a, button):focus-visible,
-.app-footer a:focus,
-.app-footer a:focus-visible,
-.lineup-page .board-controls :is(button, select):focus,
-.lineup-page .board-controls :is(button, select):focus-visible {
-  outline: none;
-}
-
-.lineup-page .board-controls select:focus,
-.lineup-page .board-controls select:focus-visible {
-  box-shadow: var(--shadow-surface);
-}
-
-.lineup-page .rank-row:focus,
-.lineup-page .rank-row:focus-visible,
-.lineup-page .player-tile.is-interactive:focus,
-.lineup-page .player-tile.is-interactive:focus-visible {
-  outline: none;
 }
 
 .app-main {

@@ -14,6 +14,7 @@ import {
   asStanding,
   avatarsByTeamId,
   callerTeamId,
+  teamIdsMissingAvatars,
   catalogMediaByMasterId,
   captainFromLineup,
   clampWeek,
@@ -246,8 +247,27 @@ export function useLineupBoard(): LineupBoard {
     ],
     [standingQuery.data],
   );
+  const knownAvatars = useMemo(() => {
+    const map = avatarsByTeamId(teamsQuery.data);
+    for (const [key, url] of avatarsByTeamId(teamQuery.data)) {
+      if (!map.has(key)) map.set(key, url);
+    }
+    return map;
+  }, [teamQuery.data, teamsQuery.data]);
+  const teamsMissingAvatars = useMemo(() => {
+    if (!teamsQuery.isSuccess && !teamsQuery.isError) return [];
+    return teamIdsMissingAvatars(standingTeamIds, knownAvatars).filter(
+      (teamId) => teamId !== activeTeamId,
+    );
+  }, [
+    activeTeamId,
+    knownAvatars,
+    standingTeamIds,
+    teamsQuery.isError,
+    teamsQuery.isSuccess,
+  ]);
   const peerTeamQueries = useQueries({
-    queries: standingTeamIds.map((teamId) => ({
+    queries: teamsMissingAvatars.map((teamId) => ({
       queryKey: ["team", leagueKey, teamId],
       enabled: enabled && teamId.length > 0,
       staleTime: 5 * 60 * 1000,
@@ -348,7 +368,7 @@ export function useLineupBoard(): LineupBoard {
   }, [needsReauth, markNeedsReauth]);
 
   const avatarByTeamId = useMemo(() => {
-    const map = avatarsByTeamId(teamsQuery.data);
+    const map = new Map(knownAvatars);
     for (const query of peerTeamQueries) {
       for (const [key, url] of avatarsByTeamId(query.data)) {
         if (!map.has(key)) map.set(key, url);
@@ -365,9 +385,9 @@ export function useLineupBoard(): LineupBoard {
     callerId,
     managerAvatar,
     managerName,
+    knownAvatars,
     peerTeamQueries,
     selected,
-    teamsQuery.data,
   ]);
   const ranking = withCallerAvatar(
     mapRanking(asStanding(standingQuery.data), avatarByTeamId),
@@ -428,8 +448,8 @@ export function useLineupBoard(): LineupBoard {
   }, [lineupPayload]);
 
   const formationOptions = useMemo(
-    () => formationSelectOptions(freeFormationCodes),
-    [freeFormationCodes],
+    () => formationSelectOptions(freeFormationCodes, formationCode),
+    [formationCode, freeFormationCodes],
   );
 
   const saveMutation = useMutation({
