@@ -31,6 +31,7 @@ Market and buyout mutations are medium-confidence community contracts.
 `fantasy-market` and `fantasy-buyout` stay read-only.
 
 Callers send `Authorization: Bearer <jwt>` minted by `POST /auth/token`.
-The lineup app does this after sign-in. For a terminal session, use
+The browser app does this after sign-in (lineup and market screens). For a
+terminal session, use
 `uv run fantasy-browser-session` from `backend/auth`.
 The system map is [Architecture](../architecture.md).

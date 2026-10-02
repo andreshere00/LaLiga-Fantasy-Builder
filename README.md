@@ -49,7 +49,7 @@ UI only (backend already running elsewhere): `cd frontend && bun run dev`.
 
 | Path | Role |
 |------|------|
-| [`frontend/`](frontend/) | Lineup UI. Talks to auth and the API through the same origin |
+| [`frontend/`](frontend/) | Lineup and market UI. Talks to auth and the API through the same origin |
 | [`backend/auth/`](backend/auth/) | Sessions, Keycloak login, LaLiga vault, internal JWT |
 | [`backend/api/`](backend/api/) | Fantasy routes and the read-only CLIs |
 | [`docs/`](docs/) | Architecture, authentication, and per-domain API notes |

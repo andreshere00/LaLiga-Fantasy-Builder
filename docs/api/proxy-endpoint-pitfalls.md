@@ -30,6 +30,7 @@ Reuse `fantasy_api.schemas.payload`:
 |--------|----------|
 | `as_object(data)` | Response must be a JSON object (`TeamDetail`, `TeamMoney`, …) |
 | `as_object_list(data)` | Response is a list or wrapped list (`standing`, `teams`, …) |
+| `as_market_snapshot(data)` | League market GET may be `null`, a listing array, nested under `market`, or a snapshot object |
 | `summarize_leagues_payload(data)` | Probe/count paths that need ids without full models |
 
 Controllers wrap parsers with `_parse_payload` / `parse_payload` so

@@ -27,6 +27,26 @@ All require `Authorization: Bearer <internal JWT>`. Read models use
 Upstream confidence: current market and squad-entry offers are **High**;
 history and all mutations are **Medium** (community catalog).
 
+## Current market snapshot shape
+
+`GET /market/leagues/{league_id}` runs upstream JSON through
+`as_market_snapshot` in `schemas/payload.py` before `MarketSnapshot`
+validation. Fantasy has returned more than one envelope for the same resource:
+
+| Upstream body | Normalized API object |
+|---------------|------------------------|
+| `null` | `{ "marketPlayers": [], "userBids": [] }` |
+| JSON array of listing objects | `{ "marketPlayers": <array> }` |
+| Object with nested `market` containing `marketPlayers` / `userBids` | Unwrapped nested object |
+| Object already shaped like `MarketSnapshot` | Passed through |
+
+Wrong types (for example a top-level string) still fail closed as **502**
+(`UpstreamError`), not an empty 200. Tests cover a captured snapshot fixture,
+array, null, and nested `market` cases in `tests/test_market.py`.
+
+The [Frontend](../frontend.md) market board consumes this route read-only and
+joins catalog and calendar data client-side.
+
 ## Identifiers
 
 | Id | Source |
@@ -56,3 +76,11 @@ uv run fantasy-market --league-id 123 --player-team-id pt-9 --json
 cd backend/auth
 uv run fantasy-browser-session market-analysis --json
 ```
+
+## Sample payloads
+
+- [`assets/fantasy_market-json-tree.json`](../../../assets/fantasy_market-json-tree.json)
+  — field tree inferred from `fantasy-market --json` aggregate output.
+- `backend/api/tests/fixtures/market_captured_snapshot.json` — real upstream
+  snapshot used in route tests (array / wrapper edge cases are covered separately
+  in `tests/test_market.py`).

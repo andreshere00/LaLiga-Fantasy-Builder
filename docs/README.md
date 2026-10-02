@@ -8,6 +8,7 @@ How to run it: [root README](../README.md).
 
 - [Architecture](architecture.md) — services, login return path, CRS, trust
   boundaries, errors
+- [Frontend](frontend.md) — routes, lineup and market screens, API usage
 - [Authentication](authentication/authentication.md) — session, internal JWT,
   LaLiga vault, CSRF
 - [Developing authenticated endpoints](authentication/developing-authenticated-endpoints.md)
@@ -25,4 +26,4 @@ Agent instructions: [`AGENTS.md`](../AGENTS.md).
 
 `backend/auth` owns login, sessions, the LaLiga vault, and internal JWTs.
 `backend/api` owns Fantasy features and accepts only those JWTs.
-`frontend` is the lineup UI and does not hold LaLiga tokens.
+`frontend` is the lineup and market UI and does not hold LaLiga tokens.

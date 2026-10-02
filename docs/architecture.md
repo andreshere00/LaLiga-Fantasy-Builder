@@ -6,7 +6,7 @@ map of what each part owns.
 ## Repository layout
 
 ```text
-frontend/          React lineup UI (Bun, Vite). Nginx in Docker.
+frontend/          React app — lineup and market (Bun, Vite). Nginx in Docker.
 backend/auth/      Sessions, Keycloak login, LaLiga vault, internal JWT
 backend/api/       Fantasy features. Calls LaLiga with a bearer from auth
 docker/            Keycloak realm import and the OTEL collector config
@@ -88,9 +88,11 @@ Token rules and CSRF are in
 
 ### Frontend
 
-`frontend/` is the lineup screen. It signs in through auth, keeps the internal
-JWT in memory, and reads leagues, standings, lineups, and squads from the API.
-Mercado is a placeholder. It does not call LaLiga and does not store tokens.
+`frontend/` is the browser app (lineup at `/`, market board at `/market`). It
+signs in through auth, keeps the internal JWT in memory, and reads leagues,
+standings, lineups, squads, and league market listings from the API. The market
+screen is read-only (no bids or listings from the UI). It does not call LaLiga
+and does not store tokens. Screen-level detail: [Frontend](frontend.md).
 
 In Docker, Nginx on port 3000 serves the built app and proxies `/auth`,
 `/laliga`, and `/api`. `bun run dev` does the same proxy for local UI work.
@@ -182,7 +184,7 @@ Cross-domain helpers (extend these rather than duplicating logic):
 |--------|------|
 | `services/laliga.py` | `with_laliga_bearer(credentials, jwt, repo_method, …)` |
 | `repositories/paths.py` | Percent-encode path segments; build `{CMP}/…` paths |
-| `schemas/payload.py` | `as_object`, `as_object_list` — fail on unexpected JSON shape |
+| `schemas/payload.py` | `as_object`, `as_object_list`, `as_market_snapshot` — fail on unexpected JSON shape |
 | `api/payload.py` | Map parser `ValueError` → `UpstreamError` (502) |
 | `clients/laliga_fantasy.py` | GET/PUT/POST/DELETE; JSON errors → `UpstreamError` |
 | `schemas/common.FlexibleModel` | Read models with `extra="allow"` for upstream passthrough |
