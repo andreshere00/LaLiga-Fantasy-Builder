@@ -47,6 +47,8 @@ array, null, and nested `market` cases in `tests/test_market.py`.
 The [Frontend](../frontend.md) market board consumes this route read-only and
 joins catalog and calendar data client-side.
 
+![Market UI — listings table](../../images/market.png)
+
 ## Identifiers
 
 | Id | Source |

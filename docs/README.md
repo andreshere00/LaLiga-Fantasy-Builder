@@ -8,7 +8,8 @@ How to run it: [root README](../README.md).
 
 - [Architecture](architecture.md) — services, login return path, CRS, trust
   boundaries, errors
-- [Frontend](frontend.md) — routes, lineup and market screens, API usage
+- [Frontend](frontend.md) — routes, lineup and market screens (with
+  [screenshots](frontend.md#screenshots)), API usage
 - [Authentication](authentication/authentication.md) — session, internal JWT,
   LaLiga vault, CSRF
 - [Developing authenticated endpoints](authentication/developing-authenticated-endpoints.md)

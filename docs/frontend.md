@@ -8,6 +8,20 @@ the internal JWT beyond memory.
 System context: [Architecture](architecture.md). API routes the UI calls:
 [API overview](api/README.md).
 
+## Screenshots
+
+Full pages (league selector and shell header included):
+
+![Lineup screen — formation controls, standings, pitch, and squad](images/lineup.png)
+
+![Market screen — read-only listings table](images/market.png)
+
+Three-column lineup layout (standings, pitch, paginated squad):
+
+![Lineup — players list, pitch, and squad grid](images/lineup-pitch-squad.jpg)
+
+Assets live under [`docs/images/`](images/) for use in other docs.
+
 ## Running locally
 
 Same-origin proxying matches production Nginx:
@@ -39,6 +53,11 @@ LaLiga again. Details: [Authentication](authentication/authentication.md).
 
 Feature code under `frontend/src/features/lineup/`.
 
+The toolbar row covers matchweek navigation, live score for the week, formation
+picker, lineup preferences input, save, and total squad value. Below that,
+standings rank league managers; the pitch shows the saved formation; the squad
+panel lists roster players with pagination (`18/24` in the screenshot above).
+
 - Loads the user’s leagues and remembers the selected league.
 - Shows matchweek standings, the active lineup on a pitch, and the squad bench.
 - Supports formation selection and `PUT /teams/{team_id}/lineup` to save (full
@@ -48,7 +67,10 @@ Shared player tiles and score badges are reused on the market table.
 
 ## Market screen
 
-Feature code under `frontend/src/features/market/`. The board is **read-only**:
+Feature code under `frontend/src/features/market/`. The table matches the
+[Market screenshot](#screenshots): player tile, position badge (including coach),
+FSYP, recent form badges, price with variation, availability, average, seal
+countdown, and seller (`LALIGA` for official listings). The board is **read-only**:
 no bids, listings, or offers from the UI (aligned with read-only CLIs).
 
 `useMarketBoard` loads and joins:

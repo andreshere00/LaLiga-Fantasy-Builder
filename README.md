@@ -1,9 +1,13 @@
 # LaLiga Fantasy Builder
 
-Companion for a LaLiga Fantasy league: a lineup screen in the browser, and an
-API that reads squads, standings, the market, and buyout clauses from Fantasy.
+Companion for a LaLiga Fantasy league: lineup and market screens in the
+browser, and an API that reads squads, standings, the market, and buyout
+clauses from Fantasy.
 
-How the pieces fit together: [Architecture](docs/architecture.md).
+![Lineup screen](docs/images/lineup.png)
+
+How the pieces fit together: [Architecture](docs/architecture.md). UI tour:
+[Frontend docs](docs/frontend.md).
 
 ## Quick start
 
