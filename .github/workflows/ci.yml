@@ -28,7 +28,7 @@ jobs:
         run: uv run black --check --diff backend main.py
 
       - name: OpenAPI
-        run: uv run poe generate-openapi
+        run: bash scripts/check-openapi-alignment.sh
 
       - name: Test
         run: uv run poe test

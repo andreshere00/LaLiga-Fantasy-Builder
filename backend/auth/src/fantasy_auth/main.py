@@ -131,12 +131,12 @@ def create_app(
     app.include_router(internal_credentials.router)
     app.include_router(pairings.router)
 
-    @app.get("/health")
-    @app.get("/health/live")
+    @app.get("/health", tags=["health"])
+    @app.get("/health/live", tags=["health"])
     async def health_live() -> dict[str, str]:
         return {"status": "ok"}
 
-    @app.get("/health/ready")
+    @app.get("/health/ready", tags=["health"])
     async def health_ready() -> JSONResponse:
         runtime = get_container() if container is None else container
         if runtime.settings.use_memory_store:

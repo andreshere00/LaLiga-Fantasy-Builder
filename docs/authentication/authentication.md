@@ -2,6 +2,9 @@
 
 ## Overview
 
+Route tables and JSON field reference: [Auth endpoints](endpoints.md).
+OpenAPI: [Auth OpenAPI / Swagger](openapi.md).
+
 The repository uses three different credential types. They have separate
 purposes and must not be interchanged.
 

@@ -12,6 +12,7 @@ Application API docs for `backend/api` (`fantasy_api`).
 - [Proxy endpoint pitfalls](proxy-endpoint-pitfalls.md)
 
 Auth: [Authentication](../authentication/authentication.md),
+[Auth endpoints](../authentication/endpoints.md),
 [Developing authenticated endpoints](../authentication/developing-authenticated-endpoints.md).
 
 | Resource | URL / path |

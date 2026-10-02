@@ -12,6 +12,8 @@ How to run it: [root README](../README.md).
   [screenshots](frontend.md#screenshots)), API usage
 - [Authentication](authentication/authentication.md) — session, internal JWT,
   LaLiga vault, CSRF
+- [Auth endpoints](authentication/endpoints.md) — auth service HTTP reference
+- [Auth OpenAPI](authentication/openapi.md) — Swagger and `backend/auth/openapi.json`
 - [Developing authenticated endpoints](authentication/developing-authenticated-endpoints.md)
   — auth vs API, CSRF, internal JWT
 - [API overview](api/README.md)
