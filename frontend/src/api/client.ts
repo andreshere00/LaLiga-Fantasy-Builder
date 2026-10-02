@@ -22,8 +22,6 @@ export const paths = {
   market: (leagueId: string) => `/api/market/leagues/${segment(leagueId)}`,
   playerMarketValue: (playerId: string) =>
     `/api/players/${segment(playerId)}/market-value`,
-  playerLeagueCard: (playerId: string, leagueId: string) =>
-    `/api/players/${segment(playerId)}/league/${segment(leagueId)}`,
   leagueTeams: (leagueId: string) => `/api/leagues/${segment(leagueId)}/teams`,
   team: (leagueId: string, teamId: string) =>
     `/api/leagues/${segment(leagueId)}/teams/${segment(teamId)}`,

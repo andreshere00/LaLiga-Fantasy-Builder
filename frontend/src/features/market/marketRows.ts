@@ -18,6 +18,7 @@ export type MarketRow = {
   points: number | null;
   form: number | null;
   formRecent: readonly number[];
+  formRecentWeeks: readonly number[];
   averagePoints: number | null;
   marketValue: number | null;
   variation: number | null;
@@ -103,6 +104,13 @@ export function formPoints(lastStats: unknown): number | null {
 /** Latest five matchweek scores, newest first. */
 export function formRecentPoints(lastStats: unknown): number[] {
   return recentFormWeeks(lastStats).map((row) => row.points);
+}
+
+/** Matchweek numbers aligned with ``formRecentPoints`` (newest first, at most three). */
+export function formRecentWeekNumbers(lastStats: unknown): number[] {
+  return recentFormWeeks(lastStats)
+    .map((row) => row.week)
+    .slice(0, FORM_DISPLAY_MATCHES);
 }
 
 /** Newest-first scores for the form column (last three matchweeks). */
@@ -300,6 +308,7 @@ export function marketRow(
   const positionId = asFiniteNumber(master.positionId);
   let form = formPoints(master.lastStats);
   let formRecent = formRecentPoints(master.lastStats);
+  let formRecentWeeks = formRecentWeekNumbers(master.lastStats);
   if (form == null && calendarForm) {
     const fromCalendar = formFromCalendarWeeks(
       playerId,
@@ -308,6 +317,7 @@ export function marketRow(
     );
     form = fromCalendar.form;
     formRecent = fromCalendar.formRecent;
+    formRecentWeeks = calendarForm.weekNumbers.slice(0, FORM_DISPLAY_MATCHES);
   }
   return {
     id: idText(item.id) ?? idText(item.playerTeamId) ?? playerId ?? `row-${index}`,
@@ -322,6 +332,7 @@ export function marketRow(
     points: asFiniteNumber(master.points),
     form,
     formRecent,
+    formRecentWeeks,
     averagePoints: asFiniteNumber(master.averagePoints),
     marketValue: asFiniteNumber(master.marketValue),
     variation: valueVariation(valueHistory),

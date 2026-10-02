@@ -5,6 +5,7 @@ import {
   formFromCalendarWeeks,
   formPoints,
   formRecentPoints,
+  formRecentWeekNumbers,
   marketDisplayName,
   marketRow,
   recentFormWeekNumbers,
@@ -34,6 +35,15 @@ describe("form helpers", () => {
 
   it("formDisplayPoints_keeps_newest_three_scores", () => {
     expect(formDisplayPoints([8, 4, 2, 1, 0])).toEqual([8, 4, 2]);
+  });
+
+  it("formRecentWeekNumbers_aligns_with_newest_three_matchweeks", () => {
+    const lastStats = [
+      { weekNumber: 3, totalPoints: 2 },
+      { weekNumber: 7, totalPoints: 8 },
+      { weekNumber: 6, totalPoints: 4 },
+    ];
+    expect(formRecentWeekNumbers(lastStats)).toEqual([7, 6, 3]);
   });
 
   it("recentFormWeekNumbers_stops_at_one", () => {
@@ -66,6 +76,7 @@ describe("form helpers", () => {
     );
     expect(row.form).toBe(8);
     expect(row.formRecent).toEqual([3, 5]);
+    expect(row.formRecentWeeks).toEqual([7, 6]);
   });
 
   it("marketRow_labels_coaches_in_the_name", () => {

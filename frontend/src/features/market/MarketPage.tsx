@@ -54,9 +54,11 @@ function FormCell({ row }: { row: MarketRow }) {
   if (scores.length === 0) return <>—</>;
   return (
     <span className="market-form-badges" aria-label={`Form: ${scores.join(", ")} points`}>
-      {scores.map((points, index) => (
-        <PlayerScoreBadge key={`${row.id}-form-${index}`} points={points} />
-      ))}
+      {scores.map((points, index) => {
+        const week = row.formRecentWeeks[index];
+        const key = week != null ? `${row.id}-form-w${week}` : `${row.id}-form-${index}`;
+        return <PlayerScoreBadge key={key} points={points} />;
+      })}
     </span>
   );
 }
@@ -115,7 +117,10 @@ function MarketListRow({ row, now }: { row: MarketRow; now: number }) {
       <span className="market-cell market-value" data-label="Market value">
         {marketValueLabel(row.marketValue, row.variation, row.variationPercent)}
       </span>
-      <span className={`market-cell market-availability is-${row.availability}`}>
+      <span
+        className={`market-cell market-availability is-${row.availability}`}
+        data-label="Availability"
+      >
         <Icon />
         <span>{label}</span>
       </span>
@@ -155,22 +160,29 @@ function MarketList() {
   }
   if (board.rows.length === 0) return <p className="status-copy">No players on the market.</p>;
   return (
-    <ul className="market-list">
-      <li className="market-row market-head" aria-hidden="true">
-        <span className="market-head-player">Player</span>
-        <span>Position</span>
-        <span>FSYP</span>
-        <span>Form</span>
-        <span>Market value</span>
-        <span>Availability</span>
-        <span>Average</span>
-        <span>Seal ends on</span>
-        <span>Seller</span>
-      </li>
-      {board.rows.map((row) => (
-        <MarketListRow key={row.id} row={row} now={now} />
-      ))}
-    </ul>
+    <>
+      {board.isDegraded ? (
+        <p className="market-notice status-copy" role="status">
+          Some market details could not be loaded. Value changes and form may be incomplete.
+        </p>
+      ) : null}
+      <ul className="market-list">
+        <li className="market-row market-head" aria-hidden="true">
+          <span className="market-head-player">Player</span>
+          <span>Position</span>
+          <span>FSYP</span>
+          <span>Form</span>
+          <span>Market value</span>
+          <span>Availability</span>
+          <span>Average</span>
+          <span>Seal ends on</span>
+          <span>Seller</span>
+        </li>
+        {board.rows.map((row) => (
+          <MarketListRow key={row.id} row={row} now={now} />
+        ))}
+      </ul>
+    </>
   );
 }
 
