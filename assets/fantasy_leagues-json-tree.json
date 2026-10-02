@@ -1,0 +1,1036 @@
+{
+  "title": "JSON structure tree for fantasy_leagues.json",
+  "generatedFrom": "assets/fantasy_leagues.json",
+  "notes": [
+    "Inferred by sampling array elements (see sampledItems).",
+    "optional: true means the key was absent on some sampled objects.",
+    "These files wrap multiple API responses under leagues[]."
+  ],
+  "description": "fantasy-leagues --json aggregate (league, standing, teams, ...).",
+  "root": {
+    "type": "object",
+    "properties": {
+      "leagues": {
+        "type": "array",
+        "length": 1,
+        "items": {
+          "type": "object",
+          "properties": {
+            "activity": {
+              "type": "array",
+              "length": 30,
+              "items": {
+                "type": "object",
+                "properties": {
+                  "activityTypeId": {
+                    "type": "integer"
+                  },
+                  "amount": {
+                    "type": "integer"
+                  },
+                  "createdAt": {
+                    "type": "string"
+                  },
+                  "id": {
+                    "type": "string"
+                  },
+                  "playerMasterId": {
+                    "type": "integer"
+                  },
+                  "user1Id": {
+                    "type": "integer"
+                  },
+                  "user2Id": {
+                    "type": "integer"
+                  }
+                }
+              },
+              "sampledItems": 25
+            },
+            "activity_page": {
+              "type": "integer"
+            },
+            "league": {
+              "type": "object",
+              "properties": {
+                "access": {
+                  "type": "string",
+                  "example": "private"
+                },
+                "config": {
+                  "type": "object",
+                  "properties": {
+                    "features": {
+                      "type": "object",
+                      "properties": {
+                        "buyoutClause": {
+                          "type": "boolean"
+                        }
+                      }
+                    },
+                    "premiumConfigurations": {
+                      "type": "object",
+                      "properties": {
+                        "ideal": {
+                          "type": "object",
+                          "properties": {
+                            "reward": {
+                              "type": "integer"
+                            }
+                          }
+                        },
+                        "loan": {
+                          "type": "object",
+                          "properties": {
+                            "duration": {
+                              "type": "integer"
+                            },
+                            "enableConclude": {
+                              "type": "boolean"
+                            },
+                            "maxLoans": {
+                              "type": "integer"
+                            },
+                            "minPercentage": {
+                              "type": "number"
+                            }
+                          }
+                        }
+                      }
+                    },
+                    "premiumFeatures": {
+                      "type": "object",
+                      "properties": {
+                        "bench": {
+                          "type": "boolean"
+                        },
+                        "captain": {
+                          "type": "boolean"
+                        },
+                        "coach": {
+                          "type": "boolean"
+                        },
+                        "formations": {
+                          "type": "boolean"
+                        },
+                        "ideal": {
+                          "type": "boolean"
+                        },
+                        "loan": {
+                          "type": "boolean"
+                        }
+                      }
+                    }
+                  }
+                },
+                "description": {
+                  "type": "string"
+                },
+                "id": {
+                  "type": "string",
+                  "example": "017798935"
+                },
+                "isDuplicated": {
+                  "type": "boolean"
+                },
+                "isSecondRound": {
+                  "type": "boolean"
+                },
+                "managersNumber": {
+                  "type": "integer"
+                },
+                "name": {
+                  "type": "string",
+                  "example": "ESTADIO DE VALLECAS"
+                },
+                "premium": {
+                  "type": "boolean"
+                },
+                "team": {
+                  "type": "object",
+                  "properties": {
+                    "canPunctuate": {
+                      "type": "boolean"
+                    },
+                    "id": {
+                      "type": "integer"
+                    },
+                    "isAdmin": {
+                      "type": "boolean"
+                    },
+                    "money": {
+                      "type": "integer"
+                    },
+                    "playersNumber": {
+                      "type": "integer"
+                    },
+                    "position": {
+                      "type": "integer"
+                    },
+                    "previousPosition": {
+                      "type": "integer"
+                    },
+                    "teamPoints": {
+                      "type": "integer"
+                    },
+                    "teamValue": {
+                      "type": "integer"
+                    }
+                  }
+                },
+                "type": {
+                  "type": "object",
+                  "properties": {
+                    "canBeDuplicated": {
+                      "type": "boolean"
+                    },
+                    "id": {
+                      "type": "string",
+                      "example": "8"
+                    },
+                    "prizeInformation": {
+                      "type": "object",
+                      "properties": {
+                        "description": {
+                          "type": "string"
+                        },
+                        "title": {
+                          "type": "string",
+                          "example": "¿Qué premios hay en LALIGA FANTASY?"
+                        }
+                      }
+                    },
+                    "sponsorId": {
+                      "type": "integer"
+                    }
+                  }
+                }
+              }
+            },
+            "league_id": {
+              "type": "string",
+              "example": "017798935"
+            },
+            "my_team": {
+              "type": "object",
+              "properties": {
+                "banned": {
+                  "type": "boolean"
+                },
+                "id": {
+                  "type": "string",
+                  "example": "38456098"
+                },
+                "loanedPlayers": {
+                  "type": "array",
+                  "length": 0,
+                  "items": {
+                    "type": "unknown",
+                    "empty": true
+                  }
+                },
+                "manager": {
+                  "type": "object",
+                  "properties": {
+                    "avatar": {
+                      "type": "string",
+                      "example": "https://ll1prglcdn.azureedge.net/global-avatar/default.png"
+                    },
+                    "id": {
+                      "type": "string",
+                      "example": "4963899"
+                    },
+                    "managerName": {
+                      "type": "string",
+                      "example": "Kylian Mpalmé"
+                    }
+                  }
+                },
+                "managerId": {
+                  "type": "integer"
+                },
+                "players": {
+                  "type": "array",
+                  "length": 20,
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "buyoutClause": {
+                        "type": "integer"
+                      },
+                      "buyoutClauseLockedEndTime": {
+                        "type": "string"
+                      },
+                      "isShielded": {
+                        "type": "boolean"
+                      },
+                      "manager": {
+                        "type": "object",
+                        "properties": {
+                          "avatar": {
+                            "type": "string"
+                          },
+                          "id": {
+                            "type": "string"
+                          },
+                          "managerName": {
+                            "type": "string"
+                          }
+                        }
+                      },
+                      "managerId": {
+                        "type": "integer"
+                      },
+                      "playerMarket": {
+                        "type": "object",
+                        "properties": {
+                          "directOffer": {
+                            "type": "boolean"
+                          },
+                          "expirationDate": {
+                            "type": "string"
+                          },
+                          "id": {
+                            "type": "string"
+                          },
+                          "numberOfOffers": {
+                            "type": "integer"
+                          },
+                          "salePrice": {
+                            "type": "integer"
+                          }
+                        }
+                      },
+                      "playerMaster": {
+                        "type": "object",
+                        "properties": {
+                          "averagePoints": {
+                            "type": [
+                              "integer",
+                              "number"
+                            ]
+                          },
+                          "id": {
+                            "type": "string"
+                          },
+                          "images": {
+                            "type": "object",
+                            "properties": {
+                              "transparent": {
+                                "type": "object",
+                                "properties": {
+                                  "256x256": {
+                                    "type": "string"
+                                  }
+                                }
+                              }
+                            }
+                          },
+                          "lastSeasonPoints": {
+                            "type": "integer"
+                          },
+                          "lastStats": {
+                            "type": "array",
+                            "lengthMin": 5,
+                            "lengthMax": 5,
+                            "items": {
+                              "type": "object",
+                              "properties": {
+                                "isInIdealFormation": {
+                                  "type": "boolean"
+                                },
+                                "stats": {
+                                  "type": "object",
+                                  "properties": {
+                                    "ball_recovery": {
+                                      "type": "array",
+                                      "items": {
+                                        "type": "integer"
+                                      }
+                                    },
+                                    "effective_clearance": {
+                                      "type": "array",
+                                      "items": {
+                                        "type": "integer"
+                                      }
+                                    },
+                                    "goal_assist": {
+                                      "type": "array",
+                                      "items": {
+                                        "type": "integer"
+                                      }
+                                    },
+                                    "goals": {
+                                      "type": "array",
+                                      "items": {
+                                        "type": "integer"
+                                      }
+                                    },
+                                    "goals_conceded": {
+                                      "type": "array",
+                                      "items": {
+                                        "type": "integer"
+                                      }
+                                    },
+                                    "marca_points": {
+                                      "type": "array",
+                                      "items": {
+                                        "type": "integer"
+                                      }
+                                    },
+                                    "mins_played": {
+                                      "type": "array",
+                                      "items": {
+                                        "type": "integer"
+                                      }
+                                    },
+                                    "offtarget_att_assist": {
+                                      "type": "array",
+                                      "items": {
+                                        "type": "integer"
+                                      }
+                                    },
+                                    "own_goals": {
+                                      "type": "array",
+                                      "items": {
+                                        "type": "integer"
+                                      }
+                                    },
+                                    "pen_area_entries": {
+                                      "type": "array",
+                                      "items": {
+                                        "type": "integer"
+                                      }
+                                    },
+                                    "penalty_conceded": {
+                                      "type": "array",
+                                      "items": {
+                                        "type": "integer"
+                                      }
+                                    },
+                                    "penalty_failed": {
+                                      "type": "array",
+                                      "items": {
+                                        "type": "integer"
+                                      }
+                                    },
+                                    "penalty_save": {
+                                      "type": "array",
+                                      "items": {
+                                        "type": "integer"
+                                      }
+                                    },
+                                    "penalty_won": {
+                                      "type": "array",
+                                      "items": {
+                                        "type": "integer"
+                                      }
+                                    },
+                                    "poss_lost_all": {
+                                      "type": "array",
+                                      "items": {
+                                        "type": "integer"
+                                      }
+                                    },
+                                    "red_card": {
+                                      "type": "array",
+                                      "items": {
+                                        "type": "integer"
+                                      }
+                                    },
+                                    "saves": {
+                                      "type": "array",
+                                      "items": {
+                                        "type": "integer"
+                                      }
+                                    },
+                                    "second_yellow_card": {
+                                      "type": "array",
+                                      "items": {
+                                        "type": "integer"
+                                      }
+                                    },
+                                    "total_scoring_att": {
+                                      "type": "array",
+                                      "items": {
+                                        "type": "integer"
+                                      }
+                                    },
+                                    "won_contest": {
+                                      "type": "array",
+                                      "items": {
+                                        "type": "integer"
+                                      }
+                                    },
+                                    "yellow_card": {
+                                      "type": "array",
+                                      "items": {
+                                        "type": "integer"
+                                      }
+                                    }
+                                  }
+                                },
+                                "totalPoints": {
+                                  "type": "integer"
+                                },
+                                "weekNumber": {
+                                  "type": "integer"
+                                }
+                              }
+                            }
+                          },
+                          "marketValue": {
+                            "type": "integer"
+                          },
+                          "name": {
+                            "type": "string"
+                          },
+                          "nickname": {
+                            "type": "string"
+                          },
+                          "playerStatus": {
+                            "type": "string"
+                          },
+                          "points": {
+                            "type": "integer"
+                          },
+                          "positionId": {
+                            "type": "integer"
+                          },
+                          "slug": {
+                            "type": "string"
+                          },
+                          "team": {
+                            "type": "object",
+                            "properties": {
+                              "assets": {
+                                "type": "string"
+                              },
+                              "badgeColor": {
+                                "type": "string"
+                              },
+                              "badgeWhite": {
+                                "type": "string"
+                              },
+                              "id": {
+                                "type": "string"
+                              },
+                              "name": {
+                                "type": "string"
+                              },
+                              "slug": {
+                                "type": "string"
+                              }
+                            }
+                          }
+                        }
+                      },
+                      "playerTeamId": {
+                        "type": "string"
+                      }
+                    }
+                  }
+                },
+                "playersNumber": {
+                  "type": "integer"
+                },
+                "position": {
+                  "type": "integer"
+                },
+                "startingWeek": {
+                  "type": "string",
+                  "example": "1"
+                },
+                "teamMoney": {
+                  "type": "integer"
+                },
+                "teamPoints": {
+                  "type": "integer"
+                },
+                "teamValue": {
+                  "type": "integer"
+                }
+              }
+            },
+            "my_team_id": {
+              "type": "integer"
+            },
+            "standing": {
+              "type": "array",
+              "length": 4,
+              "items": {
+                "type": "object",
+                "properties": {
+                  "points": {
+                    "type": "integer"
+                  },
+                  "position": {
+                    "type": "integer"
+                  },
+                  "previousPosition": {
+                    "type": "integer"
+                  },
+                  "team": {
+                    "type": "object",
+                    "properties": {
+                      "banned": {
+                        "type": "boolean"
+                      },
+                      "id": {
+                        "type": "string"
+                      },
+                      "isAdmin": {
+                        "type": "boolean"
+                      },
+                      "manager": {
+                        "type": "object",
+                        "properties": {
+                          "avatar": {
+                            "type": "string"
+                          },
+                          "id": {
+                            "type": "string"
+                          },
+                          "managerName": {
+                            "type": "string"
+                          }
+                        }
+                      },
+                      "managerId": {
+                        "type": "integer"
+                      },
+                      "managerWarned": {
+                        "type": "boolean"
+                      },
+                      "teamPoints": {
+                        "type": "integer"
+                      },
+                      "teamValue": {
+                        "type": "integer"
+                      }
+                    }
+                  }
+                }
+              }
+            },
+            "summary": {
+              "type": "object",
+              "properties": {
+                "league_name": {
+                  "type": "string",
+                  "example": "ESTADIO DE VALLECAS"
+                },
+                "points": {
+                  "type": "integer"
+                },
+                "position": {
+                  "type": "integer"
+                },
+                "standing_entry": {
+                  "type": "object",
+                  "properties": {
+                    "points": {
+                      "type": "integer"
+                    },
+                    "rank": {
+                      "type": "integer"
+                    },
+                    "row": {
+                      "type": "object",
+                      "properties": {
+                        "points": {
+                          "type": "integer"
+                        },
+                        "position": {
+                          "type": "integer"
+                        },
+                        "previousPosition": {
+                          "type": "integer"
+                        },
+                        "team": {
+                          "type": "object",
+                          "properties": {
+                            "banned": {
+                              "type": "boolean"
+                            },
+                            "id": {
+                              "type": "string",
+                              "example": "38456098"
+                            },
+                            "isAdmin": {
+                              "type": "boolean"
+                            },
+                            "manager": {
+                              "type": "object",
+                              "properties": {
+                                "avatar": {
+                                  "type": "string",
+                                  "example": "https://ll1prglcdn.azureedge.net/global-avatar/default.png"
+                                },
+                                "id": {
+                                  "type": "string",
+                                  "example": "4963899"
+                                },
+                                "managerName": {
+                                  "type": "string",
+                                  "example": "Kylian Mpalmé"
+                                }
+                              }
+                            },
+                            "managerId": {
+                              "type": "integer"
+                            },
+                            "managerWarned": {
+                              "type": "boolean"
+                            },
+                            "teamPoints": {
+                              "type": "integer"
+                            },
+                            "teamValue": {
+                              "type": "integer"
+                            }
+                          }
+                        }
+                      }
+                    }
+                  }
+                },
+                "team_id": {
+                  "type": "integer"
+                },
+                "team_name": {
+                  "type": "string",
+                  "example": "ESTADIO DE VALLECAS"
+                }
+              }
+            },
+            "teams": {
+              "type": "array",
+              "length": 4,
+              "items": {
+                "type": "object",
+                "properties": {
+                  "banned": {
+                    "type": "boolean"
+                  },
+                  "fixturePoints": {
+                    "type": "integer"
+                  },
+                  "id": {
+                    "type": "string"
+                  },
+                  "loanedPlayers": {
+                    "type": "array",
+                    "lengthMin": 0,
+                    "lengthMax": 0,
+                    "items": {
+                      "type": "unknown"
+                    }
+                  },
+                  "manager": {
+                    "type": "object",
+                    "properties": {
+                      "avatar": {
+                        "type": "string"
+                      },
+                      "id": {
+                        "type": "string"
+                      },
+                      "managerName": {
+                        "type": "string"
+                      }
+                    }
+                  },
+                  "managerId": {
+                    "type": "integer"
+                  },
+                  "players": {
+                    "type": "array",
+                    "lengthMin": 20,
+                    "lengthMax": 20,
+                    "items": {
+                      "type": "object",
+                      "properties": {
+                        "buyoutClause": {
+                          "type": "integer"
+                        },
+                        "buyoutClauseLockedEndTime": {
+                          "type": "string"
+                        },
+                        "manager": {
+                          "type": "object",
+                          "properties": {
+                            "avatar": {
+                              "type": "string"
+                            },
+                            "id": {
+                              "type": "string"
+                            },
+                            "managerName": {
+                              "type": "string"
+                            }
+                          }
+                        },
+                        "playerMarket": {
+                          "type": "object",
+                          "properties": {
+                            "directOffer": {
+                              "type": "boolean"
+                            },
+                            "expirationDate": {
+                              "type": "string"
+                            },
+                            "id": {
+                              "type": "string"
+                            },
+                            "numberOfOffers": {
+                              "type": "integer"
+                            }
+                          }
+                        },
+                        "playerMaster": {
+                          "type": "object",
+                          "properties": {
+                            "averagePoints": {
+                              "type": [
+                                "integer",
+                                "number"
+                              ]
+                            },
+                            "id": {
+                              "type": "string"
+                            },
+                            "images": {
+                              "type": "object",
+                              "properties": {
+                                "transparent": {
+                                  "type": "object",
+                                  "properties": {
+                                    "256x256": {
+                                      "type": "string"
+                                    }
+                                  }
+                                }
+                              }
+                            },
+                            "lastSeasonPoints": {
+                              "type": "integer"
+                            },
+                            "lastStats": {
+                              "type": "array",
+                              "items": {
+                                "type": [
+                                  "object",
+                                  "unknown"
+                                ],
+                                "properties": {
+                                  "stats": {
+                                    "type": "object",
+                                    "properties": {
+                                      "ball_recovery": {
+                                        "type": "array",
+                                        "items": {
+                                          "type": "integer"
+                                        }
+                                      },
+                                      "effective_clearance": {
+                                        "type": "array",
+                                        "items": {
+                                          "type": "integer"
+                                        }
+                                      },
+                                      "goal_assist": {
+                                        "type": "array",
+                                        "items": {
+                                          "type": "integer"
+                                        }
+                                      },
+                                      "goals": {
+                                        "type": "array",
+                                        "items": {
+                                          "type": "integer"
+                                        }
+                                      },
+                                      "goals_conceded": {
+                                        "type": "array",
+                                        "items": {
+                                          "type": "integer"
+                                        }
+                                      },
+                                      "marca_points": {
+                                        "type": "array",
+                                        "items": {
+                                          "type": "integer"
+                                        }
+                                      },
+                                      "mins_played": {
+                                        "type": "array",
+                                        "items": {
+                                          "type": "integer"
+                                        }
+                                      },
+                                      "offtarget_att_assist": {
+                                        "type": "array",
+                                        "items": {
+                                          "type": "integer"
+                                        }
+                                      },
+                                      "own_goals": {
+                                        "type": "array",
+                                        "items": {
+                                          "type": "integer"
+                                        }
+                                      },
+                                      "pen_area_entries": {
+                                        "type": "array",
+                                        "items": {
+                                          "type": "integer"
+                                        }
+                                      },
+                                      "penalty_conceded": {
+                                        "type": "array",
+                                        "items": {
+                                          "type": "integer"
+                                        }
+                                      },
+                                      "penalty_failed": {
+                                        "type": "array",
+                                        "items": {
+                                          "type": "integer"
+                                        }
+                                      },
+                                      "penalty_save": {
+                                        "type": "array",
+                                        "items": {
+                                          "type": "integer"
+                                        }
+                                      },
+                                      "penalty_won": {
+                                        "type": "array",
+                                        "items": {
+                                          "type": "integer"
+                                        }
+                                      },
+                                      "poss_lost_all": {
+                                        "type": "array",
+                                        "items": {
+                                          "type": "integer"
+                                        }
+                                      },
+                                      "red_card": {
+                                        "type": "array",
+                                        "items": {
+                                          "type": "integer"
+                                        }
+                                      },
+                                      "saves": {
+                                        "type": "array",
+                                        "items": {
+                                          "type": "integer"
+                                        }
+                                      },
+                                      "second_yellow_card": {
+                                        "type": "array",
+                                        "items": {
+                                          "type": "integer"
+                                        }
+                                      },
+                                      "total_scoring_att": {
+                                        "type": "array",
+                                        "items": {
+                                          "type": "integer"
+                                        }
+                                      },
+                                      "won_contest": {
+                                        "type": "array",
+                                        "items": {
+                                          "type": "integer"
+                                        }
+                                      },
+                                      "yellow_card": {
+                                        "type": "array",
+                                        "items": {
+                                          "type": "integer"
+                                        }
+                                      }
+                                    }
+                                  },
+                                  "totalPoints": {
+                                    "type": "integer"
+                                  },
+                                  "weekNumber": {
+                                    "type": "integer"
+                                  }
+                                }
+                              }
+                            },
+                            "marketValue": {
+                              "type": "integer"
+                            },
+                            "name": {
+                              "type": "string"
+                            },
+                            "nickname": {
+                              "type": "string"
+                            },
+                            "playerStatus": {
+                              "type": "string"
+                            },
+                            "points": {
+                              "type": "integer"
+                            },
+                            "positionId": {
+                              "type": "integer"
+                            },
+                            "slug": {
+                              "type": "string"
+                            },
+                            "teamId": {
+                              "type": "integer"
+                            },
+                            "weekPoints": {
+                              "type": "integer"
+                            }
+                          }
+                        },
+                        "playerTeamId": {
+                          "type": "string"
+                        }
+                      }
+                    }
+                  },
+                  "position": {
+                    "type": "integer"
+                  },
+                  "previousPosition": {
+                    "type": "integer"
+                  },
+                  "startingWeek": {
+                    "type": "string"
+                  },
+                  "teamMoney": {
+                    "type": "integer"
+                  },
+                  "teamPoints": {
+                    "type": "integer"
+                  },
+                  "teamValue": {
+                    "type": "integer"
+                  }
+                }
+              }
+            },
+            "week": {
+              "type": "null",
+              "optional": true
+            },
+            "week_standing": {
+              "type": "null",
+              "optional": true
+            }
+          }
+        }
+      }
+    }
+  }
+}

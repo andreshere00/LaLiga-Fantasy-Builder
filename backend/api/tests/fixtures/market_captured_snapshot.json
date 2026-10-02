@@ -1,0 +1,70 @@
+{
+  "marketPlayers": [
+    {
+      "id": "42034396",
+      "leagueId": 17798935,
+      "leagueType": "private",
+      "directOffer": false,
+      "discr": "market_player",
+      "expirationDate": "2026-10-03T10:57:54+02:00",
+      "numberOfBids": 1,
+      "numberOfOffers": 0,
+      "bid": {
+        "id": "42034397",
+        "money": 12500000,
+        "status": "pending",
+        "createdAt": "2026-10-01T10:57:54+02:00",
+        "updatedAt": "2026-10-01T10:57:54+02:00"
+      },
+      "playerMaster": {
+        "id": "2560",
+        "name": "Player One",
+        "nickname": "P1",
+        "slug": "player-one",
+        "positionId": 3,
+        "position": "del",
+        "teamId": 16,
+        "points": 12,
+        "averagePoints": 6.0,
+        "lastSeasonPoints": 180,
+        "marketValue": 15000000,
+        "playerStatus": "ok",
+        "images": {
+          "transparent": {
+            "256x256": "https://example.test/player-one.png"
+          }
+        }
+      }
+    },
+    {
+      "id": "42034398",
+      "leagueId": 17798935,
+      "leagueType": "private",
+      "directOffer": true,
+      "discr": "market_player",
+      "expirationDate": "2026-10-04T11:00:00+02:00",
+      "numberOfBids": 0,
+      "numberOfOffers": 2,
+      "playerMaster": {
+        "id": "2561",
+        "name": "Player Two",
+        "nickname": "P2",
+        "slug": "player-two",
+        "positionId": 2,
+        "position": "mid",
+        "teamId": 26,
+        "points": 8,
+        "averagePoints": 4.0,
+        "lastSeasonPoints": 120,
+        "marketValue": 9000000,
+        "playerStatus": "injured",
+        "images": {
+          "transparent": {
+            "256x256": "https://example.test/player-two.png"
+          }
+        }
+      }
+    }
+  ],
+  "userBids": []
+}

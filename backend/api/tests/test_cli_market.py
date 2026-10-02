@@ -6,7 +6,7 @@ import json
 
 import httpx
 import pytest
-from cli_http_stub import patch_httpx_client
+from cli_http_stub import clear_cli_credential_env, patch_httpx_client
 from fantasy_api.cli import market as market_cli
 
 # ---- Happy path ---- #
@@ -124,8 +124,11 @@ def test_main_with_player_team_id_fetches_offers(
 
 
 def test_main_missing_credentials_returns_1(
+    monkeypatch: pytest.MonkeyPatch,
     capsys: pytest.CaptureFixture[str],
 ) -> None:
+    clear_cli_credential_env(monkeypatch)
+
     code = market_cli.main([])
 
     assert code == 1

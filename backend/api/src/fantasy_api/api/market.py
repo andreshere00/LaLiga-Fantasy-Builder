@@ -17,7 +17,7 @@ from fantasy_api.schemas.market import (
     MarketSnapshot,
     PlayerTeamOffers,
 )
-from fantasy_api.schemas.payload import as_object
+from fantasy_api.schemas.payload import as_market_snapshot, as_object
 
 router = APIRouter(prefix="/market", tags=["market"])
 
@@ -41,7 +41,7 @@ async def get_market(
     """Return the current market, user bids, and offers for a league."""
     _user, internal_jwt = await get_current_user(authorization)
     data = await get_container().market_service.get_market(internal_jwt, league_id)
-    return MarketSnapshot.model_validate(parse_payload(as_object, data))
+    return MarketSnapshot.model_validate(parse_payload(as_market_snapshot, data))
 
 
 @router.get(

@@ -16,7 +16,13 @@ type PlayerTileProps = {
   onSelect?: () => void;
 };
 
-function ScoreBadge({ points, isMvp = false }: { points: number; isMvp?: boolean }) {
+export function PlayerScoreBadge({
+  points,
+  isMvp = false,
+}: {
+  points: number;
+  isMvp?: boolean;
+}) {
   const tone = scoreTone(points, isMvp);
   return (
     <span className={`player-score-badge is-${tone}`} aria-hidden="true">
@@ -105,7 +111,7 @@ export function PlayerTile({
       <div className="player-card-spacer" aria-hidden="true" />
       <PlayerPhoto url={photoUrl} />
       {fixturePoints != null ? (
-        <ScoreBadge points={fixturePoints} isMvp={isMvp} />
+        <PlayerScoreBadge points={fixturePoints} isMvp={isMvp} />
       ) : null}
       <TeamBadge url={teamBadgeUrl} />
       <div className="player-card-gap" aria-hidden="true" />

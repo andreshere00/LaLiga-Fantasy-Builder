@@ -5,7 +5,7 @@ from __future__ import annotations
 import json
 
 import pytest
-from cli_http_stub import patch_httpx_client
+from cli_http_stub import clear_cli_credential_env, patch_httpx_client
 from fantasy_api.cli import calendar as calendar_cli
 
 CURRENT = {
@@ -107,6 +107,7 @@ def test_main_missing_jwt_returns_1(
     monkeypatch: pytest.MonkeyPatch,
     capsys: pytest.CaptureFixture[str],
 ) -> None:
+    clear_cli_credential_env(monkeypatch)
     patch_httpx_client(monkeypatch, {})
 
     code = calendar_cli.main(["--api-base", "http://api.test"])

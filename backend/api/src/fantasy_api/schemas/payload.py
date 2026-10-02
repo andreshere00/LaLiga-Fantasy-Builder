@@ -16,6 +16,27 @@ _COLLECTION_WRAPPER_KEYS: tuple[str, ...] = (
 )
 
 
+def as_market_snapshot(data: Any) -> dict[str, Any]:
+    """Normalize Fantasy league market JSON to a snapshot object.
+
+    Upstream may return a bare listing array or wrap listings under ``market``.
+    """
+    if data is None:
+        return {"marketPlayers": [], "userBids": []}
+    if isinstance(data, list):
+        items: list[dict[str, Any]] = []
+        for item in data:
+            if not isinstance(item, dict):
+                raise ValueError("expected objects in market listing array")
+            items.append(item)
+        return {"marketPlayers": items}
+    record = as_object(data)
+    nested = record.get("market")
+    if isinstance(nested, dict) and ("marketPlayers" in nested or "userBids" in nested):
+        return nested
+    return record
+
+
 def as_object(data: Any) -> dict[str, Any]:
     """Require a JSON object payload.
 

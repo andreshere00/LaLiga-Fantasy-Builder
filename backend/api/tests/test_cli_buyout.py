@@ -6,7 +6,7 @@ import json
 
 import httpx
 import pytest
-from cli_http_stub import patch_httpx_client
+from cli_http_stub import clear_cli_credential_env, patch_httpx_client
 from fantasy_api.cli import buyout as buyout_cli
 
 # ---- Happy path ---- #
@@ -78,9 +78,13 @@ def test_main_json_mode_returns_shield_bundle(
 
 
 def test_main_missing_credentials_returns_1(
+    monkeypatch: pytest.MonkeyPatch,
     capsys: pytest.CaptureFixture[str],
 ) -> None:
-    # Arrange / Act
+    # Arrange
+    clear_cli_credential_env(monkeypatch)
+
+    # Act
     code = buyout_cli.main(["--league-id", "42", "--player-team-id", "pt-9"])
 
     # Assert

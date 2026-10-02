@@ -82,3 +82,33 @@ export function PersonIcon() {
     </svg>
   );
 }
+
+export function CheckIcon() {
+  return (
+    <svg className="availability-icon" viewBox="0 0 24 24" aria-hidden="true">
+      <path fill="currentColor" d="M9 16.2 4.8 12l-1.4 1.4L9 19 21 7l-1.4-1.4z" />
+    </svg>
+  );
+}
+
+export function QuestionIcon() {
+  return (
+    <svg className="availability-icon" viewBox="0 0 24 24" aria-hidden="true">
+      <path
+        fill="currentColor"
+        d="M11 18h2v-2h-2v2zm1-16a10 10 0 1 0 0 20 10 10 0 0 0 0-20zm0 18a8 8 0 1 1 0-16 8 8 0 0 1 0 16zm0-14a4 4 0 0 0-4 4h2a2 2 0 1 1 2 2c-1.1 0-2 .9-2 2v1h2v-.5c1.7-.4 3-1.8 3-3.5a4 4 0 0 0-3-4z"
+      />
+    </svg>
+  );
+}
+
+export function CrossIcon() {
+  return (
+    <svg className="availability-icon" viewBox="0 0 24 24" aria-hidden="true">
+      <path
+        fill="currentColor"
+        d="M19 6.4 17.6 5 12 10.6 6.4 5 5 6.4 10.6 12 5 17.6 6.4 19l5.6-5.6 5.6 5.6 1.4-1.4-5.6-5.6z"
+      />
+    </svg>
+  );
+}

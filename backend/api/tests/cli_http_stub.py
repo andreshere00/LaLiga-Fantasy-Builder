@@ -12,6 +12,14 @@ from fantasy_api.cli import common as cli_common
 RouteHandler = Callable[[httpx.Request], httpx.Response]
 Routes = dict[tuple[str, str], Any]
 
+_CREDENTIAL_ENV_KEYS = (
+    "FANTASY_SESSION",
+    "SESSION",
+    "FANTASY_CSRF",
+    "CSRF",
+    "INTERNAL_JWT",
+)
+
 
 def handler_map(routes: Routes) -> RouteHandler:
     """Build a mock transport handler from method/path → response mappings."""
@@ -29,6 +37,12 @@ def handler_map(routes: Routes) -> RouteHandler:
         return httpx.Response(200, json=payload)
 
     return handler
+
+
+def clear_cli_credential_env(monkeypatch: pytest.MonkeyPatch) -> None:
+    """Unset CLI credential env vars so tests do not inherit a developer shell."""
+    for key in _CREDENTIAL_ENV_KEYS:
+        monkeypatch.delenv(key, raising=False)
 
 
 def patch_httpx_client(

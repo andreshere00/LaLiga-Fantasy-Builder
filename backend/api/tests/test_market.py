@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import json
 from collections.abc import Callable
+from pathlib import Path
 
 import httpx
 import pytest
@@ -348,12 +349,85 @@ def test_get_market_maps_fantasy_401(rsa_pems: tuple[str, str]) -> None:
     assert LALIGA_BEARER not in response.text
 
 
+def test_get_market_proxies_captured_snapshot(rsa_pems: tuple[str, str]) -> None:
+    _private_pem, public_pem = rsa_pems
+    token = mint_internal_jwt(_private_pem)
+    fixture_path = Path(__file__).resolve().parent / "fixtures" / "market_captured_snapshot.json"
+    upstream = json.loads(fixture_path.read_text())
+
+    def handler(_request: httpx.Request) -> httpx.Response:
+        return httpx.Response(200, json=upstream)
+
+    with make_client(public_pem, handler) as client:
+        response = client.get(
+            f"/market/leagues/{LEAGUE_ID}",
+            headers={"Authorization": f"Bearer {token}"},
+        )
+
+    assert response.status_code == 200
+    body = response.json()
+    assert len(body["marketPlayers"]) == len(upstream["marketPlayers"])
+
+
+def test_get_market_accepts_top_level_listing_array(rsa_pems: tuple[str, str]) -> None:
+    _private_pem, public_pem = rsa_pems
+    token = mint_internal_jwt(_private_pem)
+    upstream = [{"id": "m1", "playerMaster": {"id": "7", "nickname": "A"}}]
+
+    def handler(_request: httpx.Request) -> httpx.Response:
+        return httpx.Response(200, json=upstream)
+
+    with make_client(public_pem, handler) as client:
+        response = client.get(
+            f"/market/leagues/{LEAGUE_ID}",
+            headers={"Authorization": f"Bearer {token}"},
+        )
+
+    assert response.status_code == 200
+    assert response.json() == {"marketPlayers": upstream}
+
+
+def test_get_market_accepts_null_snapshot(rsa_pems: tuple[str, str]) -> None:
+    _private_pem, public_pem = rsa_pems
+    token = mint_internal_jwt(_private_pem)
+
+    def handler(_request: httpx.Request) -> httpx.Response:
+        return httpx.Response(200, content=b"null")
+
+    with make_client(public_pem, handler) as client:
+        response = client.get(
+            f"/market/leagues/{LEAGUE_ID}",
+            headers={"Authorization": f"Bearer {token}"},
+        )
+
+    assert response.status_code == 200
+    assert response.json() == {"marketPlayers": [], "userBids": []}
+
+
+def test_get_market_accepts_nested_market_object(rsa_pems: tuple[str, str]) -> None:
+    _private_pem, public_pem = rsa_pems
+    token = mint_internal_jwt(_private_pem)
+    upstream = {"market": {"marketPlayers": [{"id": "m1"}]}}
+
+    def handler(_request: httpx.Request) -> httpx.Response:
+        return httpx.Response(200, json=upstream)
+
+    with make_client(public_pem, handler) as client:
+        response = client.get(
+            f"/market/leagues/{LEAGUE_ID}",
+            headers={"Authorization": f"Bearer {token}"},
+        )
+
+    assert response.status_code == 200
+    assert response.json() == {"marketPlayers": [{"id": "m1"}]}
+
+
 def test_get_market_rejects_non_object_payload(rsa_pems: tuple[str, str]) -> None:
     _private_pem, public_pem = rsa_pems
     token = mint_internal_jwt(_private_pem)
 
     def handler(_request: httpx.Request) -> httpx.Response:
-        return httpx.Response(200, json=[{"marketPlayers": []}])
+        return httpx.Response(200, json="not-a-collection")
 
     with make_client(public_pem, handler) as client:
         response = client.get(

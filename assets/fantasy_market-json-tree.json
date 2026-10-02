@@ -1,0 +1,297 @@
+{
+  "title": "JSON structure tree for fantasy_market.json",
+  "generatedFrom": "assets/fantasy_market.json",
+  "notes": [
+    "Inferred by sampling array elements (see sampledItems).",
+    "optional: true means the key was absent on some sampled objects.",
+    "These files wrap multiple API responses under leagues[]."
+  ],
+  "description": "fantasy-market --json aggregate (market, history, offers).",
+  "root": {
+    "type": "object",
+    "properties": {
+      "leagues": {
+        "type": "array",
+        "length": 1,
+        "items": {
+          "type": "object",
+          "properties": {
+            "history": {
+              "type": "array",
+              "length": 30,
+              "items": {
+                "type": "object",
+                "properties": {
+                  "date": {
+                    "type": "string"
+                  },
+                  "money": {
+                    "type": "integer"
+                  },
+                  "operation": {
+                    "type": "string"
+                  },
+                  "player": {
+                    "type": "object",
+                    "properties": {
+                      "id": {
+                        "type": "string"
+                      },
+                      "images": {
+                        "type": "object",
+                        "properties": {
+                          "transparent": {
+                            "type": "object",
+                            "properties": {
+                              "256x256": {
+                                "type": "string"
+                              }
+                            }
+                          }
+                        }
+                      },
+                      "name": {
+                        "type": "string"
+                      },
+                      "nickname": {
+                        "type": "string"
+                      },
+                      "positionId": {
+                        "type": "integer"
+                      }
+                    }
+                  },
+                  "toFrom": {
+                    "type": "object",
+                    "properties": {
+                      "avatar": {
+                        "type": "string",
+                        "example": "https://ll1prglcdn.azureedge.net/global-avatar/default.png"
+                      },
+                      "id": {
+                        "type": "string",
+                        "example": "1795101"
+                      },
+                      "managerName": {
+                        "type": "string",
+                        "example": "La Casucha"
+                      }
+                    }
+                  }
+                }
+              },
+              "sampledItems": 25
+            },
+            "league_id": {
+              "type": "string",
+              "example": "017798935"
+            },
+            "market": {
+              "type": "object",
+              "properties": {
+                "marketPlayers": {
+                  "type": "array",
+                  "length": 51,
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "bid": {
+                        "type": "object",
+                        "properties": {
+                          "createdAt": {
+                            "type": "string",
+                            "example": "2026-10-01T10:57:54+02:00"
+                          },
+                          "id": {
+                            "type": "string",
+                            "example": "42034397"
+                          },
+                          "money": {
+                            "type": "integer"
+                          },
+                          "status": {
+                            "type": "string",
+                            "example": "pending"
+                          },
+                          "updatedAt": {
+                            "type": "string",
+                            "example": "2026-10-01T10:57:54+02:00"
+                          }
+                        }
+                      },
+                      "directOffer": {
+                        "type": "boolean"
+                      },
+                      "discr": {
+                        "type": "string"
+                      },
+                      "expirationDate": {
+                        "type": "string"
+                      },
+                      "id": {
+                        "type": "string"
+                      },
+                      "leagueId": {
+                        "type": "integer"
+                      },
+                      "leagueType": {
+                        "type": "string"
+                      },
+                      "numberOfBids": {
+                        "type": "integer"
+                      },
+                      "numberOfOffers": {
+                        "type": "integer"
+                      },
+                      "playerMaster": {
+                        "type": "object",
+                        "properties": {
+                          "averagePoints": {
+                            "type": [
+                              "integer",
+                              "number"
+                            ]
+                          },
+                          "id": {
+                            "type": "string"
+                          },
+                          "images": {
+                            "type": "object",
+                            "properties": {
+                              "transparent": {
+                                "type": "object",
+                                "properties": {
+                                  "256x256": {
+                                    "type": "string"
+                                  }
+                                }
+                              }
+                            }
+                          },
+                          "lastSeasonPoints": {
+                            "type": "integer"
+                          },
+                          "marketValue": {
+                            "type": "integer"
+                          },
+                          "name": {
+                            "type": "string"
+                          },
+                          "nickname": {
+                            "type": "string"
+                          },
+                          "playerStatus": {
+                            "type": "string"
+                          },
+                          "points": {
+                            "type": "integer"
+                          },
+                          "position": {
+                            "type": "string"
+                          },
+                          "positionId": {
+                            "type": "integer"
+                          },
+                          "slug": {
+                            "type": "string"
+                          },
+                          "teamId": {
+                            "type": "integer"
+                          }
+                        }
+                      },
+                      "playerTeam": {
+                        "type": "object",
+                        "properties": {
+                          "buyoutClause": {
+                            "type": "integer"
+                          },
+                          "buyoutClauseLockedEndTime": {
+                            "type": "string"
+                          },
+                          "isShielded": {
+                            "type": "boolean"
+                          },
+                          "manager": {
+                            "type": "object",
+                            "properties": {
+                              "avatar": {
+                                "type": "string"
+                              },
+                              "id": {
+                                "type": "string"
+                              },
+                              "managerName": {
+                                "type": "string"
+                              }
+                            }
+                          },
+                          "playerTeamId": {
+                            "type": "string"
+                          }
+                        }
+                      },
+                      "salePrice": {
+                        "type": "integer"
+                      },
+                      "sellerTeam": {
+                        "type": "object",
+                        "properties": {
+                          "id": {
+                            "type": "string"
+                          },
+                          "manager": {
+                            "type": "object",
+                            "properties": {
+                              "avatar": {
+                                "type": "string"
+                              },
+                              "id": {
+                                "type": "string"
+                              },
+                              "managerName": {
+                                "type": "string"
+                              }
+                            }
+                          },
+                          "managerId": {
+                            "type": "integer"
+                          },
+                          "teamMoney": {
+                            "type": [
+                              "integer",
+                              "null"
+                            ],
+                            "optional": true
+                          },
+                          "teamPoints": {
+                            "type": "integer"
+                          },
+                          "teamValue": {
+                            "type": "integer"
+                          }
+                        }
+                      },
+                      "status": {
+                        "type": "string"
+                      }
+                    }
+                  },
+                  "sampledItems": 25
+                }
+              }
+            },
+            "offers": {
+              "type": "null",
+              "optional": true
+            },
+            "player_team_id": {
+              "type": "null",
+              "optional": true
+            }
+          }
+        }
+      }
+    }
+  }
+}

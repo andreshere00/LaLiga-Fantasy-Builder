@@ -6,7 +6,7 @@ import json
 
 import httpx
 import pytest
-from cli_http_stub import patch_httpx_client
+from cli_http_stub import clear_cli_credential_env, patch_httpx_client
 from fantasy_api.cli import common as cli_common
 from fantasy_api.cli import teams as teams_cli
 
@@ -175,9 +175,13 @@ def test_exchange_token_then_fetch(
 
 
 def test_main_missing_credentials_returns_1(
+    monkeypatch: pytest.MonkeyPatch,
     capsys: pytest.CaptureFixture[str],
 ) -> None:
-    # Arrange / Act
+    # Arrange
+    clear_cli_credential_env(monkeypatch)
+
+    # Act
     code = teams_cli.main([])
 
     # Assert

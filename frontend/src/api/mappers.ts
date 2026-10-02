@@ -95,26 +95,26 @@ const LINEUP_ROLES: readonly LineupRole[] = [
 
 const EMPTY_NAME = "Player name";
 
-function asRecord(value: unknown): Record<string, unknown> | null {
+export function asRecord(value: unknown): Record<string, unknown> | null {
   if (value && typeof value === "object" && !Array.isArray(value)) {
     return value as Record<string, unknown>;
   }
   return null;
 }
 
-function text(value: unknown): string | null {
+export function text(value: unknown): string | null {
   if (typeof value !== "string") return null;
   const trimmed = value.trim();
   return trimmed.length > 0 ? trimmed : null;
 }
 
-function idText(value: unknown): string | null {
+export function idText(value: unknown): string | null {
   if (typeof value === "string" && value.trim().length > 0) return value;
   if (typeof value === "number") return String(value);
   return null;
 }
 
-function asFiniteNumber(value: unknown): number | null {
+export function asFiniteNumber(value: unknown): number | null {
   if (typeof value === "number" && Number.isFinite(value)) return value;
   if (typeof value === "string" && value.trim().length > 0) {
     const parsed = Number(value);
