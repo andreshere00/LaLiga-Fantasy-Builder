@@ -237,6 +237,21 @@ describe("useLineupBoard", () => {
     api.putJson.mockResolvedValue({});
   });
 
+  it("useLineupBoard_rival_selected_on_past_week_keeps_week", async () => {
+    const { result } = renderHook(() => useLineupBoard(), { wrapper: Wrapper });
+    await loadCallerBoard(result);
+    act(() => {
+      result.current.goToWeek(5);
+    });
+    act(() => {
+      result.current.selectTeam("team-b");
+    });
+    await waitFor(() => {
+      expect(result.current.selectedTeamId).toBe("team-b");
+      expect(result.current.week).toBe(5);
+    });
+  });
+
   it("useLineupBoard_rival_peek_restores_dirty_draft", async () => {
     const { result } = renderHook(() => useLineupBoard(), { wrapper: Wrapper });
     await loadCallerBoard(result);
@@ -251,23 +266,17 @@ describe("useLineupBoard", () => {
     await waitFor(() => {
       expect(result.current.selectedTeamId).toBe("team-b");
       expect(result.current.lineupLoading).toBe(false);
+      expect(result.current.week).toBe(7);
       expect(result.current.editable).toBe(false);
-      expect(result.current.opponentLineupLocked).toBe(true);
-      expect(result.current.opponentLineupUnavailableMessage).toContain(
-        "The lineup is not available because this match has not been played yet.",
-      );
+      expect(result.current.opponentLineupLocked).toBe(false);
     });
-
-    act(() => {
-      result.current.openOpponentLineupNotice();
-    });
-    expect(result.current.opponentLineupNoticeOpen).toBe(true);
 
     act(() => {
       result.current.selectTeam("team-a");
     });
     await waitFor(() => {
       expect(result.current.selectedTeamId).toBe("team-a");
+      expect(result.current.week).toBe(8);
       expect(result.current.editable).toBe(true);
       expect(result.current.saveDisabled).toBe(false);
       expect(idsForRole(result.current, "defender")).toContain("d5");

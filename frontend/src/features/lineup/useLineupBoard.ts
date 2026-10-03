@@ -36,6 +36,7 @@ import {
   freeFormationCodesFromLineup,
   groupsFromLineup,
   hasPlayers,
+  lastPlayedWeek,
   leagueId,
   mapRanking,
   maxWeek,
@@ -192,6 +193,7 @@ export function useLineupBoard(options: UseLineupBoardOptions = {}): LineupBoard
   const [requestedWeek, setRequestedWeek] = useState<number | null>(null);
   const draftsRef = useRef(new Map<string, StoredDraft>());
   const activeKeyRef = useRef("");
+  const weekBeforePeekRef = useRef<number | null>(null);
   const [activeDraft, setActiveDraft] = useState<StoredDraft | null>(null);
   const [pitchSelection, setPitchSelection] = useState<PitchSelection | null>(null);
   const [pastFixtureNoticeOpen, setPastFixtureNoticeOpen] = useState(false);
@@ -202,6 +204,7 @@ export function useLineupBoard(options: UseLineupBoardOptions = {}): LineupBoard
   const leagueChanged = previousLeagueKeyRef.current !== leagueKey;
   if (leagueChanged) {
     previousLeagueKeyRef.current = leagueKey;
+    weekBeforePeekRef.current = null;
     setPickedTeamId(null);
     setRequestedWeek(null);
     setPitchSelection(null);
@@ -641,6 +644,16 @@ export function useLineupBoard(options: UseLineupBoardOptions = {}): LineupBoard
     selectedTeamId: activeTeamId,
     selectTeam: (teamId: string) => {
       if (ranking.some((item) => item.teamId === teamId && item.selectable)) {
+        const playedWeek = lastPlayedWeek(current);
+        if (teamId === callerId) {
+          if (weekBeforePeekRef.current != null) {
+            setRequestedWeek(weekBeforePeekRef.current);
+            weekBeforePeekRef.current = null;
+          }
+        } else if (lineupUsesCurrent && playedWeek >= 1) {
+          weekBeforePeekRef.current = week;
+          setRequestedWeek(playedWeek);
+        }
         setPickedTeamId(teamId);
         setPitchSelection(null);
         setPastFixtureNoticeOpen(false);
@@ -651,6 +664,7 @@ export function useLineupBoard(options: UseLineupBoardOptions = {}): LineupBoard
     week,
     maxWeek: upper,
     goToWeek: (next) => {
+      weekBeforePeekRef.current = null;
       setRequestedWeek(clampWeek(next, upper));
       setPitchSelection(null);
       setPastFixtureNoticeOpen(false);
@@ -692,7 +706,7 @@ export function useLineupBoard(options: UseLineupBoardOptions = {}): LineupBoard
         : null,
     lineupMessage:
       !lineupPending && lineupQuery.error
-        ? lineupLoadMessage(lineupQuery.error)
+        ? lineupLoadMessage(lineupQuery.error, !isCaller && !fixtureScoresVisible)
         : null,
     emptyLeague: !leaguesLoading && !leaguesError && selected == null,
     editable,
