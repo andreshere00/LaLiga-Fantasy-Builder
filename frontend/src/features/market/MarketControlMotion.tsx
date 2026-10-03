@@ -2,9 +2,12 @@ import { forwardRef, type ComponentPropsWithoutRef } from "react";
 import { Link } from "react-router-dom";
 import { m, type Transition } from "motion/react";
 
-import { MARKET_ROW_HOVER_TRANSITION } from "./MarketRowMotion";
-
-export const MARKET_CONTROL_HOVER_TRANSITION: Transition = MARKET_ROW_HOVER_TRANSITION;
+export const MARKET_CONTROL_HOVER_TRANSITION: Transition = {
+  type: "spring",
+  stiffness: 380,
+  damping: 28,
+  mass: 0.75,
+};
 
 export const MARKET_CONTROL_HOVER = {
   y: -2,

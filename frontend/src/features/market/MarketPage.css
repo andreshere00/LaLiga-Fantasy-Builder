@@ -275,16 +275,13 @@
   border: 1px solid color-mix(in srgb, var(--ink) 12%, transparent);
 }
 
-@media (hover: hover) {
-  .market-row-data {
-    transition:
-      background-color 0.26s cubic-bezier(0.4, 0, 0.2, 1),
-      border-color 0.26s cubic-bezier(0.4, 0, 0.2, 1);
-  }
+.market-row-data {
+  transition: background-color var(--control-fill-duration) var(--control-fill-ease);
+}
 
+@media (hover: hover) {
   .market-row-data:hover {
-    background: color-mix(in srgb, var(--gray) 42%, var(--white));
-    border-color: color-mix(in srgb, var(--ink) 20%, transparent);
+    background: var(--red-soft);
   }
 }
 
