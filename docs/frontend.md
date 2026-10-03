@@ -104,7 +104,7 @@ stale snapshots until Fantasy confirms the change (`model/pendingBids.ts`).
 | Market value | Price and 5-day change; hover: last, highest, lowest, 5d/14d ago with % vs current |
 | Availability | SVG icons + hover text for next matchday readiness |
 | Seal end | Countdown; **red** when under one hour remains |
-| Sell options | Seller link (`/?team=…`) or `LALIGA`; **Options** / **Bidded** action menu |
+| Sell options | Seller link (`/?team=…`) or `LALIGA`; **Options** / **Bidded** action menu. On your own listings the menu offers **Withdraw from market** (confirmation modal, `DELETE /api/market/leagues/{id}/{marketId}`) and a disabled **Immediate sell** entry until a documented Fantasy route exists |
 
 ### Actions (user-confirmed only)
 

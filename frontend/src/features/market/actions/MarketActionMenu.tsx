@@ -115,8 +115,7 @@ export function MarketActionMenu({ row, context, actions }: MarketActionMenuProp
           {offers.map((offer) => {
             const tooltip = menuItemTooltip(offer, row, clauseTimeLocked, unlockLabel);
             const tooltipLines = tooltip?.split("\n") ?? [];
-            const itemKey =
-              offer.type === "bid" ? offer.kind : offer.type === "cancel-bid" ? "cancel-bid" : "clause";
+            const itemKey = offer.type === "bid" ? offer.kind : offer.type;
             const tooltipId = `${menuId}-${itemKey}-tip`;
             return (
               <li
@@ -141,7 +140,9 @@ export function MarketActionMenu({ row, context, actions }: MarketActionMenuProp
                       actions.openBid(row, offer.kind);
                     } else if (offer.type === "cancel-bid") {
                       actions.cancelBid(row);
-                    } else {
+                    } else if (offer.type === "withdraw") {
+                      actions.openWithdraw(row);
+                    } else if (offer.type === "pay-clause") {
                       actions.openClause(row, offer.amount);
                     }
                   }}

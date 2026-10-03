@@ -20,7 +20,7 @@ type MarketRowViewProps = {
 export function MarketRowView({ row, now, actionContext, actions }: MarketRowViewProps) {
   return (
     <li className="market-row">
-      <PlayerCell row={row} />
+      <PlayerCell row={row} now={now} />
       <span className="market-cell" data-label="Position">
         <PositionCell positionId={row.positionId} />
       </span>

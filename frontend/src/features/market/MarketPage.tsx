@@ -5,6 +5,7 @@ import { useNow } from "../../hooks/useNow";
 import { GatePanel } from "../gates/GatePanel";
 import { BidDialog } from "./actions/BidDialog";
 import { ClauseDialog } from "./actions/ClauseDialog";
+import { WithdrawDialog } from "./actions/WithdrawDialog";
 import { useMarketActions } from "./actions/useMarketActions";
 import { MarketRowView } from "./MarketRowView";
 import { MARKET_SEARCH_NO_MATCHES } from "./marketMessages";
@@ -31,7 +32,10 @@ function MarketList() {
     squadMarketValue: board.squadMarketValue,
   };
 
-  const dialogOpen = marketActions.pendingBid != null || marketActions.pendingClause != null;
+  const dialogOpen =
+    marketActions.pendingBid != null ||
+    marketActions.pendingClause != null ||
+    marketActions.pendingWithdraw != null;
 
   if (board.isLoading) return <p className="status-copy">Loading market…</p>;
   if (board.noLeague) return <p className="status-copy">No leagues found for this account.</p>;
@@ -106,6 +110,14 @@ function MarketList() {
         error={marketActions.message}
         onClose={marketActions.closeBid}
         onConfirm={marketActions.submitBid}
+      />
+      <WithdrawDialog
+        open={marketActions.pendingWithdraw != null}
+        row={marketActions.pendingWithdraw}
+        pending={marketActions.actionPending}
+        error={marketActions.message}
+        onClose={marketActions.closeWithdraw}
+        onConfirm={marketActions.confirmWithdraw}
       />
       <ClauseDialog
         open={marketActions.pendingClause != null}

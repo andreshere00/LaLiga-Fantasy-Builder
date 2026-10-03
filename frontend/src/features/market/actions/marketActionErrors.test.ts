@@ -11,6 +11,12 @@ describe("marketActionErrorMessage", () => {
     expect(marketActionErrorMessage(error, "bid")).toBe(BID_STATE_CONFLICT_MESSAGE);
   });
 
+  it("marketActionErrorMessage_withdraw_403_returns_withdraw_copy", () => {
+    expect(marketActionErrorMessage(new ApiError(403, "fantasy_error"), "withdraw")).toBe(
+      "The player could not be withdrawn from the market.",
+    );
+  });
+
   // ---- Edge cases ---- #
 
   it("marketActionErrorMessage_clause_400_fantasy_error_returns_generic", () => {

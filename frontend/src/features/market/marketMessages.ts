@@ -11,6 +11,11 @@ export const COACH_HIRE_PREMIUM_MESSAGE =
 export const CLAUSE_BLOCKED_MESSAGE =
   "The player's release clause cannot be activated yet.";
 
+/** Tooltip copy for the time left until a release clause can be activated. */
+export function clauseUnlockTooltip(countdown: string): string {
+  return `Time remaining to activate the release clause: ${countdown}`;
+}
+
 export type MarketBidKind = "hire" | "purchase" | "modify";
 
 /** True when the listing is a LaLiga coach hire action. */
