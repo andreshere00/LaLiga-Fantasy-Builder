@@ -109,6 +109,18 @@ export function text(value: unknown): string | null {
   return trimmed.length > 0 ? trimmed : null;
 }
 
+/** Parses ISO strings or epoch timestamps (seconds or milliseconds). */
+export function parseInstant(value: unknown): number | null {
+  if (typeof value === "number" && Number.isFinite(value)) {
+    const ms = value < 1_000_000_000_000 ? value * 1000 : value;
+    return Number.isFinite(ms) ? ms : null;
+  }
+  const raw = text(value);
+  if (raw == null) return null;
+  const time = Date.parse(raw);
+  return Number.isFinite(time) ? time : null;
+}
+
 export function idText(value: unknown): string | null {
   if (typeof value === "string" && value.trim().length > 0) return value;
   if (typeof value === "number") return String(value);

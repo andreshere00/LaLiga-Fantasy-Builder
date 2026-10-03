@@ -7,9 +7,12 @@ import { useAuth } from "../../../auth/AuthProvider";
 import { useLeague } from "../../lineup/LeagueProvider";
 import { callerTeamId, leagueId } from "../../../api/mappers";
 import { patchMarketSnapshotBid } from "../marketRows";
+import { clearPendingBid, recordPendingBid } from "../model/pendingBids";
 import type { MarketRow } from "../model/row";
-import { marketActionErrorMessage } from "./marketActionErrors";
+import { marketActionErrorMessage, type MarketActionKind } from "./marketActionErrors";
 import { usesDirectOfferBid, type BidActionKind } from "./marketActions";
+
+const FOLLOW_UP_REFETCH_MS: readonly number[] = [1_500, 4_000];
 
 type PendingBid = {
   row: MarketRow;
@@ -35,16 +38,28 @@ export function useMarketActions() {
   const teamId = selected ? callerTeamId(selected) : null;
 
   const patchCachedBid = useCallback(
-    (marketId: string, myBid: { id: string; money: number } | null) => {
+    (
+      marketId: string,
+      myBid: { id: string; money: number } | null,
+      removedBidId?: string | null,
+    ) => {
       if (leagueKey === "") return;
+      recordPendingBid(queryClient, leagueKey, marketId, myBid, removedBidId ?? null);
       queryClient.setQueryData(["market", leagueKey], (current) =>
-        patchMarketSnapshotBid(current, marketId, myBid),
+        patchMarketSnapshotBid(current, marketId, myBid, {
+          removedBidId: removedBidId ?? null,
+        }),
       );
     },
     [queryClient, leagueKey],
   );
 
   const refreshAfterMutation = useCallback(async () => {
+    for (const delay of FOLLOW_UP_REFETCH_MS) {
+      window.setTimeout(() => {
+        void queryClient.refetchQueries({ queryKey: ["market", leagueKey] });
+      }, delay);
+    }
     await Promise.all([
       queryClient.refetchQueries({ queryKey: ["market", leagueKey] }),
       teamId
@@ -56,15 +71,23 @@ export function useMarketActions() {
     ]);
   }, [queryClient, leagueKey, teamId]);
 
-  const onError = useCallback(
-    (error: unknown) => {
+  const reportError = useCallback(
+    (error: unknown, kind: MarketActionKind) => {
       if (error instanceof NeedsReauthError) {
         markNeedsReauth();
         return;
       }
-      setMessage(marketActionErrorMessage(error));
+      setMessage(marketActionErrorMessage(error, kind));
     },
     [markNeedsReauth],
+  );
+
+  const onBidError = useCallback(
+    async (error: unknown) => {
+      reportError(error, "bid");
+      await refreshAfterMutation();
+    },
+    [reportError, refreshAfterMutation],
   );
 
   const createBid = useMutation({
@@ -94,7 +117,7 @@ export function useMarketActions() {
       });
       await refreshAfterMutation();
     },
-    onError,
+    onError: onBidError,
   });
 
   const modifyBid = useMutation({
@@ -110,21 +133,29 @@ export function useMarketActions() {
       patchCachedBid(variables.row.marketId, { id: bidId, money: variables.money });
       await refreshAfterMutation();
     },
-    onError,
+    onError: onBidError,
   });
 
   const cancelBid = useMutation({
     mutationFn: async (row: MarketRow) => {
       const bidId = row.myBid?.id;
       if (!bidId) throw new ApiError(400, "missing_bid");
+      if (bidId.startsWith("local-")) throw new ApiError(400, "missing_bid");
       return deleteJson(paths.marketBidUpdate(leagueKey, row.marketId, bidId), token);
+    },
+    onMutate: async (row) => {
+      await queryClient.cancelQueries({ queryKey: ["market", leagueKey] });
+      patchCachedBid(row.marketId, null, row.myBid?.id ?? null);
     },
     onSuccess: async (_data, row) => {
       setMessage(null);
-      patchCachedBid(row.marketId, null);
+      patchCachedBid(row.marketId, null, row.myBid?.id ?? null);
       await refreshAfterMutation();
     },
-    onError,
+    onError: async (error, row) => {
+      clearPendingBid(queryClient, leagueKey, row.marketId);
+      await onBidError(error);
+    },
   });
 
   const payClause = useMutation({
@@ -140,7 +171,7 @@ export function useMarketActions() {
       setMessage(null);
       await refreshAfterMutation();
     },
-    onError,
+    onError: (error) => reportError(error, "clause"),
   });
 
   const openBid = useCallback((row: MarketRow, kind: BidActionKind) => {

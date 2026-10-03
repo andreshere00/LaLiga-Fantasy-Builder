@@ -8,7 +8,7 @@ import { SellerCell } from "./cells/SellerCell";
 import { ValueCell } from "./cells/ValueCell";
 import type { MarketRow } from "./model/row";
 import { positionAbbrev, positionTone } from "./positions";
-import { remainingLabel } from "./model/valueSeries";
+import { isSealEndUnderOneHour, remainingLabel } from "./model/valueSeries";
 
 type MarketActionsApi = ReturnType<typeof useMarketActions>;
 
@@ -44,13 +44,22 @@ export function MarketRowView({ row, now, actionContext, actions }: MarketRowVie
           marketValue={row.marketValue}
           variation={row.variation}
           variationPercent={row.variationPercent}
+          valueHistory={row.valueHistory}
         />
       </span>
       <span className="market-cell market-cell-availability" data-label="Availability">
         <AvailabilityCell availability={row.availability} />
       </span>
       <span className="market-cell" data-label="Seal end">
-        {remainingLabel(row.expiresAt, now)}
+        <span
+          className={
+            isSealEndUnderOneHour(row.expiresAt, now)
+              ? "market-seal-end is-urgent"
+              : "market-seal-end"
+          }
+        >
+          {remainingLabel(row.expiresAt, now)}
+        </span>
       </span>
       <span className="market-cell market-cell-seller" data-label="Sell options">
         <SellerCell row={row} actionContext={actionContext} actions={actions} />

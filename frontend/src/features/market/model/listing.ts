@@ -76,9 +76,9 @@ export function expiryOf(item: Record<string, unknown>): number | null {
 export type UserBidRef = { id: string; money: number };
 
 function bidRefFromRecord(record: Record<string, unknown>): UserBidRef | null {
-  const nested = asRecord(record.bid) ?? record;
-  const id = idText(nested.id) ?? idText(record.bidId);
-  const money = asFiniteNumber(nested.money) ?? asFiniteNumber(record.money);
+  const bid = asRecord(record.bid);
+  const id = idText(bid?.id) ?? idText(record.bidId) ?? idText(record.id);
+  const money = asFiniteNumber(bid?.money) ?? asFiniteNumber(record.money);
   if (!id || money == null) return null;
   return { id, money };
 }
@@ -104,12 +104,25 @@ export function userBidsByMarketId(snapshot: unknown): Map<string, UserBidRef> {
   return map;
 }
 
+function userBidArray(value: unknown): Record<string, unknown>[] {
+  if (!Array.isArray(value)) return [];
+  return value.map(asRecord).filter((item): item is Record<string, unknown> => item != null);
+}
+
 /** Pending bids from a market snapshot outside listing rows. */
 export function userBidRecords(snapshot: unknown): Record<string, unknown>[] {
   const record = asRecord(snapshot);
-  const bids = record?.userBids;
-  if (!Array.isArray(bids)) return [];
-  return bids.map(asRecord).filter((item): item is Record<string, unknown> => item != null);
+  if (!record) return [];
+  const nested = asRecord(record.market);
+  const combined = [...userBidArray(record.userBids), ...userBidArray(nested?.userBids)];
+  if (combined.length === 0) return [];
+  const byBidId = new Map<string, Record<string, unknown>>();
+  for (const entry of combined) {
+    const ref = bidRefFromRecord(entry);
+    const key = ref?.id ?? JSON.stringify(entry);
+    byBidId.set(key, entry);
+  }
+  return [...byBidId.values()];
 }
 
 /** Distinct active user bids on the market (listing bids plus ``userBids``). */
@@ -122,8 +135,8 @@ export function activeUserBidCount(
     if (row.myBid?.id) ids.add(row.myBid.id);
   }
   for (const bid of userBidRecords(snapshot)) {
-    const id = idText(bid.id);
-    if (id) ids.add(id);
+    const ref = bidRefFromRecord(bid);
+    if (ref?.id) ids.add(ref.id);
   }
   return ids.size;
 }

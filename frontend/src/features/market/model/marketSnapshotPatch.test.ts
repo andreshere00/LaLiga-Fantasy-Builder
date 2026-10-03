@@ -50,4 +50,18 @@ describe("patchMarketSnapshotBid", () => {
     expect(next.marketPlayers[0]?.bid).toBeUndefined();
     expect(next.userBids).toHaveLength(0);
   });
+
+  it("patchMarketSnapshotBid_clears_nested_userBids_by_bid_id", () => {
+    const snapshot = {
+      market: {
+        marketPlayers: [{ id: "mk-1", bid: { id: "bid-real", money: 2 } }],
+        userBids: [{ id: "bid-envelope", marketPlayerId: "mk-1", bid: { id: "bid-real", money: 2 } }],
+      },
+    };
+    const next = patchMarketSnapshotBid(snapshot, "mk-1", null, {
+      removedBidId: "bid-real",
+    }) as { market: { marketPlayers: { bid?: unknown }[]; userBids: unknown[] } };
+    expect(next.market.marketPlayers[0]?.bid).toBeUndefined();
+    expect(next.market.userBids).toHaveLength(0);
+  });
 });

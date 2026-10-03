@@ -38,6 +38,7 @@ function baseRow(overrides: Partial<MarketRow> = {}): MarketRow {
     isShielded: false,
     myBid: null,
     directOffer: false,
+    valueHistory: [],
     ...overrides,
   };
 }
@@ -180,7 +181,7 @@ describe("resolveMarketActions", () => {
     const offers = resolveMarketActionOffers(baseRow({ positionId: 5 }), baseContext());
     const bid = offers.find((offer) => offer.type === "bid");
     expect(bid?.enabled).toBe(false);
-    expect(bid?.disabledReason).toContain("coach");
+    expect(bid?.disabledReason).toContain("premium");
   });
 
   it("resolveMarketActionOffers_lists_disabled_hire_when_squad_full", () => {

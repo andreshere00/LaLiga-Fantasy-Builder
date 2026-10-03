@@ -221,6 +221,21 @@
   line-height: 1.25;
 }
 
+.market-value-tooltip-target {
+  cursor: help;
+}
+
+.market-value-tooltip {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.market-value-tooltip-line {
+  display: block;
+  white-space: nowrap;
+}
+
 .market-value-primary {
   font-weight: 700;
   font-size: 1rem;
@@ -246,6 +261,11 @@
 
 .market-value-change.is-down {
   color: #c0392b;
+}
+
+.market-seal-end.is-urgent {
+  color: #ff4b44;
+  font-weight: 700;
 }
 
 .market-seller {
@@ -372,7 +392,7 @@
   position: absolute;
   top: calc(100% + 4px);
   left: 0;
-  z-index: 5;
+  z-index: 20;
   list-style: none;
   margin: 0;
   padding: 4px;
@@ -380,6 +400,20 @@
   background: var(--white);
   border: 1px solid color-mix(in srgb, var(--ink) 12%, transparent);
   box-shadow: var(--shadow-surface);
+}
+
+.market-actions-menu-item {
+  position: relative;
+  overflow: visible;
+}
+
+.market-actions-menu-item .hover-tooltip-panel {
+  z-index: 120;
+  max-width: min(22rem, calc(100vw - 32px));
+}
+
+.market-actions-tooltip-line {
+  display: inline;
 }
 
 .market-actions-item {

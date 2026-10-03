@@ -1,4 +1,4 @@
-import { isCoachPosition } from "../positions";
+import { COACH_HIRE_PREMIUM_MESSAGE, isCoachMarketHire } from "../marketMessages";
 import { remainingMs } from "../model/valueSeries";
 import type { MarketRow } from "../model/row";
 
@@ -118,11 +118,16 @@ function listingOpen(row: MarketRow, now: number): boolean {
   return left == null || left > 0;
 }
 
+/** True while the release clause lock window has not ended yet. */
+export function isClauseTimeLocked(row: MarketRow, now: number): boolean {
+  return row.clauseUnlockAt != null && row.clauseUnlockAt > now;
+}
+
 function clausePayable(row: MarketRow, money: number | null, now: number): boolean {
   if (!row.playerTeamId || row.isShielded) return false;
   const clause = row.buyoutClause;
   if (clause == null || clause <= 0) return false;
-  if (row.clauseUnlockAt == null || row.clauseUnlockAt > now) return false;
+  if (isClauseTimeLocked(row, now) || row.clauseUnlockAt == null) return false;
   if (money == null || money < clause) return false;
   return true;
 }
@@ -136,14 +141,12 @@ const INSUFFICIENT_POSITIVE_BALANCE =
 const INSUFFICIENT_DEBT_HEADROOM =
   "With a negative balance, the bid cannot push your debt above 20% of squad market value.";
 
-const COACH_HIRE_BLOCKED = "Hiring coaches from the market is not available yet.";
-
 function bidDisabledReason(
   row: MarketRow,
   context: MarketActionContext,
   kind: BidActionKind,
 ): string {
-  if (kind === "hire" && isCoachPosition(row.positionId)) return COACH_HIRE_BLOCKED;
+  if (isCoachMarketHire(row.positionId, kind)) return COACH_HIRE_PREMIUM_MESSAGE;
 
   const isModify = kind === "modify";
   if (!isModify && !squadSlotAvailableForNewBid(context)) return SQUAD_SLOT_BLOCKED;
@@ -211,8 +214,7 @@ export function resolveMarketActionOffers(
       : { kind: "purchase" as const, label: "Purchase bid" };
   const slotOk = squadSlotAvailableForNewBid(context);
   const rangeOk = bidRangeAvailable(row.marketValue, money, context.squadMarketValue, 0);
-  const coachHireBlocked =
-    bidOffer.kind === "hire" && isCoachPosition(row.positionId);
+  const coachHireBlocked = isCoachMarketHire(row.positionId, bidOffer.kind);
   const bidEnabled =
     !coachHireBlocked &&
     slotOk &&

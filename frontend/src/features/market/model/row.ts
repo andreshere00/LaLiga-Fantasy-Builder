@@ -1,10 +1,5 @@
-import {
-  asFiniteNumber,
-  asRecord,
-  idText,
-  mediaFromPlayerMaster,
-  text,
-} from "../../../api/mappers";
+import { asFiniteNumber, asRecord, idText, mediaFromPlayerMaster, text } from "../../../api/mappers";
+import { buyoutClauseUnlockAt } from "./buyout";
 import { availabilityOf, type Availability } from "./availability";
 import { FORM_DISPLAY_MATCHES, formFromCalendarWeeks, formPoints, formRecentPoints, formRecentWeekNumbers } from "./form";
 import {
@@ -47,6 +42,7 @@ export type MarketRow = {
   isShielded: boolean;
   myBid: { id: string; money: number } | null;
   directOffer: boolean;
+  valueHistory: readonly ValuePoint[];
 };
 
 export type CalendarFormContext = {
@@ -62,6 +58,7 @@ export type MarketRowContext = {
   calendarForm?: CalendarFormContext;
   callerTeamId?: string | null;
   userBidsByMarketId?: ReadonlyMap<string, UserBidRef>;
+  buyoutUnlockByPlayerTeamId?: ReadonlyMap<string, number>;
 };
 
 function lastStatsFromLeagueCard(card: unknown): unknown {
@@ -79,12 +76,6 @@ function playerTeamIdOf(item: Record<string, unknown>): string | null {
   return idText(playerTeam?.playerTeamId) ?? idText(item.playerTeamId);
 }
 
-function clauseUnlockAtOf(playerTeam: Record<string, unknown> | null): number | null {
-  const raw = text(playerTeam?.buyoutClauseLockedEndTime);
-  const time = raw == null ? Number.NaN : Date.parse(raw);
-  return Number.isFinite(time) ? time : null;
-}
-
 function myBidOf(item: Record<string, unknown>): MarketRow["myBid"] {
   const bid = asRecord(item.bid);
   const id = idText(bid?.id);
@@ -98,9 +89,9 @@ function resolveMyBid(
   marketId: string,
   userBidsByMarketId?: ReadonlyMap<string, UserBidRef>,
 ): MarketRow["myBid"] {
-  const fromUser = userBidsByMarketId?.get(marketId);
-  if (fromUser) return fromUser;
-  return myBidOf(item);
+  const fromListing = myBidOf(item);
+  if (fromListing) return fromListing;
+  return userBidsByMarketId?.get(marketId) ?? null;
 }
 
 function sellerKindOf(
@@ -127,6 +118,7 @@ export function marketRow(
     calendarForm,
     callerTeamId,
     userBidsByMarketId,
+    buyoutUnlockByPlayerTeamId,
   } = context;
   const playerId = masterIdOf(item);
   const fromCatalog = playerId ? catalog.get(playerId) : null;
@@ -164,6 +156,7 @@ export function marketRow(
     formRecentWeeks = calendarForm.weekNumbers.slice(0, FORM_DISPLAY_MATCHES);
   }
   const playerTeam = asRecord(item.playerTeam);
+  const playerTeamId = playerTeamIdOf(item);
   const seller = sellerNameOf(item);
   const sellerTeamId = sellerTeamIdOf(item);
   const marketId = idText(item.id) ?? `market-${index}`;
@@ -171,7 +164,7 @@ export function marketRow(
     id: marketId ?? idText(item.playerTeamId) ?? playerId ?? `row-${index}`,
     marketId,
     playerId,
-    playerTeamId: playerTeamIdOf(item),
+    playerTeamId,
     name: displayName(text(master.nickname), text(master.name)),
     positionId,
     ...media,
@@ -189,9 +182,13 @@ export function marketRow(
     sellerTeamId,
     sellerKind: sellerKindOf(seller, sellerTeamId, callerTeamId),
     buyoutClause: asFiniteNumber(playerTeam?.buyoutClause),
-    clauseUnlockAt: clauseUnlockAtOf(playerTeam),
+    clauseUnlockAt:
+      buyoutClauseUnlockAt(playerTeam) ??
+      buyoutClauseUnlockAt(item) ??
+      (playerTeamId ? (buyoutUnlockByPlayerTeamId?.get(playerTeamId) ?? null) : null),
     isShielded: playerTeam?.isShielded === true,
     myBid: resolveMyBid(item, marketId, userBidsByMarketId),
     directOffer: item.directOffer === true,
+    valueHistory,
   };
 }

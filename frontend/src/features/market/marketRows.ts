@@ -24,6 +24,7 @@ export type { CalendarFormContext, MarketRow, MarketRowContext, SellerKind } fro
 export { marketRow } from "./model/row";
 export type { ValuePoint } from "./model/valueSeries";
 export {
+  isSealEndUnderOneHour,
   remainingLabel,
   remainingMs,
   valueSeries,

@@ -1,5 +1,5 @@
 import { useMemo } from "react";
-import { useQueries, useQuery } from "@tanstack/react-query";
+import { useQueries, useQuery, useQueryClient } from "@tanstack/react-query";
 
 import { getJson, paths } from "../../api/client";
 import {
@@ -32,6 +32,11 @@ import {
   type MarketRow,
   type ValuePoint,
 } from "./marketRows";
+import {
+  buyoutUnlockByPlayerTeamId,
+  sellerTeamIdsForBuyoutLookup,
+} from "./model/buyout";
+import { reconcileMarketSnapshot } from "./model/pendingBids";
 
 const HISTORY_STALE_MS = CALENDAR_STALE_MS;
 
@@ -66,6 +71,7 @@ function calendarFormFromStats(
 
 /** Loads the league market, joins it with the catalog and value histories. */
 export function useMarketBoard(): MarketBoard {
+  const queryClient = useQueryClient();
   const { accessToken } = useAuth();
   const { selected, isLoading: leaguesLoading } = useLeague();
   const enabled = accessToken != null && selected != null;
@@ -84,7 +90,8 @@ export function useMarketBoard(): MarketBoard {
   const marketQuery = useQuery({
     queryKey: ["market", id],
     enabled: enabled && id !== "",
-    queryFn: ({ signal }) => getJson(paths.market(id), token, { signal }),
+    queryFn: async ({ signal }) =>
+      reconcileMarketSnapshot(queryClient, id, await getJson(paths.market(id), token, { signal })),
   });
   const catalogQuery = usePlayersCatalogQuery(enabled);
   const currentWeekQuery = useCurrentWeekQuery(enabled);
@@ -104,6 +111,21 @@ export function useMarketBoard(): MarketBoard {
     () => [...new Set(items.map(masterIdOf).filter((value): value is string => value != null))],
     [items],
   );
+
+  const sellerTeamIds = useMemo(
+    () => sellerTeamIdsForBuyoutLookup(items, teamId),
+    [items, teamId],
+  );
+
+  const sellerTeamQueries = useQueries({
+    queries: sellerTeamIds.map((sellerTeamId) => ({
+      queryKey: ["team", id, sellerTeamId],
+      enabled: enabled && id !== "" && sellerTeamId !== "",
+      staleTime: CALENDAR_STALE_MS,
+      queryFn: ({ signal }: { signal: AbortSignal }) =>
+        getJson(paths.team(id, sellerTeamId), token, { signal }),
+    })),
+  });
 
   const historyQueries = useQueries({
     queries: playerIds.map((playerId) => ({
@@ -126,6 +148,12 @@ export function useMarketBoard(): MarketBoard {
 
   const historyData = historyQueries.map((query) => query.data);
   const weekStatsData = weekStatsQueries.map((query) => query.data);
+  const sellerTeamData = sellerTeamQueries.map((query) => query.data);
+
+  const buyoutUnlockByPlayerTeamIdMap = useMemo(
+    () => buyoutUnlockByPlayerTeamId(sellerTeamData),
+    [sellerTeamData],
+  );
 
   const errors = [
     marketQuery.error,
@@ -135,6 +163,7 @@ export function useMarketBoard(): MarketBoard {
     teamQuery.error,
     ...historyQueries.map((q) => q.error),
     ...weekStatsQueries.map((q) => q.error),
+    ...sellerTeamQueries.map((q) => q.error),
   ];
   useReauthOnError(errors);
 
@@ -185,9 +214,18 @@ export function useMarketBoard(): MarketBoard {
         calendarForm,
         callerTeamId: teamId,
         userBidsByMarketId: userBidsByMarketIdMap,
+        buyoutUnlockByPlayerTeamId: buyoutUnlockByPlayerTeamIdMap,
       }),
     );
-  }, [items, catalogQuery.data, historyByPlayerId, calendarForm, teamId, userBidsByMarketIdMap]);
+  }, [
+    items,
+    catalogQuery.data,
+    historyByPlayerId,
+    calendarForm,
+    teamId,
+    userBidsByMarketIdMap,
+    buyoutUnlockByPlayerTeamIdMap,
+  ]);
 
   const money = useMemo(() => {
     const fromApi = teamMoneyFromPayload(moneyQuery.data);

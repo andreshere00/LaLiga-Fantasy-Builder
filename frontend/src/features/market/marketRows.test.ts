@@ -114,4 +114,20 @@ describe("form helpers", () => {
     expect(row.myBid).toEqual({ id: "bid-1", money: 120 });
     expect(row.sellerKind).toBe("opponent");
   });
+
+  it("marketRow_prefers_listing_bid_id_over_userBids_envelope", () => {
+    const userBids = new Map([
+      ["mk-1", { id: "bid-envelope", money: 999 }],
+    ]);
+    const row = marketRow(
+      {
+        id: "mk-1",
+        playerMaster: { id: "1", nickname: "P" },
+        bid: { id: "bid-real", money: 120 },
+      },
+      0,
+      { catalog: new Map(), history: new Map(), userBidsByMarketId: userBids },
+    );
+    expect(row.myBid).toEqual({ id: "bid-real", money: 120 });
+  });
 });

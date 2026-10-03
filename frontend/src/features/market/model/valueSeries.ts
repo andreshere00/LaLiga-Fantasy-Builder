@@ -3,7 +3,8 @@ import { asFiniteNumber, asRecord } from "../../../api/mappers";
 export type ValuePoint = { time: number; value: number };
 
 const VARIATION_DAYS = 5;
-const DAY_MS = 86_400_000;
+export const DAY_MS = 86_400_000;
+export const ONE_HOUR_MS = 3_600_000;
 
 /** Parses ``GET /players/{id}/market-value`` into an ascending value series. */
 export function valueSeries(history: unknown): ValuePoint[] {
@@ -42,6 +43,12 @@ export function remainingMs(expiresAt: number | null, now: number): number | nul
   return expiresAt == null ? null : Math.max(0, expiresAt - now);
 }
 
+/** True when the listing expires in under one hour (including already expired). */
+export function isSealEndUnderOneHour(expiresAt: number | null, now: number): boolean {
+  const left = remainingMs(expiresAt, now);
+  return left != null && left < ONE_HOUR_MS;
+}
+
 /** Human label such as ``2d 3h``, ``5h 10m`` or ``Expired``. */
 export function remainingLabel(expiresAt: number | null, now: number): string {
   const left = remainingMs(expiresAt, now);
@@ -52,4 +59,18 @@ export function remainingLabel(expiresAt: number | null, now: number): string {
   const hours = Math.floor((minutes % 1_440) / 60);
   if (days > 0) return `${days}d ${hours}h`;
   return hours > 0 ? `${hours}h ${minutes % 60}m` : `${minutes}m`;
+}
+
+function plural(count: number, unit: string): string {
+  return `${count} ${unit}${count === 1 ? "" : "s"}`;
+}
+
+/** ``X days Y hours Z minutes`` until the clause unlocks, or null when already unlocked. */
+export function clauseUnlockCountdown(unlockAt: number | null, now: number): string | null {
+  const left = remainingMs(unlockAt, now);
+  if (left == null || left === 0) return null;
+  const minutes = Math.max(1, Math.ceil(left / 60_000));
+  const days = Math.floor(minutes / 1_440);
+  const hours = Math.floor((minutes % 1_440) / 60);
+  return [plural(days, "day"), plural(hours, "hour"), plural(minutes % 60, "minute")].join(" ");
 }

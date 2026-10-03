@@ -1,10 +1,22 @@
 import { ApiError, NeedsReauthError } from "../../../api/errors";
 
-export function marketActionErrorMessage(error: unknown): string {
+export const BID_STATE_CONFLICT_MESSAGE =
+  "There have been many changes to the player's purchase status. Please refresh the page and try again";
+
+export type MarketActionKind = "bid" | "clause";
+
+/** Maps a failed market mutation to a user-facing message. */
+export function marketActionErrorMessage(
+  error: unknown,
+  kind: MarketActionKind = "bid",
+): string {
   if (error instanceof NeedsReauthError) {
     return "Your LaLiga session expired. Link your account again.";
   }
   if (error instanceof ApiError) {
+    if (kind === "bid" && error.status === 400 && error.code === "fantasy_error") {
+      return BID_STATE_CONFLICT_MESSAGE;
+    }
     if (error.status === 403) {
       return "LaLiga rejected this action (forbidden). Check your balance, the listing type, and that bidding is allowed in this league.";
     }
