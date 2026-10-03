@@ -150,7 +150,15 @@ const teams: Record<string, { players: ReturnType<typeof slot>[] }> = {
 };
 
 function respond(path: string): unknown {
-  if (path === paths.currentWeek()) return { weekNumber: 8 };
+  if (path === paths.currentWeek()) {
+    return {
+      weekNumber: 8,
+      openingWeekDate: "2026-10-11T16:15:00+02:00",
+    };
+  }
+  if (path === paths.weekFixtures(8)) {
+    return [{ matchDate: "2026-10-11T16:15:00+02:00" }];
+  }
   if (path === paths.playersCatalog()) return [];
   const standingMatch = /^\/api\/leagues\/([^/]+)\/standing(?:\/\d+)?$/.exec(path);
   if (standingMatch) return standings[standingMatch[1] ?? ""] ?? [];
@@ -193,6 +201,12 @@ async function loadCallerBoard(
     expect(result.current.squadLoading).toBe(false);
     expect(result.current.formationCode).toBe("4,4,2");
     expect(result.current.saveDisabled).toBe(true);
+    expect(result.current.saveNoChangesTooltip).toBe(
+      "No changes detected from last lineup",
+    );
+    expect(result.current.unplayedFixtureScoreTooltip).toContain(
+      "This fixture has not been played yet.",
+    );
   });
 }
 
@@ -223,11 +237,56 @@ describe("useLineupBoard", () => {
     api.putJson.mockResolvedValue({});
   });
 
+  it("useLineupBoard_rival_selected_on_past_week_keeps_week", async () => {
+    const { result } = renderHook(() => useLineupBoard(), { wrapper: Wrapper });
+    await loadCallerBoard(result);
+    act(() => {
+      result.current.goToWeek(5);
+    });
+    act(() => {
+      result.current.selectTeam("team-b");
+    });
+    await waitFor(() => {
+      expect(result.current.selectedTeamId).toBe("team-b");
+      expect(result.current.week).toBe(5);
+    });
+  });
+
+  it("useLineupBoard_rival_peek_pager_then_caller_restores_open_week", async () => {
+    const { result } = renderHook(() => useLineupBoard(), { wrapper: Wrapper });
+    await loadCallerBoard(result);
+    await swapInBench(result);
+
+    act(() => {
+      result.current.selectTeam("team-b");
+    });
+    await waitFor(() => {
+      expect(result.current.week).toBe(7);
+    });
+
+    act(() => {
+      result.current.goToWeek(5);
+    });
+    await waitFor(() => {
+      expect(result.current.week).toBe(5);
+    });
+
+    act(() => {
+      result.current.selectTeam("team-a");
+    });
+    await waitFor(() => {
+      expect(result.current.week).toBe(8);
+      expect(result.current.saveDisabled).toBe(false);
+      expect(idsForRole(result.current, "defender")).toContain("d5");
+    });
+  });
+
   it("useLineupBoard_rival_peek_restores_dirty_draft", async () => {
     const { result } = renderHook(() => useLineupBoard(), { wrapper: Wrapper });
     await loadCallerBoard(result);
     await swapInBench(result);
     expect(result.current.saveDisabled).toBe(false);
+    expect(result.current.saveNoChangesTooltip).toBeNull();
     expect(idsForRole(result.current, "defender")).toContain("d5");
 
     act(() => {
@@ -236,7 +295,9 @@ describe("useLineupBoard", () => {
     await waitFor(() => {
       expect(result.current.selectedTeamId).toBe("team-b");
       expect(result.current.lineupLoading).toBe(false);
+      expect(result.current.week).toBe(7);
       expect(result.current.editable).toBe(false);
+      expect(result.current.opponentLineupLocked).toBe(false);
     });
 
     act(() => {
@@ -244,6 +305,7 @@ describe("useLineupBoard", () => {
     });
     await waitFor(() => {
       expect(result.current.selectedTeamId).toBe("team-a");
+      expect(result.current.week).toBe(8);
       expect(result.current.editable).toBe(true);
       expect(result.current.saveDisabled).toBe(false);
       expect(idsForRole(result.current, "defender")).toContain("d5");

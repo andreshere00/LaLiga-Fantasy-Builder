@@ -73,9 +73,17 @@ Code: `frontend/src/features/market/` (`model/`, `cells/`, `actions/`,
 
 ### Toolbar
 
-- **Your money** from `GET /api/teams/{team_id}/money` (league object fallback).
+- **Balance** from `GET /api/teams/{team_id}/money` (league object fallback).
 - Negative balance shows a warning icon with a tooltip: balance must be positive
   before the next matchday to score.
+- **Search and filters** (`marketFilters.ts`, column header filter icons): toolbar
+  `query` matches player, seller and team; column popovers use separate `player`
+  and `seller` strings (AND with `query`). Each filterable table column has a funnel
+  icon that opens min/max or text controls (market value 1.000–1.000.000 €,
+  whole-number points/form). **Clear filters** in the toolbar resets everything;
+  **Clear column filter** resets only that column. Filter state stays on the page
+  across refetches; values use `useDeferredValue`. Row and table transitions use
+  `motion/react` (`domAnimation`, `MotionConfig reducedMotion="user"`).
 
 ### Data loading (`useMarketBoard`)
 
@@ -104,7 +112,7 @@ stale snapshots until Fantasy confirms the change (`model/pendingBids.ts`).
 | Market value | Price and 5-day change; hover: last, highest, lowest, 5d/14d ago with % vs current |
 | Availability | SVG icons + hover text for next matchday readiness |
 | Seal end | Countdown; **red** when under one hour remains |
-| Sell options | Seller link (`/?team=…`) or `LALIGA`; **Options** / **Bidded** action menu |
+| Sell options | Seller link (`/?team=…`) or `LALIGA`; **Options** / **Bidded** action menu. On your own listings the menu offers **Withdraw from market** (confirmation modal, `DELETE /api/market/leagues/{id}/{marketId}`) and a disabled **Immediate sell** entry until a documented Fantasy route exists |
 
 ### Actions (user-confirmed only)
 

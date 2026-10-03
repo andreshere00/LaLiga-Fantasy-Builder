@@ -17,6 +17,7 @@ export const paths = {
   weekStanding: (leagueId: string, week: number) =>
     `/api/leagues/${segment(leagueId)}/standing/${week}`,
   currentWeek: () => "/api/calendar/current",
+  weekFixtures: (week: number) => `/api/calendar/weeks/${week}`,
   weekStats: (week: number) => `/api/calendar/weeks/${week}/stats`,
   playersCatalog: () => "/api/players",
   market: (leagueId: string) => `/api/market/leagues/${segment(leagueId)}`,
@@ -35,6 +36,8 @@ export const paths = {
     `/api/market/leagues/${segment(leagueId)}/${segment(marketId)}/bids`,
   marketBidUpdate: (leagueId: string, marketId: string, bidId: string) =>
     `/api/market/leagues/${segment(leagueId)}/${segment(marketId)}/bids/${segment(bidId)}`,
+  marketListing: (leagueId: string, marketId: string) =>
+    `/api/market/leagues/${segment(leagueId)}/${segment(marketId)}`,
   buyoutPay: (leagueId: string, playerTeamId: string) =>
     `/api/buyout/leagues/${segment(leagueId)}/player-teams/${segment(playerTeamId)}/pay`,
 };

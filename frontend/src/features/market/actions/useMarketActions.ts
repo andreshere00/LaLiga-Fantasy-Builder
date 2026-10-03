@@ -40,6 +40,7 @@ export function useMarketActions() {
   const token = accessToken ?? "";
   const [pendingBid, setPendingBid] = useState<PendingBid | null>(null);
   const [pendingClause, setPendingClause] = useState<PendingClause | null>(null);
+  const [pendingWithdraw, setPendingWithdraw] = useState<MarketRow | null>(null);
   const [message, setMessage] = useState<string | null>(null);
 
   const teamId = selected ? callerTeamId(selected) : null;
@@ -187,6 +188,17 @@ export function useMarketActions() {
     onError: (error) => reportError(error, "clause"),
   });
 
+  const withdrawListing = useMutation({
+    mutationFn: async (row: MarketRow) =>
+      deleteJson(paths.marketListing(leagueKey, row.marketId), token),
+    onSuccess: async () => {
+      setPendingWithdraw(null);
+      setMessage(null);
+      await refreshAfterMutation();
+    },
+    onError: (error) => reportError(error, "withdraw"),
+  });
+
   const openBid = useCallback((row: MarketRow, kind: BidActionKind) => {
     setMessage(null);
     setPendingBid({
@@ -199,6 +211,11 @@ export function useMarketActions() {
   const openClause = useCallback((row: MarketRow, amount: number) => {
     setMessage(null);
     setPendingClause({ row, amount });
+  }, []);
+
+  const openWithdraw = useCallback((row: MarketRow) => {
+    setMessage(null);
+    setPendingWithdraw(row);
   }, []);
 
   const submitBid = useCallback(
@@ -218,7 +235,12 @@ export function useMarketActions() {
     payClause.mutate({ row: pendingClause.row, amount: pendingClause.amount });
   }, [payClause, pendingClause]);
 
+  const confirmWithdraw = useCallback(() => {
+    if (pendingWithdraw) withdrawListing.mutate(pendingWithdraw);
+  }, [pendingWithdraw, withdrawListing]);
+
   const closeBid = useCallback(() => setPendingBid(null), []);
+  const closeWithdraw = useCallback(() => setPendingWithdraw(null), []);
   const closeClause = useCallback(() => setPendingClause(null), []);
   const dismissMessage = useCallback(() => setMessage(null), []);
 
@@ -234,12 +256,17 @@ export function useMarketActions() {
     createBid.isPending ||
     modifyBid.isPending ||
     cancelBid.isPending ||
-    payClause.isPending;
+    payClause.isPending ||
+    withdrawListing.isPending;
 
   return {
     pendingBid,
     pendingClause,
+    pendingWithdraw,
     openBid,
+    openWithdraw,
+    closeWithdraw,
+    confirmWithdraw,
     openClause,
     closeBid,
     closeClause,

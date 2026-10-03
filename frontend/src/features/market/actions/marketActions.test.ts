@@ -20,6 +20,7 @@ function baseRow(overrides: Partial<MarketRow> = {}): MarketRow {
     positionId: 4,
     photoUrl: null,
     teamBadgeUrl: null,
+    teamName: null,
     points: null,
     form: null,
     formRecent: [],
@@ -54,6 +55,34 @@ function baseContext(overrides: Partial<Parameters<typeof resolveMarketActions>[
     ...overrides,
   };
 }
+
+describe("resolveMarketActionOffers own listings", () => {
+  it("resolveMarketActionOffers_own_listing_offers_withdraw_and_disabled_immediate_sell", () => {
+    const offers = resolveMarketActionOffers(
+      baseRow({ sellerKind: "self", seller: "Me", sellerTeamId: "me" }),
+      baseContext(),
+    );
+    expect(offers.map((offer) => offer.label)).toEqual([
+      "Withdraw from market",
+      "Immediate sell",
+    ]);
+    expect(offers[0]?.enabled).toBe(true);
+    expect(offers[1]?.enabled).toBe(false);
+    expect(offers[1]?.disabledReason).toContain("not available");
+  });
+
+  it("resolveMarketActionOffers_own_listing_without_market_id_disables_withdraw", () => {
+    const offers = resolveMarketActionOffers(
+      baseRow({ sellerKind: "self", marketId: "" }),
+      baseContext(),
+    );
+    expect(offers[0]?.enabled).toBe(false);
+  });
+
+  it("resolveMarketActions_own_listing_returns_no_bid_actions", () => {
+    expect(resolveMarketActions(baseRow({ sellerKind: "self" }), baseContext())).toEqual([]);
+  });
+});
 
 describe("isValidBidAmount", () => {
   it("isValidBidAmount_requires_strict_bounds", () => {

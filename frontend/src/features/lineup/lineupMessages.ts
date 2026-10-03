@@ -6,11 +6,50 @@ export const LINEUP_NOT_SET_MESSAGE =
 export const PAST_FIXTURE_LOCKED_MESSAGE =
   "You cannot change players for fixtures that have already been played.";
 
+export const SAVE_NO_CHANGES_MESSAGE = "No changes detected from last lineup";
+
+const UNPLAYED_FIXTURE_SCORE_PREFIX = "This fixture has not been played yet.";
+
+/** Hover copy for a player score badge on the open matchweek. */
+export function unplayedFixtureScoreTooltip(countdown: string): string {
+  return `${UNPLAYED_FIXTURE_SCORE_PREFIX} Next match starts in: ${countdown}.`;
+}
+
+/** Fallback when kickoff time is not available yet. */
+export function unplayedFixtureScoreTooltipFallback(): string {
+  return UNPLAYED_FIXTURE_SCORE_PREFIX;
+}
+
+const OPPONENT_LINEUP_UNAVAILABLE_PREFIX =
+  "The lineup is not available because this match has not been played yet.";
+
+/** Modal copy when peeking an opponent lineup on the open matchweek. */
+export function opponentLineupUnavailableMessage(countdown: string): string {
+  return `${OPPONENT_LINEUP_UNAVAILABLE_PREFIX} Next match: ${countdown}.`;
+}
+
+export function opponentLineupUnavailableMessageFallback(): string {
+  return OPPONENT_LINEUP_UNAVAILABLE_PREFIX;
+}
+
 const LINEUP_LOAD_FAILED_MESSAGE = "This lineup could not be loaded.";
 
-/** User-facing copy for lineup fetch failures (404 → not set yet). */
-export function lineupLoadMessage(error: unknown): string | null {
+/**
+ * User-facing copy for lineup fetch failures (404 → not set yet).
+ *
+ * Args:
+ *     error: The lineup query error.
+ *     unplayedOpponentFixture: True when the lineup belongs to an opponent and the
+ *         selected fixture has not been played yet.
+ */
+export function lineupLoadMessage(
+  error: unknown,
+  unplayedOpponentFixture = false,
+): string | null {
   if (!error || error instanceof NeedsReauthError) return null;
+  if (unplayedOpponentFixture && error instanceof ApiError && error.status === 404) {
+    return UNPLAYED_FIXTURE_SCORE_PREFIX;
+  }
   if (error instanceof ApiError && error.status === 404) {
     return LINEUP_NOT_SET_MESSAGE;
   }

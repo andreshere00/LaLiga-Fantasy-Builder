@@ -1,3 +1,6 @@
+import "../../components/TooltipPanel.css";
+import "./PlayerTile.css";
+
 import { scoreTone } from "../../api/mappers";
 import { WarningIcon } from "../shell/icons";
 import { NOT_SELECTED_PLAYER_LABEL } from "./playerTileCopy";
@@ -6,6 +9,8 @@ type PlayerTileProps = {
   name: string;
   captain: boolean;
   variant: "pitch" | "squad";
+  /** When false, the name bar is omitted and the photo is centered on the whole card. */
+  showName?: boolean;
   empty?: boolean;
   photoUrl?: string | null;
   teamBadgeUrl?: string | null;
@@ -60,6 +65,7 @@ export function PlayerTile({
   name,
   captain,
   variant,
+  showName = true,
   empty = false,
   photoUrl = null,
   teamBadgeUrl = null,
@@ -72,6 +78,7 @@ export function PlayerTile({
   const className = [
     "player-tile",
     variant === "squad" ? "squad-tile" : "pitch-tile",
+    showName ? "" : "is-nameless",
     empty ? "is-empty" : "",
     captain ? "is-captain" : "",
     selected ? "is-selected" : "",
@@ -104,7 +111,6 @@ export function PlayerTile({
       <span className="player-name player-name-empty">
         <span className="player-name-label">{NOT_SELECTED_PLAYER_LABEL}</span>
       </span>
-      <div className="player-card-spacer player-card-spacer-bottom" aria-hidden="true" />
     </>
   ) : (
     <>
@@ -114,11 +120,14 @@ export function PlayerTile({
         <PlayerScoreBadge points={fixturePoints} isMvp={isMvp} />
       ) : null}
       <TeamBadge url={teamBadgeUrl} />
-      <div className="player-card-gap" aria-hidden="true" />
-      <span className="player-name">
-        <span className="player-name-label">{name}</span>
-      </span>
-      <div className="player-card-spacer player-card-spacer-bottom" aria-hidden="true" />
+      {showName ? (
+        <>
+          <div className="player-card-gap" aria-hidden="true" />
+          <span className="player-name">
+            <span className="player-name-label">{name}</span>
+          </span>
+        </>
+      ) : null}
     </>
   );
 
@@ -137,7 +146,10 @@ export function PlayerTile({
   }
 
   return (
-    <div className={className} aria-label={empty ? label : captain ? `${name}, captain` : undefined}>
+    <div
+      className={className}
+      aria-label={empty || !showName ? label : captain ? `${name}, captain` : undefined}
+    >
       {body}
     </div>
   );

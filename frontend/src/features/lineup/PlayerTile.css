@@ -1,0 +1,234 @@
+.player-tile {
+  position: relative;
+  display: grid;
+  /* player_card.svg 300×400 → 75 : 225 : 20 : 80 (name through bottom edge) */
+  grid-template-rows: 18.75% 56.25% 5% 20%;
+  grid-template-columns: 1fr;
+  background: var(--tile);
+  border-radius: 0;
+  box-sizing: border-box;
+  aspect-ratio: var(--player-card-ratio, 3 / 4);
+  height: auto;
+  overflow: visible;
+  transition: background-color var(--control-fill-duration) var(--control-fill-ease);
+}
+
+.player-tile:is(:hover, :active) {
+  background: var(--red);
+}
+
+.player-card-spacer,
+.player-card-gap {
+  min-height: 0;
+  pointer-events: none;
+}
+
+.player-tile.is-interactive {
+  cursor: pointer;
+  border: 0;
+  padding: 0;
+  font: inherit;
+  text-align: inherit;
+}
+
+.player-tile.is-selected {
+  outline: 2px solid var(--cyan);
+  outline-offset: 1px;
+}
+
+.player-tile.is-empty {
+  background: var(--gray);
+}
+
+.player-tile.is-empty:is(:hover, :active) {
+  background: var(--red);
+}
+
+.player-photo-frame {
+  grid-row: 1 / 4;
+  grid-column: 1;
+  justify-self: stretch;
+  align-self: stretch;
+  width: 100%;
+  height: 100%;
+  min-height: 0;
+  overflow: hidden;
+  position: relative;
+  z-index: 3;
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+}
+
+.player-tile.is-nameless .player-photo-frame {
+  grid-row: 1 / -1;
+  align-items: center;
+}
+
+.player-photo-frame-empty {
+  display: grid;
+  place-items: center;
+  background: rgb(255 255 255 / 6%);
+}
+
+.player-empty-icon {
+  width: 42%;
+  aspect-ratio: 1;
+  color: #8a8a8a;
+  display: grid;
+  place-items: center;
+}
+
+.player-empty-icon svg {
+  width: 100%;
+  height: 100%;
+}
+
+.player-name-empty {
+  background: transparent;
+  color: var(--ink);
+}
+
+.player-name-empty .player-name-label {
+  color: inherit;
+}
+
+.squad-tile {
+  width: var(--lineup-squad-tile-w, 72px);
+  flex: 0 0 auto;
+}
+
+.pitch-tile {
+  width: 20cqw;
+  flex: 0 0 auto;
+}
+
+.pitch-tile .player-name {
+  font-size: clamp(12px, 0.95vw, 14px);
+}
+
+.player-badge,
+.player-score-badge {
+  position: absolute;
+  top: 5%;
+  z-index: 5;
+  width: 26.6667%;
+  aspect-ratio: 1;
+  height: auto;
+  overflow: visible;
+  display: grid;
+  place-items: center;
+  pointer-events: none;
+}
+
+.player-badge {
+  right: 6.6667%;
+  background: transparent;
+}
+
+.player-score-badge-wrap {
+  position: absolute;
+  left: 6.6667%;
+  top: 5%;
+  z-index: 6;
+  cursor: help;
+  overflow: visible;
+}
+
+.player-score-badge-wrap .player-score-badge {
+  position: static;
+  left: auto;
+  top: auto;
+}
+
+.player-score-badge {
+  left: 6.6667%;
+  container-type: size;
+  font-weight: 700;
+  line-height: 1;
+}
+
+.player-score-badge-value {
+  font-size: 42cqw;
+}
+
+.player-score-badge.is-red {
+  background: var(--red);
+  color: var(--white);
+}
+
+.player-score-badge.is-yellow {
+  background: var(--score-yellow);
+  color: var(--black);
+}
+
+.player-score-badge.is-green {
+  background: var(--score-green);
+  color: var(--white);
+}
+
+.player-score-badge.is-blue {
+  background: var(--score-blue);
+  color: var(--black);
+}
+
+.player-team-badge {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  display: block;
+}
+
+.player-photo {
+  display: block;
+  width: auto;
+  height: 100%;
+  max-width: 100%;
+  object-fit: contain;
+  object-position: bottom center;
+  pointer-events: none;
+}
+
+.player-tile.is-nameless .player-photo {
+  width: 100%;
+  height: 100%;
+  object-position: center center;
+}
+
+.player-name {
+  grid-row: 4;
+  grid-column: 1;
+  align-self: stretch;
+  justify-self: stretch;
+  width: 100%;
+  min-height: 0;
+  padding: 0 4px;
+  box-sizing: border-box;
+  overflow: hidden;
+  background: var(--white);
+  color: var(--black);
+  font-size: var(--lineup-font-small, 0.75rem);
+  position: relative;
+  z-index: 4;
+  isolation: isolate;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+}
+
+.player-name-label {
+  width: 100%;
+  max-width: 100%;
+  line-height: 1.1;
+  text-align: center;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+.player-tile.is-captain .player-name {
+  background: var(--white);
+  font-weight: 700;
+  box-shadow: 0 0 0 1px var(--black);
+}

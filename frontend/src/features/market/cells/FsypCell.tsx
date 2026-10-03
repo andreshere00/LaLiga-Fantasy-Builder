@@ -32,7 +32,7 @@ export function FsypCell({ points, averagePoints, formRecent }: FsypCellProps) {
         </span>
         <span className="market-fsyp-tooltip-line">Season average: {seasonAverage}</span>
         <span className="market-fsyp-tooltip-line">
-          Form average: {formAverage}
+          Last 3d average: {formAverage}
         </span>
       </span>
     </span>

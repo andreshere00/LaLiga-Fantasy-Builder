@@ -1,7 +1,9 @@
-import { useEffect, useId, useState, type KeyboardEvent } from "react";
+import { useEffect, useId, useState } from "react";
 
 import { formatEuro, formatIntegerAmount, parseIntegerAmount } from "../../../api/format";
 import { Modal } from "../../../components/Modal";
+import { NumericCounterField } from "../../../components/NumericCounterField";
+import { MARKET_VALUE_FILTER_STEP } from "../marketFilterInputs";
 import type { MarketRow } from "../model/row";
 import { isValidBidAmount, type BidActionKind } from "./marketActions";
 
@@ -54,7 +56,7 @@ export function BidDialog({
     setRaw(row.marketValue != null ? formatIntegerAmount(row.marketValue) : "");
   }, [open, initialAmount, row, kind]);
 
-  if (!open || !row || !kind) return null;
+  if (!row || !kind) return null;
 
   const parsed = parseIntegerAmount(raw);
   const reservedBid = kind === "modify" ? (row.myBid?.money ?? 0) : 0;
@@ -68,20 +70,10 @@ export function BidDialog({
       ? `less than ${formatEuro(spending)}`
       : "within your debt limit (20% of squad value)";
 
-  const stepAmount = (delta: number) => {
-    const current = parsed ?? bidFloor;
-    setRaw(formatIntegerAmount(Math.max(bidFloor, current + delta)));
-  };
-
-  const onAmountKeyDown = (event: KeyboardEvent<HTMLInputElement>) => {
-    if (event.key === "ArrowUp") {
-      event.preventDefault();
-      stepAmount(1);
-    }
-    if (event.key === "ArrowDown") {
-      event.preventDefault();
-      stepAmount(-1);
-    }
+  const stepBidAmount = (current: number | null, deltaSteps: number) => {
+    if (deltaSteps === 0) return current ?? bidFloor;
+    const base = current ?? bidFloor;
+    return Math.max(bidFloor, base + deltaSteps * MARKET_VALUE_FILTER_STEP);
   };
 
   return (
@@ -116,20 +108,20 @@ export function BidDialog({
       <label className="market-dialog-label" htmlFor={inputId}>
         Bid amount (€)
       </label>
-      <input
+      <NumericCounterField
         id={inputId}
-        className="market-dialog-input"
-        type="text"
-        inputMode="numeric"
-        autoComplete="off"
+        inputClassName="market-dialog-input"
+        ariaLabel="Bid amount"
         value={raw}
-        onChange={(event) => setRaw(event.target.value)}
+        disabled={pending}
+        formatInput={(value) => value}
+        parseValue={parseIntegerAmount}
+        stepValue={stepBidAmount}
+        onValueChange={setRaw}
         onBlur={() => {
           if (raw.trim() === "") return;
           setRaw(clampAndFormat(raw, bidFloor));
         }}
-        onKeyDown={onAmountKeyDown}
-        disabled={pending}
       />
       {!valid && raw.trim().length > 0 ? (
         <p className="market-dialog-error" role="alert">

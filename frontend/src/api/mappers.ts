@@ -44,6 +44,7 @@ export type FantasyLeague = {
 export type CurrentWeek = {
   previousWeek?: number | null;
   weekNumber?: number | null;
+  openingWeekDate?: string | null;
 };
 
 export type PlayerMedia = {
@@ -295,7 +296,51 @@ export function asCurrentWeek(value: unknown): CurrentWeek {
   return {
     previousWeek: typeof record.previousWeek === "number" ? record.previousWeek : null,
     weekNumber: typeof record.weekNumber === "number" ? record.weekNumber : null,
+    openingWeekDate:
+      typeof record.openingWeekDate === "string" ? record.openingWeekDate : null,
   };
+}
+
+function pluralCountdownUnit(count: number, unit: string): string {
+  return `${count} ${unit}${count === 1 ? "" : "s"}`;
+}
+
+/** Parses an ISO datetime string to epoch ms, or null when invalid. */
+export function parseIsoTimestampMs(value: string | null | undefined): number | null {
+  if (value == null || value.trim() === "") return null;
+  const ms = Date.parse(value);
+  return Number.isFinite(ms) ? ms : null;
+}
+
+function fixtureKickoffMs(fixture: Record<string, unknown>): number | null {
+  const raw = fixture.matchDate ?? fixture.date;
+  return typeof raw === "string" ? parseIsoTimestampMs(raw) : null;
+}
+
+/** Earliest upcoming fixture kickoff from a calendar week payload. */
+export function nextFixtureKickoffMs(fixturesPayload: unknown, nowMs: number): number | null {
+  const fixtures = asObjectList(fixturesPayload, ["fixtures", "matches", "data", "items"]);
+  let best: number | null = null;
+  for (const fixture of fixtures) {
+    const kickoff = fixtureKickoffMs(fixture);
+    if (kickoff == null || kickoff <= nowMs) continue;
+    if (best == null || kickoff < best) best = kickoff;
+  }
+  return best;
+}
+
+/** ``X days Y hours Z minutes`` until ``targetMs`` (at least one minute when still in the future). */
+export function formatFixtureCountdown(targetMs: number, nowMs: number): string {
+  const left = Math.max(0, targetMs - nowMs);
+  const totalMinutes = left === 0 ? 0 : Math.max(1, Math.ceil(left / 60_000));
+  const days = Math.floor(totalMinutes / 1_440);
+  const hours = Math.floor((totalMinutes % 1_440) / 60);
+  const minutes = totalMinutes % 60;
+  return [
+    pluralCountdownUnit(days, "day"),
+    pluralCountdownUnit(hours, "hour"),
+    pluralCountdownUnit(minutes, "minute"),
+  ].join(" ");
 }
 
 function asObjectList(
@@ -538,6 +583,12 @@ export function lastPlayedWeek(current: CurrentWeek): number {
   return 0;
 }
 
+/** Whether per-player fixture scores may be shown for the selected matchweek. */
+export function fixtureScoresVisibleForWeek(week: number, current: CurrentWeek): boolean {
+  if (week < 1) return false;
+  return week <= lastPlayedWeek(current);
+}
+
 export function maxWeek(current: CurrentWeek): number {
   if (current.weekNumber != null && current.weekNumber >= 1) return current.weekNumber;
   return 1;
@@ -554,6 +605,16 @@ export function weekPointsForTeam(rows: readonly StandingRow[], teamId: string):
   const match = rows.find((row) => teamIdOf(row) === teamId);
   if (!match || match.points == null) return null;
   return match.points;
+}
+
+/** Sum of the lineup players' fixture points, or null when none has a score. */
+export function lineupFixtureTotal(groups: readonly LineupGroup[]): number | null {
+  const scores = groups
+    .flatMap((group) => group.players)
+    .filter((player) => !player.isEmpty)
+    .map((player) => player.fixturePoints)
+    .filter((points): points is number => points != null);
+  return scores.length === 0 ? null : scores.reduce((total, points) => total + points, 0);
 }
 
 export function selectedTeamValue(
@@ -598,10 +659,50 @@ function buildTeamBadgeByTeamIdMap(): ReadonlyMap<string, string> {
 
 const TEAM_BADGE_BY_TEAM_ID = buildTeamBadgeByTeamIdMap();
 
+function buildTeamNameByTeamIdMap(): ReadonlyMap<string, string> {
+  const map = new Map<string, string>();
+  if (!Array.isArray(teamsMasterFile)) return map;
+  for (const entry of teamsMasterFile) {
+    const record = asRecord(entry);
+    const name = text(record?.name) ?? text(record?.shortName);
+    if (!name) continue;
+    const id = idText(record?.id);
+    const dspId = idText(record?.dspId);
+    if (id) map.set(id, name);
+    if (dspId) map.set(dspId, name);
+  }
+  return map;
+}
+
+const TEAM_NAME_BY_TEAM_ID = buildTeamNameByTeamIdMap();
+
 function teamBadgeFromTeamId(teamId: unknown): string | null {
   const id = idText(teamId);
   if (!id) return null;
   return TEAM_BADGE_BY_TEAM_ID.get(id) ?? null;
+}
+
+/** Resolves a club display name from a Fantasy team id (``id`` or ``dspId`` in teams master). */
+export function teamNameFromTeamId(teamId: unknown): string | null {
+  const id = idText(teamId);
+  if (!id) return null;
+  return TEAM_NAME_BY_TEAM_ID.get(id) ?? null;
+}
+
+function teamNameFromTeamRecord(team: unknown): string | null {
+  const record = asRecord(team);
+  if (!record) return null;
+  return text(record.name) ?? text(record.shortName) ?? null;
+}
+
+function resolveTeamName(team: unknown, teamId: unknown): string | null {
+  const teamRecord = asRecord(team);
+  return (
+    teamNameFromTeamRecord(team) ??
+    teamNameFromTeamId(teamId) ??
+    teamNameFromTeamId(teamRecord?.id) ??
+    null
+  );
 }
 
 function resolveTeamBadgeUrl(team: unknown, teamId: unknown): string | null {
@@ -612,6 +713,13 @@ function resolveTeamBadgeUrl(team: unknown, teamId: unknown): string | null {
     teamBadgeFromTeamId(teamRecord?.id) ??
     null
   );
+}
+
+/** Reads the club name from a player master record (inline team or teams master lookup). */
+export function teamNameFromPlayerMaster(master: unknown): string | null {
+  const record = asRecord(master);
+  if (!record) return null;
+  return resolveTeamName(record.team, record.teamId);
 }
 
 export function mediaFromPlayerMaster(master: unknown): PlayerMedia {
@@ -841,6 +949,24 @@ export function squadCards(
 
 export function playersOf(team: unknown): unknown {
   return asRecord(team)?.players ?? [];
+}
+
+/** Master ``playerId`` values from a team roster (deduplicated, stable order). */
+export function masterPlayerIdsFromTeam(team: unknown): string[] {
+  const players = playersOf(team);
+  if (!Array.isArray(players)) return [];
+  const ids: string[] = [];
+  for (const entry of players) {
+    const record = asRecord(entry);
+    if (!record) continue;
+    const master = asRecord(record.playerMaster);
+    const id =
+      idText(master?.id) ??
+      idText(record.playerMasterId) ??
+      idText(record.playerId);
+    if (id) ids.push(id);
+  }
+  return [...new Set(ids)];
 }
 
 /** Parses squad size from a team payload. */

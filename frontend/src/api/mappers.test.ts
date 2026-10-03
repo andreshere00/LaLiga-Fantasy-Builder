@@ -5,7 +5,9 @@ import { describe, expect, it } from "vitest";
 import {
   clampWeek,
   defaultWeek,
+  fixtureScoresVisibleForWeek,
   lastPlayedWeek,
+  lineupFixtureTotal,
   formatTeamValue,
   formationLabel,
   freeFormationCodesFromLineup,
@@ -16,6 +18,7 @@ import {
   teamIdsMissingAvatars,
   asLeagues,
   mapRanking,
+  masterPlayerIdsFromTeam,
   maxWeek,
   pointsLabel,
   possessiveName,
@@ -23,10 +26,13 @@ import {
   selectedTeamValue,
   catalogMediaByMasterId,
   enrichSquadMapFromLineup,
+  formatFixtureCountdown,
   fixtureMvpFromSlot,
   fixturePointsFromSlot,
+  nextFixtureKickoffMs,
   mediaFromLineupSlot,
   mediaFromPlayerMaster,
+  teamNameFromTeamId,
   scoreTone,
   squadCards,
   weekMvpMasterIds,
@@ -141,6 +147,20 @@ describe("squadCards", () => {
         isMvp: false,
       },
     ]);
+  });
+});
+
+describe("teamNameFromTeamId", () => {
+  it("teamNameFromTeamId_resolves_canonical_team_id", () => {
+    expect(teamNameFromTeamId("2")).toBe("Atlético de Madrid");
+  });
+
+  it("teamNameFromTeamId_resolves_dsp_id", () => {
+    expect(teamNameFromTeamId(70)).toBe("Atlético de Madrid");
+  });
+
+  it("teamNameFromTeamId_unknown_id_returns_null", () => {
+    expect(teamNameFromTeamId("not-a-club")).toBeNull();
   });
 });
 
@@ -471,10 +491,69 @@ describe("matchday bounds", () => {
     expect(lastPlayedWeek({ weekNumber: 1 })).toBe(0);
   });
 
+  it("fixtureScoresVisibleForWeek_hides_open_matchweek", () => {
+    const current = { previousWeek: 7, weekNumber: 8 };
+    expect(fixtureScoresVisibleForWeek(8, current)).toBe(false);
+    expect(fixtureScoresVisibleForWeek(7, current)).toBe(true);
+    expect(fixtureScoresVisibleForWeek(1, current)).toBe(true);
+  });
+
   it("clampWeek_out_of_range_stays_inside_bounds", () => {
     expect(clampWeek(0, 8)).toBe(1);
     expect(clampWeek(9, 8)).toBe(8);
     expect(clampWeek(3, 8)).toBe(3);
+  });
+});
+
+describe("lineupFixtureTotal", () => {
+  it("lineupFixtureTotal_sums_scored_players_and_ignores_empty_slots", () => {
+    const groups = [
+      {
+        role: "goalkeeper" as const,
+        players: [
+          { id: "a", name: "A", fixturePoints: 7 },
+          { id: "b", name: "B", fixturePoints: -1 },
+          { id: "c", name: "C", fixturePoints: 9, isEmpty: true },
+          { id: "d", name: "D" },
+        ],
+      },
+    ];
+    expect(lineupFixtureTotal(groups)).toBe(6);
+  });
+
+  it("lineupFixtureTotal_without_scores_returns_null", () => {
+    expect(lineupFixtureTotal([{ role: "defender", players: [{ id: "a", name: "A" }] }])).toBeNull();
+  });
+});
+
+describe("masterPlayerIdsFromTeam", () => {
+  it("masterPlayerIdsFromTeam_collects_master_ids_from_roster", () => {
+    expect(
+      masterPlayerIdsFromTeam({
+        players: [
+          { playerMaster: { id: 12 }, playerTeamId: "pt-1" },
+          { playerMasterId: "34" },
+        ],
+      }),
+    ).toEqual(["12", "34"]);
+  });
+});
+
+describe("fixture countdown", () => {
+  it("nextFixtureKickoffMs_picks_earliest_future_kickoff", () => {
+    const now = Date.parse("2026-10-10T12:00:00+02:00");
+    const payload = [
+      { matchDate: "2026-10-09T21:00:00+02:00" },
+      { matchDate: "2026-10-11T16:15:00+02:00" },
+      { matchDate: "2026-10-11T20:00:00+02:00" },
+    ];
+    expect(nextFixtureKickoffMs(payload, now)).toBe(Date.parse("2026-10-11T16:15:00+02:00"));
+  });
+
+  it("formatFixtureCountdown_formats_days_hours_minutes", () => {
+    const now = Date.parse("2026-10-10T12:00:00+02:00");
+    const target = Date.parse("2026-10-12T15:05:00+02:00");
+    expect(formatFixtureCountdown(target, now)).toBe("2 days 3 hours 5 minutes");
   });
 });
 
