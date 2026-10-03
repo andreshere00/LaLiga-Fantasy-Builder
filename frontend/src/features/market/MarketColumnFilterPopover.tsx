@@ -1,3 +1,4 @@
+import { MarketMotionButton } from "./MarketControlMotion";
 import type { MarketColumnKey } from "./marketColumnHeadings";
 import {
   FilterAvailabilityChips,
@@ -89,9 +90,13 @@ export function MarketColumnFilterPopover({
       ) : null}
 
       {column !== "sealEnd" ? (
-        <button type="button" className="market-column-filter-clear" onClick={onClearColumn}>
+        <MarketMotionButton
+          type="button"
+          className="market-column-filter-clear"
+          onClick={onClearColumn}
+        >
           Clear column filter
-        </button>
+        </MarketMotionButton>
       ) : null}
     </div>
   );

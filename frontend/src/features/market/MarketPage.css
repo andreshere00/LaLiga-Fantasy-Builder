@@ -275,6 +275,25 @@
   border: 1px solid color-mix(in srgb, var(--ink) 12%, transparent);
 }
 
+@media (hover: hover) {
+  .market-row-data {
+    transition:
+      background-color 0.26s cubic-bezier(0.4, 0, 0.2, 1),
+      border-color 0.26s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+
+  .market-row-data:hover {
+    background: color-mix(in srgb, var(--gray) 42%, var(--white));
+    border-color: color-mix(in srgb, var(--ink) 20%, transparent);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .market-row-data {
+    transition: none;
+  }
+}
+
 .market-head {
   background: transparent;
   border: none;
@@ -352,6 +371,19 @@
   width: 1rem;
   height: 1rem;
   display: block;
+  transition: transform 0.26s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+@media (hover: hover) {
+  .market-head-filter:not(.is-disabled):is(:hover, :focus-visible) .market-head-filter-icon {
+    transform: scale(1.14);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .market-head-filter-icon {
+    transition: none;
+  }
 }
 
 .market-column-filter-popover-wrap {
@@ -990,6 +1022,13 @@
   font-weight: 700;
   cursor: pointer;
   box-shadow: var(--shadow-surface);
+  transition:
+    background-color var(--control-fill-duration) var(--control-fill-ease),
+    color var(--control-fill-duration) var(--control-fill-ease);
+}
+
+.market-dialog-secondary:is(:hover, :focus-visible):not(:disabled) {
+  background: var(--surface-press);
 }
 
 .market-dialog-primary {

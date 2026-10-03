@@ -25,6 +25,7 @@ import {
 } from "./MarketRowMotion";
 import { MarketToolbar } from "./MarketToolbar";
 import { useMarketBoard } from "./useMarketBoard";
+import { MarketMotionButton } from "./MarketControlMotion";
 import "./MarketPage.css";
 
 function MarketList() {
@@ -104,9 +105,13 @@ function MarketList() {
             <div className="market-empty-filters" role="status">
               <p className="status-copy">{MARKET_SEARCH_NO_MATCHES}</p>
               {filterCount > 0 ? (
-                <button type="button" className="market-filter-clear-main" onClick={clearFilters}>
+                <MarketMotionButton
+                  type="button"
+                  className="market-filter-clear-main"
+                  onClick={clearFilters}
+                >
                   {MARKET_CLEAR_FILTERS_LABEL}
-                </button>
+                </MarketMotionButton>
               ) : null}
             </div>
           }

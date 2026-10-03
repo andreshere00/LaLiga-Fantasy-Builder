@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 
 import { formatIntegerAmount } from "../../api/format";
 import { NumericCounterField } from "../../components/NumericCounterField";
+import { MarketMotionButton } from "./MarketControlMotion";
 import {
   formatMarketValueFilterInput,
   formatStatFilterInput,
@@ -158,7 +159,7 @@ export function FilterPositionChips({
       {POSITION_FILTER_OPTIONS.map((option) => {
         const active = selected.has(option.id);
         return (
-          <button
+          <MarketMotionButton
             key={option.id}
             type="button"
             className={`market-filter-chip${active ? " is-active" : ""}`}
@@ -167,7 +168,7 @@ export function FilterPositionChips({
             onClick={() => toggle(option.id)}
           >
             {option.abbrev}
-          </button>
+          </MarketMotionButton>
         );
       })}
     </div>
@@ -193,7 +194,7 @@ export function FilterAvailabilityChips({
       {AVAILABILITY_FILTER_OPTIONS.map((option) => {
         const active = selected.has(option.value);
         return (
-          <button
+          <MarketMotionButton
             key={option.value}
             type="button"
             className={`market-filter-chip${active ? " is-active" : ""}`}
@@ -201,7 +202,7 @@ export function FilterAvailabilityChips({
             onClick={() => toggle(option.value)}
           >
             {option.label}
-          </button>
+          </MarketMotionButton>
         );
       })}
     </div>

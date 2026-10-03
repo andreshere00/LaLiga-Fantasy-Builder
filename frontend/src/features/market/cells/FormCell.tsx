@@ -3,6 +3,7 @@ import { useState } from "react";
 import { scoreWeekLabel } from "../../../api/mappers";
 import { PlayerScoreBadge } from "../../lineup/PlayerTile";
 import { formRecentWindow, formWindowChronological } from "../model/form";
+import { MarketMotionButton } from "../MarketControlMotion";
 import type { MarketRow } from "../model/row";
 
 export function FormCell({ row }: { row: MarketRow }) {
@@ -39,7 +40,7 @@ export function FormCell({ row }: { row: MarketRow }) {
         })}
       </span>
       <span className="market-form-nav-buttons">
-        <button
+        <MarketMotionButton
           type="button"
           className="market-form-nav-btn"
           aria-label="Earlier matchweeks"
@@ -47,8 +48,8 @@ export function FormCell({ row }: { row: MarketRow }) {
           onClick={goPast}
         >
           ‹
-        </button>
-        <button
+        </MarketMotionButton>
+        <MarketMotionButton
           type="button"
           className="market-form-nav-btn"
           aria-label="Later matchweeks"
@@ -56,7 +57,7 @@ export function FormCell({ row }: { row: MarketRow }) {
           onClick={goFuture}
         >
           ›
-        </button>
+        </MarketMotionButton>
       </span>
     </span>
   );

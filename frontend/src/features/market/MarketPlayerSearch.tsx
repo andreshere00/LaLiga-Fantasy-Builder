@@ -1,4 +1,5 @@
 import { SearchIcon } from "../shell/icons";
+import { MarketMotionButton } from "./MarketControlMotion";
 
 type MarketPlayerSearchProps = {
   value: string;
@@ -33,9 +34,9 @@ export function MarketPlayerSearch({
           />
         </div>
         {activeFilterCount > 0 ? (
-          <button type="button" className="market-filter-clear" onClick={onClearFilters}>
+          <MarketMotionButton type="button" className="market-filter-clear" onClick={onClearFilters}>
             Clear filters
-          </button>
+          </MarketMotionButton>
         ) : null}
       </div>
     </div>

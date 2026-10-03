@@ -1,7 +1,6 @@
 import { useId } from "react";
-import { Link } from "react-router-dom";
-
 import shieldIconUrl from "../../../assets/button_shield.svg";
+import { MarketMotionLink } from "../MarketControlMotion";
 import { MarketActionMenu } from "../actions/MarketActionMenu";
 import type { MarketActionsApi } from "../actions/useMarketActions";
 import type { MarketActionContext } from "../actions/marketActions";
@@ -21,12 +20,12 @@ function SellerName({ seller, sellerTeamId }: { seller: string; sellerTeamId: st
     return <span className="market-seller">{seller}</span>;
   }
   return (
-    <Link
+    <MarketMotionLink
       className="market-seller market-seller-link"
       to={`/?team=${encodeURIComponent(sellerTeamId)}`}
     >
       {seller}
-    </Link>
+    </MarketMotionLink>
   );
 }
 

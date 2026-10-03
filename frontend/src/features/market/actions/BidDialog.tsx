@@ -3,6 +3,7 @@ import { useEffect, useId, useState } from "react";
 import { formatEuro, formatIntegerAmount, parseIntegerAmount } from "../../../api/format";
 import { Modal } from "../../../components/Modal";
 import { NumericCounterField } from "../../../components/NumericCounterField";
+import { MarketMotionButton } from "../MarketControlMotion";
 import { MARKET_VALUE_FILTER_STEP } from "../marketFilterInputs";
 import type { MarketRow } from "../model/row";
 import { isValidBidAmount, type BidActionKind } from "./marketActions";
@@ -84,10 +85,15 @@ export function BidDialog({
       closeOnBackdrop={!pending}
       footer={
         <>
-          <button type="button" className="market-dialog-secondary" onClick={onClose} disabled={pending}>
+          <MarketMotionButton
+            type="button"
+            className="market-dialog-secondary"
+            onClick={onClose}
+            disabled={pending}
+          >
             Cancel
-          </button>
-          <button
+          </MarketMotionButton>
+          <MarketMotionButton
             type="button"
             className="market-dialog-primary"
             disabled={!valid || pending}
@@ -97,7 +103,7 @@ export function BidDialog({
             }}
           >
             {pending ? "Sending…" : "Confirm"}
-          </button>
+          </MarketMotionButton>
         </>
       }
     >

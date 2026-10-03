@@ -20,6 +20,28 @@ export const MARKET_ROW_EXIT_TRANSITION: Transition = {
   ease: [0.4, 0, 0.2, 1],
 };
 
+export const MARKET_ROW_HOVER_TRANSITION: Transition = {
+  type: "spring",
+  stiffness: 380,
+  damping: 28,
+  mass: 0.75,
+};
+
+export const MARKET_ROW_AT_REST = {
+  opacity: 1,
+  y: 0,
+  scale: 1,
+  boxShadow: "0 0 0 rgba(53, 53, 61, 0)",
+  zIndex: 0,
+} as const;
+
+export const MARKET_ROW_HOVER = {
+  y: -3,
+  scale: 1.004,
+  boxShadow: "0 10px 28px rgba(53, 53, 61, 0.14)",
+  zIndex: 2,
+} as const;
+
 export const MARKET_TABLE_CROSSFADE: Transition = {
   duration: 0.22,
   ease: [0.4, 0, 0.2, 1],
