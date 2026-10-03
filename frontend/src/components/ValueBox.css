@@ -1,0 +1,64 @@
+.value-box-block {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 0.35rem;
+  min-width: 0;
+  overflow: visible;
+}
+
+.value-box-block-label {
+  font-size: 0.75rem;
+  font-weight: 700;
+}
+
+.value-box-block-shell {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  min-width: var(--value-box-min, clamp(120px, 12vw, 168px));
+  padding: 0 clamp(12px, 1.2vw, 16px);
+  min-height: 2.25rem;
+  background: var(--white);
+  border-radius: var(--value-box-radius, 0);
+  box-shadow: var(--shadow-surface);
+  text-align: left;
+  font-weight: 700;
+  font-size: var(--value-box-font, 0.95rem);
+  font-variant-numeric: tabular-nums;
+}
+
+.value-box-block-text {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.value-box-block-icon-btn {
+  flex: 0 0 auto;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  background: none;
+  cursor: help;
+  line-height: 0;
+}
+
+.value-box-block-icon {
+  width: var(--value-box-icon, 1.4rem);
+  height: var(--value-box-icon, 1.4rem);
+  flex: 0 0 auto;
+  object-fit: contain;
+  display: block;
+}
+
+.value-box-block-shell.is-negative .value-box-block-text {
+  color: #ff4b44;
+}
+
+.value-box-block-shell.has-hover-tooltip-panel .value-box-block-icon-btn {
+  cursor: help;
+}

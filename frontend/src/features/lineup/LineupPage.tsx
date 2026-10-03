@@ -1,4 +1,5 @@
 import { useEffect, type CSSProperties } from "react";
+import { useSearchParams } from "react-router-dom";
 
 import { pointsLabel, possessiveName, scoreWeekLabel } from "../../api/mappers";
 import { PersonIcon, SearchIcon, WarningIcon } from "../shell/icons";
@@ -27,21 +28,20 @@ function scorePointsLabel(weekLoading: boolean, points: number | null): string {
 }
 
 export function LineupPage() {
-  const board = useLineupBoard();
+  const [searchParams] = useSearchParams();
+  const board = useLineupBoard({ initialTeamId: searchParams.get("team") });
   const owner = possessiveName(board.titleName);
+  const { pitchSelection, selectPitchPlayer } = board;
   useEffect(() => {
-    if (!board.pitchSelection) return;
+    if (!pitchSelection) return;
     const onKeyDown = (event: KeyboardEvent) => {
       if (event.key === "Escape") {
-        board.selectPitchPlayer(
-          board.pitchSelection!.role,
-          board.pitchSelection!.playerId,
-        );
+        selectPitchPlayer(pitchSelection.role, pitchSelection.playerId);
       }
     };
     window.addEventListener("keydown", onKeyDown);
     return () => window.removeEventListener("keydown", onKeyDown);
-  }, [board.pitchSelection, board.selectPitchPlayer]);
+  }, [pitchSelection, selectPitchPlayer]);
 
   if (board.isLoading) {
     return (

@@ -56,10 +56,10 @@ uv run poe generate-openapi
 
 ### Pre-commit
 
-The local hook `generate-openapi` runs when Fantasy API route/schema sources
-(or `backend/api/openapi.json`) are staged. It regenerates the schema and
-**fails the commit if the file changed**, so you can review and stage
-`backend/api/openapi.json` before committing again (same pattern as formatters).
+The local hook `generate-openapi` runs when Fantasy **API or auth** route/schema
+sources (or either committed `openapi.json`) are staged. It regenerates both
+schemas via `scripts/check-openapi-alignment.sh` and **fails the commit if a
+file changed**, so you can review and stage updates before committing again.
 
 Install hooks once:
 

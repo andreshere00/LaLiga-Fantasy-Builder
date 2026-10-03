@@ -303,6 +303,43 @@ describe("useLineupBoard", () => {
     expect(playerIds(result.current)).not.toContain("d1");
   });
 
+  it("useLineupBoard_initialTeamId_selects_valid_standing_team", async () => {
+    const { result } = renderHook(() => useLineupBoard({ initialTeamId: "team-b" }), {
+      wrapper: Wrapper,
+    });
+    await waitFor(() => {
+      expect(result.current.selectedTeamId).toBe("team-b");
+    });
+  });
+
+  it("useLineupBoard_initialTeamId_valid_never_fetches_caller_lineup", async () => {
+    api.getJson.mockImplementation(async (path: string) => {
+      if (/\/standing$/.test(path)) await new Promise((resolve) => setTimeout(resolve, 60));
+      return respond(path);
+    });
+    const { result } = renderHook(() => useLineupBoard({ initialTeamId: "team-b" }), {
+      wrapper: Wrapper,
+    });
+
+    await waitFor(() => {
+      expect(result.current.selectedTeamId).toBe("team-b");
+      expect(result.current.lineupLoading).toBe(false);
+    });
+
+    const requested = api.getJson.mock.calls.map(([path]) => String(path));
+    expect(requested).not.toContain(paths.lineup("team-a"));
+    expect(requested).toContain(paths.lineup("team-b"));
+  });
+
+  it("useLineupBoard_initialTeamId_unknown_falls_back_to_caller", async () => {
+    const { result } = renderHook(() => useLineupBoard({ initialTeamId: "missing" }), {
+      wrapper: Wrapper,
+    });
+    await waitFor(() => {
+      expect(result.current.selectedTeamId).toBe("team-a");
+    });
+  });
+
   it("useLineupBoard_failed_lineup_after_league_switch_save_stays_disabled", async () => {
     const { result, rerender } = renderHook(() => useLineupBoard(), { wrapper: Wrapper });
     await loadCallerBoard(result);

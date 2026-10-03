@@ -2,7 +2,7 @@
 
 import { describe, expect, it, vi } from "vitest";
 
-import { getJson, putJson } from "./client";
+import { getJson, postJson, putJson } from "./client";
 
 function json(body: unknown, status = 200): Response {
   return new Response(JSON.stringify(body), {
@@ -22,6 +22,20 @@ describe("getJson", () => {
     });
 
     await getJson("/api/leagues", "token-1", { fetchFn, signal: controller.signal });
+
+    expect(fetchFn).toHaveBeenCalledOnce();
+  });
+});
+
+describe("postJson", () => {
+  it("postJson_sends_post_with_json_body", async () => {
+    const fetchFn = vi.fn(async (_input: string, init?: RequestInit) => {
+      expect(init?.method).toBe("POST");
+      expect(init?.body).toBe(JSON.stringify({ money: 120 }));
+      return json({ ok: true });
+    });
+
+    await postJson("/api/market/leagues/l1/m1/bids", "token-1", { money: 120 }, { fetchFn });
 
     expect(fetchFn).toHaveBeenCalledOnce();
   });

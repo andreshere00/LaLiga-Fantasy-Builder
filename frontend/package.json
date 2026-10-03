@@ -7,6 +7,7 @@
     "dev:all": "bash ../scripts/dev-local.sh",
     "build": "tsc --noEmit && vite build",
     "preview": "vite preview",
+    "lint": "eslint src",
     "test": "vitest run"
   },
   "dependencies": {
@@ -20,8 +21,11 @@
     "@types/react": "^19.1.13",
     "@types/react-dom": "^19.1.9",
     "@vitejs/plugin-react": "^5.0.2",
+    "eslint": "^10.12.0",
+    "eslint-plugin-react-hooks": "^7.1.1",
     "happy-dom": "^20.14.5",
     "typescript": "^5.9.2",
+    "typescript-eslint": "^8.71.0",
     "vite": "^7.1.5",
     "vitest": "^5.0.2"
   }

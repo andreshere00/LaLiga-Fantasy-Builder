@@ -35,6 +35,7 @@ browser = [
 ]
 
 [project.scripts]
+generate-openapi = "fantasy_auth.openapi:main"
 laliga-fantasy-builder-auth = "fantasy_auth.main:run"
 laliga-auth-helper = "fantasy_auth.cli.helper:main"
 pair-laliga = "fantasy_auth.cli.pair:main"

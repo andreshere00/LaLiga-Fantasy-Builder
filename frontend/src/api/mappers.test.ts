@@ -5,6 +5,7 @@ import { describe, expect, it } from "vitest";
 import {
   clampWeek,
   defaultWeek,
+  lastPlayedWeek,
   formatTeamValue,
   formationLabel,
   freeFormationCodesFromLineup,
@@ -462,6 +463,12 @@ describe("matchday bounds", () => {
     expect(defaultWeek({ previousWeek: 0, weekNumber: 5 })).toBe(5);
     expect(defaultWeek({})).toBe(1);
     expect(maxWeek({ weekNumber: 5 })).toBe(5);
+  });
+
+  it("lastPlayedWeek_uses_previous_week_when_present", () => {
+    expect(lastPlayedWeek({ previousWeek: 7, weekNumber: 8 })).toBe(7);
+    expect(lastPlayedWeek({ weekNumber: 8 })).toBe(7);
+    expect(lastPlayedWeek({ weekNumber: 1 })).toBe(0);
   });
 
   it("clampWeek_out_of_range_stays_inside_bounds", () => {

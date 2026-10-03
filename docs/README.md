@@ -1,28 +1,41 @@
 # LaLiga Fantasy Builder documentation
 
-One map of the running system: [Architecture](architecture.md).
-Identity and tokens: [Authentication](authentication/authentication.md).
-How to run it: [root README](../README.md).
+Start with the [project README](../README.md) for features and quick start.
+This folder is the detailed map.
 
-## Index
+## Core
 
-- [Architecture](architecture.md) — services, login return path, CRS, trust
-  boundaries, errors
-- [Authentication](authentication/authentication.md) — session, internal JWT,
-  LaLiga vault, CSRF
-- [Developing authenticated endpoints](authentication/developing-authenticated-endpoints.md)
-  — auth vs API, CSRF, internal JWT
-- [API overview](api/README.md)
-- [Adding endpoints](api/adding-endpoints.md)
-- [OpenAPI / Swagger](api/openapi.md)
-- [Endpoint schemas](api/endpoint-schemas.md) — generated; do not edit by hand
-- [Leagues](api/leagues/README.md) · [Teams](api/teams/README.md) ·
-  [Players](api/players/README.md) · [Calendar](api/calendar/README.md) ·
-  [Market](api/market/README.md) · [Buyout](api/buyout/README.md)
-- [Proxy endpoint pitfalls](api/proxy-endpoint-pitfalls.md)
+| Doc | Contents |
+|-----|----------|
+| [Architecture](architecture.md) | Services, login path, CRS, trust boundaries, errors |
+| [Frontend](frontend.md) | Lineup and market UI, data loading, actions, tooltips |
+| [Authentication](authentication/authentication.md) | Sessions, internal JWT, LaLiga vault, CSRF |
 
-Agent instructions: [`AGENTS.md`](../AGENTS.md).
+## Authentication (HTTP reference)
 
-`backend/auth` owns login, sessions, the LaLiga vault, and internal JWTs.
-`backend/api` owns Fantasy features and accepts only those JWTs.
-`frontend` is the lineup UI and does not hold LaLiga tokens.
+| Doc | Contents |
+|-----|----------|
+| [Auth endpoints](authentication/endpoints.md) | Auth service routes |
+| [Auth OpenAPI](authentication/openapi.md) | Swagger and `backend/auth/openapi.json` |
+| [Developing authenticated endpoints](authentication/developing-authenticated-endpoints.md) | Auth vs API, CSRF, internal JWT |
+
+## API (`backend/api`)
+
+| Doc | Contents |
+|-----|----------|
+| [API overview](api/README.md) | Swagger URLs, JWT usage, CLI policy |
+| [Adding endpoints](api/adding-endpoints.md) | Availability, auth, tests, OpenAPI |
+| [OpenAPI / Swagger](api/openapi.md) | Regenerating `openapi.json` |
+| [Endpoint schemas](api/endpoint-schemas.md) | Generated — do not edit by hand |
+| [Proxy endpoint pitfalls](api/proxy-endpoint-pitfalls.md) | Fail-closed proxy patterns |
+
+### Domains
+
+[Leagues](api/leagues/README.md) · [Teams](api/teams/README.md) ·
+[Players](api/players/README.md) · [Calendar](api/calendar/README.md) ·
+[Market](api/market/README.md) · [Buyout](api/buyout/README.md)
+
+Contributors: [`AGENTS.md`](../AGENTS.md).
+
+**Layout:** `backend/auth` — login and tokens. `backend/api` — Fantasy
+features. `frontend` — lineup and market UI; no LaLiga secrets in the browser.

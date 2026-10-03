@@ -206,7 +206,7 @@ class PlayerMaster(FlexibleModel):
     playerStatus: str | None = None
     teamId: int | None = None
     lastSeasonPoints: int | None = None
-    averagePoints: float | int | None = None
+    averagePoints: float | int | None = Field(default=None, title="Average points")
     images: dict[str, Any] | None = None
     lastStats: list[PlayerStatWeek] | None = None
     team: ClubTeam | None = None

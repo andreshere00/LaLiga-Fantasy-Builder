@@ -1,0 +1,43 @@
+.has-hover-tooltip-panel {
+  position: relative;
+  overflow: visible;
+}
+
+.hover-tooltip-panel {
+  position: absolute;
+  bottom: calc(100% + 10px);
+  z-index: 100;
+  box-sizing: border-box;
+  width: max-content;
+  max-width: min(18rem, calc(100vw - 32px));
+  padding: 10px 12px;
+  border-radius: 6px;
+  background: var(--ink);
+  color: var(--white);
+  font-size: 0.75rem;
+  font-weight: 400;
+  line-height: 1.4;
+  text-align: left;
+  white-space: normal;
+  box-shadow: var(--shadow-surface);
+  pointer-events: none;
+  opacity: 0;
+  visibility: hidden;
+  transition:
+    opacity 0.12s ease,
+    visibility 0.12s ease;
+}
+
+.hover-tooltip-panel.is-align-start {
+  left: 0;
+}
+
+.hover-tooltip-panel.is-align-end {
+  right: 0;
+}
+
+.has-hover-tooltip-panel:hover .hover-tooltip-panel,
+.has-hover-tooltip-panel:focus-within .hover-tooltip-panel {
+  opacity: 1;
+  visibility: visible;
+}

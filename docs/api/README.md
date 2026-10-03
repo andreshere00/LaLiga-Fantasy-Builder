@@ -12,6 +12,7 @@ Application API docs for `backend/api` (`fantasy_api`).
 - [Proxy endpoint pitfalls](proxy-endpoint-pitfalls.md)
 
 Auth: [Authentication](../authentication/authentication.md),
+[Auth endpoints](../authentication/endpoints.md),
 [Developing authenticated endpoints](../authentication/developing-authenticated-endpoints.md).
 
 | Resource | URL / path |
@@ -31,6 +32,7 @@ Market and buyout mutations are medium-confidence community contracts.
 `fantasy-market` and `fantasy-buyout` stay read-only.
 
 Callers send `Authorization: Bearer <jwt>` minted by `POST /auth/token`.
-The lineup app does this after sign-in. For a terminal session, use
-`uv run fantasy-browser-session` from `backend/auth`.
-The system map is [Architecture](../architecture.md).
+The browser app does this after sign-in. Market bid and buyout pay mutations
+are implemented in the UI only; see [Frontend — Market](../frontend.md#market-screen).
+Terminal sessions: `uv run fantasy-browser-session` from `backend/auth`.
+System map: [Architecture](../architecture.md).

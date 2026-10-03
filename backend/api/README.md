@@ -1,6 +1,6 @@
 # API service
 
-Fantasy routes for the lineup app and the CLIs. Callers send an internal JWT
+Fantasy routes for the browser app and the CLIs. Callers send an internal JWT
 from auth. LaLiga bearers are fetched in private and never returned.
 The request path is in [Architecture](../../docs/architecture.md).
 

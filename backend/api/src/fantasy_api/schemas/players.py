@@ -4,6 +4,8 @@ from __future__ import annotations
 
 from typing import Any
 
+from pydantic import Field
+
 from fantasy_api.schemas.common import FlexibleModel
 
 
@@ -19,7 +21,7 @@ class CatalogPlayer(FlexibleModel):
     team: dict[str, Any] | None = None
     playerStatus: str | None = None
     points: int | None = None
-    averagePoints: float | int | None = None
+    averagePoints: float | int | None = Field(default=None, title="Average points")
     weekPoints: Any | None = None
     marketValue: int | None = None
     lastSeasonPoints: int | None = None

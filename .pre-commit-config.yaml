@@ -20,15 +20,25 @@ repos:
         pass_filenames: false
         types: [python]
 
+      - id: lint-frontend
+        name: lint frontend (eslint react-hooks)
+        entry: bash -c 'cd frontend && bun run lint'
+        language: system
+        pass_filenames: false
+        files: ^frontend/(src/.*\.(ts|tsx)|eslint\.config\.js|package\.json)$
+
       - id: generate-openapi
-        name: generate OpenAPI documentation
-        entry: uv run poe generate-openapi
+        name: generate OpenAPI documentation (api + auth)
+        entry: bash scripts/check-openapi-alignment.sh
         language: system
         pass_filenames: false
         files: >-
           ^(backend/api/src/fantasy_api/(api/|schemas/|openapi\.py|main\.py|config\.py)
           |backend/api/openapi\.json
-          |backend/api/pyproject\.toml)$
+          |backend/api/pyproject\.toml
+          |backend/auth/src/fantasy_auth/(api/|openapi\.py|main\.py|config\.py)
+          |backend/auth/openapi\.json
+          |backend/auth/pyproject\.toml)$
 
       - id: test
         name: test (pytest, ≥90% coverage)

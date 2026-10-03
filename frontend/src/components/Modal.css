@@ -1,0 +1,64 @@
+.modal-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 20;
+  display: grid;
+  place-items: center;
+  padding: 24px;
+  background: rgb(0 0 0 / 28%);
+}
+
+.modal-card {
+  width: min(420px, 100%);
+  padding: 28px 24px 22px;
+  background: var(--white);
+  border-radius: 12px;
+  box-shadow: var(--shadow-surface);
+  text-align: center;
+}
+
+.modal-title {
+  margin: 0 0 12px;
+  font-size: 1.125rem;
+  font-weight: 500;
+}
+
+.modal-body {
+  margin: 0;
+  font-size: 0.95rem;
+  line-height: 1.45;
+  text-align: left;
+}
+
+.modal-body-plain {
+  margin: 0;
+  text-align: center;
+}
+
+.modal-footer {
+  margin-top: 20px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  justify-content: center;
+}
+
+.modal-close {
+  margin-top: 20px;
+  border: 0;
+  background: var(--red);
+  color: var(--white);
+  padding: 10px 22px;
+  font: inherit;
+  font-weight: 700;
+  cursor: pointer;
+  box-shadow: var(--shadow-surface);
+  transition:
+    background-color var(--control-fill-duration) var(--control-fill-ease),
+    color var(--control-fill-duration) var(--control-fill-ease);
+}
+
+.modal-close:is(:hover, :active) {
+  background: var(--accent-press);
+  color: var(--black);
+}

@@ -55,12 +55,20 @@ export FANTASY_CSRF='…'
 cd backend/auth && uv run pair-laliga
 ```
 
-## Health
+## Routes and OpenAPI
 
-- `GET /health` and `GET /health/live` — process liveness
-- `GET /health/ready` — Postgres and Redis when `USE_MEMORY_STORE=false`
+Full route tables: [Auth endpoints](../../docs/authentication/endpoints.md).
+Regenerate committed schema: `uv run generate-openapi` (writes
+`backend/auth/openapi.json`). Swagger: http://localhost:8000/docs when running.
+
+Highlights:
+
+- `GET /health`, `/health/live`, `/health/ready` — liveness/readiness
+- `GET /auth/login`, `/auth/callback`, `/auth/me`, `POST /auth/logout` — app session
+- `POST /auth/token` — session + CSRF → internal JWT
+- `GET /laliga/connection`, `DELETE /laliga/connection` — link status / unlink
+- LaLiga pairing under `/laliga/pairings*`
 - `GET /.well-known/jwks.json` — internal JWT verification keys
-- `POST /auth/token` — session and CSRF to a short-lived internal JWT
 - `GET /internal/laliga/bearer` — private; JWT plus `X-Service-Token`
 
 `/internal/*` must not be exposed on the public internet.
