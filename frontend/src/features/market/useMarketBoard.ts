@@ -27,6 +27,7 @@ import {
   marketRow,
   masterIdOf,
   recentFormWeekNumbers,
+  userBidsByMarketId,
   valueSeries,
   type MarketRow,
   type ValuePoint,
@@ -170,6 +171,11 @@ export function useMarketBoard(): MarketBoard {
     [formWeekNumbers, playedThrough, ...weekStatsData],
   );
 
+  const userBidsByMarketIdMap = useMemo(
+    () => userBidsByMarketId(marketQuery.data),
+    [marketQuery.data],
+  );
+
   const rows = useMemo(() => {
     const catalog = catalogById(catalogQuery.data);
     return items.map((item, index) =>
@@ -178,9 +184,10 @@ export function useMarketBoard(): MarketBoard {
         history: historyByPlayerId,
         calendarForm,
         callerTeamId: teamId,
+        userBidsByMarketId: userBidsByMarketIdMap,
       }),
     );
-  }, [items, catalogQuery.data, historyByPlayerId, calendarForm, teamId]);
+  }, [items, catalogQuery.data, historyByPlayerId, calendarForm, teamId, userBidsByMarketIdMap]);
 
   const money = useMemo(() => {
     const fromApi = teamMoneyFromPayload(moneyQuery.data);

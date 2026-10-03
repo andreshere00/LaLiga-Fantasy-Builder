@@ -59,43 +59,6 @@
   color: #ff4b44;
 }
 
-.value-box-block-shell.has-icon-tooltip {
-  position: relative;
-  overflow: visible;
-}
-
-.value-box-block-tooltip {
-  position: absolute;
-  right: 0;
-  bottom: calc(100% + 10px);
-  z-index: 100;
-  box-sizing: border-box;
-  width: max-content;
-  max-width: min(18rem, calc(100vw - 32px));
-  padding: 10px 12px;
-  border-radius: 6px;
-  background: var(--ink);
-  color: var(--white);
-  font-size: 0.75rem;
-  font-weight: 400;
-  line-height: 1.4;
-  text-align: left;
-  white-space: normal;
-  box-shadow: var(--shadow-surface);
-  pointer-events: none;
-  opacity: 0;
-  visibility: hidden;
-  transition:
-    opacity 0.12s ease,
-    visibility 0.12s ease;
-}
-
-.value-box-block-shell.has-icon-tooltip:hover .value-box-block-tooltip,
-.value-box-block-shell.has-icon-tooltip:focus-within .value-box-block-tooltip {
-  opacity: 1;
-  visibility: visible;
-}
-
-.value-box-block-shell.has-icon-tooltip .value-box-block-icon-btn {
+.value-box-block-shell.has-hover-tooltip-panel .value-box-block-icon-btn {
   cursor: help;
 }

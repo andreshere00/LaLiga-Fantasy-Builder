@@ -14,6 +14,7 @@ import {
   masterOf,
   sellerNameOf,
   sellerTeamIdOf,
+  type UserBidRef,
 } from "./listing";
 import { valueVariation, valueVariationPercent, type ValuePoint } from "./valueSeries";
 
@@ -60,6 +61,7 @@ export type MarketRowContext = {
   leagueCards?: ReadonlyMap<string, unknown>;
   calendarForm?: CalendarFormContext;
   callerTeamId?: string | null;
+  userBidsByMarketId?: ReadonlyMap<string, UserBidRef>;
 };
 
 function lastStatsFromLeagueCard(card: unknown): unknown {
@@ -91,6 +93,16 @@ function myBidOf(item: Record<string, unknown>): MarketRow["myBid"] {
   return { id, money };
 }
 
+function resolveMyBid(
+  item: Record<string, unknown>,
+  marketId: string,
+  userBidsByMarketId?: ReadonlyMap<string, UserBidRef>,
+): MarketRow["myBid"] {
+  const fromUser = userBidsByMarketId?.get(marketId);
+  if (fromUser) return fromUser;
+  return myBidOf(item);
+}
+
 function sellerKindOf(
   sellerLabel: string,
   sellerTeamId: string | null,
@@ -108,7 +120,14 @@ export function marketRow(
   index: number,
   context: MarketRowContext,
 ): MarketRow {
-  const { catalog, history, leagueCards = new Map(), calendarForm, callerTeamId } = context;
+  const {
+    catalog,
+    history,
+    leagueCards = new Map(),
+    calendarForm,
+    callerTeamId,
+    userBidsByMarketId,
+  } = context;
   const playerId = masterIdOf(item);
   const fromCatalog = playerId ? catalog.get(playerId) : null;
   const fromMarket = masterOf(item);
@@ -172,7 +191,7 @@ export function marketRow(
     buyoutClause: asFiniteNumber(playerTeam?.buyoutClause),
     clauseUnlockAt: clauseUnlockAtOf(playerTeam),
     isShielded: playerTeam?.isShielded === true,
-    myBid: myBidOf(item),
+    myBid: resolveMyBid(item, marketId, userBidsByMarketId),
     directOffer: item.directOffer === true,
   };
 }

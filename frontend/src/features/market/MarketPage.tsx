@@ -58,7 +58,6 @@ function MarketList() {
             <span>Form</span>
             <span>Market value</span>
             <span>Availability</span>
-            <span>Average score</span>
             <span>Seal end</span>
             <span>Sell options</span>
           </li>

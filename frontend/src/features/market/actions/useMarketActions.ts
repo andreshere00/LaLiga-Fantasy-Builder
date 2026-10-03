@@ -6,6 +6,7 @@ import { ApiError, NeedsReauthError } from "../../../api/errors";
 import { useAuth } from "../../../auth/AuthProvider";
 import { useLeague } from "../../lineup/LeagueProvider";
 import { callerTeamId, leagueId } from "../../../api/mappers";
+import { patchMarketSnapshotBid } from "../marketRows";
 import type { MarketRow } from "../model/row";
 import { marketActionErrorMessage } from "./marketActionErrors";
 import { usesDirectOfferBid, type BidActionKind } from "./marketActions";
@@ -31,15 +32,29 @@ export function useMarketActions() {
   const [pendingClause, setPendingClause] = useState<PendingClause | null>(null);
   const [message, setMessage] = useState<string | null>(null);
 
-  const invalidate = useCallback(async () => {
-    const teamId = selected ? callerTeamId(selected) : null;
+  const teamId = selected ? callerTeamId(selected) : null;
+
+  const patchCachedBid = useCallback(
+    (marketId: string, myBid: { id: string; money: number } | null) => {
+      if (leagueKey === "") return;
+      queryClient.setQueryData(["market", leagueKey], (current) =>
+        patchMarketSnapshotBid(current, marketId, myBid),
+      );
+    },
+    [queryClient, leagueKey],
+  );
+
+  const refreshAfterMutation = useCallback(async () => {
     await Promise.all([
-      queryClient.invalidateQueries({ queryKey: ["market", leagueKey] }),
+      queryClient.refetchQueries({ queryKey: ["market", leagueKey] }),
       teamId
-        ? queryClient.invalidateQueries({ queryKey: ["team-money", leagueKey, teamId] })
+        ? queryClient.refetchQueries({ queryKey: ["team-money", leagueKey, teamId] })
+        : Promise.resolve(),
+      teamId
+        ? queryClient.refetchQueries({ queryKey: ["team", leagueKey, teamId] })
         : Promise.resolve(),
     ]);
-  }, [queryClient, leagueKey, selected]);
+  }, [queryClient, leagueKey, teamId]);
 
   const onError = useCallback(
     (error: unknown) => {
@@ -70,10 +85,14 @@ export function useMarketActions() {
       }
       return postJson(paths.marketBid(leagueKey, row.marketId), token, { money });
     },
-    onSuccess: async () => {
+    onSuccess: async (_data, variables) => {
       setPendingBid(null);
       setMessage(null);
-      await invalidate();
+      patchCachedBid(variables.row.marketId, {
+        id: variables.row.myBid?.id ?? `local-${variables.row.marketId}`,
+        money: variables.money,
+      });
+      await refreshAfterMutation();
     },
     onError,
   });
@@ -84,10 +103,12 @@ export function useMarketActions() {
       if (!bidId) throw new ApiError(400, "missing_bid");
       return putJson(paths.marketBidUpdate(leagueKey, row.marketId, bidId), token, { money });
     },
-    onSuccess: async () => {
+    onSuccess: async (_data, variables) => {
       setPendingBid(null);
       setMessage(null);
-      await invalidate();
+      const bidId = variables.row.myBid?.id ?? `local-${variables.row.marketId}`;
+      patchCachedBid(variables.row.marketId, { id: bidId, money: variables.money });
+      await refreshAfterMutation();
     },
     onError,
   });
@@ -98,9 +119,10 @@ export function useMarketActions() {
       if (!bidId) throw new ApiError(400, "missing_bid");
       return deleteJson(paths.marketBidUpdate(leagueKey, row.marketId, bidId), token);
     },
-    onSuccess: async () => {
+    onSuccess: async (_data, row) => {
       setMessage(null);
-      await invalidate();
+      patchCachedBid(row.marketId, null);
+      await refreshAfterMutation();
     },
     onError,
   });
@@ -116,7 +138,7 @@ export function useMarketActions() {
     onSuccess: async () => {
       setPendingClause(null);
       setMessage(null);
-      await invalidate();
+      await refreshAfterMutation();
     },
     onError,
   });

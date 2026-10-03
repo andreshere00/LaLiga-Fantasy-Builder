@@ -1,3 +1,9 @@
+@import "../../components/TooltipPanel.css";
+
+.is-bid-tooltip-target {
+  cursor: help;
+}
+
 .market-page {
   max-width: 1100px;
   margin: 24px auto;
@@ -32,8 +38,8 @@
 .market-row {
   display: grid;
   grid-template-columns:
-    72px minmax(0, 0.55fr) minmax(0, 0.55fr) 0.55fr 0.65fr 0.9fr 1.15fr 0.65fr 0.75fr 0.95fr
-    minmax(7.75rem, 1.3fr);
+    72px minmax(0, 0.55fr) minmax(0, 0.55fr) 0.55fr 0.7fr 0.9fr 1.15fr minmax(8.5rem, 1.35fr) 0.95fr
+    minmax(6.75rem, 1.05fr);
   align-items: center;
   gap: 12px;
   padding: 8px 12px;
@@ -71,6 +77,7 @@
   min-width: 0;
   justify-self: start;
   max-width: 100%;
+  overflow: visible;
 }
 
 .market-name {
@@ -255,10 +262,58 @@
   color: var(--red);
 }
 
+.market-fsyp {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 2px;
+  line-height: 1.2;
+}
+
+.market-fsyp-tooltip-target {
+  cursor: help;
+}
+
+.market-fsyp-tooltip {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  font-variant-numeric: tabular-nums;
+}
+
+.market-fsyp-tooltip-line {
+  display: block;
+  white-space: nowrap;
+}
+
+.market-fsyp-cell {
+  overflow: visible;
+}
+
+.market-fsyp-primary {
+  font-weight: inherit;
+}
+
+.market-fsyp-average {
+  font-size: 0.72rem;
+  font-weight: 600;
+  color: color-mix(in srgb, var(--ink) 52%, transparent);
+}
+
+.market-cell-availability {
+  min-width: 0;
+}
+
 .market-availability {
   display: inline-flex;
   align-items: center;
   gap: 6px;
+  white-space: nowrap;
+  max-width: 100%;
+}
+
+.market-availability > span:last-child {
+  white-space: nowrap;
 }
 
 .market-availability-icon {

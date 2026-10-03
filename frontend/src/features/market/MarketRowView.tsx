@@ -1,8 +1,8 @@
-import { pointsLabel } from "../../api/mappers";
 import type { useMarketActions } from "./actions/useMarketActions";
 import type { MarketActionContext } from "./actions/marketActions";
 import { AvailabilityCell } from "./cells/AvailabilityCell";
 import { FormCell } from "./cells/FormCell";
+import { FsypCell } from "./cells/FsypCell";
 import { PlayerCell } from "./cells/PlayerCell";
 import { SellerCell } from "./cells/SellerCell";
 import { ValueCell } from "./cells/ValueCell";
@@ -29,8 +29,12 @@ export function MarketRowView({ row, now, actionContext, actions }: MarketRowVie
           {positionAbbrev(row.positionId)}
         </span>
       </span>
-      <span className="market-cell" data-label="FSYP">
-        {pointsLabel(row.points)}
+      <span className="market-cell market-fsyp-cell" data-label="FSYP">
+        <FsypCell
+          points={row.points}
+          averagePoints={row.averagePoints}
+          formRecent={row.formRecent}
+        />
       </span>
       <span className="market-cell market-form" data-label="Form">
         <FormCell row={row} />
@@ -42,11 +46,8 @@ export function MarketRowView({ row, now, actionContext, actions }: MarketRowVie
           variationPercent={row.variationPercent}
         />
       </span>
-      <span className="market-cell" data-label="Availability">
+      <span className="market-cell market-cell-availability" data-label="Availability">
         <AvailabilityCell availability={row.availability} />
-      </span>
-      <span className="market-cell" data-label="Average score">
-        {row.averagePoints == null ? "—" : row.averagePoints.toFixed(2)}
       </span>
       <span className="market-cell" data-label="Seal end">
         {remainingLabel(row.expiresAt, now)}

@@ -1,5 +1,6 @@
 import { useId } from "react";
 
+import "./TooltipPanel.css";
 import "./ValueBox.css";
 
 type ValueBoxProps = {
@@ -32,7 +33,7 @@ export function ValueBox({
       <span className="value-box-block-label">{label}</span>
       <div
         className={
-          withTooltip ? `${shellClass} has-icon-tooltip` : shellClass
+          withTooltip ? `${shellClass} has-hover-tooltip-panel` : shellClass
         }
       >
         <span className="value-box-block-text">{value}</span>
@@ -61,7 +62,11 @@ export function ValueBox({
           )
         ) : null}
         {withTooltip ? (
-          <span id={tooltipId} className="value-box-block-tooltip" role="tooltip">
+          <span
+            id={tooltipId}
+            className="hover-tooltip-panel is-align-end"
+            role="tooltip"
+          >
             {iconTitle}
           </span>
         ) : null}

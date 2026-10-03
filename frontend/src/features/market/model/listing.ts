@@ -1,4 +1,4 @@
-import { asRecord, idText, text } from "../../../api/mappers";
+import { asFiniteNumber, asRecord, idText, text } from "../../../api/mappers";
 
 export const LALIGA_SELLER = "LALIGA";
 const LIST_KEYS: readonly string[] = ["marketPlayers", "market", "players", "items", "data"];
@@ -71,6 +71,37 @@ export function expiryOf(item: Record<string, unknown>): number | null {
   const raw = text(item.expirationDate) ?? text(market?.expirationDate);
   const time = raw == null ? Number.NaN : Date.parse(raw);
   return Number.isFinite(time) ? time : null;
+}
+
+export type UserBidRef = { id: string; money: number };
+
+function bidRefFromRecord(record: Record<string, unknown>): UserBidRef | null {
+  const nested = asRecord(record.bid) ?? record;
+  const id = idText(nested.id) ?? idText(record.bidId);
+  const money = asFiniteNumber(nested.money) ?? asFiniteNumber(record.money);
+  if (!id || money == null) return null;
+  return { id, money };
+}
+
+function marketIdFromUserBid(record: Record<string, unknown>): string | null {
+  const marketPlayer = asRecord(record.marketPlayer);
+  return (
+    idText(record.marketId) ??
+    idText(record.marketPlayerId) ??
+    idText(marketPlayer?.id) ??
+    idText(asRecord(record.playerMarket)?.id)
+  );
+}
+
+/** User bids keyed by market listing id (``userBids`` on the market snapshot). */
+export function userBidsByMarketId(snapshot: unknown): Map<string, UserBidRef> {
+  const map = new Map<string, UserBidRef>();
+  for (const raw of userBidRecords(snapshot)) {
+    const marketId = marketIdFromUserBid(raw);
+    const bid = bidRefFromRecord(raw);
+    if (marketId && bid) map.set(marketId, bid);
+  }
+  return map;
 }
 
 /** Pending bids from a market snapshot outside listing rows. */

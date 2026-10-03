@@ -1,6 +1,7 @@
 import { useEffect, useId, useRef, useState } from "react";
 
 import bidIconUrl from "../../../assets/button_bid.svg";
+import { bidAmountTooltipLabel } from "../bidTooltip";
 import type { MarketRow } from "../model/row";
 import { resolveMarketActionOffers, type MarketActionContext } from "./marketActions";
 import type { useMarketActions } from "./useMarketActions";
@@ -31,9 +32,17 @@ export function MarketActionMenu({ row, context, actions }: MarketActionMenuProp
   if (offers.length === 0) return null;
 
   const bidded = row.myBid != null;
+  const bidMoney = row.myBid?.money;
 
   return (
-    <div className="market-actions" ref={rootRef}>
+    <div
+      className={
+        bidded
+          ? "market-actions has-hover-tooltip-panel is-bid-tooltip-target"
+          : "market-actions"
+      }
+      ref={rootRef}
+    >
       <button
         type="button"
         className={bidded ? "market-actions-trigger is-bidded" : "market-actions-trigger"}
@@ -51,6 +60,11 @@ export function MarketActionMenu({ row, context, actions }: MarketActionMenuProp
           "Options"
         )}
       </button>
+      {bidded && bidMoney != null ? (
+        <span className="hover-tooltip-panel is-align-end" role="tooltip">
+          {bidAmountTooltipLabel(bidMoney)}
+        </span>
+      ) : null}
       {open ? (
         <ul id={menuId} className="market-actions-menu" role="menu">
           {offers.map((offer) => (

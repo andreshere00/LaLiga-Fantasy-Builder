@@ -17,7 +17,9 @@ export {
   masterIdOf,
   masterOf,
   userBidRecords,
+  userBidsByMarketId,
 } from "./model/listing";
+export { patchMarketSnapshotBid } from "./model/marketSnapshotPatch";
 export type { CalendarFormContext, MarketRow, MarketRowContext, SellerKind } from "./model/row";
 export { marketRow } from "./model/row";
 export type { ValuePoint } from "./model/valueSeries";
