@@ -18,7 +18,7 @@ export function MarketToolbar({ money }: MarketToolbarProps) {
         iconSrc={negative ? moneyWarningIconUrl : moneyIconUrl}
         iconTitle={
           negative
-            ? "Balance must be positive before matchday begins in order to score for the next fixture"
+            ? "Balance must be positive before matchday begins in order to score"
             : undefined
         }
         tone={negative ? "negative" : "default"}

@@ -3,7 +3,7 @@ import { asFiniteNumber, asRecord } from "../../../api/mappers";
 export const FORM_MATCHES = 5;
 export const FORM_DISPLAY_MATCHES = 3;
 
-function recentFormWeeks(
+function formWeekRows(
   lastStats: unknown,
   playedThrough: number | null = null,
 ): { week: number; points: number }[] {
@@ -23,7 +23,21 @@ function recentFormWeeks(
   if (playedThrough != null && playedThrough >= 1) {
     rows = rows.filter((row) => row.week <= playedThrough);
   }
-  return rows.sort((left, right) => right.week - left.week).slice(0, FORM_MATCHES);
+  return rows.sort((left, right) => right.week - left.week);
+}
+
+function recentFormWeeks(
+  lastStats: unknown,
+  playedThrough: number | null = null,
+): { week: number; points: number }[] {
+  return formWeekRows(lastStats, playedThrough).slice(0, FORM_MATCHES);
+}
+
+function allFormWeeks(
+  lastStats: unknown,
+  playedThrough: number | null = null,
+): { week: number; points: number }[] {
+  return formWeekRows(lastStats, playedThrough);
 }
 
 /** Sum of the points from the latest five played matchweeks. */
@@ -35,20 +49,20 @@ export function formPoints(
   return weeks.length === 0 ? null : weeks.reduce((sum, row) => sum + row.points, 0);
 }
 
-/** Latest five matchweek scores, newest first. */
+/** Played matchweek scores for the form column, newest first. */
 export function formRecentPoints(
   lastStats: unknown,
   playedThrough: number | null = null,
 ): number[] {
-  return recentFormWeeks(lastStats, playedThrough).map((row) => row.points);
+  return allFormWeeks(lastStats, playedThrough).map((row) => row.points);
 }
 
-/** Matchweek numbers aligned with ``formRecentPoints`` (newest first, up to five). */
+/** Matchweek numbers aligned with ``formRecentPoints`` (newest first). */
 export function formRecentWeekNumbers(
   lastStats: unknown,
   playedThrough: number | null = null,
 ): number[] {
-  return recentFormWeeks(lastStats, playedThrough).map((row) => row.week);
+  return allFormWeeks(lastStats, playedThrough).map((row) => row.week);
 }
 
 export type FormRecentWindow = {
@@ -58,12 +72,12 @@ export type FormRecentWindow = {
   canGoNewer: boolean;
 };
 
-/** Keeps only the last ``FORM_MATCHES`` played matchweeks (newest first). */
+/** Trims ``recent`` and ``weeks`` to a shared length (newest-first rows). */
 export function formRecentSeries(
   recent: readonly number[],
   weeks: readonly number[],
 ): { recent: number[]; weeks: number[] } {
-  const length = Math.min(recent.length, weeks.length, FORM_MATCHES);
+  const length = Math.min(recent.length, weeks.length);
   return {
     recent: recent.slice(0, length),
     weeks: weeks.slice(0, length),
@@ -108,11 +122,12 @@ export function formDisplayPoints(recent: readonly number[]): number[] {
   return recent.slice(0, FORM_DISPLAY_MATCHES);
 }
 
-/** Matchweek numbers from ``playedThrough`` down to 1 (newest first, at most ``count``). */
-export function recentFormWeekNumbers(playedThrough: number, count = FORM_MATCHES): number[] {
+/** Matchweek numbers from ``playedThrough`` down to 1 (newest first). */
+export function recentFormWeekNumbers(playedThrough: number, count?: number): number[] {
   if (!Number.isFinite(playedThrough) || playedThrough < 1) return [];
   const weeks: number[] = [];
-  for (let week = playedThrough; week >= 1 && weeks.length < count; week -= 1) {
+  for (let week = playedThrough; week >= 1; week -= 1) {
+    if (count != null && weeks.length >= count) break;
     weeks.push(week);
   }
   return weeks;
@@ -130,5 +145,8 @@ export function formFromCalendarWeeks(
   const formRecent = weekNumbers.map(
     (week) => statsByWeek.get(week)?.get(playerId) ?? 0,
   );
-  return { form: formRecent.reduce((sum, points) => sum + points, 0), formRecent };
+  const form = formRecent
+    .slice(0, FORM_MATCHES)
+    .reduce((sum, points) => sum + points, 0);
+  return { form: formRecent.length === 0 ? null : form, formRecent };
 }

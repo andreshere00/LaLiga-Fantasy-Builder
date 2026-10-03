@@ -46,11 +46,21 @@ describe("form helpers", () => {
     expect(view.points).toEqual([2, 4, 8]);
   });
 
-  it("formRecentWindow_ignores_history_beyond_five_matchweeks", () => {
+  it("formRecentWindow_slides_through_full_season_history", () => {
     const recent = [7, 6, 5, 4, 3, 2, 1];
     const weeks = [7, 6, 5, 4, 3, 2, 1];
-    const view = formRecentWindow(recent, weeks, 0);
-    expect(view.weeks).toEqual([7, 6, 5]);
+    expect(formRecentWindow(recent, weeks, 0).weeks).toEqual([7, 6, 5]);
+    expect(formRecentWindow(recent, weeks, 4).weeks).toEqual([3, 2, 1]);
+    expect(formRecentWindow(recent, weeks, 0).canGoOlder).toBe(true);
+  });
+
+  it("formRecentPoints_includes_all_played_matchweeks_from_lastStats", () => {
+    const lastStats = Array.from({ length: 7 }, (_, index) => ({
+      weekNumber: index + 1,
+      totalPoints: index + 1,
+    }));
+    expect(formRecentPoints(lastStats)).toEqual([7, 6, 5, 4, 3, 2, 1]);
+    expect(formPoints(lastStats)).toBe(7 + 6 + 5 + 4 + 3);
   });
 
   it("formRecentWeekNumbers_aligns_with_newest_three_matchweeks", () => {
@@ -62,9 +72,10 @@ describe("form helpers", () => {
     expect(formRecentWeekNumbers(lastStats)).toEqual([7, 6, 3]);
   });
 
-  it("recentFormWeekNumbers_stops_at_one", () => {
+  it("recentFormWeekNumbers_lists_played_matchweeks_newest_first", () => {
     expect(recentFormWeekNumbers(3)).toEqual([3, 2, 1]);
     expect(recentFormWeekNumbers(8, 5)).toEqual([8, 7, 6, 5, 4]);
+    expect(recentFormWeekNumbers(4)).toEqual([4, 3, 2, 1]);
   });
 
   it("formFromCalendarWeeks_fills_missing_weeks_with_zero", () => {

@@ -100,7 +100,7 @@ stale snapshots until Fantasy confirms the change (`model/pendingBids.ts`).
 | Player | Photo, name (red when you have a bid); bid amount tooltip on name |
 | Position | Abbrev badge (`GKP`, `DEF`, `MDF`, `ATK`, `COA`); hover shows full role name |
 | FSYP | Points plus season average; hover panel: total, season average, form (last 3) |
-| Form | Last three of **five** played matchweeks, oldest→newest (`F5`–`F7`); ‹ earlier, › later |
+| Form | Three played matchweeks at a time, oldest→newest; ‹ earlier, › later (full season) |
 | Market value | Price and 5-day change; hover: last, highest, lowest, 5d/14d ago with % vs current |
 | Availability | SVG icons + hover text for next matchday readiness |
 | Seal end | Countdown; **red** when under one hour remains |
