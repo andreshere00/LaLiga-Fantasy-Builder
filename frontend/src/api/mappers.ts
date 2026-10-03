@@ -659,10 +659,50 @@ function buildTeamBadgeByTeamIdMap(): ReadonlyMap<string, string> {
 
 const TEAM_BADGE_BY_TEAM_ID = buildTeamBadgeByTeamIdMap();
 
+function buildTeamNameByTeamIdMap(): ReadonlyMap<string, string> {
+  const map = new Map<string, string>();
+  if (!Array.isArray(teamsMasterFile)) return map;
+  for (const entry of teamsMasterFile) {
+    const record = asRecord(entry);
+    const name = text(record?.name) ?? text(record?.shortName);
+    if (!name) continue;
+    const id = idText(record?.id);
+    const dspId = idText(record?.dspId);
+    if (id) map.set(id, name);
+    if (dspId) map.set(dspId, name);
+  }
+  return map;
+}
+
+const TEAM_NAME_BY_TEAM_ID = buildTeamNameByTeamIdMap();
+
 function teamBadgeFromTeamId(teamId: unknown): string | null {
   const id = idText(teamId);
   if (!id) return null;
   return TEAM_BADGE_BY_TEAM_ID.get(id) ?? null;
+}
+
+/** Resolves a club display name from a Fantasy team id (``id`` or ``dspId`` in teams master). */
+export function teamNameFromTeamId(teamId: unknown): string | null {
+  const id = idText(teamId);
+  if (!id) return null;
+  return TEAM_NAME_BY_TEAM_ID.get(id) ?? null;
+}
+
+function teamNameFromTeamRecord(team: unknown): string | null {
+  const record = asRecord(team);
+  if (!record) return null;
+  return text(record.name) ?? text(record.shortName) ?? null;
+}
+
+function resolveTeamName(team: unknown, teamId: unknown): string | null {
+  const teamRecord = asRecord(team);
+  return (
+    teamNameFromTeamRecord(team) ??
+    teamNameFromTeamId(teamId) ??
+    teamNameFromTeamId(teamRecord?.id) ??
+    null
+  );
 }
 
 function resolveTeamBadgeUrl(team: unknown, teamId: unknown): string | null {
@@ -673,6 +713,13 @@ function resolveTeamBadgeUrl(team: unknown, teamId: unknown): string | null {
     teamBadgeFromTeamId(teamRecord?.id) ??
     null
   );
+}
+
+/** Reads the club name from a player master record (inline team or teams master lookup). */
+export function teamNameFromPlayerMaster(master: unknown): string | null {
+  const record = asRecord(master);
+  if (!record) return null;
+  return resolveTeamName(record.team, record.teamId);
 }
 
 export function mediaFromPlayerMaster(master: unknown): PlayerMedia {

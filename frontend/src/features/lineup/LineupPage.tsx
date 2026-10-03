@@ -263,18 +263,18 @@ export function LineupPage() {
               </p>
             ) : null}
             {board.pitchEmpty ? <p className="pitch-note">Lineup unavailable</p> : null}
-            <PitchMotionProvider>
-            <div className="pitch-rows" key={`${board.selectedTeamId}-${board.week}`}>
+            <PitchMotionProvider key={`${board.selectedTeamId}-${board.week}`}>
+            <div className="pitch-rows">
               {board.groups.map((group) => {
                 const rows = pitchRows(group.players, group.role);
                 if (rows.length === 0) return null;
                 return (
                   <div key={group.role} className={`pitch-line pitch-line-${group.role}`}>
-                    {rows.map((row) => {
+                    {rows.map((row, rowIndex) => {
                       const gapFraction = pitchRowGapFraction(row.length);
                       return (
                         <div
-                          key={row.map((player) => player.id).join("-")}
+                          key={`${group.role}-${rowIndex}`}
                           className="pitch-row"
                           style={
                             {

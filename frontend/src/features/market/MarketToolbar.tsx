@@ -2,7 +2,10 @@ import { formatEuro } from "../../api/format";
 import { ValueBox } from "../../components/ValueBox";
 import moneyWarningIconUrl from "../../assets/button_warning.svg";
 import moneyIconUrl from "../../assets/button_money.svg";
+import { MarketFilterPanel } from "./MarketFilterPanel";
+import { MarketFilterPanelMotion } from "./MarketRowMotion";
 import { MarketPlayerSearch } from "./MarketPlayerSearch";
+import type { MarketFilters } from "./marketFilters";
 
 type MarketBalanceProps = {
   money: number | null;
@@ -28,15 +31,25 @@ export function MarketBalance({ money }: MarketBalanceProps) {
 type MarketToolbarProps = {
   money: number | null;
   showSearch: boolean;
-  playerSearch: string;
-  onPlayerSearchChange: (value: string) => void;
+  filters: MarketFilters;
+  onFiltersChange: (filters: MarketFilters) => void;
+  sellerOptions: readonly string[];
+  filtersOpen: boolean;
+  onFiltersOpenChange: (open: boolean) => void;
+  activeFilterCount: number;
+  onClearFilters: () => void;
 };
 
 export function MarketToolbar({
   money,
   showSearch,
-  playerSearch,
-  onPlayerSearchChange,
+  filters,
+  onFiltersChange,
+  sellerOptions,
+  filtersOpen,
+  onFiltersOpenChange,
+  activeFilterCount,
+  onClearFilters,
 }: MarketToolbarProps) {
   return (
     <>
@@ -45,10 +58,26 @@ export function MarketToolbar({
       </div>
       <div className="market-filter-row">
         {showSearch ? (
-          <MarketPlayerSearch value={playerSearch} onChange={onPlayerSearchChange} />
+          <MarketPlayerSearch
+            value={filters.text}
+            onChange={(text) => onFiltersChange({ ...filters, text })}
+            activeFilterCount={activeFilterCount}
+            filtersOpen={filtersOpen}
+            onFiltersToggle={() => onFiltersOpenChange(!filtersOpen)}
+            onClearFilters={onClearFilters}
+          />
         ) : null}
         <MarketBalance money={money} />
       </div>
+      {showSearch ? (
+        <MarketFilterPanelMotion open={filtersOpen}>
+          <MarketFilterPanel
+            filters={filters}
+            sellers={sellerOptions}
+            onChange={onFiltersChange}
+          />
+        </MarketFilterPanelMotion>
+      ) : null}
     </>
   );
 }

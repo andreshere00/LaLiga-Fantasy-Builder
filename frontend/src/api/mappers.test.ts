@@ -32,6 +32,7 @@ import {
   nextFixtureKickoffMs,
   mediaFromLineupSlot,
   mediaFromPlayerMaster,
+  teamNameFromTeamId,
   scoreTone,
   squadCards,
   weekMvpMasterIds,
@@ -146,6 +147,20 @@ describe("squadCards", () => {
         isMvp: false,
       },
     ]);
+  });
+});
+
+describe("teamNameFromTeamId", () => {
+  it("teamNameFromTeamId_resolves_canonical_team_id", () => {
+    expect(teamNameFromTeamId("2")).toBe("Atlético de Madrid");
+  });
+
+  it("teamNameFromTeamId_resolves_dsp_id", () => {
+    expect(teamNameFromTeamId(70)).toBe("Atlético de Madrid");
+  });
+
+  it("teamNameFromTeamId_unknown_id_returns_null", () => {
+    expect(teamNameFromTeamId("not-a-club")).toBeNull();
   });
 });
 

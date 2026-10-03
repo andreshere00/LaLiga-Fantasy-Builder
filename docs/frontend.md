@@ -76,6 +76,14 @@ Code: `frontend/src/features/market/` (`model/`, `cells/`, `actions/`,
 - **Your money** from `GET /api/teams/{team_id}/money` (league object fallback).
 - Negative balance shows a warning icon with a tooltip: balance must be positive
   before the next matchday to score.
+- **Search and filters** (`marketFilters.ts`, `MarketFilterPanel.tsx`): text search
+  with a “Search in” scope (player, seller, team, or all), optional min/max ranges
+  for market value, points and form, availability chips, and a seller shortcut
+  dropdown. Active constraints show a badge on **Filters**; **Clear** resets every
+  filter. Filter state stays on the page across market refetches. Text matching uses
+  `useDeferredValue` so the listing does not re-animate on every keystroke. Panel
+  and row visibility use `motion/react` with `domAnimation` and
+  `MotionConfig reducedMotion="user"`.
 
 ### Data loading (`useMarketBoard`)
 

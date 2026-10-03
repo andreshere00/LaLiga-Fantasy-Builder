@@ -20,6 +20,7 @@ function baseRow(overrides: Partial<MarketRow> = {}): MarketRow {
     positionId: 4,
     photoUrl: null,
     teamBadgeUrl: null,
+    teamName: null,
     points: null,
     form: null,
     formRecent: [],

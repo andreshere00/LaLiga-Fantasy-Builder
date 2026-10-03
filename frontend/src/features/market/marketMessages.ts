@@ -3,6 +3,12 @@ import { isCoachPosition } from "./positions";
 export const MARKET_SEARCH_NO_MATCHES =
   "No market players match your search.";
 
+export const MARKET_CLEAR_FILTERS_LABEL = "Clear filters";
+
+/** Explains the seller text filter (LaLiga listings vs a manager name in the last column). */
+export const MARKET_SELLER_FILTER_HINT =
+  "Matches who is selling: LaLiga or the manager name shown in the Sell options column.";
+
 /** Shown when a user tries to hire a coach from the market without premium. */
 export const COACH_HIRE_PREMIUM_MESSAGE =
   "Hiring coaches is only available for LaLiga Fantasy premium subscribers";

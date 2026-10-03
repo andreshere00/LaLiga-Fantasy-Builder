@@ -9,9 +9,10 @@ import { clauseUnlockCountdown } from "../model/valueSeries";
 type PlayerCellProps = {
   row: MarketRow;
   now: number;
+  columnLabel?: string;
 };
 
-export function PlayerCell({ row, now }: PlayerCellProps) {
+export function PlayerCell({ row, now, columnLabel = "Player" }: PlayerCellProps) {
   const clauseCountdown =
     row.sellerKind === "opponent" ? clauseUnlockCountdown(row.clauseUnlockAt, now) : null;
   const bidded = row.myBid != null;
@@ -28,7 +29,7 @@ export function PlayerCell({ row, now }: PlayerCellProps) {
           teamBadgeUrl={row.teamBadgeUrl}
         />
       </div>
-      <span className="market-name-wrap" data-label="Player">
+      <span className="market-name-wrap" data-label={columnLabel}>
         <span
           className={
             bidded

@@ -1,4 +1,11 @@
-import { asFiniteNumber, asRecord, idText, mediaFromPlayerMaster, text } from "../../../api/mappers";
+import {
+  asFiniteNumber,
+  asRecord,
+  idText,
+  mediaFromPlayerMaster,
+  teamNameFromPlayerMaster,
+  text,
+} from "../../../api/mappers";
 import { buyoutClauseUnlockAt } from "./buyout";
 import { availabilityOf, type Availability } from "./availability";
 import {
@@ -30,6 +37,7 @@ export type MarketRow = {
   positionId: number | null;
   photoUrl: string | null;
   teamBadgeUrl: string | null;
+  teamName: string | null;
   points: number | null;
   form: number | null;
   formRecent: readonly number[];
@@ -142,6 +150,7 @@ export function marketRow(
       lastStatsFromLeagueCard(leagueCard),
   };
   const media = mediaFromPlayerMaster(master);
+  const teamName = teamNameFromPlayerMaster(master);
   const valueHistory = playerId ? (history.get(playerId) ?? []) : [];
   const positionId = asFiniteNumber(master.positionId);
   const playedThrough =
@@ -177,6 +186,7 @@ export function marketRow(
     name: displayName(text(master.nickname), text(master.name)),
     positionId,
     ...media,
+    teamName,
     points: asFiniteNumber(master.points),
     form,
     formRecent,

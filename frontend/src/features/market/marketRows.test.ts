@@ -133,6 +133,18 @@ describe("form helpers", () => {
     expect(row.name).toBe("Luís Castro");
   });
 
+  it("marketRow_fills_team_name_from_teams_master", () => {
+    const row = marketRow(
+      {
+        id: "m1",
+        playerMaster: { id: "1", nickname: "P", teamId: "2" },
+      },
+      0,
+      { catalog: new Map(), history: new Map() },
+    );
+    expect(row.teamName).toBe("Atlético de Madrid");
+  });
+
   it("marketRow_maps_seller_team_and_clause_fields", () => {
     const row = marketRow(
       {

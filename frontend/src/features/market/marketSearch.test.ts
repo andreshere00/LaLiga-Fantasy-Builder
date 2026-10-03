@@ -13,6 +13,7 @@ function row(name: string): MarketRow {
     positionId: null,
     photoUrl: null,
     teamBadgeUrl: null,
+    teamName: null,
     points: null,
     form: null,
     formRecent: [],
