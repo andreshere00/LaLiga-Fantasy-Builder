@@ -90,4 +90,5 @@ Per-service notes: [auth](backend/auth/README.md), [API](backend/api/README.md).
 uv run poe test
 ```
 
-Frontend only: `cd frontend && bun run test`.
+Frontend only: `cd frontend && bun run test`. Hooks lint (also a pre-commit and CI step):
+`cd frontend && bun run lint`.

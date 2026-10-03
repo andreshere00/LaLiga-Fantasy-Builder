@@ -15,9 +15,7 @@ import {
   type MarketActionContext,
   type MarketActionOffer,
 } from "./marketActions";
-import type { useMarketActions } from "./useMarketActions";
-
-type MarketActionsApi = ReturnType<typeof useMarketActions>;
+import type { MarketActionsApi } from "./useMarketActions";
 
 type MarketActionMenuProps = {
   row: MarketRow;

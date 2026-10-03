@@ -7,26 +7,26 @@ import type { MarketRow } from "../model/row";
 
 export function FormCell({ row }: { row: MarketRow }) {
   const [startIndex, setStartIndex] = useState(0);
-  const window = formWindowChronological(
+  const view = formWindowChronological(
     formRecentWindow(row.formRecent, row.formRecentWeeks, startIndex),
   );
 
-  if (window.points.length === 0) return <>—</>;
+  if (view.points.length === 0) return <>—</>;
 
-  const ariaParts = window.weeks.map((week, index) => {
-    const points = window.points[index];
+  const ariaParts = view.weeks.map((week, index) => {
+    const points = view.points[index];
     const label = scoreWeekLabel(week);
     return `${label}: ${points}`;
   });
 
-  const goPast = () => setStartIndex((value) => value + 1);
-  const goFuture = () => setStartIndex((value) => Math.max(0, value - 1));
+  const goPast = () => setStartIndex(view.offset + 1);
+  const goFuture = () => setStartIndex(Math.max(0, view.offset - 1));
 
   return (
-    <span className="market-form-nav" aria-label={`Last performances: ${ariaParts.join(", ")} points`}>
+    <span className="market-form-nav" role="group" aria-label={`Last performances: ${ariaParts.join(", ")} points`}>
       <span className="market-form-badges">
-        {window.points.map((points, index) => {
-          const week = window.weeks[index];
+        {view.points.map((points, index) => {
+          const week = view.weeks[index];
           const key = `${row.id}-form-w${week}`;
           return (
             <span key={key} className="market-form-badge-stack">
@@ -43,7 +43,7 @@ export function FormCell({ row }: { row: MarketRow }) {
           type="button"
           className="market-form-nav-btn"
           aria-label="Earlier matchweeks"
-          disabled={!window.canGoOlder}
+          disabled={!view.canGoOlder}
           onClick={goPast}
         >
           ‹
@@ -52,7 +52,7 @@ export function FormCell({ row }: { row: MarketRow }) {
           type="button"
           className="market-form-nav-btn"
           aria-label="Later matchweeks"
-          disabled={!window.canGoNewer}
+          disabled={!view.canGoNewer}
           onClick={goFuture}
         >
           ›

@@ -234,7 +234,10 @@ export function useLineupBoard(options: UseLineupBoardOptions = {}): LineupBoard
     return standingTeamIds.includes(initialTeamId) ? initialTeamId : null;
   }, [initialTeamId, standingTeamIds]);
 
-  const activeTeamId = pickedTeamId ?? validInitialTeamId ?? callerId;
+  const awaitingInitialTeam =
+    initialTeamId != null && !standingQuery.isSuccess && !standingQuery.isError;
+  const activeTeamId =
+    pickedTeamId ?? validInitialTeamId ?? (awaitingInitialTeam ? null : callerId);
   const activeKey =
     leagueKey.length > 0 && activeTeamId != null
       ? lineupSourceKey(leagueKey, activeTeamId, week)
@@ -328,10 +331,13 @@ export function useLineupBoard(options: UseLineupBoardOptions = {}): LineupBoard
 
   const lineupPayload =
     !lineupPending && lineupQuery.isSuccess ? lineupQuery.data : null;
-  const serverGroups =
-    lineupPayload == null
-      ? []
-      : groupsFromLineup(lineupPayload, catalogByMasterId, scoreLookup);
+  const serverGroups = useMemo(
+    () =>
+      lineupPayload == null
+        ? []
+        : groupsFromLineup(lineupPayload, catalogByMasterId, scoreLookup),
+    [lineupPayload, catalogByMasterId, scoreLookup],
+  );
   const serverTactical = lineupPayload == null ? null : tacticalOf(lineupPayload);
   const captainId =
     lineupPayload == null ? null : captainFromLineup(lineupPayload);
@@ -387,7 +393,6 @@ export function useLineupBoard(options: UseLineupBoardOptions = {}): LineupBoard
   }, [
     callerId,
     managerAvatar,
-    managerName,
     knownAvatars,
     peerTeamQueries,
     selected,

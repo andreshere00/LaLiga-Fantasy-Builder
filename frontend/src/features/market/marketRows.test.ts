@@ -40,6 +40,13 @@ describe("form helpers", () => {
     expect(formRecentWindow(recent, weeks, 2).canGoOlder).toBe(false);
   });
 
+  it("formRecentWindow_start_beyond_history_reports_clamped_offset", () => {
+    const view = formRecentWindow([8, 4, 2, 1, 0], [7, 6, 5, 4, 3], 9);
+
+    expect(view.offset).toBe(2);
+    expect(view.canGoOlder).toBe(false);
+  });
+
   it("formWindowChronological_orders_oldest_matchweek_left", () => {
     const view = formWindowChronological(formRecentWindow([8, 4, 2], [7, 6, 5], 0));
     expect(view.weeks).toEqual([5, 6, 7]);

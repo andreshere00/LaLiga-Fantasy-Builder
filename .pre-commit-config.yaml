@@ -20,6 +20,13 @@ repos:
         pass_filenames: false
         types: [python]
 
+      - id: lint-frontend
+        name: lint frontend (eslint react-hooks)
+        entry: bash -c 'cd frontend && bun run lint'
+        language: system
+        pass_filenames: false
+        files: ^frontend/(src/.*\.(ts|tsx)|eslint\.config\.js|package\.json)$
+
       - id: generate-openapi
         name: generate OpenAPI documentation (api + auth)
         entry: bash scripts/check-openapi-alignment.sh

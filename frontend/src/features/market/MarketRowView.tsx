@@ -1,4 +1,4 @@
-import type { useMarketActions } from "./actions/useMarketActions";
+import type { MarketActionsApi } from "./actions/useMarketActions";
 import type { MarketActionContext } from "./actions/marketActions";
 import { AvailabilityCell } from "./cells/AvailabilityCell";
 import { FormCell } from "./cells/FormCell";
@@ -9,8 +9,6 @@ import { SellerCell } from "./cells/SellerCell";
 import { ValueCell } from "./cells/ValueCell";
 import type { MarketRow } from "./model/row";
 import { isSealEndUnderOneHour, remainingLabel } from "./model/valueSeries";
-
-type MarketActionsApi = ReturnType<typeof useMarketActions>;
 
 type MarketRowViewProps = {
   row: MarketRow;

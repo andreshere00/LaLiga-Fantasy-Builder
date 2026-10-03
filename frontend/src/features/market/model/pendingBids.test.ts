@@ -1,6 +1,14 @@
+import { act, renderHook } from "@testing-library/react";
 import { describe, expect, it } from "vitest";
 
-import { applyPendingBids, type PendingBid } from "./pendingBids";
+import {
+  applyPendingBids,
+  clearPendingBid,
+  prunePendingBids,
+  recordPendingBid,
+  usePendingBids,
+  type PendingBid,
+} from "./pendingBids";
 
 // ---- Mocks, fixtures & helpers ---- #
 
@@ -49,5 +57,45 @@ describe("applyPendingBids", () => {
     const result = applyPendingBids(stale, pending({ until: NOW - 1 }), NOW);
     expect(bidOf(result.snapshot)).toEqual({ id: "b1", money: 5 });
     expect(result.remaining.size).toBe(0);
+  });
+});
+
+describe("pending bid store", () => {
+  const LEAGUE = "league-store";
+
+  it("recordPendingBid_notifies_subscribers_and_exposes_entry", () => {
+    const { result } = renderHook(() => usePendingBids(LEAGUE));
+
+    act(() => recordPendingBid(LEAGUE, "mk-1", { id: "local-mk-1", money: 9 }, null));
+
+    expect(result.current.get("mk-1")?.myBid?.money).toBe(9);
+  });
+
+  it("clearPendingBid_removes_entry", () => {
+    const { result } = renderHook(() => usePendingBids(LEAGUE));
+    act(() => recordPendingBid(LEAGUE, "mk-2", { id: "b", money: 1 }, null));
+
+    act(() => clearPendingBid(LEAGUE, "mk-2"));
+
+    expect(result.current.has("mk-2")).toBe(false);
+  });
+
+  it("prunePendingBids_confirmed_by_server_drops_entry", () => {
+    const { result } = renderHook(() => usePendingBids(LEAGUE));
+    act(() => recordPendingBid(LEAGUE, "mk-3", { id: "b3", money: 7 }, null));
+    const server = { marketPlayers: [{ id: "mk-3", bid: { id: "b3", money: 7 } }] };
+
+    act(() => prunePendingBids(LEAGUE, server));
+
+    expect(result.current.has("mk-3")).toBe(false);
+  });
+
+  it("prunePendingBids_without_snapshot_keeps_entries", () => {
+    const { result } = renderHook(() => usePendingBids(LEAGUE));
+    act(() => recordPendingBid(LEAGUE, "mk-4", null, "b4"));
+
+    act(() => prunePendingBids(LEAGUE, undefined));
+
+    expect(result.current.has("mk-4")).toBe(true);
   });
 });

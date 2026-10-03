@@ -1,12 +1,10 @@
 import { Link } from "react-router-dom";
 
 import { MarketActionMenu } from "../actions/MarketActionMenu";
-import type { useMarketActions } from "../actions/useMarketActions";
+import type { MarketActionsApi } from "../actions/useMarketActions";
 import type { MarketActionContext } from "../actions/marketActions";
 import { LALIGA_SELLER } from "../model/listing";
 import type { MarketRow } from "../model/row";
-
-type MarketActionsApi = ReturnType<typeof useMarketActions>;
 
 type SellerCellProps = {
   row: MarketRow;

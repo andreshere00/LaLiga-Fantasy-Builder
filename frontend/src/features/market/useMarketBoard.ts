@@ -1,5 +1,5 @@
-import { useMemo } from "react";
-import { useQueries, useQuery, useQueryClient, type UseQueryResult } from "@tanstack/react-query";
+import { useEffect, useMemo } from "react";
+import { useQueries, useQuery, type UseQueryResult } from "@tanstack/react-query";
 
 import { getJson, paths } from "../../api/client";
 import {
@@ -36,7 +36,7 @@ import {
   buyoutUnlockByPlayerTeamId,
   sellerTeamIdsForBuyoutLookup,
 } from "./model/buyout";
-import { reconcileMarketSnapshot } from "./model/pendingBids";
+import { applyPendingBids, prunePendingBids, usePendingBids } from "./model/pendingBids";
 
 const HISTORY_STALE_MS = CALENDAR_STALE_MS;
 
@@ -88,7 +88,6 @@ function calendarFormFromStats(
 
 /** Loads the league market, joins it with the catalog and value histories. */
 export function useMarketBoard(): MarketBoard {
-  const queryClient = useQueryClient();
   const { accessToken } = useAuth();
   const { selected, isLoading: leaguesLoading } = useLeague();
   const enabled = accessToken != null && selected != null;
@@ -107,9 +106,16 @@ export function useMarketBoard(): MarketBoard {
   const marketQuery = useQuery({
     queryKey: ["market", id],
     enabled: enabled && id !== "",
-    queryFn: async ({ signal }) =>
-      reconcileMarketSnapshot(queryClient, id, await getJson(paths.market(id), token, { signal })),
+    queryFn: ({ signal }) => getJson(paths.market(id), token, { signal }),
   });
+  const pendingBids = usePendingBids(id);
+  const market = useMemo(
+    () => applyPendingBids(marketQuery.data, pendingBids, Date.now()).snapshot,
+    [marketQuery.data, pendingBids],
+  );
+  useEffect(() => {
+    prunePendingBids(id, marketQuery.data);
+  }, [id, marketQuery.data, pendingBids]);
   const catalogQuery = usePlayersCatalogQuery(enabled);
   const currentWeekQuery = useCurrentWeekQuery(enabled);
 
@@ -123,7 +129,7 @@ export function useMarketBoard(): MarketBoard {
     return recentFormWeekNumbers(playedThrough);
   }, [playedThrough]);
 
-  const items = useMemo(() => marketItems(marketQuery.data), [marketQuery.data]);
+  const items = useMemo(() => marketItems(market), [market]);
   const playerIds = useMemo(
     () => [...new Set(items.map(masterIdOf).filter((value): value is string => value != null))],
     [items],
@@ -208,8 +214,8 @@ export function useMarketBoard(): MarketBoard {
   );
 
   const userBidsByMarketIdMap = useMemo(
-    () => userBidsByMarketId(marketQuery.data),
-    [marketQuery.data],
+    () => userBidsByMarketId(market),
+    [market],
   );
 
   const rows = useMemo(() => {
@@ -254,8 +260,8 @@ export function useMarketBoard(): MarketBoard {
   }, [teamQuery.data, selected?.team?.teamValue]);
 
   const activeBidCount = useMemo(
-    () => activeUserBidCount(rows, marketQuery.data),
-    [rows, marketQuery.data],
+    () => activeUserBidCount(rows, market),
+    [rows, market],
   );
 
   const hasError = marketQuery.isError || catalogQuery.isError;

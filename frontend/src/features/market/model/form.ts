@@ -68,6 +68,8 @@ export function formRecentWeekNumbers(
 export type FormRecentWindow = {
   points: number[];
   weeks: number[];
+  /** Clamped start index actually used (0 = most recent). */
+  offset: number;
   canGoOlder: boolean;
   canGoNewer: boolean;
 };
@@ -94,7 +96,7 @@ export function formRecentWindow(
   const capped = formRecentSeries(recent, weeks);
   const length = capped.recent.length;
   if (length === 0) {
-    return { points: [], weeks: [], canGoOlder: false, canGoNewer: false };
+    return { points: [], weeks: [], offset: 0, canGoOlder: false, canGoNewer: false };
   }
   const maxStart = Math.max(0, length - windowSize);
   const offset = Math.min(Math.max(0, startIndex), maxStart);
@@ -102,18 +104,18 @@ export function formRecentWindow(
   return {
     points: capped.recent.slice(offset, end),
     weeks: capped.weeks.slice(offset, end),
+    offset,
     canGoOlder: offset < maxStart,
     canGoNewer: offset > 0,
   };
 }
 
 /** Oldest matchweek left (e.g. F5, F6, F7) for the form column. */
-export function formWindowChronological(window: FormRecentWindow): FormRecentWindow {
+export function formWindowChronological(view: FormRecentWindow): FormRecentWindow {
   return {
-    points: [...window.points].reverse(),
-    weeks: [...window.weeks].reverse(),
-    canGoOlder: window.canGoOlder,
-    canGoNewer: window.canGoNewer,
+    ...view,
+    points: [...view.points].reverse(),
+    weeks: [...view.weeks].reverse(),
   };
 }
 

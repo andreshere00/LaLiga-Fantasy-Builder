@@ -27,6 +27,12 @@ jobs:
       - name: Format
         run: uv run black --check --diff backend main.py
 
+      - uses: oven-sh/setup-bun@v2
+
+      - name: Lint frontend
+        run: bun install --frozen-lockfile && bun run lint
+        working-directory: frontend
+
       - name: OpenAPI
         run: bash scripts/check-openapi-alignment.sh
 

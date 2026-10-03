@@ -1,4 +1,4 @@
-import type { QueryClient } from "@tanstack/react-query";
+import { useSyncExternalStore } from "react";
 
 import { asRecord, idText, asFiniteNumber } from "../../../api/mappers";
 import { marketItems, userBidsByMarketId, type UserBidRef } from "./listing";
@@ -21,8 +21,6 @@ export type PendingBid = {
 };
 
 export type PendingBids = ReadonlyMap<string, PendingBid>;
-
-export const pendingBidsKey = (leagueId: string) => ["market-pending-bids", leagueId] as const;
 
 function serverBidFor(snapshot: unknown, marketId: string): UserBidRef | null {
   const item = marketItems(snapshot).find((entry) => idText(entry.id) === marketId);
@@ -56,42 +54,62 @@ export function applyPendingBids(
   return { snapshot: next, remaining };
 }
 
-/** Reconciles a fetched market snapshot with the pending overlay stored in the query cache. */
-export function reconcileMarketSnapshot(
-  queryClient: QueryClient,
-  leagueId: string,
-  snapshot: unknown,
-): unknown {
-  const pending = queryClient.getQueryData<PendingBids>(pendingBidsKey(leagueId));
-  if (!pending || pending.size === 0) return snapshot;
-  const { snapshot: next, remaining } = applyPendingBids(snapshot, pending, Date.now());
-  queryClient.setQueryData(pendingBidsKey(leagueId), remaining);
-  return next;
+const EMPTY_PENDING: PendingBids = new Map();
+const pendingByLeague = new Map<string, PendingBids>();
+const listeners = new Set<() => void>();
+
+function setPending(leagueId: string, next: PendingBids): void {
+  pendingByLeague.set(leagueId, next);
+  listeners.forEach((listener) => listener());
+}
+
+function subscribePending(listener: () => void): () => void {
+  listeners.add(listener);
+  return () => listeners.delete(listener);
+}
+
+/** Subscribes to the unconfirmed local bid changes of one league. */
+export function usePendingBids(leagueId: string): PendingBids {
+  return useSyncExternalStore(
+    subscribePending,
+    () => pendingByLeague.get(leagueId) ?? EMPTY_PENDING,
+  );
+}
+
+/** Drops expired or server-confirmed entries once a fresh snapshot is available. */
+export function prunePendingBids(leagueId: string, snapshot: unknown): void {
+  const current = pendingByLeague.get(leagueId);
+  if (!current || current.size === 0 || snapshot == null) return;
+  const { remaining } = applyPendingBids(snapshot, current, Date.now());
+  if (remaining.size !== current.size) setPending(leagueId, remaining);
 }
 
 /** Drops a pending bid change (e.g. when the mutation failed). */
-export function clearPendingBid(
-  queryClient: QueryClient,
-  leagueId: string,
-  marketId: string,
-): void {
-  const current = queryClient.getQueryData<PendingBids>(pendingBidsKey(leagueId));
+export function clearPendingBid(leagueId: string, marketId: string): void {
+  const current = pendingByLeague.get(leagueId);
   if (!current?.has(marketId)) return;
   const next = new Map(current);
   next.delete(marketId);
-  queryClient.setQueryData(pendingBidsKey(leagueId), next);
+  setPending(leagueId, next);
 }
 
 /** Records a local bid change that must survive stale refetches until confirmed. */
 export function recordPendingBid(
-  queryClient: QueryClient,
   leagueId: string,
   marketId: string,
   myBid: UserBidRef | null,
   removedBidId: string | null,
 ): void {
-  const current = queryClient.getQueryData<PendingBids>(pendingBidsKey(leagueId)) ?? new Map();
-  const next = new Map(current);
+  const next = new Map(pendingByLeague.get(leagueId) ?? EMPTY_PENDING);
   next.set(marketId, { myBid, removedBidId, until: Date.now() + PENDING_BID_TTL_MS });
-  queryClient.setQueryData(pendingBidsKey(leagueId), next);
+  setPending(leagueId, next);
+  window.setTimeout(() => expirePendingBids(leagueId), PENDING_BID_TTL_MS + 1);
+}
+
+function expirePendingBids(leagueId: string): void {
+  const current = pendingByLeague.get(leagueId);
+  if (!current) return;
+  const now = Date.now();
+  const live = new Map([...current].filter(([, entry]) => entry.until > now));
+  if (live.size !== current.size) setPending(leagueId, live);
 }

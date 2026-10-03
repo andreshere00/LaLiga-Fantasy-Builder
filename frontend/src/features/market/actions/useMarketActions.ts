@@ -1,12 +1,11 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { useCallback, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 
 import { deleteJson, paths, postJson, putJson } from "../../../api/client";
 import { ApiError, NeedsReauthError } from "../../../api/errors";
 import { useAuth } from "../../../auth/AuthProvider";
 import { useLeague } from "../../lineup/LeagueProvider";
 import { callerTeamId, leagueId } from "../../../api/mappers";
-import { patchMarketSnapshotBid } from "../marketRows";
 import {
   clearPendingBid,
   isLocalBidId,
@@ -30,6 +29,9 @@ type PendingClause = {
   amount: number;
 };
 
+export type MarketActionsApi = ReturnType<typeof useMarketActions>;
+
+/** Mutations, confirmation dialogs and follow-up refetches for market listings. */
 export function useMarketActions() {
   const queryClient = useQueryClient();
   const { accessToken, markNeedsReauth } = useAuth();
@@ -41,6 +43,15 @@ export function useMarketActions() {
   const [message, setMessage] = useState<string | null>(null);
 
   const teamId = selected ? callerTeamId(selected) : null;
+  const followUpTimers = useRef(new Set<number>());
+
+  useEffect(() => {
+    const timers = followUpTimers.current;
+    return () => {
+      timers.forEach((timer) => window.clearTimeout(timer));
+      timers.clear();
+    };
+  }, []);
 
   const patchCachedBid = useCallback(
     (
@@ -49,21 +60,18 @@ export function useMarketActions() {
       removedBidId?: string | null,
     ) => {
       if (leagueKey === "") return;
-      recordPendingBid(queryClient, leagueKey, marketId, myBid, removedBidId ?? null);
-      queryClient.setQueryData(["market", leagueKey], (current) =>
-        patchMarketSnapshotBid(current, marketId, myBid, {
-          removedBidId: removedBidId ?? null,
-        }),
-      );
+      recordPendingBid(leagueKey, marketId, myBid, removedBidId ?? null);
     },
-    [queryClient, leagueKey],
+    [leagueKey],
   );
 
   const refreshAfterMutation = useCallback(async () => {
     for (const delay of FOLLOW_UP_REFETCH_MS) {
-      window.setTimeout(() => {
+      const timer = window.setTimeout(() => {
+        followUpTimers.current.delete(timer);
         void queryClient.refetchQueries({ queryKey: ["market", leagueKey] });
       }, delay);
+      followUpTimers.current.add(timer);
     }
     await Promise.all([
       queryClient.refetchQueries({ queryKey: ["market", leagueKey] }),
@@ -158,7 +166,7 @@ export function useMarketActions() {
       await refreshAfterMutation();
     },
     onError: async (error, row) => {
-      clearPendingBid(queryClient, leagueKey, row.marketId);
+      clearPendingBid(leagueKey, row.marketId);
       await onBidError(error);
     },
   });
