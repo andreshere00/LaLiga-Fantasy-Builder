@@ -34,7 +34,8 @@ function menuItemTooltip(
   if (offer.type === "bid" && !offer.enabled && isCoachMarketHire(row.positionId, offer.kind)) {
     return COACH_HIRE_PREMIUM_MESSAGE;
   }
-  if (offer.type !== "pay-clause" || offer.enabled) return null;
+  if (offer.enabled) return null;
+  if (offer.type !== "pay-clause") return offer.disabledReason ?? null;
   if (clauseTimeLocked) {
     const countdown = unlockLabel
       ? `Time remaining to activate the release clause: ${unlockLabel}`
@@ -44,16 +45,12 @@ function menuItemTooltip(
   return offer.disabledReason ?? CLAUSE_BLOCKED_MESSAGE;
 }
 
-function showMenuItemTooltip(offer: MarketActionOffer, row: MarketRow): boolean {
-  if (offer.enabled) return false;
-  if (offer.type === "pay-clause") return true;
-  return offer.type === "bid" && isCoachMarketHire(row.positionId, offer.kind);
-}
-
 export function MarketActionMenu({ row, context, actions }: MarketActionMenuProps) {
   const menuId = useId();
   const [open, setOpen] = useState(false);
+  const bidTooltipId = useId();
   const rootRef = useRef<HTMLDivElement>(null);
+  const triggerRef = useRef<HTMLButtonElement>(null);
   const offers = resolveMarketActionOffers(row, context);
 
   useEffect(() => {
@@ -61,8 +58,17 @@ export function MarketActionMenu({ row, context, actions }: MarketActionMenuProp
     const onDoc = (event: MouseEvent) => {
       if (!rootRef.current?.contains(event.target as Node)) setOpen(false);
     };
+    const onKey = (event: KeyboardEvent) => {
+      if (event.key !== "Escape") return;
+      setOpen(false);
+      triggerRef.current?.focus();
+    };
     document.addEventListener("mousedown", onDoc);
-    return () => document.removeEventListener("mousedown", onDoc);
+    document.addEventListener("keydown", onKey);
+    return () => {
+      document.removeEventListener("mousedown", onDoc);
+      document.removeEventListener("keydown", onKey);
+    };
   }, [open]);
 
   if (offers.length === 0) return null;
@@ -84,11 +90,12 @@ export function MarketActionMenu({ row, context, actions }: MarketActionMenuProp
       ref={rootRef}
     >
       <button
+        ref={triggerRef}
         type="button"
         className={bidded ? "market-actions-trigger is-bidded" : "market-actions-trigger"}
         aria-expanded={open}
-        aria-haspopup="menu"
         aria-controls={menuId}
+        aria-describedby={bidded && bidMoney != null ? bidTooltipId : undefined}
         onClick={() => setOpen((value) => !value)}
       >
         {bidded ? (
@@ -101,46 +108,34 @@ export function MarketActionMenu({ row, context, actions }: MarketActionMenuProp
         )}
       </button>
       {bidded && bidMoney != null ? (
-        <span className="hover-tooltip-panel is-align-end" role="tooltip">
+        <span id={bidTooltipId} className="hover-tooltip-panel is-align-end" role="tooltip">
           {bidAmountTooltipLabel(bidMoney)}
         </span>
       ) : null}
       {open ? (
-        <ul id={menuId} className="market-actions-menu" role="menu">
+        <ul id={menuId} className="market-actions-menu">
           {offers.map((offer) => {
             const tooltip = menuItemTooltip(offer, row, clauseTimeLocked, unlockLabel);
             const tooltipLines = tooltip?.split("\n") ?? [];
+            const itemKey =
+              offer.type === "bid" ? offer.kind : offer.type === "cancel-bid" ? "cancel-bid" : "clause";
+            const tooltipId = `${menuId}-${itemKey}-tip`;
             return (
               <li
-                key={
-                  offer.type === "bid"
-                    ? offer.kind
-                    : offer.type === "cancel-bid"
-                      ? "cancel-bid"
-                      : "clause"
-                }
-                role="none"
+                key={itemKey}
                 className={
-                  showMenuItemTooltip(offer, row)
-                    ? "market-actions-menu-item has-hover-tooltip-panel"
-                    : undefined
-                }
-                title={
-                  offer.enabled || showMenuItemTooltip(offer, row)
-                    ? undefined
-                    : offer.disabledReason
+                  tooltip ? "market-actions-menu-item has-hover-tooltip-panel" : undefined
                 }
               >
                 <button
                   type="button"
-                  role="menuitem"
                   className={
                     offer.type === "cancel-bid"
                       ? "market-actions-item is-cancel-bid"
                       : "market-actions-item"
                   }
-                  disabled={!offer.enabled || actions.actionPending}
                   aria-disabled={!offer.enabled || actions.actionPending}
+                  aria-describedby={tooltip ? tooltipId : undefined}
                   onClick={() => {
                     if (!offer.enabled || actions.actionPending) return;
                     setOpen(false);
@@ -156,7 +151,7 @@ export function MarketActionMenu({ row, context, actions }: MarketActionMenuProp
                   {offer.label}
                 </button>
                 {tooltip ? (
-                  <span className="hover-tooltip-panel is-align-start" role="tooltip">
+                  <span id={tooltipId} className="hover-tooltip-panel is-align-start" role="tooltip">
                     {tooltipLines.map((line, index) => (
                       <span key={line} className="market-actions-tooltip-line">
                         {index > 0 ? <br /> : null}

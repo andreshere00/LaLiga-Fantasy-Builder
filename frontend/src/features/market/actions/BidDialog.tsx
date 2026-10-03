@@ -13,6 +13,7 @@ type BidDialogProps = {
   squadMarketValue: number | null;
   initialAmount: number | null;
   pending: boolean;
+  error?: string | null;
   onClose: () => void;
   onConfirm: (amount: number) => void;
 };
@@ -37,6 +38,7 @@ export function BidDialog({
   squadMarketValue,
   initialAmount,
   pending,
+  error = null,
   onClose,
   onConfirm,
 }: BidDialogProps) {
@@ -132,6 +134,11 @@ export function BidDialog({
       {!valid && raw.trim().length > 0 ? (
         <p className="market-dialog-error" role="alert">
           Enter a valid whole amount for this listing and your balance rules.
+        </p>
+      ) : null}
+      {error ? (
+        <p className="market-dialog-error" role="alert">
+          {error}
         </p>
       ) : null}
     </Modal>

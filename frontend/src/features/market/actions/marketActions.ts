@@ -1,4 +1,5 @@
 import { COACH_HIRE_PREMIUM_MESSAGE, isCoachMarketHire } from "../marketMessages";
+import { isLocalBidId } from "../model/pendingBids";
 import { remainingMs } from "../model/valueSeries";
 import type { MarketRow } from "../model/row";
 
@@ -141,6 +142,14 @@ const INSUFFICIENT_POSITIVE_BALANCE =
 const INSUFFICIENT_DEBT_HEADROOM =
   "With a negative balance, the bid cannot push your debt above 20% of squad market value.";
 
+const BID_NOT_CONFIRMED = "Your bid is still being confirmed. Try again in a moment.";
+
+const BALANCE_UNAVAILABLE = "Your balance could not be loaded.";
+
+const SQUAD_UNAVAILABLE = "Your squad data could not be loaded.";
+
+const CLAUSE_STATUS_UNAVAILABLE = "The release clause status is unavailable for this player.";
+
 function bidDisabledReason(
   row: MarketRow,
   context: MarketActionContext,
@@ -149,6 +158,10 @@ function bidDisabledReason(
   if (isCoachMarketHire(row.positionId, kind)) return COACH_HIRE_PREMIUM_MESSAGE;
 
   const isModify = kind === "modify";
+  if (context.money == null) return BALANCE_UNAVAILABLE;
+  if (!isModify && (context.squadPlayerCount == null || context.activeBidCount == null)) {
+    return SQUAD_UNAVAILABLE;
+  }
   if (!isModify && !squadSlotAvailableForNewBid(context)) return SQUAD_SLOT_BLOCKED;
 
   const reserved = isModify ? (row.myBid?.money ?? 0) : 0;
@@ -171,16 +184,20 @@ export function resolveMarketActionOffers(
   }
 
   if (row.myBid) {
+    const confirmedBid = !isLocalBidId(row.myBid.id);
+    const disabledReason = confirmedBid ? undefined : BID_NOT_CONFIRMED;
     offers.push({
       type: "bid",
       kind: "modify",
       label: "Modify bid",
-      enabled: true,
+      enabled: confirmedBid,
+      disabledReason,
     });
     offers.push({
       type: "cancel-bid",
       label: "Cancel bid",
-      enabled: true,
+      enabled: confirmedBid,
+      disabledReason,
     });
     return offers;
   }
@@ -202,9 +219,11 @@ export function resolveMarketActionOffers(
         ? undefined
         : row.isShielded
           ? "This player is shielded."
-          : row.clauseUnlockAt == null || row.clauseUnlockAt > now
-            ? "The release clause is still locked."
-            : "Insufficient balance for the release clause.",
+          : row.clauseUnlockAt == null
+            ? CLAUSE_STATUS_UNAVAILABLE
+            : row.clauseUnlockAt > now
+              ? "The release clause is still locked."
+              : "Insufficient balance for the release clause.",
     });
   }
 

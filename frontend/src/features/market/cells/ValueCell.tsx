@@ -1,4 +1,4 @@
-import type { ReactElement } from "react";
+import { useId, type ReactElement } from "react";
 
 import { formatEuro, formatPercent, formatSignedEuro } from "../../../api/format";
 import {
@@ -26,6 +26,7 @@ export function ValueCell({
   variationPercent: number | null;
   valueHistory: readonly ValuePoint[];
 }): ReactElement {
+  const tooltipId = useId();
   const absolute = formatSignedEuro(variation);
   const percent = formatPercent(variationPercent);
   const tone = variationPercentTone(variationPercent);
@@ -50,9 +51,14 @@ export function ValueCell({
     <span
       className="market-value-line has-hover-tooltip-panel market-value-tooltip-target"
       tabIndex={0}
+      aria-describedby={tooltipId}
     >
       {primary}
-      <span className="hover-tooltip-panel is-align-start market-value-tooltip" role="tooltip">
+      <span
+        id={tooltipId}
+        className="hover-tooltip-panel is-align-start market-value-tooltip"
+        role="tooltip"
+      >
         <span className="market-value-tooltip-line">
           Last market value: {formatMarketValueStat(stats.last)}
         </span>

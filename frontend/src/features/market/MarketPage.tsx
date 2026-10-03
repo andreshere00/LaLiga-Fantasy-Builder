@@ -23,6 +23,8 @@ function MarketList() {
     squadMarketValue: board.squadMarketValue,
   };
 
+  const dialogOpen = marketActions.pendingBid != null || marketActions.pendingClause != null;
+
   if (board.isLoading) return <p className="status-copy">Loading market…</p>;
   if (board.noLeague) return <p className="status-copy">No leagues found for this account.</p>;
   if (board.hasError) {
@@ -38,11 +40,11 @@ function MarketList() {
       <MarketToolbar money={board.money} />
       {board.isDegraded ? (
         <p className="market-notice status-copy" role="status">
-          Some market details could not be loaded. Value changes and last
-          performances may be incomplete.
+          Some market details could not be loaded. Balance, squad data, value changes and
+          last performances may be incomplete, and some actions may be unavailable.
         </p>
       ) : null}
-      {marketActions.message ? (
+      {marketActions.message && !dialogOpen ? (
         <p className="status-copy" role="alert">
           {marketActions.message}
         </p>
@@ -80,6 +82,7 @@ function MarketList() {
         squadMarketValue={board.squadMarketValue}
         initialAmount={marketActions.pendingBid?.initialAmount ?? null}
         pending={marketActions.actionPending}
+        error={marketActions.message}
         onClose={marketActions.closeBid}
         onConfirm={marketActions.submitBid}
       />
@@ -88,6 +91,7 @@ function MarketList() {
         row={marketActions.pendingClause?.row ?? null}
         amount={marketActions.pendingClause?.amount ?? 0}
         pending={marketActions.actionPending}
+        error={marketActions.message}
         onClose={marketActions.closeClause}
         onConfirm={marketActions.confirmClause}
       />

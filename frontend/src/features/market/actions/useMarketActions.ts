@@ -7,7 +7,12 @@ import { useAuth } from "../../../auth/AuthProvider";
 import { useLeague } from "../../lineup/LeagueProvider";
 import { callerTeamId, leagueId } from "../../../api/mappers";
 import { patchMarketSnapshotBid } from "../marketRows";
-import { clearPendingBid, recordPendingBid } from "../model/pendingBids";
+import {
+  clearPendingBid,
+  isLocalBidId,
+  localBidId,
+  recordPendingBid,
+} from "../model/pendingBids";
 import type { MarketRow } from "../model/row";
 import { marketActionErrorMessage, type MarketActionKind } from "./marketActionErrors";
 import { usesDirectOfferBid, type BidActionKind } from "./marketActions";
@@ -112,7 +117,7 @@ export function useMarketActions() {
       setPendingBid(null);
       setMessage(null);
       patchCachedBid(variables.row.marketId, {
-        id: variables.row.myBid?.id ?? `local-${variables.row.marketId}`,
+        id: variables.row.myBid?.id ?? localBidId(variables.row.marketId),
         money: variables.money,
       });
       await refreshAfterMutation();
@@ -123,13 +128,13 @@ export function useMarketActions() {
   const modifyBid = useMutation({
     mutationFn: async ({ row, money }: { row: MarketRow; money: number }) => {
       const bidId = row.myBid?.id;
-      if (!bidId) throw new ApiError(400, "missing_bid");
+      if (!bidId || isLocalBidId(bidId)) throw new ApiError(400, "missing_bid");
       return putJson(paths.marketBidUpdate(leagueKey, row.marketId, bidId), token, { money });
     },
     onSuccess: async (_data, variables) => {
       setPendingBid(null);
       setMessage(null);
-      const bidId = variables.row.myBid?.id ?? `local-${variables.row.marketId}`;
+      const bidId = variables.row.myBid?.id ?? localBidId(variables.row.marketId);
       patchCachedBid(variables.row.marketId, { id: bidId, money: variables.money });
       await refreshAfterMutation();
     },
@@ -140,7 +145,7 @@ export function useMarketActions() {
     mutationFn: async (row: MarketRow) => {
       const bidId = row.myBid?.id;
       if (!bidId) throw new ApiError(400, "missing_bid");
-      if (bidId.startsWith("local-")) throw new ApiError(400, "missing_bid");
+      if (isLocalBidId(bidId)) throw new ApiError(400, "missing_bid");
       return deleteJson(paths.marketBidUpdate(leagueKey, row.marketId, bidId), token);
     },
     onMutate: async (row) => {
@@ -205,6 +210,10 @@ export function useMarketActions() {
     payClause.mutate({ row: pendingClause.row, amount: pendingClause.amount });
   }, [payClause, pendingClause]);
 
+  const closeBid = useCallback(() => setPendingBid(null), []);
+  const closeClause = useCallback(() => setPendingClause(null), []);
+  const dismissMessage = useCallback(() => setMessage(null), []);
+
   const cancelBidForRow = useCallback(
     (row: MarketRow) => {
       setMessage(null);
@@ -224,13 +233,13 @@ export function useMarketActions() {
     pendingClause,
     openBid,
     openClause,
-    closeBid: () => setPendingBid(null),
-    closeClause: () => setPendingClause(null),
+    closeBid,
+    closeClause,
     submitBid,
     confirmClause,
     cancelBid: cancelBidForRow,
     actionPending: pending,
     message,
-    dismissMessage: () => setMessage(null),
+    dismissMessage,
   };
 }

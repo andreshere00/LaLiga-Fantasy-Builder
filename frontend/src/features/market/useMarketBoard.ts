@@ -1,5 +1,5 @@
 import { useMemo } from "react";
-import { useQueries, useQuery, useQueryClient } from "@tanstack/react-query";
+import { useQueries, useQuery, useQueryClient, type UseQueryResult } from "@tanstack/react-query";
 
 import { getJson, paths } from "../../api/client";
 import {
@@ -53,9 +53,26 @@ export type MarketBoard = {
   noLeague: boolean;
 };
 
+type QueryBatch = {
+  data: readonly unknown[];
+  errors: readonly unknown[];
+  isLoading: boolean;
+  isError: boolean;
+};
+
+/** Collapses parallel queries into one structurally shared value (stable across renders). */
+function combineBatch(results: readonly UseQueryResult<unknown, Error>[]): QueryBatch {
+  return {
+    data: results.map((query) => query.data),
+    errors: results.map((query) => query.error),
+    isLoading: results.some((query) => query.isLoading),
+    isError: results.some((query) => query.isError),
+  };
+}
+
 function calendarFormFromStats(
   weekNumbers: readonly number[],
-  statsResponses: readonly { data: unknown }[],
+  statsData: readonly unknown[],
   playedThrough: number,
 ): {
   weekNumbers: readonly number[];
@@ -64,7 +81,7 @@ function calendarFormFromStats(
 } {
   const statsByWeek = new Map<number, Map<string, number>>();
   weekNumbers.forEach((week, index) => {
-    statsByWeek.set(week, weekPointsByMasterId(statsResponses[index]?.data));
+    statsByWeek.set(week, weekPointsByMasterId(statsData[index]));
   });
   return { weekNumbers, statsByWeek, playedThrough };
 }
@@ -117,7 +134,7 @@ export function useMarketBoard(): MarketBoard {
     [items, teamId],
   );
 
-  const sellerTeamQueries = useQueries({
+  const sellerTeams = useQueries({
     queries: sellerTeamIds.map((sellerTeamId) => ({
       queryKey: ["team", id, sellerTeamId],
       enabled: enabled && id !== "" && sellerTeamId !== "",
@@ -125,9 +142,10 @@ export function useMarketBoard(): MarketBoard {
       queryFn: ({ signal }: { signal: AbortSignal }) =>
         getJson(paths.team(id, sellerTeamId), token, { signal }),
     })),
+    combine: combineBatch,
   });
 
-  const historyQueries = useQueries({
+  const history = useQueries({
     queries: playerIds.map((playerId) => ({
       queryKey: ["players", "market-value", playerId],
       enabled: enabled && id !== "",
@@ -135,8 +153,9 @@ export function useMarketBoard(): MarketBoard {
       queryFn: ({ signal }: { signal: AbortSignal }) =>
         getJson(paths.playerMarketValue(playerId), token, { signal }),
     })),
+    combine: combineBatch,
   });
-  const weekStatsQueries = useQueries({
+  const weekStats = useQueries({
     queries: formWeekNumbers.map((week) => ({
       queryKey: ["calendar", "stats", week],
       enabled: enabled && formWeekNumbers.length > 0,
@@ -144,35 +163,28 @@ export function useMarketBoard(): MarketBoard {
       queryFn: ({ signal }: { signal: AbortSignal }) =>
         getJson(paths.weekStats(week), token, { signal }),
     })),
+    combine: combineBatch,
   });
 
-  const historyData = historyQueries.map((query) => query.data);
-  const weekStatsData = weekStatsQueries.map((query) => query.data);
-  const sellerTeamData = sellerTeamQueries.map((query) => query.data);
-
   const buyoutUnlockByPlayerTeamIdMap = useMemo(
-    () => buyoutUnlockByPlayerTeamId(sellerTeamData),
-    [sellerTeamData],
+    () => buyoutUnlockByPlayerTeamId(sellerTeams.data),
+    [sellerTeams.data],
   );
 
-  const errors = [
+  useReauthOnError([
     marketQuery.error,
     catalogQuery.error,
     currentWeekQuery.error,
     moneyQuery.error,
     teamQuery.error,
-    ...historyQueries.map((q) => q.error),
-    ...weekStatsQueries.map((q) => q.error),
-    ...sellerTeamQueries.map((q) => q.error),
-  ];
-  useReauthOnError(errors);
+    ...history.errors,
+    ...weekStats.errors,
+    ...sellerTeams.errors,
+  ]);
 
-  const historyReady =
-    playerIds.length === 0 || historyQueries.every((query) => !query.isLoading);
+  const historyReady = playerIds.length === 0 || !history.isLoading;
   const formWeeksReady =
-    formWeekNumbers.length === 0 ||
-    (currentWeekQuery.isSuccess &&
-      weekStatsQueries.every((query) => !query.isLoading));
+    formWeekNumbers.length === 0 || (currentWeekQuery.isSuccess && !weekStats.isLoading);
   const isLoading =
     leaguesLoading ||
     marketQuery.isLoading ||
@@ -185,19 +197,14 @@ export function useMarketBoard(): MarketBoard {
   const historyByPlayerId = useMemo(
     () =>
       new Map<string, readonly ValuePoint[]>(
-        playerIds.map((playerId, index) => [playerId, valueSeries(historyData[index])]),
+        playerIds.map((playerId, index) => [playerId, valueSeries(history.data[index])]),
       ),
-    [playerIds, ...historyData],
+    [playerIds, history.data],
   );
 
   const calendarForm = useMemo(
-    () =>
-      calendarFormFromStats(
-        formWeekNumbers,
-        weekStatsData.map((data) => ({ data })),
-        playedThrough,
-      ),
-    [formWeekNumbers, playedThrough, ...weekStatsData],
+    () => calendarFormFromStats(formWeekNumbers, weekStats.data, playedThrough),
+    [formWeekNumbers, playedThrough, weekStats.data],
   );
 
   const userBidsByMarketIdMap = useMemo(
@@ -257,8 +264,11 @@ export function useMarketBoard(): MarketBoard {
     !isLoading &&
     !hasError &&
     (currentWeekQuery.isError ||
-      historyQueries.some((query) => query.isError) ||
-      weekStatsQueries.some((query) => query.isError));
+      moneyQuery.isError ||
+      teamQuery.isError ||
+      history.isError ||
+      weekStats.isError ||
+      sellerTeams.isError);
 
   return {
     rows,

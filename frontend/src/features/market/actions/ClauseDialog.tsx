@@ -7,6 +7,7 @@ type ClauseDialogProps = {
   row: MarketRow | null;
   amount: number;
   pending: boolean;
+  error?: string | null;
   onClose: () => void;
   onConfirm: () => void;
 };
@@ -16,6 +17,7 @@ export function ClauseDialog({
   row,
   amount,
   pending,
+  error = null,
   onClose,
   onConfirm,
 }: ClauseDialogProps) {
@@ -47,6 +49,11 @@ export function ClauseDialog({
         Pay {formatEuro(amount)} to trigger the release clause for{" "}
         <strong>{row.name}</strong>?
       </p>
+      {error ? (
+        <p className="market-dialog-error" role="alert">
+          {error}
+        </p>
+      ) : null}
     </Modal>
   );
 }

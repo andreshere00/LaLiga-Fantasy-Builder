@@ -5,6 +5,14 @@ import { marketItems, userBidsByMarketId, type UserBidRef } from "./listing";
 import { patchMarketSnapshotBid } from "./marketSnapshotPatch";
 
 export const PENDING_BID_TTL_MS = 20_000;
+const LOCAL_BID_PREFIX = "local-";
+
+/** Synthetic bid id used until the server reports the real one. */
+export const localBidId = (marketId: string): string => `${LOCAL_BID_PREFIX}${marketId}`;
+
+/** True for synthetic ids that the upstream does not know yet. */
+export const isLocalBidId = (bidId: string | null | undefined): boolean =>
+  bidId?.startsWith(LOCAL_BID_PREFIX) ?? false;
 
 export type PendingBid = {
   myBid: UserBidRef | null;

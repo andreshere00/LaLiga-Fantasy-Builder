@@ -242,3 +242,53 @@ describe("resolveMarketActions", () => {
     expect(actions.some((action) => action.type === "pay-clause")).toBe(false);
   });
 });
+
+describe("resolveMarketActionOffers confirmation and data gaps", () => {
+  it("resolveMarketActionOffers_local_bid_id_disables_modify_and_cancel", () => {
+    const row = baseRow({ myBid: { id: "local-1", money: 150 } });
+
+    const offers = resolveMarketActionOffers(row, baseContext());
+
+    expect(offers.map((offer) => offer.enabled)).toEqual([false, false]);
+    expect(offers[0]?.type === "bid" && offers[0].disabledReason).toMatch(/being confirmed/);
+  });
+
+  it("resolveMarketActionOffers_server_bid_id_keeps_modify_and_cancel_enabled", () => {
+    const row = baseRow({ myBid: { id: "42", money: 150 } });
+
+    const offers = resolveMarketActionOffers(row, baseContext());
+
+    expect(offers.map((offer) => offer.enabled)).toEqual([true, true]);
+  });
+
+  it("resolveMarketActionOffers_missing_squad_data_reports_squad_reason", () => {
+    const context = baseContext({ squadPlayerCount: null });
+
+    const [offer] = resolveMarketActionOffers(baseRow(), context);
+
+    expect(offer?.enabled).toBe(false);
+    expect(offer?.type === "bid" && offer.disabledReason).toMatch(/squad data/);
+  });
+
+  it("resolveMarketActionOffers_missing_balance_reports_balance_reason", () => {
+    const [offer] = resolveMarketActionOffers(baseRow(), baseContext({ money: null }));
+
+    expect(offer?.type === "bid" && offer.disabledReason).toMatch(/balance could not be loaded/);
+  });
+
+  it("resolveMarketActionOffers_unknown_clause_lock_reports_unavailable_status", () => {
+    const row = baseRow({
+      sellerKind: "opponent",
+      sellerTeamId: "t2",
+      buyoutClause: 50,
+      clauseUnlockAt: null,
+    });
+
+    const clause = resolveMarketActionOffers(row, baseContext()).find(
+      (offer) => offer.type === "pay-clause",
+    );
+
+    expect(clause?.enabled).toBe(false);
+    expect(clause?.type === "pay-clause" && clause.disabledReason).toMatch(/unavailable/);
+  });
+});
