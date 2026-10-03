@@ -1,3 +1,5 @@
+import { useId } from "react";
+
 import bidIconUrl from "../../../assets/button_bid.svg";
 import shieldRedIconUrl from "../../../assets/button_shield_red.svg";
 import { PlayerTile } from "../../lineup/PlayerTile";
@@ -13,8 +15,11 @@ type PlayerCellProps = {
 };
 
 export function PlayerCell({ row, now, columnLabel = "Player" }: PlayerCellProps) {
+  const clauseTooltipId = useId();
   const clauseCountdown =
     row.sellerKind === "opponent" ? clauseUnlockCountdown(row.clauseUnlockAt, now) : null;
+  const clauseTooltip =
+    clauseCountdown != null ? clauseUnlockTooltip(clauseCountdown) : null;
   const bidded = row.myBid != null;
   const bidMoney = row.myBid?.money;
   return (
@@ -56,11 +61,20 @@ export function PlayerCell({ row, now, columnLabel = "Player" }: PlayerCellProps
             </span>
           ) : null}
         </span>
-        {clauseCountdown ? (
-          <span className="market-clause-flag has-hover-tooltip-panel" tabIndex={0}>
+        {clauseTooltip ? (
+          <span
+            className="market-clause-flag has-hover-tooltip-panel"
+            tabIndex={0}
+            aria-label={clauseTooltip}
+            aria-describedby={clauseTooltipId}
+          >
             <img className="market-clause-flag-icon" src={shieldRedIconUrl} alt="" aria-hidden />
-            <span className="hover-tooltip-panel is-align-start" role="tooltip">
-              {clauseUnlockTooltip(clauseCountdown)}
+            <span
+              id={clauseTooltipId}
+              className="hover-tooltip-panel is-align-start"
+              role="tooltip"
+            >
+              {clauseTooltip}
             </span>
           </span>
         ) : null}

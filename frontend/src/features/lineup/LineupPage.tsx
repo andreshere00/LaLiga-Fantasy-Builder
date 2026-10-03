@@ -66,6 +66,8 @@ export function LineupPage() {
   }
 
   const picking = board.pitchSelection != null;
+  const saveNoChangesOnly =
+    board.saveNoChangesTooltip != null && board.saveDisabled && !board.savePending;
   const tileOrder = new Map(
     board.groups.flatMap((group) => group.players).map((player, index) => [player.id, index]),
   );
@@ -167,11 +169,15 @@ export function LineupPage() {
                 <button
                   type="button"
                   className="save-lineup-button"
-                  disabled={board.saveDisabled}
+                  disabled={board.saveDisabled && !saveNoChangesOnly}
+                  aria-disabled={saveNoChangesOnly ? true : undefined}
                   aria-describedby={
                     board.saveNoChangesTooltip ? "save-lineup-no-changes-tooltip" : undefined
                   }
-                  onClick={() => board.saveLineup()}
+                  onClick={() => {
+                    if (saveNoChangesOnly) return;
+                    board.saveLineup();
+                  }}
                 >
                   <span className="save-lineup-button-text">
                     {board.savePending ? "Saving…" : "Save"}
@@ -206,6 +212,8 @@ export function LineupPage() {
               <TeamValueBox
                 iconSrc={moneyIconUrl}
                 evolution={board.teamValueEvolution}
+                historyLoading={board.teamValueHistoryLoading}
+                onRequestHistory={board.requestTeamValueHistory}
               />
             </div>
             </div>
@@ -254,7 +262,9 @@ export function LineupPage() {
                 className="pitch-opponent-lock"
                 aria-label={board.opponentLineupUnavailableMessage ?? "Lineup unavailable"}
                 onClick={() => board.openOpponentLineupNotice()}
-              />
+              >
+                <span className="pitch-opponent-lock-label">Lineup unavailable</span>
+              </button>
             ) : null}
             {board.lineupLoading ? <p className="pitch-note">Loading lineup…</p> : null}
             {board.lineupMessage ? (

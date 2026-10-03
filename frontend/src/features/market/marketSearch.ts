@@ -8,7 +8,6 @@ export function filterMarketRowsBySearch(
 ): MarketRow[] {
   return applyMarketFilters(rows, {
     ...EMPTY_MARKET_FILTERS,
-    text: query,
-    field: "player",
+    player: query,
   });
 }

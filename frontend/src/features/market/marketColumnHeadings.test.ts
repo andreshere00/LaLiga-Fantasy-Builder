@@ -17,14 +17,24 @@ describe("marketColumnHeadings", () => {
     expect(headings.fsyp.filtered).toBe(true);
   });
 
-  it("marketColumnHeadings_marks_player_and_sell_options_for_search_all", () => {
+  it("marketColumnHeadings_marks_player_and_sell_options_from_column_text_only", () => {
     const headings = marketColumnHeadings({
       ...createEmptyMarketFilters(),
-      text: "bar",
-      field: "all",
+      query: "bar",
+      player: "foo",
+      seller: "baz",
     });
     expect(headings.player.filtered).toBe(true);
     expect(headings.sellOptions.filtered).toBe(true);
+  });
+
+  it("marketColumnHeadings_query_does_not_mark_player_column", () => {
+    const headings = marketColumnHeadings({
+      ...createEmptyMarketFilters(),
+      query: "bar",
+    });
+    expect(headings.player.filtered).toBe(false);
+    expect(headings.sellOptions.filtered).toBe(false);
   });
 
   it("marketColumnHeadings_uses_base_labels_when_no_filters", () => {

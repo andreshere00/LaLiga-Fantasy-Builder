@@ -16,14 +16,22 @@ describe("teamValueEvolutionSnapshot", () => {
         { time: base, value: 60 },
       ],
     ];
-    const snapshot = teamValueEvolutionSnapshot(histories, [null, null], 160);
+    const snapshot = teamValueEvolutionSnapshot(histories, 160);
     expect(snapshot.today).toBe(160);
     expect(snapshot.fiveDaysAgo).toBe(120);
   });
 
-  it("teamValueEvolutionSnapshot_uses_catalog_fallback_when_history_missing", () => {
-    const snapshot = teamValueEvolutionSnapshot([[]], [200], 200);
+  it("teamValueEvolutionSnapshot_missing_history_yields_null_lookbacks", () => {
+    const snapshot = teamValueEvolutionSnapshot([[]], 200);
     expect(snapshot.today).toBe(200);
-    expect(snapshot.thirtyDaysAgo).toBe(200);
+    expect(snapshot.thirtyDaysAgo).toBeNull();
+  });
+
+  it("teamValueEvolutionSnapshot_short_series_yields_null_for_unreachable_lookback", () => {
+    const base = Date.parse("2026-01-15T12:00:00Z");
+    const histories = [[{ time: base - 2 * DAY_MS, value: 100 }]];
+    const snapshot = teamValueEvolutionSnapshot(histories, 100);
+    expect(snapshot.today).toBe(100);
+    expect(snapshot.fiveDaysAgo).toBeNull();
   });
 });

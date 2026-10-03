@@ -13,11 +13,9 @@ export function clearMarketColumnFilter(
 ): MarketFilters {
   switch (column) {
     case "player":
-      if (filters.field !== "player") return filters;
-      return { ...filters, text: "" };
+      return { ...filters, player: "" };
     case "sellOptions":
-      if (filters.field !== "seller") return filters;
-      return { ...filters, text: "" };
+      return { ...filters, seller: "" };
     case "fsyp":
       return { ...filters, points: { min: null, max: null } };
     case "form":

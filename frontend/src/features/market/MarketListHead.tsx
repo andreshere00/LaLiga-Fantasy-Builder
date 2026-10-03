@@ -36,6 +36,14 @@ type HeadCellProps = {
   onFiltersChange: (filters: MarketFilters) => void;
 };
 
+function focusFirstPopoverControl(panel: HTMLElement | null): void {
+  if (!panel) return;
+  const target = panel.querySelector<HTMLElement>(
+    "input, select, textarea, button:not(.market-head-filter)",
+  );
+  target?.focus();
+}
+
 function HeadCell({
   column,
   heading,
@@ -47,6 +55,8 @@ function HeadCell({
   onFiltersChange,
 }: HeadCellProps) {
   const wrapRef = useRef<HTMLSpanElement>(null);
+  const filterButtonRef = useRef<HTMLButtonElement>(null);
+  const popoverRef = useRef<HTMLDivElement>(null);
   const buttonId = useId();
   const popoverId = useId();
   const open = openColumn === column;
@@ -55,12 +65,23 @@ function HeadCell({
 
   useEffect(() => {
     if (!open) return;
+    focusFirstPopoverControl(popoverRef.current);
     const onPointerDown = (event: PointerEvent) => {
       if (wrapRef.current?.contains(event.target as Node)) return;
       onOpenColumn(null);
     };
+    const onKeyDown = (event: KeyboardEvent) => {
+      if (event.key !== "Escape") return;
+      event.preventDefault();
+      onOpenColumn(null);
+      filterButtonRef.current?.focus();
+    };
     window.addEventListener("pointerdown", onPointerDown);
-    return () => window.removeEventListener("pointerdown", onPointerDown);
+    window.addEventListener("keydown", onKeyDown);
+    return () => {
+      window.removeEventListener("pointerdown", onPointerDown);
+      window.removeEventListener("keydown", onKeyDown);
+    };
   }, [open, onOpenColumn]);
 
   return (
@@ -70,14 +91,16 @@ function HeadCell({
     >
       <span className="market-head-label">{title}</span>
       <button
+        ref={filterButtonRef}
         id={buttonId}
         type="button"
         className={`market-head-filter${heading.filtered ? " is-active" : ""}${!filterable ? " is-disabled" : ""}`}
         aria-expanded={filterable ? open : undefined}
         aria-controls={filterable ? popoverId : undefined}
         aria-haspopup={filterable ? "dialog" : undefined}
+        aria-label={filterable ? `Filter ${title}` : undefined}
         disabled={!filterable}
-        title={filterable ? `Filter ${title}` : `${title} cannot be filtered`}
+        title={filterable ? undefined : `${title} cannot be filtered`}
         onClick={() => {
           if (!filterable) return;
           onOpenColumn(open ? null : column);
@@ -86,7 +109,13 @@ function HeadCell({
         <img src={filterIconUrl} alt="" aria-hidden="true" className="market-head-filter-icon" />
       </button>
       {open && filterable ? (
-        <div id={popoverId} className="market-column-filter-popover-wrap">
+        <div
+          ref={popoverRef}
+          id={popoverId}
+          className="market-column-filter-popover-wrap"
+          role="dialog"
+          aria-labelledby={buttonId}
+        >
           <MarketColumnFilterPopover
             column={column}
             filters={filters}
@@ -95,6 +124,7 @@ function HeadCell({
             onClearColumn={() => {
               onFiltersChange(clearMarketColumnFilter(filters, column));
               onOpenColumn(null);
+              filterButtonRef.current?.focus();
             }}
           />
         </div>

@@ -1,4 +1,4 @@
-import { marketValueAtDaysAgo } from "../market/marketValueStats";
+import { DAY_MS } from "../market/model/valueSeries";
 import type { ValuePoint } from "../market/model/valueSeries";
 
 export type TeamValueEvolutionSnapshot = {
@@ -9,41 +9,40 @@ export type TeamValueEvolutionSnapshot = {
   thirtyDaysAgo: number | null;
 };
 
+/** Value at or before the cutoff; null when the series does not reach that window. */
+function strictValueAtDaysAgo(series: readonly ValuePoint[], days: number): number | null {
+  if (series.length === 0) return null;
+  const latest = series[series.length - 1];
+  const cutoff = latest.time - days * DAY_MS;
+  const point = [...series].reverse().find((entry) => entry.time <= cutoff);
+  return point?.value ?? null;
+}
+
 function sumTeamValueAtDays(
   histories: readonly (readonly ValuePoint[])[],
-  fallbacks: readonly (number | null)[],
   days: number,
 ): number | null {
   if (histories.length === 0) return null;
   let sum = 0;
-  let contributed = false;
-  for (let index = 0; index < histories.length; index += 1) {
-    const series = histories[index];
-    const point =
-      series.length > 0
-        ? marketValueAtDaysAgo(series, days)
-        : (fallbacks[index] ?? null);
-    if (point != null) {
-      sum += point;
-      contributed = true;
-    }
+  for (const series of histories) {
+    const value = strictValueAtDaysAgo(series, days);
+    if (value == null) return null;
+    sum += value;
   }
-  return contributed ? sum : null;
+  return sum;
 }
 
 /** Squad value today and at 1, 5, 14, and 30 calendar-day lookbacks. */
 export function teamValueEvolutionSnapshot(
   histories: readonly (readonly ValuePoint[])[],
-  fallbacks: readonly (number | null)[],
   currentTeamValue: number | null,
 ): TeamValueEvolutionSnapshot {
-  const today =
-    currentTeamValue ?? sumTeamValueAtDays(histories, fallbacks, 0);
+  const today = currentTeamValue;
   return {
     today,
-    yesterday: sumTeamValueAtDays(histories, fallbacks, 1),
-    fiveDaysAgo: sumTeamValueAtDays(histories, fallbacks, 5),
-    fourteenDaysAgo: sumTeamValueAtDays(histories, fallbacks, 14),
-    thirtyDaysAgo: sumTeamValueAtDays(histories, fallbacks, 30),
+    yesterday: sumTeamValueAtDays(histories, 1),
+    fiveDaysAgo: sumTeamValueAtDays(histories, 5),
+    fourteenDaysAgo: sumTeamValueAtDays(histories, 14),
+    thirtyDaysAgo: sumTeamValueAtDays(histories, 30),
   };
 }

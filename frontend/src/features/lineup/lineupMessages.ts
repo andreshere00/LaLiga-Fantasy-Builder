@@ -47,7 +47,9 @@ export function lineupLoadMessage(
   unplayedOpponentFixture = false,
 ): string | null {
   if (!error || error instanceof NeedsReauthError) return null;
-  if (unplayedOpponentFixture) return UNPLAYED_FIXTURE_SCORE_PREFIX;
+  if (unplayedOpponentFixture && error instanceof ApiError && error.status === 404) {
+    return UNPLAYED_FIXTURE_SCORE_PREFIX;
+  }
   if (error instanceof ApiError && error.status === 404) {
     return LINEUP_NOT_SET_MESSAGE;
   }

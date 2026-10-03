@@ -4,11 +4,13 @@ import type { MarketRow } from "./model/row";
 
 export type NumericRange = { min: number | null; max: number | null };
 
-export type MarketSearchField = "all" | "player" | "seller" | "team";
-
 export type MarketFilters = {
-  text: string;
-  field: MarketSearchField;
+  /** Toolbar search: player name, seller, or team name. */
+  query: string;
+  /** Player column filter: player name only. */
+  player: string;
+  /** Sell options column filter: seller only. */
+  seller: string;
   marketValue: NumericRange;
   points: NumericRange;
   form: NumericRange;
@@ -19,8 +21,9 @@ export type MarketFilters = {
 /** Returns a fresh filter object safe to store in React state. */
 export function createEmptyMarketFilters(): MarketFilters {
   return {
-    text: "",
-    field: "all",
+    query: "",
+    player: "",
+    seller: "",
     marketValue: { min: null, max: null },
     points: { min: null, max: null },
     form: { min: null, max: null },
@@ -43,24 +46,17 @@ function matchesRange(value: number | null, range: NumericRange): boolean {
   return true;
 }
 
-function haystacksForField(row: MarketRow, field: MarketSearchField): readonly string[] {
-  switch (field) {
-    case "player":
-      return [row.name];
-    case "seller":
-      return [row.seller];
-    case "team":
-      return [row.teamName ?? ""];
-    case "all":
-      return [row.name, row.seller, row.teamName ?? ""];
-  }
+function matchesSubstring(haystack: string, query: string): boolean {
+  const normalized = normalizeSearchText(query);
+  if (!normalized) return true;
+  return normalizeSearchText(haystack).includes(normalized);
 }
 
-function matchesText(row: MarketRow, filters: MarketFilters): boolean {
-  const query = normalizeSearchText(filters.text);
-  if (!query) return true;
-  const haystacks = haystacksForField(row, filters.field);
-  return haystacks.some((value) => normalizeSearchText(value).includes(query));
+function matchesQuery(row: MarketRow, query: string): boolean {
+  const normalized = normalizeSearchText(query);
+  if (!normalized) return true;
+  const haystacks = [row.name, row.seller, row.teamName ?? ""];
+  return haystacks.some((value) => normalizeSearchText(value).includes(normalized));
 }
 
 function matchesAvailability(row: MarketRow, selected: ReadonlySet<Availability>): boolean {
@@ -81,7 +77,9 @@ export function applyMarketFilters(
 ): MarketRow[] {
   return rows.filter(
     (row) =>
-      matchesText(row, filters) &&
+      matchesQuery(row, filters.query) &&
+      matchesSubstring(row.name, filters.player) &&
+      matchesSubstring(row.seller, filters.seller) &&
       matchesRange(row.marketValue, filters.marketValue) &&
       matchesRange(row.points, filters.points) &&
       matchesRange(row.form, filters.form) &&
@@ -93,7 +91,9 @@ export function applyMarketFilters(
 /** Counts non-default filter settings for the toolbar badge. */
 export function activeFilterCount(filters: MarketFilters): number {
   let count = 0;
-  if (normalizeSearchText(filters.text)) count += 1;
+  if (normalizeSearchText(filters.query)) count += 1;
+  if (normalizeSearchText(filters.player)) count += 1;
+  if (normalizeSearchText(filters.seller)) count += 1;
   if (rangeIsActive(filters.marketValue)) count += 1;
   if (rangeIsActive(filters.points)) count += 1;
   if (rangeIsActive(filters.form)) count += 1;

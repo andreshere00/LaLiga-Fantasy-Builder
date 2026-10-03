@@ -17,7 +17,6 @@ import {
 } from "../../api/queries";
 import {
   asCurrentWeek,
-  asFiniteNumber,
   asStanding,
   formatFixtureCountdown,
   masterPlayerIdsFromTeam,
@@ -80,7 +79,6 @@ import {
   unplayedFixtureScoreTooltip,
   unplayedFixtureScoreTooltipFallback,
 } from "./lineupMessages";
-import { catalogById } from "../market/model/listing";
 import { valueSeries } from "../market/model/valueSeries";
 import { useLeague } from "./LeagueProvider";
 import { squadPageSlice } from "./squadPanel";
@@ -101,6 +99,8 @@ export type LineupBoard = {
   weekLoading: boolean;
   formation: string;
   teamValueEvolution: TeamValueEvolutionSnapshot | null;
+  teamValueHistoryLoading: boolean;
+  requestTeamValueHistory: () => void;
   groups: LineupGroup[];
   captainId: string | null;
   squad: SquadCard[];
@@ -201,6 +201,7 @@ export function useLineupBoard(options: UseLineupBoardOptions = {}): LineupBoard
   const [opponentLineupNoticeOpen, setOpponentLineupNoticeOpen] = useState(false);
   const [squadSearch, setSquadSearch] = useState("");
   const [squadPage, setSquadPage] = useState(0);
+  const [teamValueRequested, setTeamValueRequested] = useState(false);
   const previousLeagueKeyRef = useRef(leagueKey);
   const leagueChanged = previousLeagueKeyRef.current !== leagueKey;
   if (leagueChanged) {
@@ -212,6 +213,7 @@ export function useLineupBoard(options: UseLineupBoardOptions = {}): LineupBoard
     setPastFixtureNoticeOpen(false);
     setOpponentLineupNoticeOpen(false);
     setSquadSearch("");
+    setTeamValueRequested(false);
   }
 
   const enabled = leagueKey.length > 0 && accessToken != null;
@@ -296,6 +298,7 @@ export function useLineupBoard(options: UseLineupBoardOptions = {}): LineupBoard
     setPastFixtureNoticeOpen(false);
     setOpponentLineupNoticeOpen(false);
     setSquadSearch("");
+    setTeamValueRequested(false);
   }
 
   const teamQuery = useQuery({
@@ -361,10 +364,6 @@ export function useLineupBoard(options: UseLineupBoardOptions = {}): LineupBoard
     () => catalogMediaByMasterId(catalogQuery.data),
     [catalogQuery.data],
   );
-  const catalogByPlayerId = useMemo(
-    () => catalogById(catalogQuery.data),
-    [catalogQuery.data],
-  );
   const squadMasterIds = useMemo(
     () => masterPlayerIdsFromTeam(teamQuery.data),
     [teamQuery.data],
@@ -372,7 +371,7 @@ export function useLineupBoard(options: UseLineupBoardOptions = {}): LineupBoard
   const squadMarketValueHistory = useQueries({
     queries: squadMasterIds.map((playerId) => ({
       queryKey: ["players", "market-value", playerId],
-      enabled: enabled && playerId.length > 0,
+      enabled: enabled && teamValueRequested && playerId.length > 0,
       staleTime: CATALOG_STALE_MS,
       queryFn: ({ signal }: { signal: AbortSignal }) =>
         getJson(paths.playerMarketValue(playerId), token, { signal }),
@@ -588,21 +587,45 @@ export function useLineupBoard(options: UseLineupBoardOptions = {}): LineupBoard
     callerId,
     selected?.team?.teamValue,
   );
+  const emptyEvolution = useCallback(
+    (today: number | null): TeamValueEvolutionSnapshot | null => {
+      if (today == null) return null;
+      return {
+        today,
+        yesterday: null,
+        fiveDaysAgo: null,
+        fourteenDaysAgo: null,
+        thirtyDaysAgo: null,
+      };
+    },
+    [],
+  );
+
+  const teamValueHistoryLoading =
+    teamValueRequested &&
+    squadMasterIds.length > 0 &&
+    squadMarketValueHistory.some((query) => query.isPending);
+
   const teamValueEvolution = useMemo((): TeamValueEvolutionSnapshot | null => {
-    if (squadMasterIds.length === 0) return null;
+    if (currentTeamValue == null) return null;
+    if (!teamValueRequested || squadMasterIds.length === 0) {
+      return emptyEvolution(currentTeamValue);
+    }
     const histories = squadMasterIds.map((_, index) =>
       valueSeries(squadMarketValueHistory[index]?.data),
     );
-    const fallbacks = squadMasterIds.map((playerId) =>
-      asFiniteNumber(catalogByPlayerId.get(playerId)?.marketValue),
-    );
-    return teamValueEvolutionSnapshot(histories, fallbacks, currentTeamValue);
+    return teamValueEvolutionSnapshot(histories, currentTeamValue);
   }, [
-    catalogByPlayerId,
     currentTeamValue,
+    emptyEvolution,
     squadMarketValueHistory,
     squadMasterIds,
+    teamValueRequested,
   ]);
+
+  const requestTeamValueHistory = useCallback(() => {
+    setTeamValueRequested(true);
+  }, []);
 
   const currentFixtureCountdown = useMemo((): string | null => {
     if (!lineupUsesCurrent) return null;
@@ -665,7 +688,6 @@ export function useLineupBoard(options: UseLineupBoardOptions = {}): LineupBoard
     week,
     maxWeek: upper,
     goToWeek: (next) => {
-      weekBeforePeekRef.current = null;
       setRequestedWeek(clampWeek(next, upper));
       setPitchSelection(null);
       setPastFixtureNoticeOpen(false);
@@ -682,6 +704,8 @@ export function useLineupBoard(options: UseLineupBoardOptions = {}): LineupBoard
         ? formationLabel(draft.tactical)
         : formationLabel(serverTactical),
     teamValueEvolution,
+    teamValueHistoryLoading,
+    requestTeamValueHistory,
     groups,
     captainId,
     squad,

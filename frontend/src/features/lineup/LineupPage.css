@@ -740,11 +740,24 @@
   position: absolute;
   inset: 0;
   z-index: 8;
+  display: flex;
+  align-items: center;
+  justify-content: center;
   margin: 0;
-  padding: 0;
+  padding: 12px;
   border: 0;
-  background: transparent;
+  background: color-mix(in srgb, var(--ink) 28%, transparent);
+  color: var(--white);
+  font-size: var(--lineup-font-medium);
+  font-weight: 700;
+  text-align: center;
   cursor: pointer;
+}
+
+.pitch-opponent-lock-label {
+  max-width: min(18rem, 80%);
+  line-height: 1.35;
+  text-shadow: 0 1px 2px rgb(0 0 0 / 35%);
 }
 
 .side-panel {

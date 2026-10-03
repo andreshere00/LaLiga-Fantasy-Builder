@@ -24,14 +24,21 @@ describe("clearMarketColumnFilter", () => {
     expect(clearMarketColumnFilter(filters, "position").positions.size).toBe(0);
   });
 
-  it("clearMarketColumnFilter_clears_player_text_only_when_field_is_player", () => {
+  it("clearMarketColumnFilter_clears_player_text_keeps_query", () => {
     const filters = {
       ...createEmptyMarketFilters(),
-      text: "x",
-      field: "player" as const,
+      query: "toolbar",
+      player: "x",
     };
-    expect(clearMarketColumnFilter(filters, "player").text).toBe("");
-    const kept = { ...filters, field: "all" as const };
-    expect(clearMarketColumnFilter(kept, "player").text).toBe("x");
+    expect(clearMarketColumnFilter(filters, "player").player).toBe("");
+    expect(clearMarketColumnFilter(filters, "player").query).toBe("toolbar");
+  });
+
+  it("clearMarketColumnFilter_clears_seller_text", () => {
+    const filters = {
+      ...createEmptyMarketFilters(),
+      seller: "LaLiga",
+    };
+    expect(clearMarketColumnFilter(filters, "sellOptions").seller).toBe("");
   });
 });

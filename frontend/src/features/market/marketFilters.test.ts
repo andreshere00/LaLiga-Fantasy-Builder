@@ -65,54 +65,53 @@ describe("applyMarketFilters", () => {
     expect(applyMarketFilters(rows, EMPTY_MARKET_FILTERS)).toEqual(rows);
   });
 
-  it("applyMarketFilters_text_player_field_matches_name_only", () => {
+  it("applyMarketFilters_player_column_matches_name_only", () => {
     const rows = [
       row({ name: "Marcos Llorente", seller: "Marcos FC" }),
       row({ id: "2", name: "Unai Simón" }),
     ];
-    const filters = withFilters({ text: "llor", field: "player" });
+    const filters = withFilters({ player: "llor" });
     expect(applyMarketFilters(rows, filters).map((entry) => entry.name)).toEqual([
       "Marcos Llorente",
     ]);
   });
 
-  it("applyMarketFilters_text_seller_field_matches_seller_only", () => {
+  it("applyMarketFilters_seller_column_matches_seller_only", () => {
     const rows = [
       row({ name: "P1", seller: "Rival Manager" }),
       row({ id: "2", name: "P2", seller: "LaLiga" }),
     ];
-    const filters = withFilters({ text: "rival", field: "seller" });
+    const filters = withFilters({ seller: "rival" });
     expect(applyMarketFilters(rows, filters).map((entry) => entry.name)).toEqual(["P1"]);
   });
 
-  it("applyMarketFilters_text_team_field_matches_team_name", () => {
-    const rows = [
-      row({ name: "P1", teamName: "Atlético de Madrid" }),
-      row({ id: "2", name: "P2", teamName: "Athletic Club" }),
-    ];
-    const filters = withFilters({ text: "atletico", field: "team" });
-    expect(applyMarketFilters(rows, filters).map((entry) => entry.name)).toEqual(["P1"]);
-  });
-
-  it("applyMarketFilters_text_all_field_checks_player_seller_and_team", () => {
+  it("applyMarketFilters_query_matches_player_seller_and_team", () => {
     const rows = [
       row({ name: "Hidden", seller: "LaLiga", teamName: "Sevilla" }),
       row({ id: "2", name: "Star", seller: "Sevilla Fan", teamName: "Other" }),
     ];
-    const filters = withFilters({ text: "sevilla", field: "all" });
+    const filters = withFilters({ query: "sevilla" });
     expect(applyMarketFilters(rows, filters)).toHaveLength(2);
+  });
+
+  it("applyMarketFilters_query_and_player_both_apply", () => {
+    const rows = [
+      row({ id: "a", name: "Laporte", seller: "A" }),
+      row({ id: "b", name: "Laporte Jr", seller: "A" }),
+      row({ id: "c", name: "Laporte", seller: "B" }),
+    ];
+    const filters = withFilters({ query: "laporte", player: "jr" });
+    expect(applyMarketFilters(rows, filters).map((entry) => entry.id)).toEqual(["b"]);
   });
 
   it("applyMarketFilters_text_ignores_accents_and_case", () => {
     const rows = [row({ name: "Álvaro Núñez" }), row({ id: "2", name: "Yuri" })];
-    const filters = withFilters({ text: "nunez", field: "player" });
+    const filters = withFilters({ player: "nunez" });
     expect(applyMarketFilters(rows, filters).map((entry) => entry.name)).toEqual([
       "Álvaro Núñez",
     ]);
     expect(
-      applyMarketFilters(rows, withFilters({ text: "ÁLVARO", field: "player" })).map(
-        (entry) => entry.name,
-      ),
+      applyMarketFilters(rows, withFilters({ player: "ÁLVARO" })).map((entry) => entry.name),
     ).toEqual(["Álvaro Núñez"]);
   });
 
@@ -169,8 +168,7 @@ describe("applyMarketFilters", () => {
       row({ id: "c", name: "Other", marketValue: 500 }),
     ];
     const filters = withFilters({
-      text: "laporte",
-      field: "player",
+      player: "laporte",
       marketValue: { min: 400, max: null },
     });
     expect(applyMarketFilters(rows, filters).map((entry) => entry.id)).toEqual(["a"]);
@@ -184,7 +182,7 @@ describe("activeFilterCount", () => {
 
   it("activeFilterCount_sums_text_ranges_and_availability", () => {
     const filters = withFilters({
-      text: "x",
+      query: "x",
       marketValue: { min: 1, max: null },
       availability: new Set(["available"]),
     });

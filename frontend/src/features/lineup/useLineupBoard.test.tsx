@@ -252,6 +252,35 @@ describe("useLineupBoard", () => {
     });
   });
 
+  it("useLineupBoard_rival_peek_pager_then_caller_restores_open_week", async () => {
+    const { result } = renderHook(() => useLineupBoard(), { wrapper: Wrapper });
+    await loadCallerBoard(result);
+    await swapInBench(result);
+
+    act(() => {
+      result.current.selectTeam("team-b");
+    });
+    await waitFor(() => {
+      expect(result.current.week).toBe(7);
+    });
+
+    act(() => {
+      result.current.goToWeek(5);
+    });
+    await waitFor(() => {
+      expect(result.current.week).toBe(5);
+    });
+
+    act(() => {
+      result.current.selectTeam("team-a");
+    });
+    await waitFor(() => {
+      expect(result.current.week).toBe(8);
+      expect(result.current.saveDisabled).toBe(false);
+      expect(idsForRole(result.current, "defender")).toContain("d5");
+    });
+  });
+
   it("useLineupBoard_rival_peek_restores_dirty_draft", async () => {
     const { result } = renderHook(() => useLineupBoard(), { wrapper: Wrapper });
     await loadCallerBoard(result);

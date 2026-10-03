@@ -42,21 +42,12 @@ function rangeSuffix(range: NumericRange): string {
   return "";
 }
 
-function textFiltersPlayer(field: MarketFilters["field"], hasText: boolean): boolean {
-  if (!hasText) return false;
-  return field === "player" || field === "team" || field === "all";
-}
-
-function textFiltersSellOptions(field: MarketFilters["field"], hasText: boolean): boolean {
-  if (!hasText) return false;
-  return field === "seller" || field === "all";
-}
-
 /** Table header labels reflecting active market filters (desktop head + mobile data-label). */
-export function marketColumnHeadings(filters: MarketFilters): Record<MarketColumnKey, MarketColumnHeading> {
-  const hasText = normalizeSearchText(filters.text).length > 0;
-  const playerFiltered = textFiltersPlayer(filters.field, hasText);
-  const sellFiltered = textFiltersSellOptions(filters.field, hasText);
+export function marketColumnHeadings(
+  filters: MarketFilters,
+): Record<MarketColumnKey, MarketColumnHeading> {
+  const playerFiltered = normalizeSearchText(filters.player).length > 0;
+  const sellFiltered = normalizeSearchText(filters.seller).length > 0;
   const fsypSuffix = rangeSuffix(filters.points);
   const formSuffix = rangeSuffix(filters.form);
   const valueSuffix = rangeSuffix(filters.marketValue);

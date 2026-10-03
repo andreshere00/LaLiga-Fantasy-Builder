@@ -73,16 +73,17 @@ Code: `frontend/src/features/market/` (`model/`, `cells/`, `actions/`,
 
 ### Toolbar
 
-- **Your money** from `GET /api/teams/{team_id}/money` (league object fallback).
+- **Balance** from `GET /api/teams/{team_id}/money` (league object fallback).
 - Negative balance shows a warning icon with a tooltip: balance must be positive
   before the next matchday to score.
 - **Search and filters** (`marketFilters.ts`, column header filter icons): toolbar
-  search matches player, seller and team (`field: all`); each filterable table column
-  has a funnel icon that opens min/max or text controls with the same validation as
-  before (market value 1.000–1.000.000 €, whole-number points/form). **Clear filters**
-  in the toolbar resets everything. Filter state stays on the page across refetches;
-  text uses `useDeferredValue`. Row and table transitions use `motion/react`
-  (`domMax`, `MotionConfig reducedMotion="user"`).
+  `query` matches player, seller and team; column popovers use separate `player`
+  and `seller` strings (AND with `query`). Each filterable table column has a funnel
+  icon that opens min/max or text controls (market value 1.000–1.000.000 €,
+  whole-number points/form). **Clear filters** in the toolbar resets everything;
+  **Clear column filter** resets only that column. Filter state stays on the page
+  across refetches; values use `useDeferredValue`. Row and table transitions use
+  `motion/react` (`domAnimation`, `MotionConfig reducedMotion="user"`).
 
 ### Data loading (`useMarketBoard`)
 

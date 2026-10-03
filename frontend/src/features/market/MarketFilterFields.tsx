@@ -49,8 +49,11 @@ export function FilterRangeField({
 
   useEffect(() => {
     setRawMin(range.min != null ? formatIntegerAmount(range.min) : "");
+  }, [range.min]);
+
+  useEffect(() => {
     setRawMax(range.max != null ? formatIntegerAmount(range.max) : "");
-  }, [range.min, range.max]);
+  }, [range.max]);
 
   const commit = (key: "min" | "max", raw: string, setRaw: (value: string) => void) => {
     const parsed = parseBound(raw);

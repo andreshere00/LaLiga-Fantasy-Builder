@@ -1,9 +1,8 @@
 import {
   AnimatePresence,
   LazyMotion,
-  LayoutGroup,
   MotionConfig,
-  domMax,
+  domAnimation,
   m,
   type Transition,
 } from "motion/react";
@@ -26,10 +25,10 @@ export const MARKET_TABLE_CROSSFADE: Transition = {
   ease: [0.4, 0, 0.2, 1],
 };
 
-/** Loads layout-aware motion features for the market table and filter panel. */
+/** Loads motion features for the market table. */
 export function MarketMotionScope({ children }: { children: ReactNode }) {
   return (
-    <LazyMotion features={domMax} strict>
+    <LazyMotion features={domAnimation} strict>
       <MotionConfig reducedMotion="user">{children}</MotionConfig>
     </LazyMotion>
   );
@@ -41,11 +40,9 @@ type MarketRowMotionListProps = {
 
 export function MarketRowMotionList({ children }: MarketRowMotionListProps) {
   return (
-    <LayoutGroup id="market-rows">
-      <AnimatePresence initial={false} mode="popLayout">
-        {children}
-      </AnimatePresence>
-    </LayoutGroup>
+    <AnimatePresence initial={false}>
+      {children}
+    </AnimatePresence>
   );
 }
 

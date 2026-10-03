@@ -51,8 +51,8 @@ export function MarketToolbar({
       <div className="market-filter-row">
         {showSearch ? (
           <MarketPlayerSearch
-            value={filters.text}
-            onChange={(text) => onFiltersChange({ ...filters, text, field: "all" })}
+            value={filters.query}
+            onChange={(query) => onFiltersChange({ ...filters, query })}
             activeFilterCount={activeFilterCount}
             onClearFilters={onClearFilters}
           />

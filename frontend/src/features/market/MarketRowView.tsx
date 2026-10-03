@@ -32,15 +32,10 @@ export function MarketRowView({
   return (
     <m.li
       className="market-row"
-      layout="position"
       initial={{ opacity: 0, y: 10 }}
       animate={{ opacity: 1, y: 0 }}
-      exit={{ opacity: 0, y: -6, scale: 0.985 }}
-      transition={{
-        ...MARKET_ROW_TRANSITION,
-        layout: MARKET_ROW_TRANSITION,
-        exit: MARKET_ROW_EXIT_TRANSITION,
-      }}
+      exit={{ opacity: 0, y: -6, scale: 0.985, transition: MARKET_ROW_EXIT_TRANSITION }}
+      transition={MARKET_ROW_TRANSITION}
     >
       <PlayerCell
         row={row}

@@ -25,12 +25,12 @@ export function MarketColumnFilterPopover({
   onClearColumn,
 }: MarketColumnFilterPopoverProps) {
   return (
-    <div className="market-column-filter-popover" role="group" aria-label={`Filter ${column}`}>
+    <div className="market-column-filter-popover">
       {column === "player" ? (
         <FilterTextInput
           label="Player name"
-          value={filters.field === "player" || filters.field === "all" ? filters.text : ""}
-          onChange={(text) => onChange({ ...filters, text, field: "player" })}
+          value={filters.player}
+          onChange={(player) => onChange({ ...filters, player })}
           placeholder="Search by name"
         />
       ) : null}
@@ -71,14 +71,14 @@ export function MarketColumnFilterPopover({
         <>
           <FilterTextInput
             label="Seller"
-            value={filters.field === "seller" || filters.field === "all" ? filters.text : ""}
-            onChange={(text) => onChange({ ...filters, text, field: "seller" })}
+            value={filters.seller}
+            onChange={(seller) => onChange({ ...filters, seller })}
             placeholder="LaLiga or manager"
           />
           {sellers.length > 0 ? (
             <FilterSellerSelect
               sellers={sellers}
-              onPick={(seller) => onChange({ ...filters, text: seller, field: "seller" })}
+              onPick={(seller) => onChange({ ...filters, seller })}
             />
           ) : null}
         </>

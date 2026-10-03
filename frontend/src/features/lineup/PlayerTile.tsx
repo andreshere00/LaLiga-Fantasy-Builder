@@ -15,7 +15,6 @@ type PlayerTileProps = {
   photoUrl?: string | null;
   teamBadgeUrl?: string | null;
   fixturePoints?: number | null;
-  fixtureScoreTooltip?: string | null;
   isMvp?: boolean;
   selected?: boolean;
   interactive?: boolean;
@@ -71,7 +70,6 @@ export function PlayerTile({
   photoUrl = null,
   teamBadgeUrl = null,
   fixturePoints = null,
-  fixtureScoreTooltip = null,
   isMvp = false,
   selected = false,
   interactive = false,
@@ -119,16 +117,7 @@ export function PlayerTile({
       <div className="player-card-spacer" aria-hidden="true" />
       <PlayerPhoto url={photoUrl} />
       {fixturePoints != null ? (
-        fixtureScoreTooltip ? (
-          <span className="player-score-badge-wrap has-hover-tooltip-panel">
-            <PlayerScoreBadge points={fixturePoints} isMvp={isMvp} />
-            <span className="hover-tooltip-panel is-align-start" role="tooltip">
-              {fixtureScoreTooltip}
-            </span>
-          </span>
-        ) : (
-          <PlayerScoreBadge points={fixturePoints} isMvp={isMvp} />
-        )
+        <PlayerScoreBadge points={fixturePoints} isMvp={isMvp} />
       ) : null}
       <TeamBadge url={teamBadgeUrl} />
       {showName ? (

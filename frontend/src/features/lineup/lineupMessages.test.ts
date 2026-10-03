@@ -21,12 +21,15 @@ describe("lineupLoadMessage", () => {
     expect(lineupLoadMessage(new ApiError(404, "not_found"))).toBe(LINEUP_NOT_SET_MESSAGE);
   });
 
-  it("lineupLoadMessage_unplayed_opponent_fixture_returns_not_played_copy", () => {
-    expect(lineupLoadMessage(new ApiError(502, "fantasy_error"), true)).toBe(
-      "This fixture has not been played yet.",
-    );
+  it("lineupLoadMessage_unplayed_opponent_fixture_404_returns_not_played_copy", () => {
     expect(lineupLoadMessage(new ApiError(404, "not_found"), true)).toBe(
       "This fixture has not been played yet.",
+    );
+  });
+
+  it("lineupLoadMessage_unplayed_opponent_fixture_non_404_keeps_generic_copy", () => {
+    expect(lineupLoadMessage(new ApiError(502, "fantasy_error"), true)).toBe(
+      "This lineup could not be loaded.",
     );
   });
 
