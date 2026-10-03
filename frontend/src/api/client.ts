@@ -17,6 +17,7 @@ export const paths = {
   weekStanding: (leagueId: string, week: number) =>
     `/api/leagues/${segment(leagueId)}/standing/${week}`,
   currentWeek: () => "/api/calendar/current",
+  weekFixtures: (week: number) => `/api/calendar/weeks/${week}`,
   weekStats: (week: number) => `/api/calendar/weeks/${week}/stats`,
   playersCatalog: () => "/api/players",
   market: (leagueId: string) => `/api/market/leagues/${segment(leagueId)}`,

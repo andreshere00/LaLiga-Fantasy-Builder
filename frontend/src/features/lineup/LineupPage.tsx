@@ -5,15 +5,19 @@ import { pointsLabel, possessiveName, scoreWeekLabel } from "../../api/mappers";
 import { PersonIcon, SearchIcon, WarningIcon } from "../shell/icons";
 import { ProfilePhoto } from "../shell/ProfilePhoto";
 import footballIconUrl from "../../assets/boxicons_football-filled.svg";
-import moneyBagIconUrl from "../../assets/money_bag.png";
+import moneyIconUrl from "../../assets/button_money.svg";
 import saveCartridgeIconUrl from "../../assets/save_cartridge.svg";
 import fieldUrl from "../../assets/football_field.svg";
 import { pitchRowGapFraction, pitchRows } from "./pitchLayout";
 import { SQUAD_PICKER_EMPTY_MESSAGE } from "./playerTileCopy";
 import { squadCountLabel } from "./squadPanel";
+import { CurrentFixtureTooltip } from "./CurrentFixtureTooltip";
+import { OpponentLineupNotice } from "./OpponentLineupNotice";
 import { PlayedFixtureNotice } from "./PlayedFixtureNotice";
 import { PlayerTile } from "./PlayerTile";
+import { TeamValueBox } from "./TeamValueBox";
 import { useLineupBoard } from "./useLineupBoard";
+import "../../components/TooltipPanel.css";
 import "./LineupPage.css";
 
 const RECOMMEND_COPY = "Write your lineup preferences";
@@ -30,6 +34,7 @@ function scorePointsLabel(weekLoading: boolean, points: number | null): string {
 export function LineupPage() {
   const [searchParams] = useSearchParams();
   const board = useLineupBoard({ initialTeamId: searchParams.get("team") });
+  const currentFixtureTooltip = board.unplayedFixtureScoreTooltip;
   const owner = possessiveName(board.titleName);
   const { pitchSelection, selectPitchPlayer } = board;
   useEffect(() => {
@@ -77,34 +82,38 @@ export function LineupPage() {
             <div className="controls-zone controls-zone-start">
             <div className="control-block">
               <span className="field-label">Fixture</span>
-              <div className="pager">
-                <button
-                  type="button"
-                  aria-label="Previous fixture"
-                  disabled={board.week <= 1}
-                  onClick={() => board.goToWeek(board.week - 1)}
-                >
-                  ‹
-                </button>
-                <span>{board.week}</span>
-                <button
-                  type="button"
-                  aria-label="Next fixture"
-                  disabled={board.week >= board.maxWeek}
-                  onClick={() => board.goToWeek(board.week + 1)}
-                >
-                  ›
-                </button>
-              </div>
+              <CurrentFixtureTooltip message={currentFixtureTooltip}>
+                <div className="pager">
+                  <button
+                    type="button"
+                    aria-label="Previous fixture"
+                    disabled={board.week <= 1}
+                    onClick={() => board.goToWeek(board.week - 1)}
+                  >
+                    ‹
+                  </button>
+                  <span>{board.week}</span>
+                  <button
+                    type="button"
+                    aria-label="Next fixture"
+                    disabled={board.week >= board.maxWeek}
+                    onClick={() => board.goToWeek(board.week + 1)}
+                  >
+                    ›
+                  </button>
+                </div>
+              </CurrentFixtureTooltip>
             </div>
             <div className="control-block" aria-live="polite">
               <span className="field-label">Score</span>
-              <div className="score-pill">
-                <span className="score-week">{scoreWeekLabel(board.week)}</span>
-                <span className="score-points">
-                  {scorePointsLabel(board.weekLoading, board.scorePoints)}
-                </span>
-              </div>
+              <CurrentFixtureTooltip message={currentFixtureTooltip}>
+                <div className="score-pill">
+                  <span className="score-week">{scoreWeekLabel(board.week)}</span>
+                  <span className="score-points">
+                    {scorePointsLabel(board.weekLoading, board.scorePoints)}
+                  </span>
+                </div>
+              </CurrentFixtureTooltip>
             </div>
             </div>
             <div className="controls-zone controls-zone-center">
@@ -144,11 +153,20 @@ export function LineupPage() {
             </div>
             <div className="control-block save-lineup">
               <span className="field-label">Save lineup</span>
-              <div className="accent-control-shell save-lineup-shell">
+              <div
+                className={
+                  board.saveNoChangesTooltip
+                    ? "accent-control-shell save-lineup-shell has-hover-tooltip-panel"
+                    : "accent-control-shell save-lineup-shell"
+                }
+              >
                 <button
                   type="button"
                   className="save-lineup-button"
                   disabled={board.saveDisabled}
+                  aria-describedby={
+                    board.saveNoChangesTooltip ? "save-lineup-no-changes-tooltip" : undefined
+                  }
                   onClick={() => board.saveLineup()}
                 >
                   <span className="save-lineup-button-text">
@@ -161,6 +179,15 @@ export function LineupPage() {
                     aria-hidden="true"
                   />
                 </button>
+                {board.saveNoChangesTooltip ? (
+                  <span
+                    id="save-lineup-no-changes-tooltip"
+                    className="hover-tooltip-panel is-align-start"
+                    role="tooltip"
+                  >
+                    {board.saveNoChangesTooltip}
+                  </span>
+                ) : null}
               </div>
               {board.saveMessage ? (
                 <p className="save-lineup-message" role="alert">
@@ -172,15 +199,10 @@ export function LineupPage() {
             <div className="controls-zone controls-zone-end">
             <div className="control-block team-value">
               <span className="field-label">Team value</span>
-              <div className="value-box">
-                <span className="value-box-text">{board.teamValueLabel}</span>
-                <img
-                  className="value-box-icon"
-                  src={moneyBagIconUrl}
-                  alt=""
-                  aria-hidden="true"
-                />
-              </div>
+              <TeamValueBox
+                iconSrc={moneyIconUrl}
+                evolution={board.teamValueEvolution}
+              />
             </div>
             </div>
           </div>
@@ -222,6 +244,14 @@ export function LineupPage() {
         <div className="column column-pitch">
           <div className="pitch">
             <img src={fieldUrl} alt="" />
+            {board.opponentLineupLocked ? (
+              <button
+                type="button"
+                className="pitch-opponent-lock"
+                aria-label={board.opponentLineupUnavailableMessage ?? "Lineup unavailable"}
+                onClick={() => board.openOpponentLineupNotice()}
+              />
+            ) : null}
             {board.lineupLoading ? <p className="pitch-note">Loading lineup…</p> : null}
             {board.lineupMessage ? (
               <p className="pitch-note" role="alert">
@@ -262,9 +292,11 @@ export function LineupPage() {
                                 photoUrl={player.photoUrl}
                                 teamBadgeUrl={player.teamBadgeUrl}
                                 fixturePoints={
-                                  board.isPastFixture ? player.fixturePoints : null
+                                  board.fixtureScoresVisible && !empty
+                                    ? player.fixturePoints
+                                    : null
                                 }
-                                isMvp={board.isPastFixture && player.isMvp === true}
+                                isMvp={board.fixtureScoresVisible && player.isMvp === true}
                                 interactive={
                                   board.editable || (board.isPastFixture && !empty)
                                 }
@@ -343,9 +375,9 @@ export function LineupPage() {
                         photoUrl={player.photoUrl}
                         teamBadgeUrl={player.teamBadgeUrl}
                         fixturePoints={
-                          board.isPastFixture ? player.fixturePoints : null
+                          board.fixtureScoresVisible ? player.fixturePoints : null
                         }
-                        isMvp={board.isPastFixture && player.isMvp === true}
+                        isMvp={board.fixtureScoresVisible && player.isMvp === true}
                         interactive={picking}
                         onSelect={
                           picking ? () => board.pickSquadPlayer(player.id) : undefined
@@ -386,6 +418,14 @@ export function LineupPage() {
       <PlayedFixtureNotice
         open={board.pastFixtureNoticeOpen}
         onClose={board.dismissPastFixtureNotice}
+      />
+      <OpponentLineupNotice
+        open={board.opponentLineupNoticeOpen}
+        message={
+          board.opponentLineupUnavailableMessage ??
+          "Lineup not available for matches that have not yet been played."
+        }
+        onClose={board.dismissOpponentLineupNotice}
       />
     </section>
   );

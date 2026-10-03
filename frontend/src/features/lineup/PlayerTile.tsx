@@ -1,3 +1,6 @@
+import "../../components/TooltipPanel.css";
+import "./PlayerTile.css";
+
 import { scoreTone } from "../../api/mappers";
 import { WarningIcon } from "../shell/icons";
 import { NOT_SELECTED_PLAYER_LABEL } from "./playerTileCopy";
@@ -6,10 +9,13 @@ type PlayerTileProps = {
   name: string;
   captain: boolean;
   variant: "pitch" | "squad";
+  /** Lineup cards anchor photos at the feet; market uses centered portraits. */
+  photoLayout?: "lineup" | "centered";
   empty?: boolean;
   photoUrl?: string | null;
   teamBadgeUrl?: string | null;
   fixturePoints?: number | null;
+  fixtureScoreTooltip?: string | null;
   isMvp?: boolean;
   selected?: boolean;
   interactive?: boolean;
@@ -60,10 +66,12 @@ export function PlayerTile({
   name,
   captain,
   variant,
+  photoLayout = "lineup",
   empty = false,
   photoUrl = null,
   teamBadgeUrl = null,
   fixturePoints = null,
+  fixtureScoreTooltip = null,
   isMvp = false,
   selected = false,
   interactive = false,
@@ -72,6 +80,7 @@ export function PlayerTile({
   const className = [
     "player-tile",
     variant === "squad" ? "squad-tile" : "pitch-tile",
+    photoLayout === "centered" ? "is-photo-centered" : "",
     empty ? "is-empty" : "",
     captain ? "is-captain" : "",
     selected ? "is-selected" : "",
@@ -104,21 +113,28 @@ export function PlayerTile({
       <span className="player-name player-name-empty">
         <span className="player-name-label">{NOT_SELECTED_PLAYER_LABEL}</span>
       </span>
-      <div className="player-card-spacer player-card-spacer-bottom" aria-hidden="true" />
     </>
   ) : (
     <>
       <div className="player-card-spacer" aria-hidden="true" />
       <PlayerPhoto url={photoUrl} />
       {fixturePoints != null ? (
-        <PlayerScoreBadge points={fixturePoints} isMvp={isMvp} />
+        fixtureScoreTooltip ? (
+          <span className="player-score-badge-wrap has-hover-tooltip-panel">
+            <PlayerScoreBadge points={fixturePoints} isMvp={isMvp} />
+            <span className="hover-tooltip-panel is-align-start" role="tooltip">
+              {fixtureScoreTooltip}
+            </span>
+          </span>
+        ) : (
+          <PlayerScoreBadge points={fixturePoints} isMvp={isMvp} />
+        )
       ) : null}
       <TeamBadge url={teamBadgeUrl} />
       <div className="player-card-gap" aria-hidden="true" />
       <span className="player-name">
         <span className="player-name-label">{name}</span>
       </span>
-      <div className="player-card-spacer player-card-spacer-bottom" aria-hidden="true" />
     </>
   );
 

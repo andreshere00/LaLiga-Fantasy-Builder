@@ -1,5 +1,8 @@
 import { isCoachPosition } from "./positions";
 
+export const MARKET_SEARCH_NO_MATCHES =
+  "No market players match your search.";
+
 /** Shown when a user tries to hire a coach from the market without premium. */
 export const COACH_HIRE_PREMIUM_MESSAGE =
   "Hiring coaches is only available for LaLiga Fantasy premium subscribers";

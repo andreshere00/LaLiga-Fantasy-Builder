@@ -17,7 +17,12 @@ import {
 } from "../../api/queries";
 import {
   asCurrentWeek,
+  asFiniteNumber,
   asStanding,
+  formatFixtureCountdown,
+  masterPlayerIdsFromTeam,
+  nextFixtureKickoffMs,
+  parseIsoTimestampMs,
   avatarsByTeamId,
   callerTeamId,
   teamIdsMissingAvatars,
@@ -26,7 +31,7 @@ import {
   clampWeek,
   defaultWeek,
   enrichSquadMapFromLineup,
-  formatTeamValue,
+  fixtureScoresVisibleForWeek,
   formationLabel,
   freeFormationCodesFromLineup,
   groupsFromLineup,
@@ -65,9 +70,22 @@ import {
   type LineupDraft,
   type PitchSelection,
 } from "./lineupDraft";
-import { lineupLoadMessage } from "./lineupMessages";
+import {
+  lineupLoadMessage,
+  SAVE_NO_CHANGES_MESSAGE,
+  opponentLineupUnavailableMessage,
+  opponentLineupUnavailableMessageFallback,
+  unplayedFixtureScoreTooltip,
+  unplayedFixtureScoreTooltipFallback,
+} from "./lineupMessages";
+import { catalogById } from "../market/model/listing";
+import { valueSeries } from "../market/model/valueSeries";
 import { useLeague } from "./LeagueProvider";
 import { squadPageSlice } from "./squadPanel";
+import {
+  teamValueEvolutionSnapshot,
+  type TeamValueEvolutionSnapshot,
+} from "./teamValueEvolution";
 
 export type LineupBoard = {
   titleName: string | null;
@@ -80,7 +98,7 @@ export type LineupBoard = {
   scorePoints: number | null;
   weekLoading: boolean;
   formation: string;
-  teamValueLabel: string;
+  teamValueEvolution: TeamValueEvolutionSnapshot | null;
   groups: LineupGroup[];
   captainId: string | null;
   squad: SquadCard[];
@@ -109,9 +127,17 @@ export type LineupBoard = {
   pickSquadPlayer: (playerId: string) => void;
   saveLineup: () => void;
   saveDisabled: boolean;
+  saveNoChangesTooltip: string | null;
   savePending: boolean;
   saveMessage: string | null;
   isPastFixture: boolean;
+  fixtureScoresVisible: boolean;
+  unplayedFixtureScoreTooltip: string | null;
+  opponentLineupLocked: boolean;
+  opponentLineupUnavailableMessage: string | null;
+  opponentLineupNoticeOpen: boolean;
+  openOpponentLineupNotice: () => void;
+  dismissOpponentLineupNotice: () => void;
   pastFixtureNoticeOpen: boolean;
   dismissPastFixtureNotice: () => void;
 };
@@ -169,6 +195,7 @@ export function useLineupBoard(options: UseLineupBoardOptions = {}): LineupBoard
   const [activeDraft, setActiveDraft] = useState<StoredDraft | null>(null);
   const [pitchSelection, setPitchSelection] = useState<PitchSelection | null>(null);
   const [pastFixtureNoticeOpen, setPastFixtureNoticeOpen] = useState(false);
+  const [opponentLineupNoticeOpen, setOpponentLineupNoticeOpen] = useState(false);
   const [squadSearch, setSquadSearch] = useState("");
   const [squadPage, setSquadPage] = useState(0);
   const previousLeagueKeyRef = useRef(leagueKey);
@@ -179,6 +206,7 @@ export function useLineupBoard(options: UseLineupBoardOptions = {}): LineupBoard
     setRequestedWeek(null);
     setPitchSelection(null);
     setPastFixtureNoticeOpen(false);
+    setOpponentLineupNoticeOpen(false);
     setSquadSearch("");
   }
 
@@ -210,6 +238,7 @@ export function useLineupBoard(options: UseLineupBoardOptions = {}): LineupBoard
   );
   const weekReady = currentQuery.isSuccess || currentQuery.isError;
   const lineupUsesCurrent = week === nextWeek;
+  const fixtureScoresVisible = fixtureScoresVisibleForWeek(week, current);
 
   const weekQuery = useQuery({
     queryKey: ["standing", leagueKey, week],
@@ -217,6 +246,20 @@ export function useLineupBoard(options: UseLineupBoardOptions = {}): LineupBoard
     placeholderData: keepPreviousData,
     queryFn: ({ signal }) => getJson(paths.weekStanding(leagueKey, week), token, { signal }),
   });
+
+  const fixturesQuery = useQuery({
+    queryKey: ["calendar", "fixtures", week],
+    enabled: enabled && weekReady && lineupUsesCurrent,
+    staleTime: 5 * 60 * 1000,
+    queryFn: ({ signal }) => getJson(paths.weekFixtures(week), token, { signal }),
+  });
+
+  const [nowMs, setNowMs] = useState(() => Date.now());
+  useEffect(() => {
+    if (!lineupUsesCurrent) return;
+    const id = window.setInterval(() => setNowMs(Date.now()), 60_000);
+    return () => window.clearInterval(id);
+  }, [lineupUsesCurrent]);
 
   const standingTeamIds = useMemo(
     () => [
@@ -247,6 +290,7 @@ export function useLineupBoard(options: UseLineupBoardOptions = {}): LineupBoard
     setActiveDraft(draftsRef.current.get(activeKey) ?? null);
     setPitchSelection(null);
     setPastFixtureNoticeOpen(false);
+    setOpponentLineupNoticeOpen(false);
     setSquadSearch("");
   }
 
@@ -313,6 +357,23 @@ export function useLineupBoard(options: UseLineupBoardOptions = {}): LineupBoard
     () => catalogMediaByMasterId(catalogQuery.data),
     [catalogQuery.data],
   );
+  const catalogByPlayerId = useMemo(
+    () => catalogById(catalogQuery.data),
+    [catalogQuery.data],
+  );
+  const squadMasterIds = useMemo(
+    () => masterPlayerIdsFromTeam(teamQuery.data),
+    [teamQuery.data],
+  );
+  const squadMarketValueHistory = useQueries({
+    queries: squadMasterIds.map((playerId) => ({
+      queryKey: ["players", "market-value", playerId],
+      enabled: enabled && playerId.length > 0,
+      staleTime: CATALOG_STALE_MS,
+      queryFn: ({ signal }: { signal: AbortSignal }) =>
+        getJson(paths.playerMarketValue(playerId), token, { signal }),
+    })),
+  });
   const pointsByMasterId = useMemo(
     () => weekPointsByMasterId(weekStatsQuery.data),
     [weekStatsQuery.data],
@@ -517,6 +578,63 @@ export function useLineupBoard(options: UseLineupBoardOptions = {}): LineupBoard
     setPastFixtureNoticeOpen(false);
   }, []);
 
+  const currentTeamValue = selectedTeamValue(
+    ranking,
+    activeTeamId,
+    callerId,
+    selected?.team?.teamValue,
+  );
+  const teamValueEvolution = useMemo((): TeamValueEvolutionSnapshot | null => {
+    if (squadMasterIds.length === 0) return null;
+    const histories = squadMasterIds.map((_, index) =>
+      valueSeries(squadMarketValueHistory[index]?.data),
+    );
+    const fallbacks = squadMasterIds.map((playerId) =>
+      asFiniteNumber(catalogByPlayerId.get(playerId)?.marketValue),
+    );
+    return teamValueEvolutionSnapshot(histories, fallbacks, currentTeamValue);
+  }, [
+    catalogByPlayerId,
+    currentTeamValue,
+    squadMarketValueHistory,
+    squadMasterIds,
+  ]);
+
+  const currentFixtureCountdown = useMemo((): string | null => {
+    if (!lineupUsesCurrent) return null;
+    const kickoffMs =
+      nextFixtureKickoffMs(fixturesQuery.data, nowMs) ??
+      parseIsoTimestampMs(current.openingWeekDate);
+    if (kickoffMs == null || kickoffMs <= nowMs) return null;
+    return formatFixtureCountdown(kickoffMs, nowMs);
+  }, [current.openingWeekDate, fixturesQuery.data, lineupUsesCurrent, nowMs]);
+
+  const unplayedFixtureScoreTooltipLabel = useMemo((): string | null => {
+    if (!lineupUsesCurrent) return null;
+    if (currentFixtureCountdown != null) {
+      return unplayedFixtureScoreTooltip(currentFixtureCountdown);
+    }
+    return unplayedFixtureScoreTooltipFallback();
+  }, [currentFixtureCountdown, lineupUsesCurrent]);
+
+  const opponentLineupLocked = lineupUsesCurrent && !editable;
+  const opponentLineupUnavailableMessageLabel = useMemo((): string | null => {
+    if (!opponentLineupLocked) return null;
+    if (currentFixtureCountdown != null) {
+      return opponentLineupUnavailableMessage(currentFixtureCountdown);
+    }
+    return opponentLineupUnavailableMessageFallback();
+  }, [currentFixtureCountdown, opponentLineupLocked]);
+
+  const openOpponentLineupNotice = useCallback(() => {
+    if (!opponentLineupLocked) return;
+    setOpponentLineupNoticeOpen(true);
+  }, [opponentLineupLocked]);
+
+  const dismissOpponentLineupNotice = useCallback(() => {
+    setOpponentLineupNoticeOpen(false);
+  }, []);
+
   return {
     titleName: displayName(row, isCaller, managerName),
     ranking,
@@ -526,6 +644,7 @@ export function useLineupBoard(options: UseLineupBoardOptions = {}): LineupBoard
         setPickedTeamId(teamId);
         setPitchSelection(null);
         setPastFixtureNoticeOpen(false);
+        setOpponentLineupNoticeOpen(false);
         setSquadSearch("");
       }
     },
@@ -535,6 +654,7 @@ export function useLineupBoard(options: UseLineupBoardOptions = {}): LineupBoard
       setRequestedWeek(clampWeek(next, upper));
       setPitchSelection(null);
       setPastFixtureNoticeOpen(false);
+      setOpponentLineupNoticeOpen(false);
       setSquadSearch("");
     },
     scorePoints: activeTeamId ? weekPointsForTeam(weekRows, activeTeamId) : null,
@@ -543,9 +663,7 @@ export function useLineupBoard(options: UseLineupBoardOptions = {}): LineupBoard
       draft && editable
         ? formationLabel(draft.tactical)
         : formationLabel(serverTactical),
-    teamValueLabel: formatTeamValue(
-      selectedTeamValue(ranking, activeTeamId, callerId, selected?.team?.teamValue),
-    ),
+    teamValueEvolution,
     groups,
     captainId,
     squad,
@@ -639,9 +757,24 @@ export function useLineupBoard(options: UseLineupBoardOptions = {}): LineupBoard
       !draftDirty ||
       !isDraftComplete(draft) ||
       saveMutation.isPending,
+    saveNoChangesTooltip:
+      editable &&
+      draft != null &&
+      isDraftComplete(draft) &&
+      !draftDirty &&
+      !saveMutation.isPending
+        ? SAVE_NO_CHANGES_MESSAGE
+        : null,
     savePending: saveMutation.isPending,
     saveMessage,
     isPastFixture: !lineupUsesCurrent,
+    fixtureScoresVisible,
+    unplayedFixtureScoreTooltip: unplayedFixtureScoreTooltipLabel,
+    opponentLineupLocked,
+    opponentLineupUnavailableMessage: opponentLineupUnavailableMessageLabel,
+    opponentLineupNoticeOpen,
+    openOpponentLineupNotice,
+    dismissOpponentLineupNotice,
     pastFixtureNoticeOpen,
     dismissPastFixtureNotice,
   };

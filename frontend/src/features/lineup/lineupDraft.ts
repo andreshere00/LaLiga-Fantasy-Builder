@@ -1,4 +1,5 @@
 import type { LineupGroup, LineupRole, LineupSlotView, SquadCard } from "../../api/mappers";
+import { normalizeSearchText } from "../../searchText";
 import { codeFromTactical, tacticalFromCode } from "./formations";
 
 export type LineupDraft = {
@@ -365,7 +366,7 @@ export function lineupWriteBody(
 }
 
 export function squadMatchesSearch(name: string, query: string): boolean {
-  const needle = query.trim().toLowerCase();
+  const needle = normalizeSearchText(query);
   if (!needle) return true;
-  return name.toLowerCase().includes(needle);
+  return normalizeSearchText(name).includes(needle);
 }

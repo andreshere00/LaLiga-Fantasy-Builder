@@ -1,3 +1,5 @@
+import { useMemo, useState } from "react";
+
 import { useAuth } from "../../auth/AuthProvider";
 import { useNow } from "../../hooks/useNow";
 import { GatePanel } from "../gates/GatePanel";
@@ -5,14 +7,21 @@ import { BidDialog } from "./actions/BidDialog";
 import { ClauseDialog } from "./actions/ClauseDialog";
 import { useMarketActions } from "./actions/useMarketActions";
 import { MarketRowView } from "./MarketRowView";
+import { MARKET_SEARCH_NO_MATCHES } from "./marketMessages";
+import { filterMarketRowsBySearch } from "./marketSearch";
+import { MarketPlayerSearch } from "./MarketPlayerSearch";
 import { MarketToolbar } from "./MarketToolbar";
 import { useMarketBoard } from "./useMarketBoard";
-import "../lineup/LineupPage.css";
 import "./MarketPage.css";
 
 function MarketList() {
   const board = useMarketBoard();
+  const [playerSearch, setPlayerSearch] = useState("");
   const now = useNow();
+  const visibleRows = useMemo(
+    () => filterMarketRowsBySearch(board.rows, playerSearch),
+    [board.rows, playerSearch],
+  );
   const marketActions = useMarketActions();
   const actionContext = {
     money: board.money,
@@ -52,27 +61,36 @@ function MarketList() {
       {board.rows.length === 0 ? (
         <p className="status-copy">No players on the market.</p>
       ) : (
-        <ul className="market-list">
-          <li className="market-row market-head" aria-hidden="true">
-            <span className="market-head-player">Player</span>
-            <span>Position</span>
-            <span>FSYP</span>
-            <span>Form</span>
-            <span>Market value</span>
-            <span>Availability</span>
-            <span>Seal end</span>
-            <span>Sell options</span>
-          </li>
-          {board.rows.map((row) => (
-            <MarketRowView
-              key={row.id}
-              row={row}
-              now={now}
-              actionContext={actionContext}
-              actions={marketActions}
-            />
-          ))}
-        </ul>
+        <>
+          <MarketPlayerSearch value={playerSearch} onChange={setPlayerSearch} />
+          {visibleRows.length === 0 ? (
+            <p className="status-copy" role="status">
+              {MARKET_SEARCH_NO_MATCHES}
+            </p>
+          ) : (
+            <ul className="market-list">
+              <li className="market-row market-head" aria-hidden="true">
+                <span className="market-head-player">Player</span>
+                <span>Position</span>
+                <span>FSYP</span>
+                <span>Form</span>
+                <span>Market value</span>
+                <span>Availability</span>
+                <span>Seal end</span>
+                <span>Sell options</span>
+              </li>
+              {visibleRows.map((row) => (
+                <MarketRowView
+                  key={row.id}
+                  row={row}
+                  now={now}
+                  actionContext={actionContext}
+                  actions={marketActions}
+                />
+              ))}
+            </ul>
+          )}
+        </>
       )}
       <BidDialog
         open={marketActions.pendingBid != null}

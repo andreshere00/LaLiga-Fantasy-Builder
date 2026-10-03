@@ -150,7 +150,15 @@ const teams: Record<string, { players: ReturnType<typeof slot>[] }> = {
 };
 
 function respond(path: string): unknown {
-  if (path === paths.currentWeek()) return { weekNumber: 8 };
+  if (path === paths.currentWeek()) {
+    return {
+      weekNumber: 8,
+      openingWeekDate: "2026-10-11T16:15:00+02:00",
+    };
+  }
+  if (path === paths.weekFixtures(8)) {
+    return [{ matchDate: "2026-10-11T16:15:00+02:00" }];
+  }
   if (path === paths.playersCatalog()) return [];
   const standingMatch = /^\/api\/leagues\/([^/]+)\/standing(?:\/\d+)?$/.exec(path);
   if (standingMatch) return standings[standingMatch[1] ?? ""] ?? [];
@@ -193,6 +201,12 @@ async function loadCallerBoard(
     expect(result.current.squadLoading).toBe(false);
     expect(result.current.formationCode).toBe("4,4,2");
     expect(result.current.saveDisabled).toBe(true);
+    expect(result.current.saveNoChangesTooltip).toBe(
+      "No changes detected from last lineup",
+    );
+    expect(result.current.unplayedFixtureScoreTooltip).toContain(
+      "This fixture has not been played yet.",
+    );
   });
 }
 
@@ -228,6 +242,7 @@ describe("useLineupBoard", () => {
     await loadCallerBoard(result);
     await swapInBench(result);
     expect(result.current.saveDisabled).toBe(false);
+    expect(result.current.saveNoChangesTooltip).toBeNull();
     expect(idsForRole(result.current, "defender")).toContain("d5");
 
     act(() => {
@@ -237,7 +252,16 @@ describe("useLineupBoard", () => {
       expect(result.current.selectedTeamId).toBe("team-b");
       expect(result.current.lineupLoading).toBe(false);
       expect(result.current.editable).toBe(false);
+      expect(result.current.opponentLineupLocked).toBe(true);
+      expect(result.current.opponentLineupUnavailableMessage).toContain(
+        "Lineup not available for matches that have not yet been played.",
+      );
     });
+
+    act(() => {
+      result.current.openOpponentLineupNotice();
+    });
+    expect(result.current.opponentLineupNoticeOpen).toBe(true);
 
     act(() => {
       result.current.selectTeam("team-a");

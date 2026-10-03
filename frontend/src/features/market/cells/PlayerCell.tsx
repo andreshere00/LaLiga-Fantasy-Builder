@@ -17,6 +17,7 @@ export function PlayerCell({ row }: PlayerCellProps) {
           name={row.name}
           captain={false}
           variant="squad"
+          photoLayout="centered"
           photoUrl={row.photoUrl}
           teamBadgeUrl={row.teamBadgeUrl}
         />
