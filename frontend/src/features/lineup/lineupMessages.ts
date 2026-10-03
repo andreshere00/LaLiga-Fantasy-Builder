@@ -21,7 +21,7 @@ export function unplayedFixtureScoreTooltipFallback(): string {
 }
 
 const OPPONENT_LINEUP_UNAVAILABLE_PREFIX =
-  "Lineup not available for matches that have not yet been played.";
+  "The lineup is not available because this match has not been played yet.";
 
 /** Modal copy when peeking an opponent lineup on the open matchweek. */
 export function opponentLineupUnavailableMessage(countdown: string): string {

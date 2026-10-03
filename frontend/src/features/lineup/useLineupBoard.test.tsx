@@ -254,7 +254,7 @@ describe("useLineupBoard", () => {
       expect(result.current.editable).toBe(false);
       expect(result.current.opponentLineupLocked).toBe(true);
       expect(result.current.opponentLineupUnavailableMessage).toContain(
-        "Lineup not available for matches that have not yet been played.",
+        "The lineup is not available because this match has not been played yet.",
       );
     });
 

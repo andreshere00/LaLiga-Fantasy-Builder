@@ -423,7 +423,7 @@ export function LineupPage() {
         open={board.opponentLineupNoticeOpen}
         message={
           board.opponentLineupUnavailableMessage ??
-          "Lineup not available for matches that have not yet been played."
+          "The lineup is not available because this match has not been played yet."
         }
         onClose={board.dismissOpponentLineupNotice}
       />

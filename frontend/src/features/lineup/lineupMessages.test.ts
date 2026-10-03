@@ -45,13 +45,13 @@ describe("save lineup copy", () => {
 describe("opponent lineup unavailable", () => {
   it("opponentLineupUnavailableMessage_includes_next_match_countdown", () => {
     expect(opponentLineupUnavailableMessage("2 days 3 hours 5 minutes")).toBe(
-      "Lineup not available for matches that have not yet been played. Next match: 2 days 3 hours 5 minutes.",
+      "The lineup is not available because this match has not been played yet. Next match: 2 days 3 hours 5 minutes.",
     );
   });
 
   it("opponentLineupUnavailableMessageFallback_omits_countdown", () => {
     expect(opponentLineupUnavailableMessageFallback()).toBe(
-      "Lineup not available for matches that have not yet been played.",
+      "The lineup is not available because this match has not been played yet.",
     );
   });
 });
