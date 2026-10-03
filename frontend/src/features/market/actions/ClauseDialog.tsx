@@ -21,7 +21,7 @@ export function ClauseDialog({
   onClose,
   onConfirm,
 }: ClauseDialogProps) {
-  if (!open || !row) return null;
+  if (!row) return null;
 
   return (
     <Modal

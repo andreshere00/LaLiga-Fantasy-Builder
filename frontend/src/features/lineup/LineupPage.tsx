@@ -376,7 +376,10 @@ export function LineupPage() {
                     <p className="squad-picker-empty-text">{SQUAD_PICKER_EMPTY_MESSAGE}</p>
                   </div>
                 ) : (
-                  <div className="squad-grid">
+                  <div
+                    className="squad-grid"
+                    key={`${board.selectedTeamId}-${board.squadPage}-${picking}`}
+                  >
                     {board.squadPanelPlayers.map((player) => (
                       <PlayerTile
                         key={player.id}

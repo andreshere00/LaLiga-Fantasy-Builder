@@ -2,6 +2,7 @@ import { useMemo, useState } from "react";
 
 import { useAuth } from "../../auth/AuthProvider";
 import { useNow } from "../../hooks/useNow";
+import { useRetained } from "../../hooks/useRetained";
 import { GatePanel } from "../gates/GatePanel";
 import { BidDialog } from "./actions/BidDialog";
 import { ClauseDialog } from "./actions/ClauseDialog";
@@ -23,6 +24,9 @@ function MarketList() {
     [board.rows, playerSearch],
   );
   const marketActions = useMarketActions();
+  const bid = useRetained(marketActions.pendingBid);
+  const clause = useRetained(marketActions.pendingClause);
+  const withdraw = useRetained(marketActions.pendingWithdraw);
   const actionContext = {
     money: board.money,
     now,
@@ -101,11 +105,11 @@ function MarketList() {
       )}
       <BidDialog
         open={marketActions.pendingBid != null}
-        row={marketActions.pendingBid?.row ?? null}
-        kind={marketActions.pendingBid?.kind ?? null}
+        row={bid?.row ?? null}
+        kind={bid?.kind ?? null}
         money={board.money}
         squadMarketValue={board.squadMarketValue}
-        initialAmount={marketActions.pendingBid?.initialAmount ?? null}
+        initialAmount={bid?.initialAmount ?? null}
         pending={marketActions.actionPending}
         error={marketActions.message}
         onClose={marketActions.closeBid}
@@ -113,7 +117,7 @@ function MarketList() {
       />
       <WithdrawDialog
         open={marketActions.pendingWithdraw != null}
-        row={marketActions.pendingWithdraw}
+        row={withdraw}
         pending={marketActions.actionPending}
         error={marketActions.message}
         onClose={marketActions.closeWithdraw}
@@ -121,8 +125,8 @@ function MarketList() {
       />
       <ClauseDialog
         open={marketActions.pendingClause != null}
-        row={marketActions.pendingClause?.row ?? null}
-        amount={marketActions.pendingClause?.amount ?? 0}
+        row={clause?.row ?? null}
+        amount={clause?.amount ?? 0}
         pending={marketActions.actionPending}
         error={marketActions.message}
         onClose={marketActions.closeClause}

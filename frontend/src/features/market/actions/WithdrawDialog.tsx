@@ -18,7 +18,7 @@ export function WithdrawDialog({
   onClose,
   onConfirm,
 }: WithdrawDialogProps) {
-  if (!open || !row) return null;
+  if (!row) return null;
 
   return (
     <Modal

@@ -54,7 +54,7 @@ export function BidDialog({
     setRaw(row.marketValue != null ? formatIntegerAmount(row.marketValue) : "");
   }, [open, initialAmount, row, kind]);
 
-  if (!open || !row || !kind) return null;
+  if (!row || !kind) return null;
 
   const parsed = parseIntegerAmount(raw);
   const reservedBid = kind === "modify" ? (row.myBid?.money ?? 0) : 0;
