@@ -1,13 +1,27 @@
-import { useEffect, useMemo } from "react";
+import { useMemo } from "react";
 import { useQueries, useQuery } from "@tanstack/react-query";
 
 import { getJson, paths } from "../../api/client";
-import { NeedsReauthError } from "../../api/errors";
-import { lastPlayedWeek, leagueId, weekPointsByMasterId } from "../../api/mappers";
+import {
+  CALENDAR_STALE_MS,
+  useCurrentWeekQuery,
+  usePlayersCatalogQuery,
+  useReauthOnError,
+} from "../../api/queries";
+import {
+  callerTeamId,
+  lastPlayedWeek,
+  leagueId,
+  squadPlayerCountFromTeam,
+  teamValueFromPayload,
+  weekPointsByMasterId,
+} from "../../api/mappers";
+import { teamMoneyFromPayload, useTeamMoneyQuery } from "../../api/queries";
 import type { CurrentWeek } from "../../api/mappers";
 import { useAuth } from "../../auth/AuthProvider";
 import { useLeague } from "../lineup/LeagueProvider";
 import {
+  activeUserBidCount,
   catalogById,
   marketItems,
   marketRow,
@@ -18,10 +32,15 @@ import {
   type ValuePoint,
 } from "./marketRows";
 
-const HISTORY_STALE_MS = 5 * 60_000;
+const HISTORY_STALE_MS = CALENDAR_STALE_MS;
 
 export type MarketBoard = {
   rows: MarketRow[];
+  money: number | null;
+  callerTeamId: string | null;
+  squadPlayerCount: number | null;
+  activeBidCount: number | null;
+  squadMarketValue: number | null;
   isLoading: boolean;
   hasError: boolean;
   isDegraded: boolean;
@@ -46,28 +65,28 @@ function calendarFormFromStats(
 
 /** Loads the league market, joins it with the catalog and value histories. */
 export function useMarketBoard(): MarketBoard {
-  const { accessToken, markNeedsReauth } = useAuth();
+  const { accessToken } = useAuth();
   const { selected, isLoading: leaguesLoading } = useLeague();
   const enabled = accessToken != null && selected != null;
   const token = accessToken ?? "";
   const id = selected ? leagueId(selected) : "";
+  const teamId = selected ? callerTeamId(selected) : null;
+  const moneyQuery = useTeamMoneyQuery(id, teamId, enabled);
+
+  const teamQuery = useQuery({
+    queryKey: ["team", id, teamId],
+    enabled: enabled && id !== "" && teamId != null && teamId !== "",
+    staleTime: CALENDAR_STALE_MS,
+    queryFn: ({ signal }) => getJson(paths.team(id, teamId ?? ""), token, { signal }),
+  });
 
   const marketQuery = useQuery({
     queryKey: ["market", id],
     enabled: enabled && id !== "",
     queryFn: ({ signal }) => getJson(paths.market(id), token, { signal }),
   });
-  const catalogQuery = useQuery({
-    queryKey: ["players", "catalog"],
-    enabled,
-    queryFn: ({ signal }) => getJson(paths.playersCatalog(), token, { signal }),
-  });
-  const currentWeekQuery = useQuery({
-    queryKey: ["calendar", "current"],
-    enabled,
-    staleTime: HISTORY_STALE_MS,
-    queryFn: ({ signal }) => getJson(paths.currentWeek(), token, { signal }),
-  });
+  const catalogQuery = usePlayersCatalogQuery(enabled);
+  const currentWeekQuery = useCurrentWeekQuery(enabled);
 
   const playedThrough = useMemo(() => {
     if (currentWeekQuery.data == null) return 0;
@@ -111,13 +130,12 @@ export function useMarketBoard(): MarketBoard {
     marketQuery.error,
     catalogQuery.error,
     currentWeekQuery.error,
+    moneyQuery.error,
+    teamQuery.error,
     ...historyQueries.map((q) => q.error),
     ...weekStatsQueries.map((q) => q.error),
   ];
-  const reauth = errors.some((error) => error instanceof NeedsReauthError);
-  useEffect(() => {
-    if (reauth) markNeedsReauth();
-  }, [reauth, markNeedsReauth]);
+  useReauthOnError(errors);
 
   const historyReady =
     playerIds.length === 0 || historyQueries.every((query) => !query.isLoading);
@@ -130,6 +148,7 @@ export function useMarketBoard(): MarketBoard {
     marketQuery.isLoading ||
     catalogQuery.isLoading ||
     currentWeekQuery.isLoading ||
+    teamQuery.isLoading ||
     !historyReady ||
     !formWeeksReady;
 
@@ -154,9 +173,38 @@ export function useMarketBoard(): MarketBoard {
   const rows = useMemo(() => {
     const catalog = catalogById(catalogQuery.data);
     return items.map((item, index) =>
-      marketRow(item, index, catalog, historyByPlayerId, new Map(), calendarForm),
+      marketRow(item, index, {
+        catalog,
+        history: historyByPlayerId,
+        calendarForm,
+        callerTeamId: teamId,
+      }),
     );
-  }, [items, catalogQuery.data, historyByPlayerId, calendarForm]);
+  }, [items, catalogQuery.data, historyByPlayerId, calendarForm, teamId]);
+
+  const money = useMemo(() => {
+    const fromApi = teamMoneyFromPayload(moneyQuery.data);
+    if (fromApi != null) return fromApi;
+    const fallback = selected?.team?.money;
+    return typeof fallback === "number" && Number.isFinite(fallback) ? fallback : null;
+  }, [moneyQuery.data, selected?.team?.money]);
+
+  const squadPlayerCount = useMemo(
+    () => squadPlayerCountFromTeam(teamQuery.data),
+    [teamQuery.data],
+  );
+
+  const squadMarketValue = useMemo(() => {
+    const fromTeam = teamValueFromPayload(teamQuery.data);
+    if (fromTeam != null) return fromTeam;
+    const fallback = selected?.team?.teamValue;
+    return typeof fallback === "number" && Number.isFinite(fallback) ? fallback : null;
+  }, [teamQuery.data, selected?.team?.teamValue]);
+
+  const activeBidCount = useMemo(
+    () => activeUserBidCount(rows, marketQuery.data),
+    [rows, marketQuery.data],
+  );
 
   const hasError = marketQuery.isError || catalogQuery.isError;
   const isDegraded =
@@ -169,6 +217,11 @@ export function useMarketBoard(): MarketBoard {
 
   return {
     rows,
+    money,
+    callerTeamId: teamId,
+    squadPlayerCount,
+    activeBidCount,
+    squadMarketValue,
     isLoading,
     hasError,
     isDegraded,

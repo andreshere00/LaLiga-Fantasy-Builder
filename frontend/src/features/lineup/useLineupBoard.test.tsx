@@ -303,6 +303,24 @@ describe("useLineupBoard", () => {
     expect(playerIds(result.current)).not.toContain("d1");
   });
 
+  it("useLineupBoard_initialTeamId_selects_valid_standing_team", async () => {
+    const { result } = renderHook(() => useLineupBoard({ initialTeamId: "team-b" }), {
+      wrapper: Wrapper,
+    });
+    await waitFor(() => {
+      expect(result.current.selectedTeamId).toBe("team-b");
+    });
+  });
+
+  it("useLineupBoard_initialTeamId_unknown_falls_back_to_caller", async () => {
+    const { result } = renderHook(() => useLineupBoard({ initialTeamId: "missing" }), {
+      wrapper: Wrapper,
+    });
+    await waitFor(() => {
+      expect(result.current.selectedTeamId).toBe("team-a");
+    });
+  });
+
   it("useLineupBoard_failed_lineup_after_league_switch_save_stays_disabled", async () => {
     const { result, rerender } = renderHook(() => useLineupBoard(), { wrapper: Wrapper });
     await loadCallerBoard(result);

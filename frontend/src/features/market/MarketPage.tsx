@@ -1,170 +1,28 @@
-import { useEffect, useState, type ReactElement } from "react";
-
-import { formatTeamValue, pointsLabel, scoreWeekLabel } from "../../api/mappers";
 import { useAuth } from "../../auth/AuthProvider";
+import { useNow } from "../../hooks/useNow";
 import { GatePanel } from "../gates/GatePanel";
-import { PlayerScoreBadge, PlayerTile } from "../lineup/PlayerTile";
-import { CheckIcon, CrossIcon, QuestionIcon } from "../shell/icons";
-import {
-  positionAbbrev,
-  formDisplayPoints,
-  positionTone,
-  remainingLabel,
-  type Availability,
-  type MarketRow,
-} from "./marketRows";
+import { BidDialog } from "./actions/BidDialog";
+import { ClauseDialog } from "./actions/ClauseDialog";
+import { useMarketActions } from "./actions/useMarketActions";
+import { MarketRowView } from "./MarketRowView";
+import { MarketToolbar } from "./MarketToolbar";
 import { useMarketBoard } from "./useMarketBoard";
 import "../lineup/LineupPage.css";
 import "./MarketPage.css";
 
-const SEAL_TICK_MS = 60_000;
-
-const AVAILABILITY: Record<Availability, { label: string; icon: () => ReactElement }> = {
-  available: { label: "Available", icon: CheckIcon },
-  questionable: { label: "Questionable", icon: QuestionIcon },
-  unavailable: { label: "Not available", icon: CrossIcon },
-};
-
-function variationPercentLabel(value: number | null): string | null {
-  if (value == null || !Number.isFinite(value)) return null;
-  const rounded = Math.round(value * 10) / 10;
-  const sign = rounded > 0 ? "+" : "";
-  return `${sign}${rounded}%`;
-}
-
-function variationAbsoluteLabel(value: number | null): string | null {
-  if (value == null || !Number.isFinite(value)) return null;
-  const sign = value > 0 ? "+" : "";
-  return `${sign}${new Intl.NumberFormat("es-ES").format(value)} €`;
-}
-
-function variationPercentTone(value: number | null): string {
-  if (value == null || !Number.isFinite(value)) return "is-flat";
-  if (value > 1) return "is-up";
-  if (value >= 0) return "is-mid";
-  return "is-down";
-}
-
-function averageLabel(value: number | null): string {
-  return value == null ? "—" : value.toFixed(2);
-}
-
-function LastPerformancesCell({ row }: { row: MarketRow }) {
-  const scores = formDisplayPoints(row.formRecent);
-  if (scores.length === 0) return <>—</>;
-  const weeks = row.formRecentWeeks.slice(0, scores.length);
-  const ariaParts = scores.map((points, index) => {
-    const week = weeks[index];
-    const label = week != null ? scoreWeekLabel(week) : `match ${index + 1}`;
-    return `${label}: ${points}`;
-  });
-  return (
-    <span
-      className="market-form-badges"
-      aria-label={`Last performances: ${ariaParts.join(", ")} points`}
-    >
-      {scores.map((points, index) => {
-        const week = weeks[index];
-        const key = week != null ? `${row.id}-form-w${week}` : `${row.id}-form-${index}`;
-        return (
-          <span key={key} className="market-form-badge-stack">
-            <PlayerScoreBadge points={points} />
-            <span className="market-form-week" aria-hidden="true">
-              {week != null ? scoreWeekLabel(week) : "—"}
-            </span>
-          </span>
-        );
-      })}
-    </span>
-  );
-}
-
-function marketValueLabel(
-  marketValue: number | null,
-  variation: number | null,
-  variationPercent: number | null,
-): ReactElement {
-  const absolute = variationAbsoluteLabel(variation);
-  const percent = variationPercentLabel(variationPercent);
-  const tone = variationPercentTone(variationPercent);
-  if (!absolute && !percent) {
-    return <span className="market-value-primary">{formatTeamValue(marketValue)}</span>;
-  }
-  return (
-    <span className="market-value-line">
-      <span className="market-value-primary">{formatTeamValue(marketValue)}</span>
-      <span className="market-value-sep"> · </span>
-      <span className={`market-value-change ${tone}`}>
-        {absolute}
-        {percent ? ` (${percent})` : null}
-      </span>
-    </span>
-  );
-}
-
-function MarketListRow({ row, now }: { row: MarketRow; now: number }) {
-  const { label, icon: Icon } = AVAILABILITY[row.availability];
-  const tone = positionTone(row.positionId);
-  return (
-    <li className="market-row">
-      <div className="market-card">
-        <PlayerTile
-          name={row.name}
-          captain={false}
-          variant="squad"
-          photoUrl={row.photoUrl}
-          teamBadgeUrl={row.teamBadgeUrl}
-        />
-      </div>
-      <span className="market-name" data-label="Player">
-        {row.name}
-      </span>
-      <span className="market-cell" data-label="Position">
-        <span className={`market-position-badge is-${tone}`}>
-          {positionAbbrev(row.positionId)}
-        </span>
-      </span>
-      <span className="market-cell" data-label="FSYP">
-        {pointsLabel(row.points)}
-      </span>
-      <span className="market-cell market-form" data-label="Form">
-        <LastPerformancesCell row={row} />
-      </span>
-      <span className="market-cell market-value" data-label="Market value">
-        {marketValueLabel(row.marketValue, row.variation, row.variationPercent)}
-      </span>
-      <span
-        className={`market-cell market-availability is-${row.availability}`}
-        data-label="Availability"
-      >
-        <Icon />
-        <span>{label}</span>
-      </span>
-      <span className="market-cell" data-label="Average score">
-        {averageLabel(row.averagePoints)}
-      </span>
-      <span className="market-cell" data-label="Seal end">
-        {remainingLabel(row.expiresAt, now)}
-      </span>
-      <span className="market-cell market-seller" data-label="Seller">
-        {row.seller}
-      </span>
-    </li>
-  );
-}
-
-function useMinuteClock(): number {
-  const [now, setNow] = useState(() => Date.now());
-  useEffect(() => {
-    const timer = window.setInterval(() => setNow(Date.now()), SEAL_TICK_MS);
-    return () => window.clearInterval(timer);
-  }, []);
-  return now;
-}
-
 function MarketList() {
   const board = useMarketBoard();
-  const now = useMinuteClock();
+  const now = useNow();
+  const marketActions = useMarketActions();
+  const actionContext = {
+    money: board.money,
+    now,
+    callerTeamId: board.callerTeamId,
+    squadPlayerCount: board.squadPlayerCount,
+    activeBidCount: board.activeBidCount,
+    squadMarketValue: board.squadMarketValue,
+  };
+
   if (board.isLoading) return <p className="status-copy">Loading market…</p>;
   if (board.noLeague) return <p className="status-copy">No leagues found for this account.</p>;
   if (board.hasError) {
@@ -174,31 +32,66 @@ function MarketList() {
       </p>
     );
   }
-  if (board.rows.length === 0) return <p className="status-copy">No players on the market.</p>;
+
   return (
     <>
+      <MarketToolbar money={board.money} />
       {board.isDegraded ? (
         <p className="market-notice status-copy" role="status">
           Some market details could not be loaded. Value changes and last
           performances may be incomplete.
         </p>
       ) : null}
-      <ul className="market-list">
-        <li className="market-row market-head" aria-hidden="true">
-          <span className="market-head-player">Player</span>
-          <span>Position</span>
-          <span>FSYP</span>
-          <span>Form</span>
-          <span>Market value</span>
-          <span>Availability</span>
-          <span>Average score</span>
-          <span>Seal end</span>
-          <span>Seller</span>
-        </li>
-        {board.rows.map((row) => (
-          <MarketListRow key={row.id} row={row} now={now} />
-        ))}
-      </ul>
+      {marketActions.message ? (
+        <p className="status-copy" role="alert">
+          {marketActions.message}
+        </p>
+      ) : null}
+      {board.rows.length === 0 ? (
+        <p className="status-copy">No players on the market.</p>
+      ) : (
+        <ul className="market-list">
+          <li className="market-row market-head" aria-hidden="true">
+            <span className="market-head-player">Player</span>
+            <span>Position</span>
+            <span>FSYP</span>
+            <span>Form</span>
+            <span>Market value</span>
+            <span>Availability</span>
+            <span>Average score</span>
+            <span>Seal end</span>
+            <span>Sell options</span>
+          </li>
+          {board.rows.map((row) => (
+            <MarketRowView
+              key={row.id}
+              row={row}
+              now={now}
+              actionContext={actionContext}
+              actions={marketActions}
+            />
+          ))}
+        </ul>
+      )}
+      <BidDialog
+        open={marketActions.pendingBid != null}
+        row={marketActions.pendingBid?.row ?? null}
+        kind={marketActions.pendingBid?.kind ?? null}
+        money={board.money}
+        squadMarketValue={board.squadMarketValue}
+        initialAmount={marketActions.pendingBid?.initialAmount ?? null}
+        pending={marketActions.actionPending}
+        onClose={marketActions.closeBid}
+        onConfirm={marketActions.submitBid}
+      />
+      <ClauseDialog
+        open={marketActions.pendingClause != null}
+        row={marketActions.pendingClause?.row ?? null}
+        amount={marketActions.pendingClause?.amount ?? 0}
+        pending={marketActions.actionPending}
+        onClose={marketActions.closeClause}
+        onConfirm={marketActions.confirmClause}
+      />
     </>
   );
 }
@@ -208,7 +101,6 @@ export function MarketPage() {
   if (status !== "ready") return <GatePanel status={status} />;
   return (
     <section className="market-page">
-      <h1>Market</h1>
       <MarketList />
     </section>
   );

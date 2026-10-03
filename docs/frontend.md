@@ -14,7 +14,7 @@ Full pages (league selector and shell header included):
 
 ![Lineup screen — formation controls, standings, pitch, and squad](images/lineup.png)
 
-![Market screen — read-only listings table](images/market.png)
+![Market screen — listings table with actions](images/market.png)
 
 Three-column lineup layout (standings, pitch, paginated squad):
 
@@ -68,11 +68,18 @@ Shared player tiles and score badges are reused on the market table.
 ## Market screen
 
 Feature code under `frontend/src/features/market/`. The table matches the
-[Market screenshot](#screenshots): player tile, position badge (including coach),
-FSYP, last performance badges (past matchweeks only), price with variation,
-availability, average, seal
-countdown, and seller (`LALIGA` for official listings). The board is **read-only**:
-no bids, listings, or offers from the UI (aligned with read-only CLIs).
+[Market screenshot](#screenshots): player tile, position badge (coach uses id
+5 / `COA`), FSYP, last performance badges (past matchweeks only), price with
+variation, availability icons, average, seal countdown, and seller (`LALIGA` for
+official listings). A toolbar shows **your money** (`GET /teams/{team_id}/money`
+with league fallback). Each row exposes an **Actions** menu when applicable:
+**Hire** (LaLiga listings), **Purchase bid** (opponent listings), **Modify bid**
+(when you already bid), and **Pay release clause** (unlocked buyout on an
+opponent squad entry). Mutations require confirmation in a dialog; automated
+CLIs remain read-only.
+
+Seller names link to `/?team={teamId}` on the lineup screen when a seller team
+id is present (standing must include that team).
 
 `useMarketBoard` loads and joins:
 
@@ -85,25 +92,28 @@ no bids, listings, or offers from the UI (aligned with read-only CLIs).
    value trend and variation columns.
 5. `GET /api/calendar/weeks/{week}/stats` — points for the last few weeks to
    build last-performance badges.
+6. `GET /api/teams/{team_id}/money` — caller balance for the toolbar and bid
+   validation.
 
-Row shaping and defensive parsing live in `marketRows.ts` (unit tests in
-`marketRows.test.ts`). Listing records may appear under several Fantasy keys;
-the API normalizes the snapshot object before OpenAPI validation; the client
-still tolerates wrapper keys when joining catalog data.
+Row shaping lives under `features/market/model/` (barrel `marketRows.ts`; tests
+in `marketRows.test.ts` and `actions/marketActions.test.ts`). Listing records
+may appear under several Fantasy keys; the API normalizes the snapshot object
+before OpenAPI validation; the client still tolerates wrapper keys when joining
+catalog data.
 
 ### Table columns (user-facing)
 
 | Column | Source (conceptual) |
 |--------|---------------------|
-| Player | Master id + catalog media |
+| Player | Master id + catalog media; Actions menu when bids or clause pay apply |
 | Position | `positionId` (coach uses id 5) |
 | FSYP | Season or listing points field when present |
 | Form | Last three **played** matchweek scores with `F{n}` labels (open week excluded) |
 | Market value | Listing price; variation from market-value history |
-| Availability | Maps Fantasy `playerStatus` to available / questionable / unavailable |
+| Availability | Maps Fantasy `playerStatus` to asset icons (available / questionable / unavailable) |
 | Average score | Listing average when present |
 | Seal ends| Listing expiration countdown |
-| Seller | Manager or `LALIGA` for official listings |
+| Seller | Manager (link to lineup when team id known) or `LALIGA` |
 
 ## Layout conventions
 

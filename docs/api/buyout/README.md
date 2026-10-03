@@ -43,6 +43,9 @@ forwards whatever the client supplies.
   the league id, squad-entry id, and shield body. `fantasy-browser-session
   buyout-analysis` is **read-only** (shield status only; no pay, increase, or
   activate in automated flows).
+- **Frontend:** the market screen may call `POST .../pay` after user confirmation
+  when a release clause is unlocked; no automated pay from CLIs or browser
+  session flows.
 
 ```bash
 cd backend/api

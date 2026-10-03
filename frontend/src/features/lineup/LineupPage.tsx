@@ -1,4 +1,5 @@
 import { useEffect, type CSSProperties } from "react";
+import { useSearchParams } from "react-router-dom";
 
 import { pointsLabel, possessiveName, scoreWeekLabel } from "../../api/mappers";
 import { PersonIcon, SearchIcon, WarningIcon } from "../shell/icons";
@@ -27,7 +28,8 @@ function scorePointsLabel(weekLoading: boolean, points: number | null): string {
 }
 
 export function LineupPage() {
-  const board = useLineupBoard();
+  const [searchParams] = useSearchParams();
+  const board = useLineupBoard({ initialTeamId: searchParams.get("team") });
   const owner = possessiveName(board.titleName);
   useEffect(() => {
     if (!board.pitchSelection) return;

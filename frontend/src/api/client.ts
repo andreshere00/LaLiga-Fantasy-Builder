@@ -28,9 +28,43 @@ export const paths = {
   lineup: (teamId: string) => `/api/teams/${segment(teamId)}/lineup`,
   lineupWeek: (teamId: string, week: number) =>
     `/api/teams/${segment(teamId)}/lineup/week/${week}`,
+  teamMoney: (teamId: string) => `/api/teams/${segment(teamId)}/money`,
+  marketDirectOffer: (leagueId: string) =>
+    `/api/market/leagues/${segment(leagueId)}/direct-offers`,
+  marketBid: (leagueId: string, marketId: string) =>
+    `/api/market/leagues/${segment(leagueId)}/${segment(marketId)}/bids`,
+  marketBidUpdate: (leagueId: string, marketId: string, bidId: string) =>
+    `/api/market/leagues/${segment(leagueId)}/${segment(marketId)}/bids/${segment(bidId)}`,
+  buyoutPay: (leagueId: string, playerTeamId: string) =>
+    `/api/buyout/leagues/${segment(leagueId)}/player-teams/${segment(playerTeamId)}/pay`,
 };
 
 export type PutJsonOptions = GetJsonOptions;
+export type PostJsonOptions = GetJsonOptions;
+
+type SendJsonOptions = GetJsonOptions & { method: "PUT" | "POST" };
+
+async function sendJson(
+  path: string,
+  token: string,
+  body: unknown,
+  options: SendJsonOptions,
+): Promise<unknown> {
+  const fetchFn = options.fetchFn ?? fetch;
+  const response = await fetchFn(path, {
+    method: options.method,
+    credentials: "omit",
+    headers: {
+      Accept: "application/json",
+      Authorization: `Bearer ${token}`,
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify(body),
+    signal: options.signal,
+  });
+  if (!response.ok) await throwForStatus(response);
+  return response.json() as Promise<unknown>;
+}
 
 export async function getJson(
   path: string,
@@ -56,16 +90,31 @@ export async function putJson(
   body: unknown,
   options: PutJsonOptions = {},
 ): Promise<unknown> {
+  return sendJson(path, token, body, { ...options, method: "PUT" });
+}
+
+export async function postJson(
+  path: string,
+  token: string,
+  body: unknown,
+  options: PostJsonOptions = {},
+): Promise<unknown> {
+  return sendJson(path, token, body, { ...options, method: "POST" });
+}
+
+export async function deleteJson(
+  path: string,
+  token: string,
+  options: GetJsonOptions = {},
+): Promise<unknown> {
   const fetchFn = options.fetchFn ?? fetch;
   const response = await fetchFn(path, {
-    method: "PUT",
+    method: "DELETE",
     credentials: "omit",
     headers: {
       Accept: "application/json",
       Authorization: `Bearer ${token}`,
-      "Content-Type": "application/json",
     },
-    body: JSON.stringify(body),
     signal: options.signal,
   });
   if (!response.ok) await throwForStatus(response);

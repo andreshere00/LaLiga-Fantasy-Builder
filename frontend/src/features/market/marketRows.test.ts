@@ -6,17 +6,9 @@ import {
   formPoints,
   formRecentPoints,
   formRecentWeekNumbers,
-  marketDisplayName,
   marketRow,
   recentFormWeekNumbers,
 } from "./marketRows";
-
-describe("marketDisplayName", () => {
-  it("marketDisplayName_appends_coach_label_for_position_five", () => {
-    expect(marketDisplayName("Luís Castro", null, 5)).toBe("Luís Castro (Coach)");
-    expect(marketDisplayName(null, "Full Name", 4)).toBe("Full Name");
-  });
-});
 
 describe("form helpers", () => {
   it("formPoints_sums_last_five_matchweeks", () => {
@@ -79,23 +71,47 @@ describe("form helpers", () => {
     const row = marketRow(
       { id: "m1", playerMaster: { id: "9", nickname: "A", positionId: 4 } },
       0,
-      new Map(),
-      new Map(),
-      new Map(),
-      { weekNumbers: [7, 6], statsByWeek, playedThrough: 7 },
+      {
+        catalog: new Map(),
+        history: new Map(),
+        calendarForm: { weekNumbers: [7, 6], statsByWeek, playedThrough: 7 },
+      },
     );
     expect(row.form).toBe(8);
     expect(row.formRecent).toEqual([3, 5]);
     expect(row.formRecentWeeks).toEqual([7, 6]);
   });
 
-  it("marketRow_labels_coaches_in_the_name", () => {
+  it("marketRow_keeps_coach_name_without_suffix", () => {
     const row = marketRow(
       { id: "m1", playerMaster: { id: "2877", nickname: "Luís Castro", positionId: 5 } },
       0,
-      new Map(),
-      new Map(),
+      { catalog: new Map(), history: new Map() },
     );
-    expect(row.name).toBe("Luís Castro (Coach)");
+    expect(row.name).toBe("Luís Castro");
+  });
+
+  it("marketRow_maps_seller_team_and_clause_fields", () => {
+    const row = marketRow(
+      {
+        id: "mk-1",
+        playerMaster: { id: "1", nickname: "P", marketValue: 100 },
+        sellerTeam: { id: "team-9", manager: { managerName: "Rival" } },
+        playerTeam: {
+          playerTeamId: "pt-1",
+          buyoutClause: 500_000,
+          buyoutClauseLockedEndTime: "2020-01-01T00:00:00Z",
+          isShielded: false,
+        },
+        bid: { id: "bid-1", money: 120 },
+      },
+      0,
+      { catalog: new Map(), history: new Map(), callerTeamId: "team-me" },
+    );
+    expect(row.sellerTeamId).toBe("team-9");
+    expect(row.playerTeamId).toBe("pt-1");
+    expect(row.buyoutClause).toBe(500_000);
+    expect(row.myBid).toEqual({ id: "bid-1", money: 120 });
+    expect(row.sellerKind).toBe("opponent");
   });
 });

@@ -35,6 +35,7 @@ export type FantasyLeague = {
   name?: string | null;
   team?: {
     id?: string | number | null;
+    money?: number | null;
     teamValue?: number | null;
     manager?: ManagerInfo | null;
   } | null;
@@ -498,15 +499,7 @@ export function mapRanking(
     });
 }
 
-export function formatTeamValue(value: number | null | undefined): string {
-  if (value == null || Number.isNaN(value)) return "—";
-  return `${new Intl.NumberFormat("es-ES").format(value)} €`;
-}
-
-export function pointsLabel(points: number | null | undefined): string {
-  if (points == null || Number.isNaN(points)) return "—";
-  return `${new Intl.NumberFormat("es-ES").format(points)} p`;
-}
+export { formatEuro, formatTeamValue, pointsLabel } from "./format";
 
 export function formationLabel(value: readonly number[] | null | undefined): string {
   if (!value || value.length === 0) return "—";
@@ -836,6 +829,18 @@ export function squadCards(
 
 export function playersOf(team: unknown): unknown {
   return asRecord(team)?.players ?? [];
+}
+
+/** Parses squad size from a team payload. */
+export function squadPlayerCountFromTeam(team: unknown): number | null {
+  const players = playersOf(team);
+  return Array.isArray(players) ? players.length : null;
+}
+
+/** Parses squad market value from a team or standing payload. */
+export function teamValueFromPayload(data: unknown): number | null {
+  const record = asRecord(data);
+  return asFiniteNumber(record?.teamValue);
 }
 
 export function hasPlayers(groups: readonly LineupGroup[]): boolean {

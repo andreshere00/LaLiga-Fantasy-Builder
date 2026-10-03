@@ -44,8 +44,9 @@ Wrong types (for example a top-level string) still fail closed as **502**
 (`UpstreamError`), not an empty 200. Tests cover a captured snapshot fixture,
 array, null, and nested `market` cases in `tests/test_market.py`.
 
-The [Frontend](../frontend.md) market board consumes this route read-only and
-joins catalog and calendar data client-side.
+The [Frontend](../frontend.md) market board reads this route and joins catalog
+and calendar data client-side. The UI may also call bid create/update routes
+(user-confirmed actions only; CLIs stay read-only).
 
 ![Market UI — listings table](../../images/market.png)
 

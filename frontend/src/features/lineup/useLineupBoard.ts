@@ -10,6 +10,12 @@ import {
 import { getJson, paths, putJson } from "../../api/client";
 import { ApiError, NeedsReauthError } from "../../api/errors";
 import {
+  CATALOG_STALE_MS,
+  useCurrentWeekQuery,
+  usePlayersCatalogQuery,
+  useReauthOnError,
+} from "../../api/queries";
+import {
   asCurrentWeek,
   asStanding,
   avatarsByTeamId,
@@ -145,7 +151,12 @@ export function lineupSourceKey(leagueKey: string, teamId: string, week: number)
   return `${leagueKey}:${teamId}:${week}`;
 }
 
-export function useLineupBoard(): LineupBoard {
+export type UseLineupBoardOptions = {
+  initialTeamId?: string | null;
+};
+
+export function useLineupBoard(options: UseLineupBoardOptions = {}): LineupBoard {
+  const initialTeamId = options.initialTeamId?.trim() || null;
   const queryClient = useQueryClient();
   const { accessToken, managerName, managerAvatar, markNeedsReauth } = useAuth();
   const { selected, isLoading: leaguesLoading, error: leaguesError } = useLeague();
@@ -174,18 +185,8 @@ export function useLineupBoard(): LineupBoard {
   const enabled = leagueKey.length > 0 && accessToken != null;
   const token = accessToken ?? "";
 
-  const currentQuery = useQuery({
-    queryKey: ["calendar", "current"],
-    enabled: accessToken != null,
-    queryFn: ({ signal }) => getJson(paths.currentWeek(), token, { signal }),
-  });
-
-  const catalogQuery = useQuery({
-    queryKey: ["players", "catalog"],
-    enabled: accessToken != null,
-    staleTime: 60 * 60 * 1000,
-    queryFn: ({ signal }) => getJson(paths.playersCatalog(), token, { signal }),
-  });
+  const currentQuery = useCurrentWeekQuery(accessToken != null);
+  const catalogQuery = usePlayersCatalogQuery(accessToken != null, CATALOG_STALE_MS);
 
   const standingQuery = useQuery({
     queryKey: ["standing", leagueKey],
@@ -217,7 +218,23 @@ export function useLineupBoard(): LineupBoard {
     queryFn: ({ signal }) => getJson(paths.weekStanding(leagueKey, week), token, { signal }),
   });
 
-  const activeTeamId = leagueChanged ? callerId : (pickedTeamId ?? callerId);
+  const standingTeamIds = useMemo(
+    () => [
+      ...new Set(
+        asStanding(standingQuery.data)
+          .map((row) => teamIdOf(row))
+          .filter((id) => id.length > 0),
+      ),
+    ],
+    [standingQuery.data],
+  );
+
+  const validInitialTeamId = useMemo(() => {
+    if (!initialTeamId) return null;
+    return standingTeamIds.includes(initialTeamId) ? initialTeamId : null;
+  }, [initialTeamId, standingTeamIds]);
+
+  const activeTeamId = pickedTeamId ?? validInitialTeamId ?? callerId;
   const activeKey =
     leagueKey.length > 0 && activeTeamId != null
       ? lineupSourceKey(leagueKey, activeTeamId, week)
@@ -237,16 +254,6 @@ export function useLineupBoard(): LineupBoard {
       getJson(paths.team(leagueKey, activeTeamId ?? ""), token, { signal }),
   });
 
-  const standingTeamIds = useMemo(
-    () => [
-      ...new Set(
-        asStanding(standingQuery.data)
-          .map((row) => teamIdOf(row))
-          .filter((id) => id.length > 0),
-      ),
-    ],
-    [standingQuery.data],
-  );
   const knownAvatars = useMemo(() => {
     const map = avatarsByTeamId(teamsQuery.data);
     for (const [key, url] of avatarsByTeamId(teamQuery.data)) {
@@ -351,7 +358,7 @@ export function useLineupBoard(): LineupBoard {
     scoreLookup,
   ]);
 
-  const needsReauth = [
+  useReauthOnError([
     leaguesError,
     currentQuery.error,
     standingQuery.error,
@@ -361,11 +368,7 @@ export function useLineupBoard(): LineupBoard {
     ...peerTeamQueries.map((query) => query.error),
     lineupQuery.error,
     weekStatsQuery.error,
-  ].some((error) => error instanceof NeedsReauthError);
-
-  useEffect(() => {
-    if (needsReauth) markNeedsReauth();
-  }, [needsReauth, markNeedsReauth]);
+  ]);
 
   const avatarByTeamId = useMemo(() => {
     const map = new Map(knownAvatars);
