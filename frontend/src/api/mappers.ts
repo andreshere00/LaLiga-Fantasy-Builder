@@ -607,6 +607,16 @@ export function weekPointsForTeam(rows: readonly StandingRow[], teamId: string):
   return match.points;
 }
 
+/** Sum of the lineup players' fixture points, or null when none has a score. */
+export function lineupFixtureTotal(groups: readonly LineupGroup[]): number | null {
+  const scores = groups
+    .flatMap((group) => group.players)
+    .filter((player) => !player.isEmpty)
+    .map((player) => player.fixturePoints)
+    .filter((points): points is number => points != null);
+  return scores.length === 0 ? null : scores.reduce((total, points) => total + points, 0);
+}
+
 export function selectedTeamValue(
   ranking: readonly RankingEntry[],
   teamId: string | null,

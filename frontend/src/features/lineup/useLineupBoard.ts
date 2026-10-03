@@ -37,6 +37,7 @@ import {
   groupsFromLineup,
   hasPlayers,
   lastPlayedWeek,
+  lineupFixtureTotal,
   leagueId,
   mapRanking,
   maxWeek,
@@ -671,7 +672,10 @@ export function useLineupBoard(options: UseLineupBoardOptions = {}): LineupBoard
       setOpponentLineupNoticeOpen(false);
       setSquadSearch("");
     },
-    scorePoints: activeTeamId ? weekPointsForTeam(weekRows, activeTeamId) : null,
+    scorePoints: activeTeamId
+      ? (weekPointsForTeam(weekRows, activeTeamId) ??
+        (fixtureScoresVisible ? lineupFixtureTotal(groups) : null))
+      : null,
     weekLoading: weekQuery.isLoading,
     formation:
       draft && editable

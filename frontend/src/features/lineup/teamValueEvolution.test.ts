@@ -3,11 +3,6 @@ import { describe, expect, it } from "vitest";
 import { DAY_MS } from "../market/model/valueSeries";
 import { teamValueEvolutionSnapshot } from "./teamValueEvolution";
 
-function series(dayOffset: number, value: number) {
-  const base = Date.parse("2026-01-15T12:00:00Z");
-  return [{ time: base + dayOffset * DAY_MS, value }];
-}
-
 describe("teamValueEvolutionSnapshot", () => {
   it("teamValueEvolutionSnapshot_sums_squad_histories_at_each_lookback", () => {
     const base = Date.parse("2026-01-15T12:00:00Z");

@@ -13,6 +13,7 @@ import { SQUAD_PICKER_EMPTY_MESSAGE } from "./playerTileCopy";
 import { squadCountLabel } from "./squadPanel";
 import { CurrentFixtureTooltip } from "./CurrentFixtureTooltip";
 import { OpponentLineupNotice } from "./OpponentLineupNotice";
+import { PitchMotionProvider, PitchTileMotion } from "./PitchMotion";
 import { PlayedFixtureNotice } from "./PlayedFixtureNotice";
 import { PlayerTile } from "./PlayerTile";
 import { TeamValueBox } from "./TeamValueBox";
@@ -65,6 +66,9 @@ export function LineupPage() {
   }
 
   const picking = board.pitchSelection != null;
+  const tileOrder = new Map(
+    board.groups.flatMap((group) => group.players).map((player, index) => [player.id, index]),
+  );
 
   return (
     <section className="lineup-page" data-layout-profile={LINEUP_LAYOUT_PROFILE}>
@@ -259,7 +263,8 @@ export function LineupPage() {
               </p>
             ) : null}
             {board.pitchEmpty ? <p className="pitch-note">Lineup unavailable</p> : null}
-            <div className="pitch-rows">
+            <PitchMotionProvider>
+            <div className="pitch-rows" key={`${board.selectedTeamId}-${board.week}`}>
               {board.groups.map((group) => {
                 const rows = pitchRows(group.players, group.role);
                 if (rows.length === 0) return null;
@@ -282,9 +287,15 @@ export function LineupPage() {
                               board.pitchSelection?.playerId === player.id &&
                               board.pitchSelection.role === group.role;
                             const empty = player.isEmpty === true;
+                            const interactive =
+                              board.editable || (board.isPastFixture && !empty);
                             return (
-                              <PlayerTile
+                              <PitchTileMotion
                                 key={player.id}
+                                order={tileOrder.get(player.id) ?? 0}
+                                lift={interactive}
+                              >
+                              <PlayerTile
                                 name={player.name}
                                 captain={!empty && player.id === board.captainId}
                                 variant="pitch"
@@ -297,14 +308,13 @@ export function LineupPage() {
                                     : null
                                 }
                                 isMvp={board.fixtureScoresVisible && player.isMvp === true}
-                                interactive={
-                                  board.editable || (board.isPastFixture && !empty)
-                                }
+                                interactive={interactive}
                                 selected={selected}
                                 onSelect={() =>
                                   board.selectPitchPlayer(group.role, player.id)
                                 }
                               />
+                              </PitchTileMotion>
                             );
                           })}
                         </div>
@@ -314,6 +324,7 @@ export function LineupPage() {
                 );
               })}
             </div>
+            </PitchMotionProvider>
           </div>
         </div>
 

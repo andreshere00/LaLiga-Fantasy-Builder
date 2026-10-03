@@ -7,6 +7,7 @@ import {
   defaultWeek,
   fixtureScoresVisibleForWeek,
   lastPlayedWeek,
+  lineupFixtureTotal,
   formatTeamValue,
   formationLabel,
   freeFormationCodesFromLineup,
@@ -486,6 +487,27 @@ describe("matchday bounds", () => {
     expect(clampWeek(0, 8)).toBe(1);
     expect(clampWeek(9, 8)).toBe(8);
     expect(clampWeek(3, 8)).toBe(3);
+  });
+});
+
+describe("lineupFixtureTotal", () => {
+  it("lineupFixtureTotal_sums_scored_players_and_ignores_empty_slots", () => {
+    const groups = [
+      {
+        role: "goalkeeper" as const,
+        players: [
+          { id: "a", name: "A", fixturePoints: 7 },
+          { id: "b", name: "B", fixturePoints: -1 },
+          { id: "c", name: "C", fixturePoints: 9, isEmpty: true },
+          { id: "d", name: "D" },
+        ],
+      },
+    ];
+    expect(lineupFixtureTotal(groups)).toBe(6);
+  });
+
+  it("lineupFixtureTotal_without_scores_returns_null", () => {
+    expect(lineupFixtureTotal([{ role: "defender", players: [{ id: "a", name: "A" }] }])).toBeNull();
   });
 });
 
