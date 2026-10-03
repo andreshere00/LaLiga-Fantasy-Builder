@@ -61,6 +61,16 @@ describe("form helpers", () => {
     expect(result.form).toBe(6);
   });
 
+  it("formRecentPoints_excludes_open_matchweek_from_lastStats", () => {
+    const lastStats = [
+      { weekNumber: 8, totalPoints: 0 },
+      { weekNumber: 7, totalPoints: 5 },
+      { weekNumber: 6, totalPoints: 4 },
+    ];
+    expect(formRecentPoints(lastStats, 7)).toEqual([5, 4]);
+    expect(formRecentWeekNumbers(lastStats, 7)).toEqual([7, 6]);
+  });
+
   it("marketRow_uses_calendar_form_when_lastStats_missing", () => {
     const statsByWeek = new Map<number, Map<string, number>>([
       [7, new Map([["9", 3]])],
@@ -72,7 +82,7 @@ describe("form helpers", () => {
       new Map(),
       new Map(),
       new Map(),
-      { weekNumbers: [7, 6], statsByWeek },
+      { weekNumbers: [7, 6], statsByWeek, playedThrough: 7 },
     );
     expect(row.form).toBe(8);
     expect(row.formRecent).toEqual([3, 5]);

@@ -69,7 +69,8 @@ Shared player tiles and score badges are reused on the market table.
 
 Feature code under `frontend/src/features/market/`. The table matches the
 [Market screenshot](#screenshots): player tile, position badge (including coach),
-FSYP, recent form badges, price with variation, availability, average, seal
+FSYP, last performance badges (past matchweeks only), price with variation,
+availability, average, seal
 countdown, and seller (`LALIGA` for official listings). The board is **read-only**:
 no bids, listings, or offers from the UI (aligned with read-only CLIs).
 
@@ -78,11 +79,12 @@ no bids, listings, or offers from the UI (aligned with read-only CLIs).
 1. `GET /api/market/leagues/{league_id}` — current listings for the selected
    league (`MarketSnapshot`; see [Market API](api/market/README.md)).
 2. `GET /api/players` — master catalog for names, photos, and positions.
-3. `GET /api/calendar/current` — infer recent matchweeks for form.
+3. `GET /api/calendar/current` — infer the last played matchweek and recent
+   weeks for last performances (excludes the open matchweek).
 4. `GET /api/players/{player_id}/market-value` — per listed master id, for
    value trend and variation columns.
 5. `GET /api/calendar/weeks/{week}/stats` — points for the last few weeks to
-   build form badges.
+   build last-performance badges.
 
 Row shaping and defensive parsing live in `marketRows.ts` (unit tests in
 `marketRows.test.ts`). Listing records may appear under several Fantasy keys;
@@ -96,11 +98,11 @@ still tolerates wrapper keys when joining catalog data.
 | Player | Master id + catalog media |
 | Position | `positionId` (coach uses id 5) |
 | FSYP | Season or listing points field when present |
-| Form | Last three matchweek scores from calendar stats |
+| Form | Last three **played** matchweek scores with `F{n}` labels (open week excluded) |
 | Market value | Listing price; variation from market-value history |
 | Availability | Maps Fantasy `playerStatus` to available / questionable / unavailable |
-| Average | Listing average when present |
-| Seal ends on | Listing expiration countdown |
+| Average score | Listing average when present |
+| Seal ends| Listing expiration countdown |
 | Seller | Manager or `LALIGA` for official listings |
 
 ## Layout conventions

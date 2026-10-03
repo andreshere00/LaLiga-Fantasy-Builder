@@ -3,7 +3,7 @@ import { useQueries, useQuery } from "@tanstack/react-query";
 
 import { getJson, paths } from "../../api/client";
 import { NeedsReauthError } from "../../api/errors";
-import { defaultWeek, leagueId, weekPointsByMasterId } from "../../api/mappers";
+import { lastPlayedWeek, leagueId, weekPointsByMasterId } from "../../api/mappers";
 import type { CurrentWeek } from "../../api/mappers";
 import { useAuth } from "../../auth/AuthProvider";
 import { useLeague } from "../lineup/LeagueProvider";
@@ -31,15 +31,17 @@ export type MarketBoard = {
 function calendarFormFromStats(
   weekNumbers: readonly number[],
   statsResponses: readonly { data: unknown }[],
+  playedThrough: number,
 ): {
   weekNumbers: readonly number[];
   statsByWeek: Map<number, Map<string, number>>;
+  playedThrough: number;
 } {
   const statsByWeek = new Map<number, Map<string, number>>();
   weekNumbers.forEach((week, index) => {
     statsByWeek.set(week, weekPointsByMasterId(statsResponses[index]?.data));
   });
-  return { weekNumbers, statsByWeek };
+  return { weekNumbers, statsByWeek, playedThrough };
 }
 
 /** Loads the league market, joins it with the catalog and value histories. */
@@ -67,10 +69,15 @@ export function useMarketBoard(): MarketBoard {
     queryFn: ({ signal }) => getJson(paths.currentWeek(), token, { signal }),
   });
 
-  const formWeekNumbers = useMemo(() => {
-    if (currentWeekQuery.data == null) return [];
-    return recentFormWeekNumbers(defaultWeek(currentWeekQuery.data as CurrentWeek));
+  const playedThrough = useMemo(() => {
+    if (currentWeekQuery.data == null) return 0;
+    return lastPlayedWeek(currentWeekQuery.data as CurrentWeek);
   }, [currentWeekQuery.data]);
+
+  const formWeekNumbers = useMemo(() => {
+    if (playedThrough < 1) return [];
+    return recentFormWeekNumbers(playedThrough);
+  }, [playedThrough]);
 
   const items = useMemo(() => marketItems(marketQuery.data), [marketQuery.data]);
   const playerIds = useMemo(
@@ -139,8 +146,9 @@ export function useMarketBoard(): MarketBoard {
       calendarFormFromStats(
         formWeekNumbers,
         weekStatsData.map((data) => ({ data })),
+        playedThrough,
       ),
-    [formWeekNumbers, ...weekStatsData],
+    [formWeekNumbers, playedThrough, ...weekStatsData],
   );
 
   const rows = useMemo(() => {

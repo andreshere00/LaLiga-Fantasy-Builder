@@ -80,9 +80,12 @@ export function availabilityOf(status: unknown): Availability {
   return QUESTIONABLE.has(value) ? "questionable" : "unavailable";
 }
 
-function recentFormWeeks(lastStats: unknown): { week: number; points: number }[] {
+function recentFormWeeks(
+  lastStats: unknown,
+  playedThrough: number | null = null,
+): { week: number; points: number }[] {
   if (!Array.isArray(lastStats)) return [];
-  return lastStats
+  let rows = lastStats
     .map(asRecord)
     .filter((row): row is Record<string, unknown> => row != null)
     .map((row) => ({
@@ -90,25 +93,39 @@ function recentFormWeeks(lastStats: unknown): { week: number; points: number }[]
       points:
         asFiniteNumber(row.totalPoints) ?? asFiniteNumber(row.weekPoints),
     }))
-    .filter((row): row is { week: number; points: number } => row.points != null)
-    .sort((left, right) => right.week - left.week)
-    .slice(0, FORM_MATCHES);
+    .filter(
+      (row): row is { week: number; points: number } =>
+        row.points != null && row.week >= 1,
+    );
+  if (playedThrough != null && playedThrough >= 1) {
+    rows = rows.filter((row) => row.week <= playedThrough);
+  }
+  return rows.sort((left, right) => right.week - left.week).slice(0, FORM_MATCHES);
 }
 
 /** Sum of the points from the latest five played matchweeks. */
-export function formPoints(lastStats: unknown): number | null {
-  const weeks = recentFormWeeks(lastStats);
+export function formPoints(
+  lastStats: unknown,
+  playedThrough: number | null = null,
+): number | null {
+  const weeks = recentFormWeeks(lastStats, playedThrough);
   return weeks.length === 0 ? null : weeks.reduce((sum, row) => sum + row.points, 0);
 }
 
 /** Latest five matchweek scores, newest first. */
-export function formRecentPoints(lastStats: unknown): number[] {
-  return recentFormWeeks(lastStats).map((row) => row.points);
+export function formRecentPoints(
+  lastStats: unknown,
+  playedThrough: number | null = null,
+): number[] {
+  return recentFormWeeks(lastStats, playedThrough).map((row) => row.points);
 }
 
 /** Matchweek numbers aligned with ``formRecentPoints`` (newest first, at most three). */
-export function formRecentWeekNumbers(lastStats: unknown): number[] {
-  return recentFormWeeks(lastStats)
+export function formRecentWeekNumbers(
+  lastStats: unknown,
+  playedThrough: number | null = null,
+): number[] {
+  return recentFormWeeks(lastStats, playedThrough)
     .map((row) => row.week)
     .slice(0, FORM_DISPLAY_MATCHES);
 }
@@ -170,14 +187,11 @@ function lastStatsFromLeagueCard(card: unknown): unknown {
   return master?.lastStats ?? record?.lastStats;
 }
 
-/** Matchweek numbers from ``current`` down to 1 (newest first, at most ``count``). */
-export function recentFormWeekNumbers(
-  currentWeek: number,
-  count = FORM_MATCHES,
-): number[] {
-  if (!Number.isFinite(currentWeek) || currentWeek < 1) return [];
+/** Matchweek numbers from ``playedThrough`` down to 1 (newest first, at most ``count``). */
+export function recentFormWeekNumbers(playedThrough: number, count = FORM_MATCHES): number[] {
+  if (!Number.isFinite(playedThrough) || playedThrough < 1) return [];
   const weeks: number[] = [];
-  for (let week = currentWeek; week >= 1 && weeks.length < count; week -= 1) {
+  for (let week = playedThrough; week >= 1 && weeks.length < count; week -= 1) {
     weeks.push(week);
   }
   return weeks;
@@ -286,6 +300,7 @@ export function marketRow(
   calendarForm?: {
     weekNumbers: readonly number[];
     statsByWeek: ReadonlyMap<number, ReadonlyMap<string, number>>;
+    playedThrough: number;
   },
 ): MarketRow {
   const playerId = masterIdOf(item);
@@ -306,9 +321,13 @@ export function marketRow(
   const media = mediaFromPlayerMaster(master);
   const valueHistory = playerId ? (history.get(playerId) ?? []) : [];
   const positionId = asFiniteNumber(master.positionId);
-  let form = formPoints(master.lastStats);
-  let formRecent = formRecentPoints(master.lastStats);
-  let formRecentWeeks = formRecentWeekNumbers(master.lastStats);
+  const playedThrough =
+    calendarForm != null && calendarForm.playedThrough >= 1
+      ? calendarForm.playedThrough
+      : null;
+  let form = formPoints(master.lastStats, playedThrough);
+  let formRecent = formRecentPoints(master.lastStats, playedThrough);
+  let formRecentWeeks = formRecentWeekNumbers(master.lastStats, playedThrough);
   if (form == null && calendarForm) {
     const fromCalendar = formFromCalendarWeeks(
       playerId,

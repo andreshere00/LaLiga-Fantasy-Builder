@@ -523,6 +523,16 @@ export function defaultWeek(current: CurrentWeek): number {
   return 1;
 }
 
+/** Latest matchweek with finished fixtures (excludes the open ``weekNumber``). */
+export function lastPlayedWeek(current: CurrentWeek): number {
+  if (current.previousWeek != null && current.previousWeek >= 1) {
+    return current.previousWeek;
+  }
+  const open = current.weekNumber;
+  if (open != null && open > 1) return open - 1;
+  return 0;
+}
+
 export function maxWeek(current: CurrentWeek): number {
   if (current.weekNumber != null && current.weekNumber >= 1) return current.weekNumber;
   return 1;

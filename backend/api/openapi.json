@@ -3984,7 +3984,7 @@
                 "type": "null"
               }
             ],
-            "title": "Averagepoints"
+            "title": "Average scorepoints"
           },
           "weekPoints": {
             "anyOf": [
@@ -5969,7 +5969,7 @@
                 "type": "null"
               }
             ],
-            "title": "Averagepoints"
+            "title": "Average scorepoints"
           },
           "images": {
             "anyOf": [

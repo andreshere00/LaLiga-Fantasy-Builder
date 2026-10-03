@@ -1,6 +1,6 @@
 import { useEffect, useState, type ReactElement } from "react";
 
-import { formatTeamValue, pointsLabel } from "../../api/mappers";
+import { formatTeamValue, pointsLabel, scoreWeekLabel } from "../../api/mappers";
 import { useAuth } from "../../auth/AuthProvider";
 import { GatePanel } from "../gates/GatePanel";
 import { PlayerScoreBadge, PlayerTile } from "../lineup/PlayerTile";
@@ -49,15 +49,31 @@ function averageLabel(value: number | null): string {
   return value == null ? "—" : value.toFixed(2);
 }
 
-function FormCell({ row }: { row: MarketRow }) {
+function LastPerformancesCell({ row }: { row: MarketRow }) {
   const scores = formDisplayPoints(row.formRecent);
   if (scores.length === 0) return <>—</>;
+  const weeks = row.formRecentWeeks.slice(0, scores.length);
+  const ariaParts = scores.map((points, index) => {
+    const week = weeks[index];
+    const label = week != null ? scoreWeekLabel(week) : `match ${index + 1}`;
+    return `${label}: ${points}`;
+  });
   return (
-    <span className="market-form-badges" aria-label={`Form: ${scores.join(", ")} points`}>
+    <span
+      className="market-form-badges"
+      aria-label={`Last performances: ${ariaParts.join(", ")} points`}
+    >
       {scores.map((points, index) => {
-        const week = row.formRecentWeeks[index];
+        const week = weeks[index];
         const key = week != null ? `${row.id}-form-w${week}` : `${row.id}-form-${index}`;
-        return <PlayerScoreBadge key={key} points={points} />;
+        return (
+          <span key={key} className="market-form-badge-stack">
+            <PlayerScoreBadge points={points} />
+            <span className="market-form-week" aria-hidden="true">
+              {week != null ? scoreWeekLabel(week) : "—"}
+            </span>
+          </span>
+        );
       })}
     </span>
   );
@@ -112,7 +128,7 @@ function MarketListRow({ row, now }: { row: MarketRow; now: number }) {
         {pointsLabel(row.points)}
       </span>
       <span className="market-cell market-form" data-label="Form">
-        <FormCell row={row} />
+        <LastPerformancesCell row={row} />
       </span>
       <span className="market-cell market-value" data-label="Market value">
         {marketValueLabel(row.marketValue, row.variation, row.variationPercent)}
@@ -124,10 +140,10 @@ function MarketListRow({ row, now }: { row: MarketRow; now: number }) {
         <Icon />
         <span>{label}</span>
       </span>
-      <span className="market-cell" data-label="Average">
+      <span className="market-cell" data-label="Average score">
         {averageLabel(row.averagePoints)}
       </span>
-      <span className="market-cell" data-label="Seal ends on">
+      <span className="market-cell" data-label="Seal end">
         {remainingLabel(row.expiresAt, now)}
       </span>
       <span className="market-cell market-seller" data-label="Seller">
@@ -163,7 +179,8 @@ function MarketList() {
     <>
       {board.isDegraded ? (
         <p className="market-notice status-copy" role="status">
-          Some market details could not be loaded. Value changes and form may be incomplete.
+          Some market details could not be loaded. Value changes and last
+          performances may be incomplete.
         </p>
       ) : null}
       <ul className="market-list">
@@ -174,8 +191,8 @@ function MarketList() {
           <span>Form</span>
           <span>Market value</span>
           <span>Availability</span>
-          <span>Average</span>
-          <span>Seal ends on</span>
+          <span>Average score</span>
+          <span>Seal end</span>
           <span>Seller</span>
         </li>
         {board.rows.map((row) => (
