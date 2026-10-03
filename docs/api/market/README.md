@@ -44,9 +44,13 @@ Wrong types (for example a top-level string) still fail closed as **502**
 (`UpstreamError`), not an empty 200. Tests cover a captured snapshot fixture,
 array, null, and nested `market` cases in `tests/test_market.py`.
 
-The [Frontend](../frontend.md) market board reads this route and joins catalog
-and calendar data client-side. The UI may also call bid create/update routes
-(user-confirmed actions only; CLIs stay read-only).
+## Frontend integration
+
+The [market screen](../frontend.md#market-screen) uses this domain for listings,
+`userBids`, and bid mutations (`POST` / `PUT` / `DELETE` on `…/bids`). UI
+behaviour (eligibility, bidded state, tooltips, pending-bid cache) is documented
+there — not duplicated here. Automated `fantasy-market` and browser-session
+flows remain **read-only**.
 
 ![Market UI — listings table](../../images/market.png)
 

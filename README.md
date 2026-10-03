@@ -1,70 +1,93 @@
 # LaLiga Fantasy Builder
 
-Companion for a LaLiga Fantasy league: lineup and market screens in the
-browser, and an API that reads squads, standings, the market, and buyout
-clauses from Fantasy.
+Companion for a LaLiga Fantasy league: edit your lineup and manage market
+bids from the browser, backed by a small API that proxies Fantasy reads and
+writes with your linked account.
 
 ![Lineup screen](docs/images/lineup.png)
 
-How the pieces fit together: [Architecture](docs/architecture.md). UI tour:
-[Frontend docs](docs/frontend.md).
+| Topic | Doc |
+|-------|-----|
+| Architecture and trust boundaries | [docs/architecture.md](docs/architecture.md) |
+| UI behaviour (lineup + market) | [docs/frontend.md](docs/frontend.md) |
+| API routes and CLIs | [docs/api/README.md](docs/api/README.md) |
+| Agent / contributor rules | [AGENTS.md](AGENTS.md) |
+
+## Main features
+
+### Lineup (`/`)
+
+- Sign in with Keycloak, link LaLiga once, pick a league from the shell.
+- View matchweek standings and open another manager’s team via `/?team={teamId}`.
+- Change formation and save the full lineup to Fantasy.
+- Squad panel with pagination, fixture scores, and squad value in the toolbar.
+
+### Market (`/market`)
+
+- League market table: players, form, availability, seal countdown, and sellers.
+- **Money toolbar** with a warning when balance is negative before matchday.
+- **Bids:** hire LaLiga listings, purchase opponent listings, modify or cancel
+  your bids; UI reflects `userBids` and listing `bid` state with optimistic
+  updates and refetch reconciliation.
+- **Release clauses:** pay opponent buyouts when unlocked (confirmed dialog);
+  tooltips explain lock countdown or premium-only coach hires.
+- **Hover detail:** FSYP breakdown, market-value history (high/low and 5d/14d
+  ago with %), bid amounts, balance and clause warnings.
+- **Seal end** turns red when less than one hour remains on a listing.
+
+### Platform
+
+- **Auth BFF** (`backend/auth`): sessions, OIDC, LaLiga vault, internal JWT.
+- **API** (`backend/api`): leagues, teams, players, calendar, market,
+  buyout — OpenAPI at http://localhost:8001/docs when running locally.
+- **Read-only CLIs** for market and buyout analysis; no automated bidding or
+  clause payment in CLI or browser-session flows.
 
 ## Quick start
 
-`poe up` creates any missing env files, then builds and starts Keycloak, auth,
+`poe up` creates missing env files, then builds and starts Keycloak, auth,
 the API, and the frontend:
 
 ```bash
 uv run poe up
 ```
 
-- App: http://localhost:3000 (`demo` / `demo`). An account that is not linked
-  continues to LaLiga and returns here. The first time on a Mac, run
-  `cd backend/auth && uv run fantasy-browser-session` once and allow
-  LaligaAuthredirect if macOS asks.
+- App: http://localhost:3000 (`demo` / `demo`). First LaLiga link on macOS may
+  need `cd backend/auth && uv run fantasy-browser-session` and allowing
+  LaligaAuthredirect.
 - API docs: http://localhost:8001/docs
 - Keycloak admin: http://localhost:8080 (`admin` / `admin`)
 
-Postgres, Redis, and OpenTelemetry: set `USE_MEMORY_STORE=false`, the vault
-key, and the JWT PEMs in `backend/auth/.env`, then
+Postgres, Redis, and OpenTelemetry: set `USE_MEMORY_STORE=false`, vault key,
+and JWT PEMs in `backend/auth/.env`, then
 `docker compose --profile full up --build`.
 
-To run a service on the host instead of in Compose, use that service README:
-[auth](backend/auth/README.md), [API](backend/api/README.md). Keycloak still
-comes from `docker compose up -d keycloak`.
-
-**Auth, API, and frontend on the host (Vite HMR, no frontend container):**
+**Services on the host (Vite HMR):**
 
 ```bash
-docker compose up -d keycloak   # login
-uv run poe dev                  # from repo root
+docker compose up -d keycloak
+uv run poe dev
 ```
 
-Equivalent from `frontend/` (uses Bun when installed, otherwise npm):
+From `frontend/` only: `bun install && bun run dev:all` (or `npm`).
 
-```bash
-cd frontend && bun install && bun run dev:all
-# or: npm install && npm run dev:all
-```
-
-UI only (backend already running elsewhere): `cd frontend && bun run dev`.
+Per-service notes: [auth](backend/auth/README.md), [API](backend/api/README.md).
 
 ## Repository
 
 | Path | Role |
 |------|------|
-| [`frontend/`](frontend/) | Lineup and market UI. Talks to auth and the API through the same origin |
-| [`backend/auth/`](backend/auth/) | Sessions, Keycloak login, LaLiga vault, internal JWT |
-| [`backend/api/`](backend/api/) | Fantasy routes and the read-only CLIs |
-| [`docs/`](docs/) | Architecture, authentication, and per-domain API notes |
-| [`docker/`](docker/) | Keycloak realm import and the OTEL collector config |
-| [`assets/`](assets/) | Sample Fantasy payloads |
-
-Route catalogs, OpenAPI, and CLI flags: [API docs](docs/api/README.md).
-Agent instructions: [`AGENTS.md`](AGENTS.md).
+| [`frontend/`](frontend/) | React lineup and market UI |
+| [`backend/auth/`](backend/auth/) | Sessions, Keycloak, LaLiga pairing, internal JWT |
+| [`backend/api/`](backend/api/) | Fantasy proxy routes and CLIs |
+| [`docs/`](docs/) | Architecture, authentication, API domain guides |
+| [`docker/`](docker/) | Keycloak realm import, OTEL collector |
+| [`assets/`](assets/) | Sample Fantasy JSON trees |
 
 ## Tests
 
 ```bash
 uv run poe test
 ```
+
+Frontend only: `cd frontend && bun run test`.

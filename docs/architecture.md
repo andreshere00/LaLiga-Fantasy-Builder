@@ -88,11 +88,12 @@ Token rules and CSRF are in
 
 ### Frontend
 
-`frontend/` is the browser app (lineup at `/`, market board at `/market`). It
-signs in through auth, keeps the internal JWT in memory, and reads leagues,
-standings, lineups, squads, and league market listings from the API. The market
-screen is read-only (no bids or listings from the UI). It does not call LaLiga
-and does not store tokens. Screen-level detail: [Frontend](frontend.md).
+`frontend/` is the browser app (lineup at `/`, market at `/market`). It signs
+in through auth, keeps the internal JWT in memory, and calls the API for
+leagues, standings, lineups, squads, and market/buyout actions. Market bids
+and release-clause payment are user-confirmed in the UI only; CLIs stay
+read-only. It does not call LaLiga directly or persist tokens. Detail:
+[Frontend](frontend.md).
 
 In Docker, Nginx on port 3000 serves the built app and proxies `/auth`,
 `/laliga`, and `/api`. `bun run dev` does the same proxy for local UI work.
