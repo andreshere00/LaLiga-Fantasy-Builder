@@ -1,6 +1,5 @@
 import { formatEuro } from "../../../api/format";
 import { Modal } from "../../../components/Modal";
-import { MarketMotionButton } from "../MarketControlMotion";
 import type { MarketRow } from "../model/row";
 
 type ClauseDialogProps = {
@@ -32,22 +31,17 @@ export function ClauseDialog({
       closeOnBackdrop={!pending}
       footer={
         <>
-          <MarketMotionButton
-            type="button"
-            className="market-dialog-secondary"
-            onClick={onClose}
-            disabled={pending}
-          >
+          <button type="button" className="market-dialog-secondary" onClick={onClose} disabled={pending}>
             Cancel
-          </MarketMotionButton>
-          <MarketMotionButton
+          </button>
+          <button
             type="button"
             className="market-dialog-primary"
             disabled={pending}
             onClick={onConfirm}
           >
             {pending ? "Sending…" : "Confirm"}
-          </MarketMotionButton>
+          </button>
         </>
       }
     >

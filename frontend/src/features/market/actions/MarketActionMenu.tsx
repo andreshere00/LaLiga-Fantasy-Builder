@@ -1,7 +1,6 @@
 import { useEffect, useId, useRef, useState } from "react";
 
 import bidIconUrl from "../../../assets/button_bid.svg";
-import { MarketMotionButton } from "../MarketControlMotion";
 import { bidAmountTooltipLabel } from "../bidTooltip";
 import {
   CLAUSE_BLOCKED_MESSAGE,
@@ -88,7 +87,7 @@ export function MarketActionMenu({ row, context, actions }: MarketActionMenuProp
       }
       ref={rootRef}
     >
-      <MarketMotionButton
+      <button
         ref={triggerRef}
         type="button"
         className={bidded ? "market-actions-trigger is-bidded" : "market-actions-trigger"}
@@ -105,7 +104,7 @@ export function MarketActionMenu({ row, context, actions }: MarketActionMenuProp
         ) : (
           "Options"
         )}
-      </MarketMotionButton>
+      </button>
       {bidded && bidMoney != null ? (
         <span id={bidTooltipId} className="hover-tooltip-panel is-align-end" role="tooltip">
           {bidAmountTooltipLabel(bidMoney)}
@@ -125,7 +124,7 @@ export function MarketActionMenu({ row, context, actions }: MarketActionMenuProp
                   tooltip ? "market-actions-menu-item has-hover-tooltip-panel" : undefined
                 }
               >
-                <MarketMotionButton
+                <button
                   type="button"
                   className={
                     offer.type === "cancel-bid"
@@ -149,7 +148,7 @@ export function MarketActionMenu({ row, context, actions }: MarketActionMenuProp
                   }}
                 >
                   {offer.label}
-                </MarketMotionButton>
+                </button>
                 {tooltip ? (
                   <span id={tooltipId} className="hover-tooltip-panel is-align-start" role="tooltip">
                     {tooltipLines.map((line, index) => (

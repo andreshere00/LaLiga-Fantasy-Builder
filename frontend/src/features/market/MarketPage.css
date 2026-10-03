@@ -805,6 +805,7 @@
   color: inherit;
   text-decoration: underline;
   text-underline-offset: 2px;
+  transition: color var(--control-fill-duration) var(--control-fill-ease);
 }
 
 .market-seller-link:is(:hover, :focus-visible) {
@@ -891,6 +892,10 @@
   cursor: pointer;
   box-shadow: var(--shadow-surface);
   flex: 0 0 auto;
+  transition:
+    background-color var(--control-fill-duration) var(--control-fill-ease),
+    border-color var(--control-fill-duration) var(--control-fill-ease),
+    color var(--control-fill-duration) var(--control-fill-ease);
 }
 
 .market-actions-trigger.is-bidded {
@@ -949,7 +954,7 @@
   display: inline;
 }
 
-.market-actions-item {
+.market-actions-menu .market-actions-item {
   display: block;
   width: 100%;
   border: 0;
@@ -960,7 +965,9 @@
   font-weight: 600;
   text-align: left;
   cursor: pointer;
-  transition: background-color var(--control-fill-duration) var(--control-fill-ease);
+  transition:
+    background-color var(--control-fill-duration) var(--control-fill-ease),
+    color var(--control-fill-duration) var(--control-fill-ease);
 }
 
 .market-actions-item:is(:hover, :focus-visible) {
