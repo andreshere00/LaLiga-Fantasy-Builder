@@ -6,6 +6,8 @@ import {
   formPoints,
   formRecentPoints,
   formRecentWeekNumbers,
+  formRecentWindow,
+  formWindowChronological,
   marketRow,
   recentFormWeekNumbers,
 } from "./marketRows";
@@ -27,6 +29,28 @@ describe("form helpers", () => {
 
   it("formDisplayPoints_keeps_newest_three_scores", () => {
     expect(formDisplayPoints([8, 4, 2, 1, 0])).toEqual([8, 4, 2]);
+  });
+
+  it("formRecentWindow_slides_to_older_matchweeks", () => {
+    const recent = [8, 4, 2, 1, 0];
+    const weeks = [7, 6, 5, 4, 3];
+    expect(formRecentWindow(recent, weeks, 0).points).toEqual([8, 4, 2]);
+    expect(formRecentWindow(recent, weeks, 1).points).toEqual([4, 2, 1]);
+    expect(formRecentWindow(recent, weeks, 0).canGoNewer).toBe(false);
+    expect(formRecentWindow(recent, weeks, 2).canGoOlder).toBe(false);
+  });
+
+  it("formWindowChronological_orders_oldest_matchweek_left", () => {
+    const view = formWindowChronological(formRecentWindow([8, 4, 2], [7, 6, 5], 0));
+    expect(view.weeks).toEqual([5, 6, 7]);
+    expect(view.points).toEqual([2, 4, 8]);
+  });
+
+  it("formRecentWindow_ignores_history_beyond_five_matchweeks", () => {
+    const recent = [7, 6, 5, 4, 3, 2, 1];
+    const weeks = [7, 6, 5, 4, 3, 2, 1];
+    const view = formRecentWindow(recent, weeks, 0);
+    expect(view.weeks).toEqual([7, 6, 5]);
   });
 
   it("formRecentWeekNumbers_aligns_with_newest_three_matchweeks", () => {

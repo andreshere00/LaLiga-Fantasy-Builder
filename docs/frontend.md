@@ -98,11 +98,11 @@ stale snapshots until Fantasy confirms the change (`model/pendingBids.ts`).
 | Column | Notes |
 |--------|--------|
 | Player | Photo, name (red when you have a bid); bid amount tooltip on name |
-| Position | Abbrev badge (`GKP`, `DEF`, `MDF`, `FWD`, `COA` for coaches) |
+| Position | Abbrev badge (`GKP`, `DEF`, `MDF`, `ATK`, `COA`); hover shows full role name |
 | FSYP | Points plus season average; hover panel: total, season average, form (last 3) |
-| Form | Last three **played** matchweek scores (`F{n}`); open week excluded |
+| Form | Last three of **five** played matchweeks, oldest→newest (`F5`–`F7`); ‹ earlier, › later |
 | Market value | Price and 5-day change; hover: last, highest, lowest, 5d/14d ago with % vs current |
-| Availability | SVG icons (available / questionable / not available) |
+| Availability | SVG icons + hover text for next matchday readiness |
 | Seal end | Countdown; **red** when under one hour remains |
 | Sell options | Seller link (`/?team=…`) or `LALIGA`; **Options** / **Bidded** action menu |
 

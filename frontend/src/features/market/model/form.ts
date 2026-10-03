@@ -1,6 +1,6 @@
 import { asFiniteNumber, asRecord } from "../../../api/mappers";
 
-const FORM_MATCHES = 5;
+export const FORM_MATCHES = 5;
 export const FORM_DISPLAY_MATCHES = 3;
 
 function recentFormWeeks(
@@ -43,14 +43,64 @@ export function formRecentPoints(
   return recentFormWeeks(lastStats, playedThrough).map((row) => row.points);
 }
 
-/** Matchweek numbers aligned with ``formRecentPoints`` (newest first, at most three). */
+/** Matchweek numbers aligned with ``formRecentPoints`` (newest first, up to five). */
 export function formRecentWeekNumbers(
   lastStats: unknown,
   playedThrough: number | null = null,
 ): number[] {
-  return recentFormWeeks(lastStats, playedThrough)
-    .map((row) => row.week)
-    .slice(0, FORM_DISPLAY_MATCHES);
+  return recentFormWeeks(lastStats, playedThrough).map((row) => row.week);
+}
+
+export type FormRecentWindow = {
+  points: number[];
+  weeks: number[];
+  canGoOlder: boolean;
+  canGoNewer: boolean;
+};
+
+/** Keeps only the last ``FORM_MATCHES`` played matchweeks (newest first). */
+export function formRecentSeries(
+  recent: readonly number[],
+  weeks: readonly number[],
+): { recent: number[]; weeks: number[] } {
+  const length = Math.min(recent.length, weeks.length, FORM_MATCHES);
+  return {
+    recent: recent.slice(0, length),
+    weeks: weeks.slice(0, length),
+  };
+}
+
+/** A sliding window over newest-first form scores (``startIndex`` 0 = most recent). */
+export function formRecentWindow(
+  recent: readonly number[],
+  weeks: readonly number[],
+  startIndex: number,
+  windowSize = FORM_DISPLAY_MATCHES,
+): FormRecentWindow {
+  const capped = formRecentSeries(recent, weeks);
+  const length = capped.recent.length;
+  if (length === 0) {
+    return { points: [], weeks: [], canGoOlder: false, canGoNewer: false };
+  }
+  const maxStart = Math.max(0, length - windowSize);
+  const offset = Math.min(Math.max(0, startIndex), maxStart);
+  const end = Math.min(offset + windowSize, length);
+  return {
+    points: capped.recent.slice(offset, end),
+    weeks: capped.weeks.slice(offset, end),
+    canGoOlder: offset < maxStart,
+    canGoNewer: offset > 0,
+  };
+}
+
+/** Oldest matchweek left (e.g. F5, F6, F7) for the form column. */
+export function formWindowChronological(window: FormRecentWindow): FormRecentWindow {
+  return {
+    points: [...window.points].reverse(),
+    weeks: [...window.weeks].reverse(),
+    canGoOlder: window.canGoOlder,
+    canGoNewer: window.canGoNewer,
+  };
 }
 
 /** Newest-first scores for the form column (last three matchweeks). */

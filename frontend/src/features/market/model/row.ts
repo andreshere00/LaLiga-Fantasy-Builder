@@ -1,7 +1,13 @@
 import { asFiniteNumber, asRecord, idText, mediaFromPlayerMaster, text } from "../../../api/mappers";
 import { buyoutClauseUnlockAt } from "./buyout";
 import { availabilityOf, type Availability } from "./availability";
-import { FORM_DISPLAY_MATCHES, formFromCalendarWeeks, formPoints, formRecentPoints, formRecentWeekNumbers } from "./form";
+import {
+  formFromCalendarWeeks,
+  formPoints,
+  formRecentPoints,
+  formRecentWeekNumbers,
+  formRecentSeries,
+} from "./form";
 import {
   expiryOf,
   LALIGA_SELLER,
@@ -153,8 +159,11 @@ export function marketRow(
     );
     form = fromCalendar.form;
     formRecent = fromCalendar.formRecent;
-    formRecentWeeks = calendarForm.weekNumbers.slice(0, FORM_DISPLAY_MATCHES);
+    formRecentWeeks = calendarForm.weekNumbers.slice(0, formRecent.length);
   }
+  const capped = formRecentSeries(formRecent, formRecentWeeks);
+  formRecent = capped.recent;
+  formRecentWeeks = capped.weeks;
   const playerTeam = asRecord(item.playerTeam);
   const playerTeamId = playerTeamIdOf(item);
   const seller = sellerNameOf(item);

@@ -3,11 +3,11 @@ import type { MarketActionContext } from "./actions/marketActions";
 import { AvailabilityCell } from "./cells/AvailabilityCell";
 import { FormCell } from "./cells/FormCell";
 import { FsypCell } from "./cells/FsypCell";
+import { PositionCell } from "./cells/PositionCell";
 import { PlayerCell } from "./cells/PlayerCell";
 import { SellerCell } from "./cells/SellerCell";
 import { ValueCell } from "./cells/ValueCell";
 import type { MarketRow } from "./model/row";
-import { positionAbbrev, positionTone } from "./positions";
 import { isSealEndUnderOneHour, remainingLabel } from "./model/valueSeries";
 
 type MarketActionsApi = ReturnType<typeof useMarketActions>;
@@ -20,14 +20,11 @@ type MarketRowViewProps = {
 };
 
 export function MarketRowView({ row, now, actionContext, actions }: MarketRowViewProps) {
-  const tone = positionTone(row.positionId);
   return (
     <li className="market-row">
       <PlayerCell row={row} />
       <span className="market-cell" data-label="Position">
-        <span className={`market-position-badge is-${tone}`}>
-          {positionAbbrev(row.positionId)}
-        </span>
+        <PositionCell positionId={row.positionId} />
       </span>
       <span className="market-cell market-fsyp-cell" data-label="FSYP">
         <FsypCell

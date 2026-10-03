@@ -7,6 +7,10 @@ export {
   formPoints,
   formRecentPoints,
   formRecentWeekNumbers,
+  formRecentSeries,
+  formRecentWindow,
+  formWindowChronological,
+  FORM_MATCHES,
   recentFormWeekNumbers,
 } from "./model/form";
 export {
@@ -31,4 +35,4 @@ export {
   valueVariation,
   valueVariationPercent,
 } from "./model/valueSeries";
-export { positionAbbrev, positionTone } from "./positions";
+export { positionAbbrev, positionLabel, positionTone } from "./positions";

@@ -139,6 +139,10 @@
   line-height: 1.2;
 }
 
+.market-position-tooltip-target {
+  cursor: help;
+}
+
 .market-position-badge {
   display: inline-flex;
   align-items: center;
@@ -181,6 +185,48 @@
   font-variant-numeric: tabular-nums;
   white-space: nowrap;
   overflow: visible;
+}
+
+.market-form-nav {
+  display: inline-flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 0.12rem;
+}
+
+.market-form-nav-buttons {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.15rem;
+  flex: 0 0 auto;
+  align-self: center;
+  width: 100%;
+}
+
+.market-form-nav-btn {
+  flex: 0 0 auto;
+  width: 1.35rem;
+  height: 1.35rem;
+  margin: 0;
+  padding: 0;
+  border: 1px solid color-mix(in srgb, var(--ink) 18%, transparent);
+  border-radius: 4px;
+  background: var(--white);
+  color: var(--ink);
+  font-size: 1rem;
+  font-weight: 700;
+  line-height: 1;
+  cursor: pointer;
+}
+
+.market-form-nav-btn:is(:hover, :focus-visible):not(:disabled) {
+  background: color-mix(in srgb, var(--ink) 6%, transparent);
+}
+
+.market-form-nav-btn:disabled {
+  opacity: 0.35;
+  cursor: not-allowed;
 }
 
 .market-form-badges {
@@ -332,7 +378,11 @@
   max-width: 100%;
 }
 
-.market-availability > span:last-child {
+.market-availability-tooltip-target {
+  cursor: help;
+}
+
+.market-availability-label {
   white-space: nowrap;
 }
 
