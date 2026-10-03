@@ -1,0 +1,47 @@
+.numeric-counter {
+  display: flex;
+  align-items: stretch;
+  width: 100%;
+  min-width: 0;
+}
+
+.numeric-counter-input {
+  flex: 1 1 auto;
+  min-width: 0;
+  border-left: 0;
+  border-right: 0;
+}
+
+.numeric-counter-btn {
+  flex: 0 0 2.25rem;
+  box-sizing: border-box;
+  padding: 0;
+  border: 1px solid color-mix(in srgb, var(--ink) 12%, transparent);
+  background: var(--white);
+  font: inherit;
+  font-size: 1.05rem;
+  font-weight: 700;
+  line-height: 1;
+  cursor: pointer;
+  transition:
+    background-color var(--control-fill-duration) var(--control-fill-ease),
+    border-color var(--control-fill-duration) var(--control-fill-ease);
+}
+
+.numeric-counter-btn:first-child {
+  border-radius: 0;
+}
+
+.numeric-counter-btn:last-child {
+  border-radius: 0;
+}
+
+.numeric-counter-btn:is(:hover, :active):not(:disabled) {
+  background: var(--accent-press);
+  border-color: var(--accent-press);
+}
+
+.numeric-counter-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}

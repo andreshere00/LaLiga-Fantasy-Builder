@@ -1,5 +1,17 @@
 export const COACH_POSITION_ID = 5;
 
+export const POSITION_FILTER_OPTIONS: readonly {
+  id: number;
+  abbrev: string;
+  label: string;
+}[] = [
+  { id: 1, abbrev: "GKP", label: "Goalkeeper" },
+  { id: 2, abbrev: "DEF", label: "Defense" },
+  { id: 3, abbrev: "MDF", label: "Midfielder" },
+  { id: 4, abbrev: "ATK", label: "Attacker" },
+  { id: 5, abbrev: "COA", label: "Coach" },
+];
+
 const POSITIONS: Record<number, { abbrev: string; label: string; tone: string }> = {
   1: { abbrev: "GKP", label: "Goalkeeper", tone: "gk" },
   2: { abbrev: "DEF", label: "Defense", tone: "def" },

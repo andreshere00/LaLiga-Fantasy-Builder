@@ -53,6 +53,7 @@ function withFilters(partial: Partial<MarketFilters>): MarketFilters {
     points: { ...EMPTY_MARKET_FILTERS.points, ...partial.points },
     form: { ...EMPTY_MARKET_FILTERS.form, ...partial.form },
     availability: partial.availability ?? EMPTY_MARKET_FILTERS.availability,
+    positions: partial.positions ?? EMPTY_MARKET_FILTERS.positions,
   };
 }
 
@@ -149,6 +150,16 @@ describe("applyMarketFilters", () => {
       availability: new Set(["questionable", "unavailable"]),
     });
     expect(applyMarketFilters(rows, filters).map((entry) => entry.id)).toEqual(["b", "c"]);
+  });
+
+  it("applyMarketFilters_position_subset", () => {
+    const rows = [
+      row({ id: "a", positionId: 4 }),
+      row({ id: "b", positionId: 2 }),
+      row({ id: "c", positionId: null }),
+    ];
+    const filters = withFilters({ positions: new Set([2, 4]) });
+    expect(applyMarketFilters(rows, filters).map((entry) => entry.id)).toEqual(["a", "b"]);
   });
 
   it("applyMarketFilters_combined_filters_use_and_logic", () => {

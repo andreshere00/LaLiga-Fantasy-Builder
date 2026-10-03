@@ -15,9 +15,6 @@ function renderToolbar(overrides: Partial<Parameters<typeof MarketToolbar>[0]> =
       showSearch
       filters={createEmptyMarketFilters()}
       onFiltersChange={onFiltersChange}
-      sellerOptions={[]}
-      filtersOpen={false}
-      onFiltersOpenChange={vi.fn()}
       activeFilterCount={0}
       onClearFilters={onClearFilters}
       {...overrides}
@@ -33,18 +30,14 @@ describe("MarketToolbar", () => {
     cleanup();
   });
 
-  it("MarketToolbar_shows_filter_badge_when_filters_are_active", () => {
-    renderToolbar({
-      activeFilterCount: 2,
-      filters: { ...createEmptyMarketFilters(), text: "laporte" },
-    });
-    expect(screen.getByLabelText("2 active filters").textContent).toBe("2");
-    expect(screen.getByRole("button", { name: "Clear" })).toBeTruthy();
+  it("MarketToolbar_shows_clear_filters_when_filters_active", () => {
+    renderToolbar({ activeFilterCount: 2 });
+    expect(screen.getByRole("button", { name: "Clear filters" })).toBeTruthy();
   });
 
-  it("MarketToolbar_clear_button_resets_via_callback", () => {
+  it("MarketToolbar_clear_filters_invokes_callback", () => {
     const { onClearFilters } = renderToolbar({ activeFilterCount: 1 });
-    fireEvent.click(screen.getByRole("button", { name: "Clear" }));
+    fireEvent.click(screen.getByRole("button", { name: "Clear filters" }));
     expect(onClearFilters).toHaveBeenCalledTimes(1);
   });
 });

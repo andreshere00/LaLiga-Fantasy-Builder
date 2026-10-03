@@ -2,8 +2,6 @@ import { formatEuro } from "../../api/format";
 import { ValueBox } from "../../components/ValueBox";
 import moneyWarningIconUrl from "../../assets/button_warning.svg";
 import moneyIconUrl from "../../assets/button_money.svg";
-import { MarketFilterPanel } from "./MarketFilterPanel";
-import { MarketFilterPanelMotion } from "./MarketRowMotion";
 import { MarketPlayerSearch } from "./MarketPlayerSearch";
 import type { MarketFilters } from "./marketFilters";
 
@@ -33,9 +31,6 @@ type MarketToolbarProps = {
   showSearch: boolean;
   filters: MarketFilters;
   onFiltersChange: (filters: MarketFilters) => void;
-  sellerOptions: readonly string[];
-  filtersOpen: boolean;
-  onFiltersOpenChange: (open: boolean) => void;
   activeFilterCount: number;
   onClearFilters: () => void;
 };
@@ -45,9 +40,6 @@ export function MarketToolbar({
   showSearch,
   filters,
   onFiltersChange,
-  sellerOptions,
-  filtersOpen,
-  onFiltersOpenChange,
   activeFilterCount,
   onClearFilters,
 }: MarketToolbarProps) {
@@ -60,24 +52,13 @@ export function MarketToolbar({
         {showSearch ? (
           <MarketPlayerSearch
             value={filters.text}
-            onChange={(text) => onFiltersChange({ ...filters, text })}
+            onChange={(text) => onFiltersChange({ ...filters, text, field: "all" })}
             activeFilterCount={activeFilterCount}
-            filtersOpen={filtersOpen}
-            onFiltersToggle={() => onFiltersOpenChange(!filtersOpen)}
             onClearFilters={onClearFilters}
           />
         ) : null}
         <MarketBalance money={money} />
       </div>
-      {showSearch ? (
-        <MarketFilterPanelMotion open={filtersOpen}>
-          <MarketFilterPanel
-            filters={filters}
-            sellers={sellerOptions}
-            onChange={onFiltersChange}
-          />
-        </MarketFilterPanelMotion>
-      ) : null}
     </>
   );
 }

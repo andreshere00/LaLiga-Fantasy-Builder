@@ -17,7 +17,7 @@ export type MarketColumnHeading = {
   filtered: boolean;
 };
 
-const BASE_LABELS: Record<MarketColumnKey, string> = {
+export const MARKET_COLUMN_BASE_LABELS: Record<MarketColumnKey, string> = {
   player: "Player",
   position: "Position",
   fsyp: "FSYP",
@@ -62,33 +62,46 @@ export function marketColumnHeadings(filters: MarketFilters): Record<MarketColum
   const valueSuffix = rangeSuffix(filters.marketValue);
   const availabilityFiltered = filters.availability.size > 0;
   const availabilitySuffix = availabilityFiltered ? ` (${filters.availability.size})` : "";
+  const positionFiltered = filters.positions.size > 0;
+  const positionSuffix = positionFiltered ? ` (${filters.positions.size})` : "";
 
   return {
     player: {
-      label: playerFiltered ? `${BASE_LABELS.player} · filtered` : BASE_LABELS.player,
+      label: playerFiltered
+        ? `${MARKET_COLUMN_BASE_LABELS.player} · filtered`
+        : MARKET_COLUMN_BASE_LABELS.player,
       filtered: playerFiltered,
     },
-    position: { label: BASE_LABELS.position, filtered: false },
+    position: {
+      label: `${MARKET_COLUMN_BASE_LABELS.position}${positionSuffix}`,
+      filtered: positionFiltered,
+    },
     fsyp: {
-      label: `${BASE_LABELS.fsyp}${fsypSuffix}`,
+      label: `${MARKET_COLUMN_BASE_LABELS.fsyp}${fsypSuffix}`,
       filtered: fsypSuffix.length > 0,
     },
     form: {
-      label: `${BASE_LABELS.form}${formSuffix}`,
+      label: `${MARKET_COLUMN_BASE_LABELS.form}${formSuffix}`,
       filtered: formSuffix.length > 0,
     },
     marketValue: {
-      label: `${BASE_LABELS.marketValue}${valueSuffix}`,
+      label: `${MARKET_COLUMN_BASE_LABELS.marketValue}${valueSuffix}`,
       filtered: valueSuffix.length > 0,
     },
     availability: {
-      label: `${BASE_LABELS.availability}${availabilitySuffix}`,
+      label: `${MARKET_COLUMN_BASE_LABELS.availability}${availabilitySuffix}`,
       filtered: availabilityFiltered,
     },
-    sealEnd: { label: BASE_LABELS.sealEnd, filtered: false },
+    sealEnd: { label: MARKET_COLUMN_BASE_LABELS.sealEnd, filtered: false },
     sellOptions: {
-      label: sellFiltered ? `${BASE_LABELS.sellOptions} · seller` : BASE_LABELS.sellOptions,
+      label: sellFiltered
+        ? `${MARKET_COLUMN_BASE_LABELS.sellOptions} · seller`
+        : MARKET_COLUMN_BASE_LABELS.sellOptions,
       filtered: sellFiltered,
     },
   };
+}
+
+export function marketColumnBaseLabel(column: MarketColumnKey): string {
+  return MARKET_COLUMN_BASE_LABELS[column];
 }

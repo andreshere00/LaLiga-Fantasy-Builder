@@ -49,30 +49,6 @@ export function MarketRowMotionList({ children }: MarketRowMotionListProps) {
   );
 }
 
-type MarketFilterPanelMotionProps = {
-  open: boolean;
-  children: ReactNode;
-};
-
-export function MarketFilterPanelMotion({ open, children }: MarketFilterPanelMotionProps) {
-  return (
-    <AnimatePresence initial={false}>
-      {open ? (
-        <m.div
-          id="market-filter-panel"
-          className="market-filter-panel-shell"
-          initial={{ opacity: 0, height: 0 }}
-          animate={{ opacity: 1, height: "auto" }}
-          exit={{ opacity: 0, height: 0 }}
-          transition={MARKET_TABLE_CROSSFADE}
-        >
-          {children}
-        </m.div>
-      ) : null}
-    </AnimatePresence>
-  );
-}
-
 type MarketTablePresenceProps = {
   showTable: boolean;
   emptyState: ReactNode;

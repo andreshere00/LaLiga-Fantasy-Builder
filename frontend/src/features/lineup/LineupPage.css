@@ -187,6 +187,11 @@
   max-width: 100%;
 }
 
+.board-controls .controls-zone-center .formation-field {
+  flex: 0 0 auto;
+  min-width: var(--lineup-formation-control-min);
+}
+
 .board-controls .controls-zone-center .save-lineup {
   flex: 0 0 auto;
   min-width: var(--lineup-formation-control-min);
@@ -488,9 +493,15 @@
   color: var(--red);
 }
 
+.formation-select {
+  width: 100%;
+}
+
 .formation-select select,
 .formation-value {
+  width: 100%;
   min-width: var(--lineup-formation-control-min);
+  box-sizing: border-box;
 }
 
 .formation-select select {

@@ -13,6 +13,7 @@ export type MarketFilters = {
   points: NumericRange;
   form: NumericRange;
   availability: ReadonlySet<Availability>;
+  positions: ReadonlySet<number>;
 };
 
 /** Returns a fresh filter object safe to store in React state. */
@@ -24,6 +25,7 @@ export function createEmptyMarketFilters(): MarketFilters {
     points: { min: null, max: null },
     form: { min: null, max: null },
     availability: new Set(),
+    positions: new Set(),
   };
 }
 
@@ -66,6 +68,12 @@ function matchesAvailability(row: MarketRow, selected: ReadonlySet<Availability>
   return selected.has(row.availability);
 }
 
+function matchesPosition(row: MarketRow, selected: ReadonlySet<number>): boolean {
+  if (selected.size === 0) return true;
+  if (row.positionId == null) return false;
+  return selected.has(row.positionId);
+}
+
 /** Applies every active market filter; conditions combine with AND. */
 export function applyMarketFilters(
   rows: readonly MarketRow[],
@@ -77,7 +85,8 @@ export function applyMarketFilters(
       matchesRange(row.marketValue, filters.marketValue) &&
       matchesRange(row.points, filters.points) &&
       matchesRange(row.form, filters.form) &&
-      matchesAvailability(row, filters.availability),
+      matchesAvailability(row, filters.availability) &&
+      matchesPosition(row, filters.positions),
   );
 }
 
@@ -89,6 +98,7 @@ export function activeFilterCount(filters: MarketFilters): number {
   if (rangeIsActive(filters.points)) count += 1;
   if (rangeIsActive(filters.form)) count += 1;
   if (filters.availability.size > 0) count += 1;
+  if (filters.positions.size > 0) count += 1;
   return count;
 }
 

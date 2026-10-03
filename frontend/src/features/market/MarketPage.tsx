@@ -30,7 +30,6 @@ import "./MarketPage.css";
 function MarketList() {
   const board = useMarketBoard();
   const [filters, setFilters] = useState(createEmptyMarketFilters);
-  const [filtersOpen, setFiltersOpen] = useState(false);
   const deferredFilters = useDeferredValue(filters);
   const now = useNow();
   const visibleRows = useMemo(
@@ -82,9 +81,6 @@ function MarketList() {
         showSearch={board.rows.length > 0}
         filters={filters}
         onFiltersChange={setFilters}
-        sellerOptions={sellers}
-        filtersOpen={filtersOpen}
-        onFiltersOpenChange={setFiltersOpen}
         activeFilterCount={filterCount}
         onClearFilters={clearFilters}
       />
@@ -116,7 +112,12 @@ function MarketList() {
           }
           table={
             <ul className="market-list">
-              <MarketListHead headings={columnHeadings} />
+              <MarketListHead
+                headings={columnHeadings}
+                filters={filters}
+                sellers={sellers}
+                onFiltersChange={setFilters}
+              />
               <MarketRowMotionList>
                 {visibleRows.map((row) => (
                   <MarketRowView
