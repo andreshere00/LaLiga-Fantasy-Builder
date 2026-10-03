@@ -9,8 +9,8 @@ type PlayerTileProps = {
   name: string;
   captain: boolean;
   variant: "pitch" | "squad";
-  /** Lineup cards anchor photos at the feet; market uses centered portraits. */
-  photoLayout?: "lineup" | "centered";
+  /** When false, the name bar is omitted and the photo is centered on the whole card. */
+  showName?: boolean;
   empty?: boolean;
   photoUrl?: string | null;
   teamBadgeUrl?: string | null;
@@ -66,7 +66,7 @@ export function PlayerTile({
   name,
   captain,
   variant,
-  photoLayout = "lineup",
+  showName = true,
   empty = false,
   photoUrl = null,
   teamBadgeUrl = null,
@@ -80,7 +80,7 @@ export function PlayerTile({
   const className = [
     "player-tile",
     variant === "squad" ? "squad-tile" : "pitch-tile",
-    photoLayout === "centered" ? "is-photo-centered" : "",
+    showName ? "" : "is-nameless",
     empty ? "is-empty" : "",
     captain ? "is-captain" : "",
     selected ? "is-selected" : "",
@@ -131,10 +131,14 @@ export function PlayerTile({
         )
       ) : null}
       <TeamBadge url={teamBadgeUrl} />
-      <div className="player-card-gap" aria-hidden="true" />
-      <span className="player-name">
-        <span className="player-name-label">{name}</span>
-      </span>
+      {showName ? (
+        <>
+          <div className="player-card-gap" aria-hidden="true" />
+          <span className="player-name">
+            <span className="player-name-label">{name}</span>
+          </span>
+        </>
+      ) : null}
     </>
   );
 
@@ -153,7 +157,10 @@ export function PlayerTile({
   }
 
   return (
-    <div className={className} aria-label={empty ? label : captain ? `${name}, captain` : undefined}>
+    <div
+      className={className}
+      aria-label={empty || !showName ? label : captain ? `${name}, captain` : undefined}
+    >
       {body}
     </div>
   );

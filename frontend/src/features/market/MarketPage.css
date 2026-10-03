@@ -11,25 +11,45 @@
 }
 
 .market-toolbar {
-  display: flex;
-  align-items: flex-end;
-  justify-content: space-between;
-  gap: 16px;
-  margin-bottom: 16px;
+  margin-bottom: 12px;
 }
 
 .market-toolbar h1 {
   margin: 0;
 }
 
+.market-filter-row {
+  display: flex;
+  align-items: flex-end;
+  justify-content: flex-start;
+  gap: 16px;
+  margin-bottom: 16px;
+}
+
+.market-filter-row .market-search {
+  flex: 1 1 auto;
+  max-width: min(100%, 420px);
+  margin: 0;
+}
+
+.market-filter-row .value-box-block {
+  flex: 0 0 auto;
+  margin-left: auto;
+}
+
+.market-filter-row .market-search-label {
+  font-size: 0.75rem;
+}
+
+.market-filter-row .market-search-field {
+  height: 2.25rem;
+  min-height: 2.25rem;
+  box-shadow: var(--shadow-surface);
+}
+
 .market-notice {
   margin: 0 0 12px;
   color: color-mix(in srgb, var(--ink) 72%, transparent);
-}
-
-.market-search {
-  margin: 0 0 16px;
-  max-width: min(100%, 420px);
 }
 
 .market-search-label {
@@ -127,10 +147,6 @@
 
 .market-card .player-tile:is(:hover, :active) {
   background: var(--tile);
-}
-
-.market-card .player-name {
-  visibility: hidden;
 }
 
 .market-name-wrap {

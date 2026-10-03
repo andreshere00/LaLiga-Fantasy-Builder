@@ -9,7 +9,6 @@ import { useMarketActions } from "./actions/useMarketActions";
 import { MarketRowView } from "./MarketRowView";
 import { MARKET_SEARCH_NO_MATCHES } from "./marketMessages";
 import { filterMarketRowsBySearch } from "./marketSearch";
-import { MarketPlayerSearch } from "./MarketPlayerSearch";
 import { MarketToolbar } from "./MarketToolbar";
 import { useMarketBoard } from "./useMarketBoard";
 import "./MarketPage.css";
@@ -46,7 +45,12 @@ function MarketList() {
 
   return (
     <>
-      <MarketToolbar money={board.money} />
+      <MarketToolbar
+        money={board.money}
+        showSearch={board.rows.length > 0}
+        playerSearch={playerSearch}
+        onPlayerSearchChange={setPlayerSearch}
+      />
       {board.isDegraded ? (
         <p className="market-notice status-copy" role="status">
           Some market details could not be loaded. Balance, squad data, value changes and
@@ -62,7 +66,6 @@ function MarketList() {
         <p className="status-copy">No players on the market.</p>
       ) : (
         <>
-          <MarketPlayerSearch value={playerSearch} onChange={setPlayerSearch} />
           {visibleRows.length === 0 ? (
             <p className="status-copy" role="status">
               {MARKET_SEARCH_NO_MATCHES}
