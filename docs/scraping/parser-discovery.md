@@ -1,35 +1,57 @@
 # Parser discovery
 
-Status: selector contract from the parser plan (section 5), checked against
-synthetic fixtures. Live FutbolFantasy HTML is not committed. Save a raw page
-under `tmp/ff-fixtures/` and run `backend/scraping/scripts/sanitise_fixture.py`
-before comparing it with the fixture.
+Status: selector contract from `futbolfantasy.toml`, validated against **trimmed
+fixtures** and **live** FutbolFantasy player pages (2026-10). Rules use primary
+locators plus fallbacks where production markup differs.
 
-| Section | Class | Locator |
-|---------|-------|---------|
-| Canonical, title, club, widget link | static | `link[rel=canonical]`, `a.club`, `a.widget-mercado` |
-| Identity | static | `h1 .name`, `h1 .shirt`, `h1 .pos`, `img.badge` |
-| Availability, form, start odds, risk, hierarchy | static | header classes in `futbolfantasy.toml` |
-| Personal data | static | `dl.personal` label/value pairs |
-| JSON-LD | static when present | `script[type=application/ld+json]` |
-| Injuries | static | `section.lesiones`, `table.historial` |
-| News | static | `ul.noticias` |
-| Last five / next five | static | `ul.ultimos`, `ul.proximos` |
-| Upcoming competition | static | `a.partido` date, time and logo `alt` |
-| Market numbers | static in the player page or a companion widget | `section.mercado` |
-| Market series | hidden-in-DOM | `script.market-series` JSON, read before scripts are removed |
-| Season totals | hidden-in-DOM (`d-none` still in the HTML) | `#profile-stats-puntos .statsglobales` |
-| Per-match cells | hidden-in-DOM | `tr.plegado span.stat-val` |
-| Per-match points text | hidden-in-DOM | `div.estadistica` |
-| Per-match JSON | hidden-in-DOM | `.poligono-wrapper[data-indices]` |
-| Official fantasy points | static | `section.puntos-oficial[data-modo="LaLiga Fantasy Oficial"]` |
-| Match table | static | `table.partidos` |
+Save a raw page under `tmp/ff-fixtures/` (git-ignored) and run
+`backend/scraping/scripts/sanitise_fixture.py` if you need a committed fixture.
 
-JSON-LD is optional. The DOM value wins; JSON-LD only fills gaps and emits
+## Fixture layout (tests)
+
+Used by `tests/parser/fixtures/futbolfantasy/*.html`.
+
+| Section | Locator |
+|---------|---------|
+| Canonical, title, club, widget link | `link[rel=canonical]`, `a.club`, `a.widget-mercado` |
+| Identity | `h1 .name`, `h1 .shirt`, `h1 .pos`, `img.badge` |
+| Availability, form, start odds, risk, hierarchy | Classes in `futbolfantasy.toml` (`p.disponibilidad`, `.titular`, …) |
+| Personal data | `dl.personal` (`dt` / `dd` pairs) |
+| JSON-LD | `script[type=application/ld+json]` when present |
+| Injuries | `section.lesiones`, `table.historial` |
+| News | `ul.noticias` |
+| Last five / next five | `ul.ultimos`, `ul.proximos` |
+| Upcoming competition hints | `a.partido` (`data-date`, `data-time`, logo `alt`) |
+| Market numbers | `section.mercado` on profile or companion widget HTML |
+| Market series | `script.market-series` (read before scripts are stripped) |
+| Season totals | `#profile-stats-puntos .statsglobales` |
+| Per-match cells | `table.partidos tbody tr.plegado`, `span.stat-val`, `div.estadistica`, `.poligono-wrapper[data-indices]` |
+| Official fantasy points | `section.puntos-oficial[data-modo="LaLiga Fantasy Oficial"]` |
+| Match table | `table.partidos` |
+
+## Live layout (production pages)
+
+Same data, different DOM. Fallbacks are in `futbolfantasy.toml` and calendar/
+`tablestats` extractors.
+
+| Section | Live anchor (fallback) |
+|---------|-------------------------|
+| Identity | `h1.jugador-nombre` (`11. Name`), `section.jugador_principal .position-box` |
+| Personal | `#profile-datos-personales` (`.info-left` / `.info-right` pairs); label **Pie preferido** |
+| Last five | `#profile-partidos` calendar `.day` (not `ul.ultimos`) |
+| Next five | Header “Próximos 5 partidos” + following `.calendar .day` |
+| Season totals | `#profile-stats-puntos .statsglobales` (often `d-none`; still in HTML) |
+| Per-match table | `#profile-stats-puntos table.tablestats tbody tr.plegado[data-local]` (`fixtures_live` spec) |
+| Per-match stat layers | Same hidden cells as fixtures when present (`span.stat-val`, poligono JSON) |
+| Club / widget on live profile | Team links under `.jugador_principal`; market widget id often **only in JS** (scraper `probes.widget_id` regex) |
+
+JSON-LD is optional on live pages. The DOM wins; JSON-LD fills gaps and emits
 `jsonld_mismatch` when both sides disagree.
 
 Scoring mode read: `data-modo` must be `LaLiga Fantasy Oficial`. Other modes
 are listed and their numbers are ignored.
 
 No section is classified as XHR in this contract. A block that is absent from
-the delivered HTML becomes `null` plus `missing`. It is not guessed.
+the delivered HTML becomes `null` plus `missing`. It is not guessed. More than
+two of the four core sections failing raises `UnsupportedLayoutError` (see
+[parser.md](parser.md)).
