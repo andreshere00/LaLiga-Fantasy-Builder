@@ -63,6 +63,13 @@ OPENAPI_TAGS: list[dict[str, str]] = [
         ),
     },
     {
+        "name": "player-stats",
+        "description": (
+            "Segmented player statistics (fixtures, market window, matches, profile). "
+            "Requires an internal JWT; scraped segments call the private scraper."
+        ),
+    },
+    {
         "name": "market",
         "description": (
             "LaLiga Fantasy league market, bids, listings, and offers. "
@@ -89,6 +96,18 @@ ERROR_RESPONSES: dict[int | str, dict[str, Any]] = {
     },
     503: {
         "description": "Fantasy upstream unavailable.",
+        "model": ErrorResponse,
+    },
+}
+
+PLAYER_STATS_ERROR_RESPONSES: dict[int | str, dict[str, Any]] = {
+    **ERROR_RESPONSES,
+    404: {
+        "description": "Player or stats source not found.",
+        "model": ErrorResponse,
+    },
+    429: {
+        "description": "Rate limit exceeded for scraped segments.",
         "model": ErrorResponse,
     },
 }

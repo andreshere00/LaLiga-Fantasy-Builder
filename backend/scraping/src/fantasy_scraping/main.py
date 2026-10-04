@@ -12,7 +12,9 @@ from fastapi import FastAPI, Request
 from fastapi.responses import JSONResponse
 from pydantic import BaseModel
 
+from fantasy_scraping.api.players import router as players_router
 from fantasy_scraping.config import Settings, get_settings
+from fantasy_scraping.parser.errors import ParserError
 from fantasy_scraping.scraper.cache import MemoryCache
 from fantasy_scraping.scraper.clock import SystemClock
 from fantasy_scraping.scraper.errors import ScrapingError
@@ -89,7 +91,17 @@ def create_app(settings: Settings | None = None, service: ScraperService | None 
     app.state.settings = cfg
     app.state.get_service = get_service
     app.include_router(scrape_router)
+    app.include_router(players_router)
     app.include_router(health_router)
+
+    @app.exception_handler(ParserError)
+    async def parser_error(_request: Request, exc: ParserError) -> JSONResponse:
+        """Map parser failures to stable API errors."""
+        category = exc.code if exc.code else "scraping_error"
+        return JSONResponse(
+            status_code=502,
+            content={"error": category, "detail": exc.detail},
+        )
 
     @app.exception_handler(ScrapingError)
     async def scraping_error(_request: Request, exc: ScrapingError) -> JSONResponse:

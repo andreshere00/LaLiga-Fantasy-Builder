@@ -12,6 +12,7 @@ This folder is the detailed map.
 | [Authentication](authentication/authentication.md) | Sessions, internal JWT, LaLiga vault, CSRF |
 | [Scraping service](scraping/README.md) | Private scraper HTTP, TTLs, Compose `egress`, CLIs |
 | [FutbolFantasy parser](scraping/parser.md) | Offline HTML → player JSON and Markdown |
+| [Parser selectors](scraping/parser-discovery.md) | Fixture vs live FutbolFantasy DOM contract |
 
 ## Authentication (HTTP reference)
 

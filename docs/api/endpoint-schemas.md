@@ -916,6 +916,199 @@ Reject an offer on a listing
 
 
 
+## Tag: `player-stats`
+
+Segmented player statistics (fixtures, market window, matches, profile). Requires an internal JWT; scraped segments call the private scraper.
+
+### `GET` `/players/{player_id}/stats`
+
+List the stats segments available for a player
+
+**Security:** HTTP Bearer (internal JWT)
+
+#### Inputs
+
+| Source | Name | Type | Required | Constraints | Description |
+|--------|------|------|----------|-------------|-------------|
+| path | `player_id` | string | yes |  | Master footballer id (`CatalogPlayer.id`). |
+
+#### Outputs
+
+**HTTP 200:** `PlayerStatsIndex`
+
+| Field | Type | Required | Constraints | Description |
+|-------|------|----------|-------------|-------------|
+| `player` | PlayerRef | yes |  |  |
+| `season` | string | yes |  |  |
+| `segments` | array[SegmentDescriptor] | no |  |  |
+| `generated_at` | string | yes |  |  |
+
+Full nested fields: [`PlayerStatsIndex`](#playerstatsindex).
+
+
+### `GET` `/players/{player_id}/stats/fixtures`
+
+Per-fixture statistics for a player
+
+**Security:** HTTP Bearer (internal JWT)
+
+#### Inputs
+
+| Source | Name | Type | Required | Constraints | Description |
+|--------|------|------|----------|-------------|-------------|
+| path | `player_id` | string | yes |  | Master footballer id (`CatalogPlayer.id`). |
+| query | `competition` | array[Competition] | no |  |  |
+| query | `last` | integer | no | min=1, max=60 |  |
+
+#### Outputs
+
+**HTTP 200:** `PlayerFixtureStatsResponse`
+
+| Field | Type | Required | Constraints | Description |
+|-------|------|----------|-------------|-------------|
+| `player_id` | string | yes |  |  |
+| `player` | PlayerRef | no |  |  |
+| `season` | string | yes |  |  |
+| `generated_at` | string | yes |  |  |
+| `sources` | array[SourceStatus] | no |  |  |
+| `warnings` | array[SegmentWarning] | no |  |  |
+| `fixtures` | array[FixtureStatsRow] | no |  |  |
+
+Full nested fields: [`PlayerFixtureStatsResponse`](#playerfixturestatsresponse).
+
+
+### `GET` `/players/{player_id}/stats/market`
+
+Market-value window and preset summaries
+
+**Security:** HTTP Bearer (internal JWT)
+
+#### Inputs
+
+| Source | Name | Type | Required | Constraints | Description |
+|--------|------|------|----------|-------------|-------------|
+| path | `player_id` | string | yes |  | Master footballer id (`CatalogPlayer.id`). |
+| query | `preset` | MarketPreset | no |  |  |
+| query | `from` | string | no |  |  |
+| query | `to` | string | no |  |  |
+
+#### Outputs
+
+**HTTP 200:** `PlayerMarketResponse`
+
+| Field | Type | Required | Constraints | Description |
+|-------|------|----------|-------------|-------------|
+| `player_id` | string | yes |  |  |
+| `player` | PlayerRef | no |  |  |
+| `season` | string | yes |  |  |
+| `generated_at` | string | yes |  |  |
+| `sources` | array[SourceStatus] | no |  |  |
+| `warnings` | array[SegmentWarning] | no |  |  |
+| `window` | MarketWindow | yes |  |  |
+| `presets` | array[MarketPresetSummary] | no |  |  |
+| `current_value` | integer | no |  |  |
+| `currency` | string | no |  |  |
+
+Full nested fields: [`PlayerMarketResponse`](#playermarketresponse).
+
+
+### `GET` `/players/{player_id}/stats/matches/recent`
+
+Recent matches for a player
+
+**Security:** HTTP Bearer (internal JWT)
+
+#### Inputs
+
+| Source | Name | Type | Required | Constraints | Description |
+|--------|------|------|----------|-------------|-------------|
+| path | `player_id` | string | yes |  | Master footballer id (`CatalogPlayer.id`). |
+| query | `limit` | integer | no | min=1, max=5 |  |
+| query | `include_stats` | boolean | no |  |  |
+
+#### Outputs
+
+**HTTP 200:** `RecentMatchesResponse`
+
+| Field | Type | Required | Constraints | Description |
+|-------|------|----------|-------------|-------------|
+| `player_id` | string | yes |  |  |
+| `player` | PlayerRef | no |  |  |
+| `season` | string | yes |  |  |
+| `generated_at` | string | yes |  |  |
+| `sources` | array[SourceStatus] | no |  |  |
+| `warnings` | array[SegmentWarning] | no |  |  |
+| `matches` | array[RecentMatch] | no |  |  |
+
+Full nested fields: [`RecentMatchesResponse`](#recentmatchesresponse).
+
+
+### `GET` `/players/{player_id}/stats/matches/upcoming`
+
+Upcoming matches for a player
+
+**Security:** HTTP Bearer (internal JWT)
+
+#### Inputs
+
+| Source | Name | Type | Required | Constraints | Description |
+|--------|------|------|----------|-------------|-------------|
+| path | `player_id` | string | yes |  | Master footballer id (`CatalogPlayer.id`). |
+| query | `limit` | integer | no | min=1, max=5 |  |
+| query | `include_weather` | boolean | no |  |  |
+
+#### Outputs
+
+**HTTP 200:** `UpcomingMatchesResponse`
+
+| Field | Type | Required | Constraints | Description |
+|-------|------|----------|-------------|-------------|
+| `player_id` | string | yes |  |  |
+| `player` | PlayerRef | no |  |  |
+| `season` | string | yes |  |  |
+| `generated_at` | string | yes |  |  |
+| `sources` | array[SourceStatus] | no |  |  |
+| `warnings` | array[SegmentWarning] | no |  |  |
+| `matches` | array[UpcomingMatch] | no |  |  |
+
+Full nested fields: [`UpcomingMatchesResponse`](#upcomingmatchesresponse).
+
+
+### `GET` `/players/{player_id}/stats/profile`
+
+Global player profile from FutbolFantasy
+
+**Security:** HTTP Bearer (internal JWT)
+
+#### Inputs
+
+| Source | Name | Type | Required | Constraints | Description |
+|--------|------|------|----------|-------------|-------------|
+| path | `player_id` | string | yes |  | Master footballer id (`CatalogPlayer.id`). |
+
+#### Outputs
+
+**HTTP 200:** `PlayerProfileResponse`
+
+| Field | Type | Required | Constraints | Description |
+|-------|------|----------|-------------|-------------|
+| `player_id` | string | yes |  |  |
+| `player` | PlayerRef | no |  |  |
+| `season` | string | yes |  |  |
+| `generated_at` | string | yes |  |  |
+| `sources` | array[SourceStatus] | no |  |  |
+| `warnings` | array[SegmentWarning] | no |  |  |
+| `injury` | Injury | yes |  |  |
+| `start_probability` | StartProbability | yes |  |  |
+| `injury_risk` | InjuryRiskInfo | yes |  |  |
+| `injury_history` | array[InjuryHistoryEntry] | no |  |  |
+| `max_profitable_bid` | MaxProfitableBid | yes |  |  |
+| `hierarchy` | Hierarchy | yes |  |  |
+| `news` | array[NewsItem] | no |  |  |
+
+Full nested fields: [`PlayerProfileResponse`](#playerprofileresponse).
+
+
 ## Tag: `players`
 
 LaLiga Fantasy player catalog, market value, and league cards. Catalog and market value are public; league cards are authenticated.
@@ -1077,6 +1270,10 @@ Type: `object`
 | `badgeColor` | string | no |  |  |
 | `badgeWhite` | string | no |  |  |
 
+### `Competition`
+
+Type: `string`
+
 ### `CurrentWeek`
 
 | Field | Type | Required | Constraints | Description |
@@ -1133,11 +1330,68 @@ Type: `object`
 | `visitorScore` | integer | no |  |  |
 | `featured` | boolean | no |  |  |
 
+### `FixtureRef`
+
+| Field | Type | Required | Constraints | Description |
+|-------|------|----------|-------------|-------------|
+| `date` | string | no |  |  |
+| `competition` | Competition | yes |  |  |
+| `competition_label` | string | no |  |  |
+| `matchweek` | integer | no |  |  |
+| `home_team` | string | no |  |  |
+| `away_team` | string | no |  |  |
+| `is_home` | boolean | no |  |  |
+| `opponent` | string | no |  |  |
+| `home_score` | integer | no |  |  |
+| `away_score` | integer | no |  |  |
+| `result` | MatchResult | no |  |  |
+
+### `FixtureStats`
+
+| Field | Type | Required | Constraints | Description |
+|-------|------|----------|-------------|-------------|
+| `minutes_played` | StatValue | no |  |  |
+| `goals` | StatValue | no |  |  |
+| `assists` | StatValue | no |  |  |
+| `big_chances_created` | StatValue | no |  |  |
+| `balls_into_box` | StatValue | no |  |  |
+| `penalties_committed` | StatValue | no |  |  |
+| `penalties_saved` | StatValue | no |  |  |
+| `saves` | StatValue | no |  |  |
+| `clearances` | StatValue | no |  |  |
+| `penalties_missed` | StatValue | no |  |  |
+| `own_goals` | StatValue | no |  |  |
+| `goals_conceded` | StatValue | no |  |  |
+| `yellow_cards` | StatValue | no |  |  |
+| `red_card` | StatValue | no |  |  |
+| `shots` | StatValue | no |  |  |
+| `successful_dribbles` | StatValue | no |  |  |
+| `recoveries` | StatValue | no |  |  |
+| `balls_lost` | StatValue | no |  |  |
+| `dazn_points` | StatValue | no |  |  |
+
+### `FixtureStatsRow`
+
+| Field | Type | Required | Constraints | Description |
+|-------|------|----------|-------------|-------------|
+| `fixture` | FixtureRef | yes |  |  |
+| `minutes_played` | integer | no |  |  |
+| `fantasy_points_total` | integer | no |  |  |
+| `stats` | FixtureStats | yes |  |  |
+| `warnings` | array[SegmentWarning] | no |  |  |
+
 ### `HealthResponse`
 
 | Field | Type | Required | Constraints | Description |
 |-------|------|----------|-------------|-------------|
 | `status` | string | yes |  |  |
+
+### `Hierarchy`
+
+| Field | Type | Required | Constraints | Description |
+|-------|------|----------|-------------|-------------|
+| `label` | string | no |  |  |
+| `rank` | integer | no |  |  |
 
 ### `IdealPremiumConfig`
 
@@ -1150,6 +1404,38 @@ Type: `object`
 | Field | Type | Required | Constraints | Description |
 |-------|------|----------|-------------|-------------|
 | `buyoutClause` | integer | yes | >0 |  |
+
+### `Injury`
+
+| Field | Type | Required | Constraints | Description |
+|-------|------|----------|-------------|-------------|
+| `active` | boolean | no |  |  |
+| `diagnosis` | string | no |  |  |
+| `since` | string | no |  |  |
+| `expected_return` | string | no |  |  |
+| `availability_text` | string | no |  |  |
+| `fantasy_status` | string | no |  |  |
+
+### `InjuryHistoryEntry`
+
+| Field | Type | Required | Constraints | Description |
+|-------|------|----------|-------------|-------------|
+| `start` | string | no |  |  |
+| `end` | string | no |  |  |
+| `ongoing` | boolean | no |  |  |
+| `diagnosis` | string | no |  |  |
+| `duration_days` | integer | no |  |  |
+
+### `InjuryRisk`
+
+Type: `string`
+
+### `InjuryRiskInfo`
+
+| Field | Type | Required | Constraints | Description |
+|-------|------|----------|-------------|-------------|
+| `level` | InjuryRisk | yes |  |  |
+| `raw` | string | no |  |  |
 
 ### `LaligaCredentialProbeResponse`
 
@@ -1285,6 +1571,13 @@ Type: `object`
 | `managerName` | string | no |  |  |
 | `avatar` | string | no |  |  |
 
+### `MarketExtreme`
+
+| Field | Type | Required | Constraints | Description |
+|-------|------|----------|-------------|-------------|
+| `date` | string | yes |  |  |
+| `value` | integer | yes |  |  |
+
 ### `MarketHistoryEntry`
 
 | Field | Type | Required | Constraints | Description |
@@ -1295,9 +1588,51 @@ Type: `object`
 
 Type: `object`
 
+### `MarketPreset`
+
+Type: `string`
+
+### `MarketPresetSummary`
+
+| Field | Type | Required | Constraints | Description |
+|-------|------|----------|-------------|-------------|
+| `preset` | MarketPreset | yes |  |  |
+| `from` | string | yes |  |  |
+| `to` | string | yes |  |  |
+| `start_value` | integer | no |  |  |
+| `end_value` | integer | no |  |  |
+| `delta_abs` | integer | no |  |  |
+| `delta_rel` | number | no |  |  |
+
+### `MarketSeriesPoint`
+
+| Field | Type | Required | Constraints | Description |
+|-------|------|----------|-------------|-------------|
+| `date` | string | yes |  |  |
+| `value` | integer | yes |  |  |
+| `delta_abs` | integer | no |  |  |
+| `delta_rel` | number | no |  |  |
+| `filled` | boolean | no |  |  |
+
 ### `MarketSnapshot`
 
 Type: `object`
+
+### `MarketWindow`
+
+| Field | Type | Required | Constraints | Description |
+|-------|------|----------|-------------|-------------|
+| `preset` | MarketPreset | no |  |  |
+| `from` | string | yes |  |  |
+| `to` | string | yes |  |  |
+| `days` | integer | yes |  |  |
+| `start_value` | integer | no |  |  |
+| `end_value` | integer | no |  |  |
+| `delta_abs` | integer | no |  |  |
+| `delta_rel` | number | no |  |  |
+| `min` | MarketExtreme | no |  |  |
+| `max` | MarketExtreme | no |  |  |
+| `series` | array[MarketSeriesPoint] | no |  |  |
 
 ### `MatchPlayer`
 
@@ -1310,6 +1645,10 @@ Type: `object`
 | `positionId` | integer | no |  |  |
 | `teamId` | integer | no |  |  |
 | `weekPoints` | integer | no |  |  |
+
+### `MatchResult`
+
+Type: `string`
 
 ### `MatchSide`
 
@@ -1332,6 +1671,22 @@ Type: `object`
 | `localScore` | integer | no |  |  |
 | `visitorScore` | integer | no |  |  |
 
+### `MatchWeather`
+
+| Field | Type | Required | Constraints | Description |
+|-------|------|----------|-------------|-------------|
+| `snapshot` | WeatherSnapshot | no |  |  |
+| `reason` | WeatherReason | no |  |  |
+| `venue` | Venue | no |  |  |
+
+### `MaxProfitableBid`
+
+| Field | Type | Required | Constraints | Description |
+|-------|------|----------|-------------|-------------|
+| `amount` | integer | no |  |  |
+| `profitable` | boolean | no |  |  |
+| `raw` | string | no |  |  |
+
 ### `MeResponse`
 
 | Field | Type | Required | Constraints | Description |
@@ -1340,11 +1695,40 @@ Type: `object`
 | `email` | string | no |  |  |
 | `name` | string | no |  |  |
 
+### `MinutesPlayed`
+
+| Field | Type | Required | Constraints | Description |
+|-------|------|----------|-------------|-------------|
+| `minutes` | integer | no |  |  |
+| `started` | boolean | no |  |  |
+| `note` | string | no |  |  |
+
+### `NewsItem`
+
+| Field | Type | Required | Constraints | Description |
+|-------|------|----------|-------------|-------------|
+| `title` | string | yes |  |  |
+| `url` | string | no |  |  |
+| `published_at` | string | no |  |  |
+| `source` | string | no |  |  |
+
 ### `PayBuyoutWrite`
 
 | Field | Type | Required | Constraints | Description |
 |-------|------|----------|-------------|-------------|
 | `buyoutClauseToPay` | integer | yes | >0 |  |
+
+### `PlayerFixtureStatsResponse`
+
+| Field | Type | Required | Constraints | Description |
+|-------|------|----------|-------------|-------------|
+| `player_id` | string | yes |  |  |
+| `player` | PlayerRef | no |  |  |
+| `season` | string | yes |  |  |
+| `generated_at` | string | yes |  |  |
+| `sources` | array[SourceStatus] | no |  |  |
+| `warnings` | array[SegmentWarning] | no |  |  |
+| `fixtures` | array[FixtureStatsRow] | no |  |  |
 
 ### `PlayerMarket`
 
@@ -1355,6 +1739,21 @@ Type: `object`
 | `expirationDate` | string | no |  |  |
 | `numberOfOffers` | integer | no |  |  |
 | `directOffer` | boolean | no |  |  |
+
+### `PlayerMarketResponse`
+
+| Field | Type | Required | Constraints | Description |
+|-------|------|----------|-------------|-------------|
+| `player_id` | string | yes |  |  |
+| `player` | PlayerRef | no |  |  |
+| `season` | string | yes |  |  |
+| `generated_at` | string | yes |  |  |
+| `sources` | array[SourceStatus] | no |  |  |
+| `warnings` | array[SegmentWarning] | no |  |  |
+| `window` | MarketWindow | yes |  |  |
+| `presets` | array[MarketPresetSummary] | no |  |  |
+| `current_value` | integer | no |  |  |
+| `currency` | string | no |  |  |
 
 ### `PlayerMarketValue`
 
@@ -1383,6 +1782,36 @@ Type: `object`
 | `lastStats` | array[PlayerStatWeek] | no |  |  |
 | `team` | ClubTeam | no |  | Real-world club metadata on a player. |
 
+### `PlayerProfileResponse`
+
+| Field | Type | Required | Constraints | Description |
+|-------|------|----------|-------------|-------------|
+| `player_id` | string | yes |  |  |
+| `player` | PlayerRef | no |  |  |
+| `season` | string | yes |  |  |
+| `generated_at` | string | yes |  |  |
+| `sources` | array[SourceStatus] | no |  |  |
+| `warnings` | array[SegmentWarning] | no |  |  |
+| `injury` | Injury | yes |  |  |
+| `start_probability` | StartProbability | yes |  |  |
+| `injury_risk` | InjuryRiskInfo | yes |  |  |
+| `injury_history` | array[InjuryHistoryEntry] | no |  |  |
+| `max_profitable_bid` | MaxProfitableBid | yes |  |  |
+| `hierarchy` | Hierarchy | yes |  |  |
+| `news` | array[NewsItem] | no |  |  |
+
+### `PlayerRef`
+
+| Field | Type | Required | Constraints | Description |
+|-------|------|----------|-------------|-------------|
+| `id` | string | yes |  |  |
+| `name` | string | no |  |  |
+| `nickname` | string | no |  |  |
+| `slug` | string | no |  |  |
+| `team_id` | integer | no |  |  |
+| `team_name` | string | no |  |  |
+| `position_id` | integer | no |  |  |
+
 ### `PlayerStatWeek`
 
 | Field | Type | Required | Constraints | Description |
@@ -1391,6 +1820,15 @@ Type: `object`
 | `totalPoints` | integer | no |  |  |
 | `isInIdealFormation` | boolean | no |  |  |
 | `stats` | object | no |  |  |
+
+### `PlayerStatsIndex`
+
+| Field | Type | Required | Constraints | Description |
+|-------|------|----------|-------------|-------------|
+| `player` | PlayerRef | yes |  |  |
+| `season` | string | yes |  |  |
+| `segments` | array[SegmentDescriptor] | no |  |  |
+| `generated_at` | string | yes |  |  |
 
 ### `PlayerTeamOffers`
 
@@ -1421,6 +1859,48 @@ Type: `object`
 | `title` | string | no |  |  |
 | `description` | string | no |  |  |
 
+### `RecentMatch`
+
+| Field | Type | Required | Constraints | Description |
+|-------|------|----------|-------------|-------------|
+| `fixture` | FixtureRef | yes |  |  |
+| `minutes` | MinutesPlayed | yes |  |  |
+| `fantasy_points_total` | integer | no |  |  |
+| `stats` | FixtureStats | no |  |  |
+| `warnings` | array[SegmentWarning] | no |  |  |
+
+### `RecentMatchesResponse`
+
+| Field | Type | Required | Constraints | Description |
+|-------|------|----------|-------------|-------------|
+| `player_id` | string | yes |  |  |
+| `player` | PlayerRef | no |  |  |
+| `season` | string | yes |  |  |
+| `generated_at` | string | yes |  |  |
+| `sources` | array[SourceStatus] | no |  |  |
+| `warnings` | array[SegmentWarning] | no |  |  |
+| `matches` | array[RecentMatch] | no |  |  |
+
+### `SegmentDescriptor`
+
+| Field | Type | Required | Constraints | Description |
+|-------|------|----------|-------------|-------------|
+| `name` | string | yes |  |  |
+| `href` | string | yes |  |  |
+| `auth` | string | yes |  |  |
+| `sources` | array[string] | yes |  |  |
+| `requires_scraper` | boolean | yes |  |  |
+| `available` | boolean | yes |  |  |
+| `query` | array[string] | yes |  |  |
+
+### `SegmentWarning`
+
+| Field | Type | Required | Constraints | Description |
+|-------|------|----------|-------------|-------------|
+| `code` | string | yes |  |  |
+| `source` | string | no |  |  |
+| `detail` | string | no |  |  |
+
 ### `ShieldStatus`
 
 Type: `object`
@@ -1432,6 +1912,15 @@ Type: `object`
 | `playerId` | string \| integer | yes |  |  |
 | `rewardedAdType` | string | yes |  |  |
 | `rewardedAd` | integer | yes |  |  |
+
+### `SourceStatus`
+
+| Field | Type | Required | Constraints | Description |
+|-------|------|----------|-------------|-------------|
+| `name` | string | yes |  |  |
+| `status` | string | no |  |  |
+| `cached` | boolean | no |  |  |
+| `fetched_at` | string | no |  |  |
 
 ### `SquadPlayer`
 
@@ -1472,6 +1961,27 @@ Type: `object`
 | `teamMoney` | integer | no |  |  |
 | `manager` | Manager | no |  | Manager identity. |
 
+### `StartProbability`
+
+| Field | Type | Required | Constraints | Description |
+|-------|------|----------|-------------|-------------|
+| `matchweek` | integer | no |  |  |
+| `percent` | integer | no |  |  |
+| `raw` | string | no |  |  |
+
+### `StatSource`
+
+Type: `string`
+
+### `StatValue`
+
+| Field | Type | Required | Constraints | Description |
+|-------|------|----------|-------------|-------------|
+| `count` | integer | no |  |  |
+| `fantasy_points` | integer | no |  |  |
+| `dazn_points` | integer | no |  |  |
+| `source` | StatSource | no |  |  |
+
 ### `TeamDetail`
 
 | Field | Type | Required | Constraints | Description |
@@ -1503,3 +2013,68 @@ Type: `object`
 |-------|------|----------|-------------|-------------|
 | `teamMoney` | integer | no |  |  |
 | `teamInvestment` | integer | no |  |  |
+
+### `Travel`
+
+| Field | Type | Required | Constraints | Description |
+|-------|------|----------|-------------|-------------|
+| `distance_km` | number | no |  |  |
+| `mode` | string | no |  |  |
+| `from_venue` | Venue | no |  |  |
+| `to_venue` | Venue | no |  |  |
+| `player_team_travels` | boolean | no |  |  |
+| `reason` | string | no |  |  |
+
+### `UpcomingMatch`
+
+| Field | Type | Required | Constraints | Description |
+|-------|------|----------|-------------|-------------|
+| `fixture` | FixtureRef | yes |  |  |
+| `kickoff` | string | no |  |  |
+| `weather` | MatchWeather | yes |  |  |
+| `travel` | Travel | yes |  |  |
+| `warnings` | array[SegmentWarning] | no |  |  |
+
+### `UpcomingMatchesResponse`
+
+| Field | Type | Required | Constraints | Description |
+|-------|------|----------|-------------|-------------|
+| `player_id` | string | yes |  |  |
+| `player` | PlayerRef | no |  |  |
+| `season` | string | yes |  |  |
+| `generated_at` | string | yes |  |  |
+| `sources` | array[SourceStatus] | no |  |  |
+| `warnings` | array[SegmentWarning] | no |  |  |
+| `matches` | array[UpcomingMatch] | no |  |  |
+
+### `Venue`
+
+| Field | Type | Required | Constraints | Description |
+|-------|------|----------|-------------|-------------|
+| `club_key` | string | yes |  |  |
+| `stadium` | string | no |  |  |
+| `city` | string | no |  |  |
+| `lat` | number | yes |  |  |
+| `lon` | number | yes |  |  |
+| `country` | string | no |  |  |
+
+### `WeatherReason`
+
+Type: `string`
+
+### `WeatherSnapshot`
+
+| Field | Type | Required | Constraints | Description |
+|-------|------|----------|-------------|-------------|
+| `temperature_c` | number | yes |  |  |
+| `feels_like_c` | number | no |  |  |
+| `humidity_pct` | integer | no |  |  |
+| `wind_speed_ms` | number | no |  |  |
+| `precipitation_probability` | number | no |  |  |
+| `rain_mm` | number | no |  |  |
+| `condition` | string | yes |  |  |
+| `condition_code` | integer | no |  |  |
+| `icon` | string | no |  |  |
+| `forecast_for` | string | yes |  |  |
+| `granularity` | string | no |  |  |
+| `source` | string | no |  |  |

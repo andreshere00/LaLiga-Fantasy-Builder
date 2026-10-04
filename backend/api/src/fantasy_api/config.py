@@ -4,27 +4,12 @@ from __future__ import annotations
 
 from functools import lru_cache
 
-from pydantic import Field
+from pydantic import Field, SecretStr, model_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
 class Settings(BaseSettings):
-    """Runtime configuration for the Fantasy Builder API.
-
-    Attributes:
-        app_name: Service display name.
-        debug: Verbose mode flag.
-        cors_origins: Browser origin allow-list.
-        auth_jwks_url: Auth service JWKS URL for internal JWTs.
-        internal_jwt_issuer: Expected JWT issuer.
-        internal_jwt_audience: Expected JWT audience.
-        auth_internal_base_url: Auth service base URL for private calls.
-        internal_service_token: Shared ``X-Service-Token`` secret.
-        laliga_fantasy_origin: LaLiga Fantasy API origin.
-        laliga_competition_id: Competition id used in Fantasy paths.
-        log_level: Root log level.
-        log_json: Emit JSON logs when True.
-    """
+    """Runtime configuration for the Fantasy Builder API."""
 
     model_config = SettingsConfigDict(
         env_file=".env",
@@ -45,15 +30,33 @@ class Settings(BaseSettings):
     laliga_fantasy_origin: str = "https://fantasy-api.llt-services.com"
     laliga_competition_id: int = 1
 
+    scraping_base_url: str = ""
+    scraping_service_token: SecretStr = SecretStr("")
+    scraping_timeout_seconds: float = 30.0
+    scraping_max_concurrency: int = 4
+
+    openweather_api_key: SecretStr | None = None
+    openweather_base_url: str = "https://api.openweathermap.org"
+    openweather_timeout_seconds: float = 5.0
+
+    player_catalog_ttl_seconds: int = 900
+    scraped_player_ttl_seconds: int = 900
+    weather_ttl_seconds: int = 1800
+    market_history_ttl_seconds: int = 300
+    teams_master_ttl_seconds: int = 86400
+    player_stats_rate_limit_per_minute: int = 60
+
     log_level: str = "INFO"
     log_json: bool = True
+
+    @model_validator(mode="after")
+    def _scraping_token_required(self) -> Settings:
+        if self.scraping_base_url and not self.scraping_service_token.get_secret_value():
+            raise ValueError("SCRAPING_SERVICE_TOKEN is required when SCRAPING_BASE_URL is set")
+        return self
 
 
 @lru_cache
 def get_settings() -> Settings:
-    """Return a cached Settings singleton.
-
-    Returns:
-        Application settings instance.
-    """
+    """Return a cached Settings singleton."""
     return Settings()

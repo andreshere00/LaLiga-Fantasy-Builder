@@ -6,6 +6,7 @@ import argparse
 import json
 import os
 import sys
+from collections.abc import Mapping
 from typing import Any
 from urllib.parse import quote
 
@@ -136,7 +137,12 @@ def exchange_token(
     return str(token)
 
 
-def api_get(api_base: str, path: str, jwt: str | None = None) -> Any:
+def api_get(
+    api_base: str,
+    path: str,
+    jwt: str | None = None,
+    params: Mapping[str, Any] | None = None,
+) -> Any:
     """GET a Fantasy Builder API path, optionally with the internal JWT.
 
     Args:
@@ -155,7 +161,7 @@ def api_get(api_base: str, path: str, jwt: str | None = None) -> Any:
     if jwt:
         headers["Authorization"] = f"Bearer {jwt}"
     with httpx.Client(timeout=60.0) as client:
-        response = client.get(url, headers=headers)
+        response = client.get(url, headers=headers, params=params)
     if response.status_code == 401:
         body = safe_json(response)
         error = body.get("error") or "unauthorized"

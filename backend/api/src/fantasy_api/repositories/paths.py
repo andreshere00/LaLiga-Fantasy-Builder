@@ -17,6 +17,12 @@ def segment(value: str | int) -> str:
     return quote(str(value), safe="")
 
 
+def api_path(*parts: str | int) -> str:
+    """Build a path under ``/api/...`` with encoded segments."""
+    encoded = "/".join(segment(part) for part in parts)
+    return f"/api/{encoded}" if encoded else "/api"
+
+
 def competition_path(competition_id: int, *parts: str | int) -> str:
     """Build a competition-scoped Fantasy path under ``/api/v1/competition/{id}``.
 

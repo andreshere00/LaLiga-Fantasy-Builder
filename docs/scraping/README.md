@@ -10,7 +10,8 @@ browsers never receive raw HTML.
 | Scraper | `fantasy-scraper` | Resolve names, download pages, private HTTP |
 | Parser | `fantasy-parse` | Saved HTML → JSON / Markdown (no network) |
 
-Parser detail: [parser.md](parser.md). Committed OpenAPI (internal):
+Parser detail: [parser.md](parser.md). Selector contract (fixture + live):
+[parser-discovery.md](parser-discovery.md). Committed OpenAPI (internal):
 `backend/scraping/openapi.json` (regenerate with `uv run poe generate-scraping-openapi`).
 
 ## Compose networking
@@ -86,5 +87,33 @@ uv run fantasy-scraper probe "Raphinha" --selector title=h1   # DEBUG=true
 export SCRAPING_SERVICE_TOKEN=dev-scraping-token
 uv run fantasy-scraper scrape Raphinha --service-url http://localhost:8002
 ```
+
+## Scrape-then-parse (dev workflow)
+
+The HTTP service stores pages in cache; locally you usually write HTML files
+then parse offline.
+
+1. **Scrape** profile + market (and optional competition pages):
+
+   ```bash
+   uv run fantasy-scraper scrape "Raphinha" --season 2026-27 \
+     --include profile,market --out /tmp/raphinha-scrape
+   ```
+
+2. **Parse** the LaLiga profile file (metadata flags must match the scrape):
+
+   ```bash
+   uv run fantasy-parse /tmp/raphinha-scrape/raphinha-player-laliga-26-27.html \
+     --url "https://www.futbolfantasy.com/jugadores/raphinha/laliga-26-27" \
+     --slug raphinha --season 2026-27 --season-slug laliga-26-27 \
+     --fetched-at "2026-10-04T12:00:00+00:00" --kind player --json \
+     --output /tmp/raphinha-parsed.json
+   ```
+
+3. **Market block:** `fantasy-parse` reads one file. For full `market` numbers,
+   merge in Python with `ParserService().parse(profile_page, companions=[widget_page])`
+   (widget HTML from the same `--include market` scrape), or call
+   `GET /internal/players/futbolfantasy?player_name=…&season=…&team=…` (scrape +
+   companions + `merge_competitions` in one JSON response for the API).
 
 Run and test: [backend/scraping/README.md](../../backend/scraping/README.md).

@@ -19,6 +19,13 @@ class NeedsReauthError(ApiError):
         super().__init__(message)
 
 
+class NotFoundError(ApiError):
+    """Resource not found in catalog or upstream."""
+
+    def __init__(self, message: str = "not found") -> None:
+        super().__init__(message)
+
+
 class UpstreamError(ApiError):
     """Auth or Fantasy upstream failure.
 

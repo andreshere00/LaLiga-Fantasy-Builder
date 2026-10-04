@@ -3,19 +3,25 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
+from datetime import UTC, datetime
 from typing import Annotated, Any, Protocol
 
+import httpx
 from fastapi import Header
 
 from fantasy_api.clients.auth_credentials import AuthCredentialsClient
 from fantasy_api.clients.laliga_fantasy import LaligaFantasyClient
+from fantasy_api.clients.openweather import OpenWeatherClient
+from fantasy_api.clients.scraping import ScrapingClient
 from fantasy_api.config import Settings, get_settings
 from fantasy_api.domain.errors import UnauthorizedError
 from fantasy_api.domain.users import AppUser, extract_app_user_from_claims
+from fantasy_api.domain.venues import VenueDirectory
 from fantasy_api.repositories.buyout import BuyoutRepository
 from fantasy_api.repositories.calendar import CalendarRepository
 from fantasy_api.repositories.leagues import LeaguesRepository
 from fantasy_api.repositories.market import MarketRepository
+from fantasy_api.repositories.player_stats import PlayerStatsRepository
 from fantasy_api.repositories.players import PlayersRepository
 from fantasy_api.repositories.teams import TeamsRepository
 from fantasy_api.security.internal_jwt import InternalJwtValidator
@@ -23,7 +29,10 @@ from fantasy_api.services.buyout import BuyoutService
 from fantasy_api.services.calendar import CalendarService
 from fantasy_api.services.leagues import LeaguesService
 from fantasy_api.services.market import MarketService
+from fantasy_api.services.player_resolver import PlayerResolver
+from fantasy_api.services.player_stats import PlayerStatsService
 from fantasy_api.services.players import PlayersService
+from fantasy_api.services.scraped_player import ScrapedPlayerProvider
 from fantasy_api.services.teams import TeamsService
 
 
@@ -49,6 +58,9 @@ class AppContainer:
         players_service: Players application service.
         market_service: Market application service.
         buyout_service: Buyout application service.
+        scraping_client: Private scraping HTTP client.
+        weather_client: OpenWeather HTTP client.
+        player_stats_service: Player stats orchestrator.
     """
 
     settings: Settings
@@ -61,11 +73,16 @@ class AppContainer:
     players_service: PlayersService
     market_service: MarketService
     buyout_service: BuyoutService
+    scraping_client: ScrapingClient
+    weather_client: OpenWeatherClient
+    player_stats_service: PlayerStatsService
 
     async def aclose(self) -> None:
         """Close process-lifetime HTTP clients."""
         await self.credentials.aclose()
         await self.laliga_client.aclose()
+        await self.scraping_client.aclose()
+        await self.weather_client.aclose()
 
 
 _container: AppContainer | None = None
@@ -83,6 +100,11 @@ def build_container(
     players_service: PlayersService | None = None,
     market_service: MarketService | None = None,
     buyout_service: BuyoutService | None = None,
+    scraping_client: ScrapingClient | None = None,
+    weather_client: OpenWeatherClient | None = None,
+    player_stats_service: PlayerStatsService | None = None,
+    scraping_transport: httpx.AsyncBaseTransport | None = None,
+    weather_transport: httpx.AsyncBaseTransport | None = None,
 ) -> AppContainer:
     """Build the API container.
 
@@ -97,6 +119,11 @@ def build_container(
         players_service: Optional players service override (tests).
         market_service: Optional market service override (tests).
         buyout_service: Optional buyout service override (tests).
+        scraping_client: Optional scraping client override (tests).
+        weather_client: Optional weather client override (tests).
+        player_stats_service: Optional player stats service override (tests).
+        scraping_transport: Optional scraping httpx transport (tests).
+        weather_transport: Optional weather httpx transport (tests).
 
     Returns:
         Wired container.
@@ -155,6 +182,47 @@ def build_container(
             competition_id=cfg.laliga_competition_id,
         ),
     )
+    scraper = scraping_client or ScrapingClient(
+        base_url=cfg.scraping_base_url,
+        service_token=cfg.scraping_service_token,
+        timeout_seconds=cfg.scraping_timeout_seconds,
+        transport=scraping_transport,
+    )
+    weather = weather_client or OpenWeatherClient(
+        api_key=cfg.openweather_api_key,
+        base_url=cfg.openweather_base_url,
+        timeout_seconds=cfg.openweather_timeout_seconds,
+        transport=weather_transport,
+    )
+    players_repo = PlayersRepository(
+        fantasy,
+        competition_id=cfg.laliga_competition_id,
+    )
+    stats_repo = PlayerStatsRepository(
+        fantasy,
+        scraper,
+        weather,
+        competition_id=cfg.laliga_competition_id,
+    )
+    resolver = PlayerResolver(
+        players_repo,
+        ttl_seconds=cfg.player_catalog_ttl_seconds,
+    )
+    scraped_provider = ScrapedPlayerProvider(
+        stats_repo,
+        ttl_seconds=cfg.scraped_player_ttl_seconds,
+        max_concurrency=cfg.scraping_max_concurrency,
+    )
+    stats = player_stats_service or PlayerStatsService(
+        resolver=resolver,
+        players=players_repo,
+        calendar=CalendarRepository(fantasy, competition_id=cfg.laliga_competition_id),
+        scraped=scraped_provider,
+        stats_repo=stats_repo,
+        venues=VenueDirectory.load(),
+        clock=lambda: datetime.now(tz=UTC),
+        settings=cfg,
+    )
     return AppContainer(
         settings=cfg,
         jwt_validator=validator,
@@ -166,6 +234,9 @@ def build_container(
         players_service=players,
         market_service=market,
         buyout_service=buyout,
+        scraping_client=scraper,
+        weather_client=weather,
+        player_stats_service=stats,
     )
 
 

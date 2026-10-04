@@ -112,8 +112,10 @@ cd backend/scraping
 uv run pytest --cov=src --cov-report=term-missing --cov-fail-under=80
 ```
 
-Fixtures under `tests/parser/fixtures` are synthetic HTML that follows the
-selector contract. Real pages stay in git-ignored `tmp/ff-fixtures/`.
+Fixtures under `tests/parser/fixtures` follow the **trimmed** selector contract.
+Production pages use overlapping fallbacks (see
+[parser-discovery.md](parser-discovery.md)). Raw saves stay in git-ignored
+`tmp/ff-fixtures/`.
 `--update-golden` rewrites the Markdown snapshot and is refused when `CI=true`.
 
 ## Compose

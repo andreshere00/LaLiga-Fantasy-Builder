@@ -12,6 +12,7 @@ dependencies = [
     "httpx>=0.28.0",
     "pydantic-settings>=2.7.0",
     "pyjwt[crypto]>=2.10.0",
+    "tzdata>=2024.2",
     "uvicorn[standard]>=0.34.0",
 ]
 
@@ -29,6 +30,7 @@ fantasy-calendar = "fantasy_api.cli.calendar:main"
 fantasy-players = "fantasy_api.cli.players:main"
 fantasy-market = "fantasy_api.cli.market:main"
 fantasy-buyout = "fantasy_api.cli.buyout:main"
+fantasy-player-stats = "fantasy_api.cli.player_stats:main"
 generate-openapi = "fantasy_api.openapi:main"
 generate-endpoint-schemas = "fantasy_api.endpoint_schemas_doc:main"
 
