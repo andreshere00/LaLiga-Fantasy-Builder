@@ -1,83 +1,53 @@
-import {
-  AnimatePresence,
-  LazyMotion,
-  MotionConfig,
-  domAnimation,
-  m,
-  type Transition,
-} from "motion/react";
-import type { ReactNode } from "react";
+import { LazyMotion, MotionConfig, domAnimation, m } from "motion/react";
+import { createContext, useContext, useEffect, useState, type ReactNode } from "react";
 
-export const MARKET_ROW_TRANSITION: Transition = {
-  type: "spring",
-  stiffness: 420,
-  damping: 34,
-  mass: 0.85,
-};
+const STAGGER_SECONDS = 0.035;
+const STAGGER_WINDOW_MS = 1_200;
 
-export const MARKET_ROW_EXIT_TRANSITION: Transition = {
-  duration: 0.2,
-  ease: [0.4, 0, 0.2, 1],
-};
+const MarketStaggerContext = createContext(true);
 
-export const MARKET_TABLE_CROSSFADE: Transition = {
-  duration: 0.22,
-  ease: [0.4, 0, 0.2, 1],
-};
-
-/** Loads motion features for the market table. */
-export function MarketMotionScope({ children }: { children: ReactNode }) {
+/** Loads motion features for market rows, same stack as the lineup pitch. */
+export function MarketMotionProvider({ children }: { children: ReactNode }) {
+  const [staggering, setStaggering] = useState(true);
+  useEffect(() => {
+    const timer = window.setTimeout(() => setStaggering(false), STAGGER_WINDOW_MS);
+    return () => window.clearTimeout(timer);
+  }, []);
   return (
     <LazyMotion features={domAnimation} strict>
-      <MotionConfig reducedMotion="user">{children}</MotionConfig>
+      <MotionConfig reducedMotion="user">
+        <MarketStaggerContext.Provider value={staggering}>{children}</MarketStaggerContext.Provider>
+      </MotionConfig>
     </LazyMotion>
   );
 }
 
-type MarketRowMotionListProps = {
+type MarketRowMotionProps = {
+  order: number;
   children: ReactNode;
 };
 
-export function MarketRowMotionList({ children }: MarketRowMotionListProps) {
+/**
+ * Market row entrance, matching pitch tiles.
+ *
+ * Rows present when the list mounts rise in sequence. A row that appears later
+ * (a filter change) pops in without the stagger delay.
+ */
+export function MarketRowMotion({ order, children }: MarketRowMotionProps) {
+  const staggering = useContext(MarketStaggerContext);
   return (
-    <AnimatePresence initial={false}>
+    <m.li
+      className="market-row market-data-row"
+      initial={staggering ? { opacity: 0, y: 14, scale: 0.94 } : { opacity: 0, scale: 0.8 }}
+      animate={{ opacity: 1, y: 0, scale: 1 }}
+      transition={{
+        type: "spring",
+        stiffness: 320,
+        damping: 26,
+        delay: staggering ? order * STAGGER_SECONDS : 0,
+      }}
+    >
       {children}
-    </AnimatePresence>
-  );
-}
-
-type MarketTablePresenceProps = {
-  showTable: boolean;
-  emptyState: ReactNode;
-  table: ReactNode;
-};
-
-/** Crossfades between the empty-filter message and the listings table. */
-export function MarketTablePresence({ showTable, emptyState, table }: MarketTablePresenceProps) {
-  return (
-    <AnimatePresence mode="wait" initial={false}>
-      {showTable ? (
-        <m.div
-          key="market-table-wrap"
-          className="market-table-wrap"
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          exit={{ opacity: 0 }}
-          transition={MARKET_TABLE_CROSSFADE}
-        >
-          {table}
-        </m.div>
-      ) : (
-        <m.div
-          key="market-empty-wrap"
-          initial={{ opacity: 0, y: 6 }}
-          animate={{ opacity: 1, y: 0 }}
-          exit={{ opacity: 0, y: -4 }}
-          transition={MARKET_TABLE_CROSSFADE}
-        >
-          {emptyState}
-        </m.div>
-      )}
-    </AnimatePresence>
+    </m.li>
   );
 }

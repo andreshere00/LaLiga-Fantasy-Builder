@@ -1,11 +1,11 @@
 :root {
   --black: #000000;
-  --cyan: #36fff2;
+  --cyan: #24cee5;
   --gray: #e5e5e5;
   --red: #ff4b44;
   --score-yellow: #f5c400;
   --score-green: #2bb673;
-  --score-blue: #00fbff;
+  --score-blue: #24cee5;
   --red-soft: #ffc2bf;
   --white: #ffffff;
   --surface-press: var(--gray);

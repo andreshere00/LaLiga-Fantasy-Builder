@@ -3413,6 +3413,114 @@
         ]
       }
     },
+    "/market/leagues/{league_id}/immediate-sales": {
+      "post": {
+        "tags": [
+          "market"
+        ],
+        "summary": "Sell a player immediately at half market value",
+        "description": "``playerId`` in the body is the squad-entry id (``playerTeamId``).\nFantasy credits the sale to the manager balance and removes the player.",
+        "operationId": "create_immediate_sale_market_leagues__league_id__immediate_sales_post",
+        "parameters": [
+          {
+            "name": "league_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "description": "Fantasy league identifier.",
+              "title": "League Id"
+            },
+            "description": "Fantasy league identifier."
+          },
+          {
+            "name": "authorization",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Bearer internal JWT issued by auth ``POST /auth/token``.",
+              "title": "Authorization"
+            },
+            "description": "Bearer internal JWT issued by auth ``POST /auth/token``."
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ImmediateSaleWrite"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MarketMutationResult"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized or LaLiga re-auth required.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "502": {
+            "description": "Auth or Fantasy upstream failure.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Fantasy upstream unavailable.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ]
+      }
+    },
     "/market/leagues/{league_id}/{market_id}": {
       "delete": {
         "tags": [
@@ -5634,6 +5742,28 @@
         "title": "IdealPremiumConfig",
         "description": "Ideal lineup premium configuration."
       },
+      "ImmediateSaleWrite": {
+        "properties": {
+          "playerId": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "integer"
+              }
+            ],
+            "title": "Playerid"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "playerId"
+        ],
+        "title": "ImmediateSaleWrite",
+        "description": "Request body for ``POST /market/leagues/{leagueId}/immediate-sales``.\n\n``playerId`` is the squad-entry id (``playerTeamId``), not the master\nfootballer id. Fantasy sets the price at half the current market value\nand credits the balance."
+      },
       "IncreaseBuyoutWrite": {
         "properties": {
           "buyoutClause": {
@@ -6586,6 +6716,7 @@
           },
           "salePrice": {
             "type": "integer",
+            "maximum": 999999999.0,
             "exclusiveMinimum": 0.0,
             "title": "Saleprice"
           }
@@ -6597,7 +6728,7 @@
           "salePrice"
         ],
         "title": "ListingWrite",
-        "description": "Request body for ``POST /market/leagues/{leagueId}/listings``.\n\n``playerId`` is the squad-entry id (``playerTeamId``), not the master\nfootballer id."
+        "description": "Request body for ``POST /market/leagues/{leagueId}/listings``.\n\n``playerId`` is the squad-entry id (``playerTeamId``), not the master\nfootballer id. ``salePrice`` is a whole-euro offer, at most\n``MAX_SALE_PRICE``. The caller must also keep it at or above the player's\ncurrent market value."
       },
       "LoanPremiumConfig": {
         "properties": {

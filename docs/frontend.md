@@ -64,6 +64,15 @@ Code: `frontend/src/features/lineup/`.
   full replace — [Teams API](api/teams/README.md)), standings, pitch, and
   paginated squad panel.
 - Shared player tiles and score badges are reused on the market table.
+- On your own squad, hover a player for **Click for player options**, then click the
+  card. **Bring to market** lists the player (`POST /api/market/leagues/{id}/listings`)
+  for a whole-euro offer from the current market value through 999.999.999 €.
+  When that player is already listed, **Bring to market** is replaced by **Cancel bid**
+  (`DELETE /api/market/leagues/{id}/{marketId}`) and **Modify bid** (withdraw, then list
+  again at the new amount). **Send immediately to market**
+  (`POST /api/market/leagues/{id}/immediate-sales`) sells at half the market value;
+  Fantasy credits the balance and the player leaves the squad. These actions are hidden
+  while you are replacing a pitch player, and on another manager’s squad.
 
 ## Market screen
 
@@ -82,8 +91,9 @@ Code: `frontend/src/features/market/` (`model/`, `cells/`, `actions/`,
   icon that opens min/max or text controls (market value 1.000–1.000.000 €,
   whole-number points/form). **Clear filters** in the toolbar resets everything;
   **Clear column filter** resets only that column. Filter state stays on the page
-  across refetches; values use `useDeferredValue`. Row and table transitions use
-  `motion/react` (`domAnimation`, `MotionConfig reducedMotion="user"`).
+  across refetches; values use `useDeferredValue`. When the listings mount, each
+  row rises in with the same Motion spring and stagger as lineup pitch tiles
+  (`MarketMotionProvider`, `domAnimation`, `MotionConfig reducedMotion="user"`).
 
 ### Data loading (`useMarketBoard`)
 
@@ -109,7 +119,7 @@ stale snapshots until Fantasy confirms the change (`model/pendingBids.ts`).
 | Position | Abbrev badge (`GKP`, `DEF`, `MDF`, `ATK`, `COA`); hover shows full role name |
 | FSYP | Points plus season average; hover panel: total, season average, form (last 3) |
 | Form | Three played matchweeks at a time, oldest→newest; ‹ earlier, › later (full season) |
-| Market value | Price and 5-day change; hover: last, highest, lowest, 5d/14d ago with % vs current |
+| Market value | Price on the first line, 5-day change on the next; hover: last, highest, lowest, 5d/14d ago with % vs current |
 | Availability | SVG icons + hover text for next matchday readiness |
 | Seal end | Countdown; **red** when under one hour remains |
 | Sell options | Seller link (`/?team=…`) or `LALIGA`; **Options** / **Bidded** action menu. On your own listings the menu offers **Withdraw from market** (confirmation modal, `DELETE /api/market/leagues/{id}/{marketId}`) and a disabled **Immediate sell** entry until a documented Fantasy route exists |

@@ -191,6 +191,30 @@ class MarketService:
             body,
         )
 
+    async def create_immediate_sale(
+        self,
+        internal_jwt: str,
+        league_id: str,
+        body: dict[str, Any],
+    ) -> Any:
+        """Sell a squad entry immediately at half its market value.
+
+        Args:
+            internal_jwt: Auth-issued internal access token.
+            league_id: Fantasy league identifier.
+            body: Immediate-sale payload (squad-entry ``playerId``).
+
+        Returns:
+            Upstream mutation JSON (may be empty).
+        """
+        return await with_laliga_bearer(
+            self._credentials,
+            internal_jwt,
+            self._repository.create_immediate_sale,
+            league_id,
+            body,
+        )
+
     async def delete_listing(
         self,
         internal_jwt: str,

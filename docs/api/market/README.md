@@ -15,6 +15,7 @@ To add a route, follow [Adding endpoints](../adding-endpoints.md).
 | `PUT` | `/market/leagues/{league_id}/{market_id}/bids/{bid_id}` | `.../bid/{bidId}` | `MarketMutationResult` |
 | `DELETE` | `/market/leagues/{league_id}/{market_id}/bids/{bid_id}` | `.../bid/{bidId}/cancel` | `MarketMutationResult` |
 | `POST` | `/market/leagues/{league_id}/listings` | `.../market/sell` | `MarketMutationResult` |
+| `POST` | `/market/leagues/{league_id}/immediate-sales` | `.../market/immediate-sale` | `MarketMutationResult` |
 | `POST` | `/market/leagues/{league_id}/direct-offers` | `.../market/direct-offer` | `MarketMutationResult` |
 | `DELETE` | `/market/leagues/{league_id}/{market_id}` | `.../market/{id}/delete` | `MarketMutationResult` |
 | `POST` | `/market/leagues/{league_id}/{market_id}/offers/{offer_id}/accept` | `.../offer/{id}/accept` | `MarketMutationResult` |
@@ -64,6 +65,14 @@ flows remain **read-only**.
 
 Listing and direct-offer bodies name the field `playerId`, but Fantasy
 expects the **squad-entry id** (`playerTeamId`), not the master footballer id.
+`salePrice` on a listing is a whole-euro amount from 1 through 999999999.
+The app also requires that amount to be at least the player's current
+market value.
+
+Immediate sale sends only `playerId`. Fantasy prices the player at half
+the current market value, credits the manager, and removes the squad entry.
+That upstream path is **Medium** confidence (community capture of
+`POST .../market/immediate-sale`; body observed as the squad-entry id only).
 
 ## Notes
 

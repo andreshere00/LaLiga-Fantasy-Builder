@@ -14,7 +14,14 @@ import {
   squadPickerPool,
 } from "./lineupDraft";
 
-const media = { photoUrl: null, teamBadgeUrl: null };
+const media = {
+  photoUrl: null,
+  teamBadgeUrl: null,
+  marketValue: null,
+  onMarket: false,
+  listingId: null,
+  salePrice: null,
+};
 
 const squad: SquadCard[] = [
   { id: "gk", name: "GK", captain: false, positionId: 1, ...media },

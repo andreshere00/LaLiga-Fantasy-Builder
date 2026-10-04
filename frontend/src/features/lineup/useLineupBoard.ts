@@ -121,6 +121,7 @@ export type LineupBoard = {
   lineupMessage: string | null;
   emptyLeague: boolean;
   editable: boolean;
+  ownSquad: boolean;
   formationCode: string | null;
   formationOptions: { value: string; label: string }[];
   setFormationCode: (code: string) => void;
@@ -738,6 +739,7 @@ export function useLineupBoard(options: UseLineupBoardOptions = {}): LineupBoard
         : null,
     emptyLeague: !leaguesLoading && !leaguesError && selected == null,
     editable,
+    ownSquad: isCaller,
     formationCode,
     formationOptions,
     setFormationCode: (code: string) => {

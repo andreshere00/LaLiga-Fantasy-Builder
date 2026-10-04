@@ -8,9 +8,11 @@ import {
 } from "../marketValueStats";
 import type { ValuePoint } from "../model/valueSeries";
 
+const VALUE_RISE_GREEN_MIN_PERCENT = 5;
+
 function variationPercentTone(value: number | null): string {
   if (value == null || !Number.isFinite(value)) return "is-flat";
-  if (value > 1) return "is-up";
+  if (value >= VALUE_RISE_GREEN_MIN_PERCENT) return "is-up";
   if (value >= 0) return "is-mid";
   return "is-down";
 }
@@ -32,20 +34,15 @@ export function ValueCell({
   const tone = variationPercentTone(variationPercent);
   const stats = marketValueSnapshot(valueHistory, marketValue);
 
-  const primary = (
-    <>
-      <span className="market-value-primary">{formatEuro(marketValue)}</span>
-      {absolute || percent ? (
-        <>
-          <span className="market-value-sep"> · </span>
-          <span className={`market-value-change ${tone}`}>
-            {absolute}
-            {percent ? ` (${percent})` : null}
-          </span>
-        </>
-      ) : null}
-    </>
-  );
+  const change =
+    absolute || percent ? (
+      <>
+        {absolute}
+        {percent ? ` (${percent})` : null}
+      </>
+    ) : (
+      "—"
+    );
 
   return (
     <span
@@ -53,7 +50,8 @@ export function ValueCell({
       tabIndex={0}
       aria-describedby={tooltipId}
     >
-      {primary}
+      <span className="market-value-primary">{formatEuro(marketValue)}</span>
+      <span className={`market-value-change ${tone}`}>{change}</span>
       <span
         id={tooltipId}
         className="hover-tooltip-panel is-align-start market-value-tooltip"

@@ -1,0 +1,126 @@
+.squad-tile-slot {
+  position: relative;
+}
+
+.squad-player-hit {
+  display: block;
+  width: 100%;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  text-align: inherit;
+  cursor: pointer;
+}
+
+.squad-player-hit:is(:hover, :focus-visible) {
+  z-index: 6;
+}
+
+.squad-player-hit:focus-visible {
+  outline: 2px solid var(--cyan);
+  outline-offset: 2px;
+}
+
+.squad-player-hint {
+  left: 50%;
+  right: auto;
+  translate: -50% 6px;
+  font-weight: 700;
+  text-align: center;
+  white-space: nowrap;
+  transition:
+    opacity 0.12s ease,
+    visibility 0.12s ease,
+    translate 0.16s ease;
+}
+
+.squad-player-hit:is(:hover, :focus-visible) .squad-player-hint {
+  translate: -50% 0;
+}
+
+.squad-player-hit.has-hover-tooltip-panel[aria-expanded="true"] .hover-tooltip-panel.squad-player-hint {
+  opacity: 0;
+  visibility: hidden;
+}
+
+.squad-sale-choices {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.squad-sale-choice,
+.squad-sale-primary,
+.squad-sale-secondary {
+  border: 0;
+  padding: 10px 18px;
+  font: inherit;
+  font-weight: 700;
+  cursor: pointer;
+  box-shadow: var(--shadow-surface);
+  transition:
+    background-color var(--control-fill-duration) var(--control-fill-ease),
+    color var(--control-fill-duration) var(--control-fill-ease),
+    border-color var(--control-fill-duration) var(--control-fill-ease);
+}
+
+.squad-sale-choice {
+  background: var(--white);
+  color: var(--ink);
+  border: 1px solid color-mix(in srgb, var(--ink) 12%, transparent);
+}
+
+.squad-sale-choice:is(:hover, :active):not(:disabled),
+.squad-sale-secondary:is(:hover, :active):not(:disabled) {
+  background: var(--accent-press);
+}
+
+.squad-sale-choice:disabled,
+.squad-sale-primary:disabled,
+.squad-sale-secondary:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+.squad-sale-primary {
+  background: var(--red);
+  color: var(--white);
+}
+
+.squad-sale-primary:is(:hover, :active):not(:disabled) {
+  background: var(--accent-press);
+  color: var(--black);
+}
+
+.squad-sale-secondary {
+  background: var(--white);
+  color: var(--ink);
+}
+
+.squad-sale-copy,
+.squad-sale-note {
+  margin: 0 0 12px;
+  text-align: center;
+}
+
+.squad-sale-note {
+  margin: 4px 0 0;
+  font-size: 0.82rem;
+}
+
+.squad-sale-label {
+  display: block;
+  margin: 0 0 6px;
+  font-size: 0.82rem;
+  font-weight: 700;
+  text-align: left;
+}
+
+.squad-sale-error {
+  margin: 8px 0 0;
+  font-size: 0.82rem;
+  color: #c0392b;
+}

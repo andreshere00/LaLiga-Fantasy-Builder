@@ -817,7 +817,7 @@
 }
 
 .squad-panel .side-panel-scroll {
-  overflow: hidden;
+  overflow: visible;
   scrollbar-width: none;
 }
 

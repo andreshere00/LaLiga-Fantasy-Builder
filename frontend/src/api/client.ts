@@ -38,6 +38,10 @@ export const paths = {
     `/api/market/leagues/${segment(leagueId)}/${segment(marketId)}/bids/${segment(bidId)}`,
   marketListing: (leagueId: string, marketId: string) =>
     `/api/market/leagues/${segment(leagueId)}/${segment(marketId)}`,
+  marketListings: (leagueId: string) =>
+    `/api/market/leagues/${segment(leagueId)}/listings`,
+  marketImmediateSale: (leagueId: string) =>
+    `/api/market/leagues/${segment(leagueId)}/immediate-sales`,
   buyoutPay: (leagueId: string, playerTeamId: string) =>
     `/api/buyout/leagues/${segment(leagueId)}/player-teams/${segment(playerTeamId)}/pay`,
 };
