@@ -4,6 +4,7 @@ from fantasy_scraping.models.page import PageKind
 from fantasy_scraping.parser.markdown import sections
 from fantasy_scraping.parser.markdown.options import RenderOptions
 from fantasy_scraping.parser.merge import merge_competitions, stats_of
+from fantasy_scraping.parser.models.common import PartialParseWarning
 from fantasy_scraping.parser.models.futbolfantasy import FutbolFantasyPlayer
 from fantasy_scraping.parser.rules.loader import RuleRepository
 from fantasy_scraping.parser.service import ParserService
@@ -87,6 +88,49 @@ def test_merge_competitions_warns_when_competition_page_missing() -> None:
     assert any(item.code == "competition_page_missing" for item in merged.warnings)
     assert stats_of(merged.fixtures[0]) is not None
     assert stats_of(object()) is None
+
+
+def test_merge_competitions_keeps_upcoming_competition_unresolved() -> None:
+    player = SERVICE.parse_futbolfantasy(page("raphinha_laliga_26_27.html"))
+    upcoming_warn = PartialParseWarning(
+        code="competition_unresolved",
+        section="matches.upcoming",
+        path="matches.upcoming.competition",
+        rule_id="matches.upcoming.competition",
+        message="competition was not resolved",
+        index=0,
+    )
+    player = player.model_copy(update={"warnings": [*player.warnings, upcoming_warn]})
+    merged = merge_competitions([player])
+    assert any(
+        item.code == "competition_unresolved" and item.section == "matches.upcoming"
+        for item in merged.warnings
+    )
+
+
+def test_merge_competitions_ambiguous_join_warns_without_page_missing() -> None:
+    body = page("raphinha_champions_26_27.html").html
+    laliga = SERVICE.parse_futbolfantasy(page("raphinha_laliga_26_27.html"))
+    champions = SERVICE.parse_futbolfantasy(
+        page(
+            "raphinha_champions_26_27.html",
+            season_slug="champions-26-27",
+            kind=PageKind.COMPETITION,
+        )
+    )
+    europa = SERVICE.parse_futbolfantasy(
+        page(
+            "raphinha_champions_26_27.html",
+            html=body,
+            season_slug="europa-league-26-27",
+            kind=PageKind.COMPETITION,
+            url="https://www.futbolfantasy.com/jugadores/raphinha/europa-league-26-27",
+        )
+    )
+    merged = merge_competitions([laliga, champions, europa])
+    codes = [item.code for item in merged.warnings if item.section == "matches.recent"]
+    assert "competition_join_ambiguous" in codes
+    assert "competition_page_missing" not in codes
 
 
 def test_merge_competitions_uses_first_page_when_no_laliga_slug() -> None:

@@ -34,7 +34,11 @@ def merge_competitions(pages: list[FutbolFantasyPlayer]) -> FutbolFantasyPlayer:
         )
     )
     recent: list[RecentMatch] = []
-    warnings = [item for item in base.warnings if item.code != "competition_unresolved"]
+    warnings = [
+        item
+        for item in base.warnings
+        if not (item.code == "competition_unresolved" and item.section == "matches.recent")
+    ]
     for index, row in enumerate(base.matches.recent):
         filled, join_warnings = _fill_recent(row, pages, index)
         recent.append(filled)
