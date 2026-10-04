@@ -56,7 +56,7 @@ uv run poe up
   need `cd backend/auth && uv run fantasy-browser-session` and allowing
   LaligaAuthredirect.
 - API docs: http://localhost:8001/docs
-- Scraping health: http://localhost:8002/health/live (Swagger at `/docs` when `DEBUG=true`)
+- Scraping health: http://localhost:8002/health/live (Swagger at `/docs` when `SCRAPING_EXPOSE_DOCS=true`)
 - Keycloak admin: http://localhost:8080 (`admin` / `admin`)
 
 Postgres, Redis, and OpenTelemetry: set `USE_MEMORY_STORE=false`, vault key,

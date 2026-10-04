@@ -80,13 +80,14 @@ def create_app(settings: Settings | None = None, service: ScraperService | None 
         if client := holder.get("client"):
             await client.aclose()  # type: ignore[union-attr]
 
+    serve_docs = cfg.debug or cfg.expose_docs
     app = FastAPI(
         title="LaLiga Fantasy Builder Scraping",
         version="0.1.0",
         lifespan=lifespan,
-        docs_url="/docs" if cfg.debug else None,
-        redoc_url="/redoc" if cfg.debug else None,
-        openapi_url="/openapi.json" if cfg.debug else None,
+        docs_url="/docs" if serve_docs else None,
+        redoc_url="/redoc" if serve_docs else None,
+        openapi_url="/openapi.json" if serve_docs else None,
     )
     app.state.settings = cfg
     app.state.get_service = get_service

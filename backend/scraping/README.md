@@ -44,7 +44,8 @@ uv run fantasy-parse page.html --url URL --slug SLUG --season 2026-27 \
 | `SCRAPING_SERVICE_TOKEN` | Yes (except `DEBUG`) | `X-Service-Token` for `/internal/*` |
 | `SCRAPER_CONTACT` | Yes* | User-Agent contact (*or `SCRAPER_USER_AGENT`) |
 | `SCRAPING_SERVICE_PORT` | No | Default `8002` |
-| `DEBUG` | No | `true` → Swagger at `/docs`, enables `/internal/scrape/probe` |
+| `SCRAPING_EXPOSE_DOCS` | No | `true` → Swagger at `/docs` (default in Compose) |
+| `DEBUG` | No | `true` → same docs plus empty token allowed, `/internal/scrape/probe` |
 | `SCRAPER_*` | No | Timeouts, TTLs, limits — see `.env.example` |
 
 Root `.env.template` lists Compose URLs; service-specific vars live in
@@ -59,7 +60,7 @@ SCRAPER_CONTACT=you@example.com uv run generate-openapi
 # or from repo root: uv run poe generate-scraping-openapi
 ```
 
-Committed: `openapi.json`. Interactive docs when `DEBUG=true`.
+Committed: `openapi.json`. Interactive docs when `SCRAPING_EXPOSE_DOCS=true`.
 
 Docs: [docs/scraping/README.md](../../docs/scraping/README.md),
 [parser.md](../../docs/scraping/parser.md).

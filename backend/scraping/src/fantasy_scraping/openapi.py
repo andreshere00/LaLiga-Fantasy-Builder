@@ -20,8 +20,8 @@ LaLiga Fantasy Builder **scraping** service (private).
 require ``X-Service-Token`` on the ``internal`` network. The process also joins
 ``egress`` so it can reach FutbolFantasy; it is not on ``public``.
 
-Interactive Swagger is served only when ``DEBUG=true``. The committed
-``openapi.json`` is generated offline for review.
+Interactive Swagger is served when ``SCRAPING_EXPOSE_DOCS=true`` or
+``DEBUG=true``. The committed ``openapi.json`` is generated offline for review.
 """.strip()
 
 OPENAPI_TAGS: list[dict[str, str]] = [

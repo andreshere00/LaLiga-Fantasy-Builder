@@ -10,13 +10,16 @@ class Settings(BaseSettings):
     Attributes:
         scraping_service_token: Shared secret the API sends as ``X-Service-Token``.
         debug: When true, an empty token is allowed so local probes can start.
+        expose_docs: When true, serve Swagger at ``/docs`` without enabling debug
+            probes.
         service_port: Port uvicorn binds inside the container.
     """
 
-    model_config = SettingsConfigDict(env_file=".env", extra="ignore")
+    model_config = SettingsConfigDict(env_file=".env", extra="ignore", populate_by_name=True)
 
     scraping_service_token: SecretStr = Field(default=SecretStr(""))
     debug: bool = False
+    expose_docs: bool = Field(default=False, validation_alias="SCRAPING_EXPOSE_DOCS")
     service_port: int = Field(default=8002, validation_alias="SCRAPING_SERVICE_PORT")
 
 

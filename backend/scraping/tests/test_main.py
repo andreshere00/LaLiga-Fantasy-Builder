@@ -10,8 +10,13 @@ from fantasy_scraping.main import create_app
 # ---- Mocks, fixtures & helpers ---- #
 
 
-def _settings(*, token: str, debug: bool = False) -> Settings:
-    return Settings(scraping_service_token=SecretStr(token), debug=debug)
+def _settings(*, token: str, debug: bool = False, expose_docs: bool = False) -> Settings:
+    return Settings(
+        scraping_service_token=SecretStr(token),
+        debug=debug,
+        expose_docs=expose_docs,
+        _env_file=None,
+    )
 
 
 # ---- Happy path ---- #
@@ -33,6 +38,20 @@ def test_create_app_health_ready_returns_ok() -> None:
     response = TestClient(app).get("/health/ready")
     assert response.status_code == 200
     assert response.json() == {"status": "ok"}
+
+
+def test_create_app_expose_docs_serves_openapi() -> None:
+    app = create_app(_settings(token="dev-scraping-token", expose_docs=True))
+    client = TestClient(app)
+    assert client.get("/docs").status_code == 200
+    assert client.get("/openapi.json").status_code == 200
+
+
+def test_create_app_without_expose_docs_hides_openapi() -> None:
+    app = create_app(_settings(token="dev-scraping-token"))
+    client = TestClient(app)
+    assert client.get("/docs").status_code == 404
+    assert client.get("/openapi.json").status_code == 404
 
 
 # ---- Error paths ---- #

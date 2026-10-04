@@ -2,7 +2,7 @@
   "openapi": "3.1.0",
   "info": {
     "title": "LaLiga Fantasy Builder Scraping",
-    "description": "LaLiga Fantasy Builder **scraping** service (private).\n\n``/health/*`` probes are open. ``/internal/scrape/*`` and ``/internal/health``\nrequire ``X-Service-Token`` on the ``internal`` network. The process also joins\n``egress`` so it can reach FutbolFantasy; it is not on ``public``.\n\nInteractive Swagger is served only when ``DEBUG=true``. The committed\n``openapi.json`` is generated offline for review.",
+    "description": "LaLiga Fantasy Builder **scraping** service (private).\n\n``/health/*`` probes are open. ``/internal/scrape/*`` and ``/internal/health``\nrequire ``X-Service-Token`` on the ``internal`` network. The process also joins\n``egress`` so it can reach FutbolFantasy; it is not on ``public``.\n\nInteractive Swagger is served when ``SCRAPING_EXPOSE_DOCS=true`` or\n``DEBUG=true``. The committed ``openapi.json`` is generated offline for review.",
     "version": "0.1.0"
   },
   "paths": {
