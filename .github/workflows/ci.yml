@@ -20,6 +20,7 @@ jobs:
           uv sync --group dev
           uv sync --directory backend/auth --group dev
           uv sync --directory backend/api --group dev
+          uv sync --directory backend/scraping --group dev
 
       - name: Lint
         run: uv run poe lint
@@ -49,3 +50,6 @@ jobs:
 
       - name: Build API image
         run: docker build -f backend/api/Dockerfile backend/api
+
+      - name: Build scraping image
+        run: docker build -f backend/scraping/Dockerfile backend/scraping

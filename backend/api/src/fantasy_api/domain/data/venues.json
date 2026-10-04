@@ -1,0 +1,283 @@
+[
+  {
+    "club_key": "barcelona",
+    "fantasy_id": 4,
+    "slug": "fc-barcelona",
+    "name": "FC Barcelona",
+    "stadium": "Estadi Olímpic Lluís Companys",
+    "city": "Barcelona",
+    "country": "ES",
+    "lat": 41.3648,
+    "lon": 2.155,
+    "aliases": [
+      "BAR"
+    ]
+  },
+  {
+    "club_key": "real-madrid",
+    "fantasy_id": 15,
+    "slug": "real-madrid",
+    "name": "Real Madrid",
+    "stadium": "Santiago Bernabéu",
+    "city": "Madrid",
+    "country": "ES",
+    "lat": 40.4531,
+    "lon": -3.6883,
+    "aliases": [
+      "RMA",
+      "MAD"
+    ]
+  },
+  {
+    "club_key": "atletico",
+    "fantasy_id": 2,
+    "slug": "atletico-de-madrid",
+    "name": "Atlético de Madrid",
+    "stadium": "Riyadh Air Metropolitano",
+    "city": "Madrid",
+    "country": "ES",
+    "lat": 40.4364,
+    "lon": -3.5995,
+    "aliases": [
+      "ATM"
+    ]
+  },
+  {
+    "club_key": "athletic",
+    "fantasy_id": 3,
+    "slug": "athletic-club",
+    "name": "Athletic Club",
+    "stadium": "San Mamés",
+    "city": "Bilbao",
+    "country": "ES",
+    "lat": 43.2644,
+    "lon": -2.9499,
+    "aliases": [
+      "ATH"
+    ]
+  },
+  {
+    "club_key": "betis",
+    "fantasy_id": 5,
+    "slug": "real-betis",
+    "name": "Real Betis",
+    "stadium": "Benito Villamarín",
+    "city": "Sevilla",
+    "country": "ES",
+    "lat": 37.3564,
+    "lon": -5.9815,
+    "aliases": [
+      "BET"
+    ]
+  },
+  {
+    "club_key": "celta",
+    "fantasy_id": 6,
+    "slug": "rc-celta",
+    "name": "Celta",
+    "stadium": "Balaídos",
+    "city": "Vigo",
+    "country": "ES",
+    "lat": 42.2118,
+    "lon": -8.7397,
+    "aliases": [
+      "CEL"
+    ]
+  },
+  {
+    "club_key": "espanyol",
+    "fantasy_id": 8,
+    "slug": "rcd-espanyol",
+    "name": "RCD Espanyol",
+    "stadium": "RCDE Stadium",
+    "city": "Cornellà",
+    "country": "ES",
+    "lat": 41.3479,
+    "lon": 2.0757,
+    "aliases": [
+      "ESP"
+    ]
+  },
+  {
+    "club_key": "getafe",
+    "fantasy_id": 9,
+    "slug": "getafe-cf",
+    "name": "Getafe CF",
+    "stadium": "Coliseum",
+    "city": "Getafe",
+    "country": "ES",
+    "lat": 40.3258,
+    "lon": -3.7146,
+    "aliases": [
+      "GET"
+    ]
+  },
+  {
+    "club_key": "girona",
+    "fantasy_id": 10,
+    "slug": "girona-fc",
+    "name": "Girona FC",
+    "stadium": "Montilivi",
+    "city": "Girona",
+    "country": "ES",
+    "lat": 41.9784,
+    "lon": 2.8214,
+    "aliases": [
+      "GIR"
+    ]
+  },
+  {
+    "club_key": "las-palmas",
+    "fantasy_id": 11,
+    "slug": "ud-las-palmas",
+    "name": "UD Las Palmas",
+    "stadium": "Gran Canaria",
+    "city": "Las Palmas",
+    "country": "ES",
+    "lat": 28.1003,
+    "lon": -15.4567,
+    "aliases": [
+      "LPA"
+    ]
+  },
+  {
+    "club_key": "leganes",
+    "fantasy_id": 12,
+    "slug": "cd-leganes",
+    "name": "CD Leganés",
+    "stadium": "Butarque",
+    "city": "Leganés",
+    "country": "ES",
+    "lat": 40.3278,
+    "lon": -3.7635,
+    "aliases": [
+      "LEG"
+    ]
+  },
+  {
+    "club_key": "mallorca",
+    "fantasy_id": 13,
+    "slug": "rcd-mallorca",
+    "name": "RCD Mallorca",
+    "stadium": "Son Moix",
+    "city": "Palma",
+    "country": "ES",
+    "lat": 39.5899,
+    "lon": 2.6301,
+    "aliases": [
+      "MLL"
+    ]
+  },
+  {
+    "club_key": "osasuna",
+    "fantasy_id": 14,
+    "slug": "ca-osasuna",
+    "name": "CA Osasuna",
+    "stadium": "El Sadar",
+    "city": "Pamplona",
+    "country": "ES",
+    "lat": 42.7965,
+    "lon": -1.6372,
+    "aliases": [
+      "OSA"
+    ]
+  },
+  {
+    "club_key": "rayo",
+    "fantasy_id": 16,
+    "slug": "rayo-vallecano",
+    "name": "Rayo Vallecano",
+    "stadium": "Vallecas",
+    "city": "Madrid",
+    "country": "ES",
+    "lat": 40.3919,
+    "lon": -3.6586,
+    "aliases": [
+      "RAY"
+    ]
+  },
+  {
+    "club_key": "real-sociedad",
+    "fantasy_id": 17,
+    "slug": "real-sociedad",
+    "name": "Real Sociedad",
+    "stadium": "Reale Arena",
+    "city": "San Sebastián",
+    "country": "ES",
+    "lat": 43.3014,
+    "lon": -1.9736,
+    "aliases": [
+      "RSO"
+    ]
+  },
+  {
+    "club_key": "sevilla",
+    "fantasy_id": 18,
+    "slug": "sevilla-fc",
+    "name": "Sevilla FC",
+    "stadium": "Sánchez-Pizjuán",
+    "city": "Sevilla",
+    "country": "ES",
+    "lat": 37.384,
+    "lon": -5.9705,
+    "aliases": [
+      "SEV"
+    ]
+  },
+  {
+    "club_key": "valencia",
+    "fantasy_id": 19,
+    "slug": "valencia-cf",
+    "name": "Valencia CF",
+    "stadium": "Mestalla",
+    "city": "Valencia",
+    "country": "ES",
+    "lat": 39.4745,
+    "lon": -0.3582,
+    "aliases": [
+      "VAL"
+    ]
+  },
+  {
+    "club_key": "villarreal",
+    "fantasy_id": 20,
+    "slug": "villarreal-cf",
+    "name": "Villarreal CF",
+    "stadium": "Estadio de la Cerámica",
+    "city": "Villarreal",
+    "country": "ES",
+    "lat": 39.9442,
+    "lon": -0.1036,
+    "aliases": [
+      "VIL"
+    ]
+  },
+  {
+    "club_key": "alaves",
+    "fantasy_id": 21,
+    "slug": "deportivo-alaves",
+    "name": "Deportivo Alavés",
+    "stadium": "Mendizorroza",
+    "city": "Vitoria",
+    "country": "ES",
+    "lat": 42.837,
+    "lon": -2.6882,
+    "aliases": [
+      "ALA"
+    ]
+  },
+  {
+    "club_key": "valladolid",
+    "fantasy_id": 22,
+    "slug": "real-valladolid",
+    "name": "Real Valladolid",
+    "stadium": "José Zorrilla",
+    "city": "Valladolid",
+    "country": "ES",
+    "lat": 41.6444,
+    "lon": -4.761,
+    "aliases": [
+      "VLL"
+    ]
+  }
+]

@@ -1,0 +1,406 @@
+version = "1"
+
+derivations = [
+  "schema_version",
+  "meta.*",
+  "profile.*",
+  "matches.*",
+  "market.*",
+  "season_stats.view",
+  "season_stats.matches_counted",
+  "season_stats.participation.*",
+  "season_stats.attack.*",
+  "season_stats.discipline.*",
+  "season_stats.defense.*",
+  "season_stats.goalkeeper.*",
+  "season_stats.other",
+  "season_stats.selector_catalog",
+  "season_stats.derived_fields",
+  "fantasy_points.*",
+  "fixtures",
+  "fixtures.*",
+  "missing",
+  "warnings",
+]
+
+unmapped_allowlist = []
+
+[selectors]
+canonical = "css:link[rel=canonical]"
+title = "css:title"
+club = "css:a.club"
+widget_link = "css:a.widget-mercado"
+identity_name = "css:h1 .name, h1.jugador-nombre"
+identity_shirt = "css:h1 .shirt, h1.jugador-nombre"
+identity_position = "css:h1 .pos, section.jugador_principal .position-box"
+identity_badge = "css:img.badge"
+medical = "css:p.estado-medico"
+availability = "css:p.disponibilidad"
+form = "css:.forma"
+start_matchday = "css:.titular .jornada"
+start_percent = "css:.titular .prob"
+risk_label = "css:.riesgo"
+risk_value = "css:.riesgo .nivel"
+hierarchy_label = "css:.jerarquia"
+hierarchy_value = "css:.jerarquia .valor"
+personal_root = "css:dl.personal, #profile-datos-personales"
+personal_social = "css:dl.personal a.social, #profile-datos-personales a.social"
+position_main = "css:.posicion .principal"
+position_item = "css:.posicion li"
+field_map = "css:.mapa-campo"
+platform_row = "css:ul.plataformas li"
+platform_name = "css:.plataforma"
+platform_role = "css:.rol"
+injury_root = "css:section.lesiones"
+injury_zone = "css:ul.mapa li"
+injury_note = "css:p.nota-mapa"
+injury_row = "css:table.historial tbody tr"
+news_root = "css:ul.noticias"
+news_item = "css:ul.noticias li"
+recent_root = "css:ul.ultimos, #profile-partidos"
+recent_item = "css:ul.ultimos li, #profile-partidos .day"
+upcoming_root = "css:ul.proximos"
+upcoming_item = "css:ul.proximos li"
+partido = "css:a.partido"
+market_root = "css:section.mercado"
+market_value = "css:.valor-actual"
+market_change = "css:.variacion"
+market_max = "css:.maximo"
+market_min = "css:.minimo"
+market_window = "css:.ventana"
+market_season = "css:.temporada-widget"
+market_move = "css:table.movimientos tbody tr"
+market_bid = "css:p.puja"
+market_series = "css:script.market-series"
+stats_root = "css:#profile-stats-puntos .statsglobales"
+stats_big = "css:.bigstat"
+stats_info = "css:.stat.info"
+stats_label = "css:.label"
+stats_value = "css:.value"
+stats_view = "css:.vista-stats"
+stats_matches = "css:.partidos-contados"
+selector_group = "css:select.metricas optgroup"
+points_root = "css:section.puntos-oficial"
+points_mode = "css:section.puntos-oficial"
+points_matches = "css:.partidos-puntos"
+points_row = "css:table.agregados tr"
+points_last3 = "css:.media-ultimos"
+points_mode_item = "css:ul.modos li"
+fixtures_table = "css:table.partidos, #profile-stats-puntos table.tablestats"
+fixtures_row = "css:table.partidos tbody tr.plegado, #profile-stats-puntos table.tablestats tbody tr.plegado[data-local]"
+poligono = "css:.poligono-wrapper"
+anchors = [
+  "css:#profile-stats-puntos",
+  "css:table.partidos",
+  "css:dl.personal",
+  "css:#profile-datos-personales",
+]
+
+[[rules]]
+id = "profile.identity.display_name"
+target_path = "profile.identity.display_name"
+locator = "css:h1 .name"
+fallbacks = ["css:h1.jugador-nombre"]
+normaliser = "player_display_name"
+required = "required"
+section = "identity"
+
+[[rules]]
+id = "profile.identity.shirt_number"
+target_path = "profile.identity.shirt_number"
+locator = "css:h1 .shirt"
+fallbacks = ["css:h1.jugador-nombre"]
+normaliser = "player_shirt_number"
+required = "expected"
+section = "identity"
+
+[[rules]]
+id = "profile.identity.position_code"
+target_path = "profile.identity.position_code"
+locator = "css:h1 .pos"
+fallbacks = ["css:section.jugador_principal .position-box"]
+normaliser = "position_code"
+required = "expected"
+section = "identity"
+
+[[rules]]
+id = "profile.identity.club_badge"
+target_path = "profile.identity.club_badge"
+locator = "css:img.badge"
+read = "attr:alt"
+normaliser = "clean_text"
+required = "expected"
+section = "identity"
+
+[[rules]]
+id = "meta.club"
+target_path = "meta.club"
+locator = "css:a.club"
+normaliser = "clean_text"
+required = "expected"
+section = "meta"
+
+[[rules]]
+id = "meta.season_label"
+target_path = "meta.season_label"
+locator = "css:.season-label"
+fallbacks = ["css:title"]
+normaliser = "clean_text"
+required = "optional"
+section = "meta"
+
+[[tables]]
+id = "fixtures"
+section = "fixtures"
+target_path = "fixtures"
+row_locator = "css:table.partidos tbody tr.plegado"
+
+[[tables.columns]]
+id = "date"
+locator = "css:td.fecha"
+normaliser = "clean_text"
+
+[[tables.columns]]
+id = "matchday"
+locator = "css:td.jornada"
+normaliser = "es_int"
+
+[[tables.columns]]
+id = "match"
+locator = "css:td.partido"
+normaliser = "clean_text"
+
+[[tables.columns]]
+id = "minutes"
+locator = "css:td.salida"
+normaliser = "clean_text"
+
+[[tables.columns]]
+id = "stars"
+locator = "css:td.estrellas"
+normaliser = "stars"
+
+[[tables.columns]]
+id = "grade"
+locator = "css:td.nota"
+normaliser = "es_decimal"
+
+[[tables.columns]]
+id = "dazn"
+locator = "css:td.dazn"
+normaliser = "es_int"
+
+[[tables.columns]]
+id = "points"
+locator = "css:td.puntos"
+normaliser = "es_int"
+
+[[tables.columns]]
+id = "side"
+locator = "css:td.lado"
+normaliser = "clean_text"
+
+[[tables.columns]]
+id = "starter"
+locator = "css:td.condicion"
+normaliser = "clean_text"
+
+[[tables]]
+id = "fixtures_live"
+section = "fixtures"
+target_path = "fixtures"
+row_locator = "css:#profile-stats-puntos table.tablestats tbody tr.plegado[data-local]"
+
+[[tables.columns]]
+id = "date"
+locator = "css:td.fecha"
+normaliser = "clean_text"
+
+[[tables.columns]]
+id = "matchday"
+locator = "css:td.jorn-td"
+normaliser = "es_int"
+
+[[tables.columns]]
+id = "match"
+locator = "css:td.name .link"
+normaliser = "clean_text"
+
+[[tables.columns]]
+id = "minutes"
+locator = "css:.cambio"
+normaliser = "clean_text"
+
+[[tables.columns]]
+id = "stars"
+locator = "css:td.marca"
+normaliser = "stars"
+
+[[tables.columns]]
+id = "grade"
+locator = "css:td.sofascore"
+normaliser = "es_decimal"
+
+[[tables.columns]]
+id = "dazn"
+locator = "css:td.relevo"
+normaliser = "es_int"
+
+[[tables.columns]]
+id = "points"
+locator = "css:td.data.points span.laliga-fantasy"
+normaliser = "es_int"
+
+[[tables.columns]]
+id = "starter"
+locator = "css:td.condicion"
+normaliser = "clean_text"
+
+[[tables]]
+id = "recent"
+section = "matches.recent"
+target_path = "matches.recent"
+row_locator = "css:ul.ultimos li"
+
+[[tables.columns]]
+id = "date"
+locator = "css:.fecha"
+normaliser = "clean_text"
+
+[[tables.columns]]
+id = "matchday"
+locator = "css:.jornada"
+normaliser = "es_int"
+
+[[tables.columns]]
+id = "score"
+locator = "css:.marcador"
+normaliser = "clean_text"
+
+[[tables.columns]]
+id = "minutes"
+locator = "css:.minutos"
+normaliser = "clean_text"
+
+[[tables]]
+id = "upcoming"
+section = "matches.upcoming"
+target_path = "matches.upcoming"
+row_locator = "css:ul.proximos li"
+
+[[tables.columns]]
+id = "date"
+locator = "css:.fecha"
+normaliser = "clean_text"
+
+[[tables.columns]]
+id = "matchday"
+locator = "css:.jornada"
+normaliser = "es_int"
+
+[[tables.columns]]
+id = "kickoff"
+locator = "css:.hora"
+normaliser = "time_hhmm"
+
+[[tables.columns]]
+id = "home"
+locator = "css:.local"
+normaliser = "clean_text"
+
+[[tables]]
+id = "injuries"
+section = "injuries"
+target_path = "profile.injury_history.entries"
+row_locator = "css:table.historial tbody tr"
+
+[[tables.columns]]
+id = "start"
+locator = "css:td.inicio"
+normaliser = "date_dmy"
+
+[[tables.columns]]
+id = "end"
+locator = "css:td.fin"
+normaliser = "clean_text"
+
+[[tables.columns]]
+id = "diagnosis"
+locator = "css:td.diagnostico"
+normaliser = "clean_text"
+
+[[tables.columns]]
+id = "duration"
+locator = "css:td.duracion"
+normaliser = "duration_days"
+
+[[rules]]
+id = "fantasy_points.mode"
+target_path = "fantasy_points.mode"
+locator = "css:section.puntos-oficial"
+read = "attr:data-modo"
+normaliser = "clean_text"
+required = "expected"
+section = "fantasy_points"
+
+[[tables]]
+id = "points"
+section = "fantasy_points"
+target_path = "fantasy_points"
+row_locator = "css:table.agregados tr"
+
+[[tables.columns]]
+id = "label"
+locator = "css:th"
+normaliser = "clean_text"
+
+[[tables.columns]]
+id = "gross"
+locator = "css:td.g"
+normaliser = "dash_decimal"
+
+[[tables.columns]]
+id = "net"
+locator = "css:td.n"
+normaliser = "dash_decimal"
+
+[[tables.columns]]
+id = "home_gross"
+locator = "css:td.hg"
+normaliser = "dash_decimal"
+
+[[tables.columns]]
+id = "home_net"
+locator = "css:td.hn"
+normaliser = "dash_decimal"
+
+[[tables.columns]]
+id = "away_gross"
+locator = "css:td.ag"
+normaliser = "dash_decimal"
+
+[[tables.columns]]
+id = "away_net"
+locator = "css:td.an"
+normaliser = "dash_decimal"
+
+[[tables]]
+id = "market_moves"
+section = "market"
+target_path = "market.daily_moves"
+row_locator = "css:table.movimientos tbody tr"
+
+[[tables.columns]]
+id = "date"
+locator = "css:td.fecha"
+normaliser = "clean_text"
+
+[[tables.columns]]
+id = "change"
+locator = "css:td.cambio"
+normaliser = "signed_delta"
+
+[[tables.columns]]
+id = "value"
+locator = "css:td.valor"
+normaliser = "es_int"

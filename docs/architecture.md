@@ -9,6 +9,7 @@ map of what each part owns.
 frontend/          React app — lineup and market (Bun, Vite). Nginx in Docker.
 backend/auth/      Sessions, Keycloak login, LaLiga vault, internal JWT
 backend/api/       Fantasy features. Calls LaLiga with a bearer from auth
+backend/scraping/  Private scraper + parser on port 8002 (`internal` + `egress`)
 docker/            Keycloak realm import and the OTEL collector config
 ```
 
@@ -32,6 +33,8 @@ flowchart LR
     Redis[(Redis)]
     LaligaIdP[LaLigaB2C]
     LaligaApi[LaLigaFantasyAPI]
+    Scraping[Scraping]
+    FutbolFantasy[FutbolFantasy]
 
     Browser -->|Same origin| Web
     Web -->|Session cookie| Auth
@@ -41,6 +44,8 @@ flowchart LR
     Auth -->|Confirm manager| LaligaApi
     Api -->|Private bearer request| Auth
     Api -->|LaLiga bearer| LaligaApi
+    Api -->|Service token| Scraping
+    Scraping -->|HTTPS scrape| FutbolFantasy
     Auth --> Postgres
     Auth --> Redis
 ```
@@ -229,6 +234,20 @@ The internal JWT prevents the API from selecting an arbitrary user. The
 service token and private network prevent browsers from using the credential
 route directly.
 
+### Private API-to-scraping boundary
+
+The API receives `SCRAPING_BASE_URL` (`http://scraping:8002` on Compose) and a
+separate `SCRAPING_SERVICE_TOKEN`. The scraping process is on the `internal`
+network and on `egress` (outbound internet). It is not on `public`. Host port
+8002 is published for local Compose only.
+
+The scraper resolves player names (sitemap + Hamming/Levenshtein), downloads
+profile, market widget, club calendar, and competition pages with caching and
+rate limits. `/internal/scrape/*` requires `X-Service-Token`. The parser in the
+same image turns `ScrapedPage` HTML into JSON/Markdown (`fantasy-parse` or
+`ParserService`). Uvicorn runs a **single worker** so the in-process limiter
+matches deployment. Detail: [Scraping](scraping/README.md).
+
 ### Auth-to-LaLiga boundary
 
 Only auth communicates with LaLiga B2C for pairing and refresh. Both auth and
@@ -336,7 +355,8 @@ Local and CI checks keep the monorepo consistent:
 
 - **Pre-commit** (repo root): ruff, black, OpenAPI and endpoint-schema
   regeneration when API routes/schemas change, pytest with ≥90% coverage on
-  `backend/auth` and `backend/api`.
+  `backend/auth` and `backend/api`, and ≥80% on the FutbolFantasy parser in
+  `backend/scraping`.
 - **GitHub Actions** (`.github/workflows/ci.yml`): same lint and test pipeline
   on push to `main` and on pull requests.
 
@@ -350,14 +370,16 @@ generators before merge. See [OpenAPI / Swagger](api/openapi.md).
 
 Run commands live in the [root README](../README.md).
 
-- Auth, API, and frontend each have their own image. Python services use
+- Auth, API, scraping, and frontend each have their own image. Python services use
   `python:3.14-slim-trixie` with uv only in the builder. The frontend image
   builds with Bun and serves static files plus `/auth`, `/laliga`, and `/api`
   proxies from Nginx.
-- Compose profile `apps` runs Keycloak, auth, API, and frontend. Profile
+- Compose profile `apps` runs Keycloak, auth, API, scraping, and frontend. Profile
   `full` adds Postgres, Redis, and OTEL. In-cluster OIDC URLs use
   `keycloak:8080`. The browser still uses `localhost`.
-- API and auth share a private network for `/internal/*`.
+- API and auth share a private network for `/internal/*`. Scraping joins that
+  network and an `egress` network so a future downloader can reach the public
+  internet without putting the API on egress.
 - JWT private keys, the vault key, and the service token belong in a secret
   manager, not source control.
 - Auth and API must use the same internal JWT issuer and audience.

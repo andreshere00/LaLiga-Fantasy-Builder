@@ -105,16 +105,54 @@ services:
       INTERNAL_JWT_ISSUER: ${INTERNAL_JWT_ISSUER}
       INTERNAL_JWT_AUDIENCE: ${INTERNAL_JWT_AUDIENCE}
       INTERNAL_SERVICE_TOKEN: ${INTERNAL_SERVICE_TOKEN}
+      SCRAPING_BASE_URL: ${SCRAPING_BASE_URL:-http://scraping:8002}
+      SCRAPING_SERVICE_TOKEN: ${SCRAPING_SERVICE_TOKEN}
     depends_on:
       auth:
         condition: service_healthy
+      scraping:
+        condition: service_healthy
+        required: false
     profiles: [apps, full]
     networks: [public, internal]
 
+  scraping:
+    build:
+      context: ./backend/scraping
+      dockerfile: Dockerfile
+    env_file: [./backend/scraping/.env]
+    environment:
+      SCRAPING_SERVICE_TOKEN: ${SCRAPING_SERVICE_TOKEN}
+      SCRAPING_SERVICE_PORT: ${SCRAPING_SERVICE_PORT:-8002}
+      SCRAPING_EXPOSE_DOCS: ${SCRAPING_EXPOSE_DOCS:-false}
+      USE_MEMORY_STORE: ${USE_MEMORY_STORE:-true}
+      REDIS_URL: ${SCRAPING_REDIS_URL:-redis://${REDIS_HOST:-redis}:${REDIS_PORT:-6379}/1}
+      SCRAPER_CONTACT: ${SCRAPER_CONTACT:-dev@local}
+    ports:
+      - "${SCRAPING_PUBLISH_PORT:-8002}:${SCRAPING_SERVICE_PORT:-8002}"
+    depends_on:
+      redis:
+        condition: service_healthy
+        required: false
+    healthcheck:
+      test:
+        [
+          "CMD",
+          "python",
+          "-c",
+          "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8002/health/live')",
+        ]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+      start_period: 10s
+    profiles: [apps, full]
+    networks: [internal, egress]
+
   frontend:
     build:
-      context: ./frontend
-      dockerfile: Dockerfile
+      context: .
+      dockerfile: frontend/Dockerfile
     ports:
       - "${FRONTEND_PUBLISH_PORT:-3000}:80"
     depends_on:
@@ -129,3 +167,4 @@ networks:
   public:
   internal:
     internal: true
+  egress: # outbound internet for scraping only (not internal: true)

@@ -46,7 +46,7 @@ writes with your linked account.
 ## Quick start
 
 `poe up` creates missing env files, then builds and starts Keycloak, auth,
-the API, and the frontend:
+the API, scraping, and the frontend:
 
 ```bash
 uv run poe up
@@ -56,6 +56,7 @@ uv run poe up
   need `cd backend/auth && uv run fantasy-browser-session` and allowing
   LaligaAuthredirect.
 - API docs: http://localhost:8001/docs
+- Scraping health: http://localhost:8002/health/live (Swagger at `/docs` when `SCRAPING_EXPOSE_DOCS=true`)
 - Keycloak admin: http://localhost:8080 (`admin` / `admin`)
 
 Postgres, Redis, and OpenTelemetry: set `USE_MEMORY_STORE=false`, vault key,
@@ -71,7 +72,8 @@ uv run poe dev
 
 From `frontend/` only: `bun install && bun run dev:all` (or `npm`).
 
-Per-service notes: [auth](backend/auth/README.md), [API](backend/api/README.md).
+Per-service notes: [auth](backend/auth/README.md), [API](backend/api/README.md),
+[scraping](backend/scraping/README.md) (`fantasy-scraper`, `fantasy-parse`).
 
 ## Repository
 
@@ -80,6 +82,7 @@ Per-service notes: [auth](backend/auth/README.md), [API](backend/api/README.md).
 | [`frontend/`](frontend/) | React lineup and market UI |
 | [`backend/auth/`](backend/auth/) | Sessions, Keycloak, LaLiga pairing, internal JWT |
 | [`backend/api/`](backend/api/) | Fantasy proxy routes and CLIs |
+| [`backend/scraping/`](backend/scraping/) | FutbolFantasy scraper + parser (port 8002, private) |
 | [`docs/`](docs/) | Architecture, authentication, API domain guides |
 | [`docker/`](docker/) | Keycloak realm import, OTEL collector |
 | [`assets/`](assets/) | Sample Fantasy JSON trees |

@@ -21,6 +21,7 @@ guides live under [`docs/`](docs/README.md).
 | Frontend | `frontend` | 3000 | Lineup UI. Proxies `/auth`, `/laliga`, and `/api` |
 | Auth | `backend/auth` | 8000 | Sessions, OIDC, LaLiga pairing, vault, internal JWT |
 | API | `backend/api` | 8001 | Features; LaLiga via private bearer exchange |
+| Scraping | `backend/scraping` | 8002 | Private FutbolFantasy scraper + parser on `internal` and `egress`. `/internal/scrape/*` uses `SCRAPING_SERVICE_TOKEN`. CLIs are read-only. |
 
 ```text
 Browser → frontend origin
@@ -40,7 +41,7 @@ New LaLiga features go in `backend/api`: `api/` → `services/` →
 |--------|--------|------|-------|
 | Leagues | `/leagues` | JWT + bearer | Reads |
 | Teams | `/teams` | JWT + bearer | Lineup PUT is a full replace |
-| Players | `/players` | Mixed | Catalog and market value are public |
+| Players | `/players` | Mixed | Catalog and market value are public; `/players/{id}/stats/*` needs JWT (scraped segments use scraping service) |
 | Calendar | `/calendar` | JWT; public upstream | No LaLiga bearer |
 | Market | `/market` | JWT + bearer | Mutations medium confidence; CLI is read-only |
 | Buyout | `/buyout` | JWT + bearer | Medium confidence; CLI is read-only |
@@ -67,7 +68,9 @@ Do not proxy a route marked **Low** confidence or hosted on
   in CLIs).
 - Automated CLIs and `fantasy-browser-session` must not place bids, pay
   clauses, increase clauses, or activate shields. Auth must not import
-  `fantasy_api`.
+  `fantasy_api`. Auth must not import `fantasy_scraping`. Scraping holds no
+  LaLiga tokens. `fantasy-scraper` and `fantasy-parse` must not disable robots,
+  rate limits, or place Fantasy bids.
 
 ## Python
 
@@ -100,3 +103,6 @@ Commit `backend/api/openapi.json` and `docs/api/endpoint-schemas.md`. Do not
 hand-edit the schema doc. Update the feature README, the architecture domain
 table when the domain is new, and the service READMEs when a CLI or
 browser-session flow changes.
+
+After a scraping route or schema change, run `uv run poe generate-scraping-openapi`
+and commit `backend/scraping/openapi.json`.

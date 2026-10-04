@@ -1,0 +1,84 @@
+version = "1"
+intro = "Ficha generada a partir de la página de FutbolFantasy. Los totales publicados en la cabecera corresponden solo a LaLiga."
+totals_scope = "Totales de temporada limitados a LaLiga."
+tools = "Herramientas asociadas: comparador, alertas y histórico de valor en FutbolFantasy. Este documento no calcula puntos que la página no publica."
+layers_heading = "Capas al expandir un partido"
+iconography_intro = "Los iconos de la columna de eventos se leen con la tabla siguiente. Un icono desconocido se omite."
+scope_limits = "No se calcula la edad, la duración de una lesión ni un índice de forma si la página no lo publica. Las competiciones distintas de LaLiga salen de la misma ficha de FutbolFantasy, una página por slug. No se lee FBref ni Sofascore."
+other_modes = "Solo se leen los puntos de LaLiga Fantasy Oficial. Biwenger, Marca, Mister, Comunio y el resto de pestañas se listan y no se totalizan."
+
+[[cross_reference]]
+concept = "Minutos jugados"
+field = "minutes_played"
+
+[[cross_reference]]
+concept = "Goles"
+field = "goals"
+
+[[cross_reference]]
+concept = "Asistencias"
+field = "assists"
+
+[[cross_reference]]
+concept = "Grandes ocasiones creadas"
+field = "big_chances_created"
+
+[[cross_reference]]
+concept = "Balones al área"
+field = "balls_into_box"
+
+[[cross_reference]]
+concept = "Penaltis cometidos"
+field = "penalties_committed"
+
+[[cross_reference]]
+concept = "Penaltis salvados"
+field = "penalties_saved"
+
+[[cross_reference]]
+concept = "Salvadas"
+field = "saves"
+
+[[cross_reference]]
+concept = "Despejes claros"
+field = "clearances"
+
+[[cross_reference]]
+concept = "Penaltis fallados"
+field = "penalties_missed"
+
+[[cross_reference]]
+concept = "Goles en propia"
+field = "own_goals"
+
+[[cross_reference]]
+concept = "Goles en contra"
+field = "goals_conceded"
+
+[[cross_reference]]
+concept = "Tarjetas amarillas"
+field = "yellow_cards"
+
+[[cross_reference]]
+concept = "Tarjeta roja"
+field = "red_card"
+
+[[cross_reference]]
+concept = "Intentos de gol"
+field = "shots"
+
+[[cross_reference]]
+concept = "Regates efectivos"
+field = "successful_dribbles"
+
+[[cross_reference]]
+concept = "Recuperaciones"
+field = "ball_recoveries"
+
+[[cross_reference]]
+concept = "Balones perdidos"
+field = "balls_lost"
+
+[[cross_reference]]
+concept = "Puntos DAZN"
+field = "dazn_points"

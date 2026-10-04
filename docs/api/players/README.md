@@ -4,6 +4,11 @@ Catalog and market value are **public**; the league card is authenticated
 (JWT + LaLiga bearer). To add a route, follow
 [Adding endpoints](../adding-endpoints.md).
 
+Segmented player stats (FutbolFantasy via the scraping service, LaLiga catalog
+and market history, optional OpenWeather) live under `/players/{player_id}/stats/*`.
+See [player-stats-endpoint plan](../../plans/player-stats-endpoint.md) and
+[scraping service](../../scraping/README.md).
+
 ## Routes
 
 | Method | Path | Upstream | Auth | Response model |
@@ -11,9 +16,16 @@ Catalog and market value are **public**; the league card is authenticated
 | `GET` | `/players` | `{CMP}/players` | None | `list[CatalogPlayer]` |
 | `GET` | `/players/{player_id}/market-value` | `{CMP}/player/{id}/market-value` | None | `list[PlayerMarketValue]` |
 | `GET` | `/players/{player_id}/league/{league_id}` | `{CMP}/player/{id}/league/{leagueId}` | Internal JWT | `LeaguePlayer` |
+| `GET` | `/players/{player_id}/stats` | Catalog (+ config probe) | Internal JWT | `PlayerStatsIndex` |
+| `GET` | `/players/{player_id}/stats/fixtures` | Catalog, scraping, calendar | Internal JWT | `PlayerFixtureStatsResponse` |
+| `GET` | `/players/{player_id}/stats/market` | `{CMP}/player/{id}/market-value` | Internal JWT | `PlayerMarketResponse` |
+| `GET` | `/players/{player_id}/stats/matches/recent` | Scraping, calendar | Internal JWT | `RecentMatchesResponse` |
+| `GET` | `/players/{player_id}/stats/matches/upcoming` | Scraping, calendar, OpenWeather | Internal JWT | `UpcomingMatchesResponse` |
+| `GET` | `/players/{player_id}/stats/profile` | Scraping, catalog | Internal JWT | `PlayerProfileResponse` |
 
-Models: `fantasy_api.schemas.players`. Catalog `weekPoints` stays untyped
-(upstream uses week objects; league rosters use a scalar).
+Models: `fantasy_api.schemas.players` (catalog/league card) and
+`fantasy_api.schemas.player_stats` (stats segments). Catalog `weekPoints` stays
+untyped (upstream uses week objects; league rosters use a scalar).
 
 ## Identifiers
 
@@ -36,4 +48,5 @@ Models: `fantasy_api.schemas.players`. Catalog `weekPoints` stays untyped
 cd backend/api
 uv run fantasy-players
 uv run fantasy-players --player-id 7 --league-id 42 --jwt "$INTERNAL_JWT"
+uv run fantasy-player-stats --player-id 4288 --segment index --jwt "$INTERNAL_JWT"
 ```

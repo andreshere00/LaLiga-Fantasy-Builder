@@ -48,11 +48,12 @@ executionEnvironments = [
 ]
 
 [tool.poe.tasks.up]
-help = "Build and start Keycloak, auth, API, and the frontend"
+help = "Build and start Keycloak, auth, API, scraping, and the frontend"
 shell = """
 test -f .env || cp .env.template .env
 test -f backend/auth/.env || cp backend/auth/.env.example backend/auth/.env
 test -f backend/api/.env || cp backend/api/.env.example backend/api/.env
+test -f backend/scraping/.env || cp backend/scraping/.env.example backend/scraping/.env
 docker compose --profile apps up --build
 """
 
@@ -66,6 +67,7 @@ shell = """
 uv sync --group dev
 uv sync --directory backend/auth --group dev
 uv sync --directory backend/api --group dev
+uv sync --directory backend/scraping --group dev
 uv run pre-commit install
 """
 
@@ -78,8 +80,8 @@ help = "Format Python sources with black"
 cmd = "black backend main.py"
 
 [tool.poe.tasks.test]
-help = "Run backend tests with coverage (fail under 90%)"
-sequence = ["_test-auth", "_test-api"]
+help = "Run backend tests (auth/api ≥90%, scraping parser ≥80%)"
+sequence = ["_test-auth", "_test-api", "_test-scraping"]
 
 [tool.poe.tasks._test-auth]
 cmd = """
@@ -97,6 +99,15 @@ uv run --directory backend/api pytest
   --cov-fail-under=90
 """
 
+[tool.poe.tasks._test-scraping]
+help = "Parser tests. Coverage gate is 80 until this package is held to 90"
+cmd = """
+uv run --directory backend/scraping pytest
+  --cov=src
+  --cov-report=term-missing
+  --cov-fail-under=80
+"""
+
 [tool.poe.tasks.generate-openapi]
 help = "Regenerate backend/api/openapi.json from FastAPI routes and schemas"
 cmd = "bash scripts/generate-openapi.sh"
@@ -105,8 +116,12 @@ cmd = "bash scripts/generate-openapi.sh"
 help = "Regenerate backend/auth/openapi.json from auth routes and schemas"
 cmd = "bash scripts/generate-auth-openapi.sh"
 
+[tool.poe.tasks.generate-scraping-openapi]
+help = "Regenerate backend/scraping/openapi.json from scraping routes and schemas"
+cmd = "bash scripts/generate-scraping-openapi.sh"
+
 [tool.poe.tasks.check-openapi]
-help = "Fail if backend/api or backend/auth openapi.json is out of date"
+help = "Fail if committed OpenAPI files are out of date (api, auth, scraping)"
 cmd = "bash scripts/check-openapi-alignment.sh"
 
 [tool.poe.tasks.generate-endpoint-schemas]
