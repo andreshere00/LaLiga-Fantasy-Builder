@@ -12,6 +12,8 @@ from fantasy_scraping.scraper.urls import COMPETITION_PREFIXES, SLUG_RE
 
 _TEAM_HREF = re.compile(r"/equipos/([a-z0-9-]+)/?(?:[?#].*)?$")
 _WIDGET_HREF = re.compile(r"/mercado/detalle/(\d+)")
+_WIDGET_JS = re.compile(r"/analytics/laliga-fantasy/mercado/detalle/(\d+)", re.IGNORECASE)
+_DATA_JUGADOR = re.compile(r"""data-jugador=["'](\d+)["']""", re.IGNORECASE)
 _TEAM_ALIASES: dict[str, str] = {
     "atletico-de-madrid": "atletico",
     "athletic-club": "athletic",
@@ -43,7 +45,7 @@ def team_matches(team: str, probed: str) -> bool:
 
 
 def widget_id(html: str) -> str | None:
-    """Return the numeric market widget id from ``data-jugador`` or a widget link."""
+    """Return the numeric market widget id from DOM or embedded loader scripts."""
     tree = lxml_html.fromstring(html)
     for value in tree.xpath("//@data-jugador"):
         if value.isdigit():
@@ -51,6 +53,10 @@ def widget_id(html: str) -> str | None:
     for href in tree.xpath("//@href | //@data-url | //@src"):
         if match := _WIDGET_HREF.search(href):
             return match.group(1)
+    if match := _WIDGET_JS.search(html):
+        return match.group(1)
+    if match := _DATA_JUGADOR.search(html):
+        return match.group(1)
     return None
 
 

@@ -2,13 +2,17 @@
 
 import re
 
+from lxml.html import HtmlElement
+
+from fantasy_scraping.parser.dom.locators import node_text
 from fantasy_scraping.parser.errors import NormaliseError, ParserSectionError
 from fantasy_scraping.parser.extractors.base import ExtractionContext, rows_with_dates
 from fantasy_scraping.parser.models.common import Competition, MinutesNote, Score
 from fantasy_scraping.parser.models.futbolfantasy import MatchesBlock, RecentMatch, UpcomingMatch
-from fantasy_scraping.parser.normalise.dates import day_month
+from fantasy_scraping.parser.normalise.dates import day_month, resolve_sequence
 from fantasy_scraping.parser.normalise.minutes import minutes_note
-from fantasy_scraping.parser.normalise.text import casefold_key
+from fantasy_scraping.parser.normalise.numbers import es_int
+from fantasy_scraping.parser.normalise.text import casefold_key, clean_text
 
 _SCORE = re.compile(r"(\d+)\s*[-–−]\s*(\d+)")
 
@@ -25,15 +29,154 @@ def extract_matches(ctx: ExtractionContext) -> MatchesBlock:
     Raises:
         ParserSectionError: The recent-match container is missing.
     """
-    if ctx.document.first(ctx.selector("recent_root")) is None:
+    list_root = ctx.document.first("ul.ultimos")
+    calendar_root = ctx.document.first("#profile-partidos")
+    if list_root is None and calendar_root is None:
         raise ParserSectionError(
             "required_anchor_missing",
             "recent matches missing",
             section="matches.recent",
         )
-    recent = _recent(ctx)
-    upcoming = _upcoming(ctx)
+    if list_root is not None:
+        recent = _recent(ctx)
+        upcoming = _upcoming(ctx)
+    else:
+        recent = _recent_calendar(ctx, calendar_root)
+        upcoming = _upcoming_calendar(ctx)
     return MatchesBlock(recent=recent, upcoming=upcoming)
+
+
+def _recent_calendar(ctx: ExtractionContext, root: HtmlElement) -> list[RecentMatch]:
+    pending: list[tuple[HtmlElement, tuple[int, int]]] = []
+    for day in root.cssselect(".day"):
+        raw_date = _calendar_date(day)
+        if raw_date is None:
+            continue
+        try:
+            pending.append((day, day_month(raw_date)))
+        except NormaliseError:
+            continue
+    pairs = [item[1] for item in pending]
+    resolved = resolve_sequence(pairs, ctx.page.fetched_at, "recent") if pairs else []
+    matches: list[RecentMatch] = []
+    for index, (day, _) in enumerate(pending):
+        if index >= len(resolved):
+            break
+        score = _score(_calendar_score(day))
+        note = minutes_note(_calendar_minutes(day), starter=False)
+        matches.append(
+            RecentMatch(
+                date=resolved[index],
+                matchday=_calendar_matchday(day),
+                score=score,
+                minutes=note if note.raw else MinutesNote(raw="", event="unknown"),
+            )
+        )
+    return matches
+
+
+def _upcoming_calendar(ctx: ExtractionContext) -> list[UpcomingMatch]:
+    header = ctx.document.root.xpath(
+        "//header[contains(normalize-space(.), 'Pr\u00f3ximos 5')]"
+        "/following-sibling::div[contains(@class, 'calendar')][1]"
+    )
+    if not header:
+        ctx.miss("matches.upcoming")
+        return []
+    days = header[0].cssselect(".day")
+    pending: list[HtmlElement] = []
+    pairs: list[tuple[int, int]] = []
+    for day in days:
+        raw_date = _calendar_date(day)
+        if raw_date is None:
+            continue
+        try:
+            pairs.append(day_month(raw_date))
+            pending.append(day)
+        except NormaliseError:
+            continue
+    resolved = resolve_sequence(pairs, ctx.page.fetched_at, "upcoming") if pairs else []
+    matches: list[UpcomingMatch] = []
+    for index, day in enumerate(pending):
+        if index >= len(resolved):
+            break
+        matches.append(
+            UpcomingMatch(
+                date=resolved[index],
+                matchday=_calendar_matchday(day),
+                kickoff=_calendar_kickoff(day),
+                is_home=_calendar_home(day),
+                competition=_calendar_competition(ctx, day),
+                competition_raw=_calendar_competition_raw(day),
+            )
+        )
+    return matches
+
+
+def _calendar_date(day: HtmlElement) -> str | None:
+    node = day.cssselect("span.number")
+    if not node:
+        return None
+    text = clean_text(node[0].text or "")
+    return text or None
+
+
+def _calendar_score(day: HtmlElement) -> str:
+    for selector in (".resultado", ".resultadoWid"):
+        node = day.cssselect(selector)
+        if node:
+            return clean_text(node[0].text or "")
+    return ""
+
+
+def _calendar_minutes(day: HtmlElement) -> str:
+    for node in day.cssselect("span.fecha span"):
+        text = clean_text(node.text or "")
+        if text:
+            return text
+    return (
+        clean_text(node_text(day.cssselect("span.fecha")[0])) if day.cssselect("span.fecha") else ""
+    )
+
+
+def _calendar_matchday(day: HtmlElement) -> int | None:
+    node = day.cssselect(".j b")
+    if not node:
+        return None
+    raw = clean_text(node[0].text or "").removeprefix("J").removeprefix("j")
+    try:
+        return es_int(raw)
+    except NormaliseError:
+        return None
+
+
+def _calendar_kickoff(day: HtmlElement) -> str | None:
+    text = node_text(day.cssselect("span.fecha")[0]) if day.cssselect("span.fecha") else ""
+    found = re.search(r"(\d{1,2}:\d{2})h?", text)
+    return f"{found.group(1)}h" if found else None
+
+
+def _calendar_home(day: HtmlElement) -> bool | None:
+    if day.cssselect("span.fecha span.home"):
+        return True
+    if day.cssselect("span.fecha img[alt='Fuera']"):
+        return False
+    return None
+
+
+def _calendar_competition_raw(day: HtmlElement) -> str | None:
+    node = day.cssselect(".widget-partidos-min img")
+    if not node:
+        return None
+    return node[0].get("alt")
+
+
+def _calendar_competition(ctx: ExtractionContext, day: HtmlElement) -> Competition:
+    raw = _calendar_competition_raw(day)
+    if raw is None:
+        return Competition.OTHER
+    mapped = _from_label(ctx, raw)
+    return mapped if mapped is not None else Competition.OTHER
 
 
 def _recent(ctx: ExtractionContext) -> list[RecentMatch]:

@@ -121,6 +121,15 @@ def test_widget_id_link_fallback() -> None:
     assert widget_id('<a href="/analytics/laliga-fantasy/mercado/detalle/77?perfil=1">') == "77"
 
 
+def test_widget_id_script_url_fallback() -> None:
+    html = (
+        'var url = "https://www.futbolfantasy.com/analytics/laliga-fantasy/'
+        'mercado/detalle/4288?perfil=1";'
+    )
+
+    assert widget_id(html) == "4288"
+
+
 def test_extract_fragments_multiple_returns_all_matches() -> None:
     html = "<div class='x'>1</div><div class='x'>2</div>"
 

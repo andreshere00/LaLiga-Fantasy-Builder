@@ -1,5 +1,7 @@
 """ScrapingHttpClient status paths, retries and content checks."""
 
+import gzip
+
 import httpx
 import pytest
 from conftest import HTML, FakeClock, FakeSite
@@ -16,8 +18,12 @@ from fantasy_scraping.scraper.errors import (
     UpstreamUnavailableError,
 )
 from fantasy_scraping.scraper.settings import ScraperSettings
+from fantasy_scraping.scraper.urls import PLAYERS_SITEMAP_URL
 
 URL = "https://www.futbolfantasy.com/jugadores/raphinha/laliga-26-27"
+SITEMAP_XML = (
+    b'<?xml version="1.0"?><urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"></urlset>'
+)
 
 # ---- Mocks, fixtures & helpers ---- #
 
@@ -28,6 +34,21 @@ def _site_with(site: FakeSite, response: httpx.Response) -> FakeSite:
 
 
 # ---- Happy path ---- #
+
+
+async def test_get_gzip_body_after_stream_decode_returns_text(make_client) -> None:
+    site = FakeSite()
+    site.overrides[PLAYERS_SITEMAP_URL] = httpx.Response(
+        200,
+        content=gzip.compress(SITEMAP_XML),
+        headers={"content-type": "application/xml", "content-encoding": "gzip"},
+    )
+
+    response = await make_client(site).get(
+        PLAYERS_SITEMAP_URL, accept=frozenset({"application/xml"}), max_bytes=1024 * 1024
+    )
+
+    assert response.text.startswith("<?xml")
 
 
 async def test_get_ok_returns_text_and_sends_identifiable_user_agent(make_client) -> None:

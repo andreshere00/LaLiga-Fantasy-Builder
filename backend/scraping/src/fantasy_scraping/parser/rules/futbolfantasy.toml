@@ -30,9 +30,9 @@ canonical = "css:link[rel=canonical]"
 title = "css:title"
 club = "css:a.club"
 widget_link = "css:a.widget-mercado"
-identity_name = "css:h1 .name"
-identity_shirt = "css:h1 .shirt"
-identity_position = "css:h1 .pos"
+identity_name = "css:h1 .name, h1.jugador-nombre"
+identity_shirt = "css:h1 .shirt, h1.jugador-nombre"
+identity_position = "css:h1 .pos, section.jugador_principal .position-box"
 identity_badge = "css:img.badge"
 medical = "css:p.estado-medico"
 availability = "css:p.disponibilidad"
@@ -43,8 +43,8 @@ risk_label = "css:.riesgo"
 risk_value = "css:.riesgo .nivel"
 hierarchy_label = "css:.jerarquia"
 hierarchy_value = "css:.jerarquia .valor"
-personal_root = "css:dl.personal"
-personal_social = "css:dl.personal a.social"
+personal_root = "css:dl.personal, #profile-datos-personales"
+personal_social = "css:dl.personal a.social, #profile-datos-personales a.social"
 position_main = "css:.posicion .principal"
 position_item = "css:.posicion li"
 field_map = "css:.mapa-campo"
@@ -57,8 +57,8 @@ injury_note = "css:p.nota-mapa"
 injury_row = "css:table.historial tbody tr"
 news_root = "css:ul.noticias"
 news_item = "css:ul.noticias li"
-recent_root = "css:ul.ultimos"
-recent_item = "css:ul.ultimos li"
+recent_root = "css:ul.ultimos, #profile-partidos"
+recent_item = "css:ul.ultimos li, #profile-partidos .day"
 upcoming_root = "css:ul.proximos"
 upcoming_item = "css:ul.proximos li"
 partido = "css:a.partido"
@@ -86,20 +86,22 @@ points_matches = "css:.partidos-puntos"
 points_row = "css:table.agregados tr"
 points_last3 = "css:.media-ultimos"
 points_mode_item = "css:ul.modos li"
-fixtures_table = "css:table.partidos"
-fixtures_row = "css:table.partidos tbody tr.plegado"
+fixtures_table = "css:table.partidos, #profile-stats-puntos table.tablestats"
+fixtures_row = "css:table.partidos tbody tr.plegado, #profile-stats-puntos table.tablestats tbody tr.plegado[data-local]"
 poligono = "css:.poligono-wrapper"
 anchors = [
   "css:#profile-stats-puntos",
   "css:table.partidos",
   "css:dl.personal",
+  "css:#profile-datos-personales",
 ]
 
 [[rules]]
 id = "profile.identity.display_name"
 target_path = "profile.identity.display_name"
 locator = "css:h1 .name"
-normaliser = "clean_text"
+fallbacks = ["css:h1.jugador-nombre"]
+normaliser = "player_display_name"
 required = "required"
 section = "identity"
 
@@ -107,7 +109,8 @@ section = "identity"
 id = "profile.identity.shirt_number"
 target_path = "profile.identity.shirt_number"
 locator = "css:h1 .shirt"
-normaliser = "es_int"
+fallbacks = ["css:h1.jugador-nombre"]
+normaliser = "player_shirt_number"
 required = "expected"
 section = "identity"
 
@@ -115,6 +118,7 @@ section = "identity"
 id = "profile.identity.position_code"
 target_path = "profile.identity.position_code"
 locator = "css:h1 .pos"
+fallbacks = ["css:section.jugador_principal .position-box"]
 normaliser = "position_code"
 required = "expected"
 section = "identity"
@@ -195,6 +199,57 @@ normaliser = "es_int"
 id = "side"
 locator = "css:td.lado"
 normaliser = "clean_text"
+
+[[tables.columns]]
+id = "starter"
+locator = "css:td.condicion"
+normaliser = "clean_text"
+
+[[tables]]
+id = "fixtures_live"
+section = "fixtures"
+target_path = "fixtures"
+row_locator = "css:#profile-stats-puntos table.tablestats tbody tr.plegado[data-local]"
+
+[[tables.columns]]
+id = "date"
+locator = "css:td.fecha"
+normaliser = "clean_text"
+
+[[tables.columns]]
+id = "matchday"
+locator = "css:td.jorn-td"
+normaliser = "es_int"
+
+[[tables.columns]]
+id = "match"
+locator = "css:td.name .link"
+normaliser = "clean_text"
+
+[[tables.columns]]
+id = "minutes"
+locator = "css:.cambio"
+normaliser = "clean_text"
+
+[[tables.columns]]
+id = "stars"
+locator = "css:td.marca"
+normaliser = "stars"
+
+[[tables.columns]]
+id = "grade"
+locator = "css:td.sofascore"
+normaliser = "es_decimal"
+
+[[tables.columns]]
+id = "dazn"
+locator = "css:td.relevo"
+normaliser = "es_int"
+
+[[tables.columns]]
+id = "points"
+locator = "css:td.data.points span.laliga-fantasy"
+normaliser = "es_int"
 
 [[tables.columns]]
 id = "starter"

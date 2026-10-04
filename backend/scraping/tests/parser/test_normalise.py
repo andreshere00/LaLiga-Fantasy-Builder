@@ -23,6 +23,7 @@ from fantasy_scraping.parser.normalise.enums import (
     risk_level,
     split_slash,
 )
+from fantasy_scraping.parser.normalise.identity import player_display_name, player_shirt_number
 from fantasy_scraping.parser.normalise.minutes import minutes_note
 from fantasy_scraping.parser.normalise.numbers import (
     dash_decimal,
@@ -43,6 +44,16 @@ ANCHOR = datetime(2026, 10, 4, 12, 0, tzinfo=UTC)
 
 
 # ---- Happy path ---- #
+
+
+def test_player_display_name_strips_shirt_prefix() -> None:
+    assert player_display_name("11. Raphinha") == "Raphinha"
+    assert player_display_name("Raphinha") == "Raphinha"
+
+
+def test_player_shirt_number_reads_heading_or_span() -> None:
+    assert player_shirt_number("11. Raphinha") == 11
+    assert player_shirt_number("11") == 11
 
 
 def test_es_int_grouped_spanish_integer_returns_int() -> None:

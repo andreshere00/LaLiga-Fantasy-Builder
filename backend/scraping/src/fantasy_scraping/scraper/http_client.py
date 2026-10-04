@@ -31,6 +31,9 @@ from fantasy_scraping.scraper.urls import ROBOTS_URL, assert_allowed_url
 HTML_TYPES: frozenset[str] = frozenset({"text/html", "application/xhtml+xml"})
 XML_TYPES: frozenset[str] = frozenset({"text/xml", "application/xml"})
 CHALLENGE_MARKERS: tuple[str, ...] = ("just a moment...", "cf-chl-")
+_STRIPPED_RESPONSE_HEADERS: frozenset[str] = frozenset(
+    {"content-encoding", "content-length", "transfer-encoding"}
+)
 COUNTED_FAILURES: tuple[type[ScrapingError], ...] = (
     UpstreamBlockedError,
     UpstreamRateLimitedError,
@@ -188,6 +191,13 @@ class ScrapingHttpClient:
             await self._clock.sleep(backoff_delay(attempt, self._rng))
         raise last
 
+    @staticmethod
+    def _plain_body_headers(headers: httpx.Headers) -> httpx.Headers:
+        """Drop encoding headers after ``aiter_bytes`` has already decoded the body."""
+        return httpx.Headers(
+            {k: v for k, v in headers.items() if k.lower() not in _STRIPPED_RESPONSE_HEADERS}
+        )
+
     async def _request(self, url: str, max_bytes: int) -> httpx.Response:
         """Follow redirects manually, re-validating every hop, and read a capped body."""
         current = url
@@ -207,7 +217,7 @@ class ScrapingHttpClient:
                             raise UnexpectedContentError()
                 return httpx.Response(
                     streamed.status_code,
-                    headers=streamed.headers,
+                    headers=self._plain_body_headers(streamed.headers),
                     content=bytes(body),
                     request=streamed.request,
                 )

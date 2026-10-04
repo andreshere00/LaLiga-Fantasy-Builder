@@ -28,6 +28,7 @@ from fantasy_scraping.parser.models.stats import (
     not_applicable,
     unavailable,
 )
+from fantasy_scraping.parser.normalise.identity import data_local_side
 from fantasy_scraping.parser.normalise.minutes import minutes_note
 from fantasy_scraping.parser.normalise.numbers import es_int
 from fantasy_scraping.parser.normalise.text import casefold_key, clean_text, map_minuses
@@ -61,7 +62,7 @@ def extract_fixtures(ctx: ExtractionContext, *, is_goalkeeper: bool) -> list[Fix
             "fixtures table missing",
             section="fixtures",
         )
-    spec = ctx.table("fixtures")
+    spec = _fixture_table_spec(ctx)
     payloads = _poligono(ctx)
     competition = competition_from_slug(ctx, ctx.page.season_slug or _slug_from_url(ctx))
     is_laliga = competition == Competition.LALIGA
@@ -75,6 +76,11 @@ def extract_fixtures(ctx: ExtractionContext, *, is_goalkeeper: bool) -> list[Fix
     )
     fixtures: list[FixtureRow] = []
     for index, (row, columns, when) in enumerate(dated):
+        if spec.id == "fixtures_live":
+            columns = dict(columns)
+            local = row.get("data-local")
+            if local is not None:
+                columns["side"] = data_local_side(local)
         match = _match(str(columns["match"]))
         if match is None:
             ctx.warn(
@@ -142,6 +148,13 @@ def extract_fixtures(ctx: ExtractionContext, *, is_goalkeeper: bool) -> list[Fix
         )
     _check_point_sums(ctx, fixtures)
     return fixtures
+
+
+def _fixture_table_spec(ctx: ExtractionContext):
+    """Pick the trimmed fixture table or the live ``tablestats`` layout."""
+    if ctx.document.first("table.partidos") is not None:
+        return ctx.table("fixtures")
+    return ctx.table("fixtures_live")
 
 
 def _fixture_columns(columns: dict[str, Any]) -> bool:

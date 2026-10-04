@@ -5,6 +5,11 @@ from typing import Any
 
 from fantasy_scraping.parser.normalise.dates import date_dmy, duration_days, time_hhmm
 from fantasy_scraping.parser.normalise.enums import foot, position_code, risk_level, split_slash
+from fantasy_scraping.parser.normalise.identity import (
+    data_local_side,
+    player_display_name,
+    player_shirt_number,
+)
 from fantasy_scraping.parser.normalise.numbers import (
     dash_decimal,
     es_decimal,
@@ -47,4 +52,7 @@ REGISTRY: dict[str, Normaliser] = {
     "risk_level": risk_level,
     "split_slash": split_slash,
     "count": _count,
+    "player_display_name": player_display_name,
+    "player_shirt_number": player_shirt_number,
+    "data_local_side": data_local_side,
 }

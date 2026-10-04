@@ -284,6 +284,11 @@ def label_pairs(scope: HtmlElement) -> list[tuple[str, str]]:
         value = term.getnext()
         if value is not None:
             pairs.append((node_text(term), node_text(value)))
+    for block in scope.cssselect(".info"):
+        left = block.cssselect(".info-left")
+        right = block.cssselect(".info-right")
+        if left and right:
+            pairs.append((node_text(left[0]), node_text(right[0])))
     for node in scope.cssselect(".bigstat, .stat.info"):
         labels = node.cssselect(".label")
         values = node.cssselect(".value")

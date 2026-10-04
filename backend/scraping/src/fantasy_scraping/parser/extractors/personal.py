@@ -1,5 +1,6 @@
 """Personal information and JSON-LD cross-check."""
 
+import re
 from datetime import date
 
 from fantasy_scraping.parser.extractors.base import (
@@ -11,7 +12,10 @@ from fantasy_scraping.parser.extractors.base import (
 )
 from fantasy_scraping.parser.models.common import SocialLink
 from fantasy_scraping.parser.models.futbolfantasy import PersonalInfo
-from fantasy_scraping.parser.normalise.text import clean_text
+from fantasy_scraping.parser.normalise.dates import date_dmy
+from fantasy_scraping.parser.normalise.text import casefold_key, clean_text
+
+_BIRTH_IN_AGE = re.compile(r"\((\d{2}/\d{2}/\d{4})\)")
 
 
 def extract_personal(ctx: ExtractionContext) -> PersonalInfo | None:
@@ -56,7 +60,27 @@ def extract_personal(ctx: ExtractionContext) -> PersonalInfo | None:
         contract_end=values.get("profile.personal.contract_end"),
         social=_social(ctx),
     )
+    info = _birth_from_age_line(pairs, info)
     return _fill_jsonld(ctx, info)
+
+
+def _birth_from_age_line(pairs: list[tuple[str, str]], info: PersonalInfo) -> PersonalInfo:
+    if info.birth_date is not None:
+        return info
+    for label, raw in pairs:
+        if casefold_key(label) != "edad":
+            continue
+        found = _BIRTH_IN_AGE.search(raw)
+        if found is None:
+            return info
+        from fantasy_scraping.parser.errors import NormaliseError
+
+        try:
+            birth = date_dmy(found.group(1))
+        except NormaliseError:
+            return info
+        return info.model_copy(update={"birth_date": birth})
+    return info
 
 
 def _social(ctx: ExtractionContext) -> list[SocialLink]:

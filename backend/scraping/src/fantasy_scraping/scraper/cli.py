@@ -7,6 +7,8 @@ import sys
 from collections.abc import Sequence
 from pathlib import Path
 
+from pydantic import ValidationError
+
 from fantasy_scraping.models.page import PageKind
 from fantasy_scraping.scraper.errors import InvalidRequestError, ScrapingError
 from fantasy_scraping.scraper.models import ScrapeOptions
@@ -142,6 +144,20 @@ def main(argv: Sequence[str] | None = None) -> int:
         result = _remote(args) if args.service_url else asyncio.run(_local(args))
         if args.command == "scrape" and args.out:
             _write_pages(args.out, result["pages"])  # type: ignore[arg-type]
+    except ValidationError:
+        print(
+            json.dumps(
+                {
+                    "error": "invalid_request",
+                    "detail": (
+                        "set SCRAPER_CONTACT or SCRAPER_USER_AGENT in backend/scraping/.env "
+                        "(copy from .env.example)"
+                    ),
+                }
+            ),
+            file=sys.stderr,
+        )
+        return 1
     except (ScrapingError, RemoteError) as exc:
         print(json.dumps({"error": exc.category, "detail": exc.message}), file=sys.stderr)
         return 1

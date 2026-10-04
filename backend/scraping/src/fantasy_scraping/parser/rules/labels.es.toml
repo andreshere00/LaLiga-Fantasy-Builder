@@ -48,6 +48,12 @@ normaliser = "foot"
 group = "personal"
 
 [[labels]]
+label = "Pie preferido"
+path = "profile.personal.preferred_foot"
+normaliser = "foot"
+group = "personal"
+
+[[labels]]
 label = "Fin de contrato"
 path = "profile.personal.contract_end"
 normaliser = "date_dmy"
