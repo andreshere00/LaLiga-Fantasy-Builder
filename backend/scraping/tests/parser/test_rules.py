@@ -5,9 +5,10 @@ from types import UnionType
 from typing import Union, get_args, get_origin
 
 import pytest
+from pydantic import BaseModel
+
 from fantasy_scraping.parser.models.futbolfantasy import FutbolFantasyPlayer
 from fantasy_scraping.parser.rules.loader import RuleRepository, _compile, load_rules
-from pydantic import BaseModel
 
 # ---- Mocks, fixtures & helpers ---- #
 

@@ -1,10 +1,11 @@
 """Health routes for the scraping process."""
 
 import pytest
-from fantasy_scraping.config import Settings, get_settings
-from fantasy_scraping.main import create_app
 from fastapi.testclient import TestClient
 from pydantic import SecretStr
+
+from fantasy_scraping.config import Settings, get_settings
+from fantasy_scraping.main import create_app
 
 # ---- Mocks, fixtures & helpers ---- #
 

@@ -1,7 +1,8 @@
 """JSON-LD person extraction."""
 
-from fantasy_scraping.parser.dom.jsonld import read_jsonld
 from lxml.html import fromstring
+
+from fantasy_scraping.parser.dom.jsonld import read_jsonld
 
 
 def test_read_jsonld_person_with_graph_and_invalid_block() -> None:

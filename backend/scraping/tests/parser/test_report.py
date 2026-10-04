@@ -3,6 +3,8 @@
 from datetime import date
 
 import pytest
+from support import page
+
 from fantasy_scraping.parser.errors import RenderError
 from fantasy_scraping.parser.markdown.report import (
     _fantasy_pair,
@@ -29,7 +31,6 @@ from fantasy_scraping.parser.models.supplement import (
 from fantasy_scraping.parser.normalise.dates import season_bounds
 from fantasy_scraping.parser.rules.loader import RuleRepository
 from fantasy_scraping.parser.service import ParserService
-from support import page
 
 # ---- Mocks, fixtures & helpers ---- #
 

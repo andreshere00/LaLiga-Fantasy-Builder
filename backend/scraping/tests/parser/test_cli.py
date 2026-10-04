@@ -1,7 +1,8 @@
 """Offline fantasy-parse CLI."""
 
-from fantasy_scraping.parser.cli import main
 from support import FIXTURES
+
+from fantasy_scraping.parser.cli import main
 
 HTML = FIXTURES / "raphinha_laliga_26_27.html"
 ARGS = [

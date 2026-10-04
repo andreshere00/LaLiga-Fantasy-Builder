@@ -313,7 +313,7 @@ def _line_points(line: StatLine | None) -> str:
     return _format_points(line.points)
 
 
-def _format_points(value: float | int) -> str:
+def _format_points(value: float) -> str:
     if float(value).is_integer():
         return fmt_int(int(value))
     return fmt_decimal(float(value), 2)

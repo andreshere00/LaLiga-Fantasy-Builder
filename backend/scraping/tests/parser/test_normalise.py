@@ -3,6 +3,7 @@
 from datetime import UTC, datetime
 
 import pytest
+
 from fantasy_scraping.parser.errors import NormaliseError
 from fantasy_scraping.parser.normalise.dates import (
     date_dmy,

@@ -1,9 +1,10 @@
 """Parse every committed FutbolFantasy HTML fixture."""
 
 import pytest
+from support import page
+
 from fantasy_scraping.models.page import PageKind
 from fantasy_scraping.parser.service import ParserService
-from support import page
 
 # ---- Mocks, fixtures & helpers ---- #
 

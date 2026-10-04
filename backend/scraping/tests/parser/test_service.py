@@ -1,9 +1,11 @@
 """Service, merge, markdown and error behaviour."""
 
-from datetime import date, datetime
+from datetime import UTC, date, datetime
 from pathlib import Path
 
 import pytest
+from support import FETCHED_AT, page
+
 from fantasy_scraping.models.page import PageKind, ScrapedPage
 from fantasy_scraping.parser.errors import ParseError, RenderError, UnsupportedLayoutError
 from fantasy_scraping.parser.hashing import canonical_json, content_hash
@@ -11,7 +13,6 @@ from fantasy_scraping.parser.markdown.options import RenderOptions
 from fantasy_scraping.parser.models.futbolfantasy import MarketPoint
 from fantasy_scraping.parser.models.supplement import FantasySupplement, FantasyWeek
 from fantasy_scraping.parser.service import ParserService
-from support import FETCHED_AT, page
 
 # ---- Mocks, fixtures & helpers ---- #
 
@@ -207,7 +208,7 @@ def test_parse_futbolfantasy_rejects_non_http_url() -> None:
 
 def test_parse_futbolfantasy_rejects_bad_input() -> None:
     naive = page("raphinha_laliga_26_27.html").model_copy(
-        update={"fetched_at": datetime(2026, 10, 4, 12, 0)}
+        update={"fetched_at": datetime(2026, 10, 4, 12, 0, tzinfo=UTC).replace(tzinfo=None)}
     )
     with pytest.raises(ParseError) as caught:
         SERVICE.parse_futbolfantasy(naive)
@@ -346,7 +347,7 @@ def test_error_detail_does_not_echo_input() -> None:
     with pytest.raises(ParseError) as caught:
         SERVICE.parse_futbolfantasy(page("ignored.html", html=html))
     detail = caught.value.detail
-    for index in range(0, len(html) - 19):
+    for index in range(len(html) - 19):
         assert html[index : index + 20] not in detail
 
 

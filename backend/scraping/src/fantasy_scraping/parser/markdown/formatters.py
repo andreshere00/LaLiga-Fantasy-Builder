@@ -24,7 +24,7 @@ def fmt_signed(value: int) -> str:
 
 def fmt_decimal(value: float, places: int) -> str:
     """Format a float with a comma decimal mark and fixed places."""
-    quantum = Decimal("1").scaleb(-places)
+    quantum = Decimal(1).scaleb(-places)
     number = Decimal(str(value)).quantize(quantum, rounding=ROUND_HALF_UP)
     sign = "−" if number < 0 else ""
     text = f"{abs(number):.{places}f}".replace(".", ",")
@@ -34,7 +34,7 @@ def fmt_decimal(value: float, places: int) -> str:
 def fmt_percent(value: float, places: int = 0) -> str:
     """Format a percent with a space before ``%``."""
     if places == 0:
-        number = fmt_int(int(Decimal(str(value)).quantize(Decimal("1"), rounding=ROUND_HALF_UP)))
+        number = fmt_int(int(Decimal(str(value)).quantize(Decimal(1), rounding=ROUND_HALF_UP)))
     else:
         number = fmt_decimal(value, places)
     return f"{number} %"

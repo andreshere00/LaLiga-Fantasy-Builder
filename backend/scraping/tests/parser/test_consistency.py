@@ -1,8 +1,9 @@
 """Cross-section consistency warnings."""
 
+from support import page
+
 from fantasy_scraping.parser.consistency import apply_consistency
 from fantasy_scraping.parser.service import ParserService
-from support import page
 
 # ---- Mocks, fixtures & helpers ---- #
 

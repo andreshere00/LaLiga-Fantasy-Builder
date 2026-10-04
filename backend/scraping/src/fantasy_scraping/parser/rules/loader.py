@@ -51,7 +51,7 @@ def _load_table(root: Path, name: str) -> dict[str, object]:
     with path.open("rb") as handle:
         payload = tomllib.load(handle)
     if not isinstance(payload, dict):
-        raise ValueError(f"rule file must be a table: {name}")
+        raise TypeError(f"rule file must be a table: {name}")
     return payload
 
 

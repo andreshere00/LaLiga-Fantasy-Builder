@@ -2,6 +2,8 @@
 
 from datetime import date
 
+from lxml.html import fromstring
+
 from fantasy_scraping.parser.dom.document import HtmlDocument
 from fantasy_scraping.parser.dom.locators import apply_locator, read_value
 from fantasy_scraping.parser.markdown.formatters import (
@@ -11,7 +13,6 @@ from fantasy_scraping.parser.markdown.formatters import (
     fmt_percent,
 )
 from fantasy_scraping.parser.markdown.tables import cell
-from lxml.html import fromstring
 
 
 def test_label_locator_reads_sibling_value() -> None:

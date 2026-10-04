@@ -1,5 +1,7 @@
 """Markdown section renderers with empty and partial models."""
 
+from support import page
+
 from fantasy_scraping.models.page import PageKind
 from fantasy_scraping.parser.markdown import sections
 from fantasy_scraping.parser.markdown.options import RenderOptions
@@ -8,7 +10,6 @@ from fantasy_scraping.parser.models.common import PartialParseWarning
 from fantasy_scraping.parser.models.futbolfantasy import FutbolFantasyPlayer
 from fantasy_scraping.parser.rules.loader import RuleRepository
 from fantasy_scraping.parser.service import ParserService
-from support import page
 
 # ---- Mocks, fixtures & helpers ---- #
 

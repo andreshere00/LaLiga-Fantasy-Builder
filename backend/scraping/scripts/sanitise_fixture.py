@@ -1,4 +1,3 @@
-#!/usr/bin/env python3
 """Strip tracking, mail and inline handlers from a saved HTML file.
 
 The script is offline. It does not fetch the page.

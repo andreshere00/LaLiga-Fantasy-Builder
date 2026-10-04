@@ -4,6 +4,7 @@ import shutil
 from pathlib import Path
 
 import pytest
+
 from fantasy_scraping.parser.rules.loader import _check_labels, _check_rules, load_rules
 from fantasy_scraping.parser.rules.schema import ExtractRule, LabelRule
 

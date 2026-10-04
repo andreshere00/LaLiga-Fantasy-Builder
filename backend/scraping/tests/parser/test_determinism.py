@@ -5,11 +5,12 @@ import os
 import subprocess
 import sys
 
-from fantasy_scraping.parser.hashing import canonical_json
-from fantasy_scraping.parser.service import ParserService
 from hypothesis import given, settings
 from hypothesis import strategies as st
 from support import FIXTURES, page
+
+from fantasy_scraping.parser.hashing import canonical_json
+from fantasy_scraping.parser.service import ParserService
 
 HTML = (FIXTURES / "raphinha_laliga_26_27.html").read_text(encoding="utf-8")
 SERVICE = ParserService()
