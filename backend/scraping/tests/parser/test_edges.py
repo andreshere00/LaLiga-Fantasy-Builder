@@ -26,6 +26,7 @@ def test_label_locator_reads_sibling_value() -> None:
 def test_formatters_cover_duration_percent_and_empty_cell() -> None:
     assert fmt_duration(1) == "1 día"
     assert fmt_percent(64.2, 0) == "64 %"
+    assert fmt_percent(64.25, 2) == "64,25 %"
     assert fmt_minutes("Entra 62'", None, "subbed_on") == "Entra 62'"
     assert fmt_minutes("", None, "unknown") == "—"
     assert fmt_date(date(2026, 10, 4), "iso") == "2026-10-04"

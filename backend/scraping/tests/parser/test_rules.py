@@ -82,6 +82,13 @@ def test_compile_rejects_unknown_locator_kind() -> None:
         _compile("text:nombre")
 
 
+def test_compile_accepts_xpath_and_label_locators() -> None:
+    _compile("xpath://h1")
+    _compile("label:Nombre|Apellido")
+    with pytest.raises(ValueError):
+        _compile("label:")
+
+
 def test_compile_rejects_bad_css() -> None:
     from cssselect.parser import SelectorSyntaxError
 

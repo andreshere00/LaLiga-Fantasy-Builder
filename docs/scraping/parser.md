@@ -31,6 +31,32 @@ parsed = service.parse(page, companions=[])
 markdown = service.to_markdown(parsed.futbolfantasy)
 ```
 
+`to_player_report(player, supplement=None)` renders a shorter Spanish report
+from an already parsed `FutbolFantasyPlayer` or `ParsedPlayer`. It never reads
+HTML or calls LaLiga, OpenWeather, or the clock. Market windows use
+`meta.extracted_on` as the anchor day.
+
+Pass optional `FantasySupplement` when you have LaLiga Fantasy `lastStats` weeks,
+`GET /players/{id}/market-value` samples, or upcoming-match weather and distance.
+Without a supplement, LaLiga recent rows use FutbolFantasy stats, upcoming weather
+and kilometres render as `—`, and the fantasy section omits jornada and market
+blocks.
+
+```python
+from datetime import date
+
+from fantasy_scraping.parser import FantasySupplement, FantasyWeek, ParserService
+from fantasy_scraping.parser.models.futbolfantasy import MarketPoint
+
+report = service.to_player_report(
+    parsed,
+    FantasySupplement(
+        weeks=[FantasyWeek(week_number=7, total_points=42, stats={"goals": [1, 10]})],
+        market_points=[MarketPoint(date=date(2026, 10, 4), value=172_907_890)],
+    ),
+)
+```
+
 `ParsedPlayer.content_hash` is the SHA-256 of the canonical JSON without that
 field. `meta.input_sha256` is the SHA-256 of the HTML bytes. A suggested API
 cache key is `(parser_version, rules_version, input_sha256)`.
@@ -43,6 +69,7 @@ cache key is `(parser_version, rules_version, input_sha256)`.
 | `ParserService` | Guards the page, runs extractors, merges competitions. |
 | Extractors | Pure functions over the lxml tree and the rule set. |
 | `to_markdown` | Pure function of the model, the rules and `RenderOptions`. |
+| `to_player_report` | Short report from the model plus optional `FantasySupplement`. |
 
 Selectors live in `src/fantasy_scraping/parser/rules/*.toml`. A missing required
 anchor raises. A missing expected field becomes `null`, a warning and a

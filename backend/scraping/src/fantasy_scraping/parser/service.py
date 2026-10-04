@@ -33,6 +33,7 @@ from fantasy_scraping.parser.extractors.status import (
 from fantasy_scraping.parser.hashing import content_hash
 from fantasy_scraping.parser.markdown.options import RenderOptions
 from fantasy_scraping.parser.markdown.renderer import to_markdown
+from fantasy_scraping.parser.markdown.report import render_player_report
 from fantasy_scraping.parser.merge import merge_competitions
 from fantasy_scraping.parser.models.futbolfantasy import (
     FutbolFantasyPlayer,
@@ -42,6 +43,7 @@ from fantasy_scraping.parser.models.futbolfantasy import (
 )
 from fantasy_scraping.parser.models.parsed import ParsedPlayer
 from fantasy_scraping.parser.models.stats import DaznStats
+from fantasy_scraping.parser.models.supplement import FantasySupplement
 from fantasy_scraping.parser.normalise.minutes import minutes_note
 from fantasy_scraping.parser.rules.loader import RuleRepository
 from fantasy_scraping.parser.rules.schema import RuleSet
@@ -164,6 +166,23 @@ class ParserService:
             Markdown with a single trailing newline.
         """
         return to_markdown(model, self.rules.load(), options or RenderOptions())
+
+    def to_player_report(
+        self,
+        player: FutbolFantasyPlayer | ParsedPlayer,
+        supplement: FantasySupplement | None = None,
+    ) -> str:
+        """Render the short player report from parsed JSON and optional supplement data.
+
+        Args:
+            player: Parsed FutbolFantasy tree or ``ParsedPlayer`` wrapper.
+            supplement: LaLiga Fantasy weeks, market samples, and upcoming context.
+
+        Returns:
+            UTF-8 Markdown with one trailing newline.
+        """
+        model = player.futbolfantasy if isinstance(player, ParsedPlayer) else player
+        return render_player_report(model, self.rules.load(), supplement)
 
     def _parse_document(self, page: ScrapedPage, rule_set: RuleSet) -> FutbolFantasyPlayer:
         self._check_season(page)

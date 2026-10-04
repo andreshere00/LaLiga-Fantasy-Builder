@@ -1,6 +1,6 @@
 """Service, merge, markdown and error behaviour."""
 
-from datetime import datetime
+from datetime import date, datetime
 from pathlib import Path
 
 import pytest
@@ -8,6 +8,8 @@ from fantasy_scraping.models.page import PageKind, ScrapedPage
 from fantasy_scraping.parser.errors import ParseError, RenderError, UnsupportedLayoutError
 from fantasy_scraping.parser.hashing import canonical_json, content_hash
 from fantasy_scraping.parser.markdown.options import RenderOptions
+from fantasy_scraping.parser.models.futbolfantasy import MarketPoint
+from fantasy_scraping.parser.models.supplement import FantasySupplement, FantasyWeek
 from fantasy_scraping.parser.service import ParserService
 from support import FETCHED_AT, page
 
@@ -42,6 +44,7 @@ def test_parse_futbolfantasy_raphinha_page_matches_published_totals() -> None:
     assert player.meta.extracted_on.isoformat() == "2026-10-04"
     assert "form_visual_only" in _codes(player)
     assert "market_season_mismatch" in _codes(player)
+    assert player.profile.news[0].source == "FutbolFantasy"
     assert "injury_map_total_mismatch" in _codes(player)
 
 
@@ -118,6 +121,45 @@ def test_to_markdown_raphinha_is_stable_and_structured() -> None:
     assert SERVICE.to_markdown(round_trip) == text
 
 
+def test_to_player_report_raphinha_with_and_without_supplement() -> None:
+    player = SERVICE.parse_futbolfantasy(page("raphinha_laliga_26_27.html"))
+    base = SERVICE.to_player_report(player)
+    assert base.startswith("# Raphinha\n")
+    assert "## Datos de partidos" in base
+    assert "### Últimos 5 partidos" in base
+    for token in ("03/10", "30/09", "27/09", "23/09", "19/09"):
+        assert token in base
+    assert "## Datos del jugador" in base
+    assert "*Sin lesión en la cabecera.*" in base
+    assert "### Próximos 5 partidos" in base
+    upcoming = base.split("### Próximos 5 partidos", maxsplit=1)[1]
+    assert "| — |" in upcoming
+    assert SERVICE.to_player_report(player) == base
+
+    supplement = FantasySupplement(
+        weeks=[
+            FantasyWeek(
+                week_number=7,
+                total_points=42,
+                stats={"mins_played": [76, 2], "goals": [1, 99], "goal_assist": [1, 9]},
+            )
+        ],
+        market_points=[
+            MarketPoint(date=date(2026, 9, 29), value=170_000_000),
+            MarketPoint(date=date(2026, 10, 1), value=171_000_000),
+            MarketPoint(date=date(2026, 10, 3), value=172_000_000),
+            MarketPoint(date=date(2026, 10, 4), value=173_000_000),
+        ],
+    )
+    enriched = SERVICE.to_player_report(player, supplement)
+    assert "#### Estadísticas (03/10, jornada 7)" in enriched
+    assert "| Goles | 1 | 99 |" in enriched
+    assert "## Datos del fantasy" in enriched
+    assert "### Estadísticas por jornada" in enriched
+    assert "+3.000.000" in enriched
+    assert "5 días atrás" in enriched
+
+
 def test_parse_content_hash_ignores_cache_flag() -> None:
     first = SERVICE.parse(page("raphinha_laliga_26_27.html"))
     second = SERVICE.parse(page("raphinha_laliga_26_27.html"))
@@ -146,6 +188,15 @@ def test_parse_futbolfantasy_upstream_status_raises() -> None:
     with pytest.raises(ParseError) as caught:
         SERVICE.parse_futbolfantasy(page("status_404.html", status_code=404))
     assert caught.value.code == "upstream_status"
+
+
+def test_parse_futbolfantasy_rejects_non_http_url() -> None:
+    bad = page(
+        "raphinha_laliga_26_27.html", url="ftp://example.com/jugadores/raphinha/laliga-26-27"
+    )
+    with pytest.raises(ParseError) as caught:
+        SERVICE.parse_futbolfantasy(bad)
+    assert caught.value.code == "input_invalid"
 
 
 def test_parse_futbolfantasy_rejects_bad_input() -> None:
@@ -219,7 +270,14 @@ def test_parse_futbolfantasy_fragment_edges_keep_partial_data() -> None:
     <dl class="personal"><dt>Nombre</dt><dd>Raphael Dias
         Belloli</dd><dt>Nacionalidad</dt><dd>Brasil / España</dd></dl>
     <ul class="ultimos"></ul>
-    <ul class="noticias"></ul>
+    <ul class="noticias">
+      <li><span class="fuente">Sin enlace</span></li>
+      <li>
+        <a href="javascript:void(0)">Ignorar</a>
+        <time datetime="bad-date">mal</time>
+        <span class="resumen">Resumen breve</span>
+      </li>
+    </ul>
     <section class="lesiones">
       <table class="historial"><thead><tr><th>Inicio</th></tr></thead><tbody>
         <tr><td class="inicio">01/09/26</td><td class="fin">Actualidad</td><td
@@ -288,6 +346,59 @@ def test_error_detail_does_not_echo_input() -> None:
 def test_merge_competitions_empty_input_raises() -> None:
     with pytest.raises(ParseError):
         SERVICE.merge_competitions([])
+
+
+def test_parse_futbolfantasy_market_widget_companion_overlays_market() -> None:
+    import re
+
+    base_html = re.sub(
+        r"<section class=\"mercado\">[\s\S]*?</section>",
+        "",
+        page("raphinha_laliga_26_27.html").html,
+        count=1,
+    )
+    widget_html = """
+    <html><body><section class="mercado">
+      <span class="valor-actual">99.999</span>
+      <span class="variacion">+1 (0,5 %)</span>
+    </section></body></html>
+    """
+    player = SERVICE.parse_futbolfantasy(
+        page("raphinha_laliga_26_27.html", html=base_html),
+        companions=[
+            page(
+                "widget.html",
+                html=widget_html,
+                kind=PageKind.MARKET_WIDGET,
+                url="https://www.futbolfantasy.com/analytics/laliga-fantasy/mercado/detalle/4288",
+            )
+        ],
+    )
+    assert player.market is not None
+    assert player.market.current_value == 99_999
+
+
+def test_parse_futbolfantasy_market_widget_without_market_block_is_noop() -> None:
+    import re
+
+    base_html = re.sub(
+        r"<section class=\"mercado\">[\s\S]*?</section>",
+        "",
+        page("raphinha_laliga_26_27.html").html,
+        count=1,
+    )
+    player = SERVICE.parse_futbolfantasy(
+        page("raphinha_laliga_26_27.html", html=base_html),
+        companions=[
+            page(
+                "empty.html",
+                html="<html><body></body></html>",
+                kind=PageKind.MARKET_WIDGET,
+                url="https://www.futbolfantasy.com/analytics/laliga-fantasy/mercado/detalle/1",
+            )
+        ],
+    )
+    assert player.market is None
 
 
 def test_markdown_golden_snapshot_matches_file(request: pytest.FixtureRequest) -> None:

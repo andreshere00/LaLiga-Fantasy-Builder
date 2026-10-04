@@ -32,6 +32,7 @@ from fantasy_scraping.parser.normalise.numbers import (
     signed_delta,
 )
 from fantasy_scraping.parser.normalise.ratios import count_percent, ratio
+from fantasy_scraping.parser.normalise.registry import REGISTRY
 from fantasy_scraping.parser.normalise.stars import stars
 from fantasy_scraping.parser.normalise.text import casefold_key, clean_text
 
@@ -109,6 +110,9 @@ def test_enums_known_labels_map_to_codes() -> None:
     assert hierarchy_rank("Dios", {"dios": 1}) == 1
     assert split_slash("Brasil / España") == ["Brasil", "España"]
     assert bid_amount("Sin rentabilidad") == (None, False)
+    assert bid_amount("—") == (None, None)
+    assert bid_amount("") == (None, None)
+    assert REGISTRY["count"]("12") == 12
     assert stars("★★★") == 3
     assert stars("") is None
     assert es_int_token("29 años") == 29
@@ -123,6 +127,10 @@ def test_enums_known_labels_map_to_codes() -> None:
 def test_es_int_invalid_grouping_raises() -> None:
     with pytest.raises(NormaliseError):
         es_int("1.5")
+    with pytest.raises(NormaliseError):
+        es_int("1.2.3")
+    with pytest.raises(NormaliseError):
+        es_int_token("sin número")
 
 
 def test_date_dmy_invalid_day_raises() -> None:
