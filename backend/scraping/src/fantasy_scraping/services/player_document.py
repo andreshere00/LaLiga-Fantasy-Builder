@@ -9,7 +9,7 @@ from fantasy_scraping.parser.service import ParserService
 from fantasy_scraping.scraper.service import ScraperService
 
 _FACADE_INCLUDE = frozenset(
-    {PageKind.PLAYER, PageKind.MARKET_WIDGET, PageKind.COMPETITION},
+    {PageKind.PLAYER, PageKind.MARKET_WIDGET, PageKind.COMPETITION, PageKind.CLUB},
 )
 
 

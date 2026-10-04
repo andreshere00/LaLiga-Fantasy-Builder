@@ -106,7 +106,7 @@ services:
       INTERNAL_JWT_AUDIENCE: ${INTERNAL_JWT_AUDIENCE}
       INTERNAL_SERVICE_TOKEN: ${INTERNAL_SERVICE_TOKEN}
       SCRAPING_BASE_URL: ${SCRAPING_BASE_URL:-http://scraping:8002}
-      SCRAPING_SERVICE_TOKEN: ${SCRAPING_SERVICE_TOKEN:-dev-scraping-token}
+      SCRAPING_SERVICE_TOKEN: ${SCRAPING_SERVICE_TOKEN}
     depends_on:
       auth:
         condition: service_healthy
@@ -122,9 +122,9 @@ services:
       dockerfile: Dockerfile
     env_file: [./backend/scraping/.env]
     environment:
-      SCRAPING_SERVICE_TOKEN: ${SCRAPING_SERVICE_TOKEN:-dev-scraping-token}
+      SCRAPING_SERVICE_TOKEN: ${SCRAPING_SERVICE_TOKEN}
       SCRAPING_SERVICE_PORT: ${SCRAPING_SERVICE_PORT:-8002}
-      SCRAPING_EXPOSE_DOCS: ${SCRAPING_EXPOSE_DOCS:-true}
+      SCRAPING_EXPOSE_DOCS: ${SCRAPING_EXPOSE_DOCS:-false}
       USE_MEMORY_STORE: ${USE_MEMORY_STORE:-true}
       REDIS_URL: ${SCRAPING_REDIS_URL:-redis://${REDIS_HOST:-redis}:${REDIS_PORT:-6379}/1}
       SCRAPER_CONTACT: ${SCRAPER_CONTACT:-dev@local}

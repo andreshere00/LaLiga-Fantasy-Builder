@@ -173,18 +173,34 @@ def build_market_window(
         )
         return window, warnings
 
+    by_day = {day: value for day, value in history}
+    carry: int | None = None
+    for day, value in history:
+        if day <= from_:
+            carry = value
+        else:
+            break
+    if carry is None:
+        carry = history[0][1]
+    start_value = carry
+    end_carry = carry
+    for day, value in history:
+        if day <= to:
+            end_carry = value
+    end_value = end_carry
+    delta_abs_val: int | None = None
+    delta_rel_val: float | None = None
+    if start_value is not None and end_value is not None:
+        delta_abs_val = end_value - start_value
+        if start_value == 0:
+            warnings.append(SegmentWarning(code="zero_start_value", source="fantasy", detail=None))
+        else:
+            delta_rel_val = round(delta_abs_val / start_value * 100, 4)
+
     series: list[MarketSeriesPoint] = []
     if include_series:
-        by_day = {day: value for day, value in history}
         cursor = from_
-        carry: int | None = None
-        for day, value in history:
-            if day <= from_:
-                carry = value
-            else:
-                break
-        if carry is None:
-            carry = history[0][1]
+        carry = start_value
         while cursor <= to:
             if cursor in by_day:
                 carry = by_day[cursor]
@@ -209,17 +225,7 @@ def build_market_window(
             )
             cursor = date.fromordinal(cursor.toordinal() + 1)
 
-    start_value = series[0].value if series else None
-    end_value = series[-1].value if series else None
-    delta_abs_val: int | None = None
-    delta_rel_val: float | None = None
-    if start_value is not None and end_value is not None:
-        delta_abs_val = end_value - start_value
-        if start_value == 0:
-            warnings.append(SegmentWarning(code="zero_start_value", source="fantasy", detail=None))
-        else:
-            delta_rel_val = round(delta_abs_val / start_value * 100, 4)
-    if from_ == to and series:
+    if from_ == to and (series or start_value is not None):
         warnings.append(SegmentWarning(code="single_point_window", source="fantasy", detail=None))
 
     min_extreme: MarketExtreme | None = None

@@ -174,6 +174,7 @@ async def test_scrape_players_failing_item_does_not_fail_batch(service: ScraperS
     assert outcomes[0].pages and outcomes[0].error is None
     assert outcomes[1].error == {"error": "player_not_found", "detail": "player not found"}
     assert outcomes[2].error and outcomes[2].error["error"] == "player_ambiguous"
+    assert 1 < len(outcomes[2].error["candidates"]) <= 5
 
 
 async def test_invalidate_slug_drops_only_that_player(
@@ -194,6 +195,15 @@ def test_current_season_rolls_over_in_july() -> None:
 
 
 # ---- Error paths ---- #
+
+
+async def test_resolve_player_route_alias_with_wrong_team_raises_ambiguous(
+    service: ScraperService,
+) -> None:
+    with pytest.raises(AmbiguousPlayerError):
+        await service.resolve_player_route(
+            "Vini Jr.", team="Getafe CF", season=SEASON, player_id="3102"
+        )
 
 
 async def test_resolve_player_route_namesake_without_team_raises_ambiguous(

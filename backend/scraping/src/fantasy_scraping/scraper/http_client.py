@@ -156,6 +156,9 @@ class ScrapingHttpClient:
             except COUNTED_FAILURES as exc:
                 self._breaker.record_failure(immediate=isinstance(exc, UpstreamBlockedError))
                 raise
+            except (PlayerNotFoundError, UnexpectedContentError):
+                self._breaker.record_success()
+                raise
         self._breaker.record_success()
         return response
 

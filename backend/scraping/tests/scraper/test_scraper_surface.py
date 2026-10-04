@@ -96,6 +96,16 @@ def test_internal_health_bad_token_returns_401(client: TestClient) -> None:
     assert client.get("/internal/health").status_code == 401
 
 
+def test_debug_empty_token_allows_internal_routes_without_header(
+    service: ScraperService,
+) -> None:
+    app = create_app(Settings(scraping_service_token=SecretStr(""), debug=True), service)
+    client = TestClient(app)
+
+    assert client.get("/internal/health").status_code == 200
+    assert client.get("/internal/scrape/linked-data").status_code == 200
+
+
 # ---- Error paths ---- #
 
 
@@ -107,8 +117,11 @@ def test_internal_routes_bad_token_return_401(client: TestClient, headers: dict[
 def test_routes_ambiguous_name_returns_409_error_body(client: TestClient) -> None:
     response = client.get("/internal/scrape/routes", params={"name": "Gueye"}, headers=TOKEN)
 
+    body = response.json()
     assert response.status_code == 409
-    assert response.json() == {"error": "player_ambiguous", "detail": "player name is ambiguous"}
+    assert body["error"] == "player_ambiguous"
+    assert body["detail"] == "player name is ambiguous"
+    assert 1 < len(body["candidates"]) <= 5
 
 
 def test_routes_unknown_name_returns_404(client: TestClient) -> None:

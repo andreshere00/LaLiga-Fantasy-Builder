@@ -126,7 +126,7 @@ async def route(
     name: Annotated[str, Query(min_length=1, max_length=100)],
     team: Annotated[str | None, Query(max_length=100)] = None,
     full_name: Annotated[str | None, Query(max_length=100)] = None,
-    player_id: Annotated[str | None, Query(max_length=32)] = None,
+    player_id: Annotated[str | None, Query(max_length=10, pattern=r"^[0-9]+$")] = None,
     season: str | None = None,
 ) -> PlayerRoute:
     """Resolve a name to a player route."""

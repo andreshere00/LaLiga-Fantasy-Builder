@@ -23,6 +23,9 @@ class RateLimiter:
             bucket = self._events.setdefault(subject, deque())
             while bucket and bucket[0] < window_start:
                 bucket.popleft()
+            if not bucket:
+                self._events.pop(subject, None)
+                bucket = self._events.setdefault(subject, deque())
             if len(bucket) >= self._limit:
                 retry = int(max(1.0, 60.0 - (now - bucket[0])))
                 return retry
@@ -30,12 +33,11 @@ class RateLimiter:
         return None
 
 
-_limiter: RateLimiter | None = None
+_limiters: dict[int, RateLimiter] = {}
 
 
 def get_rate_limiter(limit_per_minute: int) -> RateLimiter:
-    """Return a process-wide limiter instance."""
-    global _limiter
-    if _limiter is None:
-        _limiter = RateLimiter(limit_per_minute=limit_per_minute)
-    return _limiter
+    """Return a shared limiter for the given per-minute cap."""
+    if limit_per_minute not in _limiters:
+        _limiters[limit_per_minute] = RateLimiter(limit_per_minute=limit_per_minute)
+    return _limiters[limit_per_minute]

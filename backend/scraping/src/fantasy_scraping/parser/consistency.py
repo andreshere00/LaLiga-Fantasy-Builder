@@ -67,8 +67,16 @@ def _minutes(player: FutbolFantasyPlayer, extra: list[PartialParseWarning]) -> N
     if stats is None or stats.participation is None or stats.participation.minutes is None:
         return
     rows = _base_fixtures(player)
-    total = sum(row.minutes_out.minutes or 0 for row in rows)
-    if total and total != stats.participation.minutes:
+    if not rows:
+        return
+    has_unknown = any(row.minutes_out.minutes is None for row in rows)
+    known = [row.minutes_out.minutes for row in rows if row.minutes_out.minutes is not None]
+    if has_unknown:
+        _warn(extra, "minutes_assumed_unknown", "fixtures.minutes_out.minutes")
+    if not known or has_unknown:
+        return
+    total = sum(known)
+    if total != stats.participation.minutes:
         _warn(extra, "minutes_sum_mismatch", "season_stats.participation.minutes")
 
 

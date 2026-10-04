@@ -17,7 +17,7 @@ from fantasy_scraping.config import Settings, get_settings
 from fantasy_scraping.parser.errors import ParserError
 from fantasy_scraping.scraper.cache import MemoryCache
 from fantasy_scraping.scraper.clock import SystemClock
-from fantasy_scraping.scraper.errors import ScrapingError
+from fantasy_scraping.scraper.errors import AmbiguousPlayerError, ScrapingError
 from fantasy_scraping.scraper.http_client import ScrapingHttpClient
 from fantasy_scraping.scraper.routes import health_router
 from fantasy_scraping.scraper.routes import router as scrape_router
@@ -107,9 +107,10 @@ def create_app(settings: Settings | None = None, service: ScraperService | None 
     @app.exception_handler(ScrapingError)
     async def scraping_error(_request: Request, exc: ScrapingError) -> JSONResponse:
         """Serialise failures as the repo-wide ``{error, detail}`` body."""
-        return JSONResponse(
-            status_code=exc.status_code, content={"error": exc.category, "detail": exc.message}
-        )
+        content: dict[str, object] = {"error": exc.category, "detail": exc.message}
+        if isinstance(exc, AmbiguousPlayerError):
+            content["candidates"] = exc.candidates
+        return JSONResponse(status_code=exc.status_code, content=content)
 
     @app.get("/health/live", response_model=HealthResponse)
     @app.get("/health/ready", response_model=HealthResponse)

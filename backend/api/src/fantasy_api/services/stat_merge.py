@@ -41,6 +41,8 @@ def _coerce_stat(
 
 def merge_fixture_stats(
     layers: Sequence[tuple[StatSource, Mapping[StatKey, ScrapedStat]]],
+    *,
+    fantasy_points_total: int | None = None,
 ) -> tuple[FixtureStats, list[SegmentWarning]]:
     """Merge stat layers; first non-null count or points wins."""
     warnings: list[SegmentWarning] = []
@@ -54,8 +56,8 @@ def merge_fixture_stats(
             candidate = _coerce_stat(scraped, source, stat_key=stat_key)
             has_value = (
                 candidate.count is not None
-                or candidate.fantasy_points
-                or (stat_key == StatKey.DAZN_POINTS and candidate.dazn_points)
+                or candidate.fantasy_points is not None
+                or (stat_key == StatKey.DAZN_POINTS and candidate.dazn_points is not None)
             )
             if not has_value:
                 continue
@@ -66,7 +68,10 @@ def merge_fixture_stats(
                 winner.count is not None
                 and candidate.count is not None
                 and winner.count != candidate.count
-            ) or (winner.fantasy_points != candidate.fantasy_points and candidate.fantasy_points):
+            ) or (
+                winner.fantasy_points != candidate.fantasy_points
+                and candidate.fantasy_points is not None
+            ):
                 warnings.append(
                     SegmentWarning(
                         code="source_conflict",
@@ -76,5 +81,17 @@ def merge_fixture_stats(
                 )
                 continue
         merged[stat_key] = winner or default_stat_value()
+    if fantasy_points_total is not None:
+        summed = sum(
+            value.fantasy_points for key, value in merged.items() if key != StatKey.DAZN_POINTS
+        )
+        if summed != fantasy_points_total:
+            warnings.append(
+                SegmentWarning(
+                    code="points_total_mismatch",
+                    source=StatSource.FUTBOLFANTASY.value,
+                    detail=f"{summed}!={fantasy_points_total}",
+                )
+            )
     payload = {field: merged[key] for key, field in _STAT_FIELDS}
     return FixtureStats(**payload), warnings

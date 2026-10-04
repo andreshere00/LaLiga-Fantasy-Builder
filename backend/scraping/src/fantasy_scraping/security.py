@@ -18,6 +18,9 @@ def require_service_token(
     Raises:
         HTTPException: 401 when the token is missing or wrong.
     """
-    expected = request.app.state.settings.scraping_service_token.get_secret_value()
+    settings = request.app.state.settings
+    expected = settings.scraping_service_token.get_secret_value()
+    if settings.debug and not expected and not x_service_token:
+        return
     if not x_service_token or not secrets.compare_digest(x_service_token, expected):
         raise HTTPException(status_code=401, detail="invalid service token")

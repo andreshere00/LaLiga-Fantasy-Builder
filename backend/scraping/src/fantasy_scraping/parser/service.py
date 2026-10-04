@@ -189,8 +189,8 @@ class ParserService:
         return render_player_report(model, self.rules.load(), supplement)
 
     def _parse_document(self, page: ScrapedPage, rule_set: RuleSet) -> FutbolFantasyPlayer:
-        self._check_season(page)
         document, person, jsonld_warnings = parse_html(page.html)
+        self._check_season(page, document, rule_set)
         ctx = ExtractionContext(
             page=page,
             document=document,
@@ -302,14 +302,24 @@ class ParserService:
         if len(encoded) > self.settings.max_html_bytes:
             raise ParseError("html_too_large", "html too large", section="meta")
 
-    def _check_season(self, page: ScrapedPage) -> None:
-        slug = page.season_slug or urlparse(page.url).path.rstrip("/").split("/")[-1]
-        parsed = season_from_slug(slug, madrid_date(page.fetched_at))
+    def _check_season(self, page: ScrapedPage, document: object, rule_set: RuleSet) -> None:
         expected = _PAGE_SEASON.fullmatch(page.season.strip())
-        if parsed is None or expected is None:
-            return
-        if parsed != expected.group(0):
+        if expected is None:
             raise ParseError("season_mismatch", "season mismatch", section="meta")
+        season_key = expected.group(0)
+        anchor = madrid_date(page.fetched_at)
+        slug = page.season_slug or urlparse(page.url).path.rstrip("/").split("/")[-1]
+        from_url = season_from_slug(slug, anchor)
+        if from_url is not None and from_url != season_key:
+            raise ParseError("season_mismatch", "season mismatch", section="meta")
+        selector = rule_set.selectors.canonical.removeprefix("css:")
+        canonical = document.first(selector)  # type: ignore[union-attr]
+        href = canonical.get("href") if canonical is not None else ""
+        doc_slug = _canonical_season_slug(href or "")
+        if doc_slug:
+            from_doc = season_from_slug(doc_slug, anchor)
+            if from_doc is None or from_doc != season_key:
+                raise ParseError("season_mismatch", "season mismatch", section="meta")
 
     def _assert_player(self, ctx: ExtractionContext) -> None:
         name = ctx.document.first(ctx.selector("identity_name"))
@@ -444,4 +454,11 @@ def _canonical_slug(href: str) -> str:
     parts = [part for part in urlparse(href).path.split("/") if part]
     if len(parts) >= 2 and parts[0] == "jugadores":
         return parts[1]
+    return ""
+
+
+def _canonical_season_slug(href: str) -> str:
+    parts = [part for part in urlparse(href).path.rstrip("/").split("/") if part]
+    if len(parts) >= 3 and parts[0] == "jugadores":
+        return parts[-1]
     return ""

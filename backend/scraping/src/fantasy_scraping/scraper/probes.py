@@ -1,6 +1,7 @@
 """Navigation facts pulled from a profile page with lxml. Never statistics."""
 
 import re
+from collections.abc import Iterable
 
 from cssselect import SelectorError
 from lxml import etree
@@ -23,39 +24,65 @@ _TEAM_ALIASES: dict[str, str] = {
 }
 
 
+def _canonical_team(slug: str) -> str:
+    """Map a sitemap slug through the small alias table."""
+    return _TEAM_ALIASES.get(slug, slug)
+
+
 def team_slug(html: str) -> str | None:
-    """Return the slug of the first ``/equipos/{slug}`` link, or None."""
+    """Return the club slug from the profile header link, or None."""
     tree = lxml_html.fromstring(html)
-    for href in tree.xpath("//a/@href"):
+    for node in tree.cssselect("a.club"):
+        href = node.get("href") or ""
         if match := _TEAM_HREF.search(href):
             return match.group(1)
     return None
 
 
-def team_matches(team: str, probed: str) -> bool:
-    """Check a normalised team name against a probed team slug.
+def matching_team_slugs(team_norm: str, team_slugs: Iterable[str]) -> list[str]:
+    """Return sitemap team slugs that match the normalised free-text team name."""
+    wanted = _canonical_team(team_norm)
+    left = set(wanted.split("-"))
+    matched: list[str] = []
+    for slug in team_slugs:
+        right = set(slug.split("-"))
+        if left <= right or right <= left:
+            matched.append(slug)
+    return matched
+
+
+def team_matches(team_norm: str, probed: str, team_slugs: Iterable[str]) -> bool:
+    """Check the probed slug against one sitemap team match for ``team_norm``.
 
     Args:
-        team: Normalised free-text team name.
+        team_norm: Normalised free-text team name.
         probed: Slug found on the page.
+        team_slugs: Known club slugs from the sitemap index.
     """
-    wanted = _TEAM_ALIASES.get(team, team)
-    left, right = set(wanted.split("-")), set(probed.split("-"))
-    return left <= right or right <= left
+    matched = matching_team_slugs(team_norm, team_slugs)
+    if len(matched) != 1:
+        return False
+    expected = matched[0]
+    return probed == expected or _canonical_team(probed) == _canonical_team(expected)
 
 
 def widget_id(html: str) -> str | None:
-    """Return the numeric market widget id from DOM or embedded loader scripts."""
+    """Return the market widget id from the profile header widget only."""
     tree = lxml_html.fromstring(html)
-    for value in tree.xpath("//@data-jugador"):
-        if value.isdigit():
-            return value
-    for href in tree.xpath("//@href | //@data-url | //@src"):
+    for link in tree.cssselect("a.widget-mercado"):
+        href = link.get("href") or ""
         if match := _WIDGET_HREF.search(href):
             return match.group(1)
-    if match := _WIDGET_JS.search(html):
+    sections = tree.cssselect("section.mercado")
+    if not sections:
+        return None
+    fragment = etree.tostring(sections[0], encoding="unicode")
+    for value in sections[0].xpath(".//@data-jugador"):
+        if value.isdigit():
+            return value
+    if match := _WIDGET_JS.search(fragment):
         return match.group(1)
-    if match := _DATA_JUGADOR.search(html):
+    if match := _DATA_JUGADOR.search(fragment):
         return match.group(1)
     return None
 

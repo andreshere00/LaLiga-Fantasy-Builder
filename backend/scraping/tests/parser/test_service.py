@@ -329,6 +329,8 @@ def test_parse_futbolfantasy_fragment_edges_keep_partial_data() -> None:
     assert "profile.news" not in player.missing
     assert player.fixtures[0].stats.shots.status == "partial"
     assert player.fixtures[0].stats.shots.count == 3
+    assert player.fixtures[0].stats.big_chances_created.count == 1
+    assert player.fixtures[0].stats.big_chances_created.status == "ok"
     assert player.fixtures[0].stats.yellow_cards.count == 2
     assert player.fixtures[0].stats.yellow_cards.points == 0.0
     assert player.fixtures[0].stats.ball_recoveries.count == 3

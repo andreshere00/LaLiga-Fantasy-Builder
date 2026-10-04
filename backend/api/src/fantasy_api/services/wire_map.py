@@ -95,9 +95,14 @@ def _normalise_document(raw: Mapping[str, Any]) -> dict[str, Any]:
 def _normalise_match(row: Mapping[str, Any]) -> dict[str, Any]:
     minutes = row.get("minutes") or {}
     score = row.get("score") or {}
+    home_score: int | None = None
+    away_score: int | None = None
     score_text = None
-    if isinstance(score, Mapping) and score.get("home") is not None:
-        score_text = f"{score.get('home')}-{score.get('away')}"
+    if isinstance(score, Mapping):
+        home_score = _points_int(score.get("home"))
+        away_score = _points_int(score.get("away"))
+        if home_score is not None and away_score is not None:
+            score_text = f"{home_score}-{away_score}"
     return {
         "date": row.get("date"),
         "kickoff_time": row.get("kickoff"),
@@ -105,7 +110,10 @@ def _normalise_match(row: Mapping[str, Any]) -> dict[str, Any]:
         "competition_raw": row.get("competitionRaw") or row.get("competition"),
         "is_home": row.get("isHome") if "isHome" in row else row.get("playerSide") == "home",
         "opponent": row.get("opponent"),
+        "home_score": home_score,
+        "away_score": away_score,
         "score": score_text,
+        "fantasy_points": _points_int(row.get("weekPoints") or row.get("fantasyPoints")),
         "minutes": minutes.get("minutes") if isinstance(minutes, Mapping) else row.get("minutes"),
         "minutes_note": minutes.get("raw") if isinstance(minutes, Mapping) else None,
         "stats": row.get("stats"),
@@ -134,6 +142,8 @@ def _normalise_fixture(row: Mapping[str, Any]) -> dict[str, Any]:
         minutes = minutes_out.get("minutes")
     elif isinstance(minutes_out, int):
         minutes = minutes_out
+    side = row.get("playerSide")
+    is_home = side == "home" if isinstance(side, str) else None
     return {
         "matchweek": row.get("matchday"),
         "home_team": home,
@@ -146,6 +156,7 @@ def _normalise_fixture(row: Mapping[str, Any]) -> dict[str, Any]:
         "stats": stats or None,
         "date": row.get("date"),
         "competition": row.get("competition"),
+        "is_home": is_home,
     }
 
 
@@ -205,11 +216,13 @@ def stats_from_fantasy_week(stats: Mapping[str, Any] | None) -> dict[StatKey, Sc
         raw = stats.get(upstream_key)
         if not isinstance(raw, list) or not raw:
             continue
+        if len(raw) not in (1, 2):
+            continue
         count: int | None = None
         points: int | None = None
         if len(raw) == 1:
             points = _points_int(raw[0])
-        elif len(raw) >= 2:
+        else:
             count = _points_int(raw[0])
             points = _points_int(raw[1])
         out[stat_key] = ScrapedStat(count=count, points=points)

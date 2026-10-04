@@ -8,10 +8,11 @@ from datetime import date
 
 @dataclass(frozen=True, slots=True)
 class Season:
-    """Football season label and FutbolFantasy slug."""
+    """Football season label and FutbolFantasy slugs."""
 
     label: str
     start: date
+    season_key: str
     futbolfantasy_slug: str
 
 
@@ -32,5 +33,6 @@ def current_season(today: date) -> Season:
     return Season(
         label=f"{start_year}/{end_yy:02d}",
         start=date(start_year, 7, 1),
+        season_key=f"{start_year}-{end_yy:02d}",
         futbolfantasy_slug=f"{str(start_year)[2:]}-{end_yy:02d}",
     )

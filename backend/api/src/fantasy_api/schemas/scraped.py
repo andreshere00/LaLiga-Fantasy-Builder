@@ -21,6 +21,7 @@ class ScrapedFixture(FlexibleModel):
     away_team: str | None = None
     home_score: int | None = None
     away_score: int | None = None
+    is_home: bool | None = None
     minutes: int | None = None
     fantasy_points: int | None = None
     dazn_points: int | None = None
@@ -34,7 +35,10 @@ class ScrapedMatch(FlexibleModel):
     competition_raw: str | None = None
     is_home: bool | None = None
     opponent: str | None = None
+    home_score: int | None = None
+    away_score: int | None = None
     score: str | None = None
+    fantasy_points: int | None = None
     minutes: int | None = None
     minutes_note: str | None = None
     stats: dict[str, Any] | None = None
@@ -49,6 +53,7 @@ class ScrapedMatches(FlexibleModel):
 class ScrapedProfile(FlexibleModel):
     availability: dict[str, Any] | None = None
     injury: dict[str, Any] | None = None
+    injury_history: list[dict[str, Any]] | None = None
     start_probability: dict[str, Any] | None = None
     injury_risk: dict[str, Any] | None = None
     injury_history: list[dict[str, Any]] | None = None

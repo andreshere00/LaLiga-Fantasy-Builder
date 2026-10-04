@@ -16,9 +16,10 @@ def page_key(kind: str, *parts: str) -> str:
     return KEY_PREFIX + ":".join(("page", kind, *parts))
 
 
-def route_key(season: str, who: str, team: str | None) -> str:
+def route_key(season: str, who: str, team: str | None, *, full_name: str | None = None) -> str:
     """Build a route cache key."""
-    return f"{KEY_PREFIX}route:{season}:{who}:{team or '-'}"
+    identity = f"{who}:{full_name}" if full_name else who
+    return f"{KEY_PREFIX}route:{season}:{identity}:{team or '-'}"
 
 
 INDEX_KEY: str = f"{KEY_PREFIX}index:futbolfantasy"

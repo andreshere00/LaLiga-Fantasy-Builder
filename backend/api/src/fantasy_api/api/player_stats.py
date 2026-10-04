@@ -54,7 +54,8 @@ async def get_stats_index(
     authorization: Annotated[str | None, Header()] = None,
 ) -> PlayerStatsIndex:
     """Return the segment catalogue for one player."""
-    _user, _jwt = await get_current_user(authorization)
+    user, _jwt = await get_current_user(authorization)
+    await _enforce_rate_limit(user.user_id, response)
     payload = await get_container().player_stats_service.index(player_id)
     response.headers["Cache-Control"] = "private, max-age=300"
     response.headers["Vary"] = "Authorization"
@@ -97,7 +98,8 @@ async def get_market_stats(
     authorization: Annotated[str | None, Header()] = None,
 ) -> PlayerMarketResponse:
     """Return market history window maths for a player."""
-    _user, _jwt = await get_current_user(authorization)
+    user, _jwt = await get_current_user(authorization)
+    await _enforce_rate_limit(user.user_id, response)
     payload = await get_container().player_stats_service.market(player_id, query)
     response.headers["Cache-Control"] = "private, max-age=300"
     response.headers["Vary"] = "Authorization"

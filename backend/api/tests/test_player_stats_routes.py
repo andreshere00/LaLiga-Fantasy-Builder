@@ -40,6 +40,7 @@ def rsa_pems() -> tuple[str, str]:
 
 def make_client(public_pem: str) -> TestClient:
     scrape_calls: list[str] = []
+    scrape_params: list[dict[str, str]] = []
     golden = json.loads(GOLDEN.read_text(encoding="utf-8"))
     settings = test_settings().model_copy(
         update={
@@ -73,6 +74,7 @@ def make_client(public_pem: str) -> TestClient:
 
     def scraping_handler(request: httpx.Request) -> httpx.Response:
         scrape_calls.append(request.url.path)
+        scrape_params.append(dict(request.url.params))
         assert request.headers.get("X-Service-Token") == "scraping-token"
         return httpx.Response(200, json=golden)
 
@@ -86,6 +88,7 @@ def make_client(public_pem: str) -> TestClient:
     set_container(container)
     client = TestClient(app)
     client.scrape_calls = scrape_calls  # type: ignore[attr-defined]
+    client.scrape_params = scrape_params  # type: ignore[attr-defined]
     return client
 
 
@@ -136,6 +139,19 @@ def test_stats_profile_uses_single_scrape(rsa_pems: tuple[str, str]) -> None:
     assert first.status_code == 200
     assert second.status_code == 200
     assert len(calls) == 1
+
+
+def test_scraping_request_uses_season_key(rsa_pems: tuple[str, str]) -> None:
+    private_pem, public_pem = rsa_pems
+    token = mint_internal_jwt(private_pem)
+    with make_client(public_pem) as client:
+        response = client.get(
+            "/players/4288/stats/profile",
+            headers={"Authorization": f"Bearer {token}"},
+        )
+        params = client.scrape_params  # type: ignore[attr-defined]
+    assert response.status_code == 200
+    assert params[0]["season"] == "2026-27"
 
 
 def test_stats_fixtures_returns_rows(rsa_pems: tuple[str, str]) -> None:
@@ -189,7 +205,7 @@ def test_stats_upcoming_returns_travel_block(rsa_pems: tuple[str, str]) -> None:
 def test_stats_rate_limit_returns_429(rsa_pems: tuple[str, str]) -> None:
     import fantasy_api.security.rate_limit as rate_limit
 
-    rate_limit._limiter = None
+    rate_limit._limiters.clear()
     private_pem, public_pem = rsa_pems
     token = mint_internal_jwt(private_pem)
     settings = test_settings().model_copy(
@@ -224,7 +240,7 @@ def test_stats_rate_limit_returns_429(rsa_pems: tuple[str, str]) -> None:
     with TestClient(app) as client:
         first = client.get("/players/4288/stats/fixtures", headers=headers)
         second = client.get("/players/4288/stats/fixtures", headers=headers)
-    rate_limit._limiter = None
+    rate_limit._limiters.clear()
     assert first.status_code == 200
     assert second.status_code == 429
     assert second.json()["error"] == "rate_limited"

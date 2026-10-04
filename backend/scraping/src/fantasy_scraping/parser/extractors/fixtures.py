@@ -183,9 +183,9 @@ def _match(value: str) -> FixtureMatch | None:
 
 def _side(value: object) -> str | None:
     key = casefold_key(str(value or ""))
-    if key in {"local", "casa", "home"}:
+    if key in {"local", "casa", "home", "si", "1"}:
         return "home"
-    if key in {"visitante", "fuera", "away"}:
+    if key in {"visitante", "fuera", "away", "no", "0"}:
         return "away"
     return None
 
@@ -344,6 +344,14 @@ def _shots(
         return line(count=from_layer["shots"], points=points.get("shots", 0.0), status="ok")
     if payload is not None and isinstance(payload.get("tiros"), int):
         return line(count=int(payload["tiros"]), points=points.get("shots", 0.0), status="ok")
+    json_parts = _json_shot_parts(payload)
+    if json_parts:
+        return line(
+            count=sum(json_parts),
+            points=points.get("shots", 0.0),
+            status="partial",
+            reason="no_per_match_total",
+        )
     parts = [counts[slug] for slug in _SHOT_PARTS if slug in counts]
     if parts:
         return line(
@@ -353,6 +361,14 @@ def _shots(
             reason="no_per_match_total",
         )
     return implied_zero() if layer_present else unavailable("layer_missing")
+
+
+def _json_shot_parts(payload: dict[str, object] | None) -> list[int]:
+    """Collect integer shot components from a match JSON payload."""
+    if payload is None:
+        return []
+    keys = ("tiros_puerta", "tiros_palo", "tiros_bloqueados")
+    return [int(payload[key]) for key in keys if isinstance(payload.get(key), int)]
 
 
 def _stat_counts(row: HtmlElement) -> dict[str, int]:
@@ -395,16 +411,15 @@ def _read_layer(
     if pair:
         event = _event_for(ctx, pair.group(1))
         if event is not None and event.key == "clear_chances_pair":
+            created = int(pair.group(2))
+            missed = int(pair.group(3))
             events.append(
-                EventCount(
-                    event="big_chances_created", label="oc. creadas", count=int(pair.group(2))
-                )
+                EventCount(event="big_chances_created", label="oc. creadas", count=created)
             )
             events.append(
-                EventCount(
-                    event="big_chances_missed", label="oc. falladas", count=int(pair.group(3))
-                )
+                EventCount(event="big_chances_missed", label="oc. falladas", count=missed)
             )
+            counts["big_chances_created"] = created
         return
     count_match = _LAYER_COUNT.fullmatch(cleaned)
     if count_match is None:

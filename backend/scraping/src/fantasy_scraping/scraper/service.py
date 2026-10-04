@@ -31,6 +31,7 @@ from fantasy_scraping.scraper.normalise import normalise
 from fantasy_scraping.scraper.probes import (
     competition_slugs,
     extract_fragments,
+    matching_team_slugs,
     team_matches,
     team_slug,
     widget_id,
@@ -43,6 +44,14 @@ LOGGER: logging.Logger = logging.getLogger(__name__)
 MAX_BATCH: int = 25
 TEAM_PROBES: int = 3
 DEFAULT_INCLUDE: frozenset[PageKind] = frozenset({PageKind.PLAYER})
+
+
+def _scrape_error(exc: ScrapingError) -> dict[str, object]:
+    """Serialise a scraper failure for batch outcomes."""
+    body: dict[str, object] = {"error": exc.category, "detail": exc.message}
+    if isinstance(exc, AmbiguousPlayerError):
+        body["candidates"] = exc.candidates
+    return body
 
 
 def load_aliases() -> dict[str, str]:
@@ -124,7 +133,14 @@ class ScraperService:
         """
         season = check_season(season or current_season())
         team_norm = normalise(team) if team else None
-        key = route_key(season, player_id or normalise(player_name), team_norm)
+        full_norm = normalise(full_name) if full_name else None
+        who = player_id if player_id else normalise(player_name)
+        key = route_key(
+            season,
+            who,
+            team_norm,
+            full_name=full_norm if not player_id else None,
+        )
         if hit := self._cache.get(key):
             return hit.value
         data = await self._links.get()
@@ -133,12 +149,17 @@ class ScraperService:
         resolution = await asyncio.to_thread(
             self._resolver[1].resolve, player_name, full_name=full_name, player_id=player_id
         )
-        winner, verified = resolution.candidates[0], None
-        if resolution.ambiguous:
-            slugs = [c.slug for c in resolution.candidates]
+        winner = resolution.candidates[0]
+        verified = None
+        slugs = [c.slug for c in resolution.candidates]
+        needs_team_check = resolution.ambiguous or (winner.metric == "alias" and team_norm)
+        if needs_team_check:
             if not team_norm:
                 raise AmbiguousPlayerError(slugs)
-            winner = await self._verify_team(resolution.candidates[:TEAM_PROBES], team_norm, season)
+            if len(matching_team_slugs(team_norm, data.team_slugs)) != 1:
+                raise AmbiguousPlayerError(slugs)
+            pool = resolution.candidates if resolution.ambiguous else [winner]
+            winner = await self._verify_team(pool[:TEAM_PROBES], team_norm, season, data.team_slugs)
             verified = True
             if winner is None:
                 raise AmbiguousPlayerError(slugs)
@@ -285,7 +306,7 @@ class ScraperService:
                 )
                 pages = await self._pages_for(route, season, include, options)
             except ScrapingError as exc:
-                return ScrapeOutcome(ref=ref, error={"error": exc.category, "detail": exc.message})
+                return ScrapeOutcome(ref=ref, error=_scrape_error(exc))
             return ScrapeOutcome(ref=ref, pages=pages, route=route)
 
         async with asyncio.TaskGroup() as group:
@@ -331,9 +352,15 @@ class ScraperService:
         return pages
 
     async def _verify_team(
-        self, candidates: list[Candidate], team_norm: str, season: str
+        self,
+        candidates: list[Candidate],
+        team_norm: str,
+        season: str,
+        team_slugs: tuple[str, ...],
     ) -> Candidate | None:
-        """Return the first candidate whose profile links to the requested team."""
+        """Return the first candidate whose profile club matches the requested team."""
+        if len(matching_team_slugs(team_norm, team_slugs)) != 1:
+            return None
         for candidate in candidates:
             route = PlayerRoute(
                 slug=candidate.slug, url="", distance=candidate.distance, metric=candidate.metric
@@ -342,7 +369,7 @@ class ScraperService:
             probed = team_slug(page.html)
             if probed is None:
                 raise UnexpectedContentError()
-            if team_matches(team_norm, probed):
+            if team_matches(team_norm, probed, team_slugs):
                 return candidate
         return None
 

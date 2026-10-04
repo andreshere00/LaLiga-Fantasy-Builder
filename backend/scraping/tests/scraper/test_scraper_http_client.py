@@ -61,7 +61,7 @@ async def test_get_ok_returns_text_and_sends_identifiable_user_agent(make_client
 
     response = await make_client(handler).get(URL)
 
-    assert response.status == 200 and "data-jugador" in response.text
+    assert response.status == 200 and "widget-mercado" in response.text
     assert "test@example.com" in seen[-1].headers["user-agent"]
 
 
@@ -113,6 +113,22 @@ async def test_get_429_waits_retry_after_then_succeeds(make_client, clock: FakeC
 async def test_get_404_raises_player_not_found(make_client) -> None:
     with pytest.raises(PlayerNotFoundError):
         await make_client(_site_with(FakeSite(), httpx.Response(404))).get(URL)
+
+
+async def test_get_404_after_half_open_probe_clears_breaker(make_client, clock: FakeClock) -> None:
+    site = FakeSite()
+    client = make_client(site)
+    for _ in range(5):
+        client._breaker.record_failure()
+    clock.now += 61
+    site.overrides[URL] = httpx.Response(404)
+
+    with pytest.raises(PlayerNotFoundError):
+        await client.get(URL)
+
+    assert client._breaker.state == "closed"
+    del site.overrides[URL]
+    assert (await client.get(URL)).status == 200
 
 
 async def test_get_403_raises_blocked_without_retry_and_opens_circuit(make_client) -> None:

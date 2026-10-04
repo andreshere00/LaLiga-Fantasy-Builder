@@ -17,6 +17,10 @@ class AsyncTtlCache[T]:
         self._lock = asyncio.Lock()
         self._inflight: asyncio.Task[T] | None = None
 
+    def is_fresh(self) -> bool:
+        """Return True when a cached value is still inside its TTL."""
+        return self._value is not None and time.monotonic() < self._expires_at
+
     async def get_or_fetch(self, fetch: Callable[[], Awaitable[T]]) -> T:
         """Return cached value or await a single in-flight fetch."""
         now = time.monotonic()

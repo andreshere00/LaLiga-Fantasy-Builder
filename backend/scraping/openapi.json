@@ -169,7 +169,8 @@
               "anyOf": [
                 {
                   "type": "string",
-                  "maxLength": 32
+                  "maxLength": 10,
+                  "pattern": "^[0-9]+$"
                 },
                 {
                   "type": "null"
@@ -1031,9 +1032,7 @@
           "error": {
             "anyOf": [
               {
-                "additionalProperties": {
-                  "type": "string"
-                },
+                "additionalProperties": true,
                 "type": "object"
               },
               {

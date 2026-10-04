@@ -1,7 +1,7 @@
 """Scraper-side contracts. ``ScrapedPage`` lives in ``fantasy_scraping.models``."""
 
 from datetime import datetime
-from typing import Literal
+from typing import Any, Literal
 
 from pydantic import BaseModel, ConfigDict, Field
 
@@ -83,7 +83,7 @@ class ScrapeOutcome(BaseModel):
     ref: PlayerRef
     pages: list[ScrapedPage] | None = None
     route: PlayerRoute | None = None
-    error: dict[str, str] | None = None
+    error: dict[str, Any] | None = None
 
 
 __all__ = [

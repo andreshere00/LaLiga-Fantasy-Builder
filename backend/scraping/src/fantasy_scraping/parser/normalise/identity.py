@@ -18,12 +18,12 @@ def player_display_name(value: str) -> str:
 
 
 def data_local_side(value: str) -> str:
-    """Map ``data-local`` on live fixture rows to list-widget home flags."""
+    """Map ``data-local`` on live fixture rows to home or away tokens."""
     token = clean_text(value)
-    if token == "1":
-        return "Sí"
-    if token == "0":
-        return "No"
+    if token in {"1", "Sí", "Si", "sí", "si"}:
+        return "home"
+    if token in {"0", "No", "no"}:
+        return "away"
     return token
 
 

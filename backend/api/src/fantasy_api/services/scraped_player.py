@@ -4,6 +4,9 @@ from __future__ import annotations
 
 import asyncio
 import time
+from dataclasses import dataclass
+
+from pydantic import ValidationError
 
 from fantasy_api.domain.errors import UpstreamError
 from fantasy_api.domain.season import Season
@@ -14,6 +17,18 @@ from fantasy_api.services.player_resolver import ResolvedPlayer
 from fantasy_api.services.wire_map import parse_wire_document
 
 _NEGATIVE_TTL = 30.0
+_NEGATIVE_CATEGORIES = frozenset(
+    {"scraping_unavailable", "rate_limited", "upstream_timeout"},
+)
+
+
+@dataclass(frozen=True, slots=True)
+class ScrapedDocument:
+    """Parsed FutbolFantasy wire plus fetch metadata."""
+
+    wire: FutbolFantasyWire
+    fetched_at: float
+    cached: bool
 
 
 class ScrapedPlayerProvider:
@@ -29,7 +44,7 @@ class ScrapedPlayerProvider:
         self._repository = repository
         self._ttl = ttl_seconds
         self._cache: dict[str, AsyncTtlCache[tuple[FutbolFantasyWire, float]]] = {}
-        self._negative: dict[str, float] = {}
+        self._negative: dict[str, tuple[float, UpstreamError]] = {}
         self._semaphore = asyncio.Semaphore(max_concurrency)
         self._lock = asyncio.Lock()
 
@@ -37,41 +52,47 @@ class ScrapedPlayerProvider:
         self,
         player: ResolvedPlayer,
         season: Season,
-    ) -> FutbolFantasyWire:
+    ) -> ScrapedDocument:
         """Return parsed FutbolFantasy JSON for one player and season."""
-        key = f"{player.id}:{season.futbolfantasy_slug}"
+        key = f"{player.id}:{season.season_key}"
         now = time.monotonic()
-        negative_until = self._negative.get(key)
-        if negative_until is not None and now < negative_until:
-            raise UpstreamError(
-                "scraping unavailable",
-                status_code=503,
-                category="scraping_unavailable",
-            )
+        negative = self._negative.get(key)
+        if negative is not None and now < negative[0]:
+            raise negative[1]
         async with self._lock:
             bucket = self._cache.setdefault(key, AsyncTtlCache(self._ttl))
-        async with self._semaphore:
-            wire, fetched_at = await bucket.get_or_fetch(
-                lambda: self._fetch(player, season),
-            )
-        return wire
+            cached = bucket.is_fresh()
+        wire, fetched_at = await bucket.get_or_fetch(
+            lambda: self._fetch(player, season, key),
+        )
+        return ScrapedDocument(wire=wire, fetched_at=fetched_at, cached=cached)
 
     async def _fetch(
         self,
         player: ResolvedPlayer,
         season: Season,
+        key: str,
     ) -> tuple[FutbolFantasyWire, float]:
         name = player.nickname or player.name or player.id
+        async with self._semaphore:
+            try:
+                raw = await self._repository.get_futbolfantasy(
+                    name,
+                    season.season_key,
+                    player.team_name,
+                )
+            except UpstreamError as exc:
+                if exc.category in _NEGATIVE_CATEGORIES:
+                    self._negative[key] = (time.monotonic() + _NEGATIVE_TTL, exc)
+                raise exc
+        if not isinstance(raw, dict):
+            raise UpstreamError("scraping error", status_code=502, category="scraping_error")
         try:
-            raw = await self._repository.get_futbolfantasy(
-                name,
-                season.futbolfantasy_slug,
-                player.team_name,
-            )
-            wire = parse_wire_document(raw if isinstance(raw, dict) else {})
-            return wire, time.time()
-        except UpstreamError as exc:
-            self._negative[f"{player.id}:{season.futbolfantasy_slug}"] = (
-                time.monotonic() + _NEGATIVE_TTL
-            )
-            raise exc
+            wire = parse_wire_document(raw)
+        except ValidationError as exc:
+            raise UpstreamError(
+                "scraping error",
+                status_code=502,
+                category="scraping_error",
+            ) from exc
+        return wire, time.time()

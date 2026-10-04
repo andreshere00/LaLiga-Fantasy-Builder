@@ -139,6 +139,19 @@ def test_apply_consistency_average_last_three_mismatch() -> None:
     assert "average_mismatch" in {item.code for item in checked.warnings}
 
 
+def test_apply_consistency_minutes_skips_unknown_rows() -> None:
+    player = SERVICE.parse_futbolfantasy(page("raphinha_laliga_26_27.html"))
+    fixtures = list(player.fixtures)
+    fixtures[0] = fixtures[0].model_copy(
+        update={"minutes_out": fixtures[0].minutes_out.model_copy(update={"minutes": None})}
+    )
+    broken = player.model_copy(update={"fixtures": fixtures})
+    checked = apply_consistency(broken, "2026-27")
+    codes = {item.code for item in checked.warnings}
+    assert "minutes_sum_mismatch" not in codes
+    assert "minutes_assumed_unknown" in codes
+
+
 def test_apply_consistency_season_window_mismatch() -> None:
     player = SERVICE.parse_futbolfantasy(page("raphinha_laliga_26_27.html"))
     fixtures = list(player.fixtures)

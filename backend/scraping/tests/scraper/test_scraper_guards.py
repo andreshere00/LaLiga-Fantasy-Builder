@@ -19,6 +19,7 @@ from fantasy_scraping.scraper.limiter import CircuitBreaker, TokenBucket
 from fantasy_scraping.scraper.probes import (
     competition_slugs,
     extract_fragments,
+    matching_team_slugs,
     team_matches,
     team_slug,
     widget_id,
@@ -94,7 +95,8 @@ def test_sanitise_html_csrf_values_blanked_and_idempotent() -> None:
 
 def test_probes_profile_page_yield_navigation_facts() -> None:
     html = (
-        '<a href="/equipos/barcelona">x</a><div data-jugador="4288"></div>'
+        '<a class="club" href="/equipos/barcelona">x</a>'
+        '<a class="widget-mercado" href="/analytics/laliga-fantasy/mercado/detalle/4288">'
         '<option value="/jugadores/a/champions-26-27" data-nombre-temporada="2026/27"></option>'
         '<option value="/jugadores/a/amistoso-26-27" data-nombre-temporada="2026/27"></option>'
         '<option value="/jugadores/a/copa-del-rey-25-26" data-nombre-temporada="2025/26"></option>'
@@ -105,26 +107,37 @@ def test_probes_profile_page_yield_navigation_facts() -> None:
     assert competition_slugs(html, "2026/27") == ["champions-26-27"]
 
 
-@pytest.mark.parametrize(
-    ("team", "probed", "expected"),
-    [
-        ("fc-barcelona", "barcelona", True),
-        ("atletico-de-madrid", "atletico", True),
-        ("getafe", "barcelona", False),
-    ],
-)
-def test_team_matches_aliases_and_subsets(team: str, probed: str, expected: bool) -> None:
-    assert team_matches(team, probed) is expected
+TEAMS = ("barcelona", "getafe", "real-madrid", "atletico-de-madrid")
+
+
+def test_matching_team_slugs_resolves_one_sitemap_club() -> None:
+    assert matching_team_slugs("getafe", TEAMS) == ["getafe"]
+    assert matching_team_slugs("fc-barcelona", TEAMS) == ["barcelona"]
+
+
+def test_matching_team_slugs_ambiguous_short_name_matches_several() -> None:
+    assert len(matching_team_slugs("madrid", TEAMS)) > 1
+
+
+def test_team_matches_requires_unique_sitemap_hit() -> None:
+    assert team_matches("getafe", "getafe", TEAMS)
+    assert not team_matches("madrid", "real-madrid", TEAMS)
 
 
 def test_widget_id_link_fallback() -> None:
-    assert widget_id('<a href="/analytics/laliga-fantasy/mercado/detalle/77?perfil=1">') == "77"
+    html = '<a class="widget-mercado" href="/analytics/laliga-fantasy/mercado/detalle/77?perfil=1">'
+    assert widget_id(html) == "77"
+
+
+def test_widget_id_ignores_unscoped_data_jugador() -> None:
+    html = '<div data-jugador="9999"></div>'
+    assert widget_id(html) is None
 
 
 def test_widget_id_script_url_fallback() -> None:
     html = (
-        'var url = "https://www.futbolfantasy.com/analytics/laliga-fantasy/'
-        'mercado/detalle/4288?perfil=1";'
+        '<section class="mercado">var url = "https://www.futbolfantasy.com/analytics/'
+        'laliga-fantasy/mercado/detalle/4288?perfil=1";</section>'
     )
 
     assert widget_id(html) == "4288"

@@ -33,8 +33,8 @@ SLUGS: tuple[str, ...] = (
 )
 TEAM_SLUGS: tuple[str, ...] = ("barcelona", "real-sociedad", "getafe")
 PROFILE_HTML: str = """<html><body>
-<a href="https://www.futbolfantasy.com/equipos/{team}">club</a>
-<div data-jugador="4288"></div>
+<a class="club" href="https://www.futbolfantasy.com/equipos/{team}">club</a>
+<a class="widget-mercado" href="https://www.futbolfantasy.com/analytics/laliga-fantasy/mercado/detalle/4288">Mercado</a>
 <select>
 <option value="/jugadores/{slug}/champions-26-27" data-nombre-temporada="2026/27"></option>
 <option value="/jugadores/{slug}/copa-del-rey-25-26" data-nombre-temporada="2025/26"></option>
