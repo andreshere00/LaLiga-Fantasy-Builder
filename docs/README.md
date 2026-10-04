@@ -10,6 +10,7 @@ This folder is the detailed map.
 | [Architecture](architecture.md) | Services, login path, CRS, trust boundaries, errors |
 | [Frontend](frontend.md) | Lineup and market UI, data loading, actions, tooltips |
 | [Authentication](authentication/authentication.md) | Sessions, internal JWT, LaLiga vault, CSRF |
+| [FutbolFantasy parser](scraping/parser.md) | Offline HTML → player JSON and Markdown |
 
 ## Authentication (HTTP reference)
 

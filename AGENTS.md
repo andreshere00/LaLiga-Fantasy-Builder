@@ -21,6 +21,7 @@ guides live under [`docs/`](docs/README.md).
 | Frontend | `frontend` | 3000 | Lineup UI. Proxies `/auth`, `/laliga`, and `/api` |
 | Auth | `backend/auth` | 8000 | Sessions, OIDC, LaLiga pairing, vault, internal JWT |
 | API | `backend/api` | 8001 | Features; LaLiga via private bearer exchange |
+| Scraping | `backend/scraping` | 8002 | Private health process on the `internal` and `egress` networks. The FutbolFantasy downloader is not in this image yet. The parser library is. |
 
 ```text
 Browser → frontend origin
@@ -67,7 +68,8 @@ Do not proxy a route marked **Low** confidence or hosted on
   in CLIs).
 - Automated CLIs and `fantasy-browser-session` must not place bids, pay
   clauses, increase clauses, or activate shields. Auth must not import
-  `fantasy_api`.
+  `fantasy_api`. Auth must not import `fantasy_scraping`. Scraping holds no
+  LaLiga tokens.
 
 ## Python
 

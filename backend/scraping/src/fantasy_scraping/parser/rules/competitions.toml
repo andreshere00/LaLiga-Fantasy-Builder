@@ -1,0 +1,34 @@
+[[competitions]]
+prefix = "laliga"
+competition = "laliga"
+label = "LaLiga"
+
+[[competitions]]
+prefix = "champions"
+competition = "champions_league"
+label = "Champions"
+
+[[competitions]]
+prefix = "europa"
+competition = "europa_league"
+label = "Europa League"
+
+[[competitions]]
+prefix = "conference"
+competition = "conference_league"
+label = "Conference League"
+
+[[competitions]]
+prefix = "copa"
+competition = "copa_del_rey"
+label = "Copa del Rey"
+
+[[competitions]]
+prefix = "supercopa"
+competition = "supercopa"
+label = "Supercopa"
+
+[[competitions]]
+prefix = "amistoso"
+competition = "other"
+label = "Amistoso"

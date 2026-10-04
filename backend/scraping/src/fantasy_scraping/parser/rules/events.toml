@@ -1,0 +1,180 @@
+[[events]]
+key = "minutes_played"
+label = "Minutos jugados"
+category = "tiempo"
+md_label = "minutos jugados"
+singular = "minuto"
+plural = "minutos"
+dazn_field = "minutes_played"
+
+[[events]]
+key = "goal"
+label = "Goles"
+category = "ataque"
+md_label = "goles"
+singular = "gol"
+plural = "goles"
+icon = "icon-goal"
+dazn_field = "goals"
+
+[[events]]
+key = "assist"
+label = "Asistencias de gol"
+category = "ataque"
+md_label = "asistencias"
+singular = "asistencia"
+plural = "asistencias"
+icon = "icon-assist"
+dazn_field = "assists"
+
+[[events]]
+key = "penalty"
+label = "Penalti"
+category = "ataque"
+md_label = "penaltis"
+singular = "penalti"
+plural = "penaltis"
+icon = "icon-penalty"
+
+[[events]]
+key = "big_chances_created"
+label = "Ocasiones claras creadas"
+category = "ataque"
+md_label = "oc. creadas"
+singular = "ocasión clara"
+plural = "ocasiones claras"
+dazn_field = "big_chances_created"
+
+[[events]]
+key = "big_chances_missed"
+label = "Ocasiones claras falladas"
+category = "ataque"
+md_label = "oc. falladas"
+singular = "ocasión fallada"
+plural = "ocasiones falladas"
+
+[[events]]
+key = "balls_into_box"
+label = "Balones al área"
+category = "ataque"
+md_label = "balones al área"
+dazn_field = "balls_into_box"
+
+[[events]]
+key = "yellow_card"
+label = "Tarjetas amarillas"
+category = "disciplina"
+md_label = "tarjetas amarillas"
+singular = "tarjeta amarilla"
+plural = "tarjetas amarillas"
+icon = "icon-yellow"
+dazn_field = "yellow_cards"
+
+[[events]]
+key = "red_card"
+label = "Tarjeta roja"
+category = "disciplina"
+md_label = "tarjeta roja"
+singular = "tarjeta roja"
+plural = "tarjetas rojas"
+icon = "icon-red"
+dazn_field = "red_card"
+
+[[events]]
+key = "fouls_received"
+label = "Faltas recibidas"
+category = "disciplina"
+md_label = "faltas rec."
+
+[[events]]
+key = "balls_lost"
+label = "Posesiones perdidas"
+category = "defensa"
+md_label = "posesiones perdidas"
+dazn_field = "balls_lost"
+
+[[events]]
+key = "saves"
+label = "Paradas"
+category = "portero"
+md_label = "paradas"
+dazn_field = "saves"
+
+[[events]]
+key = "penalties_saved"
+label = "Penaltis parados"
+category = "portero"
+md_label = "penaltis parados"
+dazn_field = "penalties_saved"
+
+[[events]]
+key = "clearances"
+label = "Despejes"
+category = "defensa"
+md_label = "despejes"
+dazn_field = "clearances"
+
+[[events]]
+key = "shots"
+label = "Tiros totales"
+category = "ataque"
+md_label = "tiros"
+dazn_field = "shots"
+
+[[events]]
+key = "dribbles"
+label = "Regates con éxito"
+category = "ataque"
+md_label = "regates"
+dazn_field = "successful_dribbles"
+
+[[events]]
+key = "recoveries"
+label = "Balones recuperados"
+category = "defensa"
+md_label = "recuperaciones"
+dazn_field = "ball_recoveries"
+
+[[events]]
+key = "penalties_committed"
+label = "Penaltis cometidos"
+category = "disciplina"
+md_label = "penaltis cometidos"
+dazn_field = "penalties_committed"
+
+[[events]]
+key = "penalties_missed"
+label = "Penaltis fallados"
+category = "ataque"
+md_label = "penaltis fallados"
+dazn_field = "penalties_missed"
+
+[[events]]
+key = "own_goals"
+label = "Goles en propia"
+category = "defensa"
+md_label = "goles en propia"
+dazn_field = "own_goals"
+
+[[events]]
+key = "goals_conceded"
+label = "Goles encajados"
+category = "portero"
+md_label = "goles encajados"
+dazn_field = "goals_conceded"
+
+[[events]]
+key = "second_yellow"
+label = "Doble amarilla"
+category = "disciplina"
+md_label = "doble amarilla"
+singular = "doble amarilla"
+plural = "dobles amarillas"
+dazn_field = "yellow_cards"
+
+[[events]]
+key = "clear_chances_pair"
+label = "oc. creadas/falladas"
+category = "ataque"
+md_label = "oc. creadas/falladas"
+plural = "oc. creadas/falladas"

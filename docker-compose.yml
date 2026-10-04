@@ -105,11 +105,29 @@ services:
       INTERNAL_JWT_ISSUER: ${INTERNAL_JWT_ISSUER}
       INTERNAL_JWT_AUDIENCE: ${INTERNAL_JWT_AUDIENCE}
       INTERNAL_SERVICE_TOKEN: ${INTERNAL_SERVICE_TOKEN}
+      SCRAPING_BASE_URL: ${SCRAPING_BASE_URL:-http://scraping:8002}
+      SCRAPING_SERVICE_TOKEN: ${SCRAPING_SERVICE_TOKEN:-dev-scraping-token}
     depends_on:
       auth:
         condition: service_healthy
+      scraping:
+        condition: service_healthy
+        required: false
     profiles: [apps, full]
     networks: [public, internal]
+
+  scraping:
+    build:
+      context: ./backend/scraping
+      dockerfile: Dockerfile
+    env_file: [./backend/scraping/.env]
+    environment:
+      SCRAPING_SERVICE_TOKEN: ${SCRAPING_SERVICE_TOKEN:-dev-scraping-token}
+      SCRAPING_SERVICE_PORT: ${SCRAPING_SERVICE_PORT:-8002}
+    ports:
+      - "${SCRAPING_PUBLISH_PORT:-8002}:${SCRAPING_SERVICE_PORT:-8002}"
+    profiles: [apps, full]
+    networks: [internal, egress]
 
   frontend:
     build:
@@ -129,3 +147,4 @@ networks:
   public:
   internal:
     internal: true
+  egress:

@@ -1,0 +1,318 @@
+[hierarchy]
+dios = 1
+estrella = 2
+titular = 3
+rotacion = 4
+suplente = 5
+
+[[labels]]
+label = "Nombre"
+path = "profile.personal.full_name"
+normaliser = "clean_text"
+group = "personal"
+
+[[labels]]
+label = "Edad"
+path = "profile.personal.age_years"
+normaliser = "es_int_token"
+group = "personal"
+
+[[labels]]
+label = "Fecha de nacimiento"
+path = "profile.personal.birth_date"
+normaliser = "date_dmy"
+group = "personal"
+
+[[labels]]
+label = "Lugar de nacimiento"
+path = "profile.personal.birth_place"
+normaliser = "clean_text"
+group = "personal"
+
+[[labels]]
+label = "Nacionalidad"
+path = "profile.personal.nationalities"
+normaliser = "split_slash"
+group = "personal"
+
+[[labels]]
+label = "Altura"
+path = "profile.personal.height_cm"
+normaliser = "es_int_token"
+group = "personal"
+
+[[labels]]
+label = "Pierna"
+path = "profile.personal.preferred_foot"
+normaliser = "foot"
+group = "personal"
+
+[[labels]]
+label = "Fin de contrato"
+path = "profile.personal.contract_end"
+normaliser = "date_dmy"
+group = "personal"
+
+[[labels]]
+label = "Partidos jugados"
+path = "season_stats.participation.matches_played"
+normaliser = "es_int"
+group = "participation"
+
+[[labels]]
+label = "Titular"
+path = "season_stats.participation.starter"
+normaliser = "count_percent"
+group = "participation"
+
+[[labels]]
+label = "Suplente"
+path = "season_stats.participation.substitute"
+normaliser = "count_percent"
+group = "participation"
+
+[[labels]]
+label = "Minutos jugados"
+path = "season_stats.participation.minutes"
+normaliser = "es_int"
+group = "participation"
+
+[[labels]]
+label = "Goles"
+path = "season_stats.attack.goals"
+normaliser = "es_int"
+group = "attack"
+
+[[labels]]
+label = "Asistencias"
+path = "season_stats.attack.assists"
+normaliser = "es_int"
+group = "attack"
+
+[[labels]]
+label = "Asistencias sin gol"
+path = "season_stats.attack.assists_without_goal"
+normaliser = "es_int"
+group = "attack"
+
+[[labels]]
+label = "Goles de penalti"
+path = "season_stats.attack.penalty_goals"
+normaliser = "es_int"
+group = "attack"
+
+[[labels]]
+label = "Tiros a puerta"
+path = "season_stats.attack.shots_on_target"
+normaliser = "ratio"
+group = "attack"
+
+[[labels]]
+label = "Goles por tiro"
+path = "season_stats.attack.goals_per_shot"
+normaliser = "ratio"
+group = "attack"
+
+[[labels]]
+label = "Tiros al palo"
+path = "season_stats.attack.woodwork_shots"
+normaliser = "es_int"
+group = "attack"
+
+[[labels]]
+label = "Ocasiones claras creadas"
+path = "season_stats.attack.clear_chances_created"
+normaliser = "es_int"
+group = "attack"
+
+[[labels]]
+label = "Ocasiones claras falladas"
+path = "season_stats.attack.clear_chances_missed"
+normaliser = "es_int"
+group = "attack"
+
+[[labels]]
+label = "Goles en propia"
+path = "season_stats.attack.own_goals"
+normaliser = "es_int"
+group = "attack"
+
+[[labels]]
+label = "Pases"
+path = "season_stats.attack.passes"
+normaliser = "ratio"
+group = "attack"
+
+[[labels]]
+label = "Pases clave"
+path = "season_stats.attack.key_passes"
+normaliser = "es_int"
+group = "attack"
+
+[[labels]]
+label = "Regates con éxito"
+path = "season_stats.attack.successful_dribbles"
+normaliser = "es_int"
+group = "attack"
+
+[[labels]]
+label = "Centros"
+path = "season_stats.attack.crosses"
+normaliser = "ratio"
+group = "attack"
+
+[[labels]]
+label = "Córners"
+path = "season_stats.attack.corners_won"
+normaliser = "es_int"
+group = "attack"
+
+[[labels]]
+label = "Córners precisos"
+path = "season_stats.attack.corners_accurate"
+normaliser = "ratio"
+group = "attack"
+
+[[labels]]
+label = "Faltas precisas"
+path = "season_stats.attack.free_kicks_accurate"
+normaliser = "ratio"
+group = "attack"
+
+[[labels]]
+label = "Faltas directas a puerta"
+path = "season_stats.attack.direct_free_kicks_on_target"
+normaliser = "ratio"
+group = "attack"
+
+[[labels]]
+label = "Faltas recibidas"
+path = "season_stats.discipline.fouls_received"
+normaliser = "es_int"
+group = "discipline"
+
+[[labels]]
+label = "Faltas cometidas"
+path = "season_stats.discipline.fouls_committed"
+normaliser = "es_int"
+group = "discipline"
+
+[[labels]]
+label = "Tarjetas amarillas"
+path = "season_stats.discipline.yellow_cards"
+normaliser = "es_int"
+group = "discipline"
+
+[[labels]]
+label = "Tarjetas rojas"
+path = "season_stats.discipline.red_cards"
+normaliser = "es_int"
+group = "discipline"
+
+[[labels]]
+label = "Duelos aéreos"
+path = "season_stats.discipline.aerial_duels_won"
+normaliser = "es_int"
+group = "discipline"
+
+[[labels]]
+label = "Posesiones perdidas"
+path = "season_stats.defense.possessions_lost"
+normaliser = "es_int"
+group = "defense"
+
+[[labels]]
+label = "Errores de gol"
+path = "season_stats.defense.errors_leading_to_goal"
+normaliser = "es_int"
+group = "defense"
+
+[[labels]]
+label = "Intercepciones"
+path = "season_stats.defense.interceptions"
+normaliser = "es_int"
+group = "defense"
+
+[[labels]]
+label = "Balones robados"
+path = "season_stats.defense.ball_steals"
+normaliser = "es_int"
+group = "defense"
+
+[[labels]]
+label = "Despejes"
+path = "season_stats.defense.effective_clearances"
+normaliser = "es_int"
+group = "defense"
+
+[[labels]]
+label = "Tiros bloqueados"
+path = "season_stats.defense.blocked_shots"
+normaliser = "es_int"
+group = "defense"
+
+[[labels]]
+label = "Robos de último hombre"
+path = "season_stats.defense.last_man_steals"
+normaliser = "es_int"
+group = "defense"
+
+[[labels]]
+label = "Penaltis anotados"
+path = "season_stats.defense.penalties_scored"
+normaliser = "ratio"
+group = "defense"
+
+[[labels]]
+label = "Penaltis fallados"
+path = "season_stats.defense.penalties_missed"
+normaliser = "es_int"
+group = "defense"
+
+[[labels]]
+label = "Penaltis cometidos"
+path = "season_stats.defense.penalties_committed"
+normaliser = "es_int"
+group = "defense"
+
+[[labels]]
+label = "Penaltis provocados"
+path = "season_stats.defense.penalties_won"
+normaliser = "es_int"
+group = "defense"
+
+[[labels]]
+label = "Paradas"
+path = "season_stats.goalkeeper.saves"
+normaliser = "es_int"
+group = "goalkeeper"
+
+[[labels]]
+label = "Paradas destacadas"
+path = "season_stats.goalkeeper.standout_saves"
+normaliser = "es_int"
+group = "goalkeeper"
+
+[[labels]]
+label = "Centros atrapados"
+path = "season_stats.goalkeeper.claimed_crosses"
+normaliser = "es_int"
+group = "goalkeeper"
+
+[[labels]]
+label = "Goles encajados"
+path = "season_stats.goalkeeper.goals_conceded"
+normaliser = "es_int"
+group = "goalkeeper"
+
+[[labels]]
+label = "Salvadas en la línea"
+path = "season_stats.goalkeeper.goal_line_saves"
+normaliser = "es_int"
+group = "goalkeeper"
+
+[[labels]]
+label = "Penaltis parados"
+path = "season_stats.goalkeeper.penalties_saved"
+normaliser = "es_int"
+group = "goalkeeper"

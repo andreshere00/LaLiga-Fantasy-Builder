@@ -1,0 +1,107 @@
+[[stats]]
+slug = "goles"
+field = "goals"
+json_key = "goles"
+
+[[stats]]
+slug = "asistencias"
+field = "assists"
+json_key = "asistencias"
+
+[[stats]]
+slug = "ocasiones-claras-creadas"
+field = "big_chances_created"
+json_key = "ocasiones_claras"
+
+[[stats]]
+slug = "pases-area-exito"
+field = "balls_into_box"
+json_key = "pases_area"
+
+[[stats]]
+slug = "tiros-totales"
+field = "shots"
+json_key = "tiros"
+
+[[stats]]
+slug = "tiros-puerta"
+field = "shots"
+json_key = "tiros_puerta"
+shot_part = true
+
+[[stats]]
+slug = "tiros-palo"
+field = "shots"
+json_key = "tiros_palo"
+shot_part = true
+
+[[stats]]
+slug = "tiros-bloqueados"
+field = "shots"
+json_key = "tiros_bloqueados"
+shot_part = true
+
+[[stats]]
+slug = "regates-exito"
+field = "successful_dribbles"
+json_key = "regates_exito"
+
+[[stats]]
+slug = "posesiones-perdidas"
+field = "balls_lost"
+json_key = "posesiones_perdidas"
+
+[[stats]]
+slug = "penaltis-cometidos"
+field = "penalties_committed"
+json_key = "penaltis_cometidos"
+
+[[stats]]
+slug = "penaltis-fallados"
+field = "penalties_missed"
+json_key = "penaltis_fallados"
+
+[[stats]]
+slug = "penaltis-parados"
+field = "penalties_saved"
+json_key = "penaltis_atajados"
+
+[[stats]]
+slug = "paradas"
+field = "saves"
+json_key = "paradas"
+
+[[stats]]
+slug = "despejes"
+field = "clearances"
+json_key = "despejes_efectivos"
+
+[[stats]]
+slug = "goles-propia-meta"
+field = "own_goals"
+json_key = "goles_propia"
+
+[[stats]]
+slug = "goles-encajados"
+field = "goals_conceded"
+json_key = "goles_encajados"
+
+[[stats]]
+slug = "tarjetas-amarillas"
+field = "yellow_cards"
+json_key = "tarjetas_amarillas"
+
+[[stats]]
+slug = "tarjeta-roja"
+field = "red_card"
+json_key = "tarjetas_rojas"
+
+[[stats]]
+slug = "balones-recuperados"
+field = "ball_recoveries"
+json_key = "balones_recuperados"
+
+[[stats]]
+slug = "balones-robados"
+field = "ball_recoveries"
+json_key = "balones_robados"
