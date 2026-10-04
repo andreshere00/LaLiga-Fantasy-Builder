@@ -96,3 +96,5 @@ export function useSquadSales() {
 
   return { listPlayer, cancelListing, modifyListing, sellImmediately, leagueKey };
 }
+
+export type SquadSalesApi = ReturnType<typeof useSquadSales>;

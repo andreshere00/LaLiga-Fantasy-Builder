@@ -14,7 +14,7 @@ import {
   minimumListingPrice,
   squadSaleErrorMessage,
 } from "./squadSale";
-import { useSquadSales } from "./useSquadSales";
+import type { SquadSalesApi } from "./useSquadSales";
 import "./SquadPlayerActions.css";
 
 type SaleView = "choose" | "list" | "modify" | "cancel" | "immediate";
@@ -23,15 +23,16 @@ const PLAYER_OPTIONS_HINT = "Click for player options";
 
 export function SquadPlayerActions({
   player,
+  sales,
   children,
 }: {
   player: SquadCard;
+  sales: SquadSalesApi;
   children: ReactNode;
 }) {
   const [open, setOpen] = useState(false);
   const [view, setView] = useState<SaleView>("choose");
   const [rawPrice, setRawPrice] = useState("");
-  const sales = useSquadSales();
   const inputId = useId();
   const hintId = useId();
   const pending =

@@ -173,6 +173,22 @@ describe("squadCards", () => {
     expect(card?.listingId).toBe("mk-1");
     expect(card?.salePrice).toBe(9_000_000);
   });
+
+  it("squadCards_sale_price_without_listing_id_is_not_on_market", () => {
+    const [card] = squadCards(
+      [
+        {
+          playerTeamId: "pt-9",
+          playerMarket: { salePrice: 9_000_000 },
+          playerMaster: { nickname: "Pedri", marketValue: 8_000_000 },
+        },
+      ],
+      null,
+    );
+    expect(card?.onMarket).toBe(false);
+    expect(card?.listingId).toBeNull();
+    expect(card?.salePrice).toBe(9_000_000);
+  });
 });
 
 describe("teamNameFromTeamId", () => {

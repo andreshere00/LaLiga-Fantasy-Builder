@@ -19,6 +19,7 @@ import { PlayerTile } from "./PlayerTile";
 import { SquadPlayerActions } from "./SquadPlayerActions";
 import { TeamValueBox } from "./TeamValueBox";
 import { useLineupBoard } from "./useLineupBoard";
+import { useSquadSales } from "./useSquadSales";
 import "../../components/TooltipPanel.css";
 import "./LineupPage.css";
 
@@ -36,6 +37,7 @@ function scorePointsLabel(weekLoading: boolean, points: number | null): string {
 export function LineupPage() {
   const [searchParams] = useSearchParams();
   const board = useLineupBoard({ initialTeamId: searchParams.get("team") });
+  const squadSales = useSquadSales();
   const currentFixtureTooltip = board.unplayedFixtureScoreTooltip;
   const owner = possessiveName(board.titleName);
   const { pitchSelection, selectPitchPlayer } = board;
@@ -411,7 +413,11 @@ export function LineupPage() {
                       );
                       if (board.ownSquad && !picking) {
                         return (
-                          <SquadPlayerActions key={player.id} player={player}>
+                          <SquadPlayerActions
+                            key={player.id}
+                            player={player}
+                            sales={squadSales}
+                          >
                             {tile}
                           </SquadPlayerActions>
                         );

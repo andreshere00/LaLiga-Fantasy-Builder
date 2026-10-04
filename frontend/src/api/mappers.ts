@@ -937,8 +937,7 @@ function rosterListing(record: Record<string, unknown> | null): {
 }
 
 function rosterOnMarket(record: Record<string, unknown> | null): boolean {
-  const listing = rosterListing(record);
-  return listing.listingId != null || listing.salePrice != null;
+  return rosterListing(record).listingId != null;
 }
 
 export function squadCards(
