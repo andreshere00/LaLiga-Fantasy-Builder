@@ -18,6 +18,7 @@ class PageKind(StrEnum):
     PLAYER = "player"
     MARKET_WIDGET = "market_widget"
     COMPETITION = "competition"
+    CLUB = "club"
 
 
 class ScrapedPage(BaseModel):
@@ -25,7 +26,7 @@ class ScrapedPage(BaseModel):
 
     Attributes:
         source: Site family. Only ``futbolfantasy`` is accepted.
-        kind: Player sheet, market widget, or competition page.
+        kind: Player sheet, market widget, club calendar, or competition page.
         url: Absolute page URL.
         fetched_at: Original fetch time in UTC. Cached pages keep this instant.
         status_code: HTTP status. Anything other than 200 is rejected.

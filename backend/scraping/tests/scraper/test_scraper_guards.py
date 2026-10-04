@@ -11,11 +11,18 @@ from fantasy_scraping.scraper.errors import (
     HostNotAllowedError,
     InvalidRequestError,
     RobotsDisallowedError,
+    UnexpectedContentError,
     UpstreamBlockedError,
     UpstreamUnavailableError,
 )
 from fantasy_scraping.scraper.limiter import CircuitBreaker, TokenBucket
-from fantasy_scraping.scraper.probes import competition_slugs, team_matches, team_slug, widget_id
+from fantasy_scraping.scraper.probes import (
+    competition_slugs,
+    extract_fragments,
+    team_matches,
+    team_slug,
+    widget_id,
+)
 from fantasy_scraping.scraper.retry import backoff_delay, retry_after
 from fantasy_scraping.scraper.robots import RobotsPolicy
 from fantasy_scraping.scraper.sanitise import sanitise_html
@@ -112,6 +119,28 @@ def test_team_matches_aliases_and_subsets(team: str, probed: str, expected: bool
 
 def test_widget_id_link_fallback() -> None:
     assert widget_id('<a href="/analytics/laliga-fantasy/mercado/detalle/77?perfil=1">') == "77"
+
+
+def test_extract_fragments_multiple_returns_all_matches() -> None:
+    html = "<div class='x'>1</div><div class='x'>2</div>"
+
+    assert len(extract_fragments(html, {"n": ".x"})["n"]) == 2
+
+
+def test_extract_fragments_first_only_returns_one() -> None:
+    html = "<div class='x'>1</div><div class='x'>2</div>"
+
+    assert len(extract_fragments(html, {"n": ".x"}, multiple=False)["n"]) == 1
+
+
+def test_extract_fragments_miss_raises_unexpected() -> None:
+    with pytest.raises(UnexpectedContentError):
+        extract_fragments("<p></p>", {"n": ".missing"})
+
+
+def test_extract_fragments_bad_css_raises_invalid() -> None:
+    with pytest.raises(InvalidRequestError):
+        extract_fragments("<p></p>", {"n": "[[["})
 
 
 def test_urls_builders_use_explicit_season_route() -> None:

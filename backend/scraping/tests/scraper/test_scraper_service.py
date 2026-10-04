@@ -95,11 +95,57 @@ async def test_scrape_player_all_kinds_returns_profile_market_and_current_compet
     assert [p.kind for p in pages] == [
         PageKind.PLAYER,
         PageKind.MARKET_WIDGET,
+        PageKind.CLUB,
         PageKind.COMPETITION,
     ]
-    assert pages[2].season_slug == "champions-26-27"
+    assert pages[2].player_slug == "barcelona" and pages[2].season_slug == ""
+    assert pages[3].season_slug == "champions-26-27"
     assert site.count("copa-del-rey") == 0 and site.count("amistoso") == 0
     assert {url.split("/")[2] for url in site.requests} == {"www.futbolfantasy.com"}
+
+
+async def test_scrape_player_club_page_shared_across_two_players(
+    service: ScraperService, site: FakeSite
+) -> None:
+    include = frozenset({PageKind.PLAYER, PageKind.CLUB})
+
+    await service.scrape_player("Raphinha", SEASON, include=include)
+    await service.scrape_player("Oyarzabal", SEASON, team="Real Sociedad", include=include)
+
+    assert site.count("/laliga/equipos/barcelona") == 1
+
+
+async def test_scrape_player_club_missing_team_link_skips_club_page(
+    service: ScraperService, site: FakeSite
+) -> None:
+    site.overrides["https://www.futbolfantasy.com/jugadores/raphinha/laliga-26-27"] = (
+        httpx.Response(
+            200, text="<html><body>no team</body></html>", headers={"content-type": "text/html"}
+        )
+    )
+    include = frozenset({PageKind.PLAYER, PageKind.CLUB})
+
+    pages = await service.scrape_player("Raphinha", SEASON, include=include)
+
+    assert [p.kind for p in pages] == [PageKind.PLAYER]
+    assert site.count("/laliga/equipos/") == 0
+
+
+async def test_probe_returns_fragments(service: ScraperService) -> None:
+    fragments = await service.probe("Raphinha", {"body": "body"}, season=SEASON, multiple=False)
+
+    assert fragments["body"][0].startswith("<body>")
+
+
+async def test_health_reports_index_after_build(service: ScraperService) -> None:
+    before = service.health()
+    assert before["index"] == "missing"
+
+    await service.get_linked_data()
+
+    after = service.health()
+    assert after["index"] == "loaded" and after["index_players"] == 18
+    assert after["cache"]["hits"] >= 0
 
 
 async def test_scrape_player_bypass_cache_refetches(

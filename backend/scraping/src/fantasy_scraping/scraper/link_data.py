@@ -55,6 +55,11 @@ class LinkedDataProvider:
         self._settings: ScraperSettings = settings
         self._flight: SingleFlight = SingleFlight()
 
+    def peek(self) -> LinkedData | None:
+        """Return the cached index without any network call."""
+        hit = self._cache.get(INDEX_KEY)
+        return hit.value if hit else None
+
     async def get(self, *, refresh: bool = False) -> LinkedData:
         """Return the index, refreshing when stale or forced.
 

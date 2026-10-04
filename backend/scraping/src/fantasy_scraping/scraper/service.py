@@ -28,7 +28,13 @@ from fantasy_scraping.scraper.models import (
     ScrapeOutcome,
 )
 from fantasy_scraping.scraper.normalise import normalise
-from fantasy_scraping.scraper.probes import competition_slugs, team_matches, team_slug, widget_id
+from fantasy_scraping.scraper.probes import (
+    competition_slugs,
+    extract_fragments,
+    team_matches,
+    team_slug,
+    widget_id,
+)
 from fantasy_scraping.scraper.resolver import RouteResolver
 from fantasy_scraping.scraper.settings import ScraperSettings
 from fantasy_scraping.scraper.urls import check_season, laliga_slug, player_url
@@ -70,6 +76,7 @@ class ScraperService:
             settings: Scraper settings.
             aliases: Optional alias table. Defaults to the committed file.
         """
+        self._client: ScrapingHttpClient = client
         self._cache: PageCache = cache
         self._settings: ScraperSettings = settings
         self._links: LinkedDataProvider = LinkedDataProvider(client, cache, settings)
@@ -225,7 +232,7 @@ class ScraperService:
             team: Free-text team name.
             player_id: Master player id.
             full_name: Optional secondary name.
-            include: Page kinds to return, in the order player, market, competitions.
+            include: Page kinds to return: player, market, club, then competitions.
             options: Per-request options.
 
         Returns:
@@ -315,6 +322,10 @@ class ScraperService:
                     route, season, kind=PageKind.MARKET_WIDGET, target=wid, options=options
                 )
             )
+        if PageKind.CLUB in include and (team := team_slug(profile.html)):
+            pages.append(await self._club_page(season, team, options))
+        elif PageKind.CLUB in include:
+            LOGGER.warning("club_link_missing player=%s", route.slug)
         if PageKind.COMPETITION in include:
             pages.extend(await self.scrape_competition_pages(route, season, options=options))
         return pages
@@ -334,3 +345,54 @@ class ScraperService:
             if team_matches(team_norm, probed):
                 return candidate
         return None
+
+    async def _club_page(
+        self, season: str, team: str, options: ScrapeOptions | None
+    ) -> ScrapedPage:
+        """Download the shared club calendar page."""
+        return await self._pages.download(
+            PageKind.CLUB, player_slug=team, season=season, season_slug="", options=options
+        )
+
+    async def probe(
+        self,
+        player_name: str,
+        rules: dict[str, str],
+        *,
+        team: str | None = None,
+        season: str | None = None,
+        multiple: bool = True,
+    ) -> dict[str, list[str]]:
+        """Run CSS rules on a player profile. Developer tool; never used by the pipeline.
+
+        Args:
+            player_name: Catalog nickname.
+            rules: Name to CSS selector.
+            team: Free-text team name.
+            season: Season key.
+            multiple: Keep every match or only the first.
+
+        Returns:
+            Outer HTML fragments per rule.
+
+        Raises:
+            InvalidRequestError: Bad selector or season.
+            UnexpectedContentError: A selector matched nothing.
+            ScrapingError: Resolution or download failed.
+        """
+        season = check_season(season or current_season())
+        route = await self.resolve_player_route(player_name, team, season=season)
+        page = await self.download_player_page(route, season)
+        return extract_fragments(page.html, rules, multiple=multiple)
+
+    def health(self) -> dict[str, object]:
+        """Report breaker, index and cache state without any network call."""
+        data = self._links.peek()
+        age = (datetime.now(UTC) - data.fetched_at).total_seconds() if data else None
+        return {
+            "breaker": self._client.breaker_state,
+            "index": "loaded" if data else "missing",
+            "index_players": len(data.player_slugs) if data else 0,
+            "index_age_s": age,
+            "cache": self._cache.stats(),
+        }

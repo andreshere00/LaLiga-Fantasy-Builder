@@ -17,6 +17,7 @@ from fantasy_scraping.scraper.cache import MemoryCache
 from fantasy_scraping.scraper.clock import SystemClock
 from fantasy_scraping.scraper.errors import ScrapingError
 from fantasy_scraping.scraper.http_client import ScrapingHttpClient
+from fantasy_scraping.scraper.routes import health_router
 from fantasy_scraping.scraper.routes import router as scrape_router
 from fantasy_scraping.scraper.service import ScraperService
 from fantasy_scraping.scraper.settings import get_scraper_settings
@@ -81,6 +82,7 @@ def create_app(settings: Settings | None = None, service: ScraperService | None 
     app.state.settings = cfg
     app.state.get_service = get_service
     app.include_router(scrape_router)
+    app.include_router(health_router)
 
     @app.exception_handler(ScrapingError)
     async def scraping_error(_request: Request, exc: ScrapingError) -> JSONResponse:

@@ -47,6 +47,10 @@ class PageCache(Protocol):
         """Delete keys for which ``predicate`` is true and return how many."""
         ...
 
+    def stats(self) -> dict[str, int]:
+        """Return entry count and hit/miss counters."""
+        ...
+
 
 class MemoryCache:
     """LRU cache bounded by entry count."""
@@ -61,17 +65,21 @@ class MemoryCache:
         self._clock: Clock = clock
         self._max: int = max_entries
         self._items: OrderedDict[str, tuple[Any, float, float]] = OrderedDict()
+        self._hits: int = 0
+        self._misses: int = 0
 
     def get(self, key: str) -> CacheHit | None:
         """Return a hit, marking staleness, or None once fully expired."""
         item = self._items.get(key)
-        if item is None:
-            return None
-        value, fresh_until, stale_until = item
         now = self._clock.monotonic()
-        if now >= stale_until:
+        if item is not None and now >= item[2]:
             del self._items[key]
+            item = None
+        if item is None:
+            self._misses += 1
             return None
+        value, fresh_until, _ = item
+        self._hits += 1
         self._items.move_to_end(key)
         return CacheHit(value, now < fresh_until)
 
@@ -89,3 +97,7 @@ class MemoryCache:
         for key in doomed:
             del self._items[key]
         return len(doomed)
+
+    def stats(self) -> dict[str, int]:
+        """Return entry count and hit/miss counters."""
+        return {"entries": len(self._items), "hits": self._hits, "misses": self._misses}

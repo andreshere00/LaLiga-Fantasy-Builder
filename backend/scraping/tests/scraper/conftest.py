@@ -105,6 +105,13 @@ class FakeSite:
                 text=PROFILE_HTML.format(slug=slug, team=self.teams.get(slug, "barcelona")),
                 headers=HTML,
             )
+        if path.startswith("/laliga/equipos/"):
+            team = path.rstrip("/").rsplit("/", 1)[-1]
+            return httpx.Response(
+                200,
+                text=f'<html><body><a class="partido" href="/x">club {team}</a></body></html>',
+                headers=HTML,
+            )
         if path.startswith("/analytics/"):
             return httpx.Response(200, text="<html><body>widget</body></html>", headers=HTML)
         return httpx.Response(404)

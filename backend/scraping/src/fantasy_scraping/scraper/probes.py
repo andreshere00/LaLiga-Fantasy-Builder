@@ -2,8 +2,12 @@
 
 import re
 
+from cssselect import SelectorError
+from lxml import etree
 from lxml import html as lxml_html
+from lxml.cssselect import CSSSelector
 
+from fantasy_scraping.scraper.errors import InvalidRequestError, UnexpectedContentError
 from fantasy_scraping.scraper.urls import COMPETITION_PREFIXES, SLUG_RE
 
 _TEAM_HREF = re.compile(r"/equipos/([a-z0-9-]+)/?(?:[?#].*)?$")
@@ -72,3 +76,34 @@ def competition_slugs(html: str, season_label: str) -> list[str]:
         ):
             slugs.append(value)
     return slugs
+
+
+def extract_fragments(
+    html: str, rules: dict[str, str], *, multiple: bool = True
+) -> dict[str, list[str]]:
+    """Return outer HTML for each CSS rule. Developer aid for writing parser fixtures.
+
+    Args:
+        html: Downloaded page.
+        rules: Name to CSS selector.
+        multiple: Keep every match (True) or only the first.
+
+    Returns:
+        Fragments per rule name.
+
+    Raises:
+        InvalidRequestError: A selector is not valid CSS.
+        UnexpectedContentError: A selector matches nothing.
+    """
+    tree = lxml_html.fromstring(html)
+    out: dict[str, list[str]] = {}
+    for name, css in rules.items():
+        try:
+            nodes = CSSSelector(css)(tree)
+        except (SelectorError, etree.XPathError) as exc:
+            raise InvalidRequestError("invalid selector") from exc
+        if not nodes:
+            raise UnexpectedContentError()
+        picked = nodes if multiple else nodes[:1]
+        out[name] = [etree.tostring(n, encoding="unicode", method="html") for n in picked]
+    return out

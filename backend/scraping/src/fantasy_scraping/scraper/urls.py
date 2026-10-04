@@ -11,6 +11,7 @@ SLUG_RE: re.Pattern[str] = re.compile(r"^[a-z0-9]+(?:-[a-z0-9]+)*$")
 SEASON_RE: re.Pattern[str] = re.compile(r"^\d{4}-\d{2}$")
 ALLOWED_PREFIXES: tuple[str, ...] = (
     "/jugadores/",
+    "/laliga/equipos/",
     "/analytics/laliga-fantasy/mercado/detalle/",
     "/sitemap",
     "/robots.txt",
@@ -73,6 +74,11 @@ def widget_url(widget_id: str) -> str:
     if not widget_id.isdigit():
         raise InvalidRequestError("invalid widget id")
     return f"{BASE}/analytics/laliga-fantasy/mercado/detalle/{widget_id}?perfil=1"
+
+
+def club_url(team_slug: str) -> str:
+    """Build the club calendar URL."""
+    return f"{BASE}/laliga/equipos/{check_slug(team_slug)}"
 
 
 def assert_allowed_url(url: str) -> str:

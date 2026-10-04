@@ -45,6 +45,7 @@ class ScraperSettings(BaseSettings):
     ttl_profile_s: int = 600
     ttl_market_s: int = 300
     ttl_competition_s: int = 21_600
+    ttl_club_s: int = 600
     ttl_index_s: int = 86_400
     ttl_route_s: int = 604_800
     swr_page_s: int = 7_200

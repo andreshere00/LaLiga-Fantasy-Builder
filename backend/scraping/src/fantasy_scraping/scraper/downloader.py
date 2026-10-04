@@ -10,7 +10,7 @@ from fantasy_scraping.scraper.http_client import ScrapingHttpClient
 from fantasy_scraping.scraper.models import ScrapeOptions
 from fantasy_scraping.scraper.sanitise import sanitise_html
 from fantasy_scraping.scraper.settings import ScraperSettings
-from fantasy_scraping.scraper.urls import player_url, widget_url
+from fantasy_scraping.scraper.urls import club_url, player_url, widget_url
 
 
 class PageDownloader:
@@ -44,8 +44,8 @@ class PageDownloader:
         """Return one page, from cache when fresh.
 
         Args:
-            kind: Player sheet, market widget or competition page.
-            player_slug: Validated route slug.
+            kind: Player sheet, market widget, competition or club page.
+            player_slug: Validated route slug, or the team slug for a club page.
             season: Season key such as ``2026-27``.
             season_slug: Route segment such as ``laliga-26-27`` or ``champions-26-27``.
             widget_id: Numeric id, required for the market widget.
@@ -57,7 +57,10 @@ class PageDownloader:
         Raises:
             ScrapingError: Any guard, upstream or content failure with no stale copy.
         """
-        if kind is PageKind.MARKET_WIDGET:
+        if kind is PageKind.CLUB:
+            url, ttl = club_url(player_slug), self._settings.ttl_club_s
+            key = page_key("club", player_slug)
+        elif kind is PageKind.MARKET_WIDGET:
             url, ttl, key = widget_url(widget_id or ""), self._settings.ttl_market_s, ""
             key = page_key("market", widget_id or "")
         elif kind is PageKind.COMPETITION:
