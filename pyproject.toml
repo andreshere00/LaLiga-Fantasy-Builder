@@ -116,8 +116,12 @@ cmd = "bash scripts/generate-openapi.sh"
 help = "Regenerate backend/auth/openapi.json from auth routes and schemas"
 cmd = "bash scripts/generate-auth-openapi.sh"
 
+[tool.poe.tasks.generate-scraping-openapi]
+help = "Regenerate backend/scraping/openapi.json from scraping routes and schemas"
+cmd = "bash scripts/generate-scraping-openapi.sh"
+
 [tool.poe.tasks.check-openapi]
-help = "Fail if backend/api or backend/auth openapi.json is out of date"
+help = "Fail if committed OpenAPI files are out of date (api, auth, scraping)"
 cmd = "bash scripts/check-openapi-alignment.sh"
 
 [tool.poe.tasks.generate-endpoint-schemas]

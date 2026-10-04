@@ -1,0 +1,1109 @@
+{
+  "openapi": "3.1.0",
+  "info": {
+    "title": "LaLiga Fantasy Builder Scraping",
+    "description": "LaLiga Fantasy Builder **scraping** service (private).\n\n``/health/*`` probes are open. ``/internal/scrape/*`` and ``/internal/health``\nrequire ``X-Service-Token`` on the ``internal`` network. The process also joins\n``egress`` so it can reach FutbolFantasy; it is not on ``public``.\n\nInteractive Swagger is served only when ``DEBUG=true``. The committed\n``openapi.json`` is generated offline for review.",
+    "version": "0.1.0"
+  },
+  "paths": {
+    "/internal/scrape/linked-data": {
+      "get": {
+        "summary": "Linked Data",
+        "description": "Return index counts, optionally rebuilding first.",
+        "operationId": "linked_data_internal_scrape_linked_data_get",
+        "parameters": [
+          {
+            "name": "refresh",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "boolean",
+              "default": false,
+              "title": "Refresh"
+            }
+          },
+          {
+            "name": "x-service-token",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Service-Token"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/LinkedDataSummary"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/internal/scrape/linked-data/refresh": {
+      "post": {
+        "summary": "Refresh Linked Data",
+        "description": "Force an index rebuild.",
+        "operationId": "refresh_linked_data_internal_scrape_linked_data_refresh_post",
+        "parameters": [
+          {
+            "name": "x-service-token",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Service-Token"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/LinkedDataSummary"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/internal/scrape/routes": {
+      "get": {
+        "summary": "Route",
+        "description": "Resolve a name to a player route.",
+        "operationId": "route_internal_scrape_routes_get",
+        "parameters": [
+          {
+            "name": "name",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 100,
+              "title": "Name"
+            }
+          },
+          {
+            "name": "team",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "maxLength": 100
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Team"
+            }
+          },
+          {
+            "name": "full_name",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "maxLength": 100
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Full Name"
+            }
+          },
+          {
+            "name": "player_id",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "maxLength": 32
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Player Id"
+            }
+          },
+          {
+            "name": "season",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Season"
+            }
+          },
+          {
+            "name": "x-service-token",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Service-Token"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PlayerRoute"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/internal/scrape/players": {
+      "post": {
+        "summary": "Players",
+        "description": "Scrape a batch of players.",
+        "operationId": "players_internal_scrape_players_post",
+        "parameters": [
+          {
+            "name": "x-service-token",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Service-Token"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ScrapePlayersRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ScrapePlayersResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/internal/scrape/cache/invalidate": {
+      "post": {
+        "summary": "Invalidate",
+        "description": "Drop cached entries.",
+        "operationId": "invalidate_internal_scrape_cache_invalidate_post",
+        "parameters": [
+          {
+            "name": "x-service-token",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Service-Token"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/InvalidateRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/InvalidateResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/internal/scrape/probe": {
+      "post": {
+        "summary": "Probe",
+        "description": "Run CSS rules on a profile. Disabled unless ``DEBUG`` is true.",
+        "operationId": "probe_internal_scrape_probe_post",
+        "parameters": [
+          {
+            "name": "x-service-token",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Service-Token"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ProbeRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProbeResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/internal/health": {
+      "get": {
+        "summary": "Internal Health",
+        "description": "Return breaker, index and cache state.",
+        "operationId": "internal_health_internal_health_get",
+        "parameters": [
+          {
+            "name": "x-service-token",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Service-Token"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HealthDetail"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/health/ready": {
+      "get": {
+        "summary": "Health",
+        "description": "Return process liveness. Readiness does not call FutbolFantasy.",
+        "operationId": "health_health_ready_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HealthResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/health/live": {
+      "get": {
+        "summary": "Health",
+        "description": "Return process liveness. Readiness does not call FutbolFantasy.",
+        "operationId": "health_health_live_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HealthResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "schemas": {
+      "CacheStats": {
+        "properties": {
+          "entries": {
+            "type": "integer",
+            "title": "Entries"
+          },
+          "hits": {
+            "type": "integer",
+            "title": "Hits"
+          },
+          "misses": {
+            "type": "integer",
+            "title": "Misses"
+          }
+        },
+        "type": "object",
+        "required": [
+          "entries",
+          "hits",
+          "misses"
+        ],
+        "title": "CacheStats",
+        "description": "Cache counters."
+      },
+      "Candidate": {
+        "properties": {
+          "slug": {
+            "type": "string",
+            "title": "Slug"
+          },
+          "distance": {
+            "type": "integer",
+            "title": "Distance"
+          },
+          "metric": {
+            "type": "string",
+            "enum": [
+              "exact",
+              "alias",
+              "hamming",
+              "levenshtein"
+            ],
+            "title": "Metric"
+          }
+        },
+        "type": "object",
+        "required": [
+          "slug",
+          "distance",
+          "metric"
+        ],
+        "title": "Candidate",
+        "description": "One scored slug."
+      },
+      "HTTPValidationError": {
+        "properties": {
+          "detail": {
+            "items": {
+              "$ref": "#/components/schemas/ValidationError"
+            },
+            "type": "array",
+            "title": "Detail"
+          }
+        },
+        "type": "object",
+        "title": "HTTPValidationError"
+      },
+      "HealthDetail": {
+        "properties": {
+          "breaker": {
+            "type": "string",
+            "title": "Breaker"
+          },
+          "index": {
+            "type": "string",
+            "title": "Index"
+          },
+          "index_players": {
+            "type": "integer",
+            "title": "Index Players"
+          },
+          "index_age_s": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Index Age S"
+          },
+          "cache": {
+            "$ref": "#/components/schemas/CacheStats"
+          }
+        },
+        "type": "object",
+        "required": [
+          "breaker",
+          "index",
+          "index_players",
+          "index_age_s",
+          "cache"
+        ],
+        "title": "HealthDetail",
+        "description": "Operational status; no URLs, headers or secrets."
+      },
+      "HealthResponse": {
+        "properties": {
+          "status": {
+            "type": "string",
+            "title": "Status"
+          }
+        },
+        "type": "object",
+        "required": [
+          "status"
+        ],
+        "title": "HealthResponse",
+        "description": "Liveness and readiness body."
+      },
+      "InvalidateRequest": {
+        "properties": {
+          "slug": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Slug"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "title": "InvalidateRequest",
+        "description": "Cache invalidation body."
+      },
+      "InvalidateResponse": {
+        "properties": {
+          "deleted": {
+            "type": "integer",
+            "title": "Deleted"
+          }
+        },
+        "type": "object",
+        "required": [
+          "deleted"
+        ],
+        "title": "InvalidateResponse",
+        "description": "Number of dropped cache entries."
+      },
+      "LinkedDataSummary": {
+        "properties": {
+          "players": {
+            "type": "integer",
+            "title": "Players"
+          },
+          "teams": {
+            "type": "integer",
+            "title": "Teams"
+          },
+          "fetched_at": {
+            "type": "string",
+            "title": "Fetched At"
+          }
+        },
+        "type": "object",
+        "required": [
+          "players",
+          "teams",
+          "fetched_at"
+        ],
+        "title": "LinkedDataSummary",
+        "description": "Index counts; the 16k slugs are not returned."
+      },
+      "PageKind": {
+        "type": "string",
+        "enum": [
+          "player",
+          "market_widget",
+          "competition",
+          "club"
+        ],
+        "title": "PageKind",
+        "description": "Which FutbolFantasy document a body represents."
+      },
+      "PlayerRef": {
+        "properties": {
+          "name": {
+            "type": "string",
+            "maxLength": 100,
+            "minLength": 1,
+            "title": "Name"
+          },
+          "full_name": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 100
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Full Name"
+          },
+          "team": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 100
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Team"
+          },
+          "player_id": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 32
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Player Id"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "name"
+        ],
+        "title": "PlayerRef",
+        "description": "Caller-side player reference. ``playerTeamId`` is never accepted."
+      },
+      "PlayerRoute": {
+        "properties": {
+          "slug": {
+            "type": "string",
+            "title": "Slug"
+          },
+          "url": {
+            "type": "string",
+            "title": "Url"
+          },
+          "distance": {
+            "type": "integer",
+            "title": "Distance"
+          },
+          "candidates": {
+            "items": {
+              "$ref": "#/components/schemas/Candidate"
+            },
+            "type": "array",
+            "title": "Candidates"
+          },
+          "metric": {
+            "type": "string",
+            "enum": [
+              "exact",
+              "alias",
+              "hamming",
+              "levenshtein"
+            ],
+            "title": "Metric"
+          },
+          "team_verified": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Team Verified"
+          }
+        },
+        "type": "object",
+        "required": [
+          "slug",
+          "url",
+          "distance",
+          "metric"
+        ],
+        "title": "PlayerRoute",
+        "description": "Resolved player page.\n\nAttributes:\n    slug: Route slug.\n    url: Player URL for the requested season.\n    distance: Winning distance.\n    candidates: At most five scored alternatives, best first.\n    metric: Metric that produced the winner.\n    team_verified: True when the team probe matched, None when not checked."
+      },
+      "ProbeRequest": {
+        "properties": {
+          "name": {
+            "type": "string",
+            "maxLength": 100,
+            "minLength": 1,
+            "title": "Name"
+          },
+          "team": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 100
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Team"
+          },
+          "season": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Season"
+          },
+          "extract_rules": {
+            "additionalProperties": {
+              "type": "string",
+              "maxLength": 512
+            },
+            "type": "object",
+            "maxProperties": 20,
+            "minProperties": 1,
+            "title": "Extract Rules"
+          },
+          "multiple": {
+            "type": "boolean",
+            "title": "Multiple",
+            "default": true
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "name",
+          "extract_rules"
+        ],
+        "title": "ProbeRequest",
+        "description": "Developer selector probe body."
+      },
+      "ProbeResponse": {
+        "properties": {
+          "fragments": {
+            "additionalProperties": {
+              "items": {
+                "type": "string"
+              },
+              "type": "array"
+            },
+            "type": "object",
+            "title": "Fragments"
+          }
+        },
+        "type": "object",
+        "required": [
+          "fragments"
+        ],
+        "title": "ProbeResponse",
+        "description": "Fragments per rule."
+      },
+      "ScrapeOptions": {
+        "properties": {
+          "bypass_cache": {
+            "type": "boolean",
+            "title": "Bypass Cache",
+            "default": false
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "title": "ScrapeOptions",
+        "description": "Per-request knobs that can only make the scraper more conservative."
+      },
+      "ScrapeOutcome": {
+        "properties": {
+          "ref": {
+            "$ref": "#/components/schemas/PlayerRef"
+          },
+          "pages": {
+            "anyOf": [
+              {
+                "items": {
+                  "$ref": "#/components/schemas/ScrapedPage"
+                },
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Pages"
+          },
+          "route": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/PlayerRoute"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "error": {
+            "anyOf": [
+              {
+                "additionalProperties": {
+                  "type": "string"
+                },
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Error"
+          }
+        },
+        "type": "object",
+        "required": [
+          "ref"
+        ],
+        "title": "ScrapeOutcome",
+        "description": "Per-player batch result."
+      },
+      "ScrapePlayersRequest": {
+        "properties": {
+          "players": {
+            "items": {
+              "$ref": "#/components/schemas/PlayerRef"
+            },
+            "type": "array",
+            "maxItems": 25,
+            "minItems": 1,
+            "title": "Players"
+          },
+          "season": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Season"
+          },
+          "include": {
+            "items": {
+              "$ref": "#/components/schemas/PageKind"
+            },
+            "type": "array",
+            "title": "Include"
+          },
+          "options": {
+            "$ref": "#/components/schemas/ScrapeOptions"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "players"
+        ],
+        "title": "ScrapePlayersRequest",
+        "description": "Batch request body."
+      },
+      "ScrapePlayersResponse": {
+        "properties": {
+          "results": {
+            "items": {
+              "$ref": "#/components/schemas/ScrapeOutcome"
+            },
+            "type": "array",
+            "title": "Results"
+          }
+        },
+        "type": "object",
+        "required": [
+          "results"
+        ],
+        "title": "ScrapePlayersResponse",
+        "description": "Per-item outcomes; a failed player does not fail the batch."
+      },
+      "ScrapedPage": {
+        "properties": {
+          "source": {
+            "$ref": "#/components/schemas/Source"
+          },
+          "kind": {
+            "$ref": "#/components/schemas/PageKind",
+            "default": "player"
+          },
+          "url": {
+            "type": "string",
+            "title": "Url"
+          },
+          "fetched_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Fetched At"
+          },
+          "status_code": {
+            "type": "integer",
+            "title": "Status Code"
+          },
+          "html": {
+            "type": "string",
+            "title": "Html"
+          },
+          "from_cache": {
+            "type": "boolean",
+            "title": "From Cache",
+            "default": false
+          },
+          "season": {
+            "type": "string",
+            "title": "Season"
+          },
+          "player_slug": {
+            "type": "string",
+            "title": "Player Slug"
+          },
+          "season_slug": {
+            "type": "string",
+            "title": "Season Slug",
+            "default": ""
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "source",
+          "url",
+          "fetched_at",
+          "status_code",
+          "html",
+          "season",
+          "player_slug"
+        ],
+        "title": "ScrapedPage",
+        "description": "One downloaded document plus the fetch metadata the parser is allowed to read.\n\nAttributes:\n    source: Site family. Only ``futbolfantasy`` is accepted.\n    kind: Player sheet, market widget, club calendar, or competition page.\n    url: Absolute page URL.\n    fetched_at: Original fetch time in UTC. Cached pages keep this instant.\n    status_code: HTTP status. Anything other than 200 is rejected.\n    html: Response body as text. Session cookies are already removed.\n    from_cache: Informational. The parser does not branch on it.\n    season: Season key such as ``2026-27``.\n    player_slug: Route slug, checked against the canonical URL.\n    season_slug: Competition route such as ``laliga-26-27``."
+      },
+      "Source": {
+        "type": "string",
+        "enum": [
+          "futbolfantasy"
+        ],
+        "title": "Source",
+        "description": "Third-party page family. FBref is not parsed."
+      },
+      "ValidationError": {
+        "properties": {
+          "loc": {
+            "items": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "integer"
+                }
+              ]
+            },
+            "type": "array",
+            "title": "Location"
+          },
+          "msg": {
+            "type": "string",
+            "title": "Message"
+          },
+          "type": {
+            "type": "string",
+            "title": "Error Type"
+          },
+          "input": {
+            "title": "Input"
+          },
+          "ctx": {
+            "type": "object",
+            "title": "Context"
+          }
+        },
+        "type": "object",
+        "required": [
+          "loc",
+          "msg",
+          "type"
+        ],
+        "title": "ValidationError"
+      }
+    }
+  },
+  "tags": [
+    {
+      "name": "health",
+      "description": "Liveness and readiness probes."
+    },
+    {
+      "name": "internal",
+      "description": "Private scrape surface for the API and developer CLIs."
+    }
+  ]
+}

@@ -10,6 +10,7 @@ This folder is the detailed map.
 | [Architecture](architecture.md) | Services, login path, CRS, trust boundaries, errors |
 | [Frontend](frontend.md) | Lineup and market UI, data loading, actions, tooltips |
 | [Authentication](authentication/authentication.md) | Sessions, internal JWT, LaLiga vault, CSRF |
+| [Scraping service](scraping/README.md) | Private scraper HTTP, TTLs, Compose `egress`, CLIs |
 | [FutbolFantasy parser](scraping/parser.md) | Offline HTML → player JSON and Markdown |
 
 ## Authentication (HTTP reference)
@@ -39,4 +40,5 @@ This folder is the detailed map.
 Contributors: [`AGENTS.md`](../AGENTS.md).
 
 **Layout:** `backend/auth` — login and tokens. `backend/api` — Fantasy
-features. `frontend` — lineup and market UI; no LaLiga secrets in the browser.
+features. `backend/scraping` — FutbolFantasy downloads (private). `frontend` —
+lineup and market UI; no LaLiga secrets in the browser.

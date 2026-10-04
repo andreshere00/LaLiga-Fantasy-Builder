@@ -124,8 +124,27 @@ services:
     environment:
       SCRAPING_SERVICE_TOKEN: ${SCRAPING_SERVICE_TOKEN:-dev-scraping-token}
       SCRAPING_SERVICE_PORT: ${SCRAPING_SERVICE_PORT:-8002}
+      USE_MEMORY_STORE: ${USE_MEMORY_STORE:-true}
+      REDIS_URL: ${SCRAPING_REDIS_URL:-redis://${REDIS_HOST:-redis}:${REDIS_PORT:-6379}/1}
+      SCRAPER_CONTACT: ${SCRAPER_CONTACT:-dev@local}
     ports:
       - "${SCRAPING_PUBLISH_PORT:-8002}:${SCRAPING_SERVICE_PORT:-8002}"
+    depends_on:
+      redis:
+        condition: service_healthy
+        required: false
+    healthcheck:
+      test:
+        [
+          "CMD",
+          "python",
+          "-c",
+          "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8002/health/live')",
+        ]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+      start_period: 10s
     profiles: [apps, full]
     networks: [internal, egress]
 
@@ -147,4 +166,4 @@ networks:
   public:
   internal:
     internal: true
-  egress:
+  egress: # outbound internet for scraping only (not internal: true)

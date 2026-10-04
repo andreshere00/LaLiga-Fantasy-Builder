@@ -4,6 +4,10 @@ Catalog and market value are **public**; the league card is authenticated
 (JWT + LaLiga bearer). To add a route, follow
 [Adding endpoints](../adding-endpoints.md).
 
+Planned enriched stats (FutbolFantasy scrape + parser + LaLiga supplement) are
+described in [player-stats-endpoint plan](../../plans/player-stats-endpoint.md)
+and [scraping service](../../scraping/README.md).
+
 ## Routes
 
 | Method | Path | Upstream | Auth | Response model |

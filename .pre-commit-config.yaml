@@ -28,7 +28,7 @@ repos:
         files: ^frontend/(src/.*\.(ts|tsx)|eslint\.config\.js|package\.json)$
 
       - id: generate-openapi
-        name: generate OpenAPI documentation (api + auth)
+        name: generate OpenAPI documentation (api + auth + scraping)
         entry: bash scripts/check-openapi-alignment.sh
         language: system
         pass_filenames: false
@@ -38,7 +38,10 @@ repos:
           |backend/api/pyproject\.toml
           |backend/auth/src/fantasy_auth/(api/|openapi\.py|main\.py|config\.py)
           |backend/auth/openapi\.json
-          |backend/auth/pyproject\.toml)$
+          |backend/auth/pyproject\.toml
+          |backend/scraping/src/fantasy_scraping/(scraper/routes\.py|openapi\.py|main\.py|models/)
+          |backend/scraping/openapi\.json
+          |backend/scraping/pyproject\.toml)$
 
       - id: test
         name: test (pytest, ≥90% coverage)

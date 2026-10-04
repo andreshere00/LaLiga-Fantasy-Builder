@@ -21,7 +21,7 @@ guides live under [`docs/`](docs/README.md).
 | Frontend | `frontend` | 3000 | Lineup UI. Proxies `/auth`, `/laliga`, and `/api` |
 | Auth | `backend/auth` | 8000 | Sessions, OIDC, LaLiga pairing, vault, internal JWT |
 | API | `backend/api` | 8001 | Features; LaLiga via private bearer exchange |
-| Scraping | `backend/scraping` | 8002 | Private health process on the `internal` and `egress` networks. The FutbolFantasy downloader is not in this image yet. The parser library is. |
+| Scraping | `backend/scraping` | 8002 | Private FutbolFantasy scraper + parser on `internal` and `egress`. `/internal/scrape/*` uses `SCRAPING_SERVICE_TOKEN`. CLIs are read-only. |
 
 ```text
 Browser → frontend origin
@@ -69,7 +69,8 @@ Do not proxy a route marked **Low** confidence or hosted on
 - Automated CLIs and `fantasy-browser-session` must not place bids, pay
   clauses, increase clauses, or activate shields. Auth must not import
   `fantasy_api`. Auth must not import `fantasy_scraping`. Scraping holds no
-  LaLiga tokens.
+  LaLiga tokens. `fantasy-scraper` and `fantasy-parse` must not disable robots,
+  rate limits, or place Fantasy bids.
 
 ## Python
 
@@ -102,3 +103,6 @@ Commit `backend/api/openapi.json` and `docs/api/endpoint-schemas.md`. Do not
 hand-edit the schema doc. Update the feature README, the architecture domain
 table when the domain is new, and the service READMEs when a CLI or
 browser-session flow changes.
+
+After a scraping route or schema change, run `uv run poe generate-scraping-openapi`
+and commit `backend/scraping/openapi.json`.

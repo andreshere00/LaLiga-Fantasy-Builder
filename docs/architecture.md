@@ -9,7 +9,7 @@ map of what each part owns.
 frontend/          React app — lineup and market (Bun, Vite). Nginx in Docker.
 backend/auth/      Sessions, Keycloak login, LaLiga vault, internal JWT
 backend/api/       Fantasy features. Calls LaLiga with a bearer from auth
-backend/scraping/  Private process on port 8002 (health only). Parser library. Downloader is separate
+backend/scraping/  Private scraper + parser on port 8002 (`internal` + `egress`)
 docker/            Keycloak realm import and the OTEL collector config
 ```
 
@@ -45,7 +45,7 @@ flowchart LR
     Api -->|Private bearer request| Auth
     Api -->|LaLiga bearer| LaligaApi
     Api -->|Service token| Scraping
-    Scraping -->|Future downloads| FutbolFantasy
+    Scraping -->|HTTPS scrape| FutbolFantasy
     Auth --> Postgres
     Auth --> Redis
 ```
@@ -241,9 +241,12 @@ separate `SCRAPING_SERVICE_TOKEN`. The scraping process is on the `internal`
 network and on `egress` (outbound internet). It is not on `public`. Host port
 8002 is published for local Compose only.
 
-Today that process answers `/health/live` and `/health/ready`. It does not
-download FutbolFantasy pages. The parser library in the same image still reads
-HTML only when a caller invokes `fantasy-parse` or `ParserService`.
+The scraper resolves player names (sitemap + Hamming/Levenshtein), downloads
+profile, market widget, club calendar, and competition pages with caching and
+rate limits. `/internal/scrape/*` requires `X-Service-Token`. The parser in the
+same image turns `ScrapedPage` HTML into JSON/Markdown (`fantasy-parse` or
+`ParserService`). Uvicorn runs a **single worker** so the in-process limiter
+matches deployment. Detail: [Scraping](scraping/README.md).
 
 ### Auth-to-LaLiga boundary
 

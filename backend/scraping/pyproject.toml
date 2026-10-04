@@ -1,7 +1,7 @@
 [project]
 name = "laliga-fantasy-builder-scraping"
 version = "0.1.0"
-description = "Offline FutbolFantasy parser for LaLiga Fantasy Builder"
+description = "Private FutbolFantasy scraper and offline parser for LaLiga Fantasy Builder"
 readme = "README.md"
 authors = [
     { name = "Andrés Herencia" }
@@ -23,6 +23,7 @@ dependencies = [
 fantasy-parse = "fantasy_scraping.parser.cli:main"
 laliga-fantasy-builder-scraping = "fantasy_scraping.main:run"
 fantasy-scraper = "fantasy_scraping.scraper.cli:main"
+generate-openapi = "fantasy_scraping.openapi:main"
 
 [build-system]
 requires = ["uv_build>=0.11.29,<0.12.0"]

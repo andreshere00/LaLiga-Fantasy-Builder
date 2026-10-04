@@ -78,7 +78,14 @@ def create_app(settings: Settings | None = None, service: ScraperService | None 
         if client := holder.get("client"):
             await client.aclose()  # type: ignore[union-attr]
 
-    app = FastAPI(title="LaLiga Fantasy Builder Scraping", version="0.1.0", lifespan=lifespan)
+    app = FastAPI(
+        title="LaLiga Fantasy Builder Scraping",
+        version="0.1.0",
+        lifespan=lifespan,
+        docs_url="/docs" if cfg.debug else None,
+        redoc_url="/redoc" if cfg.debug else None,
+        openapi_url="/openapi.json" if cfg.debug else None,
+    )
     app.state.settings = cfg
     app.state.get_service = get_service
     app.include_router(scrape_router)
