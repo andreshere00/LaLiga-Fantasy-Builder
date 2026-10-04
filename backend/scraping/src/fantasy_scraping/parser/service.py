@@ -214,10 +214,6 @@ class ParserService:
                 message="fixtures table missing",
                 severity="error",
             )
-        if len(failed) > self.settings.max_failed_core_sections or (
-            "profile.personal" in failed and len(failed) > self.settings.max_failed_core_sections
-        ):
-            raise UnsupportedLayoutError("layout_drift", "layout drift", section="meta")
         if len(set(failed) & set(CORE_SECTIONS)) > self.settings.max_failed_core_sections:
             raise UnsupportedLayoutError("layout_drift", "layout drift", section="meta")
         if matches is None:

@@ -85,6 +85,12 @@ def test_parse_competition_companions_merges_recent_stats() -> None:
         ]
     )
     assert any(row.competition.value == "champions_league" for row in again.fixtures)
+    false_drift = {
+        "minutes_sum_mismatch",
+        "average_mismatch",
+        "season_window_mismatch",
+    }
+    assert false_drift.isdisjoint(_codes(merged))
 
 
 def test_parse_goalkeeper_page_reads_saves() -> None:
@@ -323,6 +329,7 @@ def test_parse_futbolfantasy_fragment_edges_keep_partial_data() -> None:
     assert player.fixtures[0].stats.shots.status == "partial"
     assert player.fixtures[0].stats.shots.count == 3
     assert player.fixtures[0].stats.yellow_cards.count == 2
+    assert player.fixtures[0].stats.yellow_cards.points == 0.0
     assert player.fixtures[0].stats.ball_recoveries.count == 3
     assert player.market is not None
     assert player.market.series is not None
@@ -406,11 +413,15 @@ def test_markdown_golden_snapshot_matches_file(request: pytest.FixtureRequest) -
     text = SERVICE.to_markdown(player)
     target = GOLDEN / "raphinha_laliga_26_27.expected.md"
     reference = GOLDEN / "raphinha_laliga_26_27.reference.md"
+    json_target = GOLDEN / "raphinha_laliga_26_27.json"
+    payload = canonical_json(player)
     if request.config.getoption("--update-golden"):
         target.write_text(text, encoding="utf-8")
         reference.write_text(text, encoding="utf-8")
+        json_target.write_text(payload, encoding="utf-8")
     assert target.read_text(encoding="utf-8") == text
     assert reference.read_text(encoding="utf-8") == text
+    assert json_target.read_text(encoding="utf-8") == payload
 
 
 def _small() -> object:

@@ -183,7 +183,7 @@ class RecentMatch(ParserModel):
     player_side: PlayerSide | None = None
     minutes: MinutesNote
     stats: DaznStats | None = None
-    stats_source: Literal["futbolfantasy", "fbref"] | None = None
+    stats_source: Literal["futbolfantasy"] | None = None
 
 
 class UpcomingMatch(ParserModel):

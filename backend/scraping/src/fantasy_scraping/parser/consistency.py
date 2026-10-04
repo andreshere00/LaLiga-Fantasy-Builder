@@ -1,12 +1,15 @@
 """Cross-section checks. Warnings only; values stay as published."""
 
+import re
 from datetime import date
 from decimal import ROUND_HALF_UP, Decimal
 
 from fantasy_scraping.parser.extractors.base import sort_warnings
 from fantasy_scraping.parser.models.common import PartialParseWarning
-from fantasy_scraping.parser.models.futbolfantasy import FutbolFantasyPlayer
+from fantasy_scraping.parser.models.futbolfantasy import FixtureRow, FutbolFantasyPlayer
 from fantasy_scraping.parser.normalise.dates import season_window
+
+_SLUG_SEASON = re.compile(r"(\d{2})-(\d{2})$")
 
 
 def apply_consistency(player: FutbolFantasyPlayer, season: str) -> FutbolFantasyPlayer:
@@ -47,11 +50,30 @@ def _warn(extra: list[PartialParseWarning], code: str, path: str) -> None:
     )
 
 
+def _base_slug(player: FutbolFantasyPlayer) -> str:
+    return player.meta.season_url or ""
+
+
+def _base_fixtures(player: FutbolFantasyPlayer) -> list[FixtureRow]:
+    slug = _base_slug(player)
+    if not slug:
+        return list(player.fixtures)
+    return [row for row in player.fixtures if row.competition_slug == slug]
+
+
+def _season_from_slug(slug: str) -> str | None:
+    found = _SLUG_SEASON.search(slug.strip())
+    if found is None:
+        return None
+    return f"20{found.group(1)}-{found.group(2)}"
+
+
 def _minutes(player: FutbolFantasyPlayer, extra: list[PartialParseWarning]) -> None:
     stats = player.season_stats
     if stats is None or stats.participation is None or stats.participation.minutes is None:
         return
-    total = sum(row.minutes_out.minutes or 0 for row in player.fixtures)
+    rows = _base_fixtures(player)
+    total = sum(row.minutes_out.minutes or 0 for row in rows)
     if total and total != stats.participation.minutes:
         _warn(extra, "minutes_sum_mismatch", "season_stats.participation.minutes")
 
@@ -60,8 +82,9 @@ def _points(player: FutbolFantasyPlayer, extra: list[PartialParseWarning]) -> No
     points = player.fantasy_points
     if points is None or points.total.net is None:
         return
-    total = sum(row.week_points or 0 for row in player.fixtures)
-    if player.fixtures and int(points.total.net) != total:
+    rows = _base_fixtures(player)
+    total = sum(row.week_points or 0 for row in rows)
+    if rows and int(points.total.net) != total:
         _warn(extra, "points_sum_mismatch", "fantasy_points.total.net")
 
 
@@ -87,14 +110,20 @@ def _average(player: FutbolFantasyPlayer, extra: list[PartialParseWarning]) -> N
     actual = Decimal(str(points.average.net)).quantize(Decimal("0.01"), rounding=ROUND_HALF_UP)
     if rounded != actual:
         _warn(extra, "average_mismatch", "fantasy_points.average.net")
-    if len(player.fixtures) >= 3 and points.average_last_3.net is not None:
-        last = sum(row.week_points or 0 for row in player.fixtures[:3]) / 3
-        last_rounded = Decimal(str(last)).quantize(Decimal("0.01"), rounding=ROUND_HALF_UP)
-        published = Decimal(str(points.average_last_3.net)).quantize(
-            Decimal("0.01"), rounding=ROUND_HALF_UP
-        )
-        if last_rounded != published:
-            _warn(extra, "average_mismatch", "fantasy_points.average_last_3.net")
+    if points.average_last_3.net is None:
+        return
+    rows = _base_fixtures(player)
+    with_points = [row for row in rows if row.week_points is not None]
+    if len(with_points) < 3:
+        return
+    newest = sorted(with_points, key=lambda row: row.date or date.min, reverse=True)[:3]
+    last = sum(row.week_points or 0 for row in newest) / 3
+    last_rounded = Decimal(str(last)).quantize(Decimal("0.01"), rounding=ROUND_HALF_UP)
+    published = Decimal(str(points.average_last_3.net)).quantize(
+        Decimal("0.01"), rounding=ROUND_HALF_UP
+    )
+    if last_rounded != published:
+        _warn(extra, "average_mismatch", "fantasy_points.average_last_3.net")
 
 
 def _market(player: FutbolFantasyPlayer, extra: list[PartialParseWarning]) -> None:
@@ -166,12 +195,15 @@ def _season_dates(
     season: str,
     extra: list[PartialParseWarning],
 ) -> None:
-    window = season_window(season)
-    if window is None:
-        return
-    start, end = window
     for row in player.fixtures:
-        if row.date is not None and not _inside(row.date, start, end):
+        if row.date is None:
+            continue
+        row_season = _season_from_slug(row.competition_slug) or season
+        window = season_window(row_season)
+        if window is None:
+            continue
+        start, end = window
+        if not _inside(row.date, start, end):
             _warn(extra, "season_window_mismatch", "fixtures.date")
             return
 

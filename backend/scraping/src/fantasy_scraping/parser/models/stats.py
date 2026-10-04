@@ -7,7 +7,7 @@ from pydantic import Field
 from fantasy_scraping.parser.models.base import ParserModel
 
 StatStatus = Literal["ok", "implied_zero", "partial", "unavailable", "not_applicable"]
-StatSource = Literal["futbolfantasy", "fbref"]
+StatSource = Literal["futbolfantasy"]
 
 
 class StatLine(ParserModel):

@@ -29,6 +29,24 @@ def test_parse_whitespace_between_tags_keeps_json() -> None:
     assert _json(HTML) == _json(mutated)
 
 
+def test_parse_attribute_quotes_keep_json() -> None:
+    mutated = HTML.replace('class="name"', "class='name'")
+    assert _json(HTML) == _json(mutated)
+
+
+def test_parse_html_comment_keeps_json() -> None:
+    mutated = HTML.replace("<body>", "<body><!-- drift -->")
+    assert _json(HTML) == _json(mutated)
+
+
+def test_parse_extra_script_block_keeps_json() -> None:
+    mutated = HTML.replace(
+        "</body>",
+        '<script type="text/javascript">window.__noise = 1;</script></body>',
+    )
+    assert _json(HTML) == _json(mutated)
+
+
 @settings(derandomize=True, max_examples=4)
 @given(st.sampled_from([" ", "\n", "\t"]))
 def test_parse_intertag_whitespace_hypothesis_keeps_json(extra: str) -> None:

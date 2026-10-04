@@ -1,6 +1,7 @@
 import { useId } from "react";
-import shieldIconUrl from "../../../assets/button_shield.svg";
 import { Link } from "react-router-dom";
+
+import shieldIconUrl from "../../../assets/button_shield.svg";
 import { MarketActionMenu } from "../actions/MarketActionMenu";
 import type { MarketActionsApi } from "../actions/useMarketActions";
 import type { MarketActionContext } from "../actions/marketActions";

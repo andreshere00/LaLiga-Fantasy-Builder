@@ -148,7 +148,9 @@ def extract_fixtures(ctx: ExtractionContext, *, is_goalkeeper: bool) -> list[Fix
                 stars=columns.get("stars") if isinstance(columns.get("stars"), int) else None,
                 grade=columns.get("grade") if isinstance(columns.get("grade"), float) else None,
                 dazn_points=columns.get("dazn") if isinstance(columns.get("dazn"), int) else None,
-                week_points=columns.get("points") if isinstance(columns.get("points"), int) else 0,
+                week_points=(
+                    columns.get("points") if isinstance(columns.get("points"), int) else None
+                ),
                 icon_events=icons,
                 stats=stats,
                 extra_events=extra,
@@ -345,32 +347,6 @@ def _field_from_specs(
     return implied_zero() if layer_present else unavailable("layer_missing")
 
 
-def _field_line(
-    field_name: str,
-    slug: str,
-    counts: dict[str, int],
-    from_layer: dict[str, int],
-    points: dict[str, float],
-    payload: dict[str, object] | None,
-    json_key: str,
-    layer_present: bool,
-    is_goalkeeper: bool,
-) -> object:
-    if field_name in _GK_FIELDS and not is_goalkeeper and slug not in counts:
-        if field_name not in from_layer:
-            return not_applicable()
-    count = counts.get(slug)
-    if count is None and field_name in from_layer:
-        count = from_layer[field_name]
-    if count is None and payload is not None and json_key and json_key in payload:
-        raw = payload[json_key]
-        if isinstance(raw, int):
-            count = raw
-    if count is None:
-        return implied_zero() if layer_present else unavailable("layer_missing")
-    return line(count=count, points=points.get(field_name, 0.0), status="ok")
-
-
 def _shots(
     counts: dict[str, int],
     from_layer: dict[str, int],
@@ -429,7 +405,6 @@ def _read_layer(
             return
         if event.key == "second_yellow":
             count = 2
-            score = -2.0 if score == 0 else score
         _store(event, count, score, points, counts, statistical, extra)
         return
     pair = _LAYER_PAIR.fullmatch(cleaned)

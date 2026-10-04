@@ -33,10 +33,17 @@ def merge_competitions(pages: list[FutbolFantasyPlayer]) -> FutbolFantasyPlayer:
             row.matchday,
         )
     )
-    recent = [_fill_recent(row, pages) for row in base.matches.recent]
+    recent: list[RecentMatch] = []
     warnings = [item for item in base.warnings if item.code != "competition_unresolved"]
-    for index, row in enumerate(recent):
-        if row.competition == Competition.OTHER and row.stats is None:
+    for index, row in enumerate(base.matches.recent):
+        filled, join_warnings = _fill_recent(row, pages, index)
+        recent.append(filled)
+        warnings.extend(join_warnings)
+        if (
+            filled.competition == Competition.OTHER
+            and filled.stats is None
+            and not any(item.code == "competition_join_ambiguous" for item in join_warnings)
+        ):
             warnings.append(
                 PartialParseWarning(
                     code="competition_page_missing",
@@ -76,31 +83,57 @@ def _laliga_page(pages: list[FutbolFantasyPlayer]) -> FutbolFantasyPlayer:
     return pages[0]
 
 
-def _fill_recent(row: RecentMatch, pages: list[FutbolFantasyPlayer]) -> RecentMatch:
+def _fill_recent(
+    row: RecentMatch,
+    pages: list[FutbolFantasyPlayer],
+    index: int,
+) -> tuple[RecentMatch, list[PartialParseWarning]]:
     if row.stats is not None and row.competition == Competition.LALIGA:
-        return row
+        return row, []
+    if row.score is None:
+        return row, []
     matches = _candidates(row, pages)
+    if len(matches) > 1:
+        return row, [
+            PartialParseWarning(
+                code="competition_join_ambiguous",
+                section="matches.recent",
+                path="matches.recent.stats",
+                rule_id="matches.recent.stats",
+                message="competition join is ambiguous",
+                index=index,
+            )
+        ]
     if len(matches) != 1:
-        return row
+        return row, []
     fixture = matches[0]
-    return row.model_copy(
-        update={
-            "competition": fixture.competition,
-            "stats": fixture.stats,
-            "stats_source": "futbolfantasy",
-            "competition_raw": fixture.competition_slug,
-        }
+    return (
+        row.model_copy(
+            update={
+                "competition": fixture.competition,
+                "stats": fixture.stats,
+                "stats_source": "futbolfantasy",
+                "competition_raw": fixture.competition_slug,
+            }
+        ),
+        [],
     )
 
 
 def _candidates(row: RecentMatch, pages: list[FutbolFantasyPlayer]) -> list[object]:
     found = []
+    score = row.score
+    if score is None:
+        return found
     for page in pages:
         slug = page.meta.season_url or ""
         if slug.startswith("laliga"):
             continue
         for fixture in page.fixtures:
-            if fixture.date == row.date:
+            if fixture.date != row.date:
+                continue
+            match = fixture.match
+            if match.home_goals == score.home and match.away_goals == score.away:
                 found.append(fixture)
     return found
 

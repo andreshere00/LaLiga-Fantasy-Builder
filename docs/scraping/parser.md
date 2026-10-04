@@ -4,8 +4,8 @@ The parser turns one saved HTML page into a frozen Pydantic player and into
 Markdown. It does not download, cache, or call a clock. The only time input is
 `ScrapedPage.fetched_at`.
 
-FBref and Sofascore are not parsed. Other competitions use the same
-FutbolFantasy template, one page per slug, then `merge_competitions`.
+Only FutbolFantasy HTML is parsed. Other competitions use the same template,
+one page per slug, then `merge_competitions`.
 
 ## Call
 
