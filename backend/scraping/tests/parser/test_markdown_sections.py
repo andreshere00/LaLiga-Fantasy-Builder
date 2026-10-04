@@ -3,7 +3,7 @@
 from fantasy_scraping.models.page import PageKind
 from fantasy_scraping.parser.markdown import sections
 from fantasy_scraping.parser.markdown.options import RenderOptions
-from fantasy_scraping.parser.merge import merge_competitions, stats_of
+from fantasy_scraping.parser.merge import merge_competitions
 from fantasy_scraping.parser.models.common import PartialParseWarning
 from fantasy_scraping.parser.models.futbolfantasy import FutbolFantasyPlayer
 from fantasy_scraping.parser.rules.loader import RuleRepository
@@ -86,8 +86,7 @@ def test_merge_competitions_warns_when_competition_page_missing() -> None:
     player = SERVICE.parse_futbolfantasy(page("raphinha_laliga_26_27.html"))
     merged = merge_competitions([player])
     assert any(item.code == "competition_page_missing" for item in merged.warnings)
-    assert stats_of(merged.fixtures[0]) is not None
-    assert stats_of(object()) is None
+    assert merged.fixtures[0].stats is not None
 
 
 def test_merge_competitions_keeps_upcoming_competition_unresolved() -> None:

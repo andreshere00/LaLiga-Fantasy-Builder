@@ -430,6 +430,34 @@ class FixtureRow(ParserModel):
     starter: bool = False
 
 
+def same_fixture(
+    fixture: FixtureRow,
+    *,
+    on: Date,
+    score: Score | None,
+    matchday: int | None = None,
+) -> bool:
+    """Return whether ``fixture`` is the match at this date and score.
+
+    Args:
+        fixture: Parsed match row.
+        on: Date from the widget row.
+        score: Published score. ``None`` never matches.
+        matchday: When set, a different date still matches this matchday.
+
+    Returns:
+        True when both score sides match and the date or the matchday matches.
+    """
+    if score is None:
+        return False
+    match = fixture.match
+    if match.home_goals != score.home or match.away_goals != score.away:
+        return False
+    if fixture.date == on:
+        return True
+    return matchday is not None and fixture.matchday == matchday
+
+
 class FutbolFantasyPlayer(ParserModel):
     """Hierarchical player document produced from one or more FutbolFantasy pages.
 

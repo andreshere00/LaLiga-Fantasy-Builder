@@ -1,15 +1,16 @@
 """Cross-section checks. Warnings only; values stay as published."""
 
-import re
 from datetime import date
 from decimal import ROUND_HALF_UP, Decimal
 
 from fantasy_scraping.parser.extractors.base import sort_warnings
 from fantasy_scraping.parser.models.common import PartialParseWarning
-from fantasy_scraping.parser.models.futbolfantasy import FixtureRow, FutbolFantasyPlayer
-from fantasy_scraping.parser.normalise.dates import season_window
-
-_SLUG_SEASON = re.compile(r"(\d{2})-(\d{2})$")
+from fantasy_scraping.parser.models.futbolfantasy import (
+    FixtureRow,
+    FutbolFantasyPlayer,
+    same_fixture,
+)
+from fantasy_scraping.parser.normalise.dates import season_from_slug, season_window
 
 
 def apply_consistency(player: FutbolFantasyPlayer, season: str) -> FutbolFantasyPlayer:
@@ -59,13 +60,6 @@ def _base_fixtures(player: FutbolFantasyPlayer) -> list[FixtureRow]:
     if not slug:
         return list(player.fixtures)
     return [row for row in player.fixtures if row.competition_slug == slug]
-
-
-def _season_from_slug(slug: str) -> str | None:
-    found = _SLUG_SEASON.search(slug.strip())
-    if found is None:
-        return None
-    return f"20{found.group(1)}-{found.group(2)}"
 
 
 def _minutes(player: FutbolFantasyPlayer, extra: list[PartialParseWarning]) -> None:
@@ -163,11 +157,7 @@ def _recent(player: FutbolFantasyPlayer, extra: list[PartialParseWarning]) -> No
         for fixture in player.fixtures:
             if fixture.competition.value != "laliga":
                 continue
-            same_score = (
-                fixture.match.home_goals == row.score.home
-                and fixture.match.away_goals == row.score.away
-            )
-            if same_score and (fixture.date == row.date or fixture.matchday == row.matchday):
+            if same_fixture(fixture, on=row.date, score=row.score, matchday=row.matchday):
                 matched = True
         if not matched:
             _warn(extra, "recent_vs_fixtures_mismatch", "matches.recent")
@@ -198,7 +188,7 @@ def _season_dates(
     for row in player.fixtures:
         if row.date is None:
             continue
-        row_season = _season_from_slug(row.competition_slug) or season
+        row_season = season_from_slug(row.competition_slug, row.date) or season
         window = season_window(row_season)
         if window is None:
             continue

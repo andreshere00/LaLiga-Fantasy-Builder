@@ -3,13 +3,13 @@
 import html
 import json
 import re
-from datetime import UTC, datetime, timedelta
+from typing import Any
 
 from lxml.html import HtmlElement
 
 from fantasy_scraping.parser.dom.locators import node_text
 from fantasy_scraping.parser.errors import NormaliseError, ParserSectionError
-from fantasy_scraping.parser.extractors.base import ExtractionContext, column_values, rows_of
+from fantasy_scraping.parser.extractors.base import ExtractionContext, rows_with_dates
 from fantasy_scraping.parser.extractors.matches import competition_from_slug
 from fantasy_scraping.parser.models.common import Competition
 from fantasy_scraping.parser.models.futbolfantasy import (
@@ -28,7 +28,6 @@ from fantasy_scraping.parser.models.stats import (
     not_applicable,
     unavailable,
 )
-from fantasy_scraping.parser.normalise.dates import MADRID, day_month, resolve_day_month
 from fantasy_scraping.parser.normalise.minutes import minutes_note
 from fantasy_scraping.parser.normalise.numbers import es_int
 from fantasy_scraping.parser.normalise.text import casefold_key, clean_text, map_minuses
@@ -63,38 +62,19 @@ def extract_fixtures(ctx: ExtractionContext, *, is_goalkeeper: bool) -> list[Fix
             section="fixtures",
         )
     spec = ctx.table("fixtures")
-    raw_rows = rows_of(ctx, spec)
     payloads = _poligono(ctx)
     competition = competition_from_slug(ctx, ctx.page.season_slug or _slug_from_url(ctx))
     is_laliga = competition == Competition.LALIGA
-    kept: list[tuple[HtmlElement, dict[str, object]]] = []
-    pairs: list[tuple[int, int]] = []
-    for index, row in enumerate(raw_rows):
-        columns = column_values(ctx, row, spec)
-        if not isinstance(columns.get("match"), str) or not isinstance(
-            columns.get("matchday"), int
-        ):
-            ctx.warn(
-                code="row_dropped",
-                section="fixtures",
-                path="fixtures",
-                rule_id="fixtures",
-                message="row dropped",
-                index=index,
-            )
-            continue
-        raw_date = columns.get("date")
-        if isinstance(raw_date, str) and raw_date:
-            try:
-                pairs.append(day_month(raw_date))
-            except NormaliseError:
-                pairs.append((0, 0))
-        else:
-            pairs.append((0, 0))
-        kept.append((row, columns))
-    dates = _dates(ctx, pairs)
+    dated = rows_with_dates(
+        ctx,
+        spec,
+        section="fixtures",
+        direction="recent",
+        accept=_fixture_columns,
+        require_date=False,
+    )
     fixtures: list[FixtureRow] = []
-    for index, ((row, columns), when) in enumerate(zip(kept, dates, strict=True)):
+    for index, (row, columns, when) in enumerate(dated):
         match = _match(str(columns["match"]))
         if match is None:
             ctx.warn(
@@ -164,18 +144,9 @@ def extract_fixtures(ctx: ExtractionContext, *, is_goalkeeper: bool) -> list[Fix
     return fixtures
 
 
-def _dates(ctx: ExtractionContext, pairs: list[tuple[int, int]]) -> list[object]:
-    resolved: list[object] = []
-    cursor = ctx.page.fetched_at
-    for day, month in pairs:
-        if not month:
-            resolved.append(None)
-            continue
-        when = resolve_day_month(day, month, cursor, "recent")
-        resolved.append(when)
-        cursor = datetime.combine(when, datetime.min.time(), tzinfo=MADRID).astimezone(UTC)
-        cursor = cursor - timedelta(days=1)
-    return resolved
+def _fixture_columns(columns: dict[str, Any]) -> bool:
+    """Keep fixture rows that publish a match line and a matchday."""
+    return isinstance(columns.get("match"), str) and isinstance(columns.get("matchday"), int)
 
 
 def _slug_from_url(ctx: ExtractionContext) -> str:

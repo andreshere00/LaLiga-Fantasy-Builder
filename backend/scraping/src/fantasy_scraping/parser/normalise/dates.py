@@ -12,6 +12,7 @@ _DMY = re.compile(r"^(\d{1,2})/(\d{1,2})/(\d{2}|\d{4})$")
 _DM = re.compile(r"^(\d{1,2})/(\d{1,2})$")
 _TIME = re.compile(r"^(\d{1,2}):(\d{2})h?$")
 _DURATION = re.compile(r"^(\d+)\s+d[ií]as?$", re.IGNORECASE)
+_SLUG_SEASON = re.compile(r"(\d{2})-(\d{2})$")
 
 
 def madrid_date(moment: datetime) -> date:
@@ -195,6 +196,49 @@ def duration_days(value: str) -> int:
     if match is None:
         raise NormaliseError("invalid_duration", "invalid duration")
     return int(match.group(1))
+
+
+def season_from_slug(slug: str, anchor: date | None = None) -> str | None:
+    """Return ``YYYY-YY`` from a competition slug such as ``laliga-26-27``.
+
+    Args:
+        slug: Route suffix. Years must be the last two pairs.
+        anchor: When a ``20xx`` start is more than five years after this date,
+            the start moves back one century.
+
+    Returns:
+        Season key, or ``None`` when the slug has no year suffix.
+    """
+    found = _SLUG_SEASON.search(slug.strip())
+    if found is None:
+        return None
+    start_year = 2000 + int(found.group(1))
+    if anchor is not None and start_year > anchor.year + 5:
+        start_year -= 100
+    return f"{start_year}-{found.group(2)}"
+
+
+def season_bounds(slug: str | None, anchor: date) -> tuple[date, date]:
+    """Return 1 July–30 June for a slug, or the anchor year when it has none.
+
+    Args:
+        slug: Competition route. Missing years use ``anchor`` as the July start.
+        anchor: Century check and fallback window.
+
+    Returns:
+        Inclusive start and end dates.
+    """
+    key = season_from_slug(slug or "", anchor)
+    window = season_window(key) if key is not None else None
+    if window is not None:
+        return window
+    if key is None:
+        return date(anchor.year, 7, 1), date(anchor.year + 1, 6, 30)
+    start_year = int(key[:4])
+    end_year = (start_year // 100) * 100 + int(key[-2:])
+    if end_year <= start_year:
+        end_year += 100
+    return date(start_year, 7, 1), date(end_year, 6, 30)
 
 
 def season_window(season: str) -> tuple[date, date] | None:

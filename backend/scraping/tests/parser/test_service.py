@@ -412,15 +412,12 @@ def test_markdown_golden_snapshot_matches_file(request: pytest.FixtureRequest) -
     player = SERVICE.parse_futbolfantasy(page("raphinha_laliga_26_27.html"))
     text = SERVICE.to_markdown(player)
     target = GOLDEN / "raphinha_laliga_26_27.expected.md"
-    reference = GOLDEN / "raphinha_laliga_26_27.reference.md"
     json_target = GOLDEN / "raphinha_laliga_26_27.json"
     payload = canonical_json(player)
     if request.config.getoption("--update-golden"):
         target.write_text(text, encoding="utf-8")
-        reference.write_text(text, encoding="utf-8")
         json_target.write_text(payload, encoding="utf-8")
     assert target.read_text(encoding="utf-8") == text
-    assert reference.read_text(encoding="utf-8") == text
     assert json_target.read_text(encoding="utf-8") == payload
 
 

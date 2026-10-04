@@ -2,9 +2,12 @@
 
 from fantasy_scraping.parser.errors import ParseError
 from fantasy_scraping.parser.extractors.base import sort_warnings
-from fantasy_scraping.parser.models.common import Competition, PartialParseWarning
-from fantasy_scraping.parser.models.futbolfantasy import FutbolFantasyPlayer, RecentMatch
-from fantasy_scraping.parser.models.stats import DaznStats
+from fantasy_scraping.parser.models.common import Competition, PartialParseWarning, warning
+from fantasy_scraping.parser.models.futbolfantasy import (
+    FutbolFantasyPlayer,
+    RecentMatch,
+    same_fixture,
+)
 
 
 def merge_competitions(pages: list[FutbolFantasyPlayer]) -> FutbolFantasyPlayer:
@@ -49,7 +52,7 @@ def merge_competitions(pages: list[FutbolFantasyPlayer]) -> FutbolFantasyPlayer:
             and not any(item.code == "competition_join_ambiguous" for item in join_warnings)
         ):
             warnings.append(
-                PartialParseWarning(
+                warning(
                     code="competition_page_missing",
                     section="matches.recent",
                     path="matches.recent.stats",
@@ -59,7 +62,7 @@ def merge_competitions(pages: list[FutbolFantasyPlayer]) -> FutbolFantasyPlayer:
                 )
             )
             warnings.append(
-                PartialParseWarning(
+                warning(
                     code="competition_unresolved",
                     section="matches.recent",
                     path="matches.recent.competition",
@@ -99,7 +102,7 @@ def _fill_recent(
     matches = _candidates(row, pages)
     if len(matches) > 1:
         return row, [
-            PartialParseWarning(
+            warning(
                 code="competition_join_ambiguous",
                 section="matches.recent",
                 path="matches.recent.stats",
@@ -134,10 +137,7 @@ def _candidates(row: RecentMatch, pages: list[FutbolFantasyPlayer]) -> list[obje
         if slug.startswith("laliga"):
             continue
         for fixture in page.fixtures:
-            if fixture.date != row.date:
-                continue
-            match = fixture.match
-            if match.home_goals == score.home and match.away_goals == score.away:
+            if same_fixture(fixture, on=row.date, score=score):
                 found.append(fixture)
     return found
 
@@ -146,9 +146,3 @@ def _min_date() -> object:
     from datetime import date
 
     return date.min
-
-
-def stats_of(row: object) -> DaznStats | None:
-    """Return fixture stats when the object has them."""
-    stats = getattr(row, "stats", None)
-    return stats if isinstance(stats, DaznStats) else None

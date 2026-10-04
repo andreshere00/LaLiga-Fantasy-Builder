@@ -1,7 +1,8 @@
 """Parser entry points."""
 
 import re
-from collections.abc import Sequence
+from collections.abc import Callable, Sequence
+from typing import Literal, TypeVar
 from urllib.parse import urlparse
 
 from fantasy_scraping.models.page import PageKind, ScrapedPage, Source
@@ -36,21 +37,24 @@ from fantasy_scraping.parser.markdown.renderer import to_markdown
 from fantasy_scraping.parser.markdown.report import render_player_report
 from fantasy_scraping.parser.merge import merge_competitions
 from fantasy_scraping.parser.models.futbolfantasy import (
+    FixtureRow,
     FutbolFantasyPlayer,
     MatchesBlock,
     PlayerProfile,
     RecentMatch,
+    same_fixture,
 )
 from fantasy_scraping.parser.models.parsed import ParsedPlayer
 from fantasy_scraping.parser.models.stats import DaznStats
 from fantasy_scraping.parser.models.supplement import FantasySupplement
+from fantasy_scraping.parser.normalise.dates import madrid_date, season_from_slug
 from fantasy_scraping.parser.normalise.minutes import minutes_note
 from fantasy_scraping.parser.rules.loader import RuleRepository
 from fantasy_scraping.parser.rules.schema import RuleSet
 from fantasy_scraping.parser.settings import CORE_SECTIONS, ParserSettings
 
-_SEASON = re.compile(r"(\d{2})-(\d{2})$")
 _PAGE_SEASON = re.compile(r"(\d{4})-(\d{2})")
+T = TypeVar("T")
 _DERIVE: tuple[tuple[str, str, str], ...] = (
     ("participation", "minutes", "minutes_played"),
     ("attack", "goals", "goals"),
@@ -198,30 +202,33 @@ class ParserService:
         self._assert_player(ctx)
         failed: list[str] = []
         identity = extract_identity(ctx)
-        personal = self._core(ctx, "profile.personal", extract_personal, failed)
-        matches = self._core(ctx, "matches.recent", extract_matches, failed)
-        season = self._core(ctx, "season_stats", extract_season_stats, failed)
-        try:
-            fixtures = extract_fixtures(ctx, is_goalkeeper=identity.position_code == "POR")
-        except ParserSectionError:
+        personal = self._isolate(ctx, extract_personal, section="profile.personal", failed=failed)
+        matches = self._isolate(ctx, extract_matches, section="matches.recent", failed=failed)
+        season = self._isolate(ctx, extract_season_stats, section="season_stats", failed=failed)
+        fixtures = self._isolate(
+            ctx,
+            lambda current: extract_fixtures(
+                current, is_goalkeeper=identity.position_code == "POR"
+            ),
+            section="fixtures",
+            failed=failed,
+            message="fixtures table missing",
+        )
+        if fixtures is None:
             fixtures = []
-            failed.append("fixtures")
-            ctx.warn(
-                code="required_anchor_missing",
-                section="fixtures",
-                path="fixtures",
-                rule_id="fixtures",
-                message="fixtures table missing",
-                severity="error",
-            )
         if len(set(failed) & set(CORE_SECTIONS)) > self.settings.max_failed_core_sections:
             raise UnsupportedLayoutError("layout_drift", "layout drift", section="meta")
         if matches is None:
             matches = MatchesBlock()
-        if matches is not None:
-            matches = _link_recent(ctx, matches, fixtures)
+        matches = _link_recent(ctx, matches, fixtures)
         season = _derive(ctx, season, fixtures)
-        history = _optional(ctx, extract_injuries)
+        history = self._isolate(
+            ctx,
+            extract_injuries,
+            section="injuries",
+            path="profile.injury_history",
+            severity="warning",
+        )
         profile = PlayerProfile(
             identity=identity,
             injury=extract_injury(ctx),
@@ -297,11 +304,11 @@ class ParserService:
 
     def _check_season(self, page: ScrapedPage) -> None:
         slug = page.season_slug or urlparse(page.url).path.rstrip("/").split("/")[-1]
-        found = _SEASON.search(slug)
+        parsed = season_from_slug(slug, madrid_date(page.fetched_at))
         expected = _PAGE_SEASON.fullmatch(page.season.strip())
-        if found is None or expected is None:
+        if parsed is None or expected is None:
             return
-        if found.group(1) != expected.group(1)[-2:] or found.group(2) != expected.group(2):
+        if parsed != expected.group(0):
             raise ParseError("season_mismatch", "season mismatch", section="meta")
 
     def _assert_player(self, ctx: ExtractionContext) -> None:
@@ -319,47 +326,39 @@ class ParserService:
         if not named or not (slug or anchors):
             raise ParseError("not_a_player_page", "not a player page", section="identity")
 
-    def _core(
+    def _isolate(
         self,
         ctx: ExtractionContext,
+        extractor: Callable[[ExtractionContext], T],
+        *,
         section: str,
-        extractor: object,
-        failed: list[str],
-    ) -> object:
+        failed: list[str] | None = None,
+        path: str | None = None,
+        severity: Literal["info", "warning", "error"] = "error",
+        message: str = "required section missing",
+    ) -> T | None:
+        """Run one extractor and record a section failure instead of raising."""
+        target = path or section
         try:
-            return extractor(ctx)  # type: ignore[operator]
+            return extractor(ctx)
         except ParserSectionError:
-            failed.append(section)
+            if failed is not None:
+                failed.append(section)
             ctx.warn(
                 code="required_anchor_missing",
                 section=section,
-                path=section,
-                rule_id=section,
-                message="required section missing",
-                severity="error",
+                path=target,
+                rule_id=target,
+                message=message,
+                severity=severity,
             )
             return None
-
-
-def _optional(ctx: ExtractionContext, extractor: object) -> object:
-    try:
-        return extractor(ctx)  # type: ignore[operator]
-    except ParserSectionError:
-        ctx.warn(
-            code="required_anchor_missing",
-            section="injuries",
-            path="profile.injury_history",
-            rule_id="profile.injury_history",
-            message="required section missing",
-            severity="warning",
-        )
-        return None
 
 
 def _link_recent(
     ctx: ExtractionContext,
     matches: MatchesBlock,
-    fixtures: list[object],
+    fixtures: list[FixtureRow],
 ) -> MatchesBlock:
     linked: list[RecentMatch] = []
     resolved: set[int] = set()
@@ -369,7 +368,7 @@ def _link_recent(
             linked.append(recent)
             continue
         note = recent.minutes
-        if note.event == "subbed_off" and getattr(fixture, "starter", False):
+        if note.event == "subbed_off" and fixture.starter:
             note = minutes_note(note.raw, starter=True)
             resolved.add(index)
         linked.append(
@@ -392,12 +391,9 @@ def _link_recent(
     return matches.model_copy(update={"recent": linked})
 
 
-def _match_fixture(recent: RecentMatch, fixtures: list[object]) -> object | None:
+def _match_fixture(recent: RecentMatch, fixtures: list[FixtureRow]) -> FixtureRow | None:
     for fixture in fixtures:
-        if getattr(fixture, "date", None) != recent.date or recent.score is None:
-            continue
-        match = fixture.match
-        if match.home_goals == recent.score.home and match.away_goals == recent.score.away:
+        if same_fixture(fixture, on=recent.date, score=recent.score):
             return fixture
     return None
 

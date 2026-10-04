@@ -10,7 +10,6 @@ from fantasy_scraping.parser.markdown.report import (
     _line_points,
     _market_preset,
     _match_result,
-    _season_bounds,
     render_player_report,
 )
 from fantasy_scraping.parser.models.common import MinutesNote
@@ -27,6 +26,7 @@ from fantasy_scraping.parser.models.supplement import (
     FantasyWeek,
     UpcomingContext,
 )
+from fantasy_scraping.parser.normalise.dates import season_bounds
 from fantasy_scraping.parser.rules.loader import RuleRepository
 from fantasy_scraping.parser.service import ParserService
 from support import page
@@ -178,7 +178,7 @@ def test_market_preset_window_outside_history() -> None:
 
 
 def test_season_bounds_without_slug_uses_anchor_year() -> None:
-    start, end = _season_bounds(None, date(2028, 3, 1))
+    start, end = season_bounds(None, date(2028, 3, 1))
     assert start == date(2028, 7, 1)
     assert end == date(2029, 6, 30)
 

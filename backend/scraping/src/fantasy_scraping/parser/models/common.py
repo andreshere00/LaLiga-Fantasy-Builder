@@ -65,6 +65,44 @@ class PartialParseWarning(ParserModel):
     index: int = 0
 
 
+def warning(
+    *,
+    code: str,
+    section: str,
+    path: str,
+    rule_id: str,
+    message: str,
+    severity: Literal["info", "warning", "error"] = "warning",
+    preview: str | None = None,
+    index: int = 0,
+) -> PartialParseWarning:
+    """Build one section warning.
+
+    Args:
+        code: Stable warning code.
+        section: Section id used for sort order.
+        path: Dotted JSON path.
+        rule_id: Rule or field that produced the warning.
+        message: Constant text. Must not quote the page.
+        severity: ``info``, ``warning``, or ``error``.
+        preview: Cleaned text, at most 40 characters.
+        index: Row index when the warning is per row.
+
+    Returns:
+        The warning model.
+    """
+    return PartialParseWarning(
+        code=code,
+        section=section,
+        path=path,
+        rule_id=rule_id,
+        message=message,
+        severity=severity,
+        preview=preview,
+        index=index,
+    )
+
+
 class JsonLdPerson(ParserModel):
     """Person node read from JSON-LD. Used to fill gaps and to cross-check."""
 

@@ -1,6 +1,6 @@
 """Short hierarchical player report in Spanish."""
 
-import re
+from collections.abc import Callable
 from datetime import date, timedelta
 
 from fantasy_scraping.parser.errors import RenderError
@@ -22,6 +22,7 @@ from fantasy_scraping.parser.models.futbolfantasy import (
 )
 from fantasy_scraping.parser.models.stats import DaznStats, StatLine
 from fantasy_scraping.parser.models.supplement import FantasySupplement, FantasyWeek
+from fantasy_scraping.parser.normalise.dates import season_bounds, season_from_slug
 from fantasy_scraping.parser.rules.schema import RuleSet
 
 _COMPETITION_LABELS: dict[Competition, str] = {
@@ -63,8 +64,6 @@ _MARKET_PRESETS: tuple[tuple[str, str, int | None], ...] = (
     ("10 días atrás", "days", 10),
     ("5 días atrás", "days", 5),
 )
-
-_SEASON_SLUG = re.compile(r"(\d{2})-(\d{2})")
 
 
 def render_player_report(
@@ -274,25 +273,30 @@ def _competition_label(competition: Competition) -> str:
     return _COMPETITION_LABELS.get(competition, "Otros")
 
 
-def _dazn_stats_table(stats: DaznStats | None) -> list[str]:
-    rows = []
-    for label, field, _ in _STAT_ROWS:
-        line = getattr(stats, field, None) if stats is not None else None
-        if not isinstance(line, StatLine):
-            line = None
-        rows.append([cell(label), cell(_line_count(line)), cell(_line_points(line))])
+def _stat_table(values: Callable[[str, str | None], tuple[str, str]]) -> list[str]:
+    rows: list[list[str]] = []
+    for label, field, fantasy_key in _STAT_ROWS:
+        count, points = values(field, fantasy_key)
+        rows.append([cell(label), cell(count), cell(points)])
     return table(["Métrica", "Conteo", "Puntos"], ["---", "---:", "---:"], rows)
+
+
+def _dazn_stats_table(stats: DaznStats | None) -> list[str]:
+    def values(field: str, _fantasy_key: str | None) -> tuple[str, str]:
+        raw = getattr(stats, field, None) if stats is not None else None
+        line = raw if isinstance(raw, StatLine) else None
+        return _line_count(line), _line_points(line)
+
+    return _stat_table(values)
 
 
 def _fantasy_stats_table(week: FantasyWeek) -> list[str]:
-    rows = []
-    for label, _field, fantasy_key in _STAT_ROWS:
+    def values(_field: str, fantasy_key: str | None) -> tuple[str, str]:
         if fantasy_key is None:
-            rows.append([cell(label), cell("—"), cell("—")])
-            continue
-        count, points = _fantasy_pair(week.stats.get(fantasy_key))
-        rows.append([cell(label), cell(count), cell(points)])
-    return table(["Métrica", "Conteo", "Puntos"], ["---", "---:", "---:"], rows)
+            return "—", "—"
+        return _fantasy_pair(week.stats.get(fantasy_key))
+
+    return _stat_table(values)
 
 
 def _line_count(line: StatLine | None) -> str:
@@ -338,10 +342,10 @@ def _market_preset(
     last = ordered[-1].date
     window_end = min(anchor, last)
     if kind == "season":
-        if _SEASON_SLUG.search(season_url or "") is None:
+        if season_from_slug(season_url or "") is None:
             window_start = ordered[0].date
         else:
-            window_start, season_end = _season_bounds(season_url, window_end)
+            window_start, season_end = season_bounds(season_url, window_end)
             window_end = min(window_end, season_end)
     elif days is not None:
         window_start = window_end - timedelta(days=days)
@@ -362,17 +366,3 @@ def _market_preset(
         fmt_signed(delta_abs),
         "—" if delta_rel is None else f"{fmt_signed_decimal(delta_rel)} %",
     )
-
-
-def _season_bounds(season_url: str | None, anchor: date) -> tuple[date, date]:
-    slug = season_url or ""
-    found = _SEASON_SLUG.search(slug)
-    if found is None:
-        return date(anchor.year, 7, 1), date(anchor.year + 1, 6, 30)
-    start_yy = int(found.group(1))
-    end_yy = int(found.group(2))
-    start_year = 2000 + start_yy
-    if start_year > anchor.year + 5:
-        start_year -= 100
-    end_year = start_year + 1 if end_yy == (start_yy + 1) % 100 else 2000 + end_yy
-    return date(start_year, 7, 1), date(end_year, 6, 30)

@@ -3,10 +3,10 @@
 import re
 
 from fantasy_scraping.parser.errors import NormaliseError, ParserSectionError
-from fantasy_scraping.parser.extractors.base import ExtractionContext, column_values, rows_of
+from fantasy_scraping.parser.extractors.base import ExtractionContext, rows_with_dates
 from fantasy_scraping.parser.models.common import Competition, MinutesNote, Score
 from fantasy_scraping.parser.models.futbolfantasy import MatchesBlock, RecentMatch, UpcomingMatch
-from fantasy_scraping.parser.normalise.dates import day_month, resolve_sequence
+from fantasy_scraping.parser.normalise.dates import day_month
 from fantasy_scraping.parser.normalise.minutes import minutes_note
 from fantasy_scraping.parser.normalise.text import casefold_key
 
@@ -37,39 +37,11 @@ def extract_matches(ctx: ExtractionContext) -> MatchesBlock:
 
 
 def _recent(ctx: ExtractionContext) -> list[RecentMatch]:
-    spec = ctx.table("recent")
-    raw_rows = rows_of(ctx, spec)
-    parsed: list[tuple[object, dict[str, object]]] = []
-    pairs: list[tuple[int, int]] = []
-    for index, row in enumerate(raw_rows):
-        columns = column_values(ctx, row, spec)
-        raw_date = columns.get("date")
-        if not isinstance(raw_date, str):
-            ctx.warn(
-                code="row_dropped",
-                section="matches.recent",
-                path="matches.recent",
-                rule_id="matches.recent",
-                message="row dropped",
-                index=index,
-            )
-            continue
-        try:
-            pairs.append(day_month(raw_date))
-        except NormaliseError:
-            ctx.warn(
-                code="row_dropped",
-                section="matches.recent",
-                path="matches.recent",
-                rule_id="matches.recent",
-                message="row dropped",
-                index=index,
-            )
-            continue
-        parsed.append((row, columns))
-    dates = resolve_sequence(pairs, ctx.page.fetched_at, "recent") if pairs else []
+    dated = rows_with_dates(ctx, ctx.table("recent"), section="matches.recent", direction="recent")
     matches: list[RecentMatch] = []
-    for index, ((row, columns), when) in enumerate(zip(parsed, dates, strict=True)):
+    for index, (_, columns, when) in enumerate(dated):
+        if when is None:
+            continue
         score = _score(str(columns.get("score") or ""))
         raw_minutes = str(columns.get("minutes") or "")
         note = minutes_note(raw_minutes, starter=False)
@@ -82,7 +54,6 @@ def _recent(ctx: ExtractionContext) -> list[RecentMatch]:
                 message="minutes need a starter flag",
                 index=index,
             )
-        _ = row
         matches.append(
             RecentMatch(
                 date=when,
@@ -107,39 +78,14 @@ def _upcoming(ctx: ExtractionContext) -> list[UpcomingMatch]:
             message="expected field missing",
         )
         return []
-    spec = ctx.table("upcoming")
-    kept: list[dict[str, object]] = []
-    pairs: list[tuple[int, int]] = []
-    for index, row in enumerate(rows_of(ctx, spec)):
-        columns = column_values(ctx, row, spec)
-        raw_date = columns.get("date")
-        if not isinstance(raw_date, str):
-            ctx.warn(
-                code="row_dropped",
-                section="matches.upcoming",
-                path="matches.upcoming",
-                rule_id="matches.upcoming",
-                message="row dropped",
-                index=index,
-            )
-            continue
-        try:
-            pairs.append(day_month(raw_date))
-        except NormaliseError:
-            ctx.warn(
-                code="row_dropped",
-                section="matches.upcoming",
-                path="matches.upcoming",
-                rule_id="matches.upcoming",
-                message="row dropped",
-                index=index,
-            )
-            continue
-        kept.append(columns)
-    dates = resolve_sequence(pairs, ctx.page.fetched_at, "upcoming") if pairs else []
+    dated = rows_with_dates(
+        ctx, ctx.table("upcoming"), section="matches.upcoming", direction="upcoming"
+    )
     partidos = _partidos(ctx)
     matches: list[UpcomingMatch] = []
-    for when, columns in zip(dates, kept, strict=True):
+    for _, columns, when in dated:
+        if when is None:
+            continue
         kickoff = columns.get("kickoff") if isinstance(columns.get("kickoff"), str) else None
         competition, raw = _competition_for(ctx, when, kickoff, partidos)
         matches.append(

@@ -2,7 +2,8 @@
 
 from collections.abc import Callable
 from dataclasses import dataclass, field
-from typing import Any
+from datetime import date
+from typing import Any, Literal
 from urllib.parse import urljoin, urlparse
 
 from lxml.html import HtmlElement
@@ -12,7 +13,8 @@ from fantasy_scraping.parser.dom.document import HtmlDocument
 from fantasy_scraping.parser.dom.locators import apply_locator, node_text, read_value
 from fantasy_scraping.parser.dom.tables import cell_text, row_nodes
 from fantasy_scraping.parser.errors import NormaliseError, ParseError
-from fantasy_scraping.parser.models.common import JsonLdPerson, PartialParseWarning
+from fantasy_scraping.parser.models.common import JsonLdPerson, PartialParseWarning, warning
+from fantasy_scraping.parser.normalise.dates import day_month, resolve_sequence
 from fantasy_scraping.parser.normalise.registry import REGISTRY
 from fantasy_scraping.parser.normalise.text import casefold_key, clean_text
 from fantasy_scraping.parser.rules.schema import ExtractRule, RuleSet, TableSpec
@@ -62,20 +64,20 @@ class ExtractionContext:
         path: str,
         rule_id: str,
         message: str,
-        severity: str = "warning",
+        severity: Literal["info", "warning", "error"] = "warning",
         preview: str | None = None,
         index: int = 0,
     ) -> None:
         """Record a warning. Preview is cleaned and capped at 40 characters."""
         shown = clean_text(preview)[:40] if preview else None
         self.warnings.append(
-            PartialParseWarning(
+            warning(
                 code=code,
                 section=section,
                 path=path,
                 rule_id=rule_id,
                 message=message,
-                severity=severity,  # type: ignore[arg-type]
+                severity=severity,
                 preview=shown or None,
                 index=index,
             )
@@ -195,6 +197,84 @@ def rows_of(ctx: ExtractionContext, spec: TableSpec) -> list[HtmlElement]:
     """Return capped row nodes for a table spec."""
     selector = spec.row_locator.removeprefix("css:")
     return row_nodes(ctx.document, selector, ctx.settings.max_rows)
+
+
+def rows_with_dates(
+    ctx: ExtractionContext,
+    spec: TableSpec,
+    *,
+    section: str,
+    direction: str,
+    accept: Callable[[dict[str, Any]], bool] | None = None,
+    require_date: bool = True,
+) -> list[tuple[HtmlElement, dict[str, Any], date | None]]:
+    """Read table rows and resolve day/month cells against ``fetched_at``.
+
+    Args:
+        ctx: Extraction context.
+        spec: Table locator.
+        section: Warning section, path, and rule id.
+        direction: ``recent`` or ``upcoming``.
+        accept: When set, a false result drops the row before the date is read.
+        require_date: When false, a missing or invalid date is kept as ``None``.
+
+    Returns:
+        Kept rows with the document node, column values, and resolved date.
+    """
+    pending: list[tuple[HtmlElement, dict[str, Any], int | None]] = []
+    pairs: list[tuple[int, int]] = []
+    for index, row in enumerate(rows_of(ctx, spec)):
+        columns = column_values(ctx, row, spec)
+        if accept is not None and not accept(columns):
+            _drop_row(ctx, section, index)
+            continue
+        slot = _date_slot(ctx, columns.get("date"), pairs, section, index, require_date)
+        if slot is _SKIP:
+            continue
+        pending.append((row, columns, slot if isinstance(slot, int) else None))
+    resolved = resolve_sequence(pairs, ctx.page.fetched_at, direction) if pairs else []
+    return [
+        (row, columns, resolved[slot] if slot is not None else None)
+        for row, columns, slot in pending
+    ]
+
+
+_SKIP: object = object()
+
+
+def _drop_row(ctx: ExtractionContext, section: str, index: int) -> None:
+    ctx.warn(
+        code="row_dropped",
+        section=section,
+        path=section,
+        rule_id=section,
+        message="row dropped",
+        index=index,
+    )
+
+
+def _date_slot(
+    ctx: ExtractionContext,
+    raw_date: object,
+    pairs: list[tuple[int, int]],
+    section: str,
+    index: int,
+    require_date: bool,
+) -> int | None | object:
+    """Return the pair index, ``None`` when the date is absent, or ``_SKIP``."""
+    if isinstance(raw_date, str) and raw_date.strip():
+        try:
+            pairs.append(day_month(raw_date))
+        except NormaliseError:
+            if require_date:
+                _drop_row(ctx, section, index)
+                return _SKIP
+            return None
+        return len(pairs) - 1
+    if require_date:
+        _drop_row(ctx, section, index)
+        return _SKIP
+    return None
 
 
 def label_pairs(scope: HtmlElement) -> list[tuple[str, str]]:
