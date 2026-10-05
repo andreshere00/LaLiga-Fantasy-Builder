@@ -36,6 +36,7 @@ from fantasy_scraping.parser.rules.schema import EventRule
 
 _MATCH = re.compile(r"([A-Za-z]{2,4})\s+(\d+)\s*[-–−]\s*(\d+)\s+([A-Za-z]{2,4})")
 _LAYER_POINTS = re.compile(r"^(\d+)\s+(.+?)\s*(?:→|->)\s*([+-]?\d+)\s+p$")
+_LAYER_POINTS_LOOSE = re.compile(r"^(\d+)\s+(.+?)\s+([+-]?\d+)\s+p$")
 _LAYER_PAIR = re.compile(r"^(.+?)\s+\((\d+)/(\d+)\)$")
 _LAYER_COUNT = re.compile(r"^(.+?)\s+\((\d+)\)$")
 _GK_FIELDS = {"penalties_saved", "saves"}
@@ -104,6 +105,7 @@ def extract_fixtures(ctx: ExtractionContext, *, is_goalkeeper: bool) -> list[Fix
                 index=index,
             )
         payload = payloads[index] if index < len(payloads) else None
+        official_nodes = _official_layer_nodes(row)
         stats, layers, extra = _stats(
             ctx,
             row,
@@ -112,7 +114,18 @@ def extract_fixtures(ctx: ExtractionContext, *, is_goalkeeper: bool) -> list[Fix
             is_goalkeeper=is_goalkeeper,
             is_laliga=is_laliga,
             dazn=columns.get("dazn") if isinstance(columns.get("dazn"), int) else None,
+            official_nodes=official_nodes,
         )
+        scored_minutes = stats.minutes_played.count
+        if scored_minutes is not None and note.minutes != scored_minutes:
+            note = note.model_copy(
+                update={
+                    "minutes": scored_minutes,
+                    "minute": scored_minutes,
+                    "event": "full" if note.event == "unknown" else note.event,
+                    "raw": note.raw or f"{scored_minutes}'",
+                }
+            )
         icons, unknown = _icons(ctx, row)
         if unknown:
             ctx.warn(
@@ -235,6 +248,14 @@ def _icons(ctx: ExtractionContext, row: HtmlElement) -> tuple[list[IconEvent], b
     return icons, unknown
 
 
+def _official_layer_nodes(row: HtmlElement) -> list[HtmlElement]:
+    """LaLiga Fantasy lines on the following breakdown row."""
+    sibling = row.getnext()
+    if sibling is None or "desglose" not in (sibling.get("class") or "").split():
+        return []
+    return list(sibling.cssselect("div.desg.laliga-fantasy div.estadistica"))
+
+
 def _stats(
     ctx: ExtractionContext,
     row: HtmlElement,
@@ -244,9 +265,11 @@ def _stats(
     is_goalkeeper: bool,
     is_laliga: bool,
     dazn: int | None,
+    official_nodes: list[HtmlElement] | None = None,
 ) -> tuple[DaznStats, FixtureLayers | None, list[EventStat]]:
     counts = _stat_counts(row)
-    layer_nodes = row.cssselect("div.estadistica")
+    official = bool(official_nodes)
+    layer_nodes = official_nodes if official else row.cssselect("div.estadistica")
     layer_present = bool(layer_nodes)
     points_by_field: dict[str, float] = {}
     count_by_field: dict[str, int] = {}
@@ -273,17 +296,31 @@ def _stats(
             payload,
             layer_present,
             is_goalkeeper,
+            official=official,
         )
-    values["shots"] = _shots(counts, count_by_field, points_by_field, payload, layer_present)
+    values["shots"] = _shots(
+        counts,
+        count_by_field,
+        points_by_field,
+        payload,
+        layer_present,
+        official=official,
+    )
+    scored_minutes = count_by_field.get("minutes_played") if official else None
+    minute_count = scored_minutes if scored_minutes is not None else note_minutes
     values["minutes_played"] = line(
-        count=note_minutes,
-        points=points_by_field.get("minutes_played", 0.0),
-        status="ok" if note_minutes is not None else "unavailable",
-        source="futbolfantasy" if note_minutes is not None else None,
-        reason=None if note_minutes is not None else "minutes_assumed_unknown",
+        count=minute_count,
+        points=_layer_points(points_by_field, "minutes_played"),
+        status="ok" if minute_count is not None else "unavailable",
+        source="futbolfantasy" if minute_count is not None else None,
+        reason=None if minute_count is not None else "minutes_assumed_unknown",
     )
     if is_laliga:
-        values["dazn_points"] = line(count=None, points=float(dazn or 0), status="ok")
+        values["dazn_points"] = line(
+            count=None,
+            points=float(dazn) if dazn is not None else None,
+            status="ok",
+        )
     else:
         values["dazn_points"] = unavailable("league_only")
     layers = None
@@ -296,6 +333,10 @@ def _stats(
     return DaznStats(**values), layers, extra  # type: ignore[arg-type]
 
 
+def _layer_points(points: dict[str, float], field_name: str) -> float | None:
+    return points.get(field_name)
+
+
 def _field_from_specs(
     field_name: str,
     specs: list[object],
@@ -305,6 +346,7 @@ def _field_from_specs(
     payload: dict[str, object] | None,
     layer_present: bool,
     is_goalkeeper: bool,
+    official: bool = False,
 ) -> object:
     from fantasy_scraping.parser.rules.schema import StatSlug
 
@@ -313,19 +355,33 @@ def _field_from_specs(
         spec.slug in counts or (spec.json_key and payload and spec.json_key in payload)
         for spec in typed
     )
+    if official and field_name in from_layer:
+        return line(
+            count=from_layer[field_name],
+            points=_layer_points(points, field_name),
+            status="ok",
+        )
     goalkeeper_only = field_name in _GK_FIELDS and not is_goalkeeper
     if goalkeeper_only and field_name not in from_layer and not published:
         return not_applicable()
     for spec in typed:
         if spec.slug in counts:
-            return line(count=counts[spec.slug], points=points.get(field_name, 0.0), status="ok")
+            return line(
+                count=counts[spec.slug],
+                points=_layer_points(points, field_name),
+                status="ok",
+            )
     if field_name in from_layer:
-        return line(count=from_layer[field_name], points=points.get(field_name, 0.0), status="ok")
+        return line(
+            count=from_layer[field_name],
+            points=_layer_points(points, field_name),
+            status="ok",
+        )
     for spec in typed:
         if payload is not None and spec.json_key and isinstance(payload.get(spec.json_key), int):
             return line(
                 count=int(payload[spec.json_key]),
-                points=points.get(field_name, 0.0),
+                points=_layer_points(points, field_name),
                 status="ok",
             )
     return implied_zero() if layer_present else unavailable("layer_missing")
@@ -337,18 +393,44 @@ def _shots(
     points: dict[str, float],
     payload: dict[str, object] | None,
     layer_present: bool,
+    official: bool = False,
 ) -> object:
+    if official and "shots" in from_layer:
+        return line(
+            count=from_layer["shots"],
+            points=_layer_points(points, "shots"),
+            status="ok",
+        )
+    on_target = payload.get("tiros_puerta") if payload is not None else None
+    if isinstance(on_target, int):
+        return line(
+            count=on_target,
+            points=_layer_points(points, "shots"),
+            status="ok",
+        )
     if "tiros-totales" in counts:
-        return line(count=counts["tiros-totales"], points=points.get("shots", 0.0), status="ok")
+        return line(
+            count=counts["tiros-totales"],
+            points=_layer_points(points, "shots"),
+            status="ok",
+        )
     if "shots" in from_layer:
-        return line(count=from_layer["shots"], points=points.get("shots", 0.0), status="ok")
+        return line(
+            count=from_layer["shots"],
+            points=_layer_points(points, "shots"),
+            status="ok",
+        )
     if payload is not None and isinstance(payload.get("tiros"), int):
-        return line(count=int(payload["tiros"]), points=points.get("shots", 0.0), status="ok")
+        return line(
+            count=int(payload["tiros"]),
+            points=_layer_points(points, "shots"),
+            status="ok",
+        )
     json_parts = _json_shot_parts(payload)
     if json_parts:
         return line(
             count=sum(json_parts),
-            points=points.get("shots", 0.0),
+            points=_layer_points(points, "shots"),
             status="partial",
             reason="no_per_match_total",
         )
@@ -356,7 +438,7 @@ def _shots(
     if parts:
         return line(
             count=sum(parts),
-            points=points.get("shots", 0.0),
+            points=_layer_points(points, "shots"),
             status="partial",
             reason="no_per_match_total",
         )
@@ -395,7 +477,7 @@ def _read_layer(
     extra: list[EventStat],
 ) -> None:
     cleaned = clean_text(map_minuses(text))
-    points_match = _LAYER_POINTS.fullmatch(cleaned)
+    points_match = _LAYER_POINTS.fullmatch(cleaned) or _LAYER_POINTS_LOOSE.fullmatch(cleaned)
     if points_match:
         count = int(points_match.group(1))
         label = points_match.group(2)
@@ -460,13 +542,19 @@ def _event_for(ctx: ExtractionContext, label: str) -> EventRule | None:
 
 def _check_point_sums(ctx: ExtractionContext, fixtures: list[FixtureRow]) -> None:
     for index, fixture in enumerate(fixtures):
-        total = 0.0
+        actions = 0.0
+        dazn = 0.0
         for name in type(fixture.stats).model_fields:
-            if name == "dazn_points":
-                continue
             stat = getattr(fixture.stats, name)
-            total += float(stat.points)
-        if fixture.week_points is not None and int(total) != fixture.week_points:
+            if stat.points is None:
+                continue
+            if name == "dazn_points":
+                dazn += float(stat.points)
+            else:
+                actions += float(stat.points)
+        week = fixture.week_points
+        matches = week is not None and (int(actions) == week or int(actions + dazn) == week)
+        if week is not None and not matches:
             ctx.warn(
                 code="points_total_mismatch",
                 section="fixtures",

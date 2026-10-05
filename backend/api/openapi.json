@@ -9343,14 +9343,26 @@
             "title": "Count"
           },
           "fantasy_points": {
-            "type": "integer",
-            "title": "Fantasy Points",
-            "default": 0
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Fantasy Points"
           },
           "dazn_points": {
-            "type": "integer",
-            "title": "Dazn Points",
-            "default": 0
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Dazn Points"
           },
           "source": {
             "$ref": "#/components/schemas/StatSource",

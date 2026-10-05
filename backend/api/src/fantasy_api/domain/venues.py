@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import json
+import re
 from dataclasses import dataclass
 from functools import lru_cache
 from pathlib import Path
@@ -70,9 +71,14 @@ class VenueDirectory:
         if fantasy_id is not None and fantasy_id in self._by_id:
             return self._by_id[fantasy_id]
         if name:
-            hit = self._by_alias.get(name.casefold())
+            key = name.casefold()
+            hit = self._by_alias.get(key)
             if hit:
                 return hit
+            for entry in self._entries:
+                haystack = entry.name.casefold()
+                if re.search(rf"\b{re.escape(key)}\b", haystack):
+                    return entry
         return None
 
 

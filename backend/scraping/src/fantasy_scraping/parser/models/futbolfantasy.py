@@ -187,6 +187,7 @@ class RecentMatch(ParserModel):
     minutes: MinutesNote
     stats: DaznStats | None = None
     stats_source: Literal["futbolfantasy"] | None = None
+    week_points: int | None = None
 
 
 class UpcomingMatch(ParserModel):

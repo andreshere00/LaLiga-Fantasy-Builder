@@ -49,11 +49,18 @@ def test_side_maps_live_home_and_away_tokens() -> None:
     assert _side("visitante") == "away"
 
 
-def test_shots_sums_json_components_when_total_missing() -> None:
+def test_shots_prefers_shots_on_target_over_component_sum() -> None:
     payload = {"tiros_puerta": 2, "tiros_palo": 1, "tiros_bloqueados": 1}
     result = _shots({}, {}, {}, payload, layer_present=True)
+    assert result.status == "ok"
+    assert result.count == 2
+
+
+def test_shots_sums_json_components_when_on_target_missing() -> None:
+    payload = {"tiros_palo": 1, "tiros_bloqueados": 1}
+    result = _shots({}, {}, {}, payload, layer_present=True)
     assert result.status == "partial"
-    assert result.count == 4
+    assert result.count == 2
     assert result.reason == "no_per_match_total"
 
 
@@ -79,6 +86,57 @@ def test_read_layer_clear_chances_pair_fills_dazn_field() -> None:
     )
     assert counts["big_chances_created"] == 1
     assert len(events) == 2
+
+
+def test_parse_fragment_official_layer_fills_scored_minutes_and_points() -> None:
+    html = """
+    <html><head>
+    <link rel="canonical" href="https://www.futbolfantasy.com/jugadores/raphinha/laliga-26-27">
+    </head><body>
+    <h1><span class="name">Raphinha</span><span class="pos">DEL</span></h1>
+    <a class="club" href="/equipos/barcelona">FC Barcelona</a>
+    <ul class="ultimos"></ul>
+    <div id="profile-stats-puntos"><div class="statsglobales">
+      <div class="bigstat"><span class="label">Minutos jugados</span><span
+          class="value">90</span></div>
+    </div></div>
+    <table class="partidos"><thead><tr><th>J</th></tr></thead><tbody>
+      <tr class="plegado">
+        <td class="fecha">06/09</td><td class="jornada">4</td><td class="partido">VAL 0-5 BAR</td>
+        <td class="salida"></td><td class="lado">visitante</td><td class="puntos">8</td>
+        <td class="dazn">2</td>
+        <td><span class="stat-val stat-tiros-totales">3</span></td>
+      </tr>
+      <tr class="desglose">
+        <td colspan="5">
+          <div class="desg laliga-fantasy">
+            <div class="estadistica">90 Minutos jugados 2 p</div>
+            <div class="estadistica">1 Goles 4 p</div>
+            <div class="estadistica">0 Goles en contra 1 p</div>
+            <div class="estadistica">13 Posesiones perdidas -1 p</div>
+            <div class="estadistica">1 Penaltis provocados 2 p</div>
+            <div class="estadistica">4 Tiros a puerta 2 p</div>
+          </div>
+        </td>
+      </tr>
+    </tbody></table>
+    </body></html>
+    """
+    player = SERVICE.parse_futbolfantasy(page("ignored.html", html=html))
+    row = player.fixtures[0]
+    assert row.minutes_out.minutes == 90
+    assert row.stats.minutes_played.count == 90
+    assert row.stats.minutes_played.points == 2
+    assert row.stats.goals.points == 4
+    assert row.stats.goals_conceded.count == 0
+    assert row.stats.goals_conceded.points == 1
+    assert row.stats.balls_lost.count == 13
+    assert row.stats.balls_lost.points == -1
+    assert row.stats.penalties_won.count == 1
+    assert row.stats.penalties_won.points == 2
+    assert row.stats.shots.count == 4
+    assert row.stats.shots.points == 2
+    assert row.dazn_points == 2
 
 
 def test_parse_fragment_big_chances_created_not_zero() -> None:

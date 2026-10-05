@@ -28,6 +28,7 @@ _PARSER_STAT_KEYS: dict[str, StatKey] = {
     "bigChancesCreated": StatKey.BIG_CHANCES_CREATED,
     "ballsIntoBox": StatKey.BALLS_INTO_BOX,
     "penaltiesCommitted": StatKey.PENALTIES_COMMITTED,
+    "penaltiesWon": StatKey.PENALTIES_WON,
     "penaltiesSaved": StatKey.PENALTIES_SAVED,
     "saves": StatKey.SAVES,
     "clearances": StatKey.CLEARANCES,

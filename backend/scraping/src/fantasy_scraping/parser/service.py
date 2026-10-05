@@ -387,9 +387,10 @@ def _link_recent(
             update["competition"] = fixture.competition
         if recent.player_side is None:
             update["player_side"] = fixture.player_side
-        if fixture.date is not None:
-            update["stats"] = fixture.stats
-            update["stats_source"] = "futbolfantasy"
+        update["stats"] = fixture.stats
+        update["stats_source"] = "futbolfantasy"
+        if fixture.week_points is not None:
+            update["week_points"] = fixture.week_points
         linked.append(recent.model_copy(update=update))
     if resolved:
         ctx.warnings = [

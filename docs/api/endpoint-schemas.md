@@ -1416,6 +1416,7 @@ Type: `string`
 | `big_chances_created` | StatValue | no |  |  |
 | `balls_into_box` | StatValue | no |  |  |
 | `penalties_committed` | StatValue | no |  |  |
+| `penalties_won` | StatValue | no |  |  |
 | `penalties_saved` | StatValue | no |  |  |
 | `saves` | StatValue | no |  |  |
 | `clearances` | StatValue | no |  |  |

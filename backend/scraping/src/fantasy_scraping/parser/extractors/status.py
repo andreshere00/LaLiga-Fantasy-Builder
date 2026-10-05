@@ -222,13 +222,6 @@ def extract_bid(ctx: ExtractionContext) -> MaxProfitableBid | None:
     node = ctx.document.first(ctx.selector("market_bid"))
     if node is None:
         ctx.miss("profile.max_profitable_bid")
-        ctx.warn(
-            code="field_missing",
-            section="market",
-            path="profile.max_profitable_bid",
-            rule_id="profile.max_profitable_bid",
-            message="expected field missing",
-        )
         return None
     label = node_text(node)
     try:

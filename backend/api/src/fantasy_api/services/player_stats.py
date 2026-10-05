@@ -3,7 +3,8 @@
 from __future__ import annotations
 
 import asyncio
-from collections.abc import Callable
+import re
+from collections.abc import Callable, Mapping
 from datetime import UTC, date, datetime
 from typing import Any
 from zoneinfo import ZoneInfo
@@ -82,6 +83,18 @@ from fantasy_api.services.wire_map import (
 
 MADRID_TZ = ZoneInfo("Europe/Madrid")
 
+_COMPETITION_SHORT: dict[Competition, str] = {
+    Competition.LALIGA: "LEAGUE",
+    Competition.CHAMPIONS_LEAGUE: "CHAMPIONS",
+    Competition.EUROPA_LEAGUE: "EUROPA",
+    Competition.CONFERENCE_LEAGUE: "CONFERENCE",
+    Competition.COPA_DEL_REY: "COPA",
+    Competition.SUPERCOPA: "SUPERCOPA",
+    Competition.OTHER: "OTHER",
+}
+
+_DISPONIBLE_JORNADA = re.compile(r"disponible\s+para\s+la\s+jornada\s+(\d+)", re.IGNORECASE)
+
 _DETAIL_SEGMENT_ORDER: tuple[DetailSegment, ...] = (
     "fixtures",
     "market",
@@ -107,15 +120,107 @@ def _match_result(
     return MatchResult.DRAW
 
 
-def _competition_label(raw: str | None, competition: Competition) -> str | None:
-    if raw is None:
+def _competition_label(_raw: str | None, competition: Competition) -> str:
+    return _COMPETITION_SHORT.get(competition, "OTHER")
+
+
+def _display_club_name(entry: VenueEntry | None, code: str | None) -> str | None:
+    if not code:
         return None
-    text = str(raw).strip()
-    if not text or text.casefold() == competition.value:
+    if entry is None:
+        return code
+    for alias in entry.aliases:
+        if alias.casefold() == code.casefold():
+            continue
+        if len(alias) > 3 or not alias.isupper():
+            return alias
+    return entry.name
+
+
+def _player_short_club(
+    wire: FutbolFantasyWire,
+    player: ResolvedPlayer,
+    venues: VenueDirectory,
+) -> str | None:
+    recent = (wire.matches.recent if wire.matches else None) or []
+    for row in recent:
+        if row.is_home is True and row.home_team:
+            return row.home_team
+        if row.is_home is False and row.away_team:
+            return row.away_team
+    entry = venues.for_club(
+        fantasy_id=player.team_id,
+        name=player.team_name,
+    )
+    if entry is not None:
+        for alias in entry.aliases:
+            if alias == "Barcelona" or (len(alias) > 3 and not alias.isupper()):
+                return alias
+        return entry.name
+    return player.team_name
+
+
+def _fill_fixture_teams(
+    fixture: FixtureRef,
+    *,
+    short_club: str | None,
+    opponent: str | None,
+) -> FixtureRef:
+    if fixture.is_home is None or not short_club or not opponent:
+        return fixture
+    home = fixture.home_team
+    away = fixture.away_team
+    if fixture.is_home:
+        if not home:
+            home = short_club
+        if not away:
+            away = opponent
+    else:
+        if not home:
+            home = opponent
+        if not away:
+            away = short_club
+    if home == fixture.home_team and away == fixture.away_team:
+        return fixture
+    return fixture.model_copy(update={"home_team": home, "away_team": away})
+
+
+def _fixture_opponent(
+    venues: VenueDirectory,
+    *,
+    is_home: bool | None,
+    home_team: str | None,
+    away_team: str | None,
+) -> str | None:
+    if is_home is None or not home_team or not away_team:
         return None
-    if text.casefold() in {item.value for item in Competition}:
+    code = away_team if is_home else home_team
+    entry = venues.for_club(fantasy_id=None, name=code)
+    return _display_club_name(entry, code)
+
+
+def _expected_return_date(
+    wire: FutbolFantasyWire,
+    availability_text: str | None,
+) -> date | None:
+    if not availability_text:
         return None
-    return text
+    match = _DISPONIBLE_JORNADA.search(availability_text)
+    if not match:
+        return None
+    matchweek = int(match.group(1))
+    for row in (wire.matches.upcoming if wire.matches else None) or []:
+        if row.matchweek == matchweek and row.date is not None:
+            return row.date
+    return None
+
+
+def _weather_failure_detail(exc: UpstreamError) -> str:
+    if exc.status_code in {401, 429}:
+        return str(exc.status_code)
+    if exc.status_code is not None and exc.status_code >= 500:
+        return str(exc.status_code)
+    return "timeout"
 
 
 def _started_from_minutes_event(event: str | None) -> bool | None:
@@ -318,6 +423,12 @@ class PlayerStatsService:
                 )
             if query.competition and competition not in query.competition:
                 continue
+            opponent = _fixture_opponent(
+                self._venues,
+                is_home=fixture.is_home,
+                home_team=fixture.home_team,
+                away_team=fixture.away_team,
+            )
             fixture_ref = FixtureRef(
                 date=parse_match_date(getattr(fixture, "date", None)),
                 competition=competition,
@@ -326,6 +437,7 @@ class PlayerStatsService:
                 home_team=fixture.home_team,
                 away_team=fixture.away_team,
                 is_home=fixture.is_home,
+                opponent=opponent,
                 home_score=fixture.home_score,
                 away_score=fixture.away_score,
                 result=_match_result(
@@ -334,16 +446,18 @@ class PlayerStatsService:
                     fixture.away_score,
                 ),
             )
-            layers: list[tuple[StatSource, dict]] = []
-            week_stats = fantasy_weeks.get(fixture.matchweek or -1)
-            if week_stats and competition == Competition.LALIGA:
-                layers.append((StatSource.FANTASY_CATALOG, week_stats))
             parser_layer = _scraped_stats_layer(fixture.stats)
-            if parser_layer:
-                layers.append((StatSource.FUTBOLFANTASY, parser_layer))
+            layers = self._fixture_stat_layers(
+                fantasy_weeks,
+                competition=competition,
+                matchweek=fixture.matchweek,
+                parser_layer=parser_layer,
+            )
             merged, warnings = merge_fixture_stats(
                 layers,
                 fantasy_points_total=fixture.fantasy_points,
+                position_id=player.position_id,
+                minutes_played=fixture.minutes,
             )
             rows.append(
                 FixtureStatsRow(
@@ -437,6 +551,7 @@ class PlayerStatsService:
         season = current_season(self._today())
         doc = await self._scraped.futbolfantasy(player, season)
         wire = doc.wire
+        fantasy_weeks = self._fantasy_week_map(player)
         matches: list[RecentMatch] = []
         for row in (wire.matches.recent if wire.matches else None) or []:
             competition = competition_from_row(row.competition_raw)
@@ -456,10 +571,18 @@ class PlayerStatsService:
             stats = None
             warnings: list[SegmentWarning] = []
             if query.include_stats and isinstance(row.stats, dict):
-                layer = stats_from_parser_layer(row.stats)
+                parser_layer = stats_from_parser_layer(row.stats)
+                layers = self._fixture_stat_layers(
+                    fantasy_weeks,
+                    competition=competition,
+                    matchweek=row.matchweek,
+                    parser_layer=parser_layer,
+                )
                 merged, merge_warnings = merge_fixture_stats(
-                    [(StatSource.FUTBOLFANTASY, layer)],
+                    layers,
                     fantasy_points_total=row.fantasy_points,
+                    position_id=player.position_id,
+                    minutes_played=row.minutes,
                 )
                 stats = merged
                 warnings = merge_warnings
@@ -497,6 +620,7 @@ class PlayerStatsService:
         season = current_season(self._today())
         doc = await self._scraped.futbolfantasy(player, season)
         wire = doc.wire
+        short_club = _player_short_club(wire, player, self._venues)
         player_home = self._venues.for_club(fantasy_id=player.team_id, name=player.team_name)
         rows: list[UpcomingMatch] = []
         now = self._now()
@@ -510,6 +634,11 @@ class PlayerStatsService:
                 home_team=row.home_team,
                 away_team=row.away_team,
                 is_home=row.is_home,
+                opponent=row.opponent,
+            )
+            fixture = _fill_fixture_teams(
+                fixture,
+                short_club=short_club,
                 opponent=row.opponent,
             )
             kickoff = kickoff_datetime(row.date, row.kickoff_time)
@@ -526,7 +655,9 @@ class PlayerStatsService:
             match_venue = self._match_venue(player_home, row.is_home, row.opponent)
             weather = MatchWeather(snapshot=None, reason=WeatherReason.DISABLED)
             if query.include_weather and self._weather_enabled():
-                weather = await self._weather_for_match(match_venue, kickoff)
+                weather, weather_warn = await self._weather_for_match(match_venue, kickoff)
+                if weather_warn is not None:
+                    row_warnings.append(weather_warn)
             elif not query.include_weather:
                 weather = MatchWeather(snapshot=None, reason=WeatherReason.DISABLED)
             travel = self._travel(player_home, row.is_home, row.opponent)
@@ -570,8 +701,9 @@ class PlayerStatsService:
                 else None
             ),
             since=parse_match_date(injury_raw.get("since")) if injury_raw else None,
-            expected_return=(
-                parse_match_date(injury_raw.get("expectedReturn")) if injury_raw else None
+            expected_return=_expected_return_date(
+                wire,
+                str(availability.get("label")) if isinstance(availability, dict) else None,
             ),
             availability_text=(
                 str(availability.get("label")) if isinstance(availability, dict) else None
@@ -678,6 +810,24 @@ class PlayerStatsService:
             return value.replace(tzinfo=UTC)
         return value.astimezone(UTC)
 
+    def _fixture_stat_layers(
+        self,
+        fantasy_weeks: dict[int, Mapping[StatKey, ScrapedStat]],
+        *,
+        competition: Competition,
+        matchweek: int | None,
+        parser_layer: Mapping[StatKey, ScrapedStat] | None,
+    ) -> list[tuple[StatSource, Mapping[StatKey, ScrapedStat]]]:
+        """Build catalog + FutbolFantasy stat layers for one match row."""
+        layers: list[tuple[StatSource, Mapping[StatKey, ScrapedStat]]] = []
+        if matchweek is not None and competition == Competition.LALIGA:
+            week_stats = fantasy_weeks.get(matchweek)
+            if week_stats:
+                layers.append((StatSource.FANTASY_CATALOG, week_stats))
+        if parser_layer:
+            layers.append((StatSource.FUTBOLFANTASY, parser_layer))
+        return layers
+
     def _fantasy_week_map(self, player: ResolvedPlayer) -> dict[int, Any]:
         out: dict[int, Any] = {}
         for week in player.last_stats or []:
@@ -740,9 +890,10 @@ class PlayerStatsService:
     ) -> VenueEntry | None:
         if player_home is None:
             return None
-        if is_home is False and opponent:
-            opponent_venue = self._venues.for_club(fantasy_id=None, name=opponent)
-            return opponent_venue or player_home
+        if is_home is False:
+            if not opponent:
+                return None
+            return self._venues.for_club(fantasy_id=None, name=opponent)
         return player_home
 
     def _ff_source(self, doc: ScrapedDocument) -> SourceStatus:
@@ -778,12 +929,15 @@ class PlayerStatsService:
         self,
         match_venue: VenueEntry | None,
         kickoff: datetime | None,
-    ) -> MatchWeather:
+    ) -> tuple[MatchWeather, SegmentWarning | None]:
         if match_venue is None:
-            return MatchWeather(snapshot=None, reason=WeatherReason.VENUE_UNKNOWN)
+            return MatchWeather(snapshot=None, reason=WeatherReason.VENUE_UNKNOWN), None
         venue = self._venue_schema(match_venue)
         if kickoff is None:
-            return MatchWeather(snapshot=None, reason=WeatherReason.KICKOFF_UNKNOWN, venue=venue)
+            return (
+                MatchWeather(snapshot=None, reason=WeatherReason.KICKOFF_UNKNOWN, venue=venue),
+                None,
+            )
         key = (round(match_venue.lat, 2), round(match_venue.lon, 2))
         cache = self._weather_cache.setdefault(
             key,
@@ -795,16 +949,23 @@ class PlayerStatsService:
 
         try:
             payload = await cache.get_or_fetch(fetch)
-        except UpstreamError:
-            return MatchWeather(
-                snapshot=None,
-                reason=WeatherReason.PROVIDER_UNAVAILABLE,
-                venue=venue,
+        except UpstreamError as exc:
+            return (
+                MatchWeather(
+                    snapshot=None,
+                    reason=WeatherReason.PROVIDER_UNAVAILABLE,
+                    venue=venue,
+                ),
+                SegmentWarning(
+                    code="weather_unavailable",
+                    source="openweather",
+                    detail=_weather_failure_detail(exc),
+                ),
             )
         slots = _forecast_slots(payload)
         picked = pick_slot(slots, kickoff.astimezone(UTC), self._now())
         if isinstance(picked, WeatherReason):
-            return MatchWeather(snapshot=None, reason=picked, venue=venue)
+            return MatchWeather(snapshot=None, reason=picked, venue=venue), None
         snapshot = WeatherSnapshot(
             temperature_c=picked.temperature_c,
             feels_like_c=picked.feels_like_c,
@@ -817,7 +978,7 @@ class PlayerStatsService:
             icon=picked.icon,
             forecast_for=picked.dt,
         )
-        return MatchWeather(snapshot=snapshot, reason=None, venue=venue)
+        return MatchWeather(snapshot=snapshot, reason=None, venue=venue), None
 
     def _travel(
         self,
@@ -835,11 +996,26 @@ class PlayerStatsService:
                 to_venue=home,
                 player_team_travels=False,
             )
+        if is_home is False and not opponent:
+            return Travel(
+                distance_km=None,
+                reason="venue_unknown",
+                from_venue=home,
+                to_venue=None,
+                player_team_travels=True,
+            )
         if not opponent:
             return Travel(distance_km=None, reason="venue_unknown", from_venue=home, to_venue=home)
         opponent_venue = self._venues.for_club(fantasy_id=None, name=opponent)
         if opponent_venue is None:
-            return Travel(distance_km=None, reason="venue_unknown", from_venue=home, to_venue=home)
+            travels = is_home is False
+            return Travel(
+                distance_km=None,
+                reason="venue_unknown",
+                from_venue=home,
+                to_venue=None if travels else home,
+                player_team_travels=True if travels else None,
+            )
         away = self._venue_schema(opponent_venue)
         distance = haversine_km(
             player_home.lat,
@@ -878,9 +1054,12 @@ def _wire_warnings(raw: list[Any] | None) -> list[SegmentWarning]:
             continue
         code = str(item.get("code") or "scraping_partial")
         message = str(item.get("message")) if item.get("message") else None
+        preview = str(item.get("preview")) if item.get("preview") else None
         path = item.get("path") or item.get("ruleId")
         detail = message
-        if path and message:
+        if code == "stat_label_unmapped" and preview:
+            detail = f"{path}: {message} ({preview})" if message and path else preview
+        elif path and message:
             detail = f"{path}: {message}"
         elif path:
             detail = str(path)

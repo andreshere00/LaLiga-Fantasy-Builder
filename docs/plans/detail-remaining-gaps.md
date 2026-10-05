@@ -1,6 +1,6 @@
 # Plan: remaining detail nulls (Raphinha capture)
 
-Status: **proposed**
+Status: **implemented**
 
 Date: **2026-10-05**
 

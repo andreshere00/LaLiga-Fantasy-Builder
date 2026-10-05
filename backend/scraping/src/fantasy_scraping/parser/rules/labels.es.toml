@@ -116,6 +116,18 @@ normaliser = "ratio"
 group = "attack"
 
 [[labels]]
+label = "Tiros a puerta / Tiros:"
+path = "season_stats.attack.shots_on_target"
+normaliser = "ratio"
+group = "attack"
+
+[[labels]]
+label = "Goles / Tiros:"
+path = "season_stats.attack.goals_per_shot"
+normaliser = "ratio"
+group = "attack"
+
+[[labels]]
 label = "Goles por tiro"
 path = "season_stats.attack.goals_per_shot"
 normaliser = "ratio"
@@ -261,6 +273,12 @@ group = "defense"
 
 [[labels]]
 label = "Despejes"
+path = "season_stats.defense.effective_clearances"
+normaliser = "es_int"
+group = "defense"
+
+[[labels]]
+label = "Despejes efectivos"
 path = "season_stats.defense.effective_clearances"
 normaliser = "es_int"
 group = "defense"

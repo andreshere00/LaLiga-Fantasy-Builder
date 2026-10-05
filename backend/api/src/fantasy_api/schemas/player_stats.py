@@ -29,6 +29,7 @@ class StatSource(StrEnum):
     FANTASY_LEAGUE_CARD = "fantasy_league_card"
     FANTASY_CALENDAR = "fantasy_calendar"
     FUTBOLFANTASY = "futbolfantasy"
+    COMPUTED_OFFICIAL = "computed_official"
     DERIVED = "derived"
     UNAVAILABLE = "unavailable"
 
@@ -41,6 +42,7 @@ class StatKey(StrEnum):
     BIG_CHANCES_CREATED = "big_chances_created"
     BALLS_INTO_BOX = "balls_into_box"
     PENALTIES_COMMITTED = "penalties_committed"
+    PENALTIES_WON = "penalties_won"
     PENALTIES_SAVED = "penalties_saved"
     SAVES = "saves"
     CLEARANCES = "clearances"
@@ -126,8 +128,8 @@ class SourceStatus(StatsModel):
 
 class StatValue(StatsModel):
     count: int | None = None
-    fantasy_points: int = 0
-    dazn_points: int = 0
+    fantasy_points: int | None = None
+    dazn_points: int | None = None
     source: StatSource = StatSource.UNAVAILABLE
 
 
@@ -143,6 +145,7 @@ class FixtureStats(StatsModel):
     big_chances_created: StatValue = Field(default_factory=default_stat_value)
     balls_into_box: StatValue = Field(default_factory=default_stat_value)
     penalties_committed: StatValue = Field(default_factory=default_stat_value)
+    penalties_won: StatValue = Field(default_factory=default_stat_value)
     penalties_saved: StatValue = Field(default_factory=default_stat_value)
     saves: StatValue = Field(default_factory=default_stat_value)
     clearances: StatValue = Field(default_factory=default_stat_value)

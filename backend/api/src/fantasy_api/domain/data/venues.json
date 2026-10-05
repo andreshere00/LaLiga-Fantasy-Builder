@@ -4,13 +4,14 @@
     "fantasy_id": 4,
     "slug": "fc-barcelona",
     "name": "FC Barcelona",
-    "stadium": "Estadi Olímpic Lluís Companys",
+    "stadium": "Camp Nou",
     "city": "Barcelona",
     "country": "ES",
-    "lat": 41.3648,
-    "lon": 2.155,
+    "lat": 41.3809,
+    "lon": 2.1228,
     "aliases": [
-      "BAR"
+      "BAR",
+      "Barcelona"
     ]
   },
   {
@@ -67,7 +68,8 @@
     "lat": 37.3564,
     "lon": -5.9815,
     "aliases": [
-      "BET"
+      "BET",
+      "Betis"
     ]
   },
   {
@@ -109,7 +111,8 @@
     "lat": 40.3258,
     "lon": -3.7146,
     "aliases": [
-      "GET"
+      "GET",
+      "Getafe"
     ]
   },
   {
@@ -193,7 +196,8 @@
     "lat": 40.3919,
     "lon": -3.6586,
     "aliases": [
-      "RAY"
+      "RAY",
+      "Rayo"
     ]
   },
   {
@@ -221,7 +225,8 @@
     "lat": 37.384,
     "lon": -5.9705,
     "aliases": [
-      "SEV"
+      "SEV",
+      "Sevilla"
     ]
   },
   {
@@ -235,7 +240,8 @@
     "lat": 39.4745,
     "lon": -0.3582,
     "aliases": [
-      "VAL"
+      "VAL",
+      "Valencia"
     ]
   },
   {
@@ -278,6 +284,64 @@
     "lon": -4.761,
     "aliases": [
       "VLL"
+    ]
+  },
+  {
+    "club_key": "levante",
+    "fantasy_id": null,
+    "slug": "levante-ud",
+    "name": "Levante",
+    "stadium": "Ciutat de València",
+    "city": "Valencia",
+    "country": "ES",
+    "lat": 39.4947,
+    "lon": -0.3636,
+    "aliases": [
+      "LEV",
+      "Levante"
+    ]
+  },
+  {
+    "club_key": "racing-santander",
+    "fantasy_id": null,
+    "slug": "racing-santander",
+    "name": "Racing",
+    "stadium": "El Sardinero",
+    "city": "Santander",
+    "country": "ES",
+    "lat": 43.4763,
+    "lon": -3.7933,
+    "aliases": [
+      "RAC",
+      "Racing"
+    ]
+  },
+  {
+    "club_key": "galatasaray",
+    "fantasy_id": null,
+    "slug": "galatasaray",
+    "name": "Galatasaray",
+    "stadium": "Rams Park",
+    "city": "Istanbul",
+    "country": "TR",
+    "lat": 41.103,
+    "lon": 28.991,
+    "aliases": [
+      "Galatasaray"
+    ]
+  },
+  {
+    "club_key": "psg",
+    "fantasy_id": null,
+    "slug": "paris-saint-germain",
+    "name": "PSG",
+    "stadium": "Parc des Princes",
+    "city": "Paris",
+    "country": "FR",
+    "lat": 48.8414,
+    "lon": 2.253,
+    "aliases": [
+      "PSG"
     ]
   }
 ]
