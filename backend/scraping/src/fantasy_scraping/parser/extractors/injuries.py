@@ -1,5 +1,7 @@
 """Injury map and history."""
 
+import re
+
 from fantasy_scraping.parser.dom.locators import node_text
 from fantasy_scraping.parser.errors import NormaliseError, ParserSectionError
 from fantasy_scraping.parser.extractors.base import ExtractionContext, column_values, rows_of
@@ -18,8 +20,9 @@ def extract_injuries(ctx: ExtractionContext) -> InjuryHistory | None:
     Returns:
         The history block. A present table with zero rows yields an empty list.
     """
+    list_items = ctx.document.css("li.noticiaJugador.lesionJugador")
     root = ctx.document.first(ctx.selector("injury_root"))
-    if root is None:
+    if root is None and not list_items:
         ctx.miss("profile.injury_history")
         ctx.warn(
             code="field_missing",
@@ -29,10 +32,13 @@ def extract_injuries(ctx: ExtractionContext) -> InjuryHistory | None:
             message="expected field missing",
         )
         return None
-    zones = _zones(ctx)
+    zones = _zones(ctx) if root is not None else []
     note_node = ctx.document.first(ctx.selector("injury_note"))
     note = node_text(note_node) if note_node is not None else None
     table = ctx.document.first("table.historial")
+    if list_items and table is None:
+        entries = _lesion_jugador_entries(list_items)
+        return InjuryHistory(body_map=zones, body_map_note=note or None, entries=entries)
     if table is None:
         raise ParserSectionError(
             "required_anchor_missing",
@@ -55,6 +61,56 @@ def _zones(ctx: ExtractionContext) -> list[BodyZoneCount]:
         if zone:
             zones.append(BodyZoneCount(zone=zone, incidents=incidents))
     return zones
+
+
+_RANGE = re.compile(
+    r"(\d{1,2}/\d{1,2}/\d{2,4})\s*-\s*(\d{1,2}/\d{1,2}/\d{2,4}|Actualidad)",
+    re.IGNORECASE,
+)
+_DURATION = re.compile(r"\((\d+)\s*d[ií]as?\)")
+
+
+def _lesion_jugador_entries(nodes: list[object]) -> list[InjuryEntry]:
+    entries: list[InjuryEntry] = []
+    for node in nodes:
+        from lxml.html import HtmlElement
+
+        if not isinstance(node, HtmlElement):
+            continue
+        date_span = node.cssselect("span.date, span.mr-1")
+        date_text = node_text(date_span[0]) if date_span else node_text(node)
+        found = _RANGE.search(date_text)
+        if found is None:
+            continue
+        start_raw, end_raw = found.group(1), found.group(2)
+        try:
+            start = date_dmy(start_raw)
+        except NormaliseError:
+            continue
+        ongoing = casefold_key(end_raw) == "actualidad"
+        end = None
+        if not ongoing:
+            try:
+                end = date_dmy(end_raw)
+            except NormaliseError:
+                end = None
+        link = node.cssselect("a.link")
+        diagnosis_raw = node_text(link[0]) if link else node_text(node)
+        duration = None
+        duration_match = _DURATION.search(diagnosis_raw)
+        if duration_match:
+            duration = int(duration_match.group(1))
+            diagnosis_raw = _DURATION.sub("", diagnosis_raw).strip()
+        entries.append(
+            InjuryEntry(
+                start=start,
+                end=end,
+                ongoing=ongoing,
+                diagnosis=diagnosis_raw,
+                duration_days=duration,
+            )
+        )
+    return entries
 
 
 def _entries(ctx: ExtractionContext) -> list[InjuryEntry]:

@@ -35,12 +35,15 @@ class ScrapedMatch(FlexibleModel):
     competition_raw: str | None = None
     is_home: bool | None = None
     opponent: str | None = None
+    home_team: str | None = None
+    away_team: str | None = None
     home_score: int | None = None
     away_score: int | None = None
     score: str | None = None
     fantasy_points: int | None = None
     minutes: int | None = None
     minutes_note: str | None = None
+    minutes_event: str | None = None
     stats: dict[str, Any] | None = None
     warnings: list[Any] | None = None
 
@@ -51,6 +54,7 @@ class ScrapedMatches(FlexibleModel):
 
 
 class ScrapedProfile(FlexibleModel):
+    personal: dict[str, Any] | None = None
     availability: dict[str, Any] | None = None
     injury: dict[str, Any] | None = None
     injury_history: list[dict[str, Any]] | None = None

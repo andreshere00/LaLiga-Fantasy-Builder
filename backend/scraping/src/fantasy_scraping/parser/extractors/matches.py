@@ -1,6 +1,7 @@
 """Recent and upcoming widgets."""
 
 import re
+from dataclasses import dataclass
 
 from lxml.html import HtmlElement
 
@@ -8,13 +9,32 @@ from fantasy_scraping.parser.dom.locators import node_text
 from fantasy_scraping.parser.errors import NormaliseError, ParserSectionError
 from fantasy_scraping.parser.extractors.base import ExtractionContext, rows_with_dates
 from fantasy_scraping.parser.models.common import Competition, MinutesNote, Score
-from fantasy_scraping.parser.models.futbolfantasy import MatchesBlock, RecentMatch, UpcomingMatch
+from fantasy_scraping.parser.models.futbolfantasy import (
+    MatchesBlock,
+    PlayerSide,
+    RecentMatch,
+    UpcomingMatch,
+)
 from fantasy_scraping.parser.normalise.dates import day_month, resolve_sequence
 from fantasy_scraping.parser.normalise.minutes import minutes_note
 from fantasy_scraping.parser.normalise.numbers import es_int
 from fantasy_scraping.parser.normalise.text import casefold_key, clean_text
 
 _SCORE = re.compile(r"(\d+)\s*[-–−]\s*(\d+)")
+_TOOLTIP = re.compile(r"^(.+?)\s+(\d+)\s*[-–−]\s*(\d+)\s+(.+)$")
+_KICKOFF = re.compile(r"(\d{1,2}:\d{2})")
+
+
+@dataclass(frozen=True, slots=True)
+class CalendarDayMeta:
+    """Teams, competition and home/away side from one calendar day cell."""
+
+    competition: Competition
+    competition_raw: str | None
+    home_team: str | None
+    away_team: str | None
+    opponent: str | None
+    is_home: bool | None
 
 
 def extract_matches(ctx: ExtractionContext) -> MatchesBlock:
@@ -48,7 +68,7 @@ def extract_matches(ctx: ExtractionContext) -> MatchesBlock:
 
 def _recent_calendar(ctx: ExtractionContext, root: HtmlElement) -> list[RecentMatch]:
     pending: list[tuple[HtmlElement, tuple[int, int]]] = []
-    for day in root.cssselect(".day"):
+    for day in _days_for_header(root, "Últimos 5", limit=5):
         raw_date = _calendar_date(day)
         if raw_date is None:
             continue
@@ -64,11 +84,23 @@ def _recent_calendar(ctx: ExtractionContext, root: HtmlElement) -> list[RecentMa
             break
         score = _score(_calendar_score(day))
         note = minutes_note(_calendar_minutes(day), starter=False)
+        meta = _calendar_day_meta(ctx, day)
+        side: PlayerSide | None = None
+        if meta.is_home is True:
+            side = "home"
+        elif meta.is_home is False:
+            side = "away"
         matches.append(
             RecentMatch(
                 date=resolved[index],
                 matchday=_calendar_matchday(day),
+                competition=meta.competition,
+                competition_raw=meta.competition_raw,
+                home_team=meta.home_team,
+                away_team=meta.away_team,
+                opponent=meta.opponent,
                 score=score,
+                player_side=side,
                 minutes=note if note.raw else MinutesNote(raw="", event="unknown"),
             )
         )
@@ -76,14 +108,10 @@ def _recent_calendar(ctx: ExtractionContext, root: HtmlElement) -> list[RecentMa
 
 
 def _upcoming_calendar(ctx: ExtractionContext) -> list[UpcomingMatch]:
-    header = ctx.document.root.xpath(
-        "//header[contains(normalize-space(.), 'Pr\u00f3ximos 5')]"
-        "/following-sibling::div[contains(@class, 'calendar')][1]"
-    )
-    if not header:
+    days = _days_for_header(ctx.document.root, "Próximos 5", limit=5)
+    if not days:
         ctx.miss("matches.upcoming")
         return []
-    days = header[0].cssselect(".day")
     pending: list[HtmlElement] = []
     pairs: list[tuple[int, int]] = []
     for day in days:
@@ -100,14 +128,18 @@ def _upcoming_calendar(ctx: ExtractionContext) -> list[UpcomingMatch]:
     for index, day in enumerate(pending):
         if index >= len(resolved):
             break
+        meta = _calendar_day_meta(ctx, day)
         matches.append(
             UpcomingMatch(
                 date=resolved[index],
                 matchday=_calendar_matchday(day),
                 kickoff=_calendar_kickoff(day),
-                is_home=_calendar_home(day),
-                competition=_calendar_competition(ctx, day),
-                competition_raw=_calendar_competition_raw(day),
+                is_home=meta.is_home,
+                competition=meta.competition,
+                competition_raw=meta.competition_raw,
+                home_team=meta.home_team,
+                away_team=meta.away_team,
+                opponent=meta.opponent,
             )
         )
     return matches
@@ -152,8 +184,8 @@ def _calendar_matchday(day: HtmlElement) -> int | None:
 
 def _calendar_kickoff(day: HtmlElement) -> str | None:
     text = node_text(day.cssselect("span.fecha")[0]) if day.cssselect("span.fecha") else ""
-    found = re.search(r"(\d{1,2}:\d{2})h?", text)
-    return f"{found.group(1)}h" if found else None
+    found = _KICKOFF.search(text)
+    return found.group(1) if found else None
 
 
 def _calendar_home(day: HtmlElement) -> bool | None:
@@ -177,6 +209,84 @@ def _calendar_competition(ctx: ExtractionContext, day: HtmlElement) -> Competiti
         return Competition.OTHER
     mapped = _from_label(ctx, raw)
     return mapped if mapped is not None else Competition.OTHER
+
+
+def _calendar_day_meta(ctx: ExtractionContext, day: HtmlElement) -> CalendarDayMeta:
+    """Read competition, teams and side from one calendar day cell."""
+    competition_raw = _calendar_competition_raw(day)
+    competition = _calendar_competition(ctx, day)
+    opponent = _calendar_rival(day)
+    home_team, away_team, is_home = _calendar_teams(day, opponent)
+    explicit = _calendar_home(day)
+    if explicit is not None:
+        is_home = explicit
+    return CalendarDayMeta(
+        competition=competition,
+        competition_raw=competition_raw,
+        home_team=home_team,
+        away_team=away_team,
+        opponent=opponent,
+        is_home=is_home,
+    )
+
+
+def _calendar_rival(day: HtmlElement) -> str | None:
+    node = day.cssselect("img.m-rival, img.rival-widget")
+    if not node:
+        return None
+    alt = clean_text(node[0].get("alt") or "")
+    return alt or None
+
+
+def _calendar_teams(
+    day: HtmlElement,
+    opponent: str | None,
+) -> tuple[str | None, str | None, bool | None]:
+    anchor = day.cssselect("a[data-tooltip], a[href*='/partidos/']")
+    tooltip = anchor[0].get("data-tooltip") if anchor else None
+    if isinstance(tooltip, str) and tooltip.strip():
+        parsed = _parse_tooltip(tooltip)
+        if parsed is not None:
+            home_name, _, _, away_name = parsed
+            is_home = None
+            if opponent:
+                key = casefold_key(opponent)
+                if key == casefold_key(away_name):
+                    is_home = True
+                elif key == casefold_key(home_name):
+                    is_home = False
+            return home_name, away_name, is_home
+    return None, None, None
+
+
+def _days_for_header(root: HtmlElement, header_text: str, *, limit: int) -> list[HtmlElement]:
+    """Return ``.day`` cells under the widget that follows ``header_text``."""
+    headers = root.xpath(f"//header[contains(normalize-space(.), '{header_text}')]")
+    for header in headers:
+        row = header.getparent()
+        if row is None:
+            continue
+        days = row.cssselect(".day")
+        if days:
+            return days[:limit]
+        calendar = header.xpath("following-sibling::div[contains(@class, 'calendar')][1]")
+        if calendar:
+            days = calendar[0].cssselect(".day")
+            if days:
+                return days[:limit]
+    return []
+
+
+def _parse_tooltip(text: str) -> tuple[str, int, int, str] | None:
+    match = _TOOLTIP.match(clean_text(text))
+    if match is None:
+        return None
+    return (
+        match.group(1).strip(),
+        int(match.group(2)),
+        int(match.group(3)),
+        match.group(4).strip(),
+    )
 
 
 def _recent(ctx: ExtractionContext) -> list[RecentMatch]:

@@ -97,6 +97,32 @@ def test_kickoff_datetime_invalid_time_returns_none() -> None:
     assert kickoff_datetime(date(2026, 10, 18), "bad") is None
 
 
+def test_kickoff_datetime_trailing_h_returns_madrid_datetime() -> None:
+    kickoff = kickoff_datetime(date(2026, 10, 10), "18:30h")
+    assert kickoff is not None
+    assert kickoff.hour == 18
+
+
+def test_normalise_match_missing_side_keeps_is_home_null() -> None:
+    wire = parse_wire_document(
+        {
+            "fixtures": [],
+            "matches": {
+                "recent": [
+                    {
+                        "date": "2026-09-16",
+                        "score": {"home": 7, "away": 2},
+                        "minutes": {"raw": "68'", "minutes": 68, "event": "full"},
+                    }
+                ],
+                "upcoming": [],
+            },
+            "profile": {},
+        },
+    )
+    assert wire.matches.recent[0].is_home is None
+
+
 def test_stats_from_parser_layer_skips_non_mappings() -> None:
     assert stats_from_parser_layer({"goals": "bad"}) == {}
 

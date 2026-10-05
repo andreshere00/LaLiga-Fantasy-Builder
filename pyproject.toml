@@ -45,6 +45,7 @@ skip_empty = true
 executionEnvironments = [
     { root = "backend/api", extraPaths = ["src"], venvPath = "backend/api", venv = ".venv", pythonVersion = "3.14" },
     { root = "backend/auth", extraPaths = ["src"], venvPath = "backend/auth", venv = ".venv", pythonVersion = "3.12" },
+    { root = "backend/scraping", extraPaths = ["src"], venvPath = "backend/scraping", venv = ".venv", pythonVersion = "3.14" },
 ]
 
 [tool.poe.tasks.up]

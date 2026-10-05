@@ -111,8 +111,12 @@ def test_main_success_invokes_helper(
 # ---- Error paths ---- #
 
 
-def test_main_missing_cookies_returns_one() -> None:
-    # Arrange / Act
+def test_main_missing_cookies_returns_one(monkeypatch: pytest.MonkeyPatch) -> None:
+    # Arrange
+    for name in ("FANTASY_SESSION", "SESSION", "FANTASY_CSRF", "CSRF"):
+        monkeypatch.delenv(name, raising=False)
+
+    # Act
     code = pair_cli.main(["--api-base", "http://localhost:8000"])
 
     # Assert

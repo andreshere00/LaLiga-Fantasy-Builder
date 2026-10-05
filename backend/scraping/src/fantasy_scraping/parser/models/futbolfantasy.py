@@ -179,6 +179,9 @@ class RecentMatch(ParserModel):
     matchday: int | None = None
     competition: Competition = Competition.OTHER
     competition_raw: str | None = None
+    home_team: str | None = None
+    away_team: str | None = None
+    opponent: str | None = None
     score: Score | None = None
     player_side: PlayerSide | None = None
     minutes: MinutesNote
@@ -195,6 +198,9 @@ class UpcomingMatch(ParserModel):
     is_home: bool | None = None
     competition: Competition = Competition.OTHER
     competition_raw: str | None = None
+    home_team: str | None = None
+    away_team: str | None = None
+    opponent: str | None = None
 
 
 class MatchesBlock(ParserModel):
