@@ -1,7 +1,4 @@
-import { m } from "motion/react";
-
 import type { MarketActionsApi } from "./actions/useMarketActions";
-import { MARKET_ROW_EXIT_TRANSITION, MARKET_ROW_TRANSITION } from "./MarketRowMotion";
 import type { MarketActionContext } from "./actions/marketActions";
 import { AvailabilityCell } from "./cells/AvailabilityCell";
 import { FormCell } from "./cells/FormCell";
@@ -14,7 +11,7 @@ import type { MarketColumnHeading, MarketColumnKey } from "./marketColumnHeading
 import type { MarketRow } from "./model/row";
 import { isSealEndUnderOneHour, remainingLabel } from "./model/valueSeries";
 
-type MarketRowViewProps = {
+export type MarketRowCellsProps = {
   row: MarketRow;
   now: number;
   actionContext: MarketActionContext;
@@ -22,26 +19,16 @@ type MarketRowViewProps = {
   columnHeadings: Record<MarketColumnKey, MarketColumnHeading>;
 };
 
-export function MarketRowView({
+export function MarketRowCells({
   row,
   now,
   actionContext,
   actions,
   columnHeadings,
-}: MarketRowViewProps) {
+}: MarketRowCellsProps) {
   return (
-    <m.li
-      className="market-row"
-      initial={{ opacity: 0, y: 10 }}
-      animate={{ opacity: 1, y: 0 }}
-      exit={{ opacity: 0, y: -6, scale: 0.985, transition: MARKET_ROW_EXIT_TRANSITION }}
-      transition={MARKET_ROW_TRANSITION}
-    >
-      <PlayerCell
-        row={row}
-        now={now}
-        columnLabel={columnHeadings.player.label}
-      />
+    <>
+      <PlayerCell row={row} now={now} columnLabel={columnHeadings.player.label} />
       <span className="market-cell" data-label={columnHeadings.position.label}>
         <PositionCell positionId={row.positionId} />
       </span>
@@ -80,9 +67,12 @@ export function MarketRowView({
           {remainingLabel(row.expiresAt, now)}
         </span>
       </span>
-      <span className="market-cell market-cell-seller" data-label={columnHeadings.sellOptions.label}>
+      <span
+        className="market-cell market-cell-seller"
+        data-label={columnHeadings.sellOptions.label}
+      >
         <SellerCell row={row} actionContext={actionContext} actions={actions} />
       </span>
-    </m.li>
+    </>
   );
 }

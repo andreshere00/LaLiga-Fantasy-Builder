@@ -135,6 +135,10 @@ describe("squadCards", () => {
         teamBadgeUrl: null,
         fixturePoints: null,
         isMvp: false,
+        marketValue: null,
+        onMarket: false,
+        listingId: null,
+        salePrice: null,
       },
       {
         id: "pt-2",
@@ -145,8 +149,45 @@ describe("squadCards", () => {
         teamBadgeUrl: null,
         fixturePoints: null,
         isMvp: false,
+        marketValue: null,
+        onMarket: false,
+        listingId: null,
+        salePrice: null,
       },
     ]);
+  });
+
+  it("squadCards_reads_market_value_and_listing", () => {
+    const [card] = squadCards(
+      [
+        {
+          playerTeamId: "pt-9",
+          playerMarket: { id: "mk-1", salePrice: 9_000_000 },
+          playerMaster: { nickname: "Pedri", marketValue: 8_000_000.4 },
+        },
+      ],
+      null,
+    );
+    expect(card?.marketValue).toBe(8_000_000);
+    expect(card?.onMarket).toBe(true);
+    expect(card?.listingId).toBe("mk-1");
+    expect(card?.salePrice).toBe(9_000_000);
+  });
+
+  it("squadCards_sale_price_without_listing_id_is_not_on_market", () => {
+    const [card] = squadCards(
+      [
+        {
+          playerTeamId: "pt-9",
+          playerMarket: { salePrice: 9_000_000 },
+          playerMaster: { nickname: "Pedri", marketValue: 8_000_000 },
+        },
+      ],
+      null,
+    );
+    expect(card?.onMarket).toBe(false);
+    expect(card?.listingId).toBeNull();
+    expect(card?.salePrice).toBe(9_000_000);
   });
 });
 

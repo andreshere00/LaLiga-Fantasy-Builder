@@ -736,6 +736,25 @@ Each item:
 | `id` | string \| integer | no |  |  |
 
 
+### `POST` `/market/leagues/{league_id}/immediate-sales`
+
+Sell a player immediately at half market value
+
+**Security:** HTTP Bearer (internal JWT)
+
+#### Inputs
+
+| Source | Name | Type | Required | Constraints | Description |
+|--------|------|------|----------|-------------|-------------|
+| path | `league_id` | string | yes |  | Fantasy league identifier. |
+| body | `playerId` | string \| integer | yes |  |  |
+
+#### Outputs
+
+**HTTP 200:** `MarketMutationResult`
+
+
+
 ### `POST` `/market/leagues/{league_id}/listings`
 
 List a player for sale
@@ -748,7 +767,7 @@ List a player for sale
 |--------|------|------|----------|-------------|-------------|
 | path | `league_id` | string | yes |  | Fantasy league identifier. |
 | body | `playerId` | string \| integer | yes |  |  |
-| body | `salePrice` | integer | yes | >0 |  |
+| body | `salePrice` | integer | yes | >0, max=999999999 |  |
 
 #### Outputs
 
@@ -1399,6 +1418,12 @@ Type: `string`
 |-------|------|----------|-------------|-------------|
 | `reward` | integer | no |  |  |
 
+### `ImmediateSaleWrite`
+
+| Field | Type | Required | Constraints | Description |
+|-------|------|----------|-------------|-------------|
+| `playerId` | string \| integer | yes |  |  |
+
 ### `IncreaseBuyoutWrite`
 
 | Field | Type | Required | Constraints | Description |
@@ -1552,7 +1577,7 @@ Type: `string`
 | Field | Type | Required | Constraints | Description |
 |-------|------|----------|-------------|-------------|
 | `playerId` | string \| integer | yes |  |  |
-| `salePrice` | integer | yes | >0 |  |
+| `salePrice` | integer | yes | >0, max=999999999 |  |
 
 ### `LoanPremiumConfig`
 

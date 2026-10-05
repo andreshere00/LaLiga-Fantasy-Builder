@@ -10,7 +10,7 @@ import { WithdrawDialog } from "./actions/WithdrawDialog";
 import { useMarketActions } from "./actions/useMarketActions";
 import { marketColumnHeadings } from "./marketColumnHeadings";
 import { MarketListHead } from "./MarketListHead";
-import { MarketRowView } from "./MarketRowView";
+import { MarketRowCells } from "./MarketRowView";
 import { MARKET_CLEAR_FILTERS_LABEL, MARKET_SEARCH_NO_MATCHES } from "./marketMessages";
 import {
   activeFilterCount,
@@ -18,11 +18,7 @@ import {
   createEmptyMarketFilters,
   sellerOptions,
 } from "./marketFilters";
-import {
-  MarketMotionScope,
-  MarketRowMotionList,
-  MarketTablePresence,
-} from "./MarketRowMotion";
+import { MarketMotionProvider, MarketRowMotion } from "./MarketRowMotion";
 import { MarketToolbar } from "./MarketToolbar";
 import { useMarketBoard } from "./useMarketBoard";
 import "./MarketPage.css";
@@ -75,7 +71,7 @@ function MarketList() {
   }
 
   return (
-    <MarketMotionScope>
+    <MarketMotionProvider>
       <MarketToolbar
         money={board.money}
         showSearch={board.rows.length > 0}
@@ -86,8 +82,8 @@ function MarketList() {
       />
       {board.isDegraded ? (
         <p className="market-notice status-copy" role="status">
-          Some market details could not be loaded. Balance, squad data, value changes and
-          last performances may be incomplete, and some actions may be unavailable.
+          Some market details could not be loaded. Balance, squad data, value changes and last
+          performances may be incomplete, and some actions may be unavailable.
         </p>
       ) : null}
       {marketActions.message && !dialogOpen ? (
@@ -97,42 +93,35 @@ function MarketList() {
       ) : null}
       {board.rows.length === 0 ? (
         <p className="status-copy">No players on the market.</p>
+      ) : visibleRows.length === 0 ? (
+        <div className="market-empty-filters" role="status">
+          <p className="status-copy">{MARKET_SEARCH_NO_MATCHES}</p>
+          {filterCount > 0 ? (
+            <button type="button" className="market-filter-clear-main" onClick={clearFilters}>
+              {MARKET_CLEAR_FILTERS_LABEL}
+            </button>
+          ) : null}
+        </div>
       ) : (
-        <MarketTablePresence
-          showTable={visibleRows.length > 0}
-          emptyState={
-            <div className="market-empty-filters" role="status">
-              <p className="status-copy">{MARKET_SEARCH_NO_MATCHES}</p>
-              {filterCount > 0 ? (
-                <button type="button" className="market-filter-clear-main" onClick={clearFilters}>
-                  {MARKET_CLEAR_FILTERS_LABEL}
-                </button>
-              ) : null}
-            </div>
-          }
-          table={
-            <ul className="market-list">
-              <MarketListHead
-                headings={columnHeadings}
-                filters={filters}
-                sellers={sellers}
-                onFiltersChange={setFilters}
+        <ul className="market-list">
+          <MarketListHead
+            headings={columnHeadings}
+            filters={filters}
+            sellers={sellers}
+            onFiltersChange={setFilters}
+          />
+          {visibleRows.map((row, order) => (
+            <MarketRowMotion key={row.id} order={order}>
+              <MarketRowCells
+                row={row}
+                now={now}
+                actionContext={actionContext}
+                actions={marketActions}
+                columnHeadings={columnHeadings}
               />
-              <MarketRowMotionList>
-                {visibleRows.map((row) => (
-                  <MarketRowView
-                    key={row.id}
-                    row={row}
-                    now={now}
-                    actionContext={actionContext}
-                    actions={marketActions}
-                    columnHeadings={columnHeadings}
-                  />
-                ))}
-              </MarketRowMotionList>
-            </ul>
-          }
-        />
+            </MarketRowMotion>
+          ))}
+        </ul>
       )}
       <BidDialog
         open={marketActions.pendingBid != null}
@@ -163,7 +152,7 @@ function MarketList() {
         onClose={marketActions.closeClause}
         onConfirm={marketActions.confirmClause}
       />
-    </MarketMotionScope>
+    </MarketMotionProvider>
   );
 }
 

@@ -104,6 +104,16 @@ class MarketRepository:
         path = self._league_path(league_id, "market", "sell")
         return await self._client.post_json(path, bearer_token, body)
 
+    async def create_immediate_sale(
+        self,
+        bearer_token: str,
+        league_id: str,
+        body: dict[str, Any],
+    ) -> Any:
+        """Sell a squad entry to LaLiga at half market value."""
+        path = self._league_path(league_id, "market", "immediate-sale")
+        return await self._client.post_json(path, bearer_token, body)
+
     async def delete_listing(
         self,
         bearer_token: str,

@@ -8,12 +8,23 @@
 .numeric-counter-input {
   flex: 1 1 auto;
   min-width: 0;
+  height: 2.25rem;
+  margin: 0;
+  padding: 0 10px;
+  border: 1px solid color-mix(in srgb, var(--ink) 12%, transparent);
   border-left: 0;
   border-right: 0;
+  border-radius: 0;
+  background: var(--white);
+  color: inherit;
+  font: inherit;
+  font-variant-numeric: tabular-nums;
+  text-align: center;
 }
 
 .numeric-counter-btn {
   flex: 0 0 2.25rem;
+  height: 2.25rem;
   box-sizing: border-box;
   padding: 0;
   border: 1px solid color-mix(in srgb, var(--ink) 12%, transparent);

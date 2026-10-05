@@ -183,6 +183,63 @@ def test_create_listing_forwards_player_team_id(rsa_pems: tuple[str, str]) -> No
     assert response.json() == {"marketId": "m-new"}
 
 
+def test_create_immediate_sale_forwards_player_team_id(rsa_pems: tuple[str, str]) -> None:
+    _private_pem, public_pem = rsa_pems
+    token = mint_internal_jwt(_private_pem)
+
+    def handler(request: httpx.Request) -> httpx.Response:
+        _assert_fantasy_auth(request)
+        assert request.method == "POST"
+        assert request.url.path.endswith("/market/immediate-sale")
+        body = json.loads(request.content.decode())
+        assert body == {"playerId": "pt-9"}
+        return httpx.Response(200, json={"sold": True})
+
+    with make_client(public_pem, handler) as client:
+        response = client.post(
+            f"/market/leagues/{LEAGUE_ID}/immediate-sales",
+            headers={"Authorization": f"Bearer {token}"},
+            json={"playerId": "pt-9"},
+        )
+
+    assert response.status_code == 200
+    assert response.json() == {"sold": True}
+
+
+def test_create_listing_rejects_sale_price_above_cap(rsa_pems: tuple[str, str]) -> None:
+    _private_pem, public_pem = rsa_pems
+    token = mint_internal_jwt(_private_pem)
+
+    def handler(_request: httpx.Request) -> httpx.Response:
+        raise AssertionError("upstream must not be called")
+
+    with make_client(public_pem, handler) as client:
+        response = client.post(
+            f"/market/leagues/{LEAGUE_ID}/listings",
+            headers={"Authorization": f"Bearer {token}"},
+            json={"playerId": "pt-9", "salePrice": 1_000_000_000},
+        )
+
+    assert response.status_code == 422
+
+
+def test_create_immediate_sale_rejects_extra_keys(rsa_pems: tuple[str, str]) -> None:
+    _private_pem, public_pem = rsa_pems
+    token = mint_internal_jwt(_private_pem)
+
+    def handler(_request: httpx.Request) -> httpx.Response:
+        raise AssertionError("upstream must not be called")
+
+    with make_client(public_pem, handler) as client:
+        response = client.post(
+            f"/market/leagues/{LEAGUE_ID}/immediate-sales",
+            headers={"Authorization": f"Bearer {token}"},
+            json={"playerId": "pt-9", "salePrice": 1},
+        )
+
+    assert response.status_code == 422
+
+
 @pytest.mark.parametrize(
     (
         "api_path",

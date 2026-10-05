@@ -86,6 +86,14 @@ export type SquadCard = {
   teamBadgeUrl: string | null;
   fixturePoints?: number | null;
   isMvp?: boolean;
+  /** Current whole-euro market value from the roster, when Fantasy sent one. */
+  marketValue: number | null;
+  /** True when the roster already has an active market listing for this entry. */
+  onMarket: boolean;
+  /** Market listing id when this squad entry is for sale. */
+  listingId: string | null;
+  /** Current asking price of that listing, in whole euros. */
+  salePrice: number | null;
 };
 
 const LINEUP_ROLES: readonly LineupRole[] = [
@@ -841,6 +849,10 @@ export function enrichSquadMapFromLineup(
           teamBadgeUrl: player.teamBadgeUrl ?? null,
           fixturePoints: player.fixturePoints ?? null,
           isMvp: player.isMvp === true,
+          marketValue: null,
+          onMarket: false,
+          listingId: null,
+          salePrice: null,
         });
         continue;
       }
@@ -903,6 +915,31 @@ export function captainFromLineup(lineup: unknown): string | null {
   return captainIdOf(asRecord(asRecord(lineup)?.formation)?.captain);
 }
 
+function rosterMarketValue(record: Record<string, unknown> | null): number | null {
+  const master = asRecord(record?.playerMaster);
+  const raw = master?.marketValue ?? record?.marketValue;
+  const value = asFiniteNumber(raw);
+  if (value == null || value <= 0) return null;
+  return Math.round(value);
+}
+
+function rosterListing(record: Record<string, unknown> | null): {
+  listingId: string | null;
+  salePrice: number | null;
+} {
+  const listing = asRecord(record?.playerMarket);
+  if (!listing) return { listingId: null, salePrice: null };
+  const sale = asFiniteNumber(listing.salePrice);
+  return {
+    listingId: idText(listing.id),
+    salePrice: sale != null && sale > 0 ? Math.round(sale) : null,
+  };
+}
+
+function rosterOnMarket(record: Record<string, unknown> | null): boolean {
+  return rosterListing(record).listingId != null;
+}
+
 export function squadCards(
   players: unknown,
   captainId: string | null,
@@ -943,6 +980,9 @@ export function squadCards(
       teamBadgeUrl: media.teamBadgeUrl ?? fromCatalog?.teamBadgeUrl ?? null,
       fixturePoints,
       isMvp,
+      marketValue: rosterMarketValue(record),
+      onMarket: rosterOnMarket(record),
+      ...rosterListing(record),
     };
   });
 }

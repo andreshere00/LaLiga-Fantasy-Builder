@@ -11,6 +11,7 @@ from fantasy_api.schemas.market import (
     AcceptOfferWrite,
     BidWrite,
     DirectOfferWrite,
+    ImmediateSaleWrite,
     ListingWrite,
     MarketHistoryEntry,
     MarketMutationResult,
@@ -183,6 +184,33 @@ async def create_listing(
     _user, internal_jwt = await get_current_user(authorization)
     payload = body.model_dump(mode="json")
     data = await get_container().market_service.create_listing(
+        internal_jwt,
+        league_id,
+        payload,
+    )
+    return MarketMutationResult.model_validate(parse_payload(as_object, data))
+
+
+@router.post(
+    "/leagues/{league_id}/immediate-sales",
+    response_model=MarketMutationResult,
+    response_model_exclude_none=True,
+    responses=ERROR_RESPONSES,
+    summary="Sell a player immediately at half market value",
+)
+async def create_immediate_sale(
+    body: ImmediateSaleWrite,
+    league_id: str = Path(description="Fantasy league identifier."),
+    authorization: str | None = _AUTH_HEADER,
+) -> MarketMutationResult:
+    """Sell a squad entry to LaLiga at half its current market value.
+
+    ``playerId`` in the body is the squad-entry id (``playerTeamId``).
+    Fantasy credits the sale to the manager balance and removes the player.
+    """
+    _user, internal_jwt = await get_current_user(authorization)
+    payload = body.model_dump(mode="json")
+    data = await get_container().market_service.create_immediate_sale(
         internal_jwt,
         league_id,
         payload,

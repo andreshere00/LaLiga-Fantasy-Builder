@@ -33,17 +33,35 @@ class BidWrite(BaseModel):
     money: int = Field(gt=0)
 
 
+MAX_SALE_PRICE = 999_999_999
+
+
 class ListingWrite(BaseModel):
     """Request body for ``POST /market/leagues/{leagueId}/listings``.
 
     ``playerId`` is the squad-entry id (``playerTeamId``), not the master
-    footballer id.
+    footballer id. ``salePrice`` is a whole-euro offer, at most
+    ``MAX_SALE_PRICE``. The caller must also keep it at or above the player's
+    current market value.
     """
 
     model_config = ConfigDict(extra="forbid")
 
     playerId: str | int
-    salePrice: int = Field(gt=0)
+    salePrice: int = Field(gt=0, le=MAX_SALE_PRICE)
+
+
+class ImmediateSaleWrite(BaseModel):
+    """Request body for ``POST /market/leagues/{leagueId}/immediate-sales``.
+
+    ``playerId`` is the squad-entry id (``playerTeamId``), not the master
+    footballer id. Fantasy sets the price at half the current market value
+    and credits the balance.
+    """
+
+    model_config = ConfigDict(extra="forbid")
+
+    playerId: str | int
 
 
 class DirectOfferWrite(BaseModel):

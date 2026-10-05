@@ -16,8 +16,10 @@ import { OpponentLineupNotice } from "./OpponentLineupNotice";
 import { PitchMotionProvider, PitchTileMotion } from "./PitchMotion";
 import { PlayedFixtureNotice } from "./PlayedFixtureNotice";
 import { PlayerTile } from "./PlayerTile";
+import { SquadPlayerActions } from "./SquadPlayerActions";
 import { TeamValueBox } from "./TeamValueBox";
 import { useLineupBoard } from "./useLineupBoard";
+import { useSquadSales } from "./useSquadSales";
 import "../../components/TooltipPanel.css";
 import "./LineupPage.css";
 
@@ -35,6 +37,7 @@ function scorePointsLabel(weekLoading: boolean, points: number | null): string {
 export function LineupPage() {
   const [searchParams] = useSearchParams();
   const board = useLineupBoard({ initialTeamId: searchParams.get("team") });
+  const squadSales = useSquadSales();
   const currentFixtureTooltip = board.unplayedFixtureScoreTooltip;
   const owner = possessiveName(board.titleName);
   const { pitchSelection, selectPitchPlayer } = board;
@@ -390,24 +393,41 @@ export function LineupPage() {
                     className="squad-grid"
                     key={`${board.selectedTeamId}-${board.squadPage}-${picking}`}
                   >
-                    {board.squadPanelPlayers.map((player) => (
-                      <PlayerTile
-                        key={player.id}
-                        name={player.name}
-                        captain={player.captain}
-                        variant="squad"
-                        photoUrl={player.photoUrl}
-                        teamBadgeUrl={player.teamBadgeUrl}
-                        fixturePoints={
-                          board.fixtureScoresVisible ? player.fixturePoints : null
-                        }
-                        isMvp={board.fixtureScoresVisible && player.isMvp === true}
-                        interactive={picking}
-                        onSelect={
-                          picking ? () => board.pickSquadPlayer(player.id) : undefined
-                        }
-                      />
-                    ))}
+                    {board.squadPanelPlayers.map((player) => {
+                      const tile = (
+                        <PlayerTile
+                          name={player.name}
+                          captain={player.captain}
+                          variant="squad"
+                          photoUrl={player.photoUrl}
+                          teamBadgeUrl={player.teamBadgeUrl}
+                          fixturePoints={
+                            board.fixtureScoresVisible ? player.fixturePoints : null
+                          }
+                          isMvp={board.fixtureScoresVisible && player.isMvp === true}
+                          interactive={picking}
+                          onSelect={
+                            picking ? () => board.pickSquadPlayer(player.id) : undefined
+                          }
+                        />
+                      );
+                      if (board.ownSquad && !picking) {
+                        return (
+                          <SquadPlayerActions
+                            key={player.id}
+                            player={player}
+                            sales={squadSales}
+                          >
+                            {tile}
+                          </SquadPlayerActions>
+                        );
+                      }
+                      return (
+                        <div className="squad-tile-slot" key={player.id}>
+                          {tile}
+                        </div>
+                      );
+                    })}
                   </div>
                 )}
               </div>
