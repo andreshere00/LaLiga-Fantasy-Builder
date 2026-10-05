@@ -1930,6 +1930,254 @@
         ]
       }
     },
+    "/players/{player_id}/stats/detail": {
+      "get": {
+        "tags": [
+          "player-stats"
+        ],
+        "summary": "Aggregate player stats segments in one response",
+        "operationId": "get_stats_detail_players__player_id__stats_detail_get",
+        "parameters": [
+          {
+            "name": "player_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "pattern": "^[0-9]{1,10}$",
+              "description": "Master footballer id (`CatalogPlayer.id`).",
+              "title": "Player Id"
+            },
+            "description": "Master footballer id (`CatalogPlayer.id`)."
+          },
+          {
+            "name": "last",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "maximum": 60,
+              "minimum": 1,
+              "default": 5,
+              "title": "Last"
+            }
+          },
+          {
+            "name": "competition",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/Competition"
+                  }
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Competition"
+            }
+          },
+          {
+            "name": "preset",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "$ref": "#/components/schemas/MarketPreset"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Preset"
+            }
+          },
+          {
+            "name": "from",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "format": "date"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "From"
+            }
+          },
+          {
+            "name": "to",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "format": "date"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "To"
+            }
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "maximum": 5,
+              "minimum": 1,
+              "default": 5,
+              "title": "Limit"
+            }
+          },
+          {
+            "name": "include_stats",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "boolean",
+              "default": true,
+              "title": "Include Stats"
+            }
+          },
+          {
+            "name": "include_weather",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "boolean",
+              "default": true,
+              "title": "Include Weather"
+            }
+          },
+          {
+            "name": "include",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "array",
+              "items": {
+                "enum": [
+                  "fixtures",
+                  "market",
+                  "recent",
+                  "upcoming",
+                  "profile"
+                ],
+                "type": "string"
+              },
+              "title": "Include"
+            }
+          },
+          {
+            "name": "authorization",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Authorization"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PlayerDetailResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized or LaLiga re-auth required.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "502": {
+            "description": "Auth or Fantasy upstream failure.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Fantasy upstream unavailable.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Player or stats source not found.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Rate limit exceeded for scraped segments.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ]
+      }
+    },
     "/players/{player_id}/stats/fixtures": {
       "get": {
         "tags": [
@@ -7566,6 +7814,92 @@
         "title": "PayBuyoutWrite",
         "description": "Request body for paying a buyout clause."
       },
+      "PlayerDetailResponse": {
+        "properties": {
+          "player_id": {
+            "type": "string",
+            "title": "Player Id"
+          },
+          "player": {
+            "$ref": "#/components/schemas/PlayerRef"
+          },
+          "season": {
+            "type": "string",
+            "title": "Season"
+          },
+          "generated_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Generated At"
+          },
+          "fixtures": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/PlayerFixtureStatsResponse"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "market": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/PlayerMarketResponse"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "recent": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/RecentMatchesResponse"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "upcoming": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/UpcomingMatchesResponse"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "profile": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/PlayerProfileResponse"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "segment_errors": {
+            "items": {
+              "$ref": "#/components/schemas/SegmentError"
+            },
+            "type": "array",
+            "title": "Segment Errors"
+          }
+        },
+        "additionalProperties": true,
+        "type": "object",
+        "required": [
+          "player_id",
+          "player",
+          "season",
+          "generated_at"
+        ],
+        "title": "PlayerDetailResponse"
+      },
       "PlayerFixtureStatsResponse": {
         "properties": {
           "player_id": {
@@ -8511,6 +8845,37 @@
           "query"
         ],
         "title": "SegmentDescriptor"
+      },
+      "SegmentError": {
+        "properties": {
+          "segment": {
+            "type": "string",
+            "enum": [
+              "fixtures",
+              "market",
+              "recent",
+              "upcoming",
+              "profile"
+            ],
+            "title": "Segment"
+          },
+          "code": {
+            "type": "string",
+            "title": "Code"
+          },
+          "detail": {
+            "type": "string",
+            "title": "Detail"
+          }
+        },
+        "additionalProperties": true,
+        "type": "object",
+        "required": [
+          "segment",
+          "code",
+          "detail"
+        ],
+        "title": "SegmentError"
       },
       "SegmentWarning": {
         "properties": {

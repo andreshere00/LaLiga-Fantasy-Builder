@@ -19,7 +19,16 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("--player-id", required=True)
     parser.add_argument(
         "--segment",
-        choices=["index", "fixtures", "market", "recent", "upcoming", "profile", "all"],
+        choices=[
+            "index",
+            "fixtures",
+            "market",
+            "recent",
+            "upcoming",
+            "profile",
+            "detail",
+            "all",
+        ],
         default="all",
     )
     parser.add_argument("--preset")
@@ -42,6 +51,19 @@ def main(argv: list[str] | None = None) -> int:
         return 1
 
     player = path_segment(args.player_id)
+    if args.segment == "detail":
+        path, params = _detail_route(player, args)
+        try:
+            data = api_get(args.api_base, path, jwt, params=params)
+        except RuntimeError as exc:
+            print(str(exc), file=sys.stderr)
+            return 1
+        if args.json:
+            print(json.dumps(data, ensure_ascii=False, indent=2))
+        else:
+            print(json.dumps(data, ensure_ascii=False, indent=2))
+        return 0
+
     segments = _segments_for(args.segment)
     payload: dict[str, object] = {}
     errors: dict[str, str] = {}
@@ -105,6 +127,30 @@ def _route(
             params["include_weather"] = False
         return f"{base}/matches/upcoming", params or None
     return f"{base}/profile", None
+
+
+def _detail_route(
+    player: str,
+    args: argparse.Namespace,
+) -> tuple[str, dict[str, str | int | bool | list[str]] | None]:
+    params: dict[str, str | int | bool | list[str]] = {}
+    if args.last is not None:
+        params["last"] = args.last
+    if args.competition:
+        params["competition"] = args.competition
+    if args.preset:
+        params["preset"] = args.preset
+    if getattr(args, "from"):
+        params["from"] = getattr(args, "from")
+    if args.to:
+        params["to"] = args.to
+    if args.limit is not None:
+        params["limit"] = args.limit
+    if args.no_stats:
+        params["include_stats"] = False
+    if args.no_weather:
+        params["include_weather"] = False
+    return f"/players/{player}/stats/detail", params or None
 
 
 if __name__ == "__main__":

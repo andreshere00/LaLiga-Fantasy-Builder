@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import asyncio
 from collections.abc import Callable
 from datetime import UTC, date, datetime
 from typing import Any
@@ -26,6 +27,7 @@ from fantasy_api.repositories.player_stats import PlayerStatsRepository
 from fantasy_api.repositories.players import PlayersRepository
 from fantasy_api.schemas.player_stats import (
     Competition,
+    DetailSegment,
     FixtureRef,
     FixturesQuery,
     FixtureStatsRow,
@@ -40,6 +42,8 @@ from fantasy_api.schemas.player_stats import (
     MaxProfitableBid,
     MinutesPlayed,
     NewsItem,
+    PlayerDetailQuery,
+    PlayerDetailResponse,
     PlayerFixtureStatsResponse,
     PlayerMarketResponse,
     PlayerProfileResponse,
@@ -49,6 +53,7 @@ from fantasy_api.schemas.player_stats import (
     RecentMatchesQuery,
     RecentMatchesResponse,
     SegmentDescriptor,
+    SegmentError,
     SegmentWarning,
     SourceStatus,
     StartProbability,
@@ -76,6 +81,14 @@ from fantasy_api.services.wire_map import (
 )
 
 MADRID_TZ = ZoneInfo("Europe/Madrid")
+
+_DETAIL_SEGMENT_ORDER: tuple[DetailSegment, ...] = (
+    "fixtures",
+    "market",
+    "recent",
+    "upcoming",
+    "profile",
+)
 
 
 def _match_result(
@@ -183,6 +196,70 @@ class PlayerStatsService:
             season=season.label,
             segments=segments,
             generated_at=self._now(),
+        )
+
+    async def detail(
+        self,
+        player_id: str,
+        query: PlayerDetailQuery,
+    ) -> PlayerDetailResponse:
+        """Return selected stats segments in one response."""
+        player = await self._resolver.resolve(player_id)
+        season = current_season(self._today())
+        requested = set(query.include)
+        segment_errors: list[SegmentError] = []
+        fixtures: PlayerFixtureStatsResponse | None = None
+        market: PlayerMarketResponse | None = None
+        recent: RecentMatchesResponse | None = None
+        upcoming: UpcomingMatchesResponse | None = None
+        profile: PlayerProfileResponse | None = None
+
+        async def run(name: DetailSegment) -> tuple[DetailSegment, Any | None, SegmentError | None]:
+            if not self._detail_segment_available(name):
+                err = SegmentError(
+                    segment=name,
+                    code="disabled",
+                    detail="segment disabled",
+                )
+                return name, None, err
+            try:
+                payload = await self._detail_segment_call(player_id, name, query)
+                return name, payload, None
+            except UpstreamError as exc:
+                err = SegmentError(
+                    segment=name,
+                    code=exc.category,
+                    detail=str(exc),
+                )
+                return name, None, err
+
+        tasks = [run(name) for name in _DETAIL_SEGMENT_ORDER if name in requested]
+        results = await asyncio.gather(*tasks)
+        for name, payload, err in results:
+            if err is not None:
+                segment_errors.append(err)
+            if name == "fixtures":
+                fixtures = payload
+            elif name == "market":
+                market = payload
+            elif name == "recent":
+                recent = payload
+            elif name == "upcoming":
+                upcoming = payload
+            elif name == "profile":
+                profile = payload
+
+        return PlayerDetailResponse(
+            player_id=player_id,
+            player=self._player_ref(player),
+            season=season.label,
+            generated_at=self._now(),
+            fixtures=fixtures,
+            market=market,
+            recent=recent,
+            upcoming=upcoming,
+            profile=profile,
+            segment_errors=segment_errors,
         )
 
     async def fixtures(
@@ -557,6 +634,34 @@ class PlayerStatsService:
     def _weather_enabled(self) -> bool:
         key = self._settings.openweather_api_key
         return bool(key and key.get_secret_value())
+
+    def _scraping_enabled(self) -> bool:
+        return bool(self._settings.scraping_base_url)
+
+    def _detail_segment_available(self, name: DetailSegment) -> bool:
+        if name == "market":
+            return True
+        if not self._scraping_enabled():
+            return False
+        if name == "upcoming":
+            return self._weather_enabled()
+        return True
+
+    async def _detail_segment_call(
+        self,
+        player_id: str,
+        name: DetailSegment,
+        query: PlayerDetailQuery,
+    ) -> Any:
+        if name == "fixtures":
+            return await self.fixtures(player_id, query.fixtures_query())
+        if name == "market":
+            return await self.market(player_id, query.market_query())
+        if name == "recent":
+            return await self.recent_matches(player_id, query.recent_query())
+        if name == "upcoming":
+            return await self.upcoming_matches(player_id, query.upcoming_query())
+        return await self.profile(player_id)
 
     def _venue_schema(self, entry: VenueEntry) -> Venue:
         return Venue(
