@@ -5822,6 +5822,9 @@
           "penalties_committed": {
             "$ref": "#/components/schemas/StatValue"
           },
+          "penalties_won": {
+            "$ref": "#/components/schemas/StatValue"
+          },
           "penalties_saved": {
             "$ref": "#/components/schemas/StatValue"
           },
@@ -9324,6 +9327,7 @@
           "fantasy_league_card",
           "fantasy_calendar",
           "futbolfantasy",
+          "computed_official",
           "derived",
           "unavailable"
         ],
