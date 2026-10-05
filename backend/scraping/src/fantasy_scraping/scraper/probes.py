@@ -30,13 +30,24 @@ def _canonical_team(slug: str) -> str:
 
 
 def team_slug(html: str) -> str | None:
-    """Return the club slug from the profile header link, or None."""
+    """Return the club slug from the profile header, or None."""
     tree = lxml_html.fromstring(html)
     for node in tree.cssselect("a.club"):
-        href = node.get("href") or ""
-        if match := _TEAM_HREF.search(href):
-            return match.group(1)
+        if slug := _slug_from_href(node.get("href") or ""):
+            return slug
+    mains = tree.cssselect("main")
+    if not mains:
+        return None
+    for node in mains[0].cssselect("a"):
+        if slug := _slug_from_href(node.get("href") or ""):
+            return slug
     return None
+
+
+def _slug_from_href(href: str) -> str | None:
+    """Return a club slug when the href ends at ``/equipos/{slug}``."""
+    match = _TEAM_HREF.search(href)
+    return match.group(1) if match else None
 
 
 def matching_team_slugs(team_norm: str, team_slugs: Iterable[str]) -> list[str]:
@@ -67,22 +78,23 @@ def team_matches(team_norm: str, probed: str, team_slugs: Iterable[str]) -> bool
 
 
 def widget_id(html: str) -> str | None:
-    """Return the market widget id from the profile header widget only."""
+    """Return the market widget id from the profile page."""
     tree = lxml_html.fromstring(html)
     for link in tree.cssselect("a.widget-mercado"):
         href = link.get("href") or ""
         if match := _WIDGET_HREF.search(href):
             return match.group(1)
     sections = tree.cssselect("section.mercado")
-    if not sections:
-        return None
-    fragment = etree.tostring(sections[0], encoding="unicode")
-    for value in sections[0].xpath(".//@data-jugador"):
-        if value.isdigit():
-            return value
-    if match := _WIDGET_JS.search(fragment):
-        return match.group(1)
-    if match := _DATA_JUGADOR.search(fragment):
+    if sections:
+        fragment = etree.tostring(sections[0], encoding="unicode")
+        for value in sections[0].xpath(".//@data-jugador"):
+            if value.isdigit():
+                return value
+        if match := _WIDGET_JS.search(fragment):
+            return match.group(1)
+        if match := _DATA_JUGADOR.search(fragment):
+            return match.group(1)
+    if match := _WIDGET_JS.search(html):
         return match.group(1)
     return None
 

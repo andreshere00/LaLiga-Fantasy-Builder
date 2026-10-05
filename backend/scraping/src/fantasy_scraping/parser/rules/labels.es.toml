@@ -1,9 +1,11 @@
 [hierarchy]
 dios = 1
-estrella = 2
-titular = 3
+clave = 2
+importante = 3
 rotacion = 4
-suplente = 5
+revulsivo = 5
+reserva = 6
+otro = 7
 
 [[labels]]
 label = "Nombre"
@@ -174,6 +176,12 @@ normaliser = "es_int"
 group = "attack"
 
 [[labels]]
+label = "Córners forzados"
+path = "season_stats.attack.corners_won"
+normaliser = "es_int"
+group = "attack"
+
+[[labels]]
 label = "Córners precisos"
 path = "season_stats.attack.corners_accurate"
 normaliser = "ratio"
@@ -235,6 +243,12 @@ group = "defense"
 
 [[labels]]
 label = "Intercepciones"
+path = "season_stats.defense.interceptions"
+normaliser = "es_int"
+group = "defense"
+
+[[labels]]
+label = "Pases interceptados"
 path = "season_stats.defense.interceptions"
 normaliser = "es_int"
 group = "defense"
