@@ -6,7 +6,9 @@ Catalog and market value are **public**; the league card is authenticated
 
 Segmented player stats (FutbolFantasy via the scraping service, LaLiga catalog
 and market history, optional OpenWeather) live under `/players/{player_id}/stats/*`.
-See [player-stats-endpoint plan](../../plans/player-stats-endpoint.md) and
+See [player-stats-endpoint plan](../../plans/player-stats-endpoint.md),
+[player detail aggregate plan](../../plans/player-detail-endpoint.md) (UI should
+prefer **`/stats/detail`** over client-side `--segment all`), and
 [scraping service](../../scraping/README.md).
 
 ## Routes
@@ -32,6 +34,20 @@ catalog failures still use 401 and 404. Query defaults: `last=5`, `limit=5`,
 `preset=season` (when `from`/`to` are omitted), all segments in `include`.
 A missing OpenWeather key still returns upcoming matches; weather on those
 rows is disabled.
+
+### Detail aggregate behaviour
+
+- **`segment_errors`**: only segments that failed upstream or were skipped
+  because scraping is disabled (`SCRAPING_BASE_URL` unset). **`market` is never
+  disabled.** **`upcoming` is not disabled** for a missing OpenWeather key.
+- Typical **`SegmentError.code`** values: `disabled`, `scraping_unavailable`,
+  `stats_source_not_found`, `scraping_error`, and other `UpstreamError.category`
+  strings from the segment that failed. **`detail`** is a fixed, sanitised
+  message (never raw upstream bodies).
+- Planned structured **`profile.availability`** / **`profile.form`** for the
+  players detail screen are described in
+  [list-availability.md](../../plans/list-availability.md) and are **not** on
+  the wire yet; use `injury.availability_text` today.
 
 Models: `fantasy_api.schemas.players` (catalog/league card) and
 `fantasy_api.schemas.player_stats` (stats segments). Catalog `weekPoints` stays

@@ -1,6 +1,9 @@
 # Plan: player detail aggregate (`GET /players/{player_id}/stats/detail`)
 
-Status: **proposed**
+Status: **implemented** (backend, CLI, tests, OpenAPI, Players API README).
+Frontend `/players/:playerId` and `client.ts` paths are **not** built yet.
+
+Verified against tree: **2026-10-06** (`feat/implement-stats-detail-endpoint`).
 
 Owner of this plan: one JWT read on `backend/api` that returns the five player
 stats segments in a single response. It does not add scraping, weather, market
@@ -120,6 +123,10 @@ returned by that segment (`"scraping unavailable"`, `"stats source not found"`,
 characters, using the same rule as `SegmentWarning.detail`. Never copy an
 upstream body, URL, or exception string.
 
+Top-level `player` starts from the catalog resolver, then the service replaces
+it with the first nested segment `PlayerRef` that has `name` or `team_name`
+(profile, then recent, upcoming, fixtures — see `PlayerStatsService.detail`).
+
 ## 3. Service
 
 Add `PlayerStatsService.detail(player_id, query) -> PlayerDetailResponse`.
@@ -134,9 +141,12 @@ Add `PlayerStatsService.detail(player_id, query) -> PlayerDetailResponse`.
 4. Wrap each call. `UpstreamError` becomes a `SegmentError` and a `null`
    payload. Anything else propagates (`UnauthorizedError`,
    `NeedsReauthError`, validation bugs).
-5. When the stats index would mark a segment `available=false` (scraper base
-   URL unset, or OpenWeather key unset for upcoming), do not call that
-   method. Record `code="disabled"` and `detail="segment disabled"`.
+5. When the stats index would mark a scraped segment `available=false` (scraper
+   base URL unset), do not call that method. Record `code="disabled"` and
+   `detail="segment disabled"`. **Market always runs.** **Upcoming always
+   runs** when scraping is enabled: a missing OpenWeather key or
+   `include_weather=false` only sets `weather.reason=disabled` on each row; it
+   does **not** skip the segment or add a `segment_errors` entry.
 
 The first scraped method fills `ScrapedPlayerProvider` for `(player, season)`.
 The others await the same single-flight cache, so one detail request triggers
@@ -177,12 +187,13 @@ not become a parallel scraper client.
 
 Forward `--preset`, `--from`, `--to`, `--competition`, `--last`, `--limit`,
 `--no-weather`, and `--no-stats` the same way the segment CLI already does.
-No new login flow. The command stays read-only.
+There is no `--include` flag on the CLI yet (API query only). No new login
+flow. The command stays read-only.
 
 ## 5. Tests
 
-File: `backend/api/tests/test_player_stats.py` (extend) or
-`test_player_detail.py` if the current module is already large. Sections:
+File: `backend/api/tests/test_player_detail.py` (plus CLI cases in
+`test_cli_player_stats.py`). Sections:
 `# ---- Mocks, fixtures & helpers ---- #`, `# ---- Happy path ---- #`,
 `# ---- Error paths ---- #`, `# ---- Edge cases ---- #`. Names:
 `{method}_{state}_{behavior}`.
@@ -197,6 +208,7 @@ File: `backend/api/tests/test_player_stats.py` (extend) or
 | `preset` together with `from` | 422, no upstream call |
 | `include=market` | only `market` is called |
 | Scraper URL unset | scraped segments `disabled`, market still called |
+| Missing OpenWeather key | 200, upcoming payload set, weather disabled per row, no upcoming `segment_errors` |
 | Rate limit exceeded | 429 and `Retry-After` |
 | Error `detail` | fixed string only; bearer, service token, and upstream body absent |
 
@@ -204,19 +216,20 @@ Use `httpx.MockTransport`, as the other stats tests do.
 
 ## 6. Docs and OpenAPI
 
-After the route exists:
+Done on this branch:
 
 ```bash
 uv run poe generate-openapi
 uv run poe generate-endpoint-schemas
 ```
 
-Commit `backend/api/openapi.json` and `docs/api/endpoint-schemas.md`.
+Committed: `backend/api/openapi.json`, `docs/api/endpoint-schemas.md`,
+[docs/api/players/README.md](../api/players/README.md) (detail row, defaults,
+200 + `segment_errors`, OpenWeather row behaviour).
 
-Update [docs/api/players/README.md](../api/players/README.md): path, JWT, query
-defaults, and the 200-with-`segment_errors` rule. Add one row to the stats
-route table. Note that D3 is superseded for this consumer and that the
-segment routes remain.
+When editing the parent plan, note that [player-stats-endpoint.md](player-stats-endpoint.md)
+decision **D3** is superseded for UI consumers that call this aggregate; segment
+routes and CLI `--segment all` remain.
 
 ## 7. What this does not fix
 

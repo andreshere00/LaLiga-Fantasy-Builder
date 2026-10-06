@@ -15,6 +15,7 @@ import {
   squadSaleErrorMessage,
 } from "./squadSale";
 import type { SquadSalesApi } from "./useSquadSales";
+import { PlayerDetailsLink } from "../players/PlayerDetailsLink";
 import "./SquadPlayerActions.css";
 
 type SaleView = "choose" | "list" | "modify" | "cancel" | "immediate";
@@ -86,23 +87,35 @@ export function SquadPlayerActions({
 
   return (
     <>
-      <button
-        type="button"
-        className="squad-tile-slot squad-player-hit has-hover-tooltip-panel"
-        aria-label={`${player.name}. ${PLAYER_OPTIONS_HINT}`}
-        aria-describedby={hintId}
-        aria-haspopup="dialog"
-        aria-expanded={open}
-        onClick={() => {
-          setView("choose");
-          setOpen(true);
-        }}
-      >
+      <div className="squad-tile-slot squad-player-hit-area">
         {children}
-        <span id={hintId} className="hover-tooltip-panel squad-player-hint" role="tooltip">
-          {PLAYER_OPTIONS_HINT}
-        </span>
-      </button>
+        <div className="squad-tile-controls">
+          {player.masterPlayerId ? (
+            <PlayerDetailsLink
+              playerId={player.masterPlayerId}
+              playerName={player.name}
+              className="squad-details-link"
+            />
+          ) : null}
+          <button
+            type="button"
+            className="squad-player-options-btn has-hover-tooltip-panel"
+            aria-label={`${player.name}. ${PLAYER_OPTIONS_HINT}`}
+            aria-describedby={hintId}
+            aria-haspopup="dialog"
+            aria-expanded={open}
+            onClick={() => {
+              setView("choose");
+              setOpen(true);
+            }}
+          >
+            Options
+            <span id={hintId} className="hover-tooltip-panel squad-player-hint" role="tooltip">
+              {PLAYER_OPTIONS_HINT}
+            </span>
+          </button>
+        </div>
+      </div>
       <Modal
         open={open}
         title={

@@ -7,6 +7,8 @@ import lineupActive from "../../assets/nav_tab_lineup_active.svg";
 import lineupIdle from "../../assets/nav_tab_lineup.svg";
 import marketActive from "../../assets/nav_tab_market_active.svg";
 import marketIdle from "../../assets/nav_tab_market.svg";
+import playersActive from "../../assets/button_players_red.svg";
+import playersIdle from "../../assets/button_players_gray.svg";
 import { useLeague } from "../lineup/LeagueProvider";
 import { PersonIcon, TrophyIcon } from "./icons";
 import { ProfilePhoto } from "./ProfilePhoto";
@@ -169,6 +171,16 @@ export function Header() {
                   <img src={isActive ? marketActive : marketIdle} alt="" />
                 </span>
                 <span className="nav-tab-label">Market</span>
+              </>
+            )}
+          </NavLink>
+          <NavLink to="/players" className="nav-tab">
+            {({ isActive }) => (
+              <>
+                <span className="nav-tab-icon-wrap" aria-hidden="true">
+                  <img src={isActive ? playersActive : playersIdle} alt="" />
+                </span>
+                <span className="nav-tab-label">Players</span>
               </>
             )}
           </NavLink>

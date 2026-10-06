@@ -124,7 +124,9 @@ loadable on its own, honest provenance per value, and no invented data.
   can be added without a breaking change.
 - Forecasts beyond what OpenWeather returns, climate averages, or any
   estimated value. Out-of-horizon weather is `null` plus a reason.
-- A single "give me everything" aggregate route (section 2.1, decision D3).
+- A single "give me everything" aggregate route in the **original** stats plan
+  (decision D3). **`GET /players/{player_id}/stats/detail`** now exists; see
+  [player-detail-endpoint.md](player-detail-endpoint.md). Segment routes remain.
 - Writes of any kind. No bids, clauses, lineups, or shields.
 - Persisting scraped data in a database (process-local TTL caches only).
 - Exposing raw scraped HTML/Markdown, `ParserService.to_markdown`, or
@@ -323,7 +325,7 @@ normalised list to `FantasySupplement.market_points[]` as `{date, value}`.
 |----|----------|-----------|
 | D1 | Routes live under `/players/{player_id}/stats/...` | Section 1.1; matches existing prefix |
 | D2 | One router module `api/player_stats.py`, new OpenAPI tag `player-stats` | `api/players.py` stays small; Swagger groups the segments |
-| D3 | Index route returns a **segment catalogue**, not data. No `include=` aggregate | Segments hit different upstreams with different failure modes; the frontend asked for independent loads; the CLI composes segments client-side. Revisit only if a consumer needs one round trip |
+| D3 | Index route returns a **segment catalogue**, not data. No `include=` on the index | Segments hit different upstreams with different failure modes; the CLI composes segments with `--segment all`. **Superseded for UI** by `GET .../stats/detail` ([player-detail-endpoint.md](player-detail-endpoint.md)); segment routes stay for direct access |
 | D4 | **Every** stats route requires the internal JWT, including `/stats/market` | Owner 2026-10-04. The upstream market history is public; this route is not |
 | D5 | No `league_id` on these routes. LaLiga bearer is not fetched for them. Source A1 is out | Owner 2026-10-04. Fixture stats use A0, then FutbolFantasy |
 | D6 | Response models keep `null` fields (`response_model_exclude_none=False`) | `null` means "not exposed upstream", which differs from "field absent". Existing routes use `exclude_none=True`; these deliberately do not |

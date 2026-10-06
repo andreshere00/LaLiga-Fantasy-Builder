@@ -7,6 +7,8 @@ import { GatePanel } from "../features/gates/GatePanel";
 import { LeagueProvider } from "../features/lineup/LeagueProvider";
 import { LineupPage } from "../features/lineup/LineupPage";
 import { MarketPage } from "../features/market/MarketPage";
+import { PlayerDetailPage } from "../features/players/PlayerDetailPage";
+import { PlayersPage } from "../features/players/PlayersPage";
 import { Footer } from "../features/shell/Footer";
 import { Header } from "../features/shell/Header";
 import { AppErrorBoundary } from "./AppErrorBoundary";
@@ -43,6 +45,8 @@ export function App() {
                   <Routes>
                     <Route path="/" element={<LineupRoute />} />
                     <Route path="/market" element={<MarketPage />} />
+                    <Route path="/players" element={<PlayersPage />} />
+                    <Route path="/players/:playerId" element={<PlayerDetailPage />} />
                     <Route path="/contact" element={<ContactPage />} />
                     <Route path="*" element={<NotFoundPage />} />
                   </Routes>

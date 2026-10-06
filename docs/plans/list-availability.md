@@ -1,8 +1,9 @@
 # Plan: catalog availability on the list, FutbolFantasy reasons on detail
 
-Status: **proposed**
+Status: **proposed** (§3 matches the API today; §4–§6 backend/frontend work
+**not** shipped).
 
-Decision date: **2026-10-05**
+Decision date: **2026-10-05**. Codebase check: **2026-10-06**.
 
 Related: [player-stats-endpoint.md](player-stats-endpoint.md) (profile segment),
 [player-detail-endpoint.md](player-detail-endpoint.md) (aggregate consumer),
@@ -63,11 +64,11 @@ Catalog examples: `backend/api/tests/fixtures/market_captured_snapshot.json`
 
 | Parser / wire (golden fixture) | API `PlayerProfileResponse` today |
 |--------------------------------|-----------------------------------|
-| `profile.availability.status`, `matchday`, `label` | Only `label` → `injury.availability_text` (`player_stats.py` ~538–540) |
+| `profile.availability.status`, `matchday`, `label` | Only `label` → `injury.availability_text` (`PlayerStatsService.profile` ~702–704) |
 | `profile.availability.status` | **Dropped** |
 | `profile.form.value`, `visualOnly` | **Dropped** (`wire_map._normalise_profile` does not pass `form`; `ScrapedProfile` has no `form` field) |
 | `profile.injury.diagnosis`, dates | `injury.diagnosis`, `since`, `expected_return`, `active` |
-| Catalog | `injury.fantasy_status` ← `player.fantasy_status` (~527) |
+| Catalog | `injury.fantasy_status` ← `player.fantasy_status` (~689–690) |
 
 Golden wire: `backend/api/tests/fixtures/scraping/futbolfantasy_raphinha.json`
 (`availability.status`: `available`, `form.visualOnly`: `true`).
@@ -145,7 +146,7 @@ Map known strings to `AvailabilityStatus`; missing or unrecognised → `unknown`
 
 ### 4.4 `backend/api/src/fantasy_api/services/player_stats.py`
 
-In **`profile()`** (~515–600):
+In **`profile()`** (~678+):
 
 1. After `availability = profile.availability` (~524), build `PlayerAvailability`:
    - `status` ← `map_availability_status(availability.get("status"))` when dict
@@ -197,9 +198,12 @@ GET /api/players/{playerId}/stats/detail?include=profile
 (or full default `include` if the screen loads other segments anyway; one scrape
 per visit via existing single-flight cache).
 
-Add `paths.playerStatsDetail(playerId)` in `frontend/src/api/client.ts`.
+Add `paths.playerStatsDetail(playerId)` in `frontend/src/api/client.ts` (not
+present as of **2026-10-06**). Until §4 ships, detail UI must use
+`profile.injury.availability_text` (and diagnosis fields) only — not
+`profile.availability` or `profile.form`.
 
-**Availability block** (plain text, never HTML):
+**Availability block** (after §4; plain text, never HTML):
 
 | Priority | Source field | Use |
 |----------|--------------|-----|

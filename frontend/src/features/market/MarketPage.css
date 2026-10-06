@@ -4,6 +4,28 @@
   cursor: help;
 }
 
+.market-card {
+  position: relative;
+}
+
+.market-player-details-link {
+  position: absolute;
+  top: 0.1rem;
+  left: 0.1rem;
+  z-index: 4;
+}
+
+.pitch-tile-wrap {
+  position: relative;
+}
+
+.pitch-details-link {
+  position: absolute;
+  top: 0.1rem;
+  right: 0.1rem;
+  z-index: 4;
+}
+
 .market-page {
   max-width: 1100px;
   margin: 24px auto;

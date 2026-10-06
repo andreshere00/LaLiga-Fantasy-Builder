@@ -7,6 +7,7 @@ import { bidAmountTooltipLabel } from "../bidTooltip";
 import { clauseUnlockTooltip } from "../marketMessages";
 import type { MarketRow } from "../model/row";
 import { clauseUnlockCountdown } from "../model/valueSeries";
+import { PlayerDetailsLink } from "../../players/PlayerDetailsLink";
 
 type PlayerCellProps = {
   row: MarketRow;
@@ -25,6 +26,13 @@ export function PlayerCell({ row, now, columnLabel = "Player" }: PlayerCellProps
   return (
     <>
       <div className="market-card">
+        {row.playerId ? (
+          <PlayerDetailsLink
+            playerId={row.playerId}
+            playerName={row.name}
+            className="market-player-details-link"
+          />
+        ) : null}
         <PlayerTile
           name={row.name}
           captain={false}

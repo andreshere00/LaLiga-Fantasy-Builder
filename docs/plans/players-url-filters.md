@@ -1,8 +1,8 @@
 # Plan: Players list URL filters
 
-Status: **proposed**
+Status: **proposed** (URL contract only; no `/players` routes in `App.tsx` yet).
 
-Decision date: **2026-10-05**
+Decision date: **2026-10-05**. Codebase check: **2026-10-06**.
 
 Product decision: filter state for the future Players list lives in the URL so a
 view can be shared and restored. This plan defines the query contract and how
@@ -19,6 +19,9 @@ List behaviour (fixed elsewhere; URL must support it):
 - Filter dimensions (market-aligned, no seal-end): name/query, owner, team,
   market value range, FSYP range, form range, availability, position. Position
   id `3` displays **MDF** (reuse `frontend/src/features/market/positions.ts`).
+  **Form filters** apply to **derived** form (same pipeline as market rows:
+  `lastStats` + calendar in `frontend/src/features/market/model/row.ts`), not
+  a field on `GET /players` (`CatalogPlayer` has no `form`).
 - Owner = fantasy manager name or **Free Agent** (from league roster + market
   join, same sources as the screen plan).
 - Detail path uses catalog master id: `/players/{playerId}` — never
@@ -38,7 +41,9 @@ Market keeps filters in React `useState` (`MarketPage.tsx`); this task does
 | `/players/:playerId` | Player detail | Out of scope here; path id is master `playerId` only |
 
 Register both in `App.tsx`. Extend `docs/frontend.md` routes table when the
-screen ships.
+screen ships. As of **2026-10-06**, only `/`, `/market`, and `/contact` are
+registered; stats for detail will use backend
+`GET /players/{playerId}/stats/detail` once the screen exists.
 
 ---
 

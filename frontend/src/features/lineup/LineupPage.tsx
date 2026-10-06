@@ -17,6 +17,7 @@ import { PitchMotionProvider, PitchTileMotion } from "./PitchMotion";
 import { PlayedFixtureNotice } from "./PlayedFixtureNotice";
 import { PlayerTile } from "./PlayerTile";
 import { SquadPlayerActions } from "./SquadPlayerActions";
+import { PlayerDetailsLink } from "../players/PlayerDetailsLink";
 import { TeamValueBox } from "./TeamValueBox";
 import { useLineupBoard } from "./useLineupBoard";
 import { useSquadSales } from "./useSquadSales";
@@ -308,25 +309,34 @@ export function LineupPage() {
                                 order={tileOrder.get(player.id) ?? 0}
                                 lift={interactive}
                               >
-                              <PlayerTile
-                                name={player.name}
-                                captain={!empty && player.id === board.captainId}
-                                variant="pitch"
-                                empty={empty}
-                                photoUrl={player.photoUrl}
-                                teamBadgeUrl={player.teamBadgeUrl}
-                                fixturePoints={
-                                  board.fixtureScoresVisible && !empty
-                                    ? player.fixturePoints
-                                    : null
-                                }
-                                isMvp={board.fixtureScoresVisible && player.isMvp === true}
-                                interactive={interactive}
-                                selected={selected}
-                                onSelect={() =>
-                                  board.selectPitchPlayer(group.role, player.id)
-                                }
-                              />
+                              <div className="pitch-tile-wrap">
+                                <PlayerTile
+                                  name={player.name}
+                                  captain={!empty && player.id === board.captainId}
+                                  variant="pitch"
+                                  empty={empty}
+                                  photoUrl={player.photoUrl}
+                                  teamBadgeUrl={player.teamBadgeUrl}
+                                  fixturePoints={
+                                    board.fixtureScoresVisible && !empty
+                                      ? player.fixturePoints
+                                      : null
+                                  }
+                                  isMvp={board.fixtureScoresVisible && player.isMvp === true}
+                                  interactive={interactive}
+                                  selected={selected}
+                                  onSelect={() =>
+                                    board.selectPitchPlayer(group.role, player.id)
+                                  }
+                                />
+                                {!empty && player.masterPlayerId ? (
+                                  <PlayerDetailsLink
+                                    playerId={player.masterPlayerId}
+                                    playerName={player.name}
+                                    className="pitch-details-link"
+                                  />
+                                ) : null}
+                              </div>
                               </PitchTileMotion>
                             );
                           })}

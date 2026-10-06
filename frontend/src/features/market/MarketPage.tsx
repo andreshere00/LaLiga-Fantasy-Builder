@@ -1,6 +1,7 @@
 import { useDeferredValue, useMemo, useState } from "react";
 
 import { useAuth } from "../../auth/AuthProvider";
+import { favoriteMarketRowClass, readFavoritePlayerIds } from "../players/favorites";
 import { useNow } from "../../hooks/useNow";
 import { useRetained } from "../../hooks/useRetained";
 import { GatePanel } from "../gates/GatePanel";
@@ -24,7 +25,12 @@ import { useMarketBoard } from "./useMarketBoard";
 import "./MarketPage.css";
 
 function MarketList() {
+  const { user } = useAuth();
   const board = useMarketBoard();
+  const favorites = useMemo(
+    () => readFavoritePlayerIds(user?.user_id ?? null),
+    [user?.user_id],
+  );
   const [filters, setFilters] = useState(createEmptyMarketFilters);
   const deferredFilters = useDeferredValue(filters);
   const now = useNow();
@@ -111,7 +117,11 @@ function MarketList() {
             onFiltersChange={setFilters}
           />
           {visibleRows.map((row, order) => (
-            <MarketRowMotion key={row.id} order={order}>
+            <MarketRowMotion
+              key={row.id}
+              order={order}
+              className={favoriteMarketRowClass(row.playerId, favorites)}
+            >
               <MarketRowCells
                 row={row}
                 now={now}

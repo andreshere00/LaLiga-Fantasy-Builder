@@ -54,6 +54,7 @@ export type PlayerMedia = {
 
 export type LineupSlotView = {
   id: string;
+  masterPlayerId: string | null;
   name: string;
   isEmpty?: boolean;
   photoUrl?: string | null;
@@ -79,6 +80,7 @@ export type LineupGroup = {
 
 export type SquadCard = {
   id: string;
+  masterPlayerId: string | null;
   name: string;
   captain: boolean;
   positionId: number | null;
@@ -739,6 +741,7 @@ export function mediaFromPlayerMaster(master: unknown): PlayerMedia {
     text(transparent?.["256x256"]) ??
     text(transparent?.["128x128"]) ??
     text(transparent?.["64x64"]) ??
+    firstImageUrl(record.images) ??
     null;
   const teamBadgeUrl = resolveTeamBadgeUrl(record.team, record.teamId);
   return { photoUrl, teamBadgeUrl };
@@ -811,7 +814,11 @@ export function slotView(
 ): LineupSlotView {
   const record = asRecord(slot);
   if (!record) {
-    return { id: idText(slot) ?? `slot-${index}`, name: EMPTY_NAME };
+    return {
+      id: idText(slot) ?? `slot-${index}`,
+      masterPlayerId: null,
+      name: EMPTY_NAME,
+    };
   }
   const master = asRecord(record.playerMaster);
   const name =
@@ -820,6 +827,7 @@ export function slotView(
   const media = mediaFromLineupSlot(record, catalogByMasterId);
   return {
     id,
+    masterPlayerId: idText(master?.id),
     name: name ?? EMPTY_NAME,
     ...media,
     fixturePoints: fixturePointsFromSlot(record, scoreLookup),
@@ -842,6 +850,7 @@ export function enrichSquadMapFromLineup(
       if (!existing) {
         merged.set(player.id, {
           id: player.id,
+          masterPlayerId: player.masterPlayerId,
           name: player.name,
           captain: false,
           positionId: null,
@@ -973,6 +982,7 @@ export function squadCards(
       Boolean(masterId && scoreLookup?.mvpByMasterId?.has(masterId));
     return {
       id,
+      masterPlayerId: masterId,
       name,
       captain: captainId != null && id === captainId,
       positionId,

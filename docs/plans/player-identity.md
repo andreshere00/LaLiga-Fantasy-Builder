@@ -1,8 +1,8 @@
 # Plan: player identity (master vs squad-entry id)
 
-Status: **proposed**
+Status: **proposed** (frontend helpers and routes not implemented).
 
-Decision date: **2026-10-05**
+Decision date: **2026-10-05**. Codebase check: **2026-10-06**.
 
 LaLiga Fantasy exposes two ids for the same footballer. The catalog master id
 (`CatalogPlayer.id`, documented as `playerId` in
@@ -234,8 +234,10 @@ fetch via master id) **only when** `masterPlayerId != null`.
 - `useLineupBoard.ts` — `squadMasterIds` via `masterPlayerIdsFromTeam` is
   correct; do not substitute `SquadCard.id`.
 
-When `GET /players/{id}/stats/detail` is consumed, add
-`paths.playerStatsDetail(masterId: MasterPlayerId)` in `client.ts` only.
+Backend **`GET /players/{id}/stats/detail`** is live (see
+[player-detail-endpoint.md](player-detail-endpoint.md)). When the detail screen
+ships, add `paths.playerStatsDetail(masterId: MasterPlayerId)` in `client.ts`
+only — **not added yet** on **2026-10-06**.
 
 ---
 

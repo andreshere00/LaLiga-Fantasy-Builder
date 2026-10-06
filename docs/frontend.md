@@ -34,8 +34,10 @@ and the API.
 |------|--------|---------------------|
 | `/` | Lineup — formation, pitch, squad, standings | [Leagues](api/leagues/README.md), [Teams](api/teams/README.md), [Calendar](api/calendar/README.md) |
 | `/market` | Market — listings, bids, release clauses | [Market](api/market/README.md), [Buyout](api/buyout/README.md), [Players](api/players/README.md), [Calendar](api/calendar/README.md) |
+| `/players` | Players — catalog, filters, top-10 leaderboard | [Players](api/players/README.md), [Calendar](api/calendar/README.md) |
+| `/players/:playerId` | Player detail — stats aggregate | [Players](api/players/README.md) (`GET /players/{id}/stats/detail`) |
 
-The shell header switches routes. The league dropdown applies to both screens.
+The shell header switches routes. The league dropdown applies to lineup, market, and players.
 
 ## Authentication
 
