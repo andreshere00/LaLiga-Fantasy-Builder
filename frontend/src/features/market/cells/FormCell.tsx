@@ -3,9 +3,13 @@ import { useState } from "react";
 import { scoreWeekLabel } from "../../../api/mappers";
 import { PlayerScoreBadge } from "../../lineup/PlayerTile";
 import { formRecentWindow, formWindowChronological } from "../model/form";
-import type { MarketRow } from "../model/row";
+type FormCellRow = {
+  id: string;
+  formRecent: readonly number[];
+  formRecentWeeks: readonly number[];
+};
 
-export function FormCell({ row }: { row: MarketRow }) {
+export function FormCell({ row }: { row: FormCellRow }) {
   const [startIndex, setStartIndex] = useState(0);
   const view = formWindowChronological(
     formRecentWindow(row.formRecent, row.formRecentWeeks, startIndex),

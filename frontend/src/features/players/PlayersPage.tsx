@@ -26,6 +26,7 @@ import type { PlayerRow } from "./model/playerRow";
 import {
   createEmptyPlayersFilters,
   isPlayersLeaderboardView,
+  clampPlayersPage,
   parsePlayersSearchParams,
   serializePlayersSearchParams,
   withPlayersFilters,
@@ -50,8 +51,11 @@ function PlayersListRow({
     formRecent: row.formRecent,
     formRecentWeeks: row.formRecentWeeks,
   };
+  const rowClass = favorite
+    ? "market-row market-data-row players-row is-favorite"
+    : "market-row market-data-row players-row";
   return (
-    <li className="market-row market-data-row players-row">
+    <li className={rowClass}>
       <div className="market-card">
         <PlayerDetailsLink
           playerId={row.playerId}
@@ -81,7 +85,7 @@ function PlayersListRow({
         />
       </span>
       <span className="market-cell market-form" data-label="Form">
-        <FormCell row={formRow as never} />
+        <FormCell row={formRow} />
       </span>
       <span className="market-cell market-value" data-label="Market value">
         {formatEuro(row.marketValue)}
@@ -123,17 +127,15 @@ function PlayersList() {
   );
 
   const leaderboard = isPlayersLeaderboardView(urlState.filters);
-  const visibleRows = useMemo(() => {
-    if (leaderboard) return filtered.slice(0, PLAYERS_LEADERBOARD_SIZE);
-    const page = urlState.page ?? 1;
-    const start = (page - 1) * PLAYERS_PAGE_SIZE;
-    return filtered.slice(start, start + PLAYERS_PAGE_SIZE);
-  }, [filtered, leaderboard, urlState.page]);
-
   const totalPages = leaderboard
     ? 1
     : Math.max(1, Math.ceil(filtered.length / PLAYERS_PAGE_SIZE));
-  const currentPage = urlState.page ?? 1;
+  const currentPage = leaderboard ? 1 : clampPlayersPage(urlState.page, totalPages);
+  const visibleRows = useMemo(() => {
+    if (leaderboard) return filtered.slice(0, PLAYERS_LEADERBOARD_SIZE);
+    const start = (currentPage - 1) * PLAYERS_PAGE_SIZE;
+    return filtered.slice(start, start + PLAYERS_PAGE_SIZE);
+  }, [currentPage, filtered, leaderboard]);
   const filterCount = activePlayersFilterCount(urlState.filters);
   const columnHeadings = useMemo(
     () => playersColumnHeadings(urlState.filters),

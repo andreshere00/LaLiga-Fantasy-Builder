@@ -93,15 +93,15 @@ describe("formatInjuryHistoryEntry_withDatesAndDuration", () => {
     });
     expect(entry.diagnosis).toBe("Edema en el bíceps femoral");
     expect(entry.period).toContain("2025");
-    expect(entry.duration).toBe("3 días");
+    expect(entry.duration).toBe("3 days");
   });
 });
 
-describe("formatInjuryHistoryEntry_ongoing_showsEnCurso", () => {
+describe("formatInjuryHistoryEntry_ongoing_showsOngoing", () => {
   it("formatInjuryHistoryEntry_marksOngoing", () => {
     expect(
       formatInjuryHistoryEntry({ diagnosis: "Test", ongoing: true }).duration,
-    ).toBe("En curso");
+    ).toBe("Ongoing");
   });
 });
 

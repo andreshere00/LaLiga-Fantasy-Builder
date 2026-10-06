@@ -71,9 +71,9 @@ export function formatInjuryHistoryEntry(
   else if (start) period = start;
 
   let duration: string | null = null;
-  if (ongoing) duration = "En curso";
+  if (ongoing) duration = "Ongoing";
   else if (durationDays != null && durationDays > 0) {
-    duration = durationDays === 1 ? "1 día" : `${durationDays} días`;
+    duration = durationDays === 1 ? "1 day" : `${durationDays} days`;
   }
 
   return { diagnosis, period, duration };

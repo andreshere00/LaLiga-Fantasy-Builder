@@ -131,6 +131,14 @@ export function withPlayersFilters(
   return serializePlayersSearchParams({ filters: next, page: null });
 }
 
+/** Page index shown in the pager, never past the last page of results. */
+export function clampPlayersPage(page: number | null, totalPages: number): number {
+  const pages = Math.max(1, totalPages);
+  const requested = page ?? 1;
+  if (!Number.isInteger(requested) || requested < 1) return 1;
+  return Math.min(requested, pages);
+}
+
 export function withPlayersPage(base: URLSearchParams, page: number): URLSearchParams {
   const current = parsePlayersSearchParams(base);
   if (isPlayersLeaderboardView(current.filters)) {

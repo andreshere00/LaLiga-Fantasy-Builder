@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 
 import {
+  clampPlayersPage,
   createEmptyPlayersFilters,
   isPlayersLeaderboardView,
   parsePlayersSearchParams,
@@ -68,5 +69,13 @@ describe("withPlayersPage_filtered_increments", () => {
     const base = new URLSearchParams("q=test");
     const next = withPlayersPage(base, 2);
     expect(next.get("page")).toBe("2");
+  });
+});
+
+describe("clampPlayersPage_pagePastEnd_clampsToLastPage", () => {
+  it("clamps a page above the result count", () => {
+    expect(clampPlayersPage(99, 2)).toBe(2);
+    expect(clampPlayersPage(null, 3)).toBe(1);
+    expect(clampPlayersPage(1, 0)).toBe(1);
   });
 });

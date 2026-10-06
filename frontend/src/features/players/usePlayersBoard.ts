@@ -13,7 +13,7 @@ import {
 import { useAuth } from "../../auth/AuthProvider";
 import { useLeague } from "../lineup/LeagueProvider";
 import { catalogById } from "../market/model/listing";
-import { recentFormWeekNumbers } from "../market/marketRows";
+import { FORM_MATCHES, recentFormWeekNumbers } from "../market/marketRows";
 import { leagueId } from "../../api/mappers";
 import { weekPointsByMasterId } from "../../api/mappers";
 import {
@@ -25,6 +25,7 @@ import {
 } from "./model/playerRow";
 
 const FREE_AGENT = "Free Agent";
+const OWNER_PENDING = "…";
 const ROSTER_STALE_MS = 5 * 60_000;
 
 type QueryBatch = {
@@ -103,7 +104,7 @@ export function usePlayersBoard(): PlayersBoard {
 
   const formWeekNumbers = useMemo(() => {
     if (playedThrough < 1) return [];
-    return recentFormWeekNumbers(playedThrough);
+    return recentFormWeekNumbers(playedThrough, FORM_MATCHES);
   }, [playedThrough]);
 
   const weekStats = useQueries({
@@ -143,11 +144,16 @@ export function usePlayersBoard(): PlayersBoard {
     [rosterQueries.data],
   );
 
+  const ownershipPending =
+    enabled &&
+    leagueKey !== "" &&
+    (leagueTeamsQuery.isLoading || (teamIds.length > 0 && rosterQueries.isLoading));
+
   const rows = useMemo(() => {
     const catalog = catalogById(catalogQuery.data);
     const list: PlayerRow[] = [];
     for (const [playerId, master] of catalog) {
-      const ownedBy = ownership.get(playerId) ?? FREE_AGENT;
+      const ownedBy = ownership.get(playerId) ?? (ownershipPending ? OWNER_PENDING : FREE_AGENT);
       const row = playerRowFromCatalog(master, playerId, ownedBy, calendarForm);
       if (!row.photoUrl) {
         const fromRoster = rosterPhotos.get(playerId);
@@ -159,18 +165,9 @@ export function usePlayersBoard(): PlayersBoard {
     }
     list.sort((left, right) => (right.points ?? -1) - (left.points ?? -1));
     return list;
-  }, [catalogQuery.data, ownership, calendarForm, rosterPhotos]);
+  }, [catalogQuery.data, ownership, ownershipPending, calendarForm, rosterPhotos]);
 
-  const formWeeksReady =
-    formWeekNumbers.length === 0 || (currentWeekQuery.isSuccess && !weekStats.isLoading);
-  const rostersReady = teamIds.length === 0 || !rosterQueries.isLoading;
-  const isLoading =
-    leaguesLoading ||
-    catalogQuery.isLoading ||
-    currentWeekQuery.isLoading ||
-    leagueTeamsQuery.isLoading ||
-    !formWeeksReady ||
-    !rostersReady;
+  const isLoading = leaguesLoading || catalogQuery.isLoading;
 
   const hasError = catalogQuery.isError;
   const isDegraded =

@@ -18,7 +18,7 @@ import {
 import { usePlayerStatsDetailQuery, usePlayersCatalogQuery } from "../../api/queries";
 import { useNow } from "../../hooks/useNow";
 import { useRetained } from "../../hooks/useRetained";
-import { parseMasterPlayerId } from "../../api/ids";
+import { parseMasterPlayerId, type MasterPlayerId } from "../../api/ids";
 import { useAuth } from "../../auth/AuthProvider";
 import { GatePanel } from "../gates/GatePanel";
 import { PlayerTile } from "../lineup/PlayerTile";
@@ -31,7 +31,6 @@ import { ClauseDialog } from "../market/actions/ClauseDialog";
 import { MarketActionMenu } from "../market/actions/MarketActionMenu";
 import { WithdrawDialog } from "../market/actions/WithdrawDialog";
 import { useMarketActions } from "../market/actions/useMarketActions";
-import { useMarketBoard } from "../market/useMarketBoard";
 import { useLeague } from "../lineup/LeagueProvider";
 import { SquadPlayerActions } from "../lineup/SquadPlayerActions";
 import { useSquadSales } from "../lineup/useSquadSales";
@@ -69,6 +68,7 @@ import {
   windKmhFromMs,
 } from "./playerDetailFormat";
 import { PlayerBookmarkButton } from "./PlayerBookmarkButton";
+import { usePlayerMarketListing } from "./usePlayerMarketListing";
 import { readFavoritePlayerIds, toggleFavoritePlayerId } from "./favorites";
 import "./PlayerDetailPage.css";
 
@@ -96,26 +96,6 @@ const STAT_KEYS = [
   "recoveries",
   "balls_lost",
   "dazn_points",
-] as const;
-
-const AVERAGE_PLACEHOLDER = [
-  ["G", "Goals"],
-  ["TaP", "Shots on target"],
-  ["T", "Shots"],
-  ["CF", "Corners won"],
-  ["Reg", "Successful dribbles"],
-  ["C", "Crosses"],
-  ["CP", "Accurate crosses"],
-  ["A", "Assists"],
-  ["A SinGol", "Assists without a goal"],
-  ["PC", "Key passes"],
-  ["Pas", "Completed passes"],
-  ["-Pos", "Possessions lost"],
-  ["DE", "Effective clearances"],
-  ["PI", "Interceptions"],
-  ["BR", "Balls recovered"],
-  ["FR", "Fouls won"],
-  ["-FC", "Fouls committed"],
 ] as const;
 
 function hierarchyIcon(label: string | null | undefined): string {
@@ -160,10 +140,30 @@ function fixtureLabel(fixture: Record<string, unknown> | null): string {
   return MISSING_STAT;
 }
 
-export function PlayerDetailPage() {
-  const { playerId: rawId } = useParams<{ playerId: string }>();
-  const masterId = parseMasterPlayerId(rawId ?? "");
-  const { status, user, accessToken } = useAuth();
+function entryKey(parts: readonly (string | null | undefined)[], index: number): string {
+  const label = parts.filter((part): part is string => part != null && part.length > 0).join("|");
+  return label.length > 0 ? `${label}|${index}` : `row-${index}`;
+}
+
+function fixtureKey(fixture: Record<string, unknown> | null, index: number): string {
+  return entryKey(
+    [
+      text(fixture?.date),
+      text(fixture?.home_team),
+      text(fixture?.away_team),
+      text(fixture?.opponent),
+      text(fixture?.competition),
+    ],
+    index,
+  );
+}
+
+type PlayerDetailBodyProps = {
+  masterId: MasterPlayerId;
+};
+
+function PlayerDetailBody({ masterId }: PlayerDetailBodyProps) {
+  const { user, accessToken } = useAuth();
   const userId = user?.user_id ?? null;
   const [last, setLast] = useState(5);
   const [marketPreset, setMarketPreset] = useState<string>("season");
@@ -182,7 +182,12 @@ export function PlayerDetailPage() {
       include_weather: true,
       include_stats: true,
     };
-    if (marketUseCustomRange && marketCustomFrom && marketCustomTo) {
+    if (
+      marketUseCustomRange &&
+      marketCustomFrom &&
+      marketCustomTo &&
+      marketCustomFrom <= marketCustomTo
+    ) {
       return { ...base, from: marketCustomFrom, to: marketCustomTo };
     }
     return { ...base, preset: marketPreset };
@@ -194,24 +199,21 @@ export function PlayerDetailPage() {
     marketUseCustomRange,
   ]);
 
-  const catalogQuery = usePlayersCatalogQuery(status === "ready");
-  const detailQuery = usePlayerStatsDetailQuery(
-    masterId,
-    detailQueryInput,
-    status === "ready" && masterId != null,
-  );
+  const signedIn = accessToken != null;
+  const catalogQuery = usePlayersCatalogQuery(signedIn);
+  const detailQuery = usePlayerStatsDetailQuery(masterId, detailQueryInput, signedIn);
 
   const league = useLeague();
   const leagueKey = league.selected ? leagueId(league.selected) : "";
   const teamId = league.selected ? callerTeamId(league.selected) : null;
   const now = useNow();
-  const marketBoard = useMarketBoard();
+  const marketListing = usePlayerMarketListing(masterId);
   const marketActions = useMarketActions();
   const squadSales = useSquadSales();
   const withdraw = useRetained(marketActions.pendingWithdraw);
   const teamQuery = useQuery({
     queryKey: ["team", leagueKey, teamId],
-    enabled: status === "ready" && leagueKey !== "" && teamId != null,
+    enabled: signedIn && leagueKey !== "" && teamId != null,
     queryFn: ({ signal }) =>
       getJson(paths.team(leagueKey, teamId ?? ""), accessToken ?? "", { signal }),
   });
@@ -226,6 +228,7 @@ export function PlayerDetailPage() {
   const media = masterId ? catalogMediaByMasterId(catalogQuery.data).get(masterId) : null;
 
   const detail = asRecord(detailQuery.data);
+  const detailReady = detail != null;
   const segmentErrors = Array.isArray(detail?.segment_errors) ? detail.segment_errors : [];
   const fixturesBlock = asRecord(detail?.fixtures);
   const marketBlock = asRecord(detail?.market);
@@ -243,10 +246,7 @@ export function PlayerDetailPage() {
   const positionId = asFiniteNumber(catalogMaster?.positionId);
   const availability = availabilityOf(catalogMaster?.playerStatus);
 
-  const marketRow = useMemo(
-    () => marketBoard.rows.find((row) => row.playerId === masterId) ?? null,
-    [marketBoard.rows, masterId],
-  );
+  const marketRow = marketListing.row;
 
   const fixtureRows = useMemo(() => {
     const rows = fixturesBlock?.fixtures;
@@ -284,38 +284,42 @@ export function PlayerDetailPage() {
     ? profileBlock.injury_history
     : [];
 
-  if (status !== "ready") return <GatePanel status={status} />;
-  if (!masterId) {
-    return (
-      <p className="status-copy" role="alert">
-        Invalid player id.
-      </p>
-    );
-  }
-
   const actionContext = {
-    money: marketBoard.money,
+    money: marketListing.money,
     now,
-    callerTeamId: marketBoard.callerTeamId,
-    squadPlayerCount: marketBoard.squadPlayerCount,
-    activeBidCount: marketBoard.activeBidCount,
-    squadMarketValue: marketBoard.squadMarketValue,
+    callerTeamId: marketListing.callerTeamId,
+    squadPlayerCount: marketListing.squadPlayerCount,
+    activeBidCount: marketListing.activeBidCount,
+    squadMarketValue: marketListing.squadMarketValue,
   };
   const showMarketMenu = marketRow != null && ownSquadCard == null;
   const showBookmark = !showMarketMenu && ownSquadCard == null;
+  const rangeInvalid =
+    marketCustomDraftFrom !== "" &&
+    marketCustomDraftTo !== "" &&
+    marketCustomDraftFrom > marketCustomDraftTo;
+  const canApplyRange =
+    marketCustomDraftFrom !== "" && marketCustomDraftTo !== "" && !rangeInvalid;
 
   return (
     <section className="player-detail-page">
       <p className="player-detail-back">
         <Link to="/players">← Back to players</Link>
       </p>
-      {detailQuery.isLoading ? <p className="status-copy">Loading player…</p> : null}
+      {!detailReady && !detailQuery.isError ? (
+        <p className="status-copy">Loading player…</p>
+      ) : null}
       {detailQuery.isError ? (
         <p className="status-copy" role="alert">
           Player details could not be loaded.
         </p>
       ) : null}
-      {segmentErrors.length > 0 ? (
+      {detailQuery.isFetching && detailQuery.isPlaceholderData ? (
+        <p className="status-copy" role="status">
+          Updating player…
+        </p>
+      ) : null}
+      {detailReady && segmentErrors.length > 0 ? (
         <div className="player-detail-panel player-detail-segment-errors" role="status">
           {segmentErrors.map((entry, index) => {
             const row = asRecord(entry);
@@ -376,16 +380,21 @@ export function PlayerDetailPage() {
               key={step}
               type="button"
               className={last === step ? "is-active" : undefined}
+              aria-pressed={last === step}
               onClick={() => setLast(step)}
             >
               Last {step}
             </button>
           ))}
-          <button type="button" onClick={() => setShowAdvancedStats((value) => !value)}>
+          <button
+            type="button"
+            aria-expanded={showAdvancedStats}
+            onClick={() => setShowAdvancedStats((value) => !value)}
+          >
             {showAdvancedStats ? "Hide details" : "Details"}
           </button>
         </div>
-        {fixturesBlock == null ? (
+        {!detailReady ? null : fixturesBlock == null ? (
           <p className="status-copy">{NO_DATA_YET}</p>
         ) : (
           <div className="player-detail-table-wrap">
@@ -406,7 +415,7 @@ export function PlayerDetailPage() {
                   const fixture = asRecord(record?.fixture);
                   const stats = asRecord(record?.stats);
                   return (
-                    <tr key={index}>
+                    <tr key={fixtureKey(fixture, index)}>
                       <td>{text(fixture?.date) ?? MISSING_STAT}</td>
                       <td>{fixtureLabel(fixture)}</td>
                       <td>{text(fixture?.competition_label) ?? text(fixture?.competition) ?? MISSING_STAT}</td>
@@ -432,6 +441,7 @@ export function PlayerDetailPage() {
               key={value}
               type="button"
               className={!marketUseCustomRange && marketPreset === value ? "is-active" : undefined}
+              aria-pressed={!marketUseCustomRange && marketPreset === value}
               onClick={() => {
                 setMarketUseCustomRange(false);
                 setMarketPreset(value);
@@ -443,6 +453,7 @@ export function PlayerDetailPage() {
           <button
             type="button"
             className={marketUseCustomRange ? "is-active" : undefined}
+            aria-pressed={marketUseCustomRange}
             onClick={() => {
               setMarketUseCustomRange(true);
               setMarketCustomDraftFrom(marketCustomFrom);
@@ -457,7 +468,7 @@ export function PlayerDetailPage() {
             className="player-detail-market-custom"
             onSubmit={(event) => {
               event.preventDefault();
-              if (!marketCustomDraftFrom || !marketCustomDraftTo) return;
+              if (!canApplyRange) return;
               setMarketCustomFrom(marketCustomDraftFrom);
               setMarketCustomTo(marketCustomDraftTo);
             }}
@@ -478,10 +489,17 @@ export function PlayerDetailPage() {
                 onChange={(event) => setMarketCustomDraftTo(event.target.value)}
               />
             </label>
-            <button type="submit">Apply range</button>
+            <button type="submit" disabled={!canApplyRange}>
+              Apply range
+            </button>
+            {rangeInvalid ? (
+              <p className="status-copy" role="alert">
+                From must be on or before to.
+              </p>
+            ) : null}
           </form>
         ) : null}
-        {marketBlock == null ? (
+        {!detailReady ? null : marketBlock == null ? (
           <p className="status-copy">{NO_DATA_YET}</p>
         ) : marketSeries.length === 0 ? (
           <p className="status-copy">{NO_DATA_YET}</p>
@@ -530,6 +548,7 @@ export function PlayerDetailPage() {
         )}
       </section>
 
+      {detailReady ? (
       <section className="player-detail-panel player-detail-section">
         <h2>Matches</h2>
         <h3>Recent</h3>
@@ -541,7 +560,7 @@ export function PlayerDetailPage() {
               const match = asRecord(m);
               const fixture = asRecord(match?.fixture);
               return (
-                <li key={i}>
+                <li key={fixtureKey(fixture, i)}>
                   {text(fixture?.date) ?? MISSING_STAT} · {fixtureLabel(fixture)} ·{" "}
                   {text(fixture?.competition_label) ?? MISSING_STAT}
                 </li>
@@ -562,7 +581,7 @@ export function PlayerDetailPage() {
               const travel = asRecord(match?.travel);
               const wind = windKmhFromMs(asFiniteNumber(snapshot?.wind_speed_ms));
               return (
-                <li key={i}>
+                <li key={fixtureKey(fixture, i)}>
                   {text(fixture?.date) ?? MISSING_STAT} · {fixtureLabel(fixture)} ·{" "}
                   {fixture?.is_home === true ? "Home" : fixture?.is_home === false ? "Away" : MISSING_STAT}
                   {" · "}
@@ -580,7 +599,9 @@ export function PlayerDetailPage() {
           </ul>
         )}
       </section>
+      ) : null}
 
+      {detailReady ? (
       <section className="player-detail-panel player-detail-section player-detail-fantasy">
         <h2>
           <img src={fantasyLogo} alt="" className="player-detail-fantasy-logo" />
@@ -614,7 +635,7 @@ export function PlayerDetailPage() {
                 const href = newsItemHref(row);
                 const source = text(row?.source);
                 return (
-                  <li key={index}>
+                  <li key={entryKey([title, href, source, text(row?.published_at)], index)}>
                     {href ? (
                       <a href={href} target="_blank" rel="noopener noreferrer">
                         {title}
@@ -636,7 +657,7 @@ export function PlayerDetailPage() {
                 const entry = formatInjuryHistoryEntry(row);
                 const meta = [entry.period, entry.duration].filter(Boolean).join(" · ");
                 return (
-                  <li key={index}>
+                  <li key={entryKey([entry.diagnosis, entry.period, text(row?.start)], index)}>
                     <span className="player-detail-injury-diagnosis">{entry.diagnosis}</span>
                     {meta ? (
                       <span className="player-detail-injury-meta">{meta}</span>
@@ -648,36 +669,14 @@ export function PlayerDetailPage() {
           </>
         )}
       </section>
-
-      <section className="player-detail-panel player-detail-section">
-        <h2>Averages per match</h2>
-        <p className="status-copy">Not available from the API yet.</p>
-        <table className="player-detail-table">
-          <thead>
-            <tr>
-              <th>Code</th>
-              <th>Statistic</th>
-              <th>Average</th>
-            </tr>
-          </thead>
-          <tbody>
-            {AVERAGE_PLACEHOLDER.map(([code, label]) => (
-              <tr key={code}>
-                <td>{code}</td>
-                <td>{label}</td>
-                <td>{MISSING_STAT}</td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      </section>
+      ) : null}
 
       <BidDialog
         open={marketActions.pendingBid != null}
         row={marketActions.pendingBid?.row ?? null}
         kind={marketActions.pendingBid?.kind ?? null}
-        money={marketBoard.money}
-        squadMarketValue={marketBoard.squadMarketValue}
+        money={marketListing.money}
+        squadMarketValue={marketListing.squadMarketValue}
         initialAmount={marketActions.pendingBid?.initialAmount ?? null}
         pending={marketActions.actionPending}
         error={marketActions.message}
@@ -703,4 +702,19 @@ export function PlayerDetailPage() {
       />
     </section>
   );
+}
+
+export function PlayerDetailPage() {
+  const { playerId: rawId } = useParams<{ playerId: string }>();
+  const masterId = parseMasterPlayerId(rawId ?? "");
+  const { status, user } = useAuth();
+  if (status !== "ready") return <GatePanel status={status} />;
+  if (!masterId) {
+    return (
+      <p className="status-copy" role="alert">
+        Invalid player id.
+      </p>
+    );
+  }
+  return <PlayerDetailBody key={user?.user_id ?? ""} masterId={masterId} />;
 }

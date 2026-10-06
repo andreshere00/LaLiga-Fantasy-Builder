@@ -74,6 +74,10 @@ export function usePlayerStatsDetailQuery(
     queryKey: ["players", "detail", id, query],
     enabled: enabled && accessToken != null && id !== "",
     staleTime: CALENDAR_STALE_MS,
+    placeholderData: (previousData, previousQuery) => {
+      if (previousQuery?.queryKey[2] !== id) return undefined;
+      return previousData;
+    },
     queryFn: ({ signal }) =>
       getJson(paths.playerStatsDetail(id, query), token, { signal }),
   });

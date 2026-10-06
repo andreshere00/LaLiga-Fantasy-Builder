@@ -141,7 +141,14 @@ export function PlayersListHead({
   };
 
   return (
-    <li className={`market-row market-head-row players-head-row${openColumn ? " is-filter-open" : ""}`}>
+    <li
+      className={[
+        "market-row market-head market-head-row players-head-row",
+        openColumn ? "is-filter-open" : "",
+      ]
+        .filter(Boolean)
+        .join(" ")}
+    >
       <span className="market-head-cell">Player</span>
       {COLUMN_ORDER.map((column) => (
         <HeadCell
