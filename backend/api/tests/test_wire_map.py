@@ -44,6 +44,17 @@ def test_stats_from_parser_layer_maps_camel_case_keys() -> None:
     assert layer[StatKey.ASSISTS].points == 9
 
 
+def test_stats_from_parser_layer_implied_zero_drops_count() -> None:
+    layer = stats_from_parser_layer(
+        {
+            "goalsConceded": {"count": 0, "points": None, "status": "implied_zero"},
+            "goals": {"count": 1, "points": None, "status": "ok"},
+        },
+    )
+    assert StatKey.GOALS_CONCEDED not in layer
+    assert layer[StatKey.GOALS].count == 1
+
+
 def test_stats_from_fantasy_week_maps_arrays() -> None:
     layer = stats_from_fantasy_week({"goals": [2, 20], "mins_played": [90]})
     assert layer[StatKey.GOALS].count == 2

@@ -68,6 +68,27 @@ def test_json_shot_parts_ignores_non_integers() -> None:
     assert _json_shot_parts({"tiros_puerta": 2, "tiros_palo": "x"}) == [2]
 
 
+def test_read_layer_shots_on_target_replaces_total_shots() -> None:
+    ctx = _layer_context()
+    points: dict[str, float] = {}
+    counts: dict[str, int] = {}
+    owners: dict[str, str] = {}
+    _read_layer(ctx, "6 Tiros totales 1 p", points, counts, [], [], [], owners)
+    _read_layer(ctx, "4 Tiros a puerta 2 p", points, counts, [], [], [], owners)
+    assert counts["shots"] == 4
+    assert points["shots"] == 2
+
+
+def test_read_layer_assist_without_goal_does_not_fill_big_chances() -> None:
+    ctx = _layer_context()
+    points: dict[str, float] = {}
+    counts: dict[str, int] = {}
+    extra: list[object] = []
+    _read_layer(ctx, "4 Asistencias sin gol 1 p", points, counts, [], [], extra)
+    assert "big_chances_created" not in counts
+    assert extra
+
+
 def test_read_layer_clear_chances_pair_fills_dazn_field() -> None:
     ctx = _layer_context()
     points: dict[str, float] = {}

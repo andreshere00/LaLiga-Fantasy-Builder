@@ -153,12 +153,28 @@ def test_widget_id_document_script_without_mercado_section() -> None:
     assert widget_id(html) == "3693"
 
 
-def test_team_slug_reads_main_laliga_equipos_link() -> None:
+def test_widget_id_two_script_ids_returns_none() -> None:
+    html = (
+        "<script>"
+        '"/analytics/laliga-fantasy/mercado/detalle/1"'
+        "</script>"
+        "<script>"
+        '"/analytics/laliga-fantasy/mercado/detalle/2"'
+        "</script>"
+    )
+
+    assert widget_id(html) is None
+
+
+def test_team_slug_reads_crest_and_ignores_other_club_links() -> None:
     html = (
         '<a class="team" href="https://www.futbolfantasy.com/laliga/equipos/alaves">nav</a>'
         "<main>"
+        '<a href="https://www.futbolfantasy.com/laliga/equipos/real-madrid">news</a>'
+        '<div class="img-underphoto">'
         '<a href="https://www.futbolfantasy.com/laliga/equipos/barcelona">'
         '<img alt="Barcelona"></a>'
+        "</div>"
         '<a href="https://www.futbolfantasy.com/laliga/equipos/barcelona/jerarquias">j</a>'
         "</main>"
     )

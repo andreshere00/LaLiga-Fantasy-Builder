@@ -216,10 +216,9 @@ def _expected_return_date(
 
 
 def _weather_failure_detail(exc: UpstreamError) -> str:
-    if exc.status_code in {401, 429}:
-        return str(exc.status_code)
-    if exc.status_code is not None and exc.status_code >= 500:
-        return str(exc.status_code)
+    code = exc.provider_status
+    if code in {401, 429} or (code is not None and code >= 500):
+        return str(code)
     return "timeout"
 
 
@@ -268,10 +267,6 @@ class PlayerStatsService:
         player = await self._resolver.resolve(player_id)
         season = current_season(self._today())
         scraping_ok = bool(self._settings.scraping_base_url)
-        weather_ok = bool(
-            self._settings.openweather_api_key
-            and self._settings.openweather_api_key.get_secret_value()
-        )
         segments = [
             SegmentDescriptor(
                 name="fixtures",
@@ -306,7 +301,7 @@ class PlayerStatsService:
                 auth="jwt",
                 sources=["futbolfantasy", "fantasy", "openweather"],
                 requires_scraper=True,
-                available=scraping_ok and weather_ok,
+                available=scraping_ok,
                 query=["limit", "include_weather"],
             ),
             SegmentDescriptor(
@@ -653,12 +648,11 @@ class PlayerStatsService:
                 )
                 continue
             match_venue = self._match_venue(player_home, row.is_home, row.opponent)
-            weather = MatchWeather(snapshot=None, reason=WeatherReason.DISABLED)
             if query.include_weather and self._weather_enabled():
                 weather, weather_warn = await self._weather_for_match(match_venue, kickoff)
                 if weather_warn is not None:
                     row_warnings.append(weather_warn)
-            elif not query.include_weather:
+            else:
                 weather = MatchWeather(snapshot=None, reason=WeatherReason.DISABLED)
             travel = self._travel(player_home, row.is_home, row.opponent)
             rows.append(
@@ -850,11 +844,7 @@ class PlayerStatsService:
     def _detail_segment_available(self, name: DetailSegment) -> bool:
         if name == "market":
             return True
-        if not self._scraping_enabled():
-            return False
-        if name == "upcoming":
-            return self._weather_enabled()
-        return True
+        return self._scraping_enabled()
 
     async def _detail_segment_call(
         self,

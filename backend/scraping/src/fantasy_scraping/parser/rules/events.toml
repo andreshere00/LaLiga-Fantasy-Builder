@@ -140,7 +140,6 @@ key = "assists_without_goal"
 label = "Asistencias sin gol"
 category = "ataque"
 md_label = "asistencias sin gol"
-dazn_field = "big_chances_created"
 
 [[events]]
 key = "goals_conceded_against"

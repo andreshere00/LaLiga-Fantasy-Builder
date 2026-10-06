@@ -75,10 +75,10 @@ class VenueDirectory:
             hit = self._by_alias.get(key)
             if hit:
                 return hit
-            for entry in self._entries:
-                haystack = entry.name.casefold()
-                if re.search(rf"\b{re.escape(key)}\b", haystack):
-                    return entry
+            pattern = re.compile(rf"\b{re.escape(key)}\b")
+            matches = [entry for entry in self._entries if pattern.search(entry.name.casefold())]
+            if len(matches) == 1:
+                return matches[0]
         return None
 
 

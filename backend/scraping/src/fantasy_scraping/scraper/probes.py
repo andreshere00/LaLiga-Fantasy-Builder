@@ -30,17 +30,12 @@ def _canonical_team(slug: str) -> str:
 
 
 def team_slug(html: str) -> str | None:
-    """Return the club slug from the profile header, or None."""
+    """Return the club slug from the profile crest or header, or None."""
     tree = lxml_html.fromstring(html)
-    for node in tree.cssselect("a.club"):
-        if slug := _slug_from_href(node.get("href") or ""):
-            return slug
-    mains = tree.cssselect("main")
-    if not mains:
-        return None
-    for node in mains[0].cssselect("a"):
-        if slug := _slug_from_href(node.get("href") or ""):
-            return slug
+    for selector in ("a.club", "header a", "div.img-underphoto a"):
+        for node in tree.cssselect(selector):
+            if slug := _slug_from_href(node.get("href") or ""):
+                return slug
     return None
 
 
@@ -94,9 +89,21 @@ def widget_id(html: str) -> str | None:
             return match.group(1)
         if match := _DATA_JUGADOR.search(fragment):
             return match.group(1)
-    if match := _WIDGET_JS.search(html):
-        return match.group(1)
+    script_ids = _script_widget_ids(tree)
+    if len(script_ids) == 1:
+        return script_ids[0]
     return None
+
+
+def _script_widget_ids(tree: lxml_html.HtmlElement) -> list[str]:
+    """Return distinct market-widget ids from script tags, in document order."""
+    found: list[str] = []
+    for script in tree.cssselect("script"):
+        for match in _WIDGET_JS.finditer(script.text or ""):
+            value = match.group(1)
+            if value not in found:
+                found.append(value)
+    return found
 
 
 def competition_slugs(html: str, season_label: str) -> list[str]:

@@ -216,10 +216,13 @@ def stats_from_parser_layer(stats: Mapping[str, Any] | None) -> dict[StatKey, Sc
         layer = stats.get(parser_key)
         if not isinstance(layer, Mapping):
             continue
-        out[stat_key] = ScrapedStat(
-            count=layer.get("count"),
-            points=_points_int(layer.get("points")),
-        )
+        count = layer.get("count")
+        if layer.get("status") == "implied_zero":
+            count = None
+        points = _points_int(layer.get("points"))
+        if count is None and points is None:
+            continue
+        out[stat_key] = ScrapedStat(count=count, points=points)
     return out
 
 

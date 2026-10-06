@@ -50,6 +50,11 @@ def _mismatch_detail(actions: int, dazn: int, total: int) -> str:
     return f"{actions}!={total}"
 
 
+def _totals_match(actions: int, dazn: int, total: int) -> bool:
+    """Match the parser: the week total is the actions, or the actions plus DAZN."""
+    return actions == total or actions + dazn == total
+
+
 def apply_computed_official_fallback(
     stats: FixtureStats,
     *,
@@ -57,10 +62,10 @@ def apply_computed_official_fallback(
     minutes_played: int | None,
     fantasy_points_total: int | None,
 ) -> tuple[FixtureStats, list[SegmentWarning]]:
-    """Fill null fantasy_points from Zendesk rules. Warn when the sum misses the total."""
+    """Fill null fantasy_points from Zendesk rules when the sum meets the total."""
     if fantasy_points_total is not None and _has_fantasy_points(stats):
         actions, dazn = _explained_total(stats)
-        if actions + dazn == fantasy_points_total:
+        if _totals_match(actions, dazn, fantasy_points_total):
             return stats, []
     computed = compute_official_fantasy_points(
         stats,
@@ -92,7 +97,7 @@ def apply_computed_official_fallback(
     warnings: list[SegmentWarning] = []
     if fantasy_points_total is not None:
         actions, dazn = _explained_total(candidate)
-        if actions + dazn != fantasy_points_total:
+        if not _totals_match(actions, dazn, fantasy_points_total):
             warnings.append(
                 SegmentWarning(
                     code="computed_points_mismatch",
@@ -100,6 +105,7 @@ def apply_computed_official_fallback(
                     detail=_mismatch_detail(actions, dazn, fantasy_points_total),
                 )
             )
+            return stats, warnings
     return candidate, warnings
 
 
@@ -173,16 +179,6 @@ def merge_fixture_stats(
                 source=source,
             )
     stats = FixtureStats(**{field: merged[key] for key, field in _STAT_FIELDS})
-    if fantasy_points_total is not None and _has_fantasy_points(stats):
-        actions, dazn = _explained_total(stats)
-        if actions + dazn != fantasy_points_total:
-            warnings.append(
-                SegmentWarning(
-                    code="points_total_mismatch",
-                    source=StatSource.FUTBOLFANTASY.value,
-                    detail=_mismatch_detail(actions, dazn, fantasy_points_total),
-                )
-            )
     fallback, fb_warnings = apply_computed_official_fallback(
         stats,
         position_id=position_id,
@@ -190,4 +186,14 @@ def merge_fixture_stats(
         fantasy_points_total=fantasy_points_total,
     )
     warnings.extend(fb_warnings)
+    if fantasy_points_total is not None and _has_fantasy_points(fallback):
+        actions, dazn = _explained_total(fallback)
+        if not _totals_match(actions, dazn, fantasy_points_total):
+            warnings.append(
+                SegmentWarning(
+                    code="points_total_mismatch",
+                    source=StatSource.FUTBOLFANTASY.value,
+                    detail=_mismatch_detail(actions, dazn, fantasy_points_total),
+                )
+            )
     return fallback, warnings

@@ -28,7 +28,7 @@ def test_merge_fixture_stats_computed_official_fills_when_total_matches() -> Non
     assert not any(item.code == "computed_points_mismatch" for item in warnings)
 
 
-def test_merge_fixture_stats_computed_official_keeps_points_on_total_mismatch() -> None:
+def test_merge_fixture_stats_computed_official_drops_points_on_total_mismatch() -> None:
     scrape = {
         StatKey.MINUTES_PLAYED: ScrapedStat(count=90, points=None),
         StatKey.GOALS: ScrapedStat(count=1, points=None),
@@ -40,8 +40,8 @@ def test_merge_fixture_stats_computed_official_keeps_points_on_total_mismatch() 
         position_id=4,
         minutes_played=90,
     )
-    assert stats.goals.fantasy_points == 4
-    assert stats.goals.source == StatSource.COMPUTED_OFFICIAL
+    assert stats.goals.fantasy_points is None
+    assert stats.goals_conceded.fantasy_points is None
     assert any(item.code == "computed_points_mismatch" for item in warnings)
 
 
@@ -62,6 +62,30 @@ def test_merge_fixture_stats_catalog_points_skip_computed() -> None:
 
 
 # ---- Edge cases ---- #
+
+
+def test_merge_fixture_stats_actions_equal_week_ignores_separate_dazn() -> None:
+    from fantasy_api.services.wire_map import stats_from_parser_layer
+
+    layer = stats_from_parser_layer(
+        {
+            "minutesPlayed": {"count": 76, "points": 2, "status": "ok"},
+            "goals": {"count": 1, "points": 10, "status": "ok"},
+            "assists": {"count": 1, "points": 9, "status": "ok"},
+            "goalsConceded": {"count": 0, "points": None, "status": "implied_zero"},
+            "daznPoints": {"count": None, "points": 3, "status": "ok"},
+        }
+    )
+    stats, warnings = merge_fixture_stats(
+        [(StatSource.FUTBOLFANTASY, layer)],
+        fantasy_points_total=21,
+        position_id=4,
+        minutes_played=76,
+    )
+    assert stats.goals_conceded.count is None
+    assert stats.goals_conceded.fantasy_points is None
+    assert stats.dazn_points.dazn_points == 3
+    assert not warnings
 
 
 def test_merge_fixture_stats_published_points_plus_dazn_match_total() -> None:
@@ -93,3 +117,5 @@ def test_official_points_forward_goal_and_ball_loss() -> None:
     assert official_points_for_key(StatKey.GOALS, 2, position_id=4, minutes=85) == 8
     assert official_points_for_key(StatKey.BALLS_LOST, 13, position_id=4, minutes=85) == -1
     assert official_points_for_key(StatKey.PENALTIES_WON, 1, position_id=4, minutes=69) == 2
+    assert official_points_for_key(StatKey.MINUTES_PLAYED, 0, position_id=4, minutes=0) == 0
+    assert official_points_for_key(StatKey.OWN_GOALS, 1, position_id=4, minutes=85) == -2

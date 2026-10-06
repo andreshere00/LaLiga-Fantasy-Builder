@@ -92,7 +92,11 @@ async def test_weather_http_401_detail_has_status_and_no_key() -> None:
     service = _service()
     home = service._venues.for_club(fantasy_id=4, name=None)
     service._stats_repo.get_forecast = AsyncMock(
-        side_effect=UpstreamError("weather unavailable", status_code=401)
+        side_effect=UpstreamError(
+            "weather unavailable",
+            status_code=503,
+            provider_status=401,
+        )
     )
     weather, warning = await service._weather_for_match(
         home, datetime(2026, 10, 10, 16, 30, tzinfo=UTC)

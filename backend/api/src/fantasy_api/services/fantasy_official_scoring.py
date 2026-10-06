@@ -17,6 +17,8 @@ def _bucket(count: int, every: int, points: int) -> int:
 
 
 def _minutes_points(minutes: int) -> int:
+    if minutes <= 0:
+        return 0
     return 2 if minutes >= 60 else 1
 
 
@@ -65,6 +67,8 @@ def official_points_for_key(
         return count * -1
     if key == StatKey.RED_CARD:
         return count * -3
+    if key == StatKey.OWN_GOALS:
+        return count * -2
     if key == StatKey.SAVES:
         return _bucket(count, 2, 1)
     if key == StatKey.SHOTS:

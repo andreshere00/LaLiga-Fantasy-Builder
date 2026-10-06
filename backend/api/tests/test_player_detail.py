@@ -304,6 +304,31 @@ def test_detail_rate_limit_returns_429(rsa_pems: tuple[str, str]) -> None:
 # ---- Edge cases ---- #
 
 
+def test_detail_missing_weather_key_still_returns_upcoming(
+    rsa_pems: tuple[str, str],
+) -> None:
+    private_pem, public_pem = rsa_pems
+    token = mint_internal_jwt(private_pem)
+    settings = base_test_settings().model_copy(
+        update={
+            "scraping_base_url": "http://scraping.test",
+            "scraping_service_token": SecretStr("scraping-token"),
+            "openweather_api_key": SecretStr(""),
+        }
+    )
+    with make_client(public_pem, settings=settings) as client:
+        response = client.get(
+            detail_url(),
+            headers={"Authorization": f"Bearer {token}"},
+        )
+    assert response.status_code == 200
+    body = response.json()
+    assert body["upcoming"] is not None
+    assert body["upcoming"]["matches"]
+    assert all(match["weather"]["reason"] == "disabled" for match in body["upcoming"]["matches"])
+    assert all(item["segment"] != "upcoming" for item in body["segment_errors"])
+
+
 def test_detail_scraper_url_unset_disables_scraped_segments(rsa_pems: tuple[str, str]) -> None:
     private_pem, public_pem = rsa_pems
     token = mint_internal_jwt(private_pem)

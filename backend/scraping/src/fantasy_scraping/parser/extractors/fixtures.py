@@ -273,12 +273,20 @@ def _stats(
     layer_present = bool(layer_nodes)
     points_by_field: dict[str, float] = {}
     count_by_field: dict[str, int] = {}
+    field_owners: dict[str, str] = {}
     statistical: list[EventStat] = []
     events: list[EventCount] = []
     extra: list[EventStat] = []
     for node in layer_nodes:
         _read_layer(
-            ctx, node_text(node), points_by_field, count_by_field, statistical, events, extra
+            ctx,
+            node_text(node),
+            points_by_field,
+            count_by_field,
+            statistical,
+            events,
+            extra,
+            field_owners,
         )
     values: dict[str, object] = {}
     grouped: dict[str, list[object]] = {}
@@ -475,6 +483,7 @@ def _read_layer(
     statistical: list[EventStat],
     events: list[EventCount],
     extra: list[EventStat],
+    owners: dict[str, str] | None = None,
 ) -> None:
     cleaned = clean_text(map_minuses(text))
     points_match = _LAYER_POINTS.fullmatch(cleaned) or _LAYER_POINTS_LOOSE.fullmatch(cleaned)
@@ -487,7 +496,7 @@ def _read_layer(
             return
         if event.key == "second_yellow":
             count = 2
-        _store(event, count, score, points, counts, statistical, extra)
+        _store(event, count, score, points, counts, statistical, extra, owners)
         return
     pair = _LAYER_PAIR.fullmatch(cleaned)
     if pair:
@@ -515,6 +524,14 @@ def _read_layer(
         counts[event.dazn_field] = count
 
 
+# Alias label yields to the primary event when both name the same stat field.
+_ALIAS_OF: dict[str, str] = {
+    "shots": "shots_on_target",
+    "dribbles_short": "dribbles",
+    "goals_conceded_against": "goals_conceded",
+}
+
+
 def _store(
     event: EventRule,
     count: int,
@@ -523,13 +540,41 @@ def _store(
     counts: dict[str, int],
     statistical: list[EventStat],
     extra: list[EventStat],
+    owners: dict[str, str] | None = None,
 ) -> None:
     statistical.append(EventStat(event=event.key, label=event.label, count=count, points=score))
     if not event.dazn_field:
         extra.append(EventStat(event=event.key, label=event.md_label, count=count, points=score))
         return
-    counts[event.dazn_field] = counts.get(event.dazn_field, 0) + count
-    points[event.dazn_field] = points.get(event.dazn_field, 0.0) + score
+    _merge_counted_field(event, count, score, points, counts, owners)
+
+
+def _merge_counted_field(
+    event: EventRule,
+    count: int,
+    score: float,
+    points: dict[str, float],
+    counts: dict[str, int],
+    owners: dict[str, str] | None,
+) -> None:
+    """Keep the primary label when two lines share a field; otherwise add."""
+    field_owners = owners if owners is not None else {}
+    field = event.dazn_field
+    owner = field_owners.get(field)
+    if owner is None:
+        counts[field] = count
+        points[field] = score
+        field_owners[field] = event.key
+        return
+    if _ALIAS_OF.get(event.key) == owner:
+        return
+    if _ALIAS_OF.get(owner) == event.key:
+        counts[field] = count
+        points[field] = score
+        field_owners[field] = event.key
+        return
+    counts[field] = counts.get(field, 0) + count
+    points[field] = points.get(field, 0.0) + score
 
 
 def _event_for(ctx: ExtractionContext, label: str) -> EventRule | None:

@@ -30,6 +30,8 @@ and CLI `--segment all` (sequential). A **200** response can include
 `segment_errors` when one or more segments failed or were disabled; auth and
 catalog failures still use 401 and 404. Query defaults: `last=5`, `limit=5`,
 `preset=season` (when `from`/`to` are omitted), all segments in `include`.
+A missing OpenWeather key still returns upcoming matches; weather on those
+rows is disabled.
 
 Models: `fantasy_api.schemas.players` (catalog/league card) and
 `fantasy_api.schemas.player_stats` (stats segments). Catalog `weekPoints` stays

@@ -58,10 +58,7 @@ def main(argv: list[str] | None = None) -> int:
         except RuntimeError as exc:
             print(str(exc), file=sys.stderr)
             return 1
-        if args.json:
-            print(json.dumps(data, ensure_ascii=False, indent=2))
-        else:
-            print(json.dumps(data, ensure_ascii=False, indent=2))
+        print(json.dumps(data, ensure_ascii=False, indent=2))
         return 0
 
     segments = _segments_for(args.segment)
