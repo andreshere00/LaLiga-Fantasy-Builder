@@ -84,7 +84,7 @@ def test_read_layer_assist_without_goal_does_not_fill_big_chances() -> None:
     points: dict[str, float] = {}
     counts: dict[str, int] = {}
     extra: list[object] = []
-    _read_layer(ctx, "4 Asistencias sin gol 1 p", points, counts, [], [], extra)
+    _read_layer(ctx, "4 Asistencias sin gol 1 p", points, counts, [], [], extra, {})
     assert "big_chances_created" not in counts
     assert extra
 
@@ -104,6 +104,7 @@ def test_read_layer_clear_chances_pair_fills_dazn_field() -> None:
         statistical,
         events,
         extra,
+        {},
     )
     assert counts["big_chances_created"] == 1
     assert len(events) == 2

@@ -186,14 +186,16 @@ def merge_fixture_stats(
         fantasy_points_total=fantasy_points_total,
     )
     warnings.extend(fb_warnings)
-    if fantasy_points_total is not None and _has_fantasy_points(fallback):
-        actions, dazn = _explained_total(fallback)
-        if not _totals_match(actions, dazn, fantasy_points_total):
-            warnings.append(
-                SegmentWarning(
-                    code="points_total_mismatch",
-                    source=StatSource.FUTBOLFANTASY.value,
-                    detail=_mismatch_detail(actions, dazn, fantasy_points_total),
-                )
+    fill_dropped = any(item.code == "computed_points_mismatch" for item in fb_warnings)
+    if fill_dropped or fantasy_points_total is None or not _has_fantasy_points(fallback):
+        return fallback, warnings
+    actions, dazn = _explained_total(fallback)
+    if not _totals_match(actions, dazn, fantasy_points_total):
+        warnings.append(
+            SegmentWarning(
+                code="points_total_mismatch",
+                source=StatSource.FUTBOLFANTASY.value,
+                detail=_mismatch_detail(actions, dazn, fantasy_points_total),
             )
+        )
     return fallback, warnings

@@ -217,7 +217,7 @@ def _expected_return_date(
 
 def _weather_failure_detail(exc: UpstreamError) -> str:
     code = exc.provider_status
-    if code in {401, 429} or (code is not None and code >= 500):
+    if code is not None and (code in {401, 429} or code >= 500):
         return str(code)
     return "timeout"
 

@@ -8,6 +8,25 @@ _GOAL_POINTS: dict[int, int] = {1: 6, 2: 6, 3: 5, 4: 4}
 _CONCEDED_PER_PAIR: dict[int, int] = {1: -2, 2: -2, 3: -1, 4: -1}
 _CLEAN_SHEET: dict[int, int] = {1: 4, 2: 3, 3: 2, 4: 1}
 _BALLS_LOST_EVERY: dict[int, int] = {1: 8, 2: 8, 3: 10, 4: 12}
+_PER_COUNT: dict[StatKey, int] = {
+    StatKey.ASSISTS: 3,
+    StatKey.BIG_CHANCES_CREATED: 1,
+    StatKey.PENALTIES_MISSED: -2,
+    StatKey.PENALTIES_SAVED: 5,
+    StatKey.PENALTIES_COMMITTED: -2,
+    StatKey.PENALTIES_WON: 2,
+    StatKey.YELLOW_CARDS: -1,
+    StatKey.RED_CARD: -3,
+    StatKey.OWN_GOALS: -2,
+}
+_PER_BUCKET: dict[StatKey, tuple[int, int]] = {
+    StatKey.BALLS_INTO_BOX: (2, 1),
+    StatKey.SAVES: (2, 1),
+    StatKey.SHOTS: (2, 1),
+    StatKey.SUCCESSFUL_DRIBBLES: (2, 1),
+    StatKey.RECOVERIES: (5, 1),
+    StatKey.CLEARANCES: (3, 1),
+}
 
 
 def _bucket(count: int, every: int, points: int) -> int:
@@ -45,40 +64,15 @@ def official_points_for_key(
         return _minutes_points(minutes)
     if key == StatKey.GOALS:
         return count * _GOAL_POINTS[position_id]
-    if key == StatKey.ASSISTS:
-        return count * 3
-    if key == StatKey.BIG_CHANCES_CREATED:
-        return count * 1
-    if key == StatKey.BALLS_INTO_BOX:
-        return _bucket(count, 2, 1)
-    if key == StatKey.PENALTIES_MISSED:
-        return count * -2
-    if key == StatKey.PENALTIES_SAVED:
-        return count * 5
-    if key == StatKey.PENALTIES_COMMITTED:
-        return count * -2
-    if key == StatKey.PENALTIES_WON:
-        return count * 2
+    if key in _PER_COUNT:
+        return count * _PER_COUNT[key]
+    if key in _PER_BUCKET:
+        every, points = _PER_BUCKET[key]
+        return _bucket(count, every, points)
     if key == StatKey.GOALS_CONCEDED:
         if count == 0 and minutes is not None and minutes >= 60:
             return _CLEAN_SHEET[position_id]
         return _bucket(count, 2, _CONCEDED_PER_PAIR[position_id])
-    if key == StatKey.YELLOW_CARDS:
-        return count * -1
-    if key == StatKey.RED_CARD:
-        return count * -3
-    if key == StatKey.OWN_GOALS:
-        return count * -2
-    if key == StatKey.SAVES:
-        return _bucket(count, 2, 1)
-    if key == StatKey.SHOTS:
-        return _bucket(count, 2, 1)
-    if key == StatKey.SUCCESSFUL_DRIBBLES:
-        return _bucket(count, 2, 1)
-    if key == StatKey.RECOVERIES:
-        return _bucket(count, 5, 1)
-    if key == StatKey.CLEARANCES:
-        return _bucket(count, 3, 1)
     if key == StatKey.BALLS_LOST:
         every = _BALLS_LOST_EVERY[position_id]
         return _bucket(count, every, -1)

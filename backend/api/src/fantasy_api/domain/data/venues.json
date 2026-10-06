@@ -40,7 +40,8 @@
     "lat": 40.4364,
     "lon": -3.5995,
     "aliases": [
-      "ATM"
+      "ATM",
+      "Atlético"
     ]
   },
   {
@@ -54,7 +55,8 @@
     "lat": 43.2644,
     "lon": -2.9499,
     "aliases": [
-      "ATH"
+      "ATH",
+      "Athletic"
     ]
   },
   {
@@ -97,7 +99,8 @@
     "lat": 41.3479,
     "lon": 2.0757,
     "aliases": [
-      "ESP"
+      "ESP",
+      "Espanyol"
     ]
   },
   {
@@ -126,7 +129,8 @@
     "lat": 41.9784,
     "lon": 2.8214,
     "aliases": [
-      "GIR"
+      "GIR",
+      "Girona"
     ]
   },
   {
@@ -140,7 +144,9 @@
     "lat": 28.1003,
     "lon": -15.4567,
     "aliases": [
-      "LPA"
+      "LPA",
+      "Palmas",
+      "Las Palmas"
     ]
   },
   {
@@ -154,7 +160,8 @@
     "lat": 40.3278,
     "lon": -3.7635,
     "aliases": [
-      "LEG"
+      "LEG",
+      "Leganés"
     ]
   },
   {
@@ -168,7 +175,8 @@
     "lat": 39.5899,
     "lon": 2.6301,
     "aliases": [
-      "MLL"
+      "MLL",
+      "Mallorca"
     ]
   },
   {
@@ -182,7 +190,8 @@
     "lat": 42.7965,
     "lon": -1.6372,
     "aliases": [
-      "OSA"
+      "OSA",
+      "Osasuna"
     ]
   },
   {
@@ -211,7 +220,8 @@
     "lat": 43.3014,
     "lon": -1.9736,
     "aliases": [
-      "RSO"
+      "RSO",
+      "Sociedad"
     ]
   },
   {
@@ -255,7 +265,8 @@
     "lat": 39.9442,
     "lon": -0.1036,
     "aliases": [
-      "VIL"
+      "VIL",
+      "Villarreal"
     ]
   },
   {
@@ -269,7 +280,8 @@
     "lat": 42.837,
     "lon": -2.6882,
     "aliases": [
-      "ALA"
+      "ALA",
+      "Alavés"
     ]
   },
   {
@@ -283,7 +295,8 @@
     "lat": 41.6444,
     "lon": -4.761,
     "aliases": [
-      "VLL"
+      "VLL",
+      "Valladolid"
     ]
   },
   {

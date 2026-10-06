@@ -483,7 +483,7 @@ def _read_layer(
     statistical: list[EventStat],
     events: list[EventCount],
     extra: list[EventStat],
-    owners: dict[str, str] | None = None,
+    owners: dict[str, str],
 ) -> None:
     cleaned = clean_text(map_minuses(text))
     points_match = _LAYER_POINTS.fullmatch(cleaned) or _LAYER_POINTS_LOOSE.fullmatch(cleaned)
@@ -540,7 +540,7 @@ def _store(
     counts: dict[str, int],
     statistical: list[EventStat],
     extra: list[EventStat],
-    owners: dict[str, str] | None = None,
+    owners: dict[str, str],
 ) -> None:
     statistical.append(EventStat(event=event.key, label=event.label, count=count, points=score))
     if not event.dazn_field:
@@ -555,23 +555,17 @@ def _merge_counted_field(
     score: float,
     points: dict[str, float],
     counts: dict[str, int],
-    owners: dict[str, str] | None,
+    owners: dict[str, str],
 ) -> None:
     """Keep the primary label when two lines share a field; otherwise add."""
-    field_owners = owners if owners is not None else {}
     field = event.dazn_field
-    owner = field_owners.get(field)
-    if owner is None:
+    owner = owners.get(field)
+    if owner is not None and _ALIAS_OF.get(event.key) == owner:
+        return
+    if owner is None or _ALIAS_OF.get(owner) == event.key:
         counts[field] = count
         points[field] = score
-        field_owners[field] = event.key
-        return
-    if _ALIAS_OF.get(event.key) == owner:
-        return
-    if _ALIAS_OF.get(owner) == event.key:
-        counts[field] = count
-        points[field] = score
-        field_owners[field] = event.key
+        owners[field] = event.key
         return
     counts[field] = counts.get(field, 0) + count
     points[field] = points.get(field, 0.0) + score

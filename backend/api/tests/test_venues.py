@@ -33,6 +33,10 @@ def test_for_club_shared_word_madrid_returns_none() -> None:
     directory = default_venue_directory()
     assert directory.for_club(fantasy_id=None, name="Madrid") is None
     assert directory.for_club(fantasy_id=None, name="Real") is None
+    girona = directory.for_club(fantasy_id=None, name="Girona")
+    palmas = directory.for_club(fantasy_id=None, name="Palmas")
+    assert girona is not None and girona.club_key == "girona"
+    assert palmas is not None and palmas.club_key == "las-palmas"
 
 
 def test_barcelona_venue_is_camp_nou() -> None:

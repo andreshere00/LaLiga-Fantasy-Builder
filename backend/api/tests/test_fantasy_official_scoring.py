@@ -42,7 +42,34 @@ def test_merge_fixture_stats_computed_official_drops_points_on_total_mismatch() 
     )
     assert stats.goals.fantasy_points is None
     assert stats.goals_conceded.fantasy_points is None
-    assert any(item.code == "computed_points_mismatch" for item in warnings)
+    assert [item.code for item in warnings] == ["computed_points_mismatch"]
+
+
+def test_merge_fixture_stats_dropped_fill_skips_total_warning() -> None:
+    scrape = {
+        StatKey.MINUTES_PLAYED: ScrapedStat(count=90, points=2),
+        StatKey.GOALS: ScrapedStat(count=1, points=None),
+    }
+    stats, warnings = merge_fixture_stats(
+        [(StatSource.FUTBOLFANTASY, scrape)],
+        fantasy_points_total=99,
+        position_id=4,
+        minutes_played=90,
+    )
+    assert stats.minutes_played.fantasy_points == 2
+    assert stats.goals.fantasy_points is None
+    assert [item.code for item in warnings] == ["computed_points_mismatch"]
+
+
+def test_merge_fixture_stats_published_mismatch_warns_once() -> None:
+    scrape = {StatKey.GOALS: ScrapedStat(count=1, points=10)}
+    stats, warnings = merge_fixture_stats(
+        [(StatSource.FUTBOLFANTASY, scrape)],
+        fantasy_points_total=99,
+        position_id=4,
+    )
+    assert stats.goals.fantasy_points == 10
+    assert [item.code for item in warnings] == ["points_total_mismatch"]
 
 
 def test_merge_fixture_stats_catalog_points_skip_computed() -> None:

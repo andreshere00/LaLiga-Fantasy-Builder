@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 import json
-import re
 from dataclasses import dataclass
 from functools import lru_cache
 from pathlib import Path
@@ -31,7 +30,6 @@ class VenueDirectory:
     """Resolve venues by Fantasy team id or club label."""
 
     def __init__(self, entries: tuple[VenueEntry, ...]) -> None:
-        self._entries = entries
         self._by_id = {entry.fantasy_id: entry for entry in entries if entry.fantasy_id is not None}
         self._by_alias: dict[str, VenueEntry] = {}
         for entry in entries:
@@ -71,14 +69,7 @@ class VenueDirectory:
         if fantasy_id is not None and fantasy_id in self._by_id:
             return self._by_id[fantasy_id]
         if name:
-            key = name.casefold()
-            hit = self._by_alias.get(key)
-            if hit:
-                return hit
-            pattern = re.compile(rf"\b{re.escape(key)}\b")
-            matches = [entry for entry in self._entries if pattern.search(entry.name.casefold())]
-            if len(matches) == 1:
-                return matches[0]
+            return self._by_alias.get(name.casefold())
         return None
 
 
