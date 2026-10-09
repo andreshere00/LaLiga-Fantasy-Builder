@@ -965,6 +965,47 @@ List the stats segments available for a player
 Full nested fields: [`PlayerStatsIndex`](#playerstatsindex).
 
 
+### `GET` `/players/{player_id}/stats/detail`
+
+Aggregate player stats segments in one response
+
+**Security:** HTTP Bearer (internal JWT)
+
+#### Inputs
+
+| Source | Name | Type | Required | Constraints | Description |
+|--------|------|------|----------|-------------|-------------|
+| path | `player_id` | string | yes |  | Master footballer id (`CatalogPlayer.id`). |
+| query | `last` | integer | no | min=1, max=60 |  |
+| query | `competition` | array[Competition] | no |  |  |
+| query | `preset` | MarketPreset | no |  |  |
+| query | `from` | string | no |  |  |
+| query | `to` | string | no |  |  |
+| query | `limit` | integer | no | min=1, max=5 |  |
+| query | `include_stats` | boolean | no |  |  |
+| query | `include_weather` | boolean | no |  |  |
+| query | `include` | array[string] | no |  |  |
+
+#### Outputs
+
+**HTTP 200:** `PlayerDetailResponse`
+
+| Field | Type | Required | Constraints | Description |
+|-------|------|----------|-------------|-------------|
+| `player_id` | string | yes |  |  |
+| `player` | PlayerRef | yes |  |  |
+| `season` | string | yes |  |  |
+| `generated_at` | string | yes |  |  |
+| `fixtures` | PlayerFixtureStatsResponse | no |  |  |
+| `market` | PlayerMarketResponse | no |  |  |
+| `recent` | RecentMatchesResponse | no |  |  |
+| `upcoming` | UpcomingMatchesResponse | no |  |  |
+| `profile` | PlayerProfileResponse | no |  |  |
+| `segment_errors` | array[SegmentError] | no |  |  |
+
+Full nested fields: [`PlayerDetailResponse`](#playerdetailresponse).
+
+
 ### `GET` `/players/{player_id}/stats/fixtures`
 
 Per-fixture statistics for a player
@@ -1124,6 +1165,7 @@ Global player profile from FutbolFantasy
 | `max_profitable_bid` | MaxProfitableBid | yes |  |  |
 | `hierarchy` | Hierarchy | yes |  |  |
 | `news` | array[NewsItem] | no |  |  |
+| `averages` | array[AveragePerMatch] | no |  |  |
 
 Full nested fields: [`PlayerProfileResponse`](#playerprofileresponse).
 
@@ -1247,6 +1289,14 @@ Nested models referenced by the operations above. All Fantasy proxy models use `
 | `msg` | string | no |  |  |
 | `message` | string | no |  |  |
 | `description` | string | no |  |  |
+
+### `AveragePerMatch`
+
+| Field | Type | Required | Constraints | Description |
+|-------|------|----------|-------------|-------------|
+| `code` | string | yes |  |  |
+| `label` | string | yes |  |  |
+| `value` | number | no |  |  |
 
 ### `BidWrite`
 
@@ -1375,6 +1425,7 @@ Type: `string`
 | `big_chances_created` | StatValue | no |  |  |
 | `balls_into_box` | StatValue | no |  |  |
 | `penalties_committed` | StatValue | no |  |  |
+| `penalties_won` | StatValue | no |  |  |
 | `penalties_saved` | StatValue | no |  |  |
 | `saves` | StatValue | no |  |  |
 | `clearances` | StatValue | no |  |  |
@@ -1743,6 +1794,21 @@ Type: `string`
 |-------|------|----------|-------------|-------------|
 | `buyoutClauseToPay` | integer | yes | >0 |  |
 
+### `PlayerDetailResponse`
+
+| Field | Type | Required | Constraints | Description |
+|-------|------|----------|-------------|-------------|
+| `player_id` | string | yes |  |  |
+| `player` | PlayerRef | yes |  |  |
+| `season` | string | yes |  |  |
+| `generated_at` | string | yes |  |  |
+| `fixtures` | PlayerFixtureStatsResponse | no |  |  |
+| `market` | PlayerMarketResponse | no |  |  |
+| `recent` | RecentMatchesResponse | no |  |  |
+| `upcoming` | UpcomingMatchesResponse | no |  |  |
+| `profile` | PlayerProfileResponse | no |  |  |
+| `segment_errors` | array[SegmentError] | no |  |  |
+
 ### `PlayerFixtureStatsResponse`
 
 | Field | Type | Required | Constraints | Description |
@@ -1824,6 +1890,7 @@ Type: `string`
 | `max_profitable_bid` | MaxProfitableBid | yes |  |  |
 | `hierarchy` | Hierarchy | yes |  |  |
 | `news` | array[NewsItem] | no |  |  |
+| `averages` | array[AveragePerMatch] | no |  |  |
 
 ### `PlayerRef`
 
@@ -1917,6 +1984,14 @@ Type: `object`
 | `requires_scraper` | boolean | yes |  |  |
 | `available` | boolean | yes |  |  |
 | `query` | array[string] | yes |  |  |
+
+### `SegmentError`
+
+| Field | Type | Required | Constraints | Description |
+|-------|------|----------|-------------|-------------|
+| `segment` | string | yes |  |  |
+| `code` | string | yes |  |  |
+| `detail` | string | yes |  |  |
 
 ### `SegmentWarning`
 

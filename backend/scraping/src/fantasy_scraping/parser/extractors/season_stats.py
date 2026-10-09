@@ -57,9 +57,12 @@ def extract_season_stats(ctx: ExtractionContext) -> SeasonStats | None:
     warn_unknown_labels(ctx, pairs, "season_stats")
     values: dict[str, object] = {}
     built: dict[str, object] = {}
+    outfield = _outfield_player(ctx)
     for group, (prefix, model_cls) in _GROUPS.items():
         if not group_present(ctx, pairs, group):
             built[group] = None
+            if group == "goalkeeper" and outfield:
+                continue
             ctx.warn(
                 code="field_missing",
                 section="season_stats",
@@ -81,6 +84,14 @@ def extract_season_stats(ctx: ExtractionContext) -> SeasonStats | None:
         other=_other(ctx, pairs),
         selector_catalog=_catalog(ctx),
     )
+
+
+def _outfield_player(ctx: ExtractionContext) -> bool:
+    code = ctx.document.first("h1 .pos, .position-box")
+    if code is None:
+        return True
+    text = node_text(code)
+    return "POR" not in text.upper()
 
 
 def _view(ctx: ExtractionContext) -> str | None:

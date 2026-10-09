@@ -1,4 +1,5 @@
 import { useEffect, useId, useState, type ReactNode } from "react";
+import { Link } from "react-router-dom";
 
 import { formatEuro, formatIntegerAmount, parseIntegerAmount } from "../../api/format";
 import type { SquadCard } from "../../api/mappers";
@@ -15,6 +16,8 @@ import {
   squadSaleErrorMessage,
 } from "./squadSale";
 import type { SquadSalesApi } from "./useSquadSales";
+import infoIcon from "../../assets/button_info.svg";
+import infoRedIcon from "../../assets/button_info_red.svg";
 import "./SquadPlayerActions.css";
 
 type SaleView = "choose" | "list" | "modify" | "cancel" | "immediate";
@@ -31,6 +34,7 @@ export function SquadPlayerActions({
   children: ReactNode;
 }) {
   const [open, setOpen] = useState(false);
+  const [menuOpen, setMenuOpen] = useState(false);
   const [view, setView] = useState<SaleView>("choose");
   const [rawPrice, setRawPrice] = useState("");
   const inputId = useId();
@@ -86,23 +90,49 @@ export function SquadPlayerActions({
 
   return (
     <>
-      <button
-        type="button"
-        className="squad-tile-slot squad-player-hit has-hover-tooltip-panel"
-        aria-label={`${player.name}. ${PLAYER_OPTIONS_HINT}`}
-        aria-describedby={hintId}
-        aria-haspopup="dialog"
-        aria-expanded={open}
-        onClick={() => {
-          setView("choose");
-          setOpen(true);
-        }}
-      >
+      <div className="squad-tile-slot squad-player-hit-area">
         {children}
-        <span id={hintId} className="hover-tooltip-panel squad-player-hint" role="tooltip">
-          {PLAYER_OPTIONS_HINT}
-        </span>
-      </button>
+        <div className="squad-tile-controls">
+          <button
+            type="button"
+            className="player-details-link squad-details-link"
+            aria-label={`${player.name}, view details`}
+            aria-haspopup="menu"
+            aria-expanded={menuOpen}
+            aria-describedby={hintId}
+            onClick={() => setMenuOpen((current) => !current)}
+          >
+            <img src={menuOpen ? infoRedIcon : infoIcon} alt="" aria-hidden />
+            <span id={hintId} className="hover-tooltip-panel squad-player-hint" role="tooltip">
+              {PLAYER_OPTIONS_HINT}
+            </span>
+          </button>
+          {menuOpen ? (
+            <div className="squad-info-menu" role="menu" aria-label={`${player.name} options`}>
+              <button
+                type="button"
+                role="menuitem"
+                onClick={() => {
+                  setMenuOpen(false);
+                  setView("choose");
+                  setOpen(true);
+                }}
+              >
+                Market options
+              </button>
+              {player.masterPlayerId ? (
+                <Link
+                  role="menuitem"
+                  to={`/players/${encodeURIComponent(player.masterPlayerId)}`}
+                  onClick={() => setMenuOpen(false)}
+                >
+                  Player details
+                </Link>
+              ) : null}
+            </div>
+          ) : null}
+        </div>
+      </div>
       <Modal
         open={open}
         title={

@@ -24,6 +24,7 @@ export function MarketMotionProvider({ children }: { children: ReactNode }) {
 
 type MarketRowMotionProps = {
   order: number;
+  className?: string;
   children: ReactNode;
 };
 
@@ -33,11 +34,11 @@ type MarketRowMotionProps = {
  * Rows present when the list mounts rise in sequence. A row that appears later
  * (a filter change) pops in without the stagger delay.
  */
-export function MarketRowMotion({ order, children }: MarketRowMotionProps) {
+export function MarketRowMotion({ order, className, children }: MarketRowMotionProps) {
   const staggering = useContext(MarketStaggerContext);
   return (
     <m.li
-      className="market-row market-data-row"
+      className={["market-row", "market-data-row", className].filter(Boolean).join(" ")}
       initial={staggering ? { opacity: 0, y: 14, scale: 0.94 } : { opacity: 0, scale: 0.8 }}
       animate={{ opacity: 1, y: 0, scale: 1 }}
       transition={{

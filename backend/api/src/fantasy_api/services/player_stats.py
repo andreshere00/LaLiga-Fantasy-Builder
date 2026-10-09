@@ -2,7 +2,9 @@
 
 from __future__ import annotations
 
-from collections.abc import Callable
+import asyncio
+import re
+from collections.abc import Callable, Mapping
 from datetime import UTC, date, datetime
 from typing import Any
 from zoneinfo import ZoneInfo
@@ -25,7 +27,9 @@ from fantasy_api.repositories.calendar import CalendarRepository
 from fantasy_api.repositories.player_stats import PlayerStatsRepository
 from fantasy_api.repositories.players import PlayersRepository
 from fantasy_api.schemas.player_stats import (
+    AveragePerMatch,
     Competition,
+    DetailSegment,
     FixtureRef,
     FixturesQuery,
     FixtureStatsRow,
@@ -40,6 +44,8 @@ from fantasy_api.schemas.player_stats import (
     MaxProfitableBid,
     MinutesPlayed,
     NewsItem,
+    PlayerDetailQuery,
+    PlayerDetailResponse,
     PlayerFixtureStatsResponse,
     PlayerMarketResponse,
     PlayerProfileResponse,
@@ -49,6 +55,7 @@ from fantasy_api.schemas.player_stats import (
     RecentMatchesQuery,
     RecentMatchesResponse,
     SegmentDescriptor,
+    SegmentError,
     SegmentWarning,
     SourceStatus,
     StartProbability,
@@ -62,7 +69,7 @@ from fantasy_api.schemas.player_stats import (
     WeatherReason,
     WeatherSnapshot,
 )
-from fantasy_api.schemas.scraped import ScrapedStat
+from fantasy_api.schemas.scraped import FutbolFantasyWire, ScrapedStat
 from fantasy_api.services.player_resolver import PlayerResolver, ResolvedPlayer
 from fantasy_api.services.scraped_player import ScrapedDocument, ScrapedPlayerProvider
 from fantasy_api.services.stat_merge import merge_fixture_stats
@@ -76,6 +83,26 @@ from fantasy_api.services.wire_map import (
 )
 
 MADRID_TZ = ZoneInfo("Europe/Madrid")
+
+_COMPETITION_SHORT: dict[Competition, str] = {
+    Competition.LALIGA: "LEAGUE",
+    Competition.CHAMPIONS_LEAGUE: "CHAMPIONS",
+    Competition.EUROPA_LEAGUE: "EUROPA",
+    Competition.CONFERENCE_LEAGUE: "CONFERENCE",
+    Competition.COPA_DEL_REY: "COPA",
+    Competition.SUPERCOPA: "SUPERCOPA",
+    Competition.OTHER: "OTHER",
+}
+
+_DISPONIBLE_JORNADA = re.compile(r"disponible\s+para\s+la\s+jornada\s+(\d+)", re.IGNORECASE)
+
+_DETAIL_SEGMENT_ORDER: tuple[DetailSegment, ...] = (
+    "fixtures",
+    "market",
+    "recent",
+    "upcoming",
+    "profile",
+)
 
 
 def _match_result(
@@ -92,6 +119,241 @@ def _match_result(
     if player_goals < opponent_goals:
         return MatchResult.LOSS
     return MatchResult.DRAW
+
+
+def _competition_label(_raw: str | None, competition: Competition) -> str:
+    return _COMPETITION_SHORT.get(competition, "OTHER")
+
+
+def _display_club_name(entry: VenueEntry | None, code: str | None) -> str | None:
+    if not code:
+        return None
+    if entry is None:
+        return code
+    for alias in entry.aliases:
+        if alias.casefold() == code.casefold():
+            continue
+        if len(alias) > 3 or not alias.isupper():
+            return alias
+    return entry.name
+
+
+def _player_short_club(
+    wire: FutbolFantasyWire,
+    player: ResolvedPlayer,
+    venues: VenueDirectory,
+) -> str | None:
+    recent = (wire.matches.recent if wire.matches else None) or []
+    for row in recent:
+        if row.is_home is True and row.home_team:
+            return row.home_team
+        if row.is_home is False and row.away_team:
+            return row.away_team
+    entry = venues.for_club(
+        fantasy_id=player.team_id,
+        name=player.team_name,
+    )
+    if entry is not None:
+        for alias in entry.aliases:
+            if alias == "Barcelona" or (len(alias) > 3 and not alias.isupper()):
+                return alias
+        return entry.name
+    return player.team_name
+
+
+def _fill_fixture_teams(
+    fixture: FixtureRef,
+    *,
+    short_club: str | None,
+    opponent: str | None,
+) -> FixtureRef:
+    if fixture.is_home is None or not short_club or not opponent:
+        return fixture
+    home = fixture.home_team
+    away = fixture.away_team
+    if fixture.is_home:
+        if not home:
+            home = short_club
+        if not away:
+            away = opponent
+    else:
+        if not home:
+            home = opponent
+        if not away:
+            away = short_club
+    if home == fixture.home_team and away == fixture.away_team:
+        return fixture
+    return fixture.model_copy(update={"home_team": home, "away_team": away})
+
+
+def _fixture_opponent(
+    venues: VenueDirectory,
+    *,
+    is_home: bool | None,
+    home_team: str | None,
+    away_team: str | None,
+) -> str | None:
+    if is_home is None or not home_team or not away_team:
+        return None
+    code = away_team if is_home else home_team
+    entry = venues.for_club(fantasy_id=None, name=code)
+    return _display_club_name(entry, code)
+
+
+def _expected_return_date(
+    wire: FutbolFantasyWire,
+    availability_text: str | None,
+) -> date | None:
+    if not availability_text:
+        return None
+    match = _DISPONIBLE_JORNADA.search(availability_text)
+    if not match:
+        return None
+    matchweek = int(match.group(1))
+    for row in (wire.matches.upcoming if wire.matches else None) or []:
+        if row.matchweek == matchweek and row.date is not None:
+            return row.date
+    return None
+
+
+def _weather_failure_detail(exc: UpstreamError) -> str:
+    code = exc.provider_status
+    if code is not None and (code in {401, 429} or code >= 500):
+        return str(code)
+    return "timeout"
+
+
+def _started_from_minutes_event(event: str | None) -> bool | None:
+    if event in ("full", "subbed_off"):
+        return True
+    if event in ("subbed_on", "unused"):
+        return False
+    return None
+
+
+def _apply_recent_dates(
+    rows: list[FixtureStatsRow],
+    wire: FutbolFantasyWire,
+) -> list[FixtureStatsRow]:
+    """Copy a recent-match date onto a fixture row that the table left blank."""
+    recent = wire.matches.recent if wire.matches is not None else None
+    if not recent:
+        return rows
+    by_score: dict[tuple[int, int | None, int | None], date] = {}
+    for match in recent:
+        if match.date is None or match.matchweek is None:
+            continue
+        by_score[(match.matchweek, match.home_score, match.away_score)] = match.date
+    filled: list[FixtureStatsRow] = []
+    for row in rows:
+        if row.fixture.date is not None or row.fixture.matchweek is None:
+            filled.append(row)
+            continue
+        found = by_score.get(
+            (row.fixture.matchweek, row.fixture.home_score, row.fixture.away_score)
+        )
+        if found is None:
+            filled.append(row)
+            continue
+        filled.append(
+            row.model_copy(update={"fixture": row.fixture.model_copy(update={"date": found})})
+        )
+    return filled
+
+
+_AVERAGE_SPECS: tuple[tuple[str, str, str, str], ...] = (
+    ("G", "Goals", "attack", "goals"),
+    ("TaP", "Shots on target", "attack", "shotsOnTarget"),
+    ("T", "Shots", "attack", "shotsOnTarget"),
+    ("CF", "Corners won", "attack", "cornersWon"),
+    ("Reg", "Successful dribbles", "attack", "successfulDribbles"),
+    ("C", "Crosses", "attack", "crosses"),
+    ("CP", "Accurate crosses", "attack", "crosses"),
+    ("A", "Assists", "attack", "assists"),
+    ("A SinGol", "Assists without a goal", "attack", "assistsWithoutGoal"),
+    ("PC", "Key passes", "attack", "keyPasses"),
+    ("Pas", "Completed passes", "attack", "passes"),
+    ("-Pos", "Possessions lost", "defense", "possessionsLost"),
+    ("DE", "Effective clearances", "defense", "effectiveClearances"),
+    ("PI", "Interceptions", "defense", "interceptions"),
+    ("BR", "Balls recovered", "defense", "ballSteals"),
+    ("FR", "Fouls won", "discipline", "foulsReceived"),
+    ("-FC", "Fouls committed", "discipline", "foulsCommitted"),
+)
+
+_RATIO_PART = {
+    ("attack", "shotsOnTarget", "TaP"): "numerator",
+    ("attack", "shotsOnTarget", "T"): "denominator",
+    ("attack", "crosses", "CP"): "numerator",
+    ("attack", "crosses", "C"): "denominator",
+    ("attack", "passes", "Pas"): "numerator",
+}
+
+
+def _season_number(value: object, part: str | None) -> float | None:
+    if isinstance(value, bool) or value is None:
+        return None
+    if isinstance(value, (int, float)):
+        return float(value)
+    if isinstance(value, dict):
+        key = part or "numerator"
+        nested = value.get(key)
+        if isinstance(nested, (int, float)) and not isinstance(nested, bool):
+            return float(nested)
+    return None
+
+
+def _season_group(season: Mapping[str, Any], name: str) -> Mapping[str, Any]:
+    raw = season.get(name)
+    if isinstance(raw, dict):
+        return raw
+    snake = {
+        "attack": "attack",
+        "defense": "defense",
+        "discipline": "discipline",
+    }[name]
+    fallback = season.get(snake)
+    return fallback if isinstance(fallback, dict) else {}
+
+
+def averages_from_season(season: Mapping[str, Any] | None) -> list[AveragePerMatch]:
+    """Per-match figures from scraped season totals divided by matches played."""
+    if not isinstance(season, Mapping):
+        return []
+    matches = season.get("matchesCounted") or season.get("matches_counted")
+    if not isinstance(matches, int) or isinstance(matches, bool) or matches <= 0:
+        participation = season.get("participation")
+        played = None
+        if isinstance(participation, dict):
+            played = participation.get("matchesPlayed") or participation.get("matches_played")
+        matches = played if isinstance(played, int) and played > 0 else None
+    if not isinstance(matches, int) or matches <= 0:
+        return []
+    rows: list[AveragePerMatch] = []
+    for code, label, group_name, field in _AVERAGE_SPECS:
+        group = _season_group(season, group_name)
+        raw = group.get(field)
+        if raw is None:
+            raw = group.get(_camel_to_snake(field))
+        total = _season_number(raw, _RATIO_PART.get((group_name, field, code)))
+        value = round(total / matches, 2) if total is not None else None
+        rows.append(AveragePerMatch(code=code, label=label, value=value))
+    return rows
+
+
+def _camel_to_snake(value: str) -> str:
+    chars: list[str] = []
+    for char in value:
+        if char.isupper():
+            chars.append("_")
+            chars.append(char.lower())
+        else:
+            chars.append(char)
+    return "".join(chars)
+
+
+def _optional_label(value: object) -> str | None:
+    return str(value) if value is not None else None
 
 
 class PlayerStatsService:
@@ -127,10 +389,6 @@ class PlayerStatsService:
         player = await self._resolver.resolve(player_id)
         season = current_season(self._today())
         scraping_ok = bool(self._settings.scraping_base_url)
-        weather_ok = bool(
-            self._settings.openweather_api_key
-            and self._settings.openweather_api_key.get_secret_value()
-        )
         segments = [
             SegmentDescriptor(
                 name="fixtures",
@@ -165,7 +423,7 @@ class PlayerStatsService:
                 auth="jwt",
                 sources=["futbolfantasy", "fantasy", "openweather"],
                 requires_scraper=True,
-                available=scraping_ok and weather_ok,
+                available=scraping_ok,
                 query=["limit", "include_weather"],
             ),
             SegmentDescriptor(
@@ -183,6 +441,77 @@ class PlayerStatsService:
             season=season.label,
             segments=segments,
             generated_at=self._now(),
+        )
+
+    async def detail(
+        self,
+        player_id: str,
+        query: PlayerDetailQuery,
+    ) -> PlayerDetailResponse:
+        """Return selected stats segments in one response."""
+        player = await self._resolver.resolve(player_id)
+        season = current_season(self._today())
+        requested = set(query.include)
+        segment_errors: list[SegmentError] = []
+        fixtures: PlayerFixtureStatsResponse | None = None
+        market: PlayerMarketResponse | None = None
+        recent: RecentMatchesResponse | None = None
+        upcoming: UpcomingMatchesResponse | None = None
+        profile: PlayerProfileResponse | None = None
+
+        async def run(name: DetailSegment) -> tuple[DetailSegment, Any | None, SegmentError | None]:
+            if not self._detail_segment_available(name):
+                err = SegmentError(
+                    segment=name,
+                    code="disabled",
+                    detail="segment disabled",
+                )
+                return name, None, err
+            try:
+                payload = await self._detail_segment_call(player_id, name, query)
+                return name, payload, None
+            except UpstreamError as exc:
+                err = SegmentError(
+                    segment=name,
+                    code=exc.category,
+                    detail=str(exc),
+                )
+                return name, None, err
+
+        tasks = [run(name) for name in _DETAIL_SEGMENT_ORDER if name in requested]
+        results = await asyncio.gather(*tasks)
+        for name, payload, err in results:
+            if err is not None:
+                segment_errors.append(err)
+            if name == "fixtures":
+                fixtures = payload
+            elif name == "market":
+                market = payload
+            elif name == "recent":
+                recent = payload
+            elif name == "upcoming":
+                upcoming = payload
+            elif name == "profile":
+                profile = payload
+
+        top_player = self._player_ref(player)
+        for segment in (profile, recent, upcoming, fixtures):
+            if segment is None or segment.player is None:
+                continue
+            if segment.player.name or segment.player.team_name:
+                top_player = segment.player
+                break
+        return PlayerDetailResponse(
+            player_id=player_id,
+            player=top_player,
+            season=season.label,
+            generated_at=self._now(),
+            fixtures=fixtures,
+            market=market,
+            recent=recent,
+            upcoming=upcoming,
+            profile=profile,
+            segment_errors=segment_errors,
         )
 
     async def fixtures(
@@ -211,13 +540,21 @@ class PlayerStatsService:
                 )
             if query.competition and competition not in query.competition:
                 continue
+            opponent = _fixture_opponent(
+                self._venues,
+                is_home=fixture.is_home,
+                home_team=fixture.home_team,
+                away_team=fixture.away_team,
+            )
             fixture_ref = FixtureRef(
                 date=parse_match_date(getattr(fixture, "date", None)),
                 competition=competition,
+                competition_label=_competition_label(raw_comp, competition),
                 matchweek=fixture.matchweek,
                 home_team=fixture.home_team,
                 away_team=fixture.away_team,
                 is_home=fixture.is_home,
+                opponent=opponent,
                 home_score=fixture.home_score,
                 away_score=fixture.away_score,
                 result=_match_result(
@@ -226,16 +563,18 @@ class PlayerStatsService:
                     fixture.away_score,
                 ),
             )
-            layers: list[tuple[StatSource, dict]] = []
-            week_stats = fantasy_weeks.get(fixture.matchweek or -1)
-            if week_stats and competition == Competition.LALIGA:
-                layers.append((StatSource.FANTASY_CATALOG, week_stats))
             parser_layer = _scraped_stats_layer(fixture.stats)
-            if parser_layer:
-                layers.append((StatSource.FUTBOLFANTASY, parser_layer))
+            layers = self._fixture_stat_layers(
+                fantasy_weeks,
+                competition=competition,
+                matchweek=fixture.matchweek,
+                parser_layer=parser_layer,
+            )
             merged, warnings = merge_fixture_stats(
                 layers,
                 fantasy_points_total=fixture.fantasy_points,
+                position_id=player.position_id,
+                minutes_played=fixture.minutes,
             )
             rows.append(
                 FixtureStatsRow(
@@ -246,11 +585,12 @@ class PlayerStatsService:
                     warnings=warnings,
                 )
             )
+        rows = _apply_recent_dates(rows, wire)
         rows.sort(key=lambda row: row.fixture.date or date.min, reverse=True)
         rows = rows[: query.last]
         return PlayerFixtureStatsResponse(
             player_id=player_id,
-            player=self._player_ref(player),
+            player=self._player_ref(player, doc.wire),
             season=season.label,
             generated_at=self._now(),
             sources=[self._ff_source(doc)],
@@ -329,13 +669,17 @@ class PlayerStatsService:
         season = current_season(self._today())
         doc = await self._scraped.futbolfantasy(player, season)
         wire = doc.wire
+        fantasy_weeks = self._fantasy_week_map(player)
         matches: list[RecentMatch] = []
         for row in (wire.matches.recent if wire.matches else None) or []:
             competition = competition_from_row(row.competition_raw)
             fixture = FixtureRef(
                 date=row.date,
                 competition=competition,
+                competition_label=_competition_label(row.competition_raw, competition),
                 matchweek=row.matchweek,
+                home_team=row.home_team,
+                away_team=row.away_team,
                 is_home=row.is_home,
                 opponent=row.opponent,
                 home_score=row.home_score,
@@ -345,10 +689,18 @@ class PlayerStatsService:
             stats = None
             warnings: list[SegmentWarning] = []
             if query.include_stats and isinstance(row.stats, dict):
-                layer = stats_from_parser_layer(row.stats)
+                parser_layer = stats_from_parser_layer(row.stats)
+                layers = self._fixture_stat_layers(
+                    fantasy_weeks,
+                    competition=competition,
+                    matchweek=row.matchweek,
+                    parser_layer=parser_layer,
+                )
                 merged, merge_warnings = merge_fixture_stats(
-                    [(StatSource.FUTBOLFANTASY, layer)],
+                    layers,
                     fantasy_points_total=row.fantasy_points,
+                    position_id=player.position_id,
+                    minutes_played=row.minutes,
                 )
                 stats = merged
                 warnings = merge_warnings
@@ -357,6 +709,7 @@ class PlayerStatsService:
                     fixture=fixture,
                     minutes=MinutesPlayed(
                         minutes=row.minutes,
+                        started=_started_from_minutes_event(row.minutes_event),
                         note=row.minutes_note,
                     ),
                     fantasy_points_total=row.fantasy_points,
@@ -367,7 +720,7 @@ class PlayerStatsService:
         matches = matches[: query.limit]
         return RecentMatchesResponse(
             player_id=player_id,
-            player=self._player_ref(player),
+            player=self._player_ref(player, doc.wire),
             season=season.label,
             generated_at=self._now(),
             sources=[self._ff_source(doc)],
@@ -385,6 +738,7 @@ class PlayerStatsService:
         season = current_season(self._today())
         doc = await self._scraped.futbolfantasy(player, season)
         wire = doc.wire
+        short_club = _player_short_club(wire, player, self._venues)
         player_home = self._venues.for_club(fantasy_id=player.team_id, name=player.team_name)
         rows: list[UpcomingMatch] = []
         now = self._now()
@@ -393,8 +747,16 @@ class PlayerStatsService:
             fixture = FixtureRef(
                 date=row.date,
                 competition=competition,
+                competition_label=_competition_label(row.competition_raw, competition),
                 matchweek=row.matchweek,
+                home_team=row.home_team,
+                away_team=row.away_team,
                 is_home=row.is_home,
+                opponent=row.opponent,
+            )
+            fixture = _fill_fixture_teams(
+                fixture,
+                short_club=short_club,
                 opponent=row.opponent,
             )
             kickoff = kickoff_datetime(row.date, row.kickoff_time)
@@ -409,10 +771,11 @@ class PlayerStatsService:
                 )
                 continue
             match_venue = self._match_venue(player_home, row.is_home, row.opponent)
-            weather = MatchWeather(snapshot=None, reason=WeatherReason.DISABLED)
             if query.include_weather and self._weather_enabled():
-                weather = await self._weather_for_match(match_venue, kickoff)
-            elif not query.include_weather:
+                weather, weather_warn = await self._weather_for_match(match_venue, kickoff)
+                if weather_warn is not None:
+                    row_warnings.append(weather_warn)
+            else:
                 weather = MatchWeather(snapshot=None, reason=WeatherReason.DISABLED)
             travel = self._travel(player_home, row.is_home, row.opponent)
             rows.append(
@@ -427,7 +790,7 @@ class PlayerStatsService:
         rows = rows[: query.limit]
         return UpcomingMatchesResponse(
             player_id=player_id,
-            player=self._player_ref(player),
+            player=self._player_ref(player, doc.wire),
             season=season.label,
             generated_at=self._now(),
             sources=[self._ff_source(doc)],
@@ -455,8 +818,9 @@ class PlayerStatsService:
                 else None
             ),
             since=parse_match_date(injury_raw.get("since")) if injury_raw else None,
-            expected_return=(
-                parse_match_date(injury_raw.get("expectedReturn")) if injury_raw else None
+            expected_return=_expected_return_date(
+                wire,
+                str(availability.get("label")) if isinstance(availability, dict) else None,
             ),
             availability_text=(
                 str(availability.get("label")) if isinstance(availability, dict) else None
@@ -467,22 +831,25 @@ class PlayerStatsService:
         start_probability = StartProbability(
             matchweek=start.get("matchday") if isinstance(start, dict) else None,
             percent=start.get("percent") if isinstance(start, dict) else None,
-            raw=str(start_label) if start_label is not None else None,
+            raw=_optional_label(start_label),
         )
         risk_raw = profile.injury_risk or {}
+        risk_label = risk_raw.get("label") if isinstance(risk_raw, dict) else None
         injury_risk = InjuryRiskInfo(
-            level=map_injury_risk(risk_raw.get("label") if isinstance(risk_raw, dict) else None),
-            raw=str(risk_raw.get("label")) if isinstance(risk_raw, dict) else None,
+            level=map_injury_risk(risk_label if isinstance(risk_label, str) else None),
+            raw=_optional_label(risk_label),
         )
         bid = profile.max_profitable_bid or {}
+        bid_label = bid.get("label") if isinstance(bid, dict) else None
         max_bid = MaxProfitableBid(
             amount=bid.get("amount") if isinstance(bid, dict) else None,
             profitable=bid.get("profitable") if isinstance(bid, dict) else None,
-            raw=str(bid.get("label")) if isinstance(bid, dict) else None,
+            raw=_optional_label(bid_label),
         )
         hierarchy_raw = profile.hierarchy or {}
+        hierarchy_label = hierarchy_raw.get("label") if isinstance(hierarchy_raw, dict) else None
         hierarchy = Hierarchy(
-            label=str(hierarchy_raw.get("label")) if isinstance(hierarchy_raw, dict) else None,
+            label=_optional_label(hierarchy_label),
             rank=hierarchy_raw.get("rank") if isinstance(hierarchy_raw, dict) else None,
         )
         news: list[NewsItem] = []
@@ -505,10 +872,14 @@ class PlayerStatsService:
             )
         news = news[:10]
         injury_history = self._injury_history_entries(profile)
+        if injury.since is None and injury_history:
+            open_row = next((row for row in injury_history if row.ongoing), None)
+            if open_row is not None:
+                injury = injury.model_copy(update={"since": open_row.start, "active": True})
         segment_warnings = _wire_warnings(wire.warnings)
         return PlayerProfileResponse(
             player_id=player_id,
-            player=self._player_ref(player),
+            player=self._player_ref(player, wire),
             season=season.label,
             generated_at=self._now(),
             sources=[self._ff_source(doc)],
@@ -520,16 +891,31 @@ class PlayerStatsService:
             max_profitable_bid=max_bid,
             hierarchy=hierarchy,
             news=news,
+            averages=averages_from_season(wire.season_stats),
         )
 
-    def _player_ref(self, player: ResolvedPlayer) -> PlayerRef:
+    def _player_ref(
+        self,
+        player: ResolvedPlayer,
+        wire: FutbolFantasyWire | None = None,
+    ) -> PlayerRef:
+        name = player.name
+        team_name = player.team_name
+        if wire and wire.profile is not None:
+            personal = wire.profile.personal
+            if name is None and isinstance(personal, dict):
+                name = personal.get("fullName") or personal.get("full_name")
+        if team_name is None and player.team_id is not None:
+            venue = self._venues.for_club(fantasy_id=player.team_id, name=None)
+            if venue is not None:
+                team_name = venue.name
         return PlayerRef(
             id=player.id,
-            name=player.name,
+            name=name,
             nickname=player.nickname,
             slug=player.slug,
             team_id=player.team_id,
-            team_name=player.team_name,
+            team_name=team_name,
             position_id=player.position_id,
         )
 
@@ -541,6 +927,24 @@ class PlayerStatsService:
         if value.tzinfo is None:
             return value.replace(tzinfo=UTC)
         return value.astimezone(UTC)
+
+    def _fixture_stat_layers(
+        self,
+        fantasy_weeks: dict[int, Mapping[StatKey, ScrapedStat]],
+        *,
+        competition: Competition,
+        matchweek: int | None,
+        parser_layer: Mapping[StatKey, ScrapedStat] | None,
+    ) -> list[tuple[StatSource, Mapping[StatKey, ScrapedStat]]]:
+        """Build catalog + FutbolFantasy stat layers for one match row."""
+        layers: list[tuple[StatSource, Mapping[StatKey, ScrapedStat]]] = []
+        if matchweek is not None and competition == Competition.LALIGA:
+            week_stats = fantasy_weeks.get(matchweek)
+            if week_stats:
+                layers.append((StatSource.FANTASY_CATALOG, week_stats))
+        if parser_layer:
+            layers.append((StatSource.FUTBOLFANTASY, parser_layer))
+        return layers
 
     def _fantasy_week_map(self, player: ResolvedPlayer) -> dict[int, Any]:
         out: dict[int, Any] = {}
@@ -557,6 +961,30 @@ class PlayerStatsService:
     def _weather_enabled(self) -> bool:
         key = self._settings.openweather_api_key
         return bool(key and key.get_secret_value())
+
+    def _scraping_enabled(self) -> bool:
+        return bool(self._settings.scraping_base_url)
+
+    def _detail_segment_available(self, name: DetailSegment) -> bool:
+        if name == "market":
+            return True
+        return self._scraping_enabled()
+
+    async def _detail_segment_call(
+        self,
+        player_id: str,
+        name: DetailSegment,
+        query: PlayerDetailQuery,
+    ) -> Any:
+        if name == "fixtures":
+            return await self.fixtures(player_id, query.fixtures_query())
+        if name == "market":
+            return await self.market(player_id, query.market_query())
+        if name == "recent":
+            return await self.recent_matches(player_id, query.recent_query())
+        if name == "upcoming":
+            return await self.upcoming_matches(player_id, query.upcoming_query())
+        return await self.profile(player_id)
 
     def _venue_schema(self, entry: VenueEntry) -> Venue:
         return Venue(
@@ -576,9 +1004,10 @@ class PlayerStatsService:
     ) -> VenueEntry | None:
         if player_home is None:
             return None
-        if is_home is False and opponent:
-            opponent_venue = self._venues.for_club(name=opponent)
-            return opponent_venue or player_home
+        if is_home is False:
+            if not opponent:
+                return None
+            return self._venues.for_club(fantasy_id=None, name=opponent)
         return player_home
 
     def _ff_source(self, doc: ScrapedDocument) -> SourceStatus:
@@ -614,12 +1043,15 @@ class PlayerStatsService:
         self,
         match_venue: VenueEntry | None,
         kickoff: datetime | None,
-    ) -> MatchWeather:
+    ) -> tuple[MatchWeather, SegmentWarning | None]:
         if match_venue is None:
-            return MatchWeather(snapshot=None, reason=WeatherReason.VENUE_UNKNOWN)
+            return MatchWeather(snapshot=None, reason=WeatherReason.VENUE_UNKNOWN), None
         venue = self._venue_schema(match_venue)
         if kickoff is None:
-            return MatchWeather(snapshot=None, reason=WeatherReason.KICKOFF_UNKNOWN, venue=venue)
+            return (
+                MatchWeather(snapshot=None, reason=WeatherReason.KICKOFF_UNKNOWN, venue=venue),
+                None,
+            )
         key = (round(match_venue.lat, 2), round(match_venue.lon, 2))
         cache = self._weather_cache.setdefault(
             key,
@@ -631,16 +1063,23 @@ class PlayerStatsService:
 
         try:
             payload = await cache.get_or_fetch(fetch)
-        except UpstreamError:
-            return MatchWeather(
-                snapshot=None,
-                reason=WeatherReason.PROVIDER_UNAVAILABLE,
-                venue=venue,
+        except UpstreamError as exc:
+            return (
+                MatchWeather(
+                    snapshot=None,
+                    reason=WeatherReason.PROVIDER_UNAVAILABLE,
+                    venue=venue,
+                ),
+                SegmentWarning(
+                    code="weather_unavailable",
+                    source="openweather",
+                    detail=_weather_failure_detail(exc),
+                ),
             )
         slots = _forecast_slots(payload)
         picked = pick_slot(slots, kickoff.astimezone(UTC), self._now())
         if isinstance(picked, WeatherReason):
-            return MatchWeather(snapshot=None, reason=picked, venue=venue)
+            return MatchWeather(snapshot=None, reason=picked, venue=venue), None
         snapshot = WeatherSnapshot(
             temperature_c=picked.temperature_c,
             feels_like_c=picked.feels_like_c,
@@ -653,7 +1092,7 @@ class PlayerStatsService:
             icon=picked.icon,
             forecast_for=picked.dt,
         )
-        return MatchWeather(snapshot=snapshot, reason=None, venue=venue)
+        return MatchWeather(snapshot=snapshot, reason=None, venue=venue), None
 
     def _travel(
         self,
@@ -664,11 +1103,33 @@ class PlayerStatsService:
         if player_home is None:
             return Travel(distance_km=None, reason="venue_unknown")
         home = self._venue_schema(player_home)
+        if is_home is True:
+            return Travel(
+                distance_km=0.0,
+                from_venue=home,
+                to_venue=home,
+                player_team_travels=False,
+            )
+        if is_home is False and not opponent:
+            return Travel(
+                distance_km=None,
+                reason="venue_unknown",
+                from_venue=home,
+                to_venue=None,
+                player_team_travels=True,
+            )
         if not opponent:
             return Travel(distance_km=None, reason="venue_unknown", from_venue=home, to_venue=home)
-        opponent_venue = self._venues.for_club(name=opponent)
+        opponent_venue = self._venues.for_club(fantasy_id=None, name=opponent)
         if opponent_venue is None:
-            return Travel(distance_km=None, reason="venue_unknown", from_venue=home, to_venue=home)
+            travels = is_home is False
+            return Travel(
+                distance_km=None,
+                reason="venue_unknown",
+                from_venue=home,
+                to_venue=None if travels else home,
+                player_team_travels=True if travels else None,
+            )
         away = self._venue_schema(opponent_venue)
         distance = haversine_km(
             player_home.lat,
@@ -706,11 +1167,21 @@ def _wire_warnings(raw: list[Any] | None) -> list[SegmentWarning]:
         if not isinstance(item, dict):
             continue
         code = str(item.get("code") or "scraping_partial")
+        message = str(item.get("message")) if item.get("message") else None
+        preview = str(item.get("preview")) if item.get("preview") else None
+        path = item.get("path") or item.get("ruleId")
+        detail = message
+        if code == "stat_label_unmapped" and preview:
+            detail = f"{path}: {message} ({preview})" if message and path else preview
+        elif path and message:
+            detail = f"{path}: {message}"
+        elif path:
+            detail = str(path)
         out.append(
             SegmentWarning(
                 code=code,
                 source=str(item.get("source") or "futbolfantasy"),
-                detail=str(item.get("message")) if item.get("message") else None,
+                detail=detail,
             )
         )
     return out
@@ -730,6 +1201,24 @@ def _scraped_stats_layer(
     return layer
 
 
+def _as_float(value: object) -> float | None:
+    if isinstance(value, bool) or not isinstance(value, int | float):
+        return None
+    return float(value)
+
+
+def _as_int(value: object) -> int | None:
+    if isinstance(value, bool) or not isinstance(value, int | float):
+        return None
+    return int(value)
+
+
+def _mapping(value: object) -> dict[str, object]:
+    if not isinstance(value, dict):
+        return {}
+    return {str(key): item for key, item in value.items()}
+
+
 def _forecast_slots(payload: Any) -> list[ForecastSlot]:
     rows = payload.get("list") if isinstance(payload, dict) else None
     if not isinstance(rows, list):
@@ -739,31 +1228,29 @@ def _forecast_slots(payload: Any) -> list[ForecastSlot]:
         if not isinstance(row, dict):
             continue
         dt_raw = row.get("dt")
-        main = row.get("main") or {}
-        weather = (row.get("weather") or [{}])[0]
-        rain = row.get("rain") or {}
-        if dt_raw is None:
+        if not isinstance(dt_raw, int | float):
             continue
+        main = _mapping(row.get("main"))
+        weather_rows = row.get("weather")
+        weather_item = weather_rows[0] if isinstance(weather_rows, list) and weather_rows else {}
+        weather = _mapping(weather_item)
+        rain = _mapping(row.get("rain"))
+        wind = _mapping(row.get("wind"))
+        condition_code = _as_int(weather.get("id"))
+        icon = weather.get("icon")
+        temperature = _as_float(main.get("temp"))
         slots.append(
             ForecastSlot(
                 dt=datetime.fromtimestamp(int(dt_raw), tz=UTC),
-                temperature_c=float(main.get("temp") or 0),
-                feels_like_c=(
-                    float(main.get("feels_like")) if main.get("feels_like") is not None else None
-                ),
-                humidity_pct=(
-                    int(main.get("humidity")) if main.get("humidity") is not None else None
-                ),
-                wind_speed_ms=(
-                    float((row.get("wind") or {}).get("speed") or 0) if row.get("wind") else None
-                ),
-                precipitation_probability=(
-                    float(row.get("pop")) if row.get("pop") is not None else None
-                ),
-                rain_mm=float(rain.get("3h")) if rain.get("3h") is not None else None,
+                temperature_c=0.0 if temperature is None else temperature,
+                feels_like_c=_as_float(main.get("feels_like")),
+                humidity_pct=_as_int(main.get("humidity")),
+                wind_speed_ms=_as_float(wind.get("speed")),
+                precipitation_probability=_as_float(row.get("pop")),
+                rain_mm=_as_float(rain.get("3h")),
                 condition=str(weather.get("description") or ""),
-                condition_code=int(weather.get("id")) if weather.get("id") else None,
-                icon=str(weather.get("icon")) if weather.get("icon") else None,
+                condition_code=condition_code,
+                icon=str(icon) if isinstance(icon, str) else None,
             )
         )
     return slots

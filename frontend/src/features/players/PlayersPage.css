@@ -1,0 +1,104 @@
+.players-page .players-list .players-head-row,
+.players-page .players-row {
+  grid-template-columns:
+    72px minmax(0, 1.05fr) minmax(0, 0.85fr) minmax(0, 0.55fr) minmax(0, 0.72fr)
+    minmax(0, 0.88fr) minmax(0, 1.05fr) minmax(0, 0.82fr) minmax(0, 0.52fr)
+    minmax(4.75rem, 0.68fr);
+  gap: 8px 10px;
+}
+
+.players-page .players-list .market-name-wrap {
+  grid-column: span 1;
+  min-width: 0;
+}
+
+.players-page .players-list .market-cell {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.players-page .players-list .market-cell-availability {
+  overflow: visible;
+}
+
+.players-page .players-list .market-head-row .market-head-cell {
+  min-width: 0;
+}
+
+.players-actions-cell {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+}
+
+.player-details-link {
+  display: inline-flex;
+  line-height: 0;
+}
+
+.player-details-link img {
+  width: 1.75rem;
+  height: 1.75rem;
+}
+
+.player-bookmark-btn {
+  border: none;
+  background: transparent;
+  padding: 0;
+  line-height: 0;
+  cursor: pointer;
+}
+
+.player-bookmark-btn img {
+  width: 1.75rem;
+  height: 1.75rem;
+  opacity: 0.45;
+}
+
+.player-bookmark-btn.is-active img {
+  opacity: 1;
+}
+
+.players-leaderboard-hint {
+  margin: 0.5rem 0 0;
+}
+
+.players-pagination {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 1rem;
+  margin-top: 1rem;
+}
+
+.players-pagination button:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.market-row.is-favorite {
+  background: var(--red-soft);
+}
+
+.market-row.is-favorite .market-name {
+  color: var(--red);
+}
+
+@media (max-width: 800px) {
+  .players-page .players-list .market-row {
+    grid-template-columns: 72px 1fr;
+  }
+
+  .players-page .players-list .market-card {
+    grid-row: auto;
+  }
+
+  .players-page .players-list .market-name-wrap {
+    grid-column: 2 / -1;
+  }
+
+  .players-page .players-list .players-actions-cell {
+    grid-column: 2 / -1;
+  }
+}

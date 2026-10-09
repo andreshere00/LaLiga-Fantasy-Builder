@@ -28,6 +28,7 @@ _PARSER_STAT_KEYS: dict[str, StatKey] = {
     "bigChancesCreated": StatKey.BIG_CHANCES_CREATED,
     "ballsIntoBox": StatKey.BALLS_INTO_BOX,
     "penaltiesCommitted": StatKey.PENALTIES_COMMITTED,
+    "penaltiesWon": StatKey.PENALTIES_WON,
     "penaltiesSaved": StatKey.PENALTIES_SAVED,
     "saves": StatKey.SAVES,
     "clearances": StatKey.CLEARANCES,
@@ -88,6 +89,7 @@ def _normalise_document(raw: Mapping[str, Any]) -> dict[str, Any]:
         "matches": {"recent": recent, "upcoming": upcoming},
         "profile": profile,
         "market": raw.get("market"),
+        "season_stats": raw.get("seasonStats") or raw.get("season_stats"),
         "warnings": raw.get("warnings"),
     }
 
@@ -108,17 +110,30 @@ def _normalise_match(row: Mapping[str, Any]) -> dict[str, Any]:
         "kickoff_time": row.get("kickoff"),
         "matchweek": row.get("matchday"),
         "competition_raw": row.get("competitionRaw") or row.get("competition"),
-        "is_home": row.get("isHome") if "isHome" in row else row.get("playerSide") == "home",
+        "is_home": _match_is_home(row),
         "opponent": row.get("opponent"),
+        "home_team": row.get("homeTeam") or row.get("home_team"),
+        "away_team": row.get("awayTeam") or row.get("away_team"),
         "home_score": home_score,
         "away_score": away_score,
         "score": score_text,
         "fantasy_points": _points_int(row.get("weekPoints") or row.get("fantasyPoints")),
         "minutes": minutes.get("minutes") if isinstance(minutes, Mapping) else row.get("minutes"),
         "minutes_note": minutes.get("raw") if isinstance(minutes, Mapping) else None,
+        "minutes_event": minutes.get("event") if isinstance(minutes, Mapping) else None,
         "stats": row.get("stats"),
         "warnings": row.get("warnings"),
     }
+
+
+def _match_is_home(row: Mapping[str, Any]) -> bool | None:
+    if "isHome" in row:
+        value = row.get("isHome")
+        return value if isinstance(value, bool) else None
+    side = row.get("playerSide")
+    if side is None:
+        return None
+    return side == "home"
 
 
 def _normalise_fixture(row: Mapping[str, Any]) -> dict[str, Any]:
@@ -169,6 +184,7 @@ def _normalise_profile(raw: Mapping[str, Any]) -> dict[str, Any]:
         nested = history.get("entries") or history.get("items")
         if isinstance(nested, list):
             history_list = nested
+    personal = raw.get("personal")
     return {
         "injury": raw.get("injury"),
         "start_probability": raw.get("startProbability"),
@@ -178,6 +194,7 @@ def _normalise_profile(raw: Mapping[str, Any]) -> dict[str, Any]:
         "hierarchy": raw.get("hierarchy"),
         "news": raw.get("news"),
         "availability": raw.get("availability"),
+        "personal": personal,
     }
 
 
@@ -200,10 +217,13 @@ def stats_from_parser_layer(stats: Mapping[str, Any] | None) -> dict[StatKey, Sc
         layer = stats.get(parser_key)
         if not isinstance(layer, Mapping):
             continue
-        out[stat_key] = ScrapedStat(
-            count=layer.get("count"),
-            points=_points_int(layer.get("points")),
-        )
+        count = layer.get("count")
+        if layer.get("status") == "implied_zero":
+            count = None
+        points = _points_int(layer.get("points"))
+        if count is None and points is None:
+            continue
+        out[stat_key] = ScrapedStat(count=count, points=points)
     return out
 
 
@@ -263,7 +283,7 @@ def kickoff_datetime(day: date | None, kickoff: str | None) -> datetime | None:
     """Combine match date and HH:MM kickoff in Europe/Madrid."""
     if day is None or not kickoff:
         return None
-    match = re.match(r"^(\d{1,2}):(\d{2})$", kickoff.strip())
+    match = re.match(r"^(\d{1,2}):(\d{2})h?$", kickoff.strip())
     if not match:
         return None
     hour = int(match.group(1))

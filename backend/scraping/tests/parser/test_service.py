@@ -27,6 +27,38 @@ def _codes(player: object) -> set[str]:
 # ---- Happy path ---- #
 
 
+def test_parse_futbolfantasy_live_calendar_publishes_match_and_header() -> None:
+    player = SERVICE.parse_futbolfantasy(page("raphinha_laliga_26_27_live.html"))
+    recent = player.matches.recent
+    assert recent[0].competition.value == "laliga"
+    assert recent[0].opponent == "Sevilla"
+    assert recent[0].player_side == "away"
+    assert recent[0].score is not None
+    assert recent[0].score.home == 1 and recent[0].score.away == 3
+    assert recent[0].minutes.minutes == 76
+    assert recent[1].player_side == "home"
+    assert recent[2].minutes.minutes == 90
+    upcoming = player.matches.upcoming[0]
+    assert upcoming.kickoff == "18:30"
+    assert upcoming.is_home is True
+    assert upcoming.opponent == "Getafe"
+    assert upcoming.competition.value == "laliga"
+    assert player.profile.hierarchy is not None
+    assert player.profile.hierarchy.label == "Dios"
+    assert player.profile.start_probability is not None
+    assert player.profile.start_probability.matchday == 8
+    assert player.profile.start_probability.percent == 50
+    assert player.profile.injury_risk is not None
+    assert player.profile.injury_risk.label == "Bajo"
+    assert player.profile.personal is not None
+    assert player.profile.personal.full_name == "Raphael Dias Belloli"
+    assert player.profile.injury is not None
+    assert player.profile.injury.diagnosis == "Edema en el bíceps femoral"
+    assert player.profile.injury_history is not None
+    assert player.profile.injury_history.entries
+    assert "bíceps femoral" in player.profile.injury_history.entries[0].diagnosis.casefold()
+
+
 def test_parse_futbolfantasy_raphinha_page_matches_published_totals() -> None:
     player = SERVICE.parse_futbolfantasy(page("raphinha_laliga_26_27.html"))
     assert player.profile.identity.display_name == "Raphinha"
@@ -47,6 +79,30 @@ def test_parse_futbolfantasy_raphinha_page_matches_published_totals() -> None:
     assert "market_season_mismatch" in _codes(player)
     assert player.profile.news[0].source == "FutbolFantasy"
     assert "injury_map_total_mismatch" in _codes(player)
+
+
+def test_match_fixture_null_fixture_date_matches_matchday_and_score() -> None:
+    from datetime import date
+
+    from fantasy_scraping.parser.models.common import MinutesNote, Score
+    from fantasy_scraping.parser.models.futbolfantasy import FixtureMatch, FixtureRow, RecentMatch
+    from fantasy_scraping.parser.models.stats import DaznStats
+    from fantasy_scraping.parser.service import _match_fixture
+
+    recent = RecentMatch(
+        date=date(2026, 9, 19),
+        matchday=7,
+        score=Score(home=1, away=3),
+        minutes=MinutesNote(raw="76'", event="full", minutes=76),
+    )
+    fixture = FixtureRow(
+        date=None,
+        matchday=7,
+        match=FixtureMatch(home_code="SEV", away_code="BAR", home_goals=1, away_goals=3),
+        minutes_out=MinutesNote(raw="76'", event="full", minutes=76),
+        stats=DaznStats(),
+    )
+    assert _match_fixture(recent, [fixture]) is fixture
 
 
 def test_parse_competition_companions_merges_recent_stats() -> None:

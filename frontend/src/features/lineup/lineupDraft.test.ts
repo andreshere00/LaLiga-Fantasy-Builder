@@ -2,7 +2,7 @@
 
 import { describe, expect, it } from "vitest";
 
-import type { LineupGroup, SquadCard } from "../../api/mappers";
+import type { LineupGroup, LineupSlotView, SquadCard } from "../../api/mappers";
 import {
   applyFormationCode,
   applyPitchPick,
@@ -15,6 +15,7 @@ import {
 } from "./lineupDraft";
 
 const media = {
+  masterPlayerId: null,
   photoUrl: null,
   teamBadgeUrl: null,
   marketValue: null,
@@ -22,6 +23,12 @@ const media = {
   listingId: null,
   salePrice: null,
 };
+
+const slot = (id: string, name: string): LineupSlotView => ({
+  id,
+  masterPlayerId: null,
+  name,
+});
 
 const squad: SquadCard[] = [
   { id: "gk", name: "GK", captain: false, positionId: 1, ...media },
@@ -35,10 +42,10 @@ const squad: SquadCard[] = [
 
 function groups442(): LineupGroup[] {
   return [
-    { role: "goalkeeper", players: [{ id: "gk", name: "GK" }] },
-    { role: "defender", players: [{ id: "d1", name: "D1" }, { id: "d2", name: "D2" }] },
-    { role: "midfield", players: [{ id: "m1", name: "M1" }, { id: "m2", name: "M2" }] },
-    { role: "striker", players: [{ id: "s1", name: "S1" }, { id: "s2", name: "S2" }] },
+    { role: "goalkeeper", players: [slot("gk", "GK")] },
+    { role: "defender", players: [slot("d1", "D1"), slot("d2", "D2")] },
+    { role: "midfield", players: [slot("m1", "M1"), slot("m2", "M2")] },
+    { role: "striker", players: [slot("s1", "S1"), slot("s2", "S2")] },
   ];
 }
 
@@ -54,26 +61,16 @@ describe("lineupDraft", () => {
   it("draftFromGroups_marks_full_lineup_complete", () => {
     const draft = draftFromGroups(
       [
-        { role: "goalkeeper", players: [{ id: "gk", name: "GK" }] },
+        { role: "goalkeeper", players: [slot("gk", "GK")] },
         {
           role: "defender",
-          players: [
-            { id: "d1", name: "D1" },
-            { id: "d2", name: "D2" },
-            { id: "d3", name: "D3" },
-            { id: "d4", name: "D4" },
-          ],
+          players: [slot("d1", "D1"), slot("d2", "D2"), slot("d3", "D3"), slot("d4", "D4")],
         },
         {
           role: "midfield",
-          players: [
-            { id: "m1", name: "M1" },
-            { id: "m2", name: "M2" },
-            { id: "m3", name: "M3" },
-            { id: "m4", name: "M4" },
-          ],
+          players: [slot("m1", "M1"), slot("m2", "M2"), slot("m3", "M3"), slot("m4", "M4")],
         },
-        { role: "striker", players: [{ id: "s1", name: "S1" }, { id: "s2", name: "S2" }] },
+        { role: "striker", players: [slot("s1", "S1"), slot("s2", "S2")] },
       ],
       [4, 4, 2],
     );
@@ -156,7 +153,7 @@ describe("groupsForPitchDisplay", () => {
       [
         {
           role: "goalkeeper",
-          players: [{ id: "gk", name: "GK", fixturePoints: 7 }],
+          players: [{ ...slot("gk", "GK"), fixturePoints: 7 }],
         },
         { role: "defender", players: [] },
         { role: "midfield", players: [] },
@@ -173,7 +170,7 @@ describe("groupsForPitchDisplay", () => {
       [
         {
           role: "goalkeeper",
-          players: [{ id: "gk", name: "GK", fixturePoints: 12, isMvp: true }],
+          players: [{ ...slot("gk", "GK"), fixturePoints: 12, isMvp: true }],
         },
         { role: "defender", players: [] },
         { role: "midfield", players: [] },

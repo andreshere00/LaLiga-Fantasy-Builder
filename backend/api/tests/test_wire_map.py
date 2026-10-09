@@ -44,6 +44,17 @@ def test_stats_from_parser_layer_maps_camel_case_keys() -> None:
     assert layer[StatKey.ASSISTS].points == 9
 
 
+def test_stats_from_parser_layer_implied_zero_drops_count() -> None:
+    layer = stats_from_parser_layer(
+        {
+            "goalsConceded": {"count": 0, "points": None, "status": "implied_zero"},
+            "goals": {"count": 1, "points": None, "status": "ok"},
+        },
+    )
+    assert StatKey.GOALS_CONCEDED not in layer
+    assert layer[StatKey.GOALS].count == 1
+
+
 def test_stats_from_fantasy_week_maps_arrays() -> None:
     layer = stats_from_fantasy_week({"goals": [2, 20], "mins_played": [90]})
     assert layer[StatKey.GOALS].count == 2
@@ -95,6 +106,32 @@ def test_parse_match_date_accepts_date_instance() -> None:
 
 def test_kickoff_datetime_invalid_time_returns_none() -> None:
     assert kickoff_datetime(date(2026, 10, 18), "bad") is None
+
+
+def test_kickoff_datetime_trailing_h_returns_madrid_datetime() -> None:
+    kickoff = kickoff_datetime(date(2026, 10, 10), "18:30h")
+    assert kickoff is not None
+    assert kickoff.hour == 18
+
+
+def test_normalise_match_missing_side_keeps_is_home_null() -> None:
+    wire = parse_wire_document(
+        {
+            "fixtures": [],
+            "matches": {
+                "recent": [
+                    {
+                        "date": "2026-09-16",
+                        "score": {"home": 7, "away": 2},
+                        "minutes": {"raw": "68'", "minutes": 68, "event": "full"},
+                    }
+                ],
+                "upcoming": [],
+            },
+            "profile": {},
+        },
+    )
+    assert wire.matches.recent[0].is_home is None
 
 
 def test_stats_from_parser_layer_skips_non_mappings() -> None:

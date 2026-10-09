@@ -1,6 +1,8 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 
 import { deleteJson, paths, postJson } from "../../api/client";
+import { parseSquadPlayerId } from "../../api/ids";
+import { upstreamPlayerIdBody } from "../../api/mutationBodies";
 import { leagueId } from "../../api/mappers";
 import { NeedsReauthError } from "../../api/errors";
 import { useAuth } from "../../auth/AuthProvider";
@@ -36,8 +38,10 @@ export function useSquadSales() {
       if (!accessToken || leagueKey === "") {
         throw new Error("Market listing requires a signed-in league.");
       }
+      const squadId = parseSquadPlayerId(input.playerTeamId);
+      if (!squadId) throw new Error("Invalid squad player id.");
       return postJson(paths.marketListings(leagueKey), accessToken, {
-        playerId: input.playerTeamId,
+        ...upstreamPlayerIdBody(squadId),
         salePrice: input.salePrice,
       });
     },
@@ -63,8 +67,10 @@ export function useSquadSales() {
       }
       await deleteJson(paths.marketListing(leagueKey, input.marketId), accessToken);
       try {
+        const squadId = parseSquadPlayerId(input.playerTeamId);
+        if (!squadId) throw new Error("Invalid squad player id.");
         return await postJson(paths.marketListings(leagueKey), accessToken, {
-          playerId: input.playerTeamId,
+          ...upstreamPlayerIdBody(squadId),
           salePrice: input.salePrice,
         });
       } catch (error) {
@@ -86,9 +92,13 @@ export function useSquadSales() {
       if (!accessToken || leagueKey === "") {
         throw new Error("Immediate sale requires a signed-in league.");
       }
-      return postJson(paths.marketImmediateSale(leagueKey), accessToken, {
-        playerId: playerTeamId,
-      });
+      const squadId = parseSquadPlayerId(playerTeamId);
+      if (!squadId) throw new Error("Invalid squad player id.");
+      return postJson(
+        paths.marketImmediateSale(leagueKey),
+        accessToken,
+        upstreamPlayerIdBody(squadId),
+      );
     },
     onSuccess: () => refreshSquadSales(queryClient, leagueKey),
     onError,

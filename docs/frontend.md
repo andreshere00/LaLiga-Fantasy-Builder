@@ -22,7 +22,7 @@ Assets live under [`docs/images/`](images/).
 
 Same-origin proxying matches production Nginx:
 
-- `uv run poe dev` from the repo root (auth, API, and Vite), or
+- `uv run poe dev` from the repo root (auth, API, scraping, and Vite), or
 - `cd frontend && bun run dev:all` when backends are already up.
 
 App URL: http://localhost:3000. `/auth`, `/laliga`, and `/api` proxy to auth
@@ -34,8 +34,22 @@ and the API.
 |------|--------|---------------------|
 | `/` | Lineup — formation, pitch, squad, standings | [Leagues](api/leagues/README.md), [Teams](api/teams/README.md), [Calendar](api/calendar/README.md) |
 | `/market` | Market — listings, bids, release clauses | [Market](api/market/README.md), [Buyout](api/buyout/README.md), [Players](api/players/README.md), [Calendar](api/calendar/README.md) |
+| `/players` | Players — catalog, filters, top-10 leaderboard | [Players](api/players/README.md), [Calendar](api/calendar/README.md) |
+| `/players/:playerId` | Player detail — stats aggregate | [Players](api/players/README.md) (`GET /players/{id}/stats/detail`) |
 
-The shell header switches routes. The league dropdown applies to both screens.
+The shell header switches routes. The league dropdown applies to lineup, market, and players.
+
+### Player detail widgets
+
+The player detail screen loads recent and upcoming matches, profile data, and
+weather from `GET /api/players/{id}/stats/detail`. Its match section shows up to
+five cards in each direction. Score badges identify wins, losses, and draws by
+color and text. Upcoming cards show an OpenWeather condition icon and available
+temperature, humidity, and wind values; unavailable forecast data leaves the
+fixture visible with a reason. The Fantasy data section groups profile indicators,
+news links, and injury history into responsive columns. News and injury history
+show five records per page with independent newer/older navigation. A partial API
+failure is reported by segment while successful groups remain visible.
 
 ## Authentication
 

@@ -8,6 +8,7 @@ import pytest
 from pydantic import BaseModel
 
 from fantasy_scraping.parser.models.futbolfantasy import FutbolFantasyPlayer
+from fantasy_scraping.parser.normalise.enums import hierarchy_rank
 from fantasy_scraping.parser.rules.loader import RuleRepository, _compile, load_rules
 
 # ---- Mocks, fixtures & helpers ---- #
@@ -55,6 +56,24 @@ def test_load_rules_packaged_files_validate() -> None:
     rules = RuleRepository().load()
     assert rules.version == "1"
     assert RuleRepository().load() is rules
+
+
+def test_hierarchy_table_maps_product_labels_and_leaves_other_ranks_unset() -> None:
+    table = load_rules(RULES).hierarchy
+    assert table == {
+        "dios": 1,
+        "clave": 2,
+        "importante": 3,
+        "rotacion": 4,
+        "revulsivo": 5,
+        "reserva": 6,
+        "otro": 7,
+    }
+    assert hierarchy_rank("Rotación", table) == 4
+    assert hierarchy_rank("Revulsivo", table) == 5
+    assert hierarchy_rank("Estrella", table) is None
+    assert hierarchy_rank("Titular", table) is None
+    assert hierarchy_rank("Suplente", table) is None
 
 
 def test_rules_cover_model_leaves() -> None:

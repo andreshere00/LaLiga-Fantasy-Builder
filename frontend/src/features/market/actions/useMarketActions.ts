@@ -2,6 +2,8 @@ import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useCallback, useEffect, useRef, useState } from "react";
 
 import { deleteJson, paths, postJson, putJson } from "../../../api/client";
+import { parseSquadPlayerId } from "../../../api/ids";
+import { upstreamPlayerIdBody } from "../../../api/mutationBodies";
 import { ApiError, NeedsReauthError } from "../../../api/errors";
 import { useAuth } from "../../../auth/AuthProvider";
 import { useLeague } from "../../lineup/LeagueProvider";
@@ -115,8 +117,10 @@ export function useMarketActions() {
       kind: BidActionKind;
     }) => {
       if (usesDirectOfferBid(row, kind)) {
+        const squadId = parseSquadPlayerId(row.playerTeamId);
+        if (!squadId) throw new Error("Invalid squad player id.");
         return postJson(paths.marketDirectOffer(leagueKey), token, {
-          playerId: row.playerTeamId,
+          ...upstreamPlayerIdBody(squadId),
           money,
         });
       }

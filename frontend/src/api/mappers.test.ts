@@ -128,6 +128,7 @@ describe("squadCards", () => {
     expect(cards).toEqual([
       {
         id: "pt-1",
+        masterPlayerId: null,
         name: "Raphinha",
         captain: true,
         positionId: null,
@@ -142,6 +143,7 @@ describe("squadCards", () => {
       },
       {
         id: "pt-2",
+        masterPlayerId: null,
         name: "Unai Simón",
         captain: false,
         positionId: null,
@@ -215,6 +217,17 @@ describe("mediaFromPlayerMaster", () => {
     ).toEqual({
       photoUrl: "https://example.test/player.png",
       teamBadgeUrl: "https://example.test/badge.png",
+    });
+  });
+
+  it("mediaFromPlayerMaster_falls_back_to_nested_images", () => {
+    expect(
+      mediaFromPlayerMaster({
+        images: { photo: { url: "https://example.test/nested.png" } },
+      }),
+    ).toEqual({
+      photoUrl: "https://example.test/nested.png",
+      teamBadgeUrl: null,
     });
   });
 
@@ -552,10 +565,10 @@ describe("lineupFixtureTotal", () => {
       {
         role: "goalkeeper" as const,
         players: [
-          { id: "a", name: "A", fixturePoints: 7 },
-          { id: "b", name: "B", fixturePoints: -1 },
-          { id: "c", name: "C", fixturePoints: 9, isEmpty: true },
-          { id: "d", name: "D" },
+          { id: "a", masterPlayerId: null, name: "A", fixturePoints: 7 },
+          { id: "b", masterPlayerId: null, name: "B", fixturePoints: -1 },
+          { id: "c", masterPlayerId: null, name: "C", fixturePoints: 9, isEmpty: true },
+          { id: "d", masterPlayerId: null, name: "D" },
         ],
       },
     ];
@@ -563,7 +576,11 @@ describe("lineupFixtureTotal", () => {
   });
 
   it("lineupFixtureTotal_without_scores_returns_null", () => {
-    expect(lineupFixtureTotal([{ role: "defender", players: [{ id: "a", name: "A" }] }])).toBeNull();
+    expect(
+      lineupFixtureTotal([
+        { role: "defender", players: [{ id: "a", masterPlayerId: null, name: "A" }] },
+      ]),
+    ).toBeNull();
   });
 });
 
@@ -630,7 +647,9 @@ describe("lineup names", () => {
       },
     });
     expect(formationLabel([4, 4, 2])).toBe("4-4-2");
-    expect(groups[0]?.players).toEqual([{ id: "pt-1", name: "Player name" }]);
+    expect(groups[0]?.players).toEqual([
+      { id: "pt-1", masterPlayerId: null, name: "Player name" },
+    ]);
   });
 
   it("possessiveName_blank_falls_back_to_your", () => {

@@ -122,6 +122,40 @@ md_label = "tiros"
 dazn_field = "shots"
 
 [[events]]
+key = "shots_on_target"
+label = "Tiros a puerta"
+category = "ataque"
+md_label = "tiros a puerta"
+dazn_field = "shots"
+
+[[events]]
+key = "dribbles_short"
+label = "Regates"
+category = "ataque"
+md_label = "regates"
+dazn_field = "successful_dribbles"
+
+[[events]]
+key = "assists_without_goal"
+label = "Asistencias sin gol"
+category = "ataque"
+md_label = "asistencias sin gol"
+
+[[events]]
+key = "goals_conceded_against"
+label = "Goles en contra"
+category = "portero"
+md_label = "goles en contra"
+dazn_field = "goals_conceded"
+
+[[events]]
+key = "penalties_won"
+label = "Penaltis provocados"
+category = "ataque"
+md_label = "penaltis provocados"
+dazn_field = "penalties_won"
+
+[[events]]
 key = "dribbles"
 label = "Regates con éxito"
 category = "ataque"

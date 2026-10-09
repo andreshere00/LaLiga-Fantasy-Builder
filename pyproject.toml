@@ -45,6 +45,7 @@ skip_empty = true
 executionEnvironments = [
     { root = "backend/api", extraPaths = ["src"], venvPath = "backend/api", venv = ".venv", pythonVersion = "3.14" },
     { root = "backend/auth", extraPaths = ["src"], venvPath = "backend/auth", venv = ".venv", pythonVersion = "3.12" },
+    { root = "backend/scraping", extraPaths = ["src"], venvPath = "backend/scraping", venv = ".venv", pythonVersion = "3.14" },
 ]
 
 [tool.poe.tasks.up]
@@ -58,7 +59,7 @@ docker compose --profile apps up --build
 """
 
 [tool.poe.tasks.dev]
-help = "Run auth, API, and Vite on the host (start Keycloak separately if you need login)"
+help = "Run auth, API, scraping, and Vite on the host (start Keycloak separately if you need login)"
 cmd = "bash scripts/dev-local.sh"
 
 [tool.poe.tasks.install]

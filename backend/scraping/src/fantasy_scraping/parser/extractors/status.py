@@ -44,7 +44,13 @@ def extract_injury(ctx: ExtractionContext) -> CurrentInjury | None:
 def extract_availability(ctx: ExtractionContext) -> Availability | None:
     """Read the availability sentence."""
     node = ctx.document.first(ctx.selector("availability"))
-    if node is None:
+    if node is not None:
+        label = node_text(node)
+        if "disponible" not in label.casefold() and "no disponible" not in label.casefold():
+            label = _availability_near_lesion(ctx) or label
+    else:
+        label = _availability_near_lesion(ctx)
+    if label is None:
         ctx.miss("profile.availability")
         ctx.warn(
             code="field_missing",
@@ -54,7 +60,6 @@ def extract_availability(ctx: ExtractionContext) -> Availability | None:
             message="expected field missing",
         )
         return None
-    label = node_text(node)
     status, matchday = availability(label)
     if status == "unknown":
         ctx.warn(
@@ -97,10 +102,30 @@ def extract_form(ctx: ExtractionContext) -> Form | None:
     return Form(value=None, visual_only=True)
 
 
+def _availability_near_lesion(ctx: ExtractionContext) -> str | None:
+    lesion = ctx.document.first("span.lesion")
+    if lesion is None:
+        return None
+    parent = lesion.getparent()
+    if parent is None:
+        return None
+    for child in parent:
+        text = clean_text(node_text(child))
+        lowered = text.casefold()
+        if "disponible" in lowered or "no disponible" in lowered:
+            return text
+    return None
+
+
 def extract_start_probability(ctx: ExtractionContext) -> StartProbability | None:
     """Read the next-matchday start probability."""
     matchday_node = ctx.document.first(ctx.selector("start_matchday"))
     percent_node = ctx.document.first(ctx.selector("start_percent"))
+    if matchday_node is None:
+        for candidate in ctx.document.css("strong"):
+            if "titular" in node_text(candidate).casefold():
+                matchday_node = candidate
+                break
     if matchday_node is None or percent_node is None:
         ctx.miss("profile.start_probability")
         ctx.warn(
@@ -111,12 +136,15 @@ def extract_start_probability(ctx: ExtractionContext) -> StartProbability | None
             message="expected field missing",
         )
         return None
-    matchday_text = _MATCHDAY.search(node_text(matchday_node))
+    matchday_raw = node_text(matchday_node)
+    matchday_text = _MATCHDAY.search(matchday_raw) or re.search(
+        r"J\s*(\d+)",
+        matchday_raw,
+        re.IGNORECASE,
+    )
     try:
         percent = int(es_percent(node_text(percent_node)))
-        matchday = (
-            int(matchday_text.group(1)) if matchday_text else es_int(node_text(matchday_node))
-        )
+        matchday = int(matchday_text.group(1)) if matchday_text else es_int(matchday_raw)
     except NormaliseError:
         ctx.miss("profile.start_probability")
         return None
@@ -136,7 +164,7 @@ def extract_injury_risk(ctx: ExtractionContext) -> InjuryRisk | None:
             message="expected field missing",
         )
         return None
-    label = node_text(node)
+    label = _risk_label(node)
     level = risk_level(label)
     if level is None:
         ctx.warn(
@@ -148,6 +176,18 @@ def extract_injury_risk(ctx: ExtractionContext) -> InjuryRisk | None:
             preview=label,
         )
     return InjuryRisk(level=level, label=label)  # type: ignore[arg-type]
+
+
+def _risk_label(node: object) -> str:
+    from lxml.html import HtmlElement
+
+    if isinstance(node, HtmlElement) and node.tag == "img":
+        raw = node.get("alt") or ""
+        prefix = "Riesgo de lesión "
+        if raw.casefold().startswith(prefix.casefold()):
+            return raw[len(prefix) :].strip()
+        return clean_text(raw)
+    return node_text(node)  # type: ignore[arg-type]
 
 
 def extract_hierarchy(ctx: ExtractionContext) -> Hierarchy | None:
@@ -182,13 +222,6 @@ def extract_bid(ctx: ExtractionContext) -> MaxProfitableBid | None:
     node = ctx.document.first(ctx.selector("market_bid"))
     if node is None:
         ctx.miss("profile.max_profitable_bid")
-        ctx.warn(
-            code="field_missing",
-            section="market",
-            path="profile.max_profitable_bid",
-            rule_id="profile.max_profitable_bid",
-            message="expected field missing",
-        )
         return None
     label = node_text(node)
     try:

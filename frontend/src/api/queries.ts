@@ -1,7 +1,9 @@
 import { useEffect } from "react";
 import { useQuery } from "@tanstack/react-query";
 
-import { getJson, paths } from "./client";
+import { getJson, paths, type PlayerStatsDetailQuery } from "./client";
+import type { MasterPlayerId } from "./ids";
+import { masterPlayerIdToString } from "./ids";
 import { NeedsReauthError } from "./errors";
 import { asCurrentWeek, asFiniteNumber, asRecord } from "./mappers";
 import { useAuth } from "../auth/AuthProvider";
@@ -58,4 +60,25 @@ export function teamMoneyFromPayload(data: unknown): number | null {
 
 export function useCurrentWeekData(query: ReturnType<typeof useCurrentWeekQuery>) {
   return asCurrentWeek(query.data);
+}
+
+export function usePlayerStatsDetailQuery(
+  playerId: MasterPlayerId | string | null,
+  query: PlayerStatsDetailQuery,
+  enabled: boolean,
+) {
+  const { accessToken } = useAuth();
+  const token = accessToken ?? "";
+  const id = playerId == null ? "" : typeof playerId === "string" ? playerId : masterPlayerIdToString(playerId);
+  return useQuery({
+    queryKey: ["players", "detail", id, query],
+    enabled: enabled && accessToken != null && id !== "",
+    staleTime: CALENDAR_STALE_MS,
+    placeholderData: (previousData, previousQuery) => {
+      if (previousQuery?.queryKey[2] !== id) return undefined;
+      return previousData;
+    },
+    queryFn: ({ signal }) =>
+      getJson(paths.playerStatsDetail(id, query), token, { signal }),
+  });
 }

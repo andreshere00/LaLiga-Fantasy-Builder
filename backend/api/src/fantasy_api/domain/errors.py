@@ -30,8 +30,10 @@ class UpstreamError(ApiError):
     """Auth or Fantasy upstream failure.
 
     Attributes:
-        status_code: Optional HTTP status from upstream.
+        status_code: HTTP status returned to API clients. Provider codes that
+            would look like an auth or routing failure stay off this field.
         category: Stable error category for clients.
+        provider_status: Upstream HTTP status kept for logs and warnings.
     """
 
     def __init__(
@@ -40,7 +42,9 @@ class UpstreamError(ApiError):
         *,
         status_code: int | None = None,
         category: str = "upstream_error",
+        provider_status: int | None = None,
     ) -> None:
         super().__init__(message)
         self.status_code = status_code
         self.category = category
+        self.provider_status = provider_status

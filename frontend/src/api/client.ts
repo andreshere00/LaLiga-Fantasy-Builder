@@ -1,4 +1,16 @@
+import type { MasterPlayerId, SquadPlayerId } from "./ids";
+import { masterPlayerIdToString, squadPlayerIdToString } from "./ids";
 import { ApiError, NeedsReauthError } from "./errors";
+
+export type PlayerStatsDetailQuery = {
+  last?: number;
+  limit?: number;
+  preset?: string;
+  from?: string;
+  to?: string;
+  include_weather?: boolean;
+  include_stats?: boolean;
+};
 
 export type FetchLike = (input: string, init?: RequestInit) => Promise<Response>;
 
@@ -21,8 +33,27 @@ export const paths = {
   weekStats: (week: number) => `/api/calendar/weeks/${week}/stats`,
   playersCatalog: () => "/api/players",
   market: (leagueId: string) => `/api/market/leagues/${segment(leagueId)}`,
-  playerMarketValue: (playerId: string) =>
-    `/api/players/${segment(playerId)}/market-value`,
+  playerMarketValue: (playerId: MasterPlayerId | string) =>
+    `/api/players/${segment(typeof playerId === "string" ? playerId : masterPlayerIdToString(playerId))}/market-value`,
+  playerStatsDetail: (playerId: MasterPlayerId | string, query?: PlayerStatsDetailQuery) => {
+    const id = typeof playerId === "string" ? playerId : masterPlayerIdToString(playerId);
+    const base = `/api/players/${segment(id)}/stats/detail`;
+    if (!query) return base;
+    const params = new URLSearchParams();
+    if (query.last != null) params.set("last", String(query.last));
+    if (query.limit != null) params.set("limit", String(query.limit));
+    if (query.preset) params.set("preset", query.preset);
+    if (query.from) params.set("from", query.from);
+    if (query.to) params.set("to", query.to);
+    if (query.include_weather != null) {
+      params.set("include_weather", query.include_weather ? "true" : "false");
+    }
+    if (query.include_stats != null) {
+      params.set("include_stats", query.include_stats ? "true" : "false");
+    }
+    const qs = params.toString();
+    return qs ? `${base}?${qs}` : base;
+  },
   leagueTeams: (leagueId: string) => `/api/leagues/${segment(leagueId)}/teams`,
   team: (leagueId: string, teamId: string) =>
     `/api/leagues/${segment(leagueId)}/teams/${segment(teamId)}`,
@@ -42,8 +73,8 @@ export const paths = {
     `/api/market/leagues/${segment(leagueId)}/listings`,
   marketImmediateSale: (leagueId: string) =>
     `/api/market/leagues/${segment(leagueId)}/immediate-sales`,
-  buyoutPay: (leagueId: string, playerTeamId: string) =>
-    `/api/buyout/leagues/${segment(leagueId)}/player-teams/${segment(playerTeamId)}/pay`,
+  buyoutPay: (leagueId: string, playerTeamId: SquadPlayerId | string) =>
+    `/api/buyout/leagues/${segment(leagueId)}/player-teams/${segment(typeof playerTeamId === "string" ? playerTeamId : squadPlayerIdToString(playerTeamId))}/pay`,
 };
 
 export type PutJsonOptions = GetJsonOptions;

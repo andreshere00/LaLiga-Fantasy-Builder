@@ -36,6 +36,7 @@ from fantasy_scraping.parser.markdown.options import RenderOptions
 from fantasy_scraping.parser.markdown.renderer import to_markdown
 from fantasy_scraping.parser.markdown.report import render_player_report
 from fantasy_scraping.parser.merge import merge_competitions
+from fantasy_scraping.parser.models.common import Competition
 from fantasy_scraping.parser.models.futbolfantasy import (
     FixtureRow,
     FutbolFantasyPlayer,
@@ -381,17 +382,16 @@ def _link_recent(
         if note.event == "subbed_off" and fixture.starter:
             note = minutes_note(note.raw, starter=True)
             resolved.add(index)
-        linked.append(
-            recent.model_copy(
-                update={
-                    "competition": fixture.competition,
-                    "player_side": fixture.player_side,
-                    "stats": fixture.stats,
-                    "stats_source": "futbolfantasy",
-                    "minutes": note,
-                }
-            )
-        )
+        update: dict[str, object] = {"minutes": note}
+        if recent.competition == Competition.OTHER:
+            update["competition"] = fixture.competition
+        if recent.player_side is None:
+            update["player_side"] = fixture.player_side
+        update["stats"] = fixture.stats
+        update["stats_source"] = "futbolfantasy"
+        if fixture.week_points is not None:
+            update["week_points"] = fixture.week_points
+        linked.append(recent.model_copy(update=update))
     if resolved:
         ctx.warnings = [
             item
@@ -403,7 +403,13 @@ def _link_recent(
 
 def _match_fixture(recent: RecentMatch, fixtures: list[FixtureRow]) -> FixtureRow | None:
     for fixture in fixtures:
-        if same_fixture(fixture, on=recent.date, score=recent.score):
+        matchday = recent.matchday if fixture.date is None else None
+        if same_fixture(
+            fixture,
+            on=recent.date,
+            score=recent.score,
+            matchday=matchday,
+        ):
             return fixture
     return None
 

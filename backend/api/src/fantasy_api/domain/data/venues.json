@@ -4,13 +4,14 @@
     "fantasy_id": 4,
     "slug": "fc-barcelona",
     "name": "FC Barcelona",
-    "stadium": "Estadi Olímpic Lluís Companys",
+    "stadium": "Camp Nou",
     "city": "Barcelona",
     "country": "ES",
-    "lat": 41.3648,
-    "lon": 2.155,
+    "lat": 41.3809,
+    "lon": 2.1228,
     "aliases": [
-      "BAR"
+      "BAR",
+      "Barcelona"
     ]
   },
   {
@@ -39,7 +40,8 @@
     "lat": 40.4364,
     "lon": -3.5995,
     "aliases": [
-      "ATM"
+      "ATM",
+      "Atlético"
     ]
   },
   {
@@ -53,7 +55,8 @@
     "lat": 43.2644,
     "lon": -2.9499,
     "aliases": [
-      "ATH"
+      "ATH",
+      "Athletic"
     ]
   },
   {
@@ -67,7 +70,8 @@
     "lat": 37.3564,
     "lon": -5.9815,
     "aliases": [
-      "BET"
+      "BET",
+      "Betis"
     ]
   },
   {
@@ -95,7 +99,8 @@
     "lat": 41.3479,
     "lon": 2.0757,
     "aliases": [
-      "ESP"
+      "ESP",
+      "Espanyol"
     ]
   },
   {
@@ -109,7 +114,8 @@
     "lat": 40.3258,
     "lon": -3.7146,
     "aliases": [
-      "GET"
+      "GET",
+      "Getafe"
     ]
   },
   {
@@ -123,7 +129,8 @@
     "lat": 41.9784,
     "lon": 2.8214,
     "aliases": [
-      "GIR"
+      "GIR",
+      "Girona"
     ]
   },
   {
@@ -137,7 +144,9 @@
     "lat": 28.1003,
     "lon": -15.4567,
     "aliases": [
-      "LPA"
+      "LPA",
+      "Palmas",
+      "Las Palmas"
     ]
   },
   {
@@ -151,7 +160,8 @@
     "lat": 40.3278,
     "lon": -3.7635,
     "aliases": [
-      "LEG"
+      "LEG",
+      "Leganés"
     ]
   },
   {
@@ -165,7 +175,8 @@
     "lat": 39.5899,
     "lon": 2.6301,
     "aliases": [
-      "MLL"
+      "MLL",
+      "Mallorca"
     ]
   },
   {
@@ -179,7 +190,8 @@
     "lat": 42.7965,
     "lon": -1.6372,
     "aliases": [
-      "OSA"
+      "OSA",
+      "Osasuna"
     ]
   },
   {
@@ -193,7 +205,8 @@
     "lat": 40.3919,
     "lon": -3.6586,
     "aliases": [
-      "RAY"
+      "RAY",
+      "Rayo"
     ]
   },
   {
@@ -207,7 +220,8 @@
     "lat": 43.3014,
     "lon": -1.9736,
     "aliases": [
-      "RSO"
+      "RSO",
+      "Sociedad"
     ]
   },
   {
@@ -221,7 +235,8 @@
     "lat": 37.384,
     "lon": -5.9705,
     "aliases": [
-      "SEV"
+      "SEV",
+      "Sevilla"
     ]
   },
   {
@@ -235,7 +250,8 @@
     "lat": 39.4745,
     "lon": -0.3582,
     "aliases": [
-      "VAL"
+      "VAL",
+      "Valencia"
     ]
   },
   {
@@ -249,7 +265,8 @@
     "lat": 39.9442,
     "lon": -0.1036,
     "aliases": [
-      "VIL"
+      "VIL",
+      "Villarreal"
     ]
   },
   {
@@ -263,7 +280,8 @@
     "lat": 42.837,
     "lon": -2.6882,
     "aliases": [
-      "ALA"
+      "ALA",
+      "Alavés"
     ]
   },
   {
@@ -277,7 +295,66 @@
     "lat": 41.6444,
     "lon": -4.761,
     "aliases": [
-      "VLL"
+      "VLL",
+      "Valladolid"
+    ]
+  },
+  {
+    "club_key": "levante",
+    "fantasy_id": null,
+    "slug": "levante-ud",
+    "name": "Levante",
+    "stadium": "Ciutat de València",
+    "city": "Valencia",
+    "country": "ES",
+    "lat": 39.4947,
+    "lon": -0.3636,
+    "aliases": [
+      "LEV",
+      "Levante"
+    ]
+  },
+  {
+    "club_key": "racing-santander",
+    "fantasy_id": null,
+    "slug": "racing-santander",
+    "name": "Racing",
+    "stadium": "El Sardinero",
+    "city": "Santander",
+    "country": "ES",
+    "lat": 43.4763,
+    "lon": -3.7933,
+    "aliases": [
+      "RAC",
+      "Racing"
+    ]
+  },
+  {
+    "club_key": "galatasaray",
+    "fantasy_id": null,
+    "slug": "galatasaray",
+    "name": "Galatasaray",
+    "stadium": "Rams Park",
+    "city": "Istanbul",
+    "country": "TR",
+    "lat": 41.103,
+    "lon": 28.991,
+    "aliases": [
+      "Galatasaray"
+    ]
+  },
+  {
+    "club_key": "psg",
+    "fantasy_id": null,
+    "slug": "paris-saint-germain",
+    "name": "PSG",
+    "stadium": "Parc des Princes",
+    "city": "Paris",
+    "country": "FR",
+    "lat": 48.8414,
+    "lon": 2.253,
+    "aliases": [
+      "PSG"
     ]
   }
 ]

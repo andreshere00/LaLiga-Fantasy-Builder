@@ -183,6 +183,48 @@ def test_main_fixtures_and_matches_pass_optional_flags(
     assert seen["upcoming"] == {"limit": "2", "include_weather": "false"}
 
 
+def test_main_detail_segment_single_request(
+    monkeypatch: pytest.MonkeyPatch,
+    capsys: pytest.CaptureFixture[str],
+) -> None:
+    detail = {
+        "player_id": "4288",
+        "market": MARKET,
+        "segment_errors": [
+            {"segment": "fixtures", "code": "disabled", "detail": "segment disabled"}
+        ],
+    }
+    seen: list[str] = []
+
+    def detail_handler(request: httpx.Request) -> httpx.Response:
+        seen.append(request.url.path)
+        return httpx.Response(200, json=detail)
+
+    patch_httpx_client(
+        monkeypatch,
+        {("GET", "/players/4288/stats/detail"): detail_handler},
+    )
+
+    code = player_stats_cli.main(
+        [
+            "--jwt",
+            "tok",
+            "--api-base",
+            "http://api.test",
+            "--player-id",
+            "4288",
+            "--segment",
+            "detail",
+            "--json",
+        ],
+    )
+
+    assert code == 0
+    payload = json.loads(capsys.readouterr().out)
+    assert payload["segment_errors"]
+    assert seen == ["/players/4288/stats/detail"]
+
+
 # ---- Error paths ---- #
 
 
