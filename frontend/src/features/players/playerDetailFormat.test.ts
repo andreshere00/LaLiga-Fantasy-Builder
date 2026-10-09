@@ -4,6 +4,7 @@ import {
   formatChartAxisDate,
   formatInjuryHistoryEntry,
   formatMarketChartTick,
+  statDisplay,
   mapDetailSegmentBlocks,
   marketChartDomain,
   newsItemHref,
@@ -93,7 +94,27 @@ describe("formatInjuryHistoryEntry_withDatesAndDuration", () => {
     });
     expect(entry.diagnosis).toBe("Edema en el bíceps femoral");
     expect(entry.period).toContain("2025");
-    expect(entry.duration).toBe("3 days");
+    expect(entry.duration).toBe("3 días");
+  });
+});
+
+describe("formatInjuryHistoryEntry_datesWithoutDuration_computesInclusiveDays", () => {
+  it("formatInjuryHistoryEntry_countsInclusiveDays", () => {
+    const entry = formatInjuryHistoryEntry({
+      diagnosis: "Contusión",
+      start: "2026-01-17",
+      end: "2026-01-19",
+      ongoing: false,
+    });
+    expect(entry.duration).toBe("3 días");
+  });
+});
+
+describe("statDisplay_daznField_readsDaznPoints", () => {
+  it("statDisplay_usesDaznPointsNotCount", () => {
+    expect(statDisplay({ count: null, dazn_points: 2, source: "futbolfantasy" }, "dazn_points")).toBe(
+      "2",
+    );
   });
 });
 
@@ -101,7 +122,7 @@ describe("formatInjuryHistoryEntry_ongoing_showsOngoing", () => {
   it("formatInjuryHistoryEntry_marksOngoing", () => {
     expect(
       formatInjuryHistoryEntry({ diagnosis: "Test", ongoing: true }).duration,
-    ).toBe("Ongoing");
+    ).toBe("En curso");
   });
 });
 

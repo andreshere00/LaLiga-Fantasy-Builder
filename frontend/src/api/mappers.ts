@@ -725,6 +725,34 @@ function resolveTeamBadgeUrl(team: unknown, teamId: unknown): string | null {
   );
 }
 
+function httpImageUrl(value: unknown): string | null {
+  const raw = text(value);
+  if (!raw) return null;
+  if (raw.startsWith("//")) return `https:${raw}`;
+  if (/^https?:\/\//i.test(raw)) return raw;
+  return null;
+}
+
+function photoFromImages(images: unknown): string | null {
+  const record = asRecord(images);
+  if (!record) return httpImageUrl(images);
+  const transparent =
+    asRecord(record.transparent) ??
+    asRecord(record.transparentColor) ??
+    asRecord(record.photo);
+  if (transparent) {
+    for (const key of ["512x512", "256x256", "128x128", "64x64"]) {
+      const url = httpImageUrl(transparent[key]);
+      if (url) return url;
+    }
+    for (const value of Object.values(transparent)) {
+      const url = httpImageUrl(value);
+      if (url) return url;
+    }
+  }
+  return firstImageUrl(record);
+}
+
 /** Reads the club name from a player master record (inline team or teams master lookup). */
 export function teamNameFromPlayerMaster(master: unknown): string | null {
   const record = asRecord(master);
@@ -735,14 +763,7 @@ export function teamNameFromPlayerMaster(master: unknown): string | null {
 export function mediaFromPlayerMaster(master: unknown): PlayerMedia {
   const record = asRecord(master);
   if (!record) return { photoUrl: null, teamBadgeUrl: null };
-  const images = asRecord(record.images);
-  const transparent = asRecord(images?.transparent);
-  const photoUrl =
-    text(transparent?.["256x256"]) ??
-    text(transparent?.["128x128"]) ??
-    text(transparent?.["64x64"]) ??
-    firstImageUrl(record.images) ??
-    null;
+  const photoUrl = photoFromImages(record.images);
   const teamBadgeUrl = resolveTeamBadgeUrl(record.team, record.teamId);
   return { photoUrl, teamBadgeUrl };
 }

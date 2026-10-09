@@ -5018,6 +5018,37 @@
         "title": "ActivityItem",
         "description": "One league activity feed item."
       },
+      "AveragePerMatch": {
+        "properties": {
+          "code": {
+            "type": "string",
+            "title": "Code"
+          },
+          "label": {
+            "type": "string",
+            "title": "Label"
+          },
+          "value": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Value"
+          }
+        },
+        "additionalProperties": true,
+        "type": "object",
+        "required": [
+          "code",
+          "label"
+        ],
+        "title": "AveragePerMatch",
+        "description": "One published per-match average from the scraped season block."
+      },
       "BidWrite": {
         "properties": {
           "money": {
@@ -8375,6 +8406,13 @@
             },
             "type": "array",
             "title": "News"
+          },
+          "averages": {
+            "items": {
+              "$ref": "#/components/schemas/AveragePerMatch"
+            },
+            "type": "array",
+            "title": "Averages"
           }
         },
         "additionalProperties": true,

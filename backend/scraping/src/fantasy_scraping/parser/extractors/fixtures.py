@@ -3,6 +3,7 @@
 import html
 import json
 import re
+from datetime import date
 from typing import Any
 
 from lxml.html import HtmlElement
@@ -159,6 +160,7 @@ def extract_fixtures(ctx: ExtractionContext, *, is_goalkeeper: bool) -> list[Fix
                 starter=starter,
             )
         )
+    fixtures = _fill_dates_from_poligono(ctx, fixtures)
     _check_point_sums(ctx, fixtures)
     return fixtures
 
@@ -201,6 +203,56 @@ def _side(value: object) -> str | None:
     if key in {"visitante", "fuera", "away", "no", "0"}:
         return "away"
     return None
+
+
+def _fill_dates_from_poligono(
+    ctx: ExtractionContext,
+    fixtures: list[FixtureRow],
+) -> list[FixtureRow]:
+    """Use poligono match dates when the fixtures table left every row undated."""
+    if not fixtures or any(row.date is not None for row in fixtures):
+        return fixtures
+    dates = _poligono_dates(ctx)
+    if len(dates) < len(fixtures):
+        return fixtures
+    dates.sort(reverse=True)
+    return [row.model_copy(update={"date": dates[index]}) for index, row in enumerate(fixtures)]
+
+
+def _poligono_dates(ctx: ExtractionContext) -> list[date]:
+    node = ctx.document.first(ctx.selector("poligono"))
+    if node is None:
+        return []
+    raw = html.unescape(node.get("data-indices") or "")
+    try:
+        payload = json.loads(raw)
+    except json.JSONDecodeError:
+        return []
+    info = payload.get("partidos_info") if isinstance(payload, dict) else None
+    if isinstance(info, str):
+        try:
+            info = json.loads(info)
+        except json.JSONDecodeError:
+            return []
+    rows: list[object]
+    if isinstance(info, dict):
+        rows = list(info.values())
+    elif isinstance(info, list):
+        rows = info
+    else:
+        return []
+    dates: list[date] = []
+    for item in rows:
+        if not isinstance(item, dict):
+            continue
+        raw_date = item.get("fecha")
+        if not isinstance(raw_date, str):
+            continue
+        try:
+            dates.append(date.fromisoformat(raw_date[:10]))
+        except ValueError:
+            continue
+    return dates
 
 
 def _poligono(ctx: ExtractionContext) -> list[dict[str, object]]:

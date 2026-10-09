@@ -111,7 +111,8 @@ export function rosterPhotoByMasterId(rosterPayloads: readonly unknown[]): Map<s
       const record = asRecord(entry);
       const master = asRecord(record?.playerMaster);
       const masterId = idText(master?.id);
-      const photoUrl = mediaFromPlayerMaster(master).photoUrl;
+      const photoUrl =
+        mediaFromPlayerMaster(master).photoUrl ?? mediaFromPlayerMaster(record).photoUrl;
       if (masterId && photoUrl) map.set(masterId, photoUrl);
     }
   }

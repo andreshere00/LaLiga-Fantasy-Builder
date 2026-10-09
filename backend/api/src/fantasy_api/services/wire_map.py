@@ -89,6 +89,7 @@ def _normalise_document(raw: Mapping[str, Any]) -> dict[str, Any]:
         "matches": {"recent": recent, "upcoming": upcoming},
         "profile": profile,
         "market": raw.get("market"),
+        "season_stats": raw.get("seasonStats") or raw.get("season_stats"),
         "warnings": raw.get("warnings"),
     }
 

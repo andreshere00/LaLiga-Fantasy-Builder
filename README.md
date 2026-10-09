@@ -70,6 +70,12 @@ docker compose up -d keycloak
 uv run poe dev
 ```
 
+This starts auth (`:8000`), API (`:8001`), scraping (`:8002`), and Vite
+(`:3000`). The command creates missing service `.env` files. Set
+`SCRAPER_CONTACT` in `backend/scraping/.env` to a contact address before using
+the scraper against FutbolFantasy. Scraping API calls use the shared token in
+`backend/scraping/.env`; the command passes it to the API automatically.
+
 From `frontend/` only: `bun install && bun run dev:all` (or `npm`).
 
 Per-service notes: [auth](backend/auth/README.md), [API](backend/api/README.md),

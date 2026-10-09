@@ -61,6 +61,7 @@ function PlayersListRow({
           playerId={row.playerId}
           playerName={row.name}
           className="market-player-details-link"
+          card
         />
         <PlayerTile
           name={row.name}

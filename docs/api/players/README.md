@@ -44,6 +44,9 @@ rows is disabled.
   `stats_source_not_found`, `scraping_error`, and other `UpstreamError.category`
   strings from the segment that failed. **`detail`** is a fixed, sanitised
   message (never raw upstream bodies).
+- **`profile.averages`** lists per-match figures derived from the scraped
+  season totals (`seasonStats`) divided by matches played. A missing code is
+  `value: null`.
 - Planned structured **`profile.availability`** / **`profile.form`** for the
   players detail screen are described in
   [list-availability.md](../../plans/list-availability.md) and are **not** on

@@ -361,6 +361,14 @@ class Hierarchy(StatsModel):
     rank: int | None = None
 
 
+class AveragePerMatch(StatsModel):
+    """One published per-match average from the scraped season block."""
+
+    code: str
+    label: str
+    value: float | None = None
+
+
 class NewsItem(StatsModel):
     title: str
     url: HttpUrl | None = None
@@ -381,6 +389,7 @@ class PlayerProfileResponse(SegmentEnvelope):
     max_profitable_bid: MaxProfitableBid
     hierarchy: Hierarchy
     news: list[NewsItem] = Field(default_factory=list)
+    averages: list[AveragePerMatch] = Field(default_factory=list)
 
 
 class SegmentDescriptor(StatsModel):

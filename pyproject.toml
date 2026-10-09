@@ -59,7 +59,7 @@ docker compose --profile apps up --build
 """
 
 [tool.poe.tasks.dev]
-help = "Run auth, API, and Vite on the host (start Keycloak separately if you need login)"
+help = "Run auth, API, scraping, and Vite on the host (start Keycloak separately if you need login)"
 cmd = "bash scripts/dev-local.sh"
 
 [tool.poe.tasks.install]

@@ -31,6 +31,7 @@ export function PlayerCell({ row, now, columnLabel = "Player" }: PlayerCellProps
             playerId={row.playerId}
             playerName={row.name}
             className="market-player-details-link"
+            card
           />
         ) : null}
         <PlayerTile

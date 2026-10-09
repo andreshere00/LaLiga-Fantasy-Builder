@@ -21,6 +21,71 @@ export function statCount(value: unknown): string {
   return count != null ? String(count) : MISSING_STAT;
 }
 
+/** Count plus fantasy points. DAZN is stored on `dazn_points`, not `count`. */
+export function statDisplay(value: unknown, key?: string): string {
+  const record = asRecord(value);
+  if (!record) return MISSING_STAT;
+  if (text(record.source) === "unavailable") return MISSING_STAT;
+  if (key === "dazn_points") {
+    const dazn = asFiniteNumber(record.dazn_points);
+    return dazn != null ? String(dazn) : MISSING_STAT;
+  }
+  const count = asFiniteNumber(record.count);
+  const points = asFiniteNumber(record.fantasy_points);
+  if (count == null && points == null) return MISSING_STAT;
+  const countText = count != null ? String(count) : MISSING_STAT;
+  if (points == null) return countText;
+  return `${countText} (${points} p)`;
+}
+
+/** Match date, or the matchweek when the fixtures row has no date yet. */
+export function fixtureDateLabel(fixture: Record<string, unknown> | null): string {
+  const raw = text(fixture?.date);
+  if (raw) return raw.slice(0, 10);
+  const week = asFiniteNumber(fixture?.matchweek);
+  return week != null ? `J${week}` : MISSING_STAT;
+}
+
+export function scoreLabel(fixture: Record<string, unknown> | null): string | null {
+  const home = asFiniteNumber(fixture?.home_score);
+  const away = asFiniteNumber(fixture?.away_score);
+  if (home == null || away == null) return null;
+  return `${home}-${away}`;
+}
+
+/** Green at or above 5%, yellow from 0, red below. Same scale as the market value cell. */
+export function marketChangeTone(percent: number | null | undefined): string {
+  if (percent == null || !Number.isFinite(percent)) return "";
+  if (percent >= 5) return "is-up";
+  if (percent >= 0) return "is-mid";
+  return "is-down";
+}
+
+export function withMarketTrend<T extends { value: number }>(
+  series: readonly T[],
+): (T & { trend: number })[] {
+  const count = series.length;
+  if (count === 0) return [];
+  if (count === 1) return [{ ...series[0], trend: series[0].value }];
+  let sumX = 0;
+  let sumY = 0;
+  let sumXY = 0;
+  let sumXX = 0;
+  series.forEach((point, index) => {
+    sumX += index;
+    sumY += point.value;
+    sumXY += index * point.value;
+    sumXX += index * index;
+  });
+  const denom = count * sumXX - sumX * sumX || 1;
+  const slope = (count * sumXY - sumX * sumY) / denom;
+  const intercept = (sumY - slope * sumX) / count;
+  return series.map((point, index) => ({
+    ...point,
+    trend: Math.round(intercept + slope * index),
+  }));
+}
+
 /** Short Y-axis labels for large market values (avoids duplicate full-euro ticks). */
 export function formatMarketChartTick(value: number): string {
   if (!Number.isFinite(value)) return "";
@@ -64,19 +129,31 @@ export function formatInjuryHistoryEntry(
   const end = formatInjuryHistoryDate(item?.end ?? item?.endDate);
   const ongoing = item?.ongoing === true;
   const durationDays =
-    asFiniteNumber(item?.duration_days) ?? asFiniteNumber(item?.durationDays);
+    asFiniteNumber(item?.duration_days) ??
+    asFiniteNumber(item?.durationDays) ??
+    inclusiveInjuryDays(item?.start ?? item?.startDate, item?.end ?? item?.endDate);
 
   let period: string | null = null;
   if (start && end) period = `${start} – ${end}`;
   else if (start) period = start;
 
   let duration: string | null = null;
-  if (ongoing) duration = "Ongoing";
+  if (ongoing) duration = "En curso";
   else if (durationDays != null && durationDays > 0) {
-    duration = durationDays === 1 ? "1 day" : `${durationDays} days`;
+    duration = durationDays === 1 ? "1 día" : `${durationDays} días`;
   }
 
   return { diagnosis, period, duration };
+}
+
+function inclusiveInjuryDays(startRaw: unknown, endRaw: unknown): number | null {
+  const start = text(startRaw)?.slice(0, 10);
+  const end = text(endRaw)?.slice(0, 10);
+  if (!start || !end) return null;
+  const startMs = Date.parse(`${start}T00:00:00Z`);
+  const endMs = Date.parse(`${end}T00:00:00Z`);
+  if (Number.isNaN(startMs) || Number.isNaN(endMs) || endMs < startMs) return null;
+  return Math.round((endMs - startMs) / 86_400_000) + 1;
 }
 
 function formatInjuryHistoryDate(raw: unknown): string | null {

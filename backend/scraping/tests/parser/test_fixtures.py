@@ -161,6 +161,32 @@ def test_parse_fragment_official_layer_fills_scored_minutes_and_points() -> None
     assert row.dazn_points == 2
 
 
+def test_parse_fragment_poligono_fills_missing_fixture_dates() -> None:
+    html = """
+    <html><head>
+    <link rel="canonical" href="https://www.futbolfantasy.com/jugadores/raphinha/laliga-26-27">
+    </head><body>
+    <h1><span class="name">Raphinha</span><span class="pos">DEL</span></h1>
+    <a class="club" href="/equipos/barcelona">FC Barcelona</a>
+    <ul class="ultimos"></ul>
+    <div class="poligono-wrapper" data-indices='{"partidos_info":
+      {"1":{"fecha":"2026-09-13"},"2":{"fecha":"2026-09-19"}}}'></div>
+    <table class="partidos"><tbody>
+      <tr class="plegado">
+        <td class="fecha"></td><td class="jornada">7</td><td class="partido">SEV 1-3 BAR</td>
+        <td class="salida">76'</td><td class="puntos">21</td>
+      </tr>
+      <tr class="plegado">
+        <td class="fecha"></td><td class="jornada">5</td><td class="partido">LEV 2-4 BAR</td>
+        <td class="salida">90'</td><td class="puntos">8</td>
+      </tr>
+    </tbody></table>
+    </body></html>
+    """
+    player = SERVICE.parse_futbolfantasy(page("ignored.html", html=html))
+    assert [row.date.isoformat() for row in player.fixtures] == ["2026-09-19", "2026-09-13"]
+
+
 def test_parse_fragment_big_chances_created_not_zero() -> None:
     html = """
     <html><head>

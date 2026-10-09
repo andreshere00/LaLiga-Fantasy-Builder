@@ -72,4 +72,5 @@ class FutbolFantasyWire(FlexibleModel):
     matches: ScrapedMatches | None = None
     profile: ScrapedProfile | None = None
     market: dict[str, Any] | None = None
+    season_stats: dict[str, Any] | None = None
     warnings: list[Any] | None = None

@@ -136,3 +136,55 @@ def test_merge_fixture_stats_row_total_only_skips_mismatch() -> None:
         fantasy_points_total=21,
     )
     assert not any(item.code == "points_total_mismatch" for item in warnings)
+
+
+def test_averages_from_season_divides_totals_by_matches() -> None:
+    from fantasy_api.services.player_stats import averages_from_season
+
+    rows = averages_from_season(
+        {
+            "matchesCounted": 7,
+            "attack": {"goals": 12, "shotsOnTarget": {"numerator": 16, "denominator": 25}},
+            "defense": {},
+            "discipline": {},
+        }
+    )
+    by_code = {row.code: row.value for row in rows}
+    assert by_code["G"] == 1.71
+    assert by_code["TaP"] == 2.29
+    assert by_code["T"] == 3.57
+    assert by_code["DE"] is None
+
+
+def test_apply_recent_dates_copies_blank_fixture_date() -> None:
+    from fantasy_api.schemas.player_stats import FixtureRef, FixtureStats, FixtureStatsRow
+    from fantasy_api.schemas.scraped import ScrapedMatch, ScrapedMatches
+    from fantasy_api.services.player_stats import _apply_recent_dates
+
+    wire = parse_wire_document({"fixtures": [], "matches": {"recent": [], "upcoming": []}})
+    wire = wire.model_copy(
+        update={
+            "matches": ScrapedMatches(
+                recent=[
+                    ScrapedMatch(
+                        date=date(2026, 9, 19),
+                        matchweek=7,
+                        home_score=1,
+                        away_score=3,
+                    )
+                ]
+            )
+        }
+    )
+    row = FixtureStatsRow(
+        fixture=FixtureRef(
+            date=None,
+            competition=Competition.LALIGA,
+            matchweek=7,
+            home_score=1,
+            away_score=3,
+        ),
+        stats=FixtureStats(),
+    )
+    filled = _apply_recent_dates([row], wire)
+    assert filled[0].fixture.date == date(2026, 9, 19)

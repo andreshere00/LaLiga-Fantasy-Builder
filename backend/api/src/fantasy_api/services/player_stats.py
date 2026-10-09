@@ -27,6 +27,7 @@ from fantasy_api.repositories.calendar import CalendarRepository
 from fantasy_api.repositories.player_stats import PlayerStatsRepository
 from fantasy_api.repositories.players import PlayersRepository
 from fantasy_api.schemas.player_stats import (
+    AveragePerMatch,
     Competition,
     DetailSegment,
     FixtureRef,
@@ -228,6 +229,127 @@ def _started_from_minutes_event(event: str | None) -> bool | None:
     if event in ("subbed_on", "unused"):
         return False
     return None
+
+
+def _apply_recent_dates(
+    rows: list[FixtureStatsRow],
+    wire: FutbolFantasyWire,
+) -> list[FixtureStatsRow]:
+    """Copy a recent-match date onto a fixture row that the table left blank."""
+    recent = wire.matches.recent if wire.matches is not None else None
+    if not recent:
+        return rows
+    by_score: dict[tuple[int, int | None, int | None], date] = {}
+    for match in recent:
+        if match.date is None or match.matchweek is None:
+            continue
+        by_score[(match.matchweek, match.home_score, match.away_score)] = match.date
+    filled: list[FixtureStatsRow] = []
+    for row in rows:
+        if row.fixture.date is not None or row.fixture.matchweek is None:
+            filled.append(row)
+            continue
+        found = by_score.get(
+            (row.fixture.matchweek, row.fixture.home_score, row.fixture.away_score)
+        )
+        if found is None:
+            filled.append(row)
+            continue
+        filled.append(
+            row.model_copy(update={"fixture": row.fixture.model_copy(update={"date": found})})
+        )
+    return filled
+
+
+_AVERAGE_SPECS: tuple[tuple[str, str, str, str], ...] = (
+    ("G", "Goals", "attack", "goals"),
+    ("TaP", "Shots on target", "attack", "shotsOnTarget"),
+    ("T", "Shots", "attack", "shotsOnTarget"),
+    ("CF", "Corners won", "attack", "cornersWon"),
+    ("Reg", "Successful dribbles", "attack", "successfulDribbles"),
+    ("C", "Crosses", "attack", "crosses"),
+    ("CP", "Accurate crosses", "attack", "crosses"),
+    ("A", "Assists", "attack", "assists"),
+    ("A SinGol", "Assists without a goal", "attack", "assistsWithoutGoal"),
+    ("PC", "Key passes", "attack", "keyPasses"),
+    ("Pas", "Completed passes", "attack", "passes"),
+    ("-Pos", "Possessions lost", "defense", "possessionsLost"),
+    ("DE", "Effective clearances", "defense", "effectiveClearances"),
+    ("PI", "Interceptions", "defense", "interceptions"),
+    ("BR", "Balls recovered", "defense", "ballSteals"),
+    ("FR", "Fouls won", "discipline", "foulsReceived"),
+    ("-FC", "Fouls committed", "discipline", "foulsCommitted"),
+)
+
+_RATIO_PART = {
+    ("attack", "shotsOnTarget", "TaP"): "numerator",
+    ("attack", "shotsOnTarget", "T"): "denominator",
+    ("attack", "crosses", "CP"): "numerator",
+    ("attack", "crosses", "C"): "denominator",
+    ("attack", "passes", "Pas"): "numerator",
+}
+
+
+def _season_number(value: object, part: str | None) -> float | None:
+    if isinstance(value, bool) or value is None:
+        return None
+    if isinstance(value, (int, float)):
+        return float(value)
+    if isinstance(value, dict):
+        key = part or "numerator"
+        nested = value.get(key)
+        if isinstance(nested, (int, float)) and not isinstance(nested, bool):
+            return float(nested)
+    return None
+
+
+def _season_group(season: Mapping[str, Any], name: str) -> Mapping[str, Any]:
+    raw = season.get(name)
+    if isinstance(raw, dict):
+        return raw
+    snake = {
+        "attack": "attack",
+        "defense": "defense",
+        "discipline": "discipline",
+    }[name]
+    fallback = season.get(snake)
+    return fallback if isinstance(fallback, dict) else {}
+
+
+def averages_from_season(season: Mapping[str, Any] | None) -> list[AveragePerMatch]:
+    """Per-match figures from scraped season totals divided by matches played."""
+    if not isinstance(season, Mapping):
+        return []
+    matches = season.get("matchesCounted") or season.get("matches_counted")
+    if not isinstance(matches, int) or isinstance(matches, bool) or matches <= 0:
+        participation = season.get("participation")
+        played = None
+        if isinstance(participation, dict):
+            played = participation.get("matchesPlayed") or participation.get("matches_played")
+        matches = played if isinstance(played, int) and played > 0 else None
+    if not isinstance(matches, int) or matches <= 0:
+        return []
+    rows: list[AveragePerMatch] = []
+    for code, label, group_name, field in _AVERAGE_SPECS:
+        group = _season_group(season, group_name)
+        raw = group.get(field)
+        if raw is None:
+            raw = group.get(_camel_to_snake(field))
+        total = _season_number(raw, _RATIO_PART.get((group_name, field, code)))
+        value = round(total / matches, 2) if total is not None else None
+        rows.append(AveragePerMatch(code=code, label=label, value=value))
+    return rows
+
+
+def _camel_to_snake(value: str) -> str:
+    chars: list[str] = []
+    for char in value:
+        if char.isupper():
+            chars.append("_")
+            chars.append(char.lower())
+        else:
+            chars.append(char)
+    return "".join(chars)
 
 
 def _optional_label(value: object) -> str | None:
@@ -463,6 +585,7 @@ class PlayerStatsService:
                     warnings=warnings,
                 )
             )
+        rows = _apply_recent_dates(rows, wire)
         rows.sort(key=lambda row: row.fixture.date or date.min, reverse=True)
         rows = rows[: query.last]
         return PlayerFixtureStatsResponse(
@@ -768,6 +891,7 @@ class PlayerStatsService:
             max_profitable_bid=max_bid,
             hierarchy=hierarchy,
             news=news,
+            averages=averages_from_season(wire.season_stats),
         )
 
     def _player_ref(

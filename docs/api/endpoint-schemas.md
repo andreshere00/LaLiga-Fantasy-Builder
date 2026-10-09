@@ -1165,6 +1165,7 @@ Global player profile from FutbolFantasy
 | `max_profitable_bid` | MaxProfitableBid | yes |  |  |
 | `hierarchy` | Hierarchy | yes |  |  |
 | `news` | array[NewsItem] | no |  |  |
+| `averages` | array[AveragePerMatch] | no |  |  |
 
 Full nested fields: [`PlayerProfileResponse`](#playerprofileresponse).
 
@@ -1288,6 +1289,14 @@ Nested models referenced by the operations above. All Fantasy proxy models use `
 | `msg` | string | no |  |  |
 | `message` | string | no |  |  |
 | `description` | string | no |  |  |
+
+### `AveragePerMatch`
+
+| Field | Type | Required | Constraints | Description |
+|-------|------|----------|-------------|-------------|
+| `code` | string | yes |  |  |
+| `label` | string | yes |  |  |
+| `value` | number | no |  |  |
 
 ### `BidWrite`
 
@@ -1881,6 +1890,7 @@ Type: `string`
 | `max_profitable_bid` | MaxProfitableBid | yes |  |  |
 | `hierarchy` | Hierarchy | yes |  |  |
 | `news` | array[NewsItem] | no |  |  |
+| `averages` | array[AveragePerMatch] | no |  |  |
 
 ### `PlayerRef`
 

@@ -13,6 +13,7 @@ import {
   leagueId,
   playersOf,
   squadCards,
+  teamNameFromPlayerMaster,
   text,
 } from "../../api/mappers";
 import { usePlayerStatsDetailQuery, usePlayersCatalogQuery } from "../../api/queries";
@@ -34,20 +35,8 @@ import { useMarketActions } from "../market/actions/useMarketActions";
 import { useLeague } from "../lineup/LeagueProvider";
 import { SquadPlayerActions } from "../lineup/SquadPlayerActions";
 import { useSquadSales } from "../lineup/useSquadSales";
-import fantasyLogo from "../../assets/fantasy_logo.png";
-import hierarchyGod from "../../assets/button_hierarchy_god.svg";
-import hierarchyKey from "../../assets/button_hierarchy_key.svg";
-import hierarchyImportant from "../../assets/button_hierarchy_important.svg";
-import hierarchyRotation from "../../assets/button_hierarchy_rotation.svg";
-import hierarchyReserve from "../../assets/button_hierarchy_reserve.svg";
-import starterHigh from "../../assets/button_starter_high.svg";
-import starterMid from "../../assets/button_starter_mid.svg";
-import starterLow from "../../assets/button_starter_low.svg";
-import injuryGreen from "../../assets/button_injury_green.svg";
-import injuryYellow from "../../assets/button_injury_yellow.svg";
-import injuryRed from "../../assets/button_injury_red.svg";
-import injuryGray from "../../assets/button_injury_gray.svg";
 import {
+  CartesianGrid,
   Line,
   LineChart,
   ResponsiveContainer,
@@ -56,24 +45,50 @@ import {
   YAxis,
 } from "recharts";
 import {
+  fixtureDateLabel,
   formatChartAxisDate,
   formatMarketChartTick,
+  marketChangeTone,
   marketChartDomain,
-  formatInjuryHistoryEntry,
-  newsItemHref,
+  statDisplay,
+  withMarketTrend,
   MISSING_STAT,
   NO_DATA_YET,
   deltaRelPercent,
-  statCount,
-  windKmhFromMs,
 } from "./playerDetailFormat";
+import { clubDisplayName } from "./clubNames";
 import { PlayerBookmarkButton } from "./PlayerBookmarkButton";
 import { usePlayerMarketListing } from "./usePlayerMarketListing";
 import { readFavoritePlayerIds, toggleFavoritePlayerId } from "./favorites";
+import { PlayerMatchesSection } from "./PlayerMatchesSection";
+import { PlayerFantasySection } from "./PlayerFantasySection";
 import "./PlayerDetailPage.css";
 
 const FIXTURE_LAST_STEPS = [5, 10, 20, 40, 60] as const;
 const MARKET_PRESETS = ["season", "30d", "14d", "10d", "5d"] as const;
+
+const STAT_LABELS: Record<string, string> = {
+  minutes_played: "Minutes",
+  goals: "Goals",
+  assists: "Assists",
+  big_chances_created: "Big chances",
+  balls_into_box: "Balls into box",
+  penalties_won: "Penalties won",
+  penalties_committed: "Penalties committed",
+  penalties_saved: "Penalties saved",
+  saves: "Saves",
+  clearances: "Clearances",
+  penalties_missed: "Penalties missed",
+  own_goals: "Own goals",
+  goals_conceded: "Goals conceded",
+  yellow_cards: "Yellow cards",
+  red_card: "Red card",
+  shots: "Shots",
+  successful_dribbles: "Dribbles",
+  recoveries: "Recoveries",
+  balls_lost: "Balls lost",
+  dazn_points: "DAZN",
+};
 
 const STAT_KEYS = [
   "minutes_played",
@@ -98,46 +113,20 @@ const STAT_KEYS = [
   "dazn_points",
 ] as const;
 
-function hierarchyIcon(label: string | null | undefined): string {
-  const key = (label ?? "").trim().toLowerCase();
-  if (key.includes("dios") || key === "god") return hierarchyGod;
-  if (key.includes("clave") || key.includes("key")) return hierarchyKey;
-  if (key.includes("importante") || key.includes("important")) return hierarchyImportant;
-  if (key.includes("rotación") || key.includes("rotation") || key.includes("revulsivo")) {
-    return hierarchyRotation;
-  }
-  if (key.includes("reserva") || key.includes("reserve")) return hierarchyReserve;
-  return hierarchyImportant;
-}
-
-function starterIcon(percent: number | null): string {
-  if (percent == null) return starterLow;
-  if (percent >= 75) return starterHigh;
-  if (percent >= 50) return starterMid;
-  return starterLow;
-}
-
-function injuryIcon(level: string | null | undefined): string {
-  switch (level) {
-    case "low":
-      return injuryGreen;
-    case "medium":
-      return injuryYellow;
-    case "high":
-      return injuryRed;
-    default:
-      return injuryGray;
-  }
-}
-
 function fixtureLabel(fixture: Record<string, unknown> | null): string {
   if (!fixture) return MISSING_STAT;
-  const home = text(fixture.home_team);
-  const away = text(fixture.away_team);
+  const home = clubDisplayName(text(fixture.home_team));
+  const away = clubDisplayName(text(fixture.away_team));
   if (home && away) return `${home} vs ${away}`;
-  const opponent = text(fixture.opponent);
+  const opponent = clubDisplayName(text(fixture.opponent));
   if (opponent) return opponent;
   return MISSING_STAT;
+}
+
+function isoDate(value: Date): string {
+  const month = String(value.getMonth() + 1).padStart(2, "0");
+  const day = String(value.getDate()).padStart(2, "0");
+  return `${value.getFullYear()}-${month}-${day}`;
 }
 
 function entryKey(parts: readonly (string | null | undefined)[], index: number): string {
@@ -172,6 +161,7 @@ function PlayerDetailBody({ masterId }: PlayerDetailBodyProps) {
   const [marketCustomDraftFrom, setMarketCustomDraftFrom] = useState("");
   const [marketCustomDraftTo, setMarketCustomDraftTo] = useState("");
   const [marketUseCustomRange, setMarketUseCustomRange] = useState(false);
+  const [lastDays, setLastDays] = useState("21");
   const [favorites, setFavorites] = useState(() => readFavoritePlayerIds(userId));
   const [showAdvancedStats, setShowAdvancedStats] = useState(false);
 
@@ -244,6 +234,9 @@ function PlayerDetailBody({ masterId }: PlayerDetailBodyProps) {
     "Player";
   const points = asFiniteNumber(catalogMaster?.points);
   const positionId = asFiniteNumber(catalogMaster?.positionId);
+  const teamName =
+    text(asRecord(detail?.player)?.team_name) ??
+    teamNameFromPlayerMaster(catalogMaster);
   const availability = availabilityOf(catalogMaster?.playerStatus);
 
   const marketRow = marketListing.row;
@@ -258,13 +251,14 @@ function PlayerDetailBody({ masterId }: PlayerDetailBodyProps) {
     const window = asRecord(marketBlock?.window);
     const series = window?.series;
     if (!Array.isArray(series)) return [];
-    return series.map((point) => {
+    const points = series.map((point) => {
       const row = asRecord(point);
       return {
         date: text(row?.date) ?? "",
         value: asFiniteNumber(row?.value) ?? 0,
       };
     });
+    return withMarketTrend(points);
   }, [marketBlock]);
 
   const marketChartYDomain = useMemo(
@@ -274,16 +268,11 @@ function PlayerDetailBody({ masterId }: PlayerDetailBodyProps) {
 
   const deltaAbs = asFiniteNumber(asRecord(marketBlock?.window)?.delta_abs);
   const deltaRel = asFiniteNumber(asRecord(marketBlock?.window)?.delta_rel);
+  const currentValue = asFiniteNumber(marketBlock?.current_value);
+  const changeTone = marketChangeTone(deltaRel);
+  const averages = Array.isArray(profileBlock?.averages) ? profileBlock.averages : [];
 
   const injury = asRecord(profileBlock?.injury);
-  const hierarchy = asRecord(profileBlock?.hierarchy);
-  const startProb = asRecord(profileBlock?.start_probability);
-  const injuryRisk = asRecord(profileBlock?.injury_risk);
-  const news = Array.isArray(profileBlock?.news) ? profileBlock.news : [];
-  const injuryHistory = Array.isArray(profileBlock?.injury_history)
-    ? profileBlock.injury_history
-    : [];
-
   const actionContext = {
     money: marketListing.money,
     now,
@@ -344,7 +333,7 @@ function PlayerDetailBody({ masterId }: PlayerDetailBodyProps) {
         <div className="player-detail-header-text">
           <h1>{name}</h1>
           <p>
-            FSYP {points ?? MISSING_STAT} · {positionLabel(positionId)} ·{" "}
+            {teamName ?? MISSING_STAT} · FSYP {points ?? MISSING_STAT} · {positionLabel(positionId)} ·{" "}
             <AvailabilityCell availability={availability} />
           </p>
           {injury?.availability_text || injury?.diagnosis ? (
@@ -404,8 +393,10 @@ function PlayerDetailBody({ masterId }: PlayerDetailBodyProps) {
                   <th>Date</th>
                   <th>Fixture</th>
                   <th>Competition</th>
+                  <th>Minutes</th>
+                  <th>Points</th>
                   {showAdvancedStats
-                    ? STAT_KEYS.map((key) => <th key={key}>{key.replace(/_/g, " ")}</th>)
+                    ? STAT_KEYS.map((key) => <th key={key}>{STAT_LABELS[key] ?? key}</th>)
                     : null}
                 </tr>
               </thead>
@@ -414,20 +405,35 @@ function PlayerDetailBody({ masterId }: PlayerDetailBodyProps) {
                   const record = asRecord(row);
                   const fixture = asRecord(record?.fixture);
                   const stats = asRecord(record?.stats);
+                  const total = asFiniteNumber(record?.fantasy_points_total);
                   return (
                     <tr key={fixtureKey(fixture, index)}>
-                      <td>{text(fixture?.date) ?? MISSING_STAT}</td>
+                      <td>{fixtureDateLabel(fixture)}</td>
                       <td>{fixtureLabel(fixture)}</td>
                       <td>{text(fixture?.competition_label) ?? text(fixture?.competition) ?? MISSING_STAT}</td>
+                      <td>{asFiniteNumber(record?.minutes_played) ?? MISSING_STAT}</td>
+                      <td>{total ?? MISSING_STAT}</td>
                       {showAdvancedStats
                         ? STAT_KEYS.map((key) => (
-                            <td key={key}>{statCount(stats?.[key])}</td>
+                            <td key={key}>{statDisplay(stats?.[key], key)}</td>
                           ))
                         : null}
                     </tr>
                   );
                 })}
               </tbody>
+              <tfoot>
+                <tr>
+                  <th colSpan={4}>Total</th>
+                  <td>
+                    {fixtureRows.reduce((sum, row) => {
+                      const total = asFiniteNumber(asRecord(row)?.fantasy_points_total);
+                      return sum + (total ?? 0);
+                    }, 0)}
+                  </td>
+                  {showAdvancedStats ? <td colSpan={STAT_KEYS.length} /> : null}
+                </tr>
+              </tfoot>
             </table>
           </div>
         )}
@@ -489,6 +495,34 @@ function PlayerDetailBody({ masterId }: PlayerDetailBodyProps) {
                 onChange={(event) => setMarketCustomDraftTo(event.target.value)}
               />
             </label>
+            <label>
+              Last days
+              <input
+                type="number"
+                min={1}
+                max={400}
+                value={lastDays}
+                onChange={(event) => setLastDays(event.target.value)}
+              />
+            </label>
+            <button
+              type="button"
+              onClick={() => {
+                const days = Number(lastDays);
+                if (!Number.isInteger(days) || days < 1) return;
+                const to = new Date();
+                const from = new Date();
+                from.setDate(to.getDate() - days);
+                const fromIso = isoDate(from);
+                const toIso = isoDate(to);
+                setMarketCustomDraftFrom(fromIso);
+                setMarketCustomDraftTo(toIso);
+                setMarketCustomFrom(fromIso);
+                setMarketCustomTo(toIso);
+              }}
+            >
+              Apply last days
+            </button>
             <button type="submit" disabled={!canApplyRange}>
               Apply range
             </button>
@@ -506,40 +540,78 @@ function PlayerDetailBody({ masterId }: PlayerDetailBodyProps) {
         ) : (
           <>
             <p className="player-detail-deltas">
-              Absolute: {deltaAbs != null ? formatEuro(deltaAbs) : MISSING_STAT} · Relative:{" "}
-              {deltaRelPercent(deltaRel) ?? MISSING_STAT}
+              <strong>{currentValue != null ? formatEuro(currentValue) : MISSING_STAT}</strong>
+              {" · "}
+              <span className={changeTone}>
+                {deltaAbs != null ? formatEuro(deltaAbs) : MISSING_STAT}
+              </span>
+              {" · "}
+              <span className={changeTone}>{deltaRelPercent(deltaRel) ?? MISSING_STAT}</span>
             </p>
             <div className="player-detail-chart">
-              <ResponsiveContainer width="100%" height={240}>
+              <ResponsiveContainer width="100%" height={260}>
                 <LineChart
                   data={marketSeries}
-                  margin={{ top: 8, right: 12, left: 0, bottom: 4 }}
+                  margin={{ top: 12, right: 16, left: 8, bottom: 20 }}
                 >
+                  <CartesianGrid
+                    stroke="#ffffff"
+                    strokeDasharray="0 6"
+                    strokeOpacity={0.5}
+                    strokeWidth={2}
+                    strokeLinecap="round"
+                    vertical
+                    horizontal
+                  />
                   <XAxis
                     dataKey="date"
                     tickFormatter={formatChartAxisDate}
                     minTickGap={28}
-                    tick={{ fill: "var(--ink)", fontSize: 11 }}
+                    stroke="#ffffff"
+                    tick={{ fill: "#ffffff", fontSize: 11 }}
+                    label={{ value: "Date", position: "insideBottom", offset: -8, fill: "#ffffff" }}
                   />
                   <YAxis
-                    width={56}
+                    width={64}
                     domain={marketChartYDomain}
                     tickCount={5}
                     allowDecimals={false}
                     tickFormatter={formatMarketChartTick}
-                    tick={{ fill: "var(--ink)", fontSize: 11 }}
+                    stroke="#ffffff"
+                    tick={{ fill: "#ffffff", fontSize: 11 }}
+                    label={{
+                      value: "Market value",
+                      angle: -90,
+                      position: "insideLeft",
+                      fill: "#ffffff",
+                    }}
                   />
                   <Tooltip
                     labelFormatter={(label) => formatChartAxisDate(String(label ?? ""))}
-                    formatter={(value) => formatEuro(Number(value))}
+                    formatter={(value, name) => [
+                      formatEuro(Number(value)),
+                      name === "trend" ? "Tendency" : "Value",
+                    ]}
+                  />
+                  <Line
+                    type="monotone"
+                    dataKey="trend"
+                    name="trend"
+                    stroke="#FFC2BF"
+                    strokeDasharray="5 4"
+                    strokeWidth={2}
+                    dot={false}
+                    isAnimationActive={false}
                   />
                   <Line
                     type="monotone"
                     dataKey="value"
-                    stroke="var(--cyan)"
-                    strokeWidth={2}
+                    name="value"
+                    stroke="#FF4B44"
+                    strokeWidth={2.5}
                     dot={false}
                     isAnimationActive={false}
+                    style={{ filter: "drop-shadow(0 0 4px #FF4B44)" }}
                   />
                 </LineChart>
               </ResponsiveContainer>
@@ -549,126 +621,46 @@ function PlayerDetailBody({ masterId }: PlayerDetailBodyProps) {
       </section>
 
       {detailReady ? (
-      <section className="player-detail-panel player-detail-section">
-        <h2>Matches</h2>
-        <h3>Recent</h3>
-        {recentBlock == null ? (
-          <p className="status-copy">{NO_DATA_YET}</p>
-        ) : (
-          <ul className="player-detail-match-list">
-            {(Array.isArray(recentBlock.matches) ? recentBlock.matches : []).map((m, i) => {
-              const match = asRecord(m);
-              const fixture = asRecord(match?.fixture);
-              return (
-                <li key={fixtureKey(fixture, i)}>
-                  {text(fixture?.date) ?? MISSING_STAT} · {fixtureLabel(fixture)} ·{" "}
-                  {text(fixture?.competition_label) ?? MISSING_STAT}
-                </li>
-              );
-            })}
-          </ul>
-        )}
-        <h3>Upcoming (max 5)</h3>
-        {upcomingBlock == null ? (
-          <p className="status-copy">{NO_DATA_YET}</p>
-        ) : (
-          <ul className="player-detail-match-list">
-            {(Array.isArray(upcomingBlock.matches) ? upcomingBlock.matches : []).map((m, i) => {
-              const match = asRecord(m);
-              const fixture = asRecord(match?.fixture);
-              const weather = asRecord(match?.weather);
-              const snapshot = asRecord(weather?.snapshot);
-              const travel = asRecord(match?.travel);
-              const wind = windKmhFromMs(asFiniteNumber(snapshot?.wind_speed_ms));
-              return (
-                <li key={fixtureKey(fixture, i)}>
-                  {text(fixture?.date) ?? MISSING_STAT} · {fixtureLabel(fixture)} ·{" "}
-                  {fixture?.is_home === true ? "Home" : fixture?.is_home === false ? "Away" : MISSING_STAT}
-                  {" · "}
-                  {snapshot
-                    ? `Temp ${asFiniteNumber(snapshot.temperature_c) ?? MISSING_STAT}°C`
-                    : NO_DATA_YET}
-                  {wind != null ? ` · Wind ${wind} km/h` : ""}
-                  {" · "}
-                  {asFiniteNumber(travel?.distance_km) != null
-                    ? `${travel?.distance_km} km`
-                    : NO_DATA_YET}
-                </li>
-              );
-            })}
-          </ul>
-        )}
-      </section>
+        <PlayerMatchesSection recent={recentBlock} upcoming={upcomingBlock} />
       ) : null}
 
+
       {detailReady ? (
-      <section className="player-detail-panel player-detail-section player-detail-fantasy">
-        <h2>
-          <img src={fantasyLogo} alt="" className="player-detail-fantasy-logo" />
-          Fantasy data
-        </h2>
-        {profileBlock == null ? (
-          <p className="status-copy">{NO_DATA_YET}</p>
+      <>
+      <PlayerFantasySection profile={profileBlock} />
+
+      <section className="player-detail-panel player-detail-section player-detail-averages">
+        <h2>Averages per match</h2>
+        {averages.length === 0 ? (
+          <p className="status-copy">Not available from the API yet.</p>
         ) : (
-          <>
-            <p className="player-detail-hierarchy">
-              <span>{text(hierarchy?.label) ?? "Other"}</span>
-              <img src={hierarchyIcon(text(hierarchy?.label))} alt="" aria-hidden />
-            </p>
-            <p className="player-detail-inline-icon">
-              Starter {asFiniteNumber(startProb?.percent) ?? MISSING_STAT}%
-              <img
-                src={starterIcon(asFiniteNumber(startProb?.percent))}
-                alt=""
-                aria-hidden
-              />
-            </p>
-            <p className="player-detail-inline-icon">
-              Injury risk {text(injuryRisk?.raw) ?? text(injuryRisk?.level) ?? "Other"}
-              <img src={injuryIcon(text(injuryRisk?.level))} alt="" aria-hidden />
-            </p>
-            <h3>News</h3>
-            <ul className="player-detail-news-list">
-              {news.map((item, index) => {
-                const row = asRecord(item);
-                const title = text(row?.title) ?? MISSING_STAT;
-                const href = newsItemHref(row);
-                const source = text(row?.source);
-                return (
-                  <li key={entryKey([title, href, source, text(row?.published_at)], index)}>
-                    {href ? (
-                      <a href={href} target="_blank" rel="noopener noreferrer">
-                        {title}
-                      </a>
-                    ) : (
-                      title
-                    )}
-                    {source ? (
-                      <span className="player-detail-news-source"> ({source})</span>
-                    ) : null}
-                  </li>
-                );
-              })}
-            </ul>
-            <h3>Injury history</h3>
-            <ul className="player-detail-injury-list">
-              {injuryHistory.map((item, index) => {
-                const row = asRecord(item);
-                const entry = formatInjuryHistoryEntry(row);
-                const meta = [entry.period, entry.duration].filter(Boolean).join(" · ");
-                return (
-                  <li key={entryKey([entry.diagnosis, entry.period, text(row?.start)], index)}>
-                    <span className="player-detail-injury-diagnosis">{entry.diagnosis}</span>
-                    {meta ? (
-                      <span className="player-detail-injury-meta">{meta}</span>
-                    ) : null}
-                  </li>
-                );
-              })}
-            </ul>
-          </>
+          <div className="player-detail-table-wrap">
+            <table className="player-detail-table">
+              <thead>
+                <tr>
+                  <th>Code</th>
+                  <th>Statistic</th>
+                  <th>Average</th>
+                </tr>
+              </thead>
+              <tbody>
+                {averages.map((item, index) => {
+                  const row = asRecord(item);
+                  const value = asFiniteNumber(row?.value);
+                  return (
+                    <tr key={text(row?.code) ?? String(index)}>
+                      <td>{text(row?.code) ?? MISSING_STAT}</td>
+                      <td>{text(row?.label) ?? MISSING_STAT}</td>
+                      <td>{value != null ? value.toFixed(2) : MISSING_STAT}</td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          </div>
         )}
       </section>
+      </>
       ) : null}
 
       <BidDialog

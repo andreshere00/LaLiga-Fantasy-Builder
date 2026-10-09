@@ -15,6 +15,18 @@
   z-index: 4;
 }
 
+.market-player-details-link .is-for-red {
+  display: none;
+}
+
+.market-list > .market-data-row:is(:hover, :focus-within) .market-player-details-link .is-for-gray {
+  display: none;
+}
+
+.market-list > .market-data-row:is(:hover, :focus-within) .market-player-details-link .is-for-red {
+  display: block;
+}
+
 .pitch-tile-wrap {
   position: relative;
 }
