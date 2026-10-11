@@ -153,15 +153,15 @@ export function usePlayersBoard(): PlayersBoard {
     const catalog = catalogById(catalogQuery.data);
     const list: PlayerRow[] = [];
     for (const [playerId, master] of catalog) {
-      const ownedBy = ownership.get(playerId) ?? (ownershipPending ? OWNER_PENDING : FREE_AGENT);
-      const row = playerRowFromCatalog(master, playerId, ownedBy, calendarForm);
-      if (!row.photoUrl) {
-        const fromRoster = rosterPhotos.get(playerId);
-        if (fromRoster) list.push({ ...row, photoUrl: fromRoster });
-        else list.push(row);
-      } else {
-        list.push(row);
-      }
+      const owner = ownership.get(playerId);
+      const ownedBy = owner?.name ?? (ownershipPending ? OWNER_PENDING : FREE_AGENT);
+      const row = playerRowFromCatalog(master, playerId, ownedBy, owner?.teamId ?? null, calendarForm);
+      const fromRoster = rosterPhotos.get(playerId) ?? null;
+      list.push({
+        ...row,
+        photoUrl: row.photoUrl ?? fromRoster,
+        photoFallbackUrl: row.photoUrl ? fromRoster : null,
+      });
     }
     list.sort((left, right) => (right.points ?? -1) - (left.points ?? -1));
     return list;

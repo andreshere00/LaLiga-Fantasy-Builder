@@ -32,6 +32,9 @@ and CLI `--segment all` (sequential). A **200** response can include
 `segment_errors` when one or more segments failed or were disabled; auth and
 catalog failures still use 401 and 404. Query defaults: `last=5`, `limit=5`,
 `preset=season` (when `from`/`to` are omitted), all segments in `include`.
+The `competition` query parameter can be repeated to filter fixture stats by
+competition (for example, `competition=laliga`). It filters the `fixtures`
+segment only; recent and upcoming match segments remain unfiltered.
 A missing OpenWeather key still returns upcoming matches; weather on those
 rows is disabled.
 
@@ -41,16 +44,26 @@ rows is disabled.
   because scraping is disabled (`SCRAPING_BASE_URL` unset). **`market` is never
   disabled.** **`upcoming` is not disabled** for a missing OpenWeather key.
 - Typical **`SegmentError.code`** values: `disabled`, `scraping_unavailable`,
-  `stats_source_not_found`, `scraping_error`, and other `UpstreamError.category`
-  strings from the segment that failed. **`detail`** is a fixed, sanitised
-  message (never raw upstream bodies).
+  `stats_source_not_found`, `stats_not_applicable` (coach entries have no
+  player profile on the scraping source), `scraping_error`, and other
+  `UpstreamError.category` strings from the segment that failed. **`detail`**
+  is a fixed, sanitised message (never raw upstream bodies).
+- When the public player catalog omits a club name, stats resolution looks up
+  its `teamId` in the cached teams-master directory and uses that name to
+  disambiguate short or shared player nicknames.
 - **`profile.averages`** lists per-match figures derived from the scraped
-  season totals (`seasonStats`) divided by matches played. A missing code is
-  `value: null`.
-- Planned structured **`profile.availability`** / **`profile.form`** for the
-  players detail screen are described in
-  [list-availability.md](../../plans/list-availability.md) and are **not** on
-  the wire yet; use `injury.availability_text` today.
+  season totals (`seasonStats`) divided by matches played, including saves and
+  goals conceded for goalkeepers. A missing code is `value: null`. The player
+  detail screen fills supported missing values from the catalog's recent
+  `lastStats` matchweeks and labels those shorter Fantasy samples separately.
+- **`profile.form`** carries a published numeric value when available, or an
+  arrow rating (`bad`, `mid`, `good`, `very_good`) from FutbolFantasy's form
+  widget. Arrow ratings have `visual_only: true` and no numeric value.
+  **`profile.start_probability`** carries the published
+  percentage and matchweek.
+- Availability is available as `injury.availability_text`; structured
+  `profile.availability` is described in
+  [list-availability.md](../../plans/list-availability.md).
 
 Models: `fantasy_api.schemas.players` (catalog/league card) and
 `fantasy_api.schemas.player_stats` (stats segments). Catalog `weekPoints` stays

@@ -4,6 +4,7 @@ import { ApiError, NeedsReauthError } from "./errors";
 
 export type PlayerStatsDetailQuery = {
   last?: number;
+  competition?: string[];
   limit?: number;
   preset?: string;
   from?: string;
@@ -32,6 +33,8 @@ export const paths = {
   weekFixtures: (week: number) => `/api/calendar/weeks/${week}`,
   weekStats: (week: number) => `/api/calendar/weeks/${week}/stats`,
   playersCatalog: () => "/api/players",
+  playerLeague: (playerId: MasterPlayerId | string, leagueId: string) =>
+    `/api/players/${segment(typeof playerId === "string" ? playerId : masterPlayerIdToString(playerId))}/league/${segment(leagueId)}`,
   market: (leagueId: string) => `/api/market/leagues/${segment(leagueId)}`,
   playerMarketValue: (playerId: MasterPlayerId | string) =>
     `/api/players/${segment(typeof playerId === "string" ? playerId : masterPlayerIdToString(playerId))}/market-value`,
@@ -41,6 +44,9 @@ export const paths = {
     if (!query) return base;
     const params = new URLSearchParams();
     if (query.last != null) params.set("last", String(query.last));
+    for (const competition of query.competition ?? []) {
+      params.append("competition", competition);
+    }
     if (query.limit != null) params.set("limit", String(query.limit));
     if (query.preset) params.set("preset", query.preset);
     if (query.from) params.set("from", query.from);

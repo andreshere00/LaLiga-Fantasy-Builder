@@ -55,9 +55,10 @@ class Availability(ParserModel):
 
 
 class Form(ParserModel):
-    """Form widget. ``visual_only`` is set when the DOM has no number."""
+    """Form widget with a numeric value or a published arrow rating."""
 
     value: float | None = None
+    rating: Literal["bad", "mid", "good", "very_good"] | None = None
     visual_only: bool = False
 
 

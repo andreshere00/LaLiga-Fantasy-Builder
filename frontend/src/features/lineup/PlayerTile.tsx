@@ -1,3 +1,4 @@
+import { useState } from "react";
 import "../../components/TooltipPanel.css";
 import "./PlayerTile.css";
 
@@ -13,6 +14,7 @@ type PlayerTileProps = {
   showName?: boolean;
   empty?: boolean;
   photoUrl?: string | null;
+  photoFallbackUrls?: readonly (string | null | undefined)[];
   teamBadgeUrl?: string | null;
   fixturePoints?: number | null;
   isMvp?: boolean;
@@ -45,7 +47,9 @@ function TeamBadge({ url }: { url: string | null | undefined }) {
   );
 }
 
-function PlayerPhoto({ url }: { url: string | null | undefined }) {
+function PlayerPhoto({ candidates }: { candidates: readonly string[] }) {
+  const [candidateIndex, setCandidateIndex] = useState(0);
+  const url = candidates[candidateIndex];
   return (
     <div className="player-photo-frame" aria-hidden="true">
       {url ? (
@@ -55,8 +59,17 @@ function PlayerPhoto({ url }: { url: string | null | undefined }) {
           alt=""
           loading="lazy"
           decoding="async"
+          onError={() =>
+            setCandidateIndex((index) =>
+              index < candidates.length - 1 ? index + 1 : candidates.length,
+            )
+          }
         />
-      ) : null}
+      ) : (
+        <span className="player-empty-icon">
+          <WarningIcon />
+        </span>
+      )}
     </div>
   );
 }
@@ -68,6 +81,7 @@ export function PlayerTile({
   showName = true,
   empty = false,
   photoUrl = null,
+  photoFallbackUrls = [],
   teamBadgeUrl = null,
   fixturePoints = null,
   isMvp = false,
@@ -98,6 +112,13 @@ export function PlayerTile({
     : captain
       ? `${name}, captain${scoreLabel}`
       : `${name}${scoreLabel}`;
+  const photoCandidates = [
+    ...new Set(
+      [photoUrl, ...photoFallbackUrls].filter(
+        (url): url is string => typeof url === "string" && url.length > 0,
+      ),
+    ),
+  ];
 
   const body = empty ? (
     <>
@@ -115,7 +136,7 @@ export function PlayerTile({
   ) : (
     <>
       <div className="player-card-spacer" aria-hidden="true" />
-      <PlayerPhoto url={photoUrl} />
+      <PlayerPhoto key={`${name}|${photoCandidates.join("|")}`} candidates={photoCandidates} />
       {fixturePoints != null ? (
         <PlayerScoreBadge points={fixturePoints} isMvp={isMvp} />
       ) : null}

@@ -10,14 +10,19 @@ import {
 } from "../../api/queries";
 import {
   callerTeamId,
+  captainIdOf,
+  catalogMediaByMasterId,
   lastPlayedWeek,
   leagueId,
+  playersOf,
+  squadCards,
   squadPlayerCountFromTeam,
   teamValueFromPayload,
   weekPointsByMasterId,
 } from "../../api/mappers";
 import { teamMoneyFromPayload, useTeamMoneyQuery } from "../../api/queries";
 import type { CurrentWeek } from "../../api/mappers";
+import type { SquadCard } from "../../api/mappers";
 import { useAuth } from "../../auth/AuthProvider";
 import { useLeague } from "../lineup/LeagueProvider";
 import {
@@ -42,6 +47,7 @@ const HISTORY_STALE_MS = CALENDAR_STALE_MS;
 
 export type MarketBoard = {
   rows: MarketRow[];
+  ownSquadCards: SquadCard[];
   money: number | null;
   callerTeamId: string | null;
   squadPlayerCount: number | null;
@@ -251,6 +257,15 @@ export function useMarketBoard(): MarketBoard {
     () => squadPlayerCountFromTeam(teamQuery.data),
     [teamQuery.data],
   );
+  const ownSquadCards = useMemo(
+    () =>
+      squadCards(
+        playersOf(teamQuery.data),
+        captainIdOf(teamQuery.data),
+        catalogMediaByMasterId(catalogQuery.data),
+      ),
+    [catalogQuery.data, teamQuery.data],
+  );
 
   const squadMarketValue = useMemo(() => {
     const fromTeam = teamValueFromPayload(teamQuery.data);
@@ -278,6 +293,7 @@ export function useMarketBoard(): MarketBoard {
 
   return {
     rows,
+    ownSquadCards,
     money,
     callerTeamId: teamId,
     squadPlayerCount,

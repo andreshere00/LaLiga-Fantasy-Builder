@@ -20,6 +20,7 @@ _NEGATIVE_TTL = 30.0
 _NEGATIVE_CATEGORIES = frozenset(
     {"scraping_unavailable", "rate_limited", "upstream_timeout"},
 )
+_COACH_POSITION_ID = 5
 
 
 @dataclass(frozen=True, slots=True)
@@ -54,6 +55,12 @@ class ScrapedPlayerProvider:
         season: Season,
     ) -> ScrapedDocument:
         """Return parsed FutbolFantasy JSON for one player and season."""
+        if player.position_id == _COACH_POSITION_ID:
+            raise UpstreamError(
+                "FutbolFantasy player statistics are not available for coaches",
+                status_code=404,
+                category="stats_not_applicable",
+            )
         key = f"{player.id}:{season.season_key}"
         now = time.monotonic()
         negative = self._negative.get(key)
@@ -80,6 +87,8 @@ class ScrapedPlayerProvider:
                     name,
                     season.season_key,
                     player.team_name,
+                    player.id,
+                    player.name,
                 )
             except UpstreamError as exc:
                 if exc.category in _NEGATIVE_CATEGORIES:

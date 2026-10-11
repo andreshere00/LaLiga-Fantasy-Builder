@@ -28,10 +28,12 @@ export function SquadPlayerActions({
   player,
   sales,
   children,
+  triggerText,
 }: {
   player: SquadCard;
   sales: SquadSalesApi;
   children: ReactNode;
+  triggerText?: string;
 }) {
   const [open, setOpen] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
@@ -95,17 +97,19 @@ export function SquadPlayerActions({
         <div className="squad-tile-controls">
           <button
             type="button"
-            className="player-details-link squad-details-link"
-            aria-label={`${player.name}, view details`}
+            className={`player-details-link squad-details-link${triggerText ? " is-text-trigger" : ""}`}
+            aria-label={triggerText ? `${player.name}, options` : `${player.name}, view details`}
             aria-haspopup="menu"
             aria-expanded={menuOpen}
-            aria-describedby={hintId}
+            aria-describedby={triggerText ? undefined : hintId}
             onClick={() => setMenuOpen((current) => !current)}
           >
-            <img src={menuOpen ? infoRedIcon : infoIcon} alt="" aria-hidden />
-            <span id={hintId} className="hover-tooltip-panel squad-player-hint" role="tooltip">
-              {PLAYER_OPTIONS_HINT}
-            </span>
+            {triggerText ? triggerText : <img src={menuOpen ? infoRedIcon : infoIcon} alt="" aria-hidden />}
+            {!triggerText ? (
+              <span id={hintId} className="hover-tooltip-panel squad-player-hint" role="tooltip">
+                {PLAYER_OPTIONS_HINT}
+              </span>
+            ) : null}
           </button>
           {menuOpen ? (
             <div className="squad-info-menu" role="menu" aria-label={`${player.name} options`}>

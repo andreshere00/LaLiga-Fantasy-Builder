@@ -12,7 +12,7 @@ import injuryGreen from "../../assets/button_injury_green.svg";
 import injuryYellow from "../../assets/button_injury_yellow.svg";
 import injuryRed from "../../assets/button_injury_red.svg";
 import injuryGray from "../../assets/button_injury_gray.svg";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { asFiniteNumber, asRecord, text } from "../../api/mappers";
 import { formatInjuryHistoryEntry, newsItemHref } from "./playerDetailFormat";
 import { newsDate } from "./playerDetailWidgets";
@@ -23,6 +23,83 @@ type FantasySectionProps = {
 };
 
 const HISTORY_PAGE_SIZE = 5;
+const HIERARCHY_LABELS: Record<string, string> = {
+  dios: "God",
+  god: "God",
+  clave: "Key player",
+  key: "Key player",
+  importante: "Important",
+  important: "Important",
+  rotacion: "Rotation",
+  rotation: "Rotation",
+  revulsivo: "Impact substitute",
+  otro: "Other",
+  other: "Other",
+  reserva: "Reserve",
+  reserve: "Reserve",
+};
+
+const FORM_RATINGS: Record<string, { label: string; code: string }> = {
+  bad: { label: "Bad", code: "bad" },
+  malo: { label: "Bad", code: "bad" },
+  mid: { label: "Mid", code: "mid" },
+  regular: { label: "Mid", code: "mid" },
+  good: { label: "Good", code: "good" },
+  bueno: { label: "Good", code: "good" },
+  very_good: { label: "Very good", code: "very_good" },
+  muy_bueno: { label: "Very good", code: "very_good" },
+};
+
+const INJURY_RISK_LABELS: Record<string, string> = {
+  bajo: "Low",
+  low: "Low",
+  medio: "Medium",
+  medium: "Medium",
+  alto: "High",
+  high: "High",
+};
+
+function NewsTitleLink({ href, title }: { href: string; title: string }) {
+  const linkRef = useRef<HTMLAnchorElement>(null);
+  const titleRef = useRef<HTMLSpanElement>(null);
+  const [isTruncated, setIsTruncated] = useState(false);
+
+  useEffect(() => {
+    const link = linkRef.current;
+    const titleElement = titleRef.current;
+    if (!link || !titleElement) return;
+
+    const measure = () => {
+      setIsTruncated(titleElement.scrollWidth > link.clientWidth + 1);
+    };
+    measure();
+    const observer = new ResizeObserver(measure);
+    observer.observe(link);
+    return () => observer.disconnect();
+  }, [href, title]);
+
+  return (
+    <a
+      ref={linkRef}
+      className="player-fantasy-news-link"
+      href={href}
+      target="_blank"
+      rel="noopener noreferrer"
+    >
+      <span ref={titleRef} className="player-fantasy-news-title-line">{title}</span>
+      {isTruncated ? <strong>Read more</strong> : null}
+    </a>
+  );
+}
+
+function normalizedFantasyValue(value: string): string {
+  return value
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .trim()
+    .toLocaleLowerCase("en")
+    .replace(/[\s-]+/g, "_");
+}
 
 function HistoryNavigator({
   page,
@@ -80,16 +157,28 @@ function durationLabel(row: Record<string, unknown>, fallback: string | null): s
 function FantasyProfile({ profile }: FantasySectionProps) {
   const hierarchy = asRecord(profile?.hierarchy);
   const startProbability = asRecord(profile?.start_probability);
+  const form = asRecord(profile?.form);
   const injuryRisk = asRecord(profile?.injury_risk);
-  const hierarchyLabel = text(hierarchy?.label) ?? "Unavailable";
+  const hierarchyRaw = text(hierarchy?.label);
+  const hierarchyKeyValue = hierarchyRaw ? normalizedFantasyValue(hierarchyRaw) : "";
+  const hierarchyLabel = hierarchyRaw
+    ? HIERARCHY_LABELS[hierarchyKeyValue] ?? hierarchyRaw
+    : "Unavailable";
   const startPercent = asFiniteNumber(startProbability?.percent);
-  const injuryLabel = text(injuryRisk?.raw) ?? text(injuryRisk?.level) ?? "Unavailable";
-  const hierarchyKeyText = hierarchyLabel.toLocaleLowerCase();
+  const startMatchweek = asFiniteNumber(startProbability?.matchweek);
+  const formValue = asFiniteNumber(form?.value);
+  const formRatingRaw = text(form?.rating);
+  const formRating = formRatingRaw ? FORM_RATINGS[normalizedFantasyValue(formRatingRaw)] : null;
+  const injuryRaw = text(injuryRisk?.raw) ?? text(injuryRisk?.level);
+  const injuryLabel = injuryRaw
+    ? INJURY_RISK_LABELS[normalizedFantasyValue(injuryRaw)] ?? injuryRaw
+    : "Unavailable";
+  const hierarchyKeyText = hierarchyKeyValue;
   const hierarchyIcon = hierarchyKeyText.includes("dios") || hierarchyKeyText === "god"
     ? hierarchyGod
     : hierarchyKeyText.includes("clave") || hierarchyKeyText.includes("key")
       ? hierarchyKey
-      : hierarchyKeyText.includes("rotación") || hierarchyKeyText.includes("rotation")
+    : hierarchyKeyText.includes("rotacion") || hierarchyKeyText.includes("rotation")
         ? hierarchyRotation
         : hierarchyKeyText.includes("reserva") || hierarchyKeyText.includes("reserve")
           ? hierarchyReserve
@@ -119,8 +208,27 @@ function FantasyProfile({ profile }: FantasySectionProps) {
           <dd>{hierarchyLabel}</dd>
         </div>
         <div>
-          <dt><img src={starterIcon} alt="" aria-hidden="true" />Starter:</dt>
-          <dd>{startPercent != null ? `${startPercent}%` : "Unavailable"}</dd>
+          <dt><img src={starterIcon} alt="" aria-hidden="true" />Starter likelihood:</dt>
+          <dd>
+            {startPercent != null ? `${startPercent}%` : "Unavailable"}
+            {startMatchweek != null ? (
+              <span className="player-fantasy-matchday">Matchday {startMatchweek}</span>
+            ) : null}
+          </dd>
+        </div>
+        <div>
+          <dt>
+            <svg className="player-fantasy-form-icon" viewBox="0 0 24 24" aria-hidden="true">
+              <path d="M3 17.5 8.2 12l3.5 3.2L20.5 6" />
+              <path d="M15.5 6h5v5" />
+            </svg>
+            Form:
+          </dt>
+          <dd>
+            {formRating ? (
+              <span className={`player-fantasy-form-rating is-${formRating.code}`}>{formRating.label}</span>
+            ) : formValue != null ? String(formValue) : "Unavailable"}
+          </dd>
         </div>
         <div>
           <dt><img src={riskIcon} alt="" aria-hidden="true" />Injury risk:</dt>
@@ -172,10 +280,7 @@ function PlayerNewsList({ profile }: FantasySectionProps) {
                 <div>
                   {published ? <time dateTime={text(row?.published_at) ?? undefined}>{published} · </time> : null}
                   {href ? (
-                    <a href={href} target="_blank" rel="noopener noreferrer">
-                      <span>{title}</span>
-                      <strong>Read more…</strong>
-                    </a>
+                    <NewsTitleLink href={href} title={title} />
                   ) : (
                     <span className="player-fantasy-news-title">{title}</span>
                   )}

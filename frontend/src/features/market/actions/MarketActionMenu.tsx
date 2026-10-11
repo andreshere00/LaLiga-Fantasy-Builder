@@ -1,4 +1,5 @@
 import { useEffect, useId, useRef, useState } from "react";
+import { Link } from "react-router-dom";
 
 import bidIconUrl from "../../../assets/button_bid.svg";
 import { bidAmountTooltipLabel } from "../bidTooltip";
@@ -21,6 +22,7 @@ type MarketActionMenuProps = {
   row: MarketRow;
   context: MarketActionContext;
   actions: MarketActionsApi;
+  detailsPlayer?: { id: string; name: string };
 };
 
 function menuItemTooltip(
@@ -36,14 +38,14 @@ function menuItemTooltip(
   if (offer.type !== "pay-clause") return offer.disabledReason ?? null;
   if (clauseTimeLocked) {
     const countdown = unlockLabel
-      ? `Time remaining to activate the release clause: ${unlockLabel}`
+      ? `Time remaining to expire the release clause: ${unlockLabel}`
       : null;
     return countdown ? `${CLAUSE_BLOCKED_MESSAGE}\n${countdown}` : CLAUSE_BLOCKED_MESSAGE;
   }
   return offer.disabledReason ?? CLAUSE_BLOCKED_MESSAGE;
 }
 
-export function MarketActionMenu({ row, context, actions }: MarketActionMenuProps) {
+export function MarketActionMenu({ row, context, actions, detailsPlayer }: MarketActionMenuProps) {
   const menuId = useId();
   const [open, setOpen] = useState(false);
   const bidTooltipId = useId();
@@ -69,7 +71,7 @@ export function MarketActionMenu({ row, context, actions }: MarketActionMenuProp
     };
   }, [open]);
 
-  if (offers.length === 0) return null;
+  if (offers.length === 0 && !detailsPlayer) return null;
 
   const bidded = row.myBid != null;
   const bidMoney = row.myBid?.money;
@@ -162,6 +164,18 @@ export function MarketActionMenu({ row, context, actions }: MarketActionMenuProp
               </li>
             );
           })}
+          {detailsPlayer ? (
+            <li className="market-actions-menu-item">
+              <Link
+                className="market-actions-item players-action-link"
+                role="menuitem"
+                to={`/players/${encodeURIComponent(detailsPlayer.id)}`}
+                onClick={() => setOpen(false)}
+              >
+                Player details
+              </Link>
+            </li>
+          ) : null}
         </ul>
       ) : null}
     </div>

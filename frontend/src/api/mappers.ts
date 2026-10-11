@@ -416,7 +416,7 @@ function avatarNameKey(value: unknown): string | null {
 function firstImageUrl(value: unknown, depth = 0): string | null {
   const direct = asHttpUrl(value);
   if (direct) return direct;
-  if (depth > 3) return null;
+  if (depth > 6) return null;
   if (Array.isArray(value)) {
     for (const item of value) {
       const found = firstImageUrl(item, depth + 1);
@@ -763,7 +763,14 @@ export function teamNameFromPlayerMaster(master: unknown): string | null {
 export function mediaFromPlayerMaster(master: unknown): PlayerMedia {
   const record = asRecord(master);
   if (!record) return { photoUrl: null, teamBadgeUrl: null };
-  const photoUrl = photoFromImages(record.images);
+  const photoUrl =
+    httpImageUrl(record.photoUrl) ??
+    httpImageUrl(record.imageUrl) ??
+    firstImageUrl(record.avatar) ??
+    firstImageUrl(record.photo) ??
+    firstImageUrl(record.image) ??
+    firstImageUrl(record.profileImage) ??
+    photoFromImages(record.images);
   const teamBadgeUrl = resolveTeamBadgeUrl(record.team, record.teamId);
   return { photoUrl, teamBadgeUrl };
 }

@@ -10,7 +10,7 @@ import { buyoutClauseUnlockAt } from "./buyout";
 import { availabilityOf, type Availability } from "./availability";
 import {
   formFromCalendarWeeks,
-  formPoints,
+  formAverageLastThree,
   formRecentPoints,
   formRecentWeekNumbers,
   formRecentSeries,
@@ -157,20 +157,19 @@ export function marketRow(
     calendarForm != null && calendarForm.playedThrough >= 1
       ? calendarForm.playedThrough
       : null;
-  let form = formPoints(master.lastStats, playedThrough);
   let formRecent = formRecentPoints(master.lastStats, playedThrough);
   let formRecentWeeks = formRecentWeekNumbers(master.lastStats, playedThrough);
-  if (form == null && calendarForm) {
+  if (formRecent.length === 0 && calendarForm) {
     const fromCalendar = formFromCalendarWeeks(
       playerId,
       calendarForm.weekNumbers,
       calendarForm.statsByWeek,
     );
-    form = fromCalendar.form;
     formRecent = fromCalendar.formRecent;
     formRecentWeeks = calendarForm.weekNumbers.slice(0, formRecent.length);
   }
   const capped = formRecentSeries(formRecent, formRecentWeeks);
+  const form = formAverageLastThree(capped.recent);
   formRecent = capped.recent;
   formRecentWeeks = capped.weeks;
   const playerTeam = asRecord(item.playerTeam);

@@ -1,6 +1,8 @@
+import { useState } from "react";
 import { asFiniteNumber, asRecord, text } from "../../api/mappers";
 import footballIcon from "../../assets/boxicons_football-filled.svg";
 import { windKmhFromMs } from "./playerDetailFormat";
+import { useNow } from "../../hooks/useNow";
 import {
   fixtureDate,
   matchOutcome,
@@ -108,6 +110,55 @@ function outcomeLabel(outcome: MatchOutcome): string {
   }
 }
 
+function TeamCrest({ media }: { media: { badge: string } | null }) {
+  const [failed, setFailed] = useState(false);
+  if (!media || failed) return <span aria-hidden="true">–</span>;
+  return (
+    <img
+      src={media.badge}
+      alt=""
+      aria-hidden="true"
+      loading="lazy"
+      decoding="async"
+      onError={() => setFailed(true)}
+    />
+  );
+}
+
+function MatchTimer({ kickoff }: { kickoff: string | null }) {
+  const now = useNow();
+  const kickoffMs = kickoff ? Date.parse(kickoff) : NaN;
+  const remaining = kickoffMs - now;
+  let countdown = "Kickoff time not confirmed";
+  if (kickoff && /T\d{2}:\d{2}/.test(kickoff) && Number.isFinite(kickoffMs)) {
+    if (remaining <= 0) {
+      countdown = "Kickoff has passed";
+    } else {
+      const minutes = Math.floor(remaining / 60_000);
+      const days = Math.floor(minutes / 1_440);
+      const hours = Math.floor((minutes % 1_440) / 60);
+      const restMinutes = minutes % 60;
+      countdown = [
+        days ? `${days}d` : null,
+        hours || days ? `${hours}h` : null,
+        `${restMinutes}m`,
+      ]
+        .filter(Boolean)
+        .join(" ");
+    }
+  }
+
+  return (
+    <details className="player-match-timer">
+      <summary>View match timer</summary>
+      <p>
+        <span>Time remaining</span>
+        <strong>{countdown}</strong>
+      </p>
+    </details>
+  );
+}
+
 function MatchCard({
   match,
   upcoming,
@@ -127,6 +178,8 @@ function MatchCard({
   const competition =
     text(fixture?.competition_label) ?? text(fixture?.competition) ?? "Competition";
   const matchDate = text(fixture?.date) ?? text(matchRecord?.kickoff);
+  const kickoff =
+    text(matchRecord?.kickoff) ?? text(fixture?.kickoff) ?? text(fixture?.date);
   const date = fixtureDate(matchDate);
   const points = asFiniteNumber(matchRecord?.fantasy_points_total);
   const minutes = asFiniteNumber(asRecord(matchRecord?.minutes)?.minutes) ??
@@ -140,7 +193,7 @@ function MatchCard({
       <div className="player-match-teams">
         <div className="player-match-team">
           <div className="player-match-crest-tile">
-            {home ? <img src={home.badge} alt="" aria-hidden="true" /> : <span>–</span>}
+            <TeamCrest key={home?.badge ?? "home"} media={home} />
             {homeScore != null ? (
               <span className={`player-match-score is-${homeOutcome}`}>
                 <span className="visually-hidden">{outcomeLabel(homeOutcome)}: </span>
@@ -152,7 +205,7 @@ function MatchCard({
         </div>
         <div className="player-match-team">
           <div className="player-match-crest-tile">
-            {away ? <img src={away.badge} alt="" aria-hidden="true" /> : <span>–</span>}
+            <TeamCrest key={away?.badge ?? "away"} media={away} />
             {awayScore != null ? (
               <span className={`player-match-score is-${awayOutcome}`}>
                 <span className="visually-hidden">{outcomeLabel(awayOutcome)}: </span>
@@ -167,7 +220,10 @@ function MatchCard({
         {date}
       </time>
       {upcoming ? (
-        <MatchWeather match={matchRecord} />
+        <>
+          <MatchTimer kickoff={kickoff} />
+          <MatchWeather match={matchRecord} />
+        </>
       ) : points != null || minutes != null ? (
         <p className="player-match-player-stats">
           {minutes != null ? `${minutes} min` : ""}

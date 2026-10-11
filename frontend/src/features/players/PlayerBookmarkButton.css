@@ -1,0 +1,28 @@
+.player-bookmark-btn {
+  display: inline-grid;
+  place-items: center;
+  border: none;
+  background: transparent;
+  padding: 0;
+  color: #35353d;
+  line-height: 0;
+  cursor: pointer;
+}
+
+.player-bookmark-btn.is-active {
+  color: #ff4b44;
+}
+
+.player-bookmark-btn:focus-visible {
+  outline: 2px solid var(--cyan);
+  outline-offset: 3px;
+}
+
+.player-bookmark-icon {
+  display: block;
+  width: 1.75rem;
+  height: 1.75rem;
+  background: currentColor;
+  -webkit-mask: var(--bookmark-icon) center / contain no-repeat;
+  mask: var(--bookmark-icon) center / contain no-repeat;
+}

@@ -33,9 +33,21 @@
 
 .pitch-details-link {
   position: absolute;
-  top: 0.1rem;
-  right: 0.1rem;
+  top: 5%;
+  right: auto;
+  left: 6.6667%;
   z-index: 4;
+  display: grid;
+  width: 26.6667%;
+  aspect-ratio: 1;
+  place-items: center;
+  line-height: 0;
+}
+
+.pitch-details-link img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
 }
 
 .market-page {
@@ -990,6 +1002,11 @@
   text-align: left;
   cursor: pointer;
   transition: background-color var(--control-fill-duration) var(--control-fill-ease);
+}
+
+a.market-actions-item {
+  color: inherit;
+  text-decoration: none;
 }
 
 .market-actions-item:is(:hover, :focus-visible) {

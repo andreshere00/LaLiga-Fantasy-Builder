@@ -1,5 +1,5 @@
 import { useMemo, useState } from "react";
-import { useQuery } from "@tanstack/react-query";
+import { useQueries, useQuery } from "@tanstack/react-query";
 import { Link, useParams } from "react-router-dom";
 
 import { formatEuro } from "../../api/format";
@@ -11,6 +11,7 @@ import {
   catalogMediaByMasterId,
   captainIdOf,
   leagueId,
+  mediaFromPlayerMaster,
   playersOf,
   squadCards,
   teamNameFromPlayerMaster,
@@ -60,8 +61,13 @@ import { clubDisplayName } from "./clubNames";
 import { PlayerBookmarkButton } from "./PlayerBookmarkButton";
 import { usePlayerMarketListing } from "./usePlayerMarketListing";
 import { readFavoritePlayerIds, toggleFavoritePlayerId } from "./favorites";
+import { rosterPhotoByMasterId, teamIdsFromLeagueTeams } from "./model/playerRow";
 import { PlayerMatchesSection } from "./PlayerMatchesSection";
 import { PlayerFantasySection } from "./PlayerFantasySection";
+import { PlayerAveragesPanel } from "./PlayerAveragesPanel";
+import { playerAverages } from "./playerAverages";
+import { PlayerDetailScreenLoading } from "./PlayerScreenLoading";
+import daznIcon from "../../assets/dazn.png";
 import "./PlayerDetailPage.css";
 
 const FIXTURE_LAST_STEPS = [5, 10, 20, 40, 60] as const;
@@ -168,6 +174,7 @@ function PlayerDetailBody({ masterId }: PlayerDetailBodyProps) {
   const detailQueryInput = useMemo((): PlayerStatsDetailQuery => {
     const base: PlayerStatsDetailQuery = {
       last,
+      competition: ["laliga"],
       limit: 5,
       include_weather: true,
       include_stats: true,
@@ -196,6 +203,35 @@ function PlayerDetailBody({ masterId }: PlayerDetailBodyProps) {
   const league = useLeague();
   const leagueKey = league.selected ? leagueId(league.selected) : "";
   const teamId = league.selected ? callerTeamId(league.selected) : null;
+  const leaguePlayerQuery = useQuery({
+    queryKey: ["player-league", leagueKey, masterId],
+    enabled: signedIn && leagueKey !== "" && masterId != null,
+    staleTime: 5 * 60_000,
+    queryFn: ({ signal }) =>
+      getJson(paths.playerLeague(masterId ?? "", leagueKey), accessToken ?? "", { signal }),
+  });
+  const leagueTeamsForMedia = useQuery({
+    queryKey: ["league-teams", leagueKey],
+    enabled: signedIn && leagueKey !== "",
+    staleTime: 5 * 60_000,
+    queryFn: ({ signal }) => getJson(paths.leagueTeams(leagueKey), accessToken ?? "", { signal }),
+  });
+  const mediaTeamIds = useMemo(
+    () => teamIdsFromLeagueTeams(leagueTeamsForMedia.data),
+    [leagueTeamsForMedia.data],
+  );
+  const mediaRosterQueries = useQueries({
+    queries: mediaTeamIds.map((rosterTeamId) => ({
+      queryKey: ["team", leagueKey, rosterTeamId],
+      enabled: signedIn && leagueKey !== "" && rosterTeamId !== "",
+      staleTime: 5 * 60_000,
+      queryFn: ({ signal }: { signal: AbortSignal }) =>
+        getJson(paths.team(leagueKey, rosterTeamId), accessToken ?? "", { signal }),
+    })),
+  });
+  const rosterPhotoUrl = rosterPhotoByMasterId(mediaRosterQueries.map((query) => query.data)).get(
+    masterId,
+  );
   const now = useNow();
   const marketListing = usePlayerMarketListing(masterId);
   const marketActions = useMarketActions();
@@ -204,6 +240,7 @@ function PlayerDetailBody({ masterId }: PlayerDetailBodyProps) {
   const teamQuery = useQuery({
     queryKey: ["team", leagueKey, teamId],
     enabled: signedIn && leagueKey !== "" && teamId != null,
+    staleTime: 5 * 60_000,
     queryFn: ({ signal }) =>
       getJson(paths.team(leagueKey, teamId ?? ""), accessToken ?? "", { signal }),
   });
@@ -216,6 +253,18 @@ function PlayerDetailBody({ masterId }: PlayerDetailBodyProps) {
   const catalog = useMemo(() => catalogById(catalogQuery.data), [catalogQuery.data]);
   const catalogMaster = masterId ? catalog.get(masterId) : null;
   const media = masterId ? catalogMediaByMasterId(catalogQuery.data).get(masterId) : null;
+  const leaguePlayer = asRecord(leaguePlayerQuery.data);
+  const leagueMaster = asRecord(leaguePlayer?.playerMaster);
+  const leagueMedia = mediaFromPlayerMaster(leagueMaster ?? leaguePlayerQuery.data);
+  const catalogWeekCount = Array.isArray(catalogMaster?.lastStats)
+    ? catalogMaster.lastStats.length
+    : 0;
+  const leagueWeekCount = Array.isArray(leagueMaster?.lastStats)
+    ? leagueMaster.lastStats.length
+    : 0;
+  const fantasyAveragesPlayer = leagueWeekCount > catalogWeekCount
+    ? leagueMaster
+    : catalogMaster ?? leagueMaster;
 
   const detail = asRecord(detailQuery.data);
   const detailReady = detail != null;
@@ -233,7 +282,9 @@ function PlayerDetailBody({ masterId }: PlayerDetailBodyProps) {
     text(asRecord(detail?.player)?.name) ??
     "Player";
   const points = asFiniteNumber(catalogMaster?.points);
-  const positionId = asFiniteNumber(catalogMaster?.positionId);
+  const positionId =
+    asFiniteNumber(catalogMaster?.positionId) ??
+    asFiniteNumber(asRecord(detail?.player)?.position_id);
   const teamName =
     text(asRecord(detail?.player)?.team_name) ??
     teamNameFromPlayerMaster(catalogMaster);
@@ -270,7 +321,7 @@ function PlayerDetailBody({ masterId }: PlayerDetailBodyProps) {
   const deltaRel = asFiniteNumber(asRecord(marketBlock?.window)?.delta_rel);
   const currentValue = asFiniteNumber(marketBlock?.current_value);
   const changeTone = marketChangeTone(deltaRel);
-  const averages = Array.isArray(profileBlock?.averages) ? profileBlock.averages : [];
+  const averages = playerAverages(profileBlock?.averages, fantasyAveragesPlayer);
 
   const injury = asRecord(profileBlock?.injury);
   const actionContext = {
@@ -290,14 +341,13 @@ function PlayerDetailBody({ masterId }: PlayerDetailBodyProps) {
   const canApplyRange =
     marketCustomDraftFrom !== "" && marketCustomDraftTo !== "" && !rangeInvalid;
 
+  if (!detailReady && !detailQuery.isError) return <PlayerDetailScreenLoading />;
+
   return (
     <section className="player-detail-page">
       <p className="player-detail-back">
         <Link to="/players">← Back to players</Link>
       </p>
-      {!detailReady && !detailQuery.isError ? (
-        <p className="status-copy">Loading player…</p>
-      ) : null}
       {detailQuery.isError ? (
         <p className="status-copy" role="alert">
           Player details could not be loaded.
@@ -322,26 +372,52 @@ function PlayerDetailBody({ masterId }: PlayerDetailBodyProps) {
       ) : null}
 
       <header className="player-detail-panel player-detail-header">
-        <PlayerTile
-          name={name}
-          captain={false}
-          variant="squad"
-          showName={false}
-          photoUrl={media?.photoUrl ?? ownSquadCard?.photoUrl ?? null}
-          teamBadgeUrl={media?.teamBadgeUrl ?? ownSquadCard?.teamBadgeUrl ?? null}
-        />
-        <div className="player-detail-header-text">
-          <h1>{name}</h1>
-          <p>
-            {teamName ?? MISSING_STAT} · FSYP {points ?? MISSING_STAT} · {positionLabel(positionId)} ·{" "}
-            <AvailabilityCell availability={availability} />
-          </p>
-          {injury?.availability_text || injury?.diagnosis ? (
-            <p className="player-detail-availability-reason">
-              {[text(injury.availability_text), text(injury.diagnosis)].filter(Boolean).join(" — ")}
-            </p>
-          ) : null}
+        <div className="player-detail-header-identity">
+          <PlayerTile
+            name={name}
+            captain={false}
+            variant="squad"
+            showName={false}
+            photoUrl={
+              leagueMedia.photoUrl ??
+              marketListing.row?.photoUrl ??
+              media?.photoUrl ??
+              rosterPhotoUrl ??
+              ownSquadCard?.photoUrl ??
+              null
+            }
+            photoFallbackUrls={[
+              marketListing.row?.photoUrl,
+              media?.photoUrl,
+              rosterPhotoUrl,
+              ownSquadCard?.photoUrl,
+            ]}
+            teamBadgeUrl={
+              leagueMedia.teamBadgeUrl ??
+              marketListing.row?.teamBadgeUrl ??
+              media?.teamBadgeUrl ??
+              ownSquadCard?.teamBadgeUrl ??
+              null
+            }
+          />
+          <div className="player-detail-header-text">
+            <h1>{name}</h1>
+            <div className="player-detail-header-facts">
+              <p>{teamName ?? MISSING_STAT}</p>
+              <p>FSYP {points ?? MISSING_STAT}</p>
+              <p>{positionLabel(positionId) ?? MISSING_STAT}</p>
+              <p><AvailabilityCell availability={availability} /></p>
+            </div>
+            {injury?.availability_text || injury?.diagnosis ? (
+              <p className="player-detail-availability-reason">
+                {[text(injury.availability_text), text(injury.diagnosis)].filter(Boolean).join(" — ")}
+              </p>
+            ) : null}
+          </div>
         </div>
+        {detailReady || catalogMaster || leagueMaster ? (
+          <PlayerAveragesPanel rows={averages} positionId={positionId} />
+        ) : null}
         <div className="player-detail-header-actions">
           {ownSquadCard ? (
             <SquadPlayerActions player={ownSquadCard} sales={squadSales}>
@@ -361,7 +437,7 @@ function PlayerDetailBody({ masterId }: PlayerDetailBodyProps) {
         </div>
       </header>
 
-      <section className="player-detail-panel player-detail-section">
+      <section className="player-detail-panel player-detail-section player-form-section">
         <h2>Form — fixture stats</h2>
         <div className="player-detail-fixture-actions">
           {FIXTURE_LAST_STEPS.map((step) => (
@@ -378,6 +454,7 @@ function PlayerDetailBody({ masterId }: PlayerDetailBodyProps) {
           <button
             type="button"
             aria-expanded={showAdvancedStats}
+            aria-controls="player-form-list"
             onClick={() => setShowAdvancedStats((value) => !value)}
           >
             {showAdvancedStats ? "Hide details" : "Details"}
@@ -385,56 +462,63 @@ function PlayerDetailBody({ masterId }: PlayerDetailBodyProps) {
         </div>
         {!detailReady ? null : fixturesBlock == null ? (
           <p className="status-copy">{NO_DATA_YET}</p>
+        ) : fixtureRows.length === 0 ? (
+          <p className="status-copy">No LaLiga fixture stats available.</p>
         ) : (
-          <div className="player-detail-table-wrap">
-            <table className="player-detail-table">
-              <thead>
-                <tr>
-                  <th>Date</th>
-                  <th>Fixture</th>
-                  <th>Competition</th>
-                  <th>Minutes</th>
-                  <th>Points</th>
-                  {showAdvancedStats
-                    ? STAT_KEYS.map((key) => <th key={key}>{STAT_LABELS[key] ?? key}</th>)
-                    : null}
-                </tr>
-              </thead>
-              <tbody>
-                {fixtureRows.map((row, index) => {
-                  const record = asRecord(row);
-                  const fixture = asRecord(record?.fixture);
-                  const stats = asRecord(record?.stats);
-                  const total = asFiniteNumber(record?.fantasy_points_total);
-                  return (
-                    <tr key={fixtureKey(fixture, index)}>
-                      <td>{fixtureDateLabel(fixture)}</td>
-                      <td>{fixtureLabel(fixture)}</td>
-                      <td>{text(fixture?.competition_label) ?? text(fixture?.competition) ?? MISSING_STAT}</td>
-                      <td>{asFiniteNumber(record?.minutes_played) ?? MISSING_STAT}</td>
-                      <td>{total ?? MISSING_STAT}</td>
-                      {showAdvancedStats
-                        ? STAT_KEYS.map((key) => (
-                            <td key={key}>{statDisplay(stats?.[key], key)}</td>
-                          ))
-                        : null}
-                    </tr>
-                  );
-                })}
-              </tbody>
-              <tfoot>
-                <tr>
-                  <th colSpan={4}>Total</th>
-                  <td>
-                    {fixtureRows.reduce((sum, row) => {
-                      const total = asFiniteNumber(asRecord(row)?.fantasy_points_total);
-                      return sum + (total ?? 0);
-                    }, 0)}
-                  </td>
-                  {showAdvancedStats ? <td colSpan={STAT_KEYS.length} /> : null}
-                </tr>
-              </tfoot>
-            </table>
+          <div id="player-form-list" className="player-form-grid">
+            {fixtureRows.map((row, index) => {
+              const record = asRecord(row);
+              const fixture = asRecord(record?.fixture);
+              const stats = asRecord(record?.stats);
+              const total = asFiniteNumber(record?.fantasy_points_total);
+              return (
+                <article className="player-form-card" key={fixtureKey(fixture, index)}>
+                  <header className="player-form-card-heading">
+                    <strong>{fixtureLabel(fixture)}</strong>
+                    <time dateTime={text(fixture?.date) ?? undefined}>
+                      {fixtureDateLabel(fixture)}
+                    </time>
+                  </header>
+                  <dl className="player-form-summary">
+                    <div>
+                      <dt>Minutes</dt>
+                      <dd>{asFiniteNumber(record?.minutes_played) ?? MISSING_STAT}</dd>
+                    </div>
+                    <div>
+                      <dt>Fantasy points</dt>
+                      <dd>{total ?? MISSING_STAT}</dd>
+                    </div>
+                  </dl>
+                  {showAdvancedStats ? (
+                    <dl className="player-form-details">
+                      {STAT_KEYS.map((key) => (
+                        <div key={key}>
+                          <dt>
+                            {key === "dazn_points" ? (
+                              <>
+                                <img src={daznIcon} alt="" aria-hidden="true" /> DAZN
+                              </>
+                            ) : (
+                              STAT_LABELS[key] ?? key
+                            )}
+                          </dt>
+                          <dd>{statDisplay(stats?.[key], key)}</dd>
+                        </div>
+                      ))}
+                    </dl>
+                  ) : null}
+                </article>
+              );
+            })}
+            <p className="player-form-total">
+              Total fantasy points
+              <strong>
+                {fixtureRows.reduce((sum, row) => {
+                  const total = asFiniteNumber(asRecord(row)?.fantasy_points_total);
+                  return sum + (total ?? 0);
+                }, 0)}
+              </strong>
+            </p>
           </div>
         )}
       </section>
@@ -625,43 +709,7 @@ function PlayerDetailBody({ masterId }: PlayerDetailBodyProps) {
       ) : null}
 
 
-      {detailReady ? (
-      <>
-      <PlayerFantasySection profile={profileBlock} />
-
-      <section className="player-detail-panel player-detail-section player-detail-averages">
-        <h2>Averages per match</h2>
-        {averages.length === 0 ? (
-          <p className="status-copy">Not available from the API yet.</p>
-        ) : (
-          <div className="player-detail-table-wrap">
-            <table className="player-detail-table">
-              <thead>
-                <tr>
-                  <th>Code</th>
-                  <th>Statistic</th>
-                  <th>Average</th>
-                </tr>
-              </thead>
-              <tbody>
-                {averages.map((item, index) => {
-                  const row = asRecord(item);
-                  const value = asFiniteNumber(row?.value);
-                  return (
-                    <tr key={text(row?.code) ?? String(index)}>
-                      <td>{text(row?.code) ?? MISSING_STAT}</td>
-                      <td>{text(row?.label) ?? MISSING_STAT}</td>
-                      <td>{value != null ? value.toFixed(2) : MISSING_STAT}</td>
-                    </tr>
-                  );
-                })}
-              </tbody>
-            </table>
-          </div>
-        )}
-      </section>
-      </>
-      ) : null}
+      {detailReady ? <PlayerFantasySection profile={profileBlock} /> : null}
 
       <BidDialog
         open={marketActions.pendingBid != null}

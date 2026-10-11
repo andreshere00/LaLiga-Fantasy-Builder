@@ -9,13 +9,20 @@
 
 .squad-tile-controls {
   position: absolute;
-  top: 0.15rem;
-  right: 0.15rem;
+  top: 5%;
+  right: auto;
+  left: 6.6667%;
   z-index: 5;
+  width: 26.6667%;
+  aspect-ratio: 1;
 }
 
 .squad-details-link {
   display: inline-flex;
+  width: 100%;
+  height: 100%;
+  align-items: center;
+  justify-content: center;
   padding: 0;
   border: 0;
   background: transparent;
@@ -24,14 +31,15 @@
 }
 
 .squad-details-link img {
-  width: 1.5rem;
-  height: 1.5rem;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
 }
 
 .squad-info-menu {
   position: absolute;
   top: calc(100% + 0.25rem);
-  right: 0;
+  left: 0;
   display: flex;
   flex-direction: column;
   min-width: 9.5rem;

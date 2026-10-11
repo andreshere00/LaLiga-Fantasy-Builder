@@ -13,7 +13,6 @@ from fantasy_scraping.scraper.downloader import PageDownloader
 from fantasy_scraping.scraper.errors import (
     AmbiguousPlayerError,
     InvalidRequestError,
-    PlayerNotFoundError,
     ScrapingError,
     UnexpectedContentError,
 )
@@ -42,7 +41,8 @@ from fantasy_scraping.scraper.urls import check_season, laliga_slug, player_url
 
 LOGGER: logging.Logger = logging.getLogger(__name__)
 MAX_BATCH: int = 25
-TEAM_PROBES: int = 3
+# Probe every candidate returned by RouteResolver when a team must disambiguate.
+TEAM_PROBES: int = 5
 DEFAULT_INCLUDE: frozenset[PageKind] = frozenset({PageKind.PLAYER})
 
 
@@ -230,8 +230,14 @@ class ScraperService:
                         route, season, kind=PageKind.COMPETITION, target=slug, options=options
                     )
                 )
-            except PlayerNotFoundError:
-                LOGGER.warning("competition_page_missing slug=%s player=%s", slug, route.slug)
+            except ScrapingError as exc:
+                LOGGER.warning(
+                    "competition_page_unavailable slug=%s player=%s category=%s status=%s",
+                    slug,
+                    route.slug,
+                    exc.category,
+                    exc.status_code,
+                )
         return pages
 
     async def scrape_player(

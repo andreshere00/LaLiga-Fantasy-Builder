@@ -13,6 +13,7 @@ type PlayersColumnFilterPopoverProps = {
   column: PlayersColumnKey;
   filters: PlayersFilters;
   owners: readonly string[];
+  teams: readonly string[];
   onChange: (filters: PlayersFilters) => void;
   onClearColumn: () => void;
 };
@@ -21,6 +22,7 @@ export function PlayersColumnFilterPopover({
   column,
   filters,
   owners,
+  teams,
   onChange,
   onClearColumn,
 }: PlayersColumnFilterPopoverProps) {
@@ -36,12 +38,29 @@ export function PlayersColumnFilterPopover({
       ) : null}
 
       {column === "team" ? (
-        <FilterTextInput
-          label="Team"
-          value={filters.team}
-          onChange={(team) => onChange({ ...filters, team })}
-          placeholder="Club name"
-        />
+        <>
+          <FilterTextInput
+            label="Team"
+            value={filters.team}
+            onChange={(team) => onChange({ ...filters, team })}
+            placeholder="Club name"
+          />
+          {teams.length > 0 ? (
+            <label className="market-column-filter-text">
+              Pick a team
+              <select
+                className="market-filter-select"
+                value=""
+                onChange={(event) => {
+                  if (event.target.value) onChange({ ...filters, team: event.target.value });
+                }}
+              >
+                <option value="">Choose…</option>
+                {teams.map((team) => <option key={team} value={team}>{team}</option>)}
+              </select>
+            </label>
+          ) : null}
+        </>
       ) : null}
 
       {column === "owner" ? (

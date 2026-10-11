@@ -187,7 +187,12 @@ def _normalise_profile(raw: Mapping[str, Any]) -> dict[str, Any]:
     personal = raw.get("personal")
     return {
         "injury": raw.get("injury"),
-        "start_probability": raw.get("startProbability"),
+        "form": raw.get("form"),
+        "start_probability": (
+            raw.get("startProbability")
+            if raw.get("startProbability") is not None
+            else raw.get("start_probability")
+        ),
         "injury_risk": raw.get("injuryRisk"),
         "injury_history": history_list,
         "max_profitable_bid": raw.get("maxProfitableBid"),

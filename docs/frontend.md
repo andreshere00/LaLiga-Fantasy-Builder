@@ -46,10 +46,18 @@ weather from `GET /api/players/{id}/stats/detail`. Its match section shows up to
 five cards in each direction. Score badges identify wins, losses, and draws by
 color and text. Upcoming cards show an OpenWeather condition icon and available
 temperature, humidity, and wind values; unavailable forecast data leaves the
-fixture visible with a reason. The Fantasy data section groups profile indicators,
-news links, and injury history into responsive columns. News and injury history
-show five records per page with independent newer/older navigation. A partial API
-failure is reported by segment while successful groups remain visible.
+fixture visible with a reason. The Form section shows LaLiga fixture cards with
+expandable per-match stats, including DAZN points. The Fantasy data section
+groups profile indicators, news links, and injury history into responsive
+columns. News and injury history show five records per page with independent
+newer/older navigation. Player photos use roster media as a fallback, and
+bookmarks distinguish inactive and active states by color. A partial API failure
+is reported by segment while successful groups remain visible.
+The player header separates club, FSYP, position, and availability into rows.
+It shows six position-specific averages in a compact table; the remaining
+statistics open under **Details**. Missing scraped averages use count data from
+recent played Fantasy matchweeks when a matching stat is available, with that
+shorter sample identified in the UI.
 
 ## Authentication
 

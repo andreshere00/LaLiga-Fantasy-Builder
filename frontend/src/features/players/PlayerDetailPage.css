@@ -28,26 +28,74 @@
 }
 
 .player-detail-header {
+  display: grid;
+  grid-template-columns: minmax(0, 1.15fr) minmax(0, 1.7fr) auto;
+  align-items: stretch;
+  gap: 1.25rem;
+}
+
+.player-detail-header-identity {
   display: flex;
-  flex-wrap: wrap;
-  align-items: flex-start;
+  align-items: stretch;
   gap: 1rem;
+  min-width: 0;
+  align-self: start;
+}
+
+.player-detail-header-identity > .player-tile {
+  height: clamp(112px, 13vw, 160px);
+  width: auto;
+  aspect-ratio: 3 / 4;
+  align-self: center;
+}
+
+.player-detail-header-text {
+  display: grid;
+  min-width: 0;
+  gap: 0.8rem;
 }
 
 .player-detail-header-text h1 {
-  margin: 0 0 0.25rem;
+  margin: 0;
+}
+
+.player-detail-header-facts {
+  display: grid;
+  gap: 0.65rem;
+}
+
+.player-detail-header-facts p {
+  margin: 0;
 }
 
 .player-detail-availability-reason {
   color: var(--ink);
   max-width: 36rem;
+  margin: 0;
 }
 
 .player-detail-header-actions {
-  margin-left: auto;
+  grid-column: 3;
+  grid-row: 1;
   display: flex;
   gap: 0.5rem;
   align-items: center;
+}
+
+@media (max-width: 1100px) {
+  .player-detail-header {
+    grid-template-columns: minmax(0, 1fr) auto;
+  }
+
+  .player-detail-header-identity {
+    grid-column: 1;
+    grid-row: 1;
+  }
+
+  .player-detail-header-actions {
+    grid-column: 2;
+    grid-row: 1;
+  }
 }
 
 .player-detail-header-actions .squad-tile-slot {

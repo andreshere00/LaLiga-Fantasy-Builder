@@ -49,6 +49,13 @@ export function formPoints(
   return weeks.length === 0 ? null : weeks.reduce((sum, row) => sum + row.points, 0);
 }
 
+/** Average the latest three played matchweek scores for numeric Form filters. */
+export function formAverageLastThree(recent: readonly number[]): number | null {
+  const values = recent.slice(0, FORM_DISPLAY_MATCHES).filter(Number.isFinite);
+  if (values.length === 0) return null;
+  return values.reduce((sum, value) => sum + value, 0) / values.length;
+}
+
 /** Played matchweek scores for the form column, newest first. */
 export function formRecentPoints(
   lastStats: unknown,

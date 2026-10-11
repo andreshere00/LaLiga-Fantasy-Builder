@@ -144,7 +144,7 @@ async def test_health_reports_index_after_build(service: ScraperService) -> None
     await service.get_linked_data()
 
     after = service.health()
-    assert after["index"] == "loaded" and after["index_players"] == 18
+    assert after["index"] == "loaded" and after["index_players"] == 19
     assert after["cache"]["hits"] >= 0
 
 

@@ -1,4 +1,4 @@
-version = "1"
+version = "2"
 
 derivations = [
   "schema_version",
@@ -38,7 +38,7 @@ medical = "css:p.estado-medico, span.lesion"
 availability = "css:p.disponibilidad"
 form = "css:.forma"
 start_matchday = "css:.titular .jornada"
-start_percent = "css:.titular .prob, span.prob-2"
+start_percent = "css:.titular .prob, span[class*='prob-']"
 risk_label = "css:.riesgo"
 risk_value = "css:.riesgo .nivel, img[alt*='Riesgo de lesión']"
 hierarchy_label = "css:.jerarquia"

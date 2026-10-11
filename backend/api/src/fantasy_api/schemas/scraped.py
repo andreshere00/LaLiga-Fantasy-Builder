@@ -56,6 +56,7 @@ class ScrapedMatches(FlexibleModel):
 class ScrapedProfile(FlexibleModel):
     personal: dict[str, Any] | None = None
     availability: dict[str, Any] | None = None
+    form: dict[str, Any] | None = None
     injury: dict[str, Any] | None = None
     injury_history: list[dict[str, Any]] | None = None
     start_probability: dict[str, Any] | None = None

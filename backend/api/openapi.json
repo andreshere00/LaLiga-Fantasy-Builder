@@ -5946,6 +5946,47 @@
         ],
         "title": "FixtureStatsRow"
       },
+      "FormStat": {
+        "properties": {
+          "value": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Value"
+          },
+          "rating": {
+            "anyOf": [
+              {
+                "type": "string",
+                "enum": [
+                  "bad",
+                  "mid",
+                  "good",
+                  "very_good"
+                ]
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Rating"
+          },
+          "visual_only": {
+            "type": "boolean",
+            "title": "Visual Only",
+            "default": false
+          }
+        },
+        "additionalProperties": true,
+        "type": "object",
+        "title": "FormStat",
+        "description": "Published numeric form value or categorical arrow rating."
+      },
       "HTTPValidationError": {
         "properties": {
           "detail": {
@@ -8380,6 +8421,16 @@
           },
           "injury": {
             "$ref": "#/components/schemas/Injury"
+          },
+          "form": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/FormStat"
+              },
+              {
+                "type": "null"
+              }
+            ]
           },
           "start_probability": {
             "$ref": "#/components/schemas/StartProbability"

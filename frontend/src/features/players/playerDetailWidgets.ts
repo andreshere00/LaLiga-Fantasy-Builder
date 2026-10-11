@@ -46,6 +46,24 @@ const TEAM_ALIASES: Record<string, string> = {
   osasuna: "CA Osasuna",
   valencia: "Valencia CF",
   villarreal: "Villarreal CF",
+  levante: "Levante UD",
+  racing: "R. Racing Club",
+};
+
+// Crest URLs and names are read from the saved FutbolFantasy fixture markup.
+const EXTERNAL_TEAM_MEDIA: Record<string, { name: string; badge: string }> = {
+  feyenoord: {
+    name: "Feyenoord",
+    badge: "https://static.futbolfantasy.com/uploads/images/equipos/escudom/575.png",
+  },
+  galatasaray: {
+    name: "Galatasaray",
+    badge: "https://static.futbolfantasy.com/uploads/images/equipos/escudom/509.png",
+  },
+  psg: {
+    name: "PSG",
+    badge: "https://static.futbolfantasy.com/uploads/images/equipos/escudom/520.png",
+  },
 };
 
 function normalizedTeamName(value: string): string {
@@ -58,6 +76,8 @@ function normalizedTeamName(value: string): string {
 
 function buildTeamMediaIndex(): ReadonlyMap<string, { name: string; badge: string }> {
   const index = new Map<string, { name: string; badge: string }>();
+  const shortNameMedia = new Map<string, { name: string; badge: string }>();
+  const ambiguousShortNames = new Set<string>();
   if (!Array.isArray(teamsMasterFile)) return index;
 
   for (const team of teamsMasterFile) {
@@ -66,14 +86,29 @@ function buildTeamMediaIndex(): ReadonlyMap<string, { name: string; badge: strin
     const badge = text(record?.badgeColor) ?? text(record?.badgeWhite);
     if (!name || !badge) continue;
 
-    for (const candidate of [name, text(record?.shortName), text(record?.slug)]) {
-      if (candidate) index.set(normalizedTeamName(candidate), { name, badge });
+    index.set(normalizedTeamName(name), { name, badge });
+    const slug = text(record?.slug);
+    if (slug) index.set(normalizedTeamName(slug), { name, badge });
+    const shortName = text(record?.shortName);
+    if (shortName) {
+      const shortKey = normalizedTeamName(shortName);
+      const existing = shortNameMedia.get(shortKey);
+      if (existing && existing.badge !== badge) {
+        shortNameMedia.delete(shortKey);
+        ambiguousShortNames.add(shortKey);
+      } else if (!ambiguousShortNames.has(shortKey)) {
+        shortNameMedia.set(shortKey, { name, badge });
+      }
     }
   }
 
+  for (const [shortName, team] of shortNameMedia) index.set(shortName, team);
   for (const [alias, canonical] of Object.entries(TEAM_ALIASES)) {
     const team = index.get(normalizedTeamName(canonical));
     if (team) index.set(normalizedTeamName(alias), team);
+  }
+  for (const [alias, team] of Object.entries(EXTERNAL_TEAM_MEDIA)) {
+    index.set(normalizedTeamName(alias), team);
   }
   return index;
 }
@@ -81,8 +116,21 @@ function buildTeamMediaIndex(): ReadonlyMap<string, { name: string; badge: strin
 const TEAM_MEDIA = buildTeamMediaIndex();
 
 export function teamMediaFromFixture(value: unknown): { name: string; badge: string } | null {
-  const raw = text(value);
+  const record = asRecord(value);
+  const raw =
+    text(record?.name) ??
+    text(record?.shortName) ??
+    text(record?.displayName) ??
+    text(record?.teamName) ??
+    text(value);
   if (!raw) return null;
+  const directBadge =
+    text(record?.badge) ??
+    text(record?.badgeColor) ??
+    text(record?.logo) ??
+    text(record?.crest) ??
+    text(record?.image);
+  if (directBadge && /^https?:\/\//i.test(directBadge)) return { name: raw, badge: directBadge };
   return TEAM_MEDIA.get(normalizedTeamName(raw)) ?? null;
 }
 

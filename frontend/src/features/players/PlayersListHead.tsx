@@ -11,6 +11,7 @@ type PlayersListHeadProps = {
   headings: Record<PlayersColumnKey, PlayersColumnHeading>;
   filters: PlayersFilters;
   owners: readonly string[];
+  teams: readonly string[];
   onFiltersChange: (patch: Partial<PlayersFilters>) => void;
 };
 
@@ -31,6 +32,7 @@ type HeadCellProps = {
   className?: string;
   filters: PlayersFilters;
   owners: readonly string[];
+  teams: readonly string[];
   openColumn: PlayersColumnKey | null;
   onOpenColumn: (column: PlayersColumnKey | null) => void;
   onFiltersChange: (patch: Partial<PlayersFilters>) => void;
@@ -50,6 +52,7 @@ function HeadCell({
   className,
   filters,
   owners,
+  teams,
   openColumn,
   onOpenColumn,
   onFiltersChange,
@@ -115,6 +118,7 @@ function HeadCell({
             column={column}
             filters={filters}
             owners={owners}
+            teams={teams}
             onChange={applyFilters}
             onClearColumn={() => {
               applyFilters(clearPlayersColumnFilter(filters, column));
@@ -132,6 +136,7 @@ export function PlayersListHead({
   headings,
   filters,
   owners,
+  teams,
   onFiltersChange,
 }: PlayersListHeadProps) {
   const [openColumn, setOpenColumn] = useState<PlayersColumnKey | null>(null);
@@ -158,12 +163,16 @@ export function PlayersListHead({
           className={`market-head-cell-${column}`}
           filters={filters}
           owners={owners}
+          teams={teams}
           openColumn={openColumn}
           onOpenColumn={setOpenColumn}
           onFiltersChange={patchFilters}
         />
       ))}
-      <span className="market-head-cell">Actions</span>
+      <span className="market-head-cell players-details-heading">
+        <span className="players-details-heading-full">Actions</span>
+        <span className="players-details-heading-compact">Details</span>
+      </span>
     </li>
   );
 }

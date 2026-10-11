@@ -37,6 +37,12 @@ uv run fantasy-parse page.html --url URL --slug SLUG --season 2026-27 \
   --fetched-at 2026-10-04T12:00:00+00:00 --json
 ```
 
+The profile parser extracts numeric form when available, otherwise preserves
+the FutbolFantasy form arrow as a categorical rating. It also scopes starter
+likelihood to the lineup box containing the player's matchweek label. See the
+[parser guide](../../docs/scraping/parser.md) and
+[selector contract](../../docs/scraping/parser-discovery.md).
+
 ## Environment
 
 | Variable | Required | Notes |

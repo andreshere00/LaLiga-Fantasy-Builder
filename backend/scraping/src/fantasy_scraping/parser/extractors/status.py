@@ -26,6 +26,12 @@ from fantasy_scraping.parser.normalise.text import casefold_key, clean_text
 
 _DATE = re.compile(r"\d{1,2}/\d{1,2}/\d{2,4}")
 _MATCHDAY = re.compile(r"(\d+)")
+_FORM_RATINGS = {
+    "arrow-1": "very_good",
+    "arrow-2": "good",
+    "arrow-3": "mid",
+    "arrow-4": "bad",
+}
 
 
 def extract_injury(ctx: ExtractionContext) -> CurrentInjury | None:
@@ -74,15 +80,20 @@ def extract_availability(ctx: ExtractionContext) -> Availability | None:
 
 
 def extract_form(ctx: ExtractionContext) -> Form | None:
-    """Read a numeric form value, or mark the widget as visual-only."""
+    """Read a numeric form value or the arrow rating published by the widget."""
     node = ctx.document.first(ctx.selector("form"))
     if node is None:
         ctx.miss("profile.form")
         return None
+    classes = set((node.get("class") or "").split())
+    rating = next(
+        (value for css_class, value in _FORM_RATINGS.items() if css_class in classes),
+        None,
+    )
     raw = node.get("data-value") or ""
     if raw.strip():
         try:
-            return Form(value=es_percent(raw), visual_only=False)
+            return Form(value=es_percent(raw), rating=rating, visual_only=False)
         except NormaliseError:
             ctx.warn(
                 code="field_invalid",
@@ -92,6 +103,8 @@ def extract_form(ctx: ExtractionContext) -> Form | None:
                 message="field could not be parsed",
                 preview=raw,
             )
+    if rating is not None:
+        return Form(value=None, rating=rating, visual_only=True)
     ctx.warn(
         code="form_visual_only",
         section="status",
@@ -119,13 +132,29 @@ def _availability_near_lesion(ctx: ExtractionContext) -> str | None:
 
 def extract_start_probability(ctx: ExtractionContext) -> StartProbability | None:
     """Read the next-matchday start probability."""
-    matchday_node = ctx.document.first(ctx.selector("start_matchday"))
-    percent_node = ctx.document.first(ctx.selector("start_percent"))
-    if matchday_node is None:
-        for candidate in ctx.document.css("strong"):
-            if "titular" in node_text(candidate).casefold():
-                matchday_node = candidate
+    matchday_node = None
+    percent_node = None
+    for candidate in ctx.document.css("strong"):
+        label = node_text(candidate)
+        if not re.search(r"\btitular\s+j\s*\d+\b", label, re.IGNORECASE):
+            continue
+        matchday_node = candidate
+        ancestor = candidate.getparent()
+        while ancestor is not None:
+            if "cuadro" in (ancestor.get("class") or "").split():
+                percent_node = ctx.document.first(ctx.selector("start_percent"), scope=ancestor)
                 break
+            ancestor = ancestor.getparent()
+        break
+
+    if matchday_node is None:
+        matchday_node = ctx.document.first(ctx.selector("start_matchday"))
+        if matchday_node is None:
+            for candidate in ctx.document.css("strong"):
+                if "titular" in node_text(candidate).casefold():
+                    matchday_node = candidate
+                    break
+        percent_node = ctx.document.first(ctx.selector("start_percent"))
     if matchday_node is None or percent_node is None:
         ctx.miss("profile.start_probability")
         ctx.warn(

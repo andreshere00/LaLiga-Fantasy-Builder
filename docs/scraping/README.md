@@ -93,6 +93,11 @@ uv run fantasy-scraper scrape Raphinha --service-url http://localhost:8002
 The HTTP service stores pages in cache; locally you usually write HTML files
 then parse offline.
 
+The player profile parser reads FutbolFantasy's form arrow classes as categorical
+ratings: `arrow-4` → bad, `arrow-3` → mid, `arrow-2` → good, and `arrow-1` →
+very good. These ratings are returned as `profile.form.rating` without inventing
+a numeric form value.
+
 1. **Scrape** profile + market (and optional competition pages):
 
    ```bash
@@ -112,8 +117,9 @@ then parse offline.
 
 3. **Market block:** `fantasy-parse` reads one file. For full `market` numbers,
    merge in Python with `ParserService().parse(profile_page, companions=[widget_page])`
-   (widget HTML from the same `--include market` scrape), or call
-   `GET /internal/players/futbolfantasy?player_name=…&season=…&team=…` (scrape +
-   companions + `merge_competitions` in one JSON response for the API).
+   (widget HTML from the same `--include market` scrape). The player stats
+   facade parses the profile and optional competition pages; it does not fetch
+   the market widget or club calendar because those pages are not used by the
+   player stats segments.
 
 Run and test: [backend/scraping/README.md](../../backend/scraping/README.md).

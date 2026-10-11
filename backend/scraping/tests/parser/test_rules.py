@@ -54,7 +54,7 @@ def _covers(path: str, item: str) -> bool:
 
 def test_load_rules_packaged_files_validate() -> None:
     rules = RuleRepository().load()
-    assert rules.version == "1"
+    assert rules.version == "2"
     assert RuleRepository().load() is rules
 
 

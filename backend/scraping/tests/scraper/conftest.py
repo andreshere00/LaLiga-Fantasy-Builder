@@ -26,6 +26,7 @@ SLUGS: tuple[str, ...] = (
     "lamine-gueye",
     "lamine-gueye-1",
     "lamine-yamal",
+    "jose-maria-gimenez",
     "lamine-camara",
     "inaki-lvarez",
     "vitinha",

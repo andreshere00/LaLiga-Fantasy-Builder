@@ -1,10 +1,26 @@
 .players-page .players-list .players-head-row,
 .players-page .players-row {
   grid-template-columns:
-    72px minmax(0, 1.05fr) minmax(0, 0.85fr) minmax(0, 0.55fr) minmax(0, 0.72fr)
-    minmax(0, 0.88fr) minmax(0, 1.05fr) minmax(0, 0.82fr) minmax(0, 0.52fr)
-    minmax(4.75rem, 0.68fr);
-  gap: 8px 10px;
+    72px minmax(8rem, 1.05fr) minmax(6rem, 0.85fr) minmax(4.5rem, 0.55fr)
+    minmax(10rem, 1.05fr) minmax(9rem, 1fr) minmax(8.5rem, 1fr)
+    minmax(8.5rem, 0.95fr) minmax(4rem, 0.45fr) minmax(8.5rem, 0.9fr);
+  gap: 12px;
+}
+
+.market-page.players-page {
+  width: min(100%, 1600px);
+  max-width: 1600px;
+}
+
+@media (min-width: 801px) and (max-width: 1350px) {
+  .players-page .players-list {
+    overflow-x: auto;
+  }
+
+  .players-page .players-list .players-head-row,
+  .players-page .players-list .players-row {
+    min-width: 1252px;
+  }
 }
 
 .players-page .players-list .market-name-wrap {
@@ -18,18 +34,134 @@
   text-overflow: ellipsis;
 }
 
+.players-page .players-list .players-team-cell,
+.players-page .players-list .players-value-cell,
+.players-page .players-list .players-owner-cell,
+.players-page .players-list .market-cell-availability {
+  font-size: 0.86rem;
+}
+
+.players-page .players-list .market-cell:is(.market-form, .market-value, .market-cell-availability, .players-actions-cell) {
+  overflow: visible;
+}
+
 .players-page .players-list .market-cell-availability {
   overflow: visible;
 }
 
 .players-page .players-list .market-head-row .market-head-cell {
   min-width: 0;
+  font-size: 0.84rem;
+}
+
+.players-page .players-list .market-head-row > .market-head-cell {
+  font-size: 0.84rem;
+}
+
+.players-details-heading-compact {
+  display: none;
 }
 
 .players-actions-cell {
   display: flex;
+  flex-wrap: wrap;
   align-items: center;
   gap: 0.35rem;
+}
+
+.players-actions-cell .squad-player-hit-area {
+  width: 1.5rem;
+  min-height: 1.5rem;
+}
+
+.players-squad-actions-target {
+  display: block;
+  width: 1.5rem;
+  height: 1.5rem;
+}
+
+.players-actions-cell .squad-tile-controls {
+  position: static;
+  width: auto;
+  aspect-ratio: auto;
+}
+
+.players-actions-cell .squad-details-link.is-text-trigger {
+  width: auto;
+  height: auto;
+  padding: 0.2rem 0.45rem;
+  border: 1px solid var(--red);
+  background: var(--red);
+  color: var(--white);
+  font: inherit;
+  font-size: 0.72rem;
+  font-weight: 700;
+  line-height: 1.2;
+  white-space: nowrap;
+  cursor: pointer;
+}
+
+.players-detail-options {
+  position: relative;
+}
+
+.players-detail-options > summary {
+  list-style: none;
+  cursor: pointer;
+}
+
+.players-detail-options > summary::-webkit-details-marker {
+  display: none;
+}
+
+.players-action-link {
+  color: inherit;
+  text-decoration: none;
+}
+
+.players-free-agent {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  white-space: nowrap;
+}
+
+.players-free-agent img {
+  width: 1.1rem;
+  height: 1.1rem;
+  flex: 0 0 auto;
+}
+
+.players-owner-link {
+  color: inherit;
+  text-decoration: underline;
+  text-decoration-color: color-mix(in srgb, currentColor 38%, transparent);
+  text-underline-offset: 0.15em;
+}
+
+.players-owner-link:is(:hover, :focus-visible) {
+  color: var(--red);
+}
+
+.players-pagination-button {
+  min-width: 5.5rem;
+  padding: 0.35rem 0.7rem;
+  border: 1px solid color-mix(in srgb, var(--ink) 18%, transparent);
+  border-radius: 4px;
+  background: var(--white);
+  color: var(--ink);
+  font: inherit;
+  font-size: 0.9rem;
+  line-height: 1.2;
+  cursor: pointer;
+  transition:
+    background-color var(--control-fill-duration) var(--control-fill-ease),
+    border-color var(--control-fill-duration) var(--control-fill-ease);
+}
+
+.players-pagination-button:is(:hover, :focus-visible):not(:disabled) {
+  background: var(--accent-press);
+  border-color: var(--accent-press);
 }
 
 .player-details-link {
@@ -38,30 +170,8 @@
 }
 
 .player-details-link img {
-  width: 1.75rem;
-  height: 1.75rem;
-}
-
-.player-bookmark-btn {
-  border: none;
-  background: transparent;
-  padding: 0;
-  line-height: 0;
-  cursor: pointer;
-}
-
-.player-bookmark-btn img {
-  width: 1.75rem;
-  height: 1.75rem;
-  opacity: 0.45;
-}
-
-.player-bookmark-btn.is-active img {
-  opacity: 1;
-}
-
-.players-leaderboard-hint {
-  margin: 0.5rem 0 0;
+  width: 1.25rem;
+  height: 1.25rem;
 }
 
 .players-pagination {
@@ -77,6 +187,11 @@
   cursor: not-allowed;
 }
 
+.players-actions-cell .player-bookmark-icon {
+  width: 1.2rem;
+  height: 1.2rem;
+}
+
 .market-row.is-favorite {
   background: var(--red-soft);
 }
@@ -86,19 +201,61 @@
 }
 
 @media (max-width: 800px) {
-  .players-page .players-list .market-row {
-    grid-template-columns: 72px 1fr;
+  .players-page .players-list {
+    overflow-x: hidden;
   }
 
-  .players-page .players-list .market-card {
+  .players-page .players-list .players-head-row {
+    display: grid;
+  }
+
+  .players-page .players-list .players-head-row,
+  .players-page .players-list .players-row {
+    grid-template-columns: 72px minmax(0, 1.35fr) minmax(0, 1fr) minmax(5rem, auto);
+    align-items: center;
+    gap: 6px;
+    min-width: 0;
+  }
+
+  .players-page .players-list .players-row > .market-card {
     grid-row: auto;
+    align-self: center;
   }
 
-  .players-page .players-list .market-name-wrap {
-    grid-column: 2 / -1;
+  .players-page .players-list .players-head-row > :nth-child(n + 4):nth-child(-n + 9),
+  .players-page .players-list .players-row > :nth-child(n + 4):nth-child(-n + 9) {
+    display: none;
+  }
+
+  .players-page .players-list .players-row > [data-label]::before {
+    display: none;
+    content: none;
+  }
+
+  .players-page .players-list .players-row .market-name-wrap {
+    grid-column: auto;
+    min-width: 0;
+  }
+
+  .players-page .players-list .players-row .market-name {
+    max-width: 100%;
+  }
+
+  .players-page .players-list .players-row .players-team-cell {
+    overflow-wrap: anywhere;
+  }
+
+  .players-details-heading-full {
+    display: none;
+  }
+
+  .players-details-heading-compact {
+    display: inline;
   }
 
   .players-page .players-list .players-actions-cell {
-    grid-column: 2 / -1;
+    justify-content: flex-end;
+    flex-wrap: nowrap;
+    overflow: visible;
   }
 }

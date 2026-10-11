@@ -65,7 +65,9 @@ def render_status(model: FutbolFantasyPlayer, options: RenderOptions) -> list[st
     if profile.availability is not None:
         rows.append(("Disponibilidad", profile.availability.label))
     if profile.form is not None:
-        if profile.form.visual_only or profile.form.value is None:
+        if profile.form.rating is not None:
+            rows.append(("Forma", profile.form.rating.replace("_", " ").capitalize()))
+        elif profile.form.visual_only or profile.form.value is None:
             rows.append(("Forma", "Indicador visual"))
         else:
             rows.append(("Forma", fmt_decimal(profile.form.value, 2)))

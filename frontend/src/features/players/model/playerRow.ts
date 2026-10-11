@@ -9,7 +9,7 @@ import {
 import { availabilityOf, type Availability } from "../../market/model/availability";
 import {
   formFromCalendarWeeks,
-  formPoints,
+  formAverageLastThree,
   formRecentPoints,
   formRecentSeries,
   formRecentWeekNumbers,
@@ -22,6 +22,7 @@ export type PlayerRow = {
   teamName: string | null;
   positionId: number | null;
   photoUrl: string | null;
+  photoFallbackUrl?: string | null;
   teamBadgeUrl: string | null;
   points: number | null;
   form: number | null;
@@ -31,6 +32,7 @@ export type PlayerRow = {
   marketValue: number | null;
   availability: Availability;
   ownedBy: string;
+  ownerTeamId: string | null;
 };
 
 function displayName(nickname: string | null, name: string | null): string {
@@ -42,6 +44,7 @@ export function playerRowFromCatalog(
   master: Record<string, unknown>,
   playerId: string,
   ownedBy: string,
+  ownerTeamId: string | null = null,
   calendarForm?: CalendarFormContext,
 ): PlayerRow {
   const media = mediaFromPlayerMaster(master);
@@ -51,20 +54,19 @@ export function playerRowFromCatalog(
     calendarForm != null && calendarForm.playedThrough >= 1
       ? calendarForm.playedThrough
       : null;
-  let form = formPoints(master.lastStats, playedThrough);
   let formRecent = formRecentPoints(master.lastStats, playedThrough);
   let formRecentWeeks = formRecentWeekNumbers(master.lastStats, playedThrough);
-  if (form == null && calendarForm) {
+  if (formRecent.length === 0 && calendarForm) {
     const fromCalendar = formFromCalendarWeeks(
       playerId,
       calendarForm.weekNumbers,
       calendarForm.statsByWeek,
     );
-    form = fromCalendar.form;
     formRecent = fromCalendar.formRecent;
     formRecentWeeks = calendarForm.weekNumbers.slice(0, formRecent.length);
   }
   const capped = formRecentSeries(formRecent, formRecentWeeks);
+  const form = formAverageLastThree(capped.recent);
   return {
     playerId,
     name: displayName(text(master.nickname), text(master.name)),
@@ -79,24 +81,30 @@ export function playerRowFromCatalog(
     marketValue: asFiniteNumber(master.marketValue),
     availability: availabilityOf(master.playerStatus),
     ownedBy,
+    ownerTeamId,
   };
 }
 
-export function ownerByMasterIdFromRosters(rosterPayloads: readonly unknown[]): Map<string, string> {
-  const map = new Map<string, string>();
+export type PlayerOwner = { name: string; teamId: string };
+
+export function ownerByMasterIdFromRosters(
+  rosterPayloads: readonly unknown[],
+): Map<string, PlayerOwner> {
+  const map = new Map<string, PlayerOwner>();
   for (const payload of rosterPayloads) {
     const team = asRecord(payload);
     if (!team) continue;
     const managerRecord = asRecord(team.manager);
     const managerName = text(managerRecord?.managerName) ?? text(team.managerName);
-    if (!managerName) continue;
+    const teamId = idText(team.id) ?? idText(team.teamId);
+    if (!managerName || !teamId) continue;
     const players = team.players;
     if (!Array.isArray(players)) continue;
     for (const entry of players) {
       const record = asRecord(entry);
       const master = asRecord(record?.playerMaster);
       const masterId = idText(master?.id);
-      if (masterId) map.set(masterId, managerName);
+      if (masterId) map.set(masterId, { name: managerName, teamId });
     }
   }
   return map;

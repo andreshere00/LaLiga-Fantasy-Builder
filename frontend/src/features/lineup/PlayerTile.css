@@ -142,7 +142,7 @@
 }
 
 .player-score-badge {
-  left: 6.6667%;
+  left: calc(50% - 13.33335%);
   container-type: size;
   font-weight: 700;
   line-height: 1;

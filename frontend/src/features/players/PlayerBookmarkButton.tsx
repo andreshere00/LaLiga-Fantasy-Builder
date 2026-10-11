@@ -1,4 +1,6 @@
+import type { CSSProperties } from "react";
 import bookmarkIcon from "../../assets/button_bookmark_red.svg";
+import "./PlayerBookmarkButton.css";
 
 type PlayerBookmarkButtonProps = {
   pressed: boolean;
@@ -19,7 +21,11 @@ export function PlayerBookmarkButton({
       aria-pressed={pressed}
       onClick={onToggle}
     >
-      <img src={bookmarkIcon} alt="" aria-hidden />
+      <span
+        className="player-bookmark-icon"
+        style={{ "--bookmark-icon": `url("${bookmarkIcon}")` } as CSSProperties}
+        aria-hidden="true"
+      />
     </button>
   );
 }

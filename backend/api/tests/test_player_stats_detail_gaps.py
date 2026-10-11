@@ -156,6 +156,18 @@ def test_averages_from_season_divides_totals_by_matches() -> None:
     assert by_code["DE"] is None
 
 
+def test_averages_from_season_includes_goalkeeper_saves_and_goals_conceded() -> None:
+    from fantasy_api.services.player_stats import averages_from_season
+
+    rows = averages_from_season(
+        {"matchesCounted": 4, "goalkeeper": {"saves": 16, "goalsConceded": 3}}
+    )
+
+    by_code = {row.code: row.value for row in rows}
+    assert by_code["S"] == 4.0
+    assert by_code["GC"] == 0.75
+
+
 def test_apply_recent_dates_copies_blank_fixture_date() -> None:
     from fantasy_api.schemas.player_stats import FixtureRef, FixtureStats, FixtureStatsRow
     from fantasy_api.schemas.scraped import ScrapedMatch, ScrapedMatches

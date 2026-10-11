@@ -1159,6 +1159,7 @@ Global player profile from FutbolFantasy
 | `sources` | array[SourceStatus] | no |  |  |
 | `warnings` | array[SegmentWarning] | no |  |  |
 | `injury` | Injury | yes |  |  |
+| `form` | FormStat | no |  | Published numeric form value or categorical arrow rating. |
 | `start_probability` | StartProbability | yes |  |  |
 | `injury_risk` | InjuryRiskInfo | yes |  |  |
 | `injury_history` | array[InjuryHistoryEntry] | no |  |  |
@@ -1449,6 +1450,14 @@ Type: `string`
 | `fantasy_points_total` | integer | no |  |  |
 | `stats` | FixtureStats | yes |  |  |
 | `warnings` | array[SegmentWarning] | no |  |  |
+
+### `FormStat`
+
+| Field | Type | Required | Constraints | Description |
+|-------|------|----------|-------------|-------------|
+| `value` | number | no |  |  |
+| `rating` | string | no |  |  |
+| `visual_only` | boolean | no |  |  |
 
 ### `HealthResponse`
 
@@ -1884,6 +1893,7 @@ Type: `string`
 | `sources` | array[SourceStatus] | no |  |  |
 | `warnings` | array[SegmentWarning] | no |  |  |
 | `injury` | Injury | yes |  |  |
+| `form` | FormStat | no |  | Published numeric form value or categorical arrow rating. |
 | `start_probability` | StartProbability | yes |  |  |
 | `injury_risk` | InjuryRiskInfo | yes |  |  |
 | `injury_history` | array[InjuryHistoryEntry] | no |  |  |

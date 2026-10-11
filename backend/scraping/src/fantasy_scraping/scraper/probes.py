@@ -32,7 +32,12 @@ def _canonical_team(slug: str) -> str:
 def team_slug(html: str) -> str | None:
     """Return the club slug from the profile crest or header, or None."""
     tree = lxml_html.fromstring(html)
-    for selector in ("a.club", "header a", "div.img-underphoto a"):
+    for selector in (
+        "div.img-underphoto a.club",
+        "div.img-underphoto a",
+        "a.club",
+        "header a",
+    ):
         for node in tree.cssselect(selector):
             if slug := _slug_from_href(node.get("href") or ""):
                 return slug

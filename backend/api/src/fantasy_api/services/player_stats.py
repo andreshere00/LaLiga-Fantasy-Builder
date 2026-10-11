@@ -5,12 +5,14 @@ from __future__ import annotations
 import asyncio
 import re
 from collections.abc import Callable, Mapping
+from dataclasses import replace
 from datetime import UTC, date, datetime
 from typing import Any
 from zoneinfo import ZoneInfo
 
+from fantasy_api.api.payload import parse_payload
 from fantasy_api.config import Settings
-from fantasy_api.domain.clubs import ClubDirectory
+from fantasy_api.domain.clubs import ClubDirectory, load_alias_map
 from fantasy_api.domain.errors import UpstreamError
 from fantasy_api.domain.geo import haversine_km
 from fantasy_api.domain.market_window import (
@@ -26,6 +28,7 @@ from fantasy_api.domain.weather import ForecastSlot, pick_slot
 from fantasy_api.repositories.calendar import CalendarRepository
 from fantasy_api.repositories.player_stats import PlayerStatsRepository
 from fantasy_api.repositories.players import PlayersRepository
+from fantasy_api.schemas.payload import as_object_list
 from fantasy_api.schemas.player_stats import (
     AveragePerMatch,
     Competition,
@@ -33,6 +36,7 @@ from fantasy_api.schemas.player_stats import (
     FixtureRef,
     FixturesQuery,
     FixtureStatsRow,
+    FormStat,
     Hierarchy,
     Injury,
     InjuryHistoryEntry,
@@ -279,6 +283,8 @@ _AVERAGE_SPECS: tuple[tuple[str, str, str, str], ...] = (
     ("BR", "Balls recovered", "defense", "ballSteals"),
     ("FR", "Fouls won", "discipline", "foulsReceived"),
     ("-FC", "Fouls committed", "discipline", "foulsCommitted"),
+    ("S", "Saves", "goalkeeper", "saves"),
+    ("GC", "Goals conceded", "goalkeeper", "goalsConceded"),
 )
 
 _RATIO_PART = {
@@ -311,6 +317,7 @@ def _season_group(season: Mapping[str, Any], name: str) -> Mapping[str, Any]:
         "attack": "attack",
         "defense": "defense",
         "discipline": "discipline",
+        "goalkeeper": "goalkeeper",
     }[name]
     fallback = season.get(snake)
     return fallback if isinstance(fallback, dict) else {}
@@ -449,7 +456,7 @@ class PlayerStatsService:
         query: PlayerDetailQuery,
     ) -> PlayerDetailResponse:
         """Return selected stats segments in one response."""
-        player = await self._resolver.resolve(player_id)
+        player = await self._player_with_team_name(await self._resolver.resolve(player_id))
         season = current_season(self._today())
         requested = set(query.include)
         segment_errors: list[SegmentError] = []
@@ -520,7 +527,7 @@ class PlayerStatsService:
         query: FixturesQuery,
     ) -> PlayerFixtureStatsResponse:
         """Return per-fixture stats rows."""
-        player = await self._resolver.resolve(player_id)
+        player = await self._player_with_team_name(await self._resolver.resolve(player_id))
         season = current_season(self._today())
         doc = await self._scraped.futbolfantasy(player, season)
         wire = doc.wire
@@ -665,7 +672,7 @@ class PlayerStatsService:
         query: RecentMatchesQuery,
     ) -> RecentMatchesResponse:
         """Return recent matches with optional stats."""
-        player = await self._resolver.resolve(player_id)
+        player = await self._player_with_team_name(await self._resolver.resolve(player_id))
         season = current_season(self._today())
         doc = await self._scraped.futbolfantasy(player, season)
         wire = doc.wire
@@ -734,7 +741,7 @@ class PlayerStatsService:
         query: UpcomingMatchesQuery,
     ) -> UpcomingMatchesResponse:
         """Return upcoming matches with travel and weather."""
-        player = await self._resolver.resolve(player_id)
+        player = await self._player_with_team_name(await self._resolver.resolve(player_id))
         season = current_season(self._today())
         doc = await self._scraped.futbolfantasy(player, season)
         wire = doc.wire
@@ -800,7 +807,7 @@ class PlayerStatsService:
 
     async def profile(self, player_id: str) -> PlayerProfileResponse:
         """Return global profile from FutbolFantasy."""
-        player = await self._resolver.resolve(player_id)
+        player = await self._player_with_team_name(await self._resolver.resolve(player_id))
         season = current_season(self._today())
         doc = await self._scraped.futbolfantasy(player, season)
         wire = doc.wire
@@ -827,11 +834,42 @@ class PlayerStatsService:
             ),
         )
         start = profile.start_probability or {}
-        start_label = start.get("label") if isinstance(start, dict) else None
+        start_label = (start.get("label") or start.get("raw")) if isinstance(start, dict) else None
+        start_matchday = (
+            _profile_int(
+                start.get("matchday")
+                if start.get("matchday") is not None
+                else start.get("matchweek")
+            )
+            if isinstance(start, dict)
+            else None
+        )
+        start_percent = (
+            _profile_int(
+                start.get("percent")
+                if start.get("percent") is not None
+                else start.get("probability")
+            )
+            if isinstance(start, dict)
+            else None
+        )
         start_probability = StartProbability(
-            matchweek=start.get("matchday") if isinstance(start, dict) else None,
-            percent=start.get("percent") if isinstance(start, dict) else None,
+            matchweek=start_matchday,
+            percent=start_percent,
             raw=_optional_label(start_label),
+        )
+        form_raw = profile.form
+        form_rating = form_raw.get("rating") if form_raw is not None else None
+        form = (
+            FormStat(
+                value=_as_float(form_raw.get("value")),
+                rating=form_rating if form_rating in {"bad", "mid", "good", "very_good"} else None,
+                visual_only=(
+                    form_raw.get("visual_only") is True or form_raw.get("visualOnly") is True
+                ),
+            )
+            if form_raw is not None
+            else None
         )
         risk_raw = profile.injury_risk or {}
         risk_label = risk_raw.get("label") if isinstance(risk_raw, dict) else None
@@ -885,6 +923,7 @@ class PlayerStatsService:
             sources=[self._ff_source(doc)],
             warnings=segment_warnings,
             injury=injury,
+            form=form,
             start_probability=start_probability,
             injury_risk=injury_risk,
             injury_history=injury_history,
@@ -918,6 +957,36 @@ class PlayerStatsService:
             team_name=team_name,
             position_id=player.position_id,
         )
+
+    async def _player_with_team_name(self, player: ResolvedPlayer) -> ResolvedPlayer:
+        """Enrich sparse Fantasy catalog rows with the current club name."""
+        if player.team_name or player.team_id is None:
+            return player
+        try:
+            club = (await self._club_directory()).by_id(player.team_id)
+        except UpstreamError:
+            club = None
+        if club is not None:
+            return replace(player, team_name=club.name)
+        venue = self._venues.for_club(fantasy_id=player.team_id, name=None)
+        return replace(player, team_name=venue.name) if venue is not None else player
+
+    async def _club_directory(self) -> ClubDirectory:
+        """Load the cached teams-master index used to resolve Fantasy team ids."""
+        if self._clubs is not None:
+            return self._clubs
+
+        async def fetch() -> ClubDirectory:
+            raw = await self._stats_repo.get_teams_master()
+            teams = parse_payload(as_object_list, raw)
+            return ClubDirectory(
+                teams,
+                laliga_ids=await self._resolver.laliga_club_ids(),
+                aliases=load_alias_map(),
+            )
+
+        self._clubs = await self._teams_master_cache.get_or_fetch(fetch)
+        return self._clubs
 
     def _today(self) -> date:
         return self._clock().astimezone(MADRID_TZ).date()
@@ -1211,6 +1280,17 @@ def _as_int(value: object) -> int | None:
     if isinstance(value, bool) or not isinstance(value, int | float):
         return None
     return int(value)
+
+
+def _profile_int(value: object) -> int | None:
+    """Read profile integers from numbers or display strings such as ``50%``."""
+    numeric = _as_int(value)
+    if numeric is not None:
+        return numeric
+    if not isinstance(value, str):
+        return None
+    match = re.search(r"-?\d+", value)
+    return int(match.group()) if match else None
 
 
 def _mapping(value: object) -> dict[str, object]:

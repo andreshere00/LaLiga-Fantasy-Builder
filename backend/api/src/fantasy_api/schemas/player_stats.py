@@ -337,6 +337,14 @@ class StartProbability(StatsModel):
     raw: str | None = None
 
 
+class FormStat(StatsModel):
+    """Published numeric form value or categorical arrow rating."""
+
+    value: float | None = None
+    rating: Literal["bad", "mid", "good", "very_good"] | None = None
+    visual_only: bool = False
+
+
 class InjuryRiskInfo(StatsModel):
     level: InjuryRisk
     raw: str | None = None
@@ -383,6 +391,7 @@ class NewsItem(StatsModel):
 
 class PlayerProfileResponse(SegmentEnvelope):
     injury: Injury
+    form: FormStat | None = None
     start_probability: StartProbability
     injury_risk: InjuryRiskInfo
     injury_history: list[InjuryHistoryEntry] = Field(default_factory=list)
