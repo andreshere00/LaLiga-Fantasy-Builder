@@ -52,6 +52,7 @@ export function MarketActionMenu({ row, context, actions, detailsPlayer }: Marke
   const rootRef = useRef<HTMLDivElement>(null);
   const triggerRef = useRef<HTMLButtonElement>(null);
   const offers = resolveMarketActionOffers(row, context);
+  const showPlayerDetails = detailsPlayer != null && row.positionId !== 5;
 
   useEffect(() => {
     if (!open) return;
@@ -71,7 +72,7 @@ export function MarketActionMenu({ row, context, actions, detailsPlayer }: Marke
     };
   }, [open]);
 
-  if (offers.length === 0 && !detailsPlayer) return null;
+  if (offers.length === 0 && !showPlayerDetails) return null;
 
   const bidded = row.myBid != null;
   const bidMoney = row.myBid?.money;
@@ -82,11 +83,12 @@ export function MarketActionMenu({ row, context, actions, detailsPlayer }: Marke
 
   return (
     <div
-      className={
+      className={[
         bidded
           ? "market-actions has-hover-tooltip-panel is-bid-tooltip-target"
-          : "market-actions"
-      }
+          : "market-actions",
+        open ? "is-open" : "",
+      ].filter(Boolean).join(" ")}
       ref={rootRef}
     >
       <button
@@ -164,7 +166,7 @@ export function MarketActionMenu({ row, context, actions, detailsPlayer }: Marke
               </li>
             );
           })}
-          {detailsPlayer ? (
+          {showPlayerDetails && detailsPlayer ? (
             <li className="market-actions-menu-item">
               <Link
                 className="market-actions-item players-action-link"

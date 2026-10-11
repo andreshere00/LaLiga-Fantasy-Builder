@@ -124,7 +124,7 @@ export function SquadPlayerActions({
               >
                 Market options
               </button>
-              {player.masterPlayerId ? (
+              {player.masterPlayerId && player.positionId !== 5 ? (
                 <Link
                   role="menuitem"
                   to={`/players/${encodeURIComponent(player.masterPlayerId)}`}

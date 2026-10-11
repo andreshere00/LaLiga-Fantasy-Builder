@@ -94,7 +94,7 @@ function PlayersListRow({
   ) : (
     row.ownedBy
   );
-  const detailsOptions = (
+  const detailsOptions = row.positionId === 5 ? null : (
     <details className="players-detail-options">
       <summary className="market-actions-trigger">Options</summary>
       <ul className="market-actions-menu">
@@ -171,7 +171,7 @@ function PlayersListRow({
             row={marketRow}
             context={actionContext}
             actions={actions}
-            detailsPlayer={{ id: row.playerId, name: row.name }}
+            detailsPlayer={row.positionId === 5 ? undefined : { id: row.playerId, name: row.name }}
           />
         ) : (
           detailsOptions

@@ -26,7 +26,7 @@ export function PlayerCell({ row, now, columnLabel = "Player" }: PlayerCellProps
   return (
     <>
       <div className="market-card">
-        {row.playerId ? (
+        {row.playerId && row.positionId !== 5 ? (
           <PlayerDetailsLink
             playerId={row.playerId}
             playerName={row.name}

@@ -340,6 +340,10 @@
   transition: background-color var(--control-fill-duration) var(--control-fill-ease);
 }
 
+.market-list > .market-data-row:has([aria-expanded="true"], details[open]) {
+  z-index: 40;
+}
+
 .market-head {
   background: transparent;
   border: none;
@@ -981,9 +985,22 @@
   overflow: visible;
 }
 
-.market-actions-menu-item .hover-tooltip-panel {
+.market-actions .market-actions-menu-item > .hover-tooltip-panel {
   z-index: 120;
   max-width: min(22rem, calc(100vw - 32px));
+  opacity: 0;
+  visibility: hidden;
+}
+
+.market-actions-menu-item:hover > .hover-tooltip-panel,
+.market-actions-menu:not(:hover) .market-actions-menu-item:focus-within > .hover-tooltip-panel {
+  opacity: 1;
+  visibility: visible;
+}
+
+.market-actions.is-open > .hover-tooltip-panel {
+  opacity: 0;
+  visibility: hidden;
 }
 
 .market-actions-tooltip-line {

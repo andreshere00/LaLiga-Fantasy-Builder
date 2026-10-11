@@ -48,6 +48,9 @@ const TEAM_ALIASES: Record<string, string> = {
   villarreal: "Villarreal CF",
   levante: "Levante UD",
   racing: "R. Racing Club",
+  malaga: "Málaga CF",
+  "malaga fc": "Málaga CF",
+  cordoba: "Córdoba CF",
 };
 
 // Crest URLs and names are read from the saved FutbolFantasy fixture markup.
