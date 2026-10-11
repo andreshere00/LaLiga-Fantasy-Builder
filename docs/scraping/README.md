@@ -14,6 +14,9 @@ Parser detail: [parser.md](parser.md). Selector contract (fixture + live):
 [parser-discovery.md](parser-discovery.md). Committed OpenAPI (internal):
 `backend/scraping/openapi.json` (regenerate with `uv run poe generate-scraping-openapi`).
 
+Player identity coverage, name variants, collisions and regeneration:
+[player-aliases.md](player-aliases.md).
+
 ## Compose networking
 
 | Network | Scraping |

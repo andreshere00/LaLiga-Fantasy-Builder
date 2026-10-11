@@ -17,7 +17,12 @@ from fantasy_scraping.scraper.flight import SingleFlight
 from fantasy_scraping.scraper.http_client import XML_TYPES, ScrapingHttpClient
 from fantasy_scraping.scraper.models import LinkedData
 from fantasy_scraping.scraper.settings import ScraperSettings
-from fantasy_scraping.scraper.urls import PLAYERS_SITEMAP_URL, SLUG_RE, TEAMS_SITEMAP_URL
+from fantasy_scraping.scraper.urls import (
+    PLAYER_SLUG_RE,
+    PLAYERS_SITEMAP_URL,
+    SLUG_RE,
+    TEAMS_SITEMAP_URL,
+)
 
 
 def _slugs(xml: str) -> tuple[str, ...]:
@@ -26,12 +31,16 @@ def _slugs(xml: str) -> tuple[str, ...]:
         root = SafeET.fromstring(xml)
     except (SafeET.ParseError, DefusedXmlException) as exc:
         raise UnexpectedContentError() from exc
-    found = (
-        urlsplit((el.text or "").strip()).path.rstrip("/").rsplit("/", 1)[-1]
-        for el in root.iter()
-        if el.tag.endswith("loc")
-    )
-    slugs = tuple(dict.fromkeys(s for s in found if SLUG_RE.fullmatch(s)))
+    found: list[str] = []
+    for el in root.iter():
+        if not el.tag.endswith("loc"):
+            continue
+        path = urlsplit((el.text or "").strip()).path.rstrip("/")
+        slug = path.rsplit("/", 1)[-1]
+        pattern = PLAYER_SLUG_RE if path.startswith("/jugadores/") else SLUG_RE
+        if pattern.fullmatch(slug):
+            found.append(slug)
+    slugs = tuple(dict.fromkeys(found))
     if not slugs:
         raise UnexpectedContentError()
     return slugs

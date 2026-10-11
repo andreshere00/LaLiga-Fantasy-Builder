@@ -6,6 +6,7 @@ from dataclasses import dataclass
 from fantasy_scraping.scraper.distance import banded_levenshtein, padded_hamming
 from fantasy_scraping.scraper.errors import InvalidRequestError, PlayerNotFoundError
 from fantasy_scraping.scraper.models import Candidate
+from fantasy_scraping.scraper.name_aliases import AliasValue
 from fantasy_scraping.scraper.normalise import base_slug, normalise
 
 AMBIGUITY_GAP: int = 2
@@ -30,7 +31,7 @@ class Resolution:
 class RouteResolver:
     """Pure scorer over a fixed slug list."""
 
-    def __init__(self, slugs: Iterable[str], aliases: Mapping[str, str]) -> None:
+    def __init__(self, slugs: Iterable[str], aliases: Mapping[str, AliasValue]) -> None:
         """Pre-split the slugs.
 
         Args:
@@ -40,7 +41,7 @@ class RouteResolver:
         self._entries: list[tuple[str, str, list[str]]] = [
             (slug, base, base.split("-")) for slug in slugs if (base := base_slug(slug))
         ]
-        self._aliases: Mapping[str, str] = aliases
+        self._aliases: Mapping[str, AliasValue] = aliases
 
     def resolve(
         self, name: str, *, full_name: str | None = None, player_id: str | None = None
@@ -62,15 +63,32 @@ class RouteResolver:
         queries = [q for q in (normalise(name), normalise(full_name or "")) if q]
         if not queries:
             raise InvalidRequestError("invalid name")
-        for key in (player_id, queries[0]):
-            if key and (slug := self._aliases.get(key)):
-                return Resolution([Candidate(slug=slug, distance=0, metric="alias")], False)
+        if player_id and player_id in self._aliases:
+            return self._alias_resolution(self._aliases[player_id])
+        matches = [self._aliases[q] for q in queries if q in self._aliases]
+        if matches:
+            targets = [set([value] if isinstance(value, str) else value) for value in matches]
+            # A supplied full name can settle a shared nickname before fuzzy matching.
+            narrowed = set.intersection(*targets)
+            if not narrowed:
+                narrowed = targets[-1]
+            return self._alias_resolution(sorted(narrowed))
         for query in queries:
             allowed = max(1, len(query) // 4)
             for metric, limit in (("hamming", allowed), ("levenshtein", max(1, len(query) // 5))):
                 if found := self._rank(query, metric, limit):
                     return found
         raise PlayerNotFoundError()
+
+    def _alias_resolution(self, value: AliasValue) -> Resolution:
+        """Preserve alias collisions as ambiguous routes for team verification."""
+        slugs = [value] if isinstance(value, str) else sorted(set(value))
+        if not slugs:
+            raise PlayerNotFoundError()
+        return Resolution(
+            [Candidate(slug=s, distance=0, metric="alias") for s in slugs],
+            len(slugs) > 1,
+        )
 
     def _rank(self, query: str, metric: str, limit: int) -> Resolution | None:
         """Score every slug and apply the threshold and gap rules."""

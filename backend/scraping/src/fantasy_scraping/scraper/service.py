@@ -26,6 +26,7 @@ from fantasy_scraping.scraper.models import (
     ScrapeOptions,
     ScrapeOutcome,
 )
+from fantasy_scraping.scraper.name_aliases import AliasValue
 from fantasy_scraping.scraper.normalise import normalise
 from fantasy_scraping.scraper.probes import (
     competition_slugs,
@@ -54,7 +55,7 @@ def _scrape_error(exc: ScrapingError) -> dict[str, object]:
     return body
 
 
-def load_aliases() -> dict[str, str]:
+def load_aliases() -> dict[str, AliasValue]:
     """Read the committed ``aliases.json``."""
     text = resources.files("fantasy_scraping.scraper").joinpath("data/aliases.json").read_text()
     return json.loads(text)
@@ -75,7 +76,7 @@ class ScraperService:
         client: ScrapingHttpClient,
         cache: PageCache,
         settings: ScraperSettings,
-        aliases: Mapping[str, str] | None = None,
+        aliases: Mapping[str, AliasValue] | None = None,
     ) -> None:
         """Compose the repositories.
 
@@ -90,7 +91,7 @@ class ScraperService:
         self._settings: ScraperSettings = settings
         self._links: LinkedDataProvider = LinkedDataProvider(client, cache, settings)
         self._pages: PageDownloader = PageDownloader(client, cache, settings)
-        self._aliases: Mapping[str, str] = aliases if aliases is not None else load_aliases()
+        self._aliases: Mapping[str, AliasValue] = aliases if aliases is not None else load_aliases()
         self._resolver: tuple[datetime, RouteResolver] | None = None
 
     async def get_linked_data(self, *, refresh: bool = False) -> LinkedData:
@@ -155,6 +156,8 @@ class ScraperService:
         needs_team_check = resolution.ambiguous or (winner.metric == "alias" and team_norm)
         if needs_team_check:
             if not team_norm:
+                raise AmbiguousPlayerError(slugs)
+            if len(resolution.candidates) > TEAM_PROBES:
                 raise AmbiguousPlayerError(slugs)
             if len(matching_team_slugs(team_norm, data.team_slugs)) != 1:
                 raise AmbiguousPlayerError(slugs)
@@ -364,9 +367,10 @@ class ScraperService:
         season: str,
         team_slugs: tuple[str, ...],
     ) -> Candidate | None:
-        """Return the first candidate whose profile club matches the requested team."""
+        """Return a unique candidate whose profile club matches the requested team."""
         if len(matching_team_slugs(team_norm, team_slugs)) != 1:
             return None
+        matches: list[Candidate] = []
         for candidate in candidates:
             route = PlayerRoute(
                 slug=candidate.slug, url="", distance=candidate.distance, metric=candidate.metric
@@ -376,8 +380,10 @@ class ScraperService:
             if probed is None:
                 raise UnexpectedContentError()
             if team_matches(team_norm, probed, team_slugs):
-                return candidate
-        return None
+                matches.append(candidate)
+        if len(matches) > 1:
+            raise AmbiguousPlayerError([candidate.slug for candidate in matches])
+        return matches[0] if matches else None
 
     async def _club_page(
         self, season: str, team: str, options: ScrapeOptions | None

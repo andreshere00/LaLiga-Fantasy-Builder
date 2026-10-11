@@ -28,6 +28,10 @@
   min-width: 0;
 }
 
+.players-page .players-list > .players-row:focus-within {
+  z-index: 30;
+}
+
 .players-page .players-list .market-cell {
   min-width: 0;
   overflow: hidden;
