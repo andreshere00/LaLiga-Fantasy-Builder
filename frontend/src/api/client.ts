@@ -1,5 +1,3 @@
-import type { MasterPlayerId, SquadPlayerId } from "./ids";
-import { masterPlayerIdToString, squadPlayerIdToString } from "./ids";
 import { ApiError, NeedsReauthError } from "./errors";
 
 export type PlayerStatsDetailQuery = {
@@ -33,14 +31,13 @@ export const paths = {
   weekFixtures: (week: number) => `/api/calendar/weeks/${week}`,
   weekStats: (week: number) => `/api/calendar/weeks/${week}/stats`,
   playersCatalog: () => "/api/players",
-  playerLeague: (playerId: MasterPlayerId | string, leagueId: string) =>
-    `/api/players/${segment(typeof playerId === "string" ? playerId : masterPlayerIdToString(playerId))}/league/${segment(leagueId)}`,
+  playerLeague: (playerId: string, leagueId: string) =>
+    `/api/players/${segment(playerId)}/league/${segment(leagueId)}`,
   market: (leagueId: string) => `/api/market/leagues/${segment(leagueId)}`,
-  playerMarketValue: (playerId: MasterPlayerId | string) =>
-    `/api/players/${segment(typeof playerId === "string" ? playerId : masterPlayerIdToString(playerId))}/market-value`,
-  playerStatsDetail: (playerId: MasterPlayerId | string, query?: PlayerStatsDetailQuery) => {
-    const id = typeof playerId === "string" ? playerId : masterPlayerIdToString(playerId);
-    const base = `/api/players/${segment(id)}/stats/detail`;
+  playerMarketValue: (playerId: string) =>
+    `/api/players/${segment(playerId)}/market-value`,
+  playerStatsDetail: (playerId: string, query?: PlayerStatsDetailQuery) => {
+    const base = `/api/players/${segment(playerId)}/stats/detail`;
     if (!query) return base;
     const params = new URLSearchParams();
     if (query.last != null) params.set("last", String(query.last));
@@ -79,8 +76,8 @@ export const paths = {
     `/api/market/leagues/${segment(leagueId)}/listings`,
   marketImmediateSale: (leagueId: string) =>
     `/api/market/leagues/${segment(leagueId)}/immediate-sales`,
-  buyoutPay: (leagueId: string, playerTeamId: SquadPlayerId | string) =>
-    `/api/buyout/leagues/${segment(leagueId)}/player-teams/${segment(typeof playerTeamId === "string" ? playerTeamId : squadPlayerIdToString(playerTeamId))}/pay`,
+  buyoutPay: (leagueId: string, playerTeamId: string) =>
+    `/api/buyout/leagues/${segment(leagueId)}/player-teams/${segment(playerTeamId)}/pay`,
 };
 
 export type PutJsonOptions = GetJsonOptions;

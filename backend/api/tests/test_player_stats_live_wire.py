@@ -49,8 +49,6 @@ def test_travel_home_without_opponent_returns_zero() -> None:
 
     service = PlayerStatsService(
         resolver=MagicMock(),
-        players=MagicMock(),
-        calendar=MagicMock(),
         scraped=MagicMock(),
         stats_repo=MagicMock(),
         venues=default_venue_directory(),

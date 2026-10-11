@@ -215,8 +215,6 @@ def build_container(
     )
     stats = player_stats_service or PlayerStatsService(
         resolver=resolver,
-        players=players_repo,
-        calendar=CalendarRepository(fantasy, competition_id=cfg.laliga_competition_id),
         scraped=scraped_provider,
         stats_repo=stats_repo,
         venues=VenueDirectory.load(),

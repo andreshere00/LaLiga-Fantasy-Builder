@@ -1,12 +1,11 @@
 """Scraper orchestrator. No HTTP, parsing or FastAPI imports."""
 
 import asyncio
+import json
 import logging
 from collections.abc import Mapping, Sequence
 from datetime import UTC, datetime
 from importlib import resources
-
-from pydantic import TypeAdapter
 
 from fantasy_scraping.models.page import PageKind, ScrapedPage
 from fantasy_scraping.scraper.cache import PageCache, route_key
@@ -29,7 +28,7 @@ from fantasy_scraping.scraper.models import (
 )
 from fantasy_scraping.scraper.name_aliases import (
     AliasValue,
-    PlayerAliasRecord,
+    build_player_alias_records,
     index_player_alias_records,
 )
 from fantasy_scraping.scraper.normalise import normalise
@@ -61,9 +60,15 @@ def _scrape_error(exc: ScrapingError) -> dict[str, object]:
 
 
 def load_aliases() -> dict[str, AliasValue]:
-    """Validate grouped player records and build the in-memory route index."""
-    text = resources.files("fantasy_scraping.scraper").joinpath("data/aliases.json").read_text()
-    records = TypeAdapter(dict[str, PlayerAliasRecord]).validate_json(text, strict=True)
+    """Build the validated route index from the reviewed identity inventory."""
+    text = (
+        resources.files("fantasy_scraping.scraper").joinpath("data/player_names.json").read_text()
+    )
+    inventory = json.loads(text)
+    players = inventory.get("players") if isinstance(inventory, dict) else None
+    if not isinstance(players, list) or not all(isinstance(player, dict) for player in players):
+        raise ValueError("invalid player identity inventory")
+    records = build_player_alias_records(players)
     return index_player_alias_records(records)
 
 

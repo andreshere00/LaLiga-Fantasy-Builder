@@ -19,7 +19,6 @@ import {
 } from "../../api/mappers";
 import { usePlayerStatsDetailQuery, usePlayersCatalogQuery } from "../../api/queries";
 import { useNow } from "../../hooks/useNow";
-import { useRetained } from "../../hooks/useRetained";
 import { parseMasterPlayerId, type MasterPlayerId } from "../../api/ids";
 import { useAuth } from "../../auth/AuthProvider";
 import { GatePanel } from "../gates/GatePanel";
@@ -28,10 +27,8 @@ import { positionLabel } from "../market/positions";
 import { AvailabilityCell } from "../market/cells/AvailabilityCell";
 import { availabilityOf } from "../market/model/availability";
 import { catalogById } from "../market/model/listing";
-import { BidDialog } from "../market/actions/BidDialog";
-import { ClauseDialog } from "../market/actions/ClauseDialog";
+import { MarketActionDialogs } from "../market/actions/MarketActionDialogs";
 import { MarketActionMenu } from "../market/actions/MarketActionMenu";
-import { WithdrawDialog } from "../market/actions/WithdrawDialog";
 import { useMarketActions } from "../market/actions/useMarketActions";
 import { useLeague } from "../lineup/LeagueProvider";
 import { SquadPlayerActions } from "../lineup/SquadPlayerActions";
@@ -73,50 +70,15 @@ import "./PlayerDetailPage.css";
 const FIXTURE_LAST_STEPS = [5, 10, 20, 40, 60] as const;
 const MARKET_PRESETS = ["season", "30d", "14d", "10d", "5d"] as const;
 
-const STAT_LABELS: Record<string, string> = {
-  minutes_played: "Minutes",
-  goals: "Goals",
-  assists: "Assists",
-  big_chances_created: "Big chances",
-  balls_into_box: "Balls into box",
-  penalties_won: "Penalties won",
-  penalties_committed: "Penalties committed",
-  penalties_saved: "Penalties saved",
-  saves: "Saves",
-  clearances: "Clearances",
-  penalties_missed: "Penalties missed",
-  own_goals: "Own goals",
-  goals_conceded: "Goals conceded",
-  yellow_cards: "Yellow cards",
-  red_card: "Red card",
-  shots: "Shots",
-  successful_dribbles: "Dribbles",
-  recoveries: "Recoveries",
-  balls_lost: "Balls lost",
-  dazn_points: "DAZN",
-};
-
-const STAT_KEYS = [
-  "minutes_played",
-  "goals",
-  "assists",
-  "big_chances_created",
-  "balls_into_box",
-  "penalties_won",
-  "penalties_committed",
-  "penalties_saved",
-  "saves",
-  "clearances",
-  "penalties_missed",
-  "own_goals",
-  "goals_conceded",
-  "yellow_cards",
-  "red_card",
-  "shots",
-  "successful_dribbles",
-  "recoveries",
-  "balls_lost",
-  "dazn_points",
+const STAT_SPECS = [
+  ["minutes_played", "Minutes"], ["goals", "Goals"], ["assists", "Assists"],
+  ["big_chances_created", "Big chances"], ["balls_into_box", "Balls into box"],
+  ["penalties_won", "Penalties won"], ["penalties_committed", "Penalties committed"],
+  ["penalties_saved", "Penalties saved"], ["saves", "Saves"], ["clearances", "Clearances"],
+  ["penalties_missed", "Penalties missed"], ["own_goals", "Own goals"],
+  ["goals_conceded", "Goals conceded"], ["yellow_cards", "Yellow cards"],
+  ["red_card", "Red card"], ["shots", "Shots"], ["successful_dribbles", "Dribbles"],
+  ["recoveries", "Recoveries"], ["balls_lost", "Balls lost"], ["dazn_points", "DAZN"],
 ] as const;
 
 function fixtureLabel(fixture: Record<string, unknown> | null): string {
@@ -236,7 +198,6 @@ function PlayerDetailBody({ masterId }: PlayerDetailBodyProps) {
   const marketListing = usePlayerMarketListing(masterId);
   const marketActions = useMarketActions();
   const squadSales = useSquadSales();
-  const withdraw = useRetained(marketActions.pendingWithdraw);
   const teamQuery = useQuery({
     queryKey: ["team", leagueKey, teamId],
     enabled: signedIn && leagueKey !== "" && teamId != null,
@@ -488,7 +449,7 @@ function PlayerDetailBody({ masterId }: PlayerDetailBodyProps) {
                   </dl>
                   {showAdvancedStats ? (
                     <dl className="player-form-details">
-                      {STAT_KEYS.map((key) => (
+                      {STAT_SPECS.map(([key, label]) => (
                         <div key={key}>
                           <dt>
                             {key === "dazn_points" ? (
@@ -496,7 +457,7 @@ function PlayerDetailBody({ masterId }: PlayerDetailBodyProps) {
                                 <img src={daznIcon} alt="" aria-hidden="true" /> DAZN
                               </>
                             ) : (
-                              STAT_LABELS[key] ?? key
+                              label
                             )}
                           </dt>
                           <dd>{statDisplay(stats?.[key], key)}</dd>
@@ -722,34 +683,10 @@ function PlayerDetailBody({ masterId }: PlayerDetailBodyProps) {
 
       {detailReady ? <PlayerFantasySection profile={profileBlock} /> : null}
 
-      <BidDialog
-        open={marketActions.pendingBid != null}
-        row={marketActions.pendingBid?.row ?? null}
-        kind={marketActions.pendingBid?.kind ?? null}
+      <MarketActionDialogs
+        actions={marketActions}
         money={marketListing.money}
         squadMarketValue={marketListing.squadMarketValue}
-        initialAmount={marketActions.pendingBid?.initialAmount ?? null}
-        pending={marketActions.actionPending}
-        error={marketActions.message}
-        onClose={marketActions.closeBid}
-        onConfirm={marketActions.submitBid}
-      />
-      <WithdrawDialog
-        open={marketActions.pendingWithdraw != null}
-        row={withdraw}
-        pending={marketActions.actionPending}
-        error={marketActions.message}
-        onClose={marketActions.closeWithdraw}
-        onConfirm={marketActions.confirmWithdraw}
-      />
-      <ClauseDialog
-        open={marketActions.pendingClause != null}
-        row={marketActions.pendingClause?.row ?? null}
-        amount={marketActions.pendingClause?.amount ?? 0}
-        pending={marketActions.actionPending}
-        error={marketActions.message}
-        onClose={marketActions.closeClause}
-        onConfirm={marketActions.confirmClause}
       />
     </section>
   );

@@ -3,7 +3,6 @@ import { Link, useNavigate, useSearchParams } from "react-router-dom";
 
 import { useAuth } from "../../auth/AuthProvider";
 import { useNow } from "../../hooks/useNow";
-import { useRetained } from "../../hooks/useRetained";
 import { GatePanel } from "../gates/GatePanel";
 import { SquadPlayerActions } from "../lineup/SquadPlayerActions";
 import { useSquadSales } from "../lineup/useSquadSales";
@@ -13,14 +12,12 @@ import { FsypCell } from "../market/cells/FsypCell";
 import { PositionCell } from "../market/cells/PositionCell";
 import { ValueCell } from "../market/cells/ValueCell";
 import { PlayerTile } from "../lineup/PlayerTile";
-import { BidDialog } from "../market/actions/BidDialog";
-import { ClauseDialog } from "../market/actions/ClauseDialog";
+import { MarketActionDialogs } from "../market/actions/MarketActionDialogs";
 import { MarketActionMenu } from "../market/actions/MarketActionMenu";
 import { useMarketActions } from "../market/actions/useMarketActions";
 import type { MarketActionContext } from "../market/actions/marketActions";
 import type { MarketRow } from "../market/model/row";
 import { MarketMotionProvider, MarketRowMotion } from "../market/MarketRowMotion";
-import { WithdrawDialog } from "../market/actions/WithdrawDialog";
 import { useMarketBoard } from "../market/useMarketBoard";
 import type { SquadCard } from "../../api/mappers";
 import { MarketPlayerSearch } from "../market/MarketPlayerSearch";
@@ -283,9 +280,6 @@ function PlayersList() {
     activeBidCount: marketBoard.activeBidCount,
     squadMarketValue: marketBoard.squadMarketValue,
   };
-  const bid = useRetained(actions.pendingBid);
-  const clause = useRetained(actions.pendingClause);
-  const withdraw = useRetained(actions.pendingWithdraw);
   const dialogOpen =
     actions.pendingBid != null ||
     actions.pendingClause != null ||
@@ -412,34 +406,10 @@ function PlayersList() {
           </button>
         </nav>
       ) : null}
-      <BidDialog
-        open={actions.pendingBid != null}
-        row={bid?.row ?? null}
-        kind={bid?.kind ?? null}
+      <MarketActionDialogs
+        actions={actions}
         money={marketBoard.money}
         squadMarketValue={marketBoard.squadMarketValue}
-        initialAmount={bid?.initialAmount ?? null}
-        pending={actions.actionPending}
-        error={actions.message}
-        onClose={actions.closeBid}
-        onConfirm={actions.submitBid}
-      />
-      <WithdrawDialog
-        open={actions.pendingWithdraw != null}
-        row={withdraw}
-        pending={actions.actionPending}
-        error={actions.message}
-        onClose={actions.closeWithdraw}
-        onConfirm={actions.confirmWithdraw}
-      />
-      <ClauseDialog
-        open={actions.pendingClause != null}
-        row={clause?.row ?? null}
-        amount={clause?.amount ?? 0}
-        pending={actions.actionPending}
-        error={actions.message}
-        onClose={actions.closeClause}
-        onConfirm={actions.confirmClause}
       />
     </>
   );

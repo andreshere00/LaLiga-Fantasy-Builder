@@ -16,11 +16,3 @@ export function parseSquadPlayerId(raw: unknown): SquadPlayerId | null {
   if (!text) return null;
   return text as SquadPlayerId;
 }
-
-export function masterPlayerIdToString(id: MasterPlayerId): string {
-  return id;
-}
-
-export function squadPlayerIdToString(id: SquadPlayerId): string {
-  return id;
-}

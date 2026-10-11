@@ -1,4 +1,4 @@
-import teamsMasterFile from "../../../assets/teams_master.json";
+import { clubMediaFromId } from "./clubMedia";
 
 export type ManagerInfo = {
   id?: string | number | null;
@@ -665,51 +665,13 @@ function teamBadgeUrlFromTeamRecord(team: unknown): string | null {
   return text(record.badgeColor) ?? text(record.badgeWhite) ?? null;
 }
 
-function buildTeamBadgeByTeamIdMap(): ReadonlyMap<string, string> {
-  const map = new Map<string, string>();
-  if (!Array.isArray(teamsMasterFile)) return map;
-  for (const entry of teamsMasterFile) {
-    const record = asRecord(entry);
-    const badge = teamBadgeUrlFromTeamRecord(entry);
-    if (!badge) continue;
-    const id = idText(record?.id);
-    const dspId = idText(record?.dspId);
-    if (id) map.set(id, badge);
-    if (dspId) map.set(dspId, badge);
-  }
-  return map;
-}
-
-const TEAM_BADGE_BY_TEAM_ID = buildTeamBadgeByTeamIdMap();
-
-function buildTeamNameByTeamIdMap(): ReadonlyMap<string, string> {
-  const map = new Map<string, string>();
-  if (!Array.isArray(teamsMasterFile)) return map;
-  for (const entry of teamsMasterFile) {
-    const record = asRecord(entry);
-    const name = text(record?.name) ?? text(record?.shortName);
-    if (!name) continue;
-    const id = idText(record?.id);
-    const dspId = idText(record?.dspId);
-    if (id) map.set(id, name);
-    if (dspId) map.set(dspId, name);
-  }
-  return map;
-}
-
-const TEAM_NAME_BY_TEAM_ID = buildTeamNameByTeamIdMap();
-
 function teamBadgeFromTeamId(teamId: unknown): string | null {
-  const id = idText(teamId);
-  if (!id) return null;
-  return TEAM_BADGE_BY_TEAM_ID.get(id) ?? null;
+  return clubMediaFromId(teamId)?.badge ?? null;
 }
 
 /** Resolves a club display name from a Fantasy team id (``id`` or ``dspId`` in teams master). */
 export function teamNameFromTeamId(teamId: unknown): string | null {
-  const id = idText(teamId);
-  if (!id) return null;
-  return TEAM_NAME_BY_TEAM_ID.get(id) ?? null;
+  return clubMediaFromId(teamId)?.name ?? null;
 }
 
 function teamNameFromTeamRecord(team: unknown): string | null {

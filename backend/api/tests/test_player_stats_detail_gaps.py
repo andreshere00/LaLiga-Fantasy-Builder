@@ -28,8 +28,6 @@ def _service(clock: datetime | None = None) -> PlayerStatsService:
     moment = clock or datetime(2026, 10, 5, 12, 0, tzinfo=UTC)
     return PlayerStatsService(
         resolver=MagicMock(),
-        players=MagicMock(),
-        calendar=MagicMock(),
         scraped=MagicMock(),
         stats_repo=MagicMock(),
         venues=default_venue_directory(),

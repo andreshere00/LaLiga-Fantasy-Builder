@@ -3,11 +3,8 @@ import { useDeferredValue, useMemo, useState } from "react";
 import { useAuth } from "../../auth/AuthProvider";
 import { favoriteMarketRowClass, readFavoritePlayerIds } from "../players/favorites";
 import { useNow } from "../../hooks/useNow";
-import { useRetained } from "../../hooks/useRetained";
 import { GatePanel } from "../gates/GatePanel";
-import { BidDialog } from "./actions/BidDialog";
-import { ClauseDialog } from "./actions/ClauseDialog";
-import { WithdrawDialog } from "./actions/WithdrawDialog";
+import { MarketActionDialogs } from "./actions/MarketActionDialogs";
 import { useMarketActions } from "./actions/useMarketActions";
 import { marketColumnHeadings } from "./marketColumnHeadings";
 import { MarketListHead } from "./MarketListHead";
@@ -46,9 +43,6 @@ function MarketList() {
   );
   const sellers = useMemo(() => sellerOptions(board.rows), [board.rows]);
   const marketActions = useMarketActions();
-  const bid = useRetained(marketActions.pendingBid);
-  const clause = useRetained(marketActions.pendingClause);
-  const withdraw = useRetained(marketActions.pendingWithdraw);
   const actionContext = {
     money: board.money,
     now,
@@ -134,34 +128,10 @@ function MarketList() {
           ))}
         </ul>
       )}
-      <BidDialog
-        open={marketActions.pendingBid != null}
-        row={bid?.row ?? null}
-        kind={bid?.kind ?? null}
+      <MarketActionDialogs
+        actions={marketActions}
         money={board.money}
         squadMarketValue={board.squadMarketValue}
-        initialAmount={bid?.initialAmount ?? null}
-        pending={marketActions.actionPending}
-        error={marketActions.message}
-        onClose={marketActions.closeBid}
-        onConfirm={marketActions.submitBid}
-      />
-      <WithdrawDialog
-        open={marketActions.pendingWithdraw != null}
-        row={withdraw}
-        pending={marketActions.actionPending}
-        error={marketActions.message}
-        onClose={marketActions.closeWithdraw}
-        onConfirm={marketActions.confirmWithdraw}
-      />
-      <ClauseDialog
-        open={marketActions.pendingClause != null}
-        row={clause?.row ?? null}
-        amount={clause?.amount ?? 0}
-        pending={marketActions.actionPending}
-        error={marketActions.message}
-        onClose={marketActions.closeClause}
-        onConfirm={marketActions.confirmClause}
       />
     </MarketMotionProvider>
   );

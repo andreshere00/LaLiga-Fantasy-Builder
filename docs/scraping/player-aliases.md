@@ -11,8 +11,7 @@ identity includes its source URLs.
 | File | Purpose |
 |------|---------|
 | `backend/scraping/src/fantasy_scraping/scraper/data/player_names.json` | Reviewed IDs, nicknames, available full names, profile routes and source provenance |
-| `backend/scraping/src/fantasy_scraping/scraper/data/aliases.json` | Generated records grouped by master player ID; compiled into a lookup index at service startup |
-| `backend/scraping/scripts/generate_player_aliases.py` | Offline regeneration from reviewed identities |
+| `backend/scraping/scripts/generate_player_aliases.py` | Offline normalization of the reviewed inventory |
 
 826 footballers have confirmed profile routes. Three have published identities
 but no confirmed FutbolFantasy route: Mario Nájera (`2970`), Albert García
@@ -22,12 +21,12 @@ empty lists. Requests with those IDs return `player_not_found` instead of fallin
 back to a different person.
 Revisit these entries when the source adds profiles.
 
-## Grouped registry
+## Runtime index
 
-Each master player ID owns one record with `full_name`, `slug`, `team_id`, `team`,
-and `aliases`. Full names and teams retain their published spelling; aliases are
-normalized lookup names. Missing full names, teams, or source routes remain `null`.
-Team IDs identify Fantasy clubs, not league managers' squads or squad entries.
+At service startup, each master player ID is compiled from the reviewed inventory
+into `full_name`, `slug`, `team_id`, `team`, and normalized aliases. Missing full
+names, teams, or source routes remain `null`. Team IDs identify Fantasy clubs,
+not league managers' squads or squad entries.
 
 Example with an abbreviated alias list (the generated record contains all variants):
 
@@ -43,9 +42,8 @@ Example with an abbreviated alias list (the generated record contains all varian
 }
 ```
 
-The generator derives aliases from the reviewed identity fields. Generated arrays
-are stored only in `aliases.json`, avoiding duplicate lists in the source inventory.
-The loader validates record fields, source route shapes, normalized aliases and
+The loader derives aliases from the reviewed identity fields and validates record
+fields, source route shapes, normalized aliases and
 numeric master IDs before building a reverse name index. Malformed records fail
 loading rather than silently changing the lookup behavior.
 
@@ -115,8 +113,7 @@ not prove that a requested competition/season has statistics.
 3. Review full names, positions and namesakes. A matching surname or current club
    alone is insufficient proof. Record source URLs. Keep `slug: null` with
    `route_status: "source_not_found"` when no route is confirmed.
-4. Update reviewed names, teams and routes in `player_names.json`. Edit those
-   source fields rather than the generated records in `aliases.json`.
+4. Update reviewed names, teams and routes in `player_names.json`.
 5. Regenerate offline:
 
    ```bash
@@ -124,8 +121,8 @@ not prove that a requested competition/season has statistics.
    uv run python scripts/generate_player_aliases.py
    ```
 
-6. Review and commit both JSON files together. Restart the scraping process to
-   load the new aliases and clear its in-memory route cache.
+6. Review and commit the inventory. Restart the scraping process to load the
+   new aliases and clear its in-memory route cache.
 
 The generator rejects duplicate IDs, invalid ID keys and invalid route
 slugs. It preserves collisions and produces deterministic output. No LaLiga

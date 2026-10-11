@@ -114,9 +114,10 @@ every sitemap slug before comparison:
    base `lamine-gueye`); keep the original string as the route. (297 of the 16 498
    observed slugs carry such a suffix.)
 
-**Step 1 — overrides.** `aliases.json` (package data, committed) maps
-`player_id` or normalised nickname to a slug (e.g. `"3102" → "vinicius-junior"`
-for catalog nickname `Vini Jr.`). An alias hit short-circuits scoring
+**Step 1 — reviewed inventory.** `player_names.json` (package data, committed)
+maps a master `player_id` to its reviewed source slug (for example, `"3102" →
+"vinicius-junior"` for catalog nickname `Vini Jr.`). The service derives name
+aliases from that inventory at startup. An ID hit short-circuits scoring
 (`metric="alias"`, `distance=0`) but still passes team verification.
 
 **Step 2 — padded Hamming distance.**
@@ -311,7 +312,7 @@ backend/scraping/
 │   │   ├── metrics.py          # MetricsSink protocol + logging sink
 │   │   ├── routes.py           # FastAPI router: /internal/scrape/*
 │   │   ├── cli.py              # fantasy-scraper
-│   │   └── data/aliases.json   # player_id / nickname → slug overrides
+│   │   └── data/player_names.json # reviewed player identities and source routes
 │   └── parser/                 # implemented (see player-stats-parser.md, docs/scraping/parser.md)
 │       ├── service.py          # parse, to_markdown, to_player_report
 │       ├── models/supplement.py  # FantasySupplement, FantasyWeek, UpcomingContext
@@ -984,7 +985,7 @@ sequenceDiagram
 | 4 | Current season only. |
 | 5 | Club competitions only: Champions, Europa League, Conference League, Copa del Rey, Supercopa. |
 | 6 | Label a widget row from pages already downloaded (date + score). Upcoming rows use one cached club page per team (`a.partido` + competition logo), not one request per player or per match. |
-| 7 | Maintain `aliases.json`. After alias and team, an unresolved name is `player_not_found` or `player_ambiguous`, never a guessed page. |
+| 7 | Maintain `player_names.json`. After alias and team, an unresolved name is `player_not_found` or `player_ambiguous`, never a guessed page. |
 | 20 | One container, one worker, scraper and parser together. |
 | 21 | Profile TTL 10 min. Market widget TTL 5 min. |
 | 22 | Download the market widget. The extra field is "puja máxima rentable". |

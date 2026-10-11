@@ -2,8 +2,6 @@ import { useEffect } from "react";
 import { useQuery } from "@tanstack/react-query";
 
 import { getJson, paths, type PlayerStatsDetailQuery } from "./client";
-import type { MasterPlayerId } from "./ids";
-import { masterPlayerIdToString } from "./ids";
 import { NeedsReauthError } from "./errors";
 import { asCurrentWeek, asFiniteNumber, asRecord } from "./mappers";
 import { useAuth } from "../auth/AuthProvider";
@@ -63,13 +61,13 @@ export function useCurrentWeekData(query: ReturnType<typeof useCurrentWeekQuery>
 }
 
 export function usePlayerStatsDetailQuery(
-  playerId: MasterPlayerId | string | null,
+  playerId: string | null,
   query: PlayerStatsDetailQuery,
   enabled: boolean,
 ) {
   const { accessToken } = useAuth();
   const token = accessToken ?? "";
-  const id = playerId == null ? "" : typeof playerId === "string" ? playerId : masterPlayerIdToString(playerId);
+  const id = playerId ?? "";
   return useQuery({
     queryKey: ["players", "detail", id, query],
     enabled: enabled && accessToken != null && id !== "",

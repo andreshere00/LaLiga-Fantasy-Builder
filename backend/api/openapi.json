@@ -7973,7 +7973,8 @@
           "season",
           "generated_at"
         ],
-        "title": "PlayerDetailResponse"
+        "title": "PlayerDetailResponse",
+        "description": "Aggregate player details with optional segments and partial errors."
       },
       "PlayerFixtureStatsResponse": {
         "properties": {
@@ -8967,7 +8968,8 @@
           "code",
           "detail"
         ],
-        "title": "SegmentError"
+        "title": "SegmentError",
+        "description": "Sanitised reason that one detail segment could not be produced."
       },
       "SegmentWarning": {
         "properties": {

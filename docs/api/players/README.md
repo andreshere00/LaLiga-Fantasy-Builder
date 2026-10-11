@@ -67,6 +67,15 @@ rows is disabled.
   `lastStats` catalog data. The fallback averages count only played weeks and
   report their source and sample size in the UI; they do not change the API's
   scraped average values.
+- **Fixture-point provenance:** each `StatValue` keeps published Fantasy and
+  DAZN values separate. When a published Fantasy value is unavailable, the API
+  may calculate it from the official scoring rules using the player's position,
+  minutes and observed stat counts; this has
+  `source: "computed_official"`. `null` means that the source did not publish
+  a value; it is never silently converted to zero. Computed values are returned
+  only when their explained action total, either alone or together with DAZN,
+  agrees with the match total. Otherwise the API retains the unavailable value
+  and adds a `computed_points_mismatch` warning.
 - Availability is available as `injury.availability_text`; structured
   `profile.availability` is described in
   [list-availability.md](../../plans/list-availability.md).

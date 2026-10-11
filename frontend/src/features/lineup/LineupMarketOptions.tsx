@@ -1,10 +1,7 @@
 import type { SquadCard } from "../../api/mappers";
 import { Modal } from "../../components/Modal";
 import { useNow } from "../../hooks/useNow";
-import { useRetained } from "../../hooks/useRetained";
-import { BidDialog } from "../market/actions/BidDialog";
-import { ClauseDialog } from "../market/actions/ClauseDialog";
-import { WithdrawDialog } from "../market/actions/WithdrawDialog";
+import { MarketActionDialogs } from "../market/actions/MarketActionDialogs";
 import { resolveMarketActionOffers } from "../market/actions/marketActions";
 import { useMarketActions } from "../market/actions/useMarketActions";
 import { useMarketBoard } from "../market/useMarketBoard";
@@ -21,9 +18,6 @@ function OpponentMarketOptions({ player, onClose }: Omit<Props, "open">) {
   const board = useMarketBoard();
   const actions = useMarketActions();
   const now = useNow();
-  const bid = useRetained(actions.pendingBid);
-  const clause = useRetained(actions.pendingClause);
-  const withdraw = useRetained(actions.pendingWithdraw);
   const row = board.rows.find((item) => item.playerId === player.masterPlayerId &&
     (item.playerTeamId === player.id || item.playerTeamId == null));
   const context = {
@@ -68,16 +62,12 @@ function OpponentMarketOptions({ player, onClose }: Omit<Props, "open">) {
         )}
         {actions.message ? <p role="alert">{actions.message}</p> : null}
       </Modal>
-      <BidDialog squareCorners open={actions.pendingBid != null} row={bid?.row ?? null}
-        kind={bid?.kind ?? null} money={board.money} squadMarketValue={board.squadMarketValue}
-        initialAmount={bid?.initialAmount ?? null} pending={actions.actionPending}
-        error={actions.message} onClose={actions.closeBid} onConfirm={actions.submitBid} />
-      <WithdrawDialog squareCorners open={actions.pendingWithdraw != null} row={withdraw}
-        pending={actions.actionPending} error={actions.message}
-        onClose={actions.closeWithdraw} onConfirm={actions.confirmWithdraw} />
-      <ClauseDialog squareCorners open={actions.pendingClause != null} row={clause?.row ?? null}
-        amount={clause?.amount ?? 0} pending={actions.actionPending}
-        error={actions.message} onClose={actions.closeClause} onConfirm={actions.confirmClause} />
+      <MarketActionDialogs
+        actions={actions}
+        money={board.money}
+        squadMarketValue={board.squadMarketValue}
+        squareCorners
+      />
     </>
   );
 }

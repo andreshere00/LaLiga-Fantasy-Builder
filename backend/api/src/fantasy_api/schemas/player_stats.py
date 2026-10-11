@@ -471,6 +471,20 @@ def default_detail_include() -> list[DetailSegment]:
 
 
 class PlayerDetailQuery(StrictQuery):
+    """Select optional detail segments and their validated query options.
+
+    Attributes:
+        last: Maximum fixture-stat rows to return.
+        competition: Optional fixture competitions to include.
+        preset: Market-history preset when no explicit date range is supplied.
+        from_: Inclusive custom market-history start date.
+        to: Inclusive custom market-history end date.
+        limit: Maximum recent and upcoming matches to return.
+        include_stats: Whether recent matches include player stats.
+        include_weather: Whether upcoming matches include weather data.
+        include: Detail segments to fetch; defaults to every segment.
+    """
+
     last: int = Field(5, ge=1, le=60)
     competition: list[Competition] | None = None
     preset: MarketPreset | None = None
@@ -499,6 +513,7 @@ class PlayerDetailQuery(StrictQuery):
         return self.preset if self.preset is not None else MarketPreset.SEASON
 
     def market_query(self) -> MarketQuery:
+        """Return the validated market-history request for this aggregate query."""
         return MarketQuery(
             preset=self._effective_market_preset(),
             from_=self.from_,
@@ -506,16 +521,27 @@ class PlayerDetailQuery(StrictQuery):
         )
 
     def fixtures_query(self) -> FixturesQuery:
+        """Return the validated fixtures request for this aggregate query."""
         return FixturesQuery(competition=self.competition, last=self.last)
 
     def recent_query(self) -> RecentMatchesQuery:
+        """Return the validated recent-matches request for this aggregate query."""
         return RecentMatchesQuery(limit=self.limit, include_stats=self.include_stats)
 
     def upcoming_query(self) -> UpcomingMatchesQuery:
+        """Return the validated upcoming-matches request for this aggregate query."""
         return UpcomingMatchesQuery(limit=self.limit, include_weather=self.include_weather)
 
 
 class SegmentError(StatsModel):
+    """Sanitised reason that one requested detail segment could not be produced.
+
+    Attributes:
+        segment: Detail segment that failed.
+        code: Stable error category safe to return to API clients.
+        detail: Bounded, sanitised diagnostic text.
+    """
+
     segment: DetailSegment
     code: str
     detail: str
@@ -528,6 +554,24 @@ class SegmentError(StatsModel):
 
 
 class PlayerDetailResponse(StatsModel):
+    """Aggregate player details with optional segments and partial errors.
+
+    Successful segments are returned even when another segment fails. Failed
+    requested segments are absent and described in ``segment_errors``.
+
+    Attributes:
+        player_id: Requested Fantasy master player id.
+        player: Resolved player identity shared by returned segments.
+        season: Season used for all returned data.
+        generated_at: Time the aggregate response was built.
+        fixtures: Optional fixture-stat segment.
+        market: Optional market-history segment.
+        recent: Optional recent-matches segment.
+        upcoming: Optional upcoming-matches segment.
+        profile: Optional scraped-profile segment.
+        segment_errors: Sanitised failures for requested optional segments.
+    """
+
     player_id: str
     player: PlayerRef
     season: str

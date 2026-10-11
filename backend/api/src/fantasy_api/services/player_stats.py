@@ -10,7 +10,6 @@ from datetime import UTC, date, datetime
 from typing import Any
 from zoneinfo import ZoneInfo
 
-from fantasy_api.api.payload import parse_payload
 from fantasy_api.config import Settings
 from fantasy_api.domain.clubs import ClubDirectory, load_alias_map
 from fantasy_api.domain.errors import UpstreamError
@@ -25,9 +24,7 @@ from fantasy_api.domain.season import current_season
 from fantasy_api.domain.ttl_cache import AsyncTtlCache
 from fantasy_api.domain.venues import VenueDirectory, VenueEntry
 from fantasy_api.domain.weather import ForecastSlot, pick_slot
-from fantasy_api.repositories.calendar import CalendarRepository
 from fantasy_api.repositories.player_stats import PlayerStatsRepository
-from fantasy_api.repositories.players import PlayersRepository
 from fantasy_api.schemas.payload import as_object_list
 from fantasy_api.schemas.player_stats import (
     AveragePerMatch,
@@ -74,6 +71,7 @@ from fantasy_api.schemas.player_stats import (
     WeatherSnapshot,
 )
 from fantasy_api.schemas.scraped import FutbolFantasyWire, ScrapedStat
+from fantasy_api.services.payload import parse_payload
 from fantasy_api.services.player_resolver import PlayerResolver, ResolvedPlayer
 from fantasy_api.services.scraped_player import ScrapedDocument, ScrapedPlayerProvider
 from fantasy_api.services.stat_merge import merge_fixture_stats
@@ -114,6 +112,7 @@ def _match_result(
     home_score: int | None,
     away_score: int | None,
 ) -> MatchResult | None:
+    """Return the player's result when side and score are known."""
     if is_home is None or home_score is None or away_score is None:
         return None
     player_goals = home_score if is_home else away_score
@@ -130,6 +129,7 @@ def _competition_label(_raw: str | None, competition: Competition) -> str:
 
 
 def _display_club_name(entry: VenueEntry | None, code: str | None) -> str | None:
+    """Prefer a human-readable venue alias over an abbreviated club code."""
     if not code:
         return None
     if entry is None:
@@ -306,6 +306,7 @@ _RATIO_PART = {
 
 
 def _season_number(value: object, part: str | None) -> float | None:
+    """Read a numeric season total or one side of a published ratio."""
     if isinstance(value, bool) or value is None:
         return None
     if isinstance(value, (int, float)):
@@ -319,17 +320,9 @@ def _season_number(value: object, part: str | None) -> float | None:
 
 
 def _season_group(season: Mapping[str, Any], name: str) -> Mapping[str, Any]:
+    """Return one structured season-stat group when the upstream value is a mapping."""
     raw = season.get(name)
-    if isinstance(raw, dict):
-        return raw
-    snake = {
-        "attack": "attack",
-        "defense": "defense",
-        "discipline": "discipline",
-        "goalkeeper": "goalkeeper",
-    }[name]
-    fallback = season.get(snake)
-    return fallback if isinstance(fallback, dict) else {}
+    return raw if isinstance(raw, dict) else {}
 
 
 def averages_from_season(season: Mapping[str, Any] | None) -> list[AveragePerMatch]:
@@ -379,8 +372,6 @@ class PlayerStatsService:
         self,
         *,
         resolver: PlayerResolver,
-        players: PlayersRepository,
-        calendar: CalendarRepository,
         scraped: ScrapedPlayerProvider,
         stats_repo: PlayerStatsRepository,
         venues: VenueDirectory,
@@ -388,8 +379,6 @@ class PlayerStatsService:
         settings: Settings,
     ) -> None:
         self._resolver = resolver
-        self._players = players
-        self._calendar = calendar
         self._scraped = scraped
         self._stats_repo = stats_repo
         self._venues = venues
@@ -463,7 +452,16 @@ class PlayerStatsService:
         player_id: str,
         query: PlayerDetailQuery,
     ) -> PlayerDetailResponse:
-        """Return selected stats segments in one response."""
+        """Return selected stats segments, preserving independent segment failures.
+
+        Args:
+            player_id: Fantasy master player id.
+            query: Aggregate request options shared by selected segments.
+
+        Returns:
+            A response with successful segment payloads and sanitised errors for
+            segments that could not be produced.
+        """
         player = await self._player_with_team_name(await self._resolver.resolve(player_id))
         season = current_season(self._today())
         requested = set(query.include)
@@ -1211,13 +1209,6 @@ class PlayerStatsService:
             opponent_venue.lat,
             opponent_venue.lon,
         )
-        if is_home is True:
-            return Travel(
-                distance_km=distance,
-                from_venue=away,
-                to_venue=home,
-                player_team_travels=False,
-            )
         if is_home is False:
             return Travel(
                 distance_km=distance,

@@ -618,7 +618,7 @@ class WeatherReason(StrEnum):
 | `SegmentWarning` | `code: str`, `source: str \| None`, `detail: str \| None` | `detail` max 200 chars, no control characters, never an upstream body |
 | `SourceStatus` | `name: str` (`fantasy`, `futbolfantasy`, `openweather`, `calendar`) | |
 | `SegmentEnvelope` | `player_id: str`, `player: PlayerRef \| None`, `season: str` (e.g. `"2026/27"`), `generated_at: datetime`, `sources: list[SourceStatus]`, `warnings: list[SegmentWarning]` | Base class for every segment response |
-| `StatValue` | `count: int \| None`, `fantasy_points: int`, `dazn_points: int`, `source: StatSource` | Missing points are `0`. Oficial and DAZN only |
+| `StatValue` | `count: int \| None`, `fantasy_points: int \| None`, `dazn_points: int \| None`, `source: StatSource` | `null` means unavailable; zero is a published or computed value. Sources include published Fantasy, DAZN, and `computed_official`. |
 | `FixtureStats` | one `StatValue` per `StatKey` (19 explicit fields, default `StatValue(count=None, points=None, source=UNAVAILABLE)`) | Explicit fields give a readable OpenAPI; a `dict[StatKey, StatValue]` would not |
 
 Stable warning codes (extend only by adding): `scraping_partial`, `parser_warning`,
@@ -629,10 +629,11 @@ Stable warning codes (extend only by adding): `scraping_partial`, `parser_warnin
 `to_clamped_to_today`, `to_clamped_to_last_sample`, `window_outside_history`,
 `zero_start_value`, `single_point_window`, `dropped_invalid_points`.
 
-`dazn_points` is `0` outside LaLiga. `minutes_played.count` is minutes.
-The sum of `fantasy_points` is checked against the Oficial match total, and the
-sum of `dazn_points` against the DAZN match total. A mismatch warns
-`points_total_mismatch` and does not change the figures.
+`dazn_points` is `null` outside LaLiga when it is not published.
+`minutes_played.count` is minutes. Published action points are checked against
+the Fantasy match total; when a published point is unavailable, official rules
+may compute it only when the explained total agrees. A mismatch retains the
+unavailable value and warns `computed_points_mismatch`.
 
 ### 3.3 Fixtures segment
 
