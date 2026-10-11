@@ -30,7 +30,6 @@ class VenueDirectory:
     """Resolve venues by Fantasy team id or club label."""
 
     def __init__(self, entries: tuple[VenueEntry, ...]) -> None:
-        self._entries = entries
         self._by_id = {entry.fantasy_id: entry for entry in entries if entry.fantasy_id is not None}
         self._by_alias: dict[str, VenueEntry] = {}
         for entry in entries:
@@ -70,9 +69,7 @@ class VenueDirectory:
         if fantasy_id is not None and fantasy_id in self._by_id:
             return self._by_id[fantasy_id]
         if name:
-            hit = self._by_alias.get(name.casefold())
-            if hit:
-                return hit
+            return self._by_alias.get(name.casefold())
         return None
 
 

@@ -1,5 +1,11 @@
-import { LazyMotion, MotionConfig, domAnimation, m } from "motion/react";
-import { createContext, useContext, useEffect, useState, type ReactNode } from "react";
+import { LazyMotion, MotionConfig, domAnimation, m, type HTMLMotionProps } from "motion/react";
+import {
+  createContext,
+  useContext,
+  useEffect,
+  useState,
+  type ReactNode,
+} from "react";
 
 const STAGGER_SECONDS = 0.035;
 const STAGGER_WINDOW_MS = 1_200;
@@ -22,7 +28,7 @@ export function MarketMotionProvider({ children }: { children: ReactNode }) {
   );
 }
 
-type MarketRowMotionProps = {
+type MarketRowMotionProps = Omit<HTMLMotionProps<"li">, "children"> & {
   order: number;
   children: ReactNode;
 };
@@ -33,11 +39,12 @@ type MarketRowMotionProps = {
  * Rows present when the list mounts rise in sequence. A row that appears later
  * (a filter change) pops in without the stagger delay.
  */
-export function MarketRowMotion({ order, children }: MarketRowMotionProps) {
+export function MarketRowMotion({ order, className, children, ...liProps }: MarketRowMotionProps) {
   const staggering = useContext(MarketStaggerContext);
   return (
     <m.li
-      className="market-row market-data-row"
+      className={["market-row", "market-data-row", className].filter(Boolean).join(" ")}
+      {...liProps}
       initial={staggering ? { opacity: 0, y: 14, scale: 0.94 } : { opacity: 0, scale: 0.8 }}
       animate={{ opacity: 1, y: 0, scale: 1 }}
       transition={{

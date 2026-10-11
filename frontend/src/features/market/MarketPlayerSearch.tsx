@@ -5,6 +5,9 @@ type MarketPlayerSearchProps = {
   onChange: (value: string) => void;
   activeFilterCount: number;
   onClearFilters: () => void;
+  label?: string;
+  placeholder?: string;
+  inputId?: string;
 };
 
 export function MarketPlayerSearch({
@@ -12,11 +15,14 @@ export function MarketPlayerSearch({
   onChange,
   activeFilterCount,
   onClearFilters,
+  label = "Search market",
+  placeholder = "Name, seller or team",
+  inputId = "market-player-search",
 }: MarketPlayerSearchProps) {
   return (
     <div className="market-search">
-      <label className="market-search-label" htmlFor="market-player-search">
-        Search market
+      <label className="market-search-label" htmlFor={inputId}>
+        {label}
       </label>
       <div className="market-search-controls">
         <div className="market-search-field">
@@ -24,12 +30,12 @@ export function MarketPlayerSearch({
             <SearchIcon />
           </span>
           <input
-            id="market-player-search"
+            id={inputId}
             className="market-search-input"
             type="search"
             value={value}
             onChange={(event) => onChange(event.target.value)}
-            placeholder="Name, seller or team"
+            placeholder={placeholder}
           />
         </div>
         {activeFilterCount > 0 ? (

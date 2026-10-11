@@ -20,7 +20,8 @@ def strip_accents(value: str) -> str:
 
 def casefold_key(value: str) -> str:
     """Accent-insensitive key used to match Spanish labels."""
-    return strip_accents(clean_text(value)).casefold()
+    text = strip_accents(clean_text(value)).casefold()
+    return text.rstrip(":").strip()
 
 
 def map_minuses(value: str) -> str:

@@ -338,7 +338,7 @@ def warn_unknown_labels(ctx: ExtractionContext, pairs: list[tuple[str, str]], se
             section=section,
             path="season_stats.other",
             rule_id="season_stats.other",
-            message="stat label is not mapped",
+            message=f"stat label is not mapped ({label})",
             preview=label,
         )
 

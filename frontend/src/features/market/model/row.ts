@@ -9,11 +9,8 @@ import {
 import { buyoutClauseUnlockAt } from "./buyout";
 import { availabilityOf, type Availability } from "./availability";
 import {
-  formFromCalendarWeeks,
-  formPoints,
-  formRecentPoints,
-  formRecentWeekNumbers,
-  formRecentSeries,
+  formAverageLastThree,
+  playerFormHistory,
 } from "./form";
 import {
   expiryOf,
@@ -42,6 +39,7 @@ export type MarketRow = {
   form: number | null;
   formRecent: readonly number[];
   formRecentWeeks: readonly number[];
+  pendingFormWeek?: number;
   averagePoints: number | null;
   marketValue: number | null;
   variation: number | null;
@@ -63,6 +61,8 @@ export type CalendarFormContext = {
   weekNumbers: readonly number[];
   statsByWeek: ReadonlyMap<number, ReadonlyMap<string, number>>;
   playedThrough: number;
+  currentWeek?: number;
+  pendingByWeek?: ReadonlyMap<number, ReadonlySet<string>>;
 };
 
 export type MarketRowContext = {
@@ -153,26 +153,10 @@ export function marketRow(
   const teamName = teamNameFromPlayerMaster(master);
   const valueHistory = playerId ? (history.get(playerId) ?? []) : [];
   const positionId = asFiniteNumber(master.positionId);
-  const playedThrough =
-    calendarForm != null && calendarForm.playedThrough >= 1
-      ? calendarForm.playedThrough
-      : null;
-  let form = formPoints(master.lastStats, playedThrough);
-  let formRecent = formRecentPoints(master.lastStats, playedThrough);
-  let formRecentWeeks = formRecentWeekNumbers(master.lastStats, playedThrough);
-  if (form == null && calendarForm) {
-    const fromCalendar = formFromCalendarWeeks(
-      playerId,
-      calendarForm.weekNumbers,
-      calendarForm.statsByWeek,
-    );
-    form = fromCalendar.form;
-    formRecent = fromCalendar.formRecent;
-    formRecentWeeks = calendarForm.weekNumbers.slice(0, formRecent.length);
-  }
-  const capped = formRecentSeries(formRecent, formRecentWeeks);
-  formRecent = capped.recent;
-  formRecentWeeks = capped.weeks;
+  const capped = playerFormHistory(playerId, master.lastStats, calendarForm);
+  const form = formAverageLastThree(capped.recent);
+  const formRecent = capped.recent;
+  const formRecentWeeks = capped.weeks;
   const playerTeam = asRecord(item.playerTeam);
   const playerTeamId = playerTeamIdOf(item);
   const seller = sellerNameOf(item);
@@ -191,6 +175,7 @@ export function marketRow(
     form,
     formRecent,
     formRecentWeeks,
+    pendingFormWeek: capped.pendingFormWeek,
     averagePoints: asFiniteNumber(master.averagePoints),
     marketValue: asFiniteNumber(master.marketValue),
     variation: valueVariation(valueHistory),

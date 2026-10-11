@@ -12,6 +12,8 @@ from fantasy_api.openapi import PLAYER_STATS_ERROR_RESPONSES
 from fantasy_api.schemas.player_stats import (
     FixturesQuery,
     MarketQuery,
+    PlayerDetailQuery,
+    PlayerDetailResponse,
     PlayerFixtureStatsResponse,
     PlayerMarketResponse,
     PlayerProfileResponse,
@@ -58,6 +60,28 @@ async def get_stats_index(
     await _enforce_rate_limit(user.user_id, response)
     payload = await get_container().player_stats_service.index(player_id)
     response.headers["Cache-Control"] = "private, max-age=300"
+    response.headers["Vary"] = "Authorization"
+    return payload
+
+
+@router.get(
+    "/players/{player_id}/stats/detail",
+    response_model=PlayerDetailResponse,
+    response_model_exclude_none=False,
+    responses=PLAYER_STATS_ERROR_RESPONSES,
+    summary="Aggregate player stats segments in one response",
+)
+async def get_stats_detail(
+    player_id: PlayerIdPath,
+    query: Annotated[PlayerDetailQuery, Query()],
+    response: Response,
+    authorization: Annotated[str | None, Header()] = None,
+) -> PlayerDetailResponse:
+    """Return fixtures, market, matches, and profile in one payload."""
+    user, _jwt = await get_current_user(authorization)
+    await _enforce_rate_limit(user.user_id, response)
+    payload = await get_container().player_stats_service.detail(player_id, query)
+    response.headers["Cache-Control"] = "private, max-age=60"
     response.headers["Vary"] = "Authorization"
     return payload
 

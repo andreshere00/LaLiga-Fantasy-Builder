@@ -4,6 +4,44 @@
   cursor: help;
 }
 
+.market-card {
+  position: relative;
+}
+
+.market-player-details-link {
+  position: absolute;
+  top: 0.1rem;
+  left: 0.1rem;
+  z-index: 4;
+}
+
+.market-player-details-link .is-for-red {
+  display: none;
+}
+
+.pitch-tile-wrap {
+  position: relative;
+}
+
+.pitch-details-link {
+  position: absolute;
+  top: 5%;
+  right: auto;
+  left: 6.6667%;
+  z-index: 4;
+  display: grid;
+  width: 26.6667%;
+  aspect-ratio: 1;
+  place-items: center;
+  line-height: 0;
+}
+
+.pitch-details-link img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+}
+
 .market-page {
   max-width: 1100px;
   margin: 24px auto;
@@ -275,23 +313,13 @@
   border: 1px solid color-mix(in srgb, var(--ink) 12%, transparent);
 }
 
-@media (hover: hover) {
-  .market-list > .market-data-row:is(:hover, :focus-within) {
-    background-color: var(--red-soft);
-  }
-
-  .market-list > .market-data-row:is(:hover, :focus-within) .market-card .player-tile {
-    background-color: var(--red);
-  }
-
-  .market-list > .market-data-row:is(:hover, :focus-within) .market-value-change.is-mid {
-    color: var(--black);
-  }
-}
-
 .market-data-row {
   transform-origin: center top;
   transition: background-color var(--control-fill-duration) var(--control-fill-ease);
+}
+
+.market-list > .market-data-row:has([aria-expanded="true"], details[open]) {
+  z-index: 40;
 }
 
 .market-head {
@@ -497,10 +525,9 @@
   width: 72px;
 }
 
-@media (hover: hover) {
-  .market-data-row:is(:hover, :focus-within) .market-card .player-tile:is(:hover, :active) {
-    background-color: var(--red);
-  }
+/* Table cards keep their resting color when hovering a row or photo. */
+.market-data-row .market-card .player-tile:is(:hover, :active) {
+  background-color: var(--tile);
 }
 
 .market-name-wrap {
@@ -919,7 +946,7 @@
 .market-actions-menu {
   position: absolute;
   top: calc(100% + 4px);
-  left: 0;
+  right: 0;
   z-index: 20;
   list-style: none;
   margin: 0;
@@ -935,9 +962,22 @@
   overflow: visible;
 }
 
-.market-actions-menu-item .hover-tooltip-panel {
+.market-actions .market-actions-menu-item > .hover-tooltip-panel {
   z-index: 120;
   max-width: min(22rem, calc(100vw - 32px));
+  opacity: 0;
+  visibility: hidden;
+}
+
+.market-actions-menu-item:hover > .hover-tooltip-panel,
+.market-actions-menu:not(:hover) .market-actions-menu-item:focus-within > .hover-tooltip-panel {
+  opacity: 1;
+  visibility: visible;
+}
+
+.market-actions.is-open > .hover-tooltip-panel {
+  opacity: 0;
+  visibility: hidden;
 }
 
 .market-actions-tooltip-line {
@@ -956,6 +996,11 @@
   text-align: left;
   cursor: pointer;
   transition: background-color var(--control-fill-duration) var(--control-fill-ease);
+}
+
+a.market-actions-item {
+  color: inherit;
+  text-decoration: none;
 }
 
 .market-actions-item:is(:hover, :focus-visible) {
@@ -1031,26 +1076,85 @@
   color: var(--ink);
 }
 
-@media (max-width: 800px) {
-  .market-head {
+/* Preserve the table layout while hiding optional columns in priority order. */
+@media (max-width: 1100px) {
+  .market-page:not(.players-page) {
+    --market-table-columns:
+      72px minmax(7rem, 1fr) 3.5rem 4rem 8rem minmax(8rem, 1fr) 5rem 7rem;
+  }
+
+  .market-page:not(.players-page) .market-row {
+    grid-template-columns: var(--market-table-columns);
+  }
+
+  .market-page:not(.players-page) .market-name-wrap {
+    grid-column: span 1;
+  }
+
+  .market-page:not(.players-page) .market-head-player {
+    grid-column: span 2;
+  }
+
+  .market-page:not(.players-page) .market-name {
+    white-space: normal;
+    overflow-wrap: anywhere;
+  }
+
+  .market-page:not(.players-page) .market-head-cell-availability,
+  .market-page:not(.players-page) .market-data-row > :nth-child(7),
+  .market-page:not(.players-page) .market-loading-row > :nth-child(7) {
     display: none;
   }
 
-  .market-row {
-    grid-template-columns: 72px 1fr;
+  .market-page:not(.players-page) .market-loading-row > :nth-child(2) {
+    grid-column: span 1;
+  }
+}
+
+@media (max-width: 1000px) {
+  .market-page:not(.players-page) {
+    --market-table-columns: 72px minmax(7rem, 1fr) 3.5rem 4rem 8rem 5rem 7rem;
   }
 
-  .market-name-wrap {
-    grid-column: 2 / -1;
+  .market-page:not(.players-page) .market-head-cell-marketValue,
+  .market-page:not(.players-page) .market-data-row > :nth-child(6),
+  .market-page:not(.players-page) .market-loading-row > :nth-child(6) {
+    display: none;
+  }
+}
+
+@media (max-width: 860px) {
+  .market-page:not(.players-page) {
+    --market-table-columns: 72px minmax(7rem, 1fr) 3.5rem 4rem 5rem 7rem;
   }
 
-  .market-card {
-    grid-row: span 2;
+  .market-page:not(.players-page) .market-head-cell-form,
+  .market-page:not(.players-page) .market-data-row > :nth-child(5),
+  .market-page:not(.players-page) .market-loading-row > :nth-child(5) {
+    display: none;
+  }
+}
+
+@media (max-width: 644px) {
+  .market-page:not(.players-page) :is(.market-list, .market-loading-table) {
+    overflow-x: auto;
   }
 
-  .market-cell[data-label]::before,
-  .market-name[data-label]::before {
-    content: attr(data-label) ": ";
-    font-weight: 700;
+  .market-page:not(.players-page) :is(.market-row, .market-loading-row) {
+    min-width: 580px;
   }
+
+  .market-page:not(.players-page) .market-list:has([aria-expanded="true"], details[open]) {
+    padding-bottom: 16rem;
+  }
+}
+
+.market-form-badge-stack.is-unplayed-fixture .hover-tooltip-panel {
+  bottom: calc(100% + 0.45rem);
+  left: 50%;
+  transform: translateX(-50%);
+}
+
+.market-form-badge-stack.is-unplayed-fixture {
+  cursor: help;
 }

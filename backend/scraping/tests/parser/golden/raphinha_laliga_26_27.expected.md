@@ -257,6 +257,15 @@ Capas al expandir un partido
 #### ataque
 
 - Tiros totales (`tiros`)
+- Tiros a puerta (`tiros a puerta`)
+- Regates (`regates`)
+- Asistencias sin gol (`asistencias sin gol`)
+#### portero
+
+- Goles en contra (`goles en contra`)
+#### ataque
+
+- Penaltis provocados (`penaltis provocados`)
 - Regates con éxito (`regates`)
 #### defensa
 

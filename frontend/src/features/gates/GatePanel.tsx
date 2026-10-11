@@ -11,11 +11,11 @@ type GateCopy = {
 const COPY: Record<Exclude<AuthStatus, "ready">, GateCopy> = {
   loading: {
     title: "Loading",
-    body: "Checking your session.",
+    body: "Checking your session...",
   },
   "signed-out": {
     title: "Sign in",
-    body: "Log in to load your league, lineup, and ranking.",
+    body: "Log in to operate within LaLiga Fantasy application by using a web interface.",
     action: "login",
   },
   unlinked: {
@@ -45,6 +45,9 @@ export function GatePanel({ status }: { status: Exclude<AuthStatus, "ready"> }) 
 
   return (
     <section className="gate">
+      {status === "loading" ? (
+        <span className="gate-loading-indicator" role="status" aria-label="Loading" />
+      ) : null}
       <h1>{copy.title}</h1>
       <p>{copy.body}</p>
       {copy.action === "login" ? (

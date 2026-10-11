@@ -29,6 +29,7 @@ class StatSource(StrEnum):
     FANTASY_LEAGUE_CARD = "fantasy_league_card"
     FANTASY_CALENDAR = "fantasy_calendar"
     FUTBOLFANTASY = "futbolfantasy"
+    COMPUTED_OFFICIAL = "computed_official"
     DERIVED = "derived"
     UNAVAILABLE = "unavailable"
 
@@ -41,6 +42,7 @@ class StatKey(StrEnum):
     BIG_CHANCES_CREATED = "big_chances_created"
     BALLS_INTO_BOX = "balls_into_box"
     PENALTIES_COMMITTED = "penalties_committed"
+    PENALTIES_WON = "penalties_won"
     PENALTIES_SAVED = "penalties_saved"
     SAVES = "saves"
     CLEARANCES = "clearances"
@@ -126,8 +128,8 @@ class SourceStatus(StatsModel):
 
 class StatValue(StatsModel):
     count: int | None = None
-    fantasy_points: int = 0
-    dazn_points: int = 0
+    fantasy_points: int | None = None
+    dazn_points: int | None = None
     source: StatSource = StatSource.UNAVAILABLE
 
 
@@ -143,6 +145,7 @@ class FixtureStats(StatsModel):
     big_chances_created: StatValue = Field(default_factory=default_stat_value)
     balls_into_box: StatValue = Field(default_factory=default_stat_value)
     penalties_committed: StatValue = Field(default_factory=default_stat_value)
+    penalties_won: StatValue = Field(default_factory=default_stat_value)
     penalties_saved: StatValue = Field(default_factory=default_stat_value)
     saves: StatValue = Field(default_factory=default_stat_value)
     clearances: StatValue = Field(default_factory=default_stat_value)
@@ -334,6 +337,14 @@ class StartProbability(StatsModel):
     raw: str | None = None
 
 
+class FormStat(StatsModel):
+    """Published numeric form value or categorical arrow rating."""
+
+    value: float | None = None
+    rating: Literal["bad", "mid", "good", "very_good"] | None = None
+    visual_only: bool = False
+
+
 class InjuryRiskInfo(StatsModel):
     level: InjuryRisk
     raw: str | None = None
@@ -358,6 +369,14 @@ class Hierarchy(StatsModel):
     rank: int | None = None
 
 
+class AveragePerMatch(StatsModel):
+    """One published per-match average from the scraped season block."""
+
+    code: str
+    label: str
+    value: float | None = None
+
+
 class NewsItem(StatsModel):
     title: str
     url: HttpUrl | None = None
@@ -372,12 +391,14 @@ class NewsItem(StatsModel):
 
 class PlayerProfileResponse(SegmentEnvelope):
     injury: Injury
+    form: FormStat | None = None
     start_probability: StartProbability
     injury_risk: InjuryRiskInfo
     injury_history: list[InjuryHistoryEntry] = Field(default_factory=list)
     max_profitable_bid: MaxProfitableBid
     hierarchy: Hierarchy
     news: list[NewsItem] = Field(default_factory=list)
+    averages: list[AveragePerMatch] = Field(default_factory=list)
 
 
 class SegmentDescriptor(StatsModel):
@@ -436,3 +457,128 @@ class UpcomingMatchesQuery(StrictQuery):
 
 class ProfileQuery(StrictQuery):
     pass
+
+
+DetailSegment = Literal["fixtures", "market", "recent", "upcoming", "profile"]
+
+_DETAIL_SEGMENTS: frozenset[str] = frozenset(
+    {"fixtures", "market", "recent", "upcoming", "profile"},
+)
+
+
+def default_detail_include() -> list[DetailSegment]:
+    return ["fixtures", "market", "recent", "upcoming", "profile"]
+
+
+class PlayerDetailQuery(StrictQuery):
+    """Select optional detail segments and their validated query options.
+
+    Attributes:
+        last: Maximum fixture-stat rows to return.
+        competition: Optional fixture competitions to include.
+        preset: Market-history preset when no explicit date range is supplied.
+        from_: Inclusive custom market-history start date.
+        to: Inclusive custom market-history end date.
+        limit: Maximum recent and upcoming matches to return.
+        include_stats: Whether recent matches include player stats.
+        include_weather: Whether upcoming matches include weather data.
+        include: Detail segments to fetch; defaults to every segment.
+    """
+
+    last: int = Field(5, ge=1, le=60)
+    competition: list[Competition] | None = None
+    preset: MarketPreset | None = None
+    from_: Date | None = Field(None, alias="from")
+    to: Date | None = None
+    limit: int = Field(5, ge=1, le=5)
+    include_stats: bool = True
+    include_weather: bool = True
+    include: list[DetailSegment] = Field(default_factory=default_detail_include)
+
+    @model_validator(mode="after")
+    def _validate_detail(self) -> PlayerDetailQuery:
+        unknown = set(self.include) - _DETAIL_SEGMENTS
+        if unknown:
+            raise ValueError("unknown include segment")
+        MarketQuery(
+            preset=self._effective_market_preset(),
+            from_=self.from_,
+            to=self.to,
+        )
+        return self
+
+    def _effective_market_preset(self) -> MarketPreset | None:
+        if self.from_ is not None or self.to is not None:
+            return self.preset
+        return self.preset if self.preset is not None else MarketPreset.SEASON
+
+    def market_query(self) -> MarketQuery:
+        """Return the validated market-history request for this aggregate query."""
+        return MarketQuery(
+            preset=self._effective_market_preset(),
+            from_=self.from_,
+            to=self.to,
+        )
+
+    def fixtures_query(self) -> FixturesQuery:
+        """Return the validated fixtures request for this aggregate query."""
+        return FixturesQuery(competition=self.competition, last=self.last)
+
+    def recent_query(self) -> RecentMatchesQuery:
+        """Return the validated recent-matches request for this aggregate query."""
+        return RecentMatchesQuery(limit=self.limit, include_stats=self.include_stats)
+
+    def upcoming_query(self) -> UpcomingMatchesQuery:
+        """Return the validated upcoming-matches request for this aggregate query."""
+        return UpcomingMatchesQuery(limit=self.limit, include_weather=self.include_weather)
+
+
+class SegmentError(StatsModel):
+    """Sanitised reason that one requested detail segment could not be produced.
+
+    Attributes:
+        segment: Detail segment that failed.
+        code: Stable error category safe to return to API clients.
+        detail: Bounded, sanitised diagnostic text.
+    """
+
+    segment: DetailSegment
+    code: str
+    detail: str
+
+    @field_validator("detail")
+    @classmethod
+    def _cap_detail(cls, value: str) -> str:
+        cleaned = "".join(ch for ch in value if ord(ch) >= 32)
+        return cleaned[:200] if cleaned else ""
+
+
+class PlayerDetailResponse(StatsModel):
+    """Aggregate player details with optional segments and partial errors.
+
+    Successful segments are returned even when another segment fails. Failed
+    requested segments are absent and described in ``segment_errors``.
+
+    Attributes:
+        player_id: Requested Fantasy master player id.
+        player: Resolved player identity shared by returned segments.
+        season: Season used for all returned data.
+        generated_at: Time the aggregate response was built.
+        fixtures: Optional fixture-stat segment.
+        market: Optional market-history segment.
+        recent: Optional recent-matches segment.
+        upcoming: Optional upcoming-matches segment.
+        profile: Optional scraped-profile segment.
+        segment_errors: Sanitised failures for requested optional segments.
+    """
+
+    player_id: str
+    player: PlayerRef
+    season: str
+    generated_at: datetime
+    fixtures: PlayerFixtureStatsResponse | None = None
+    market: PlayerMarketResponse | None = None
+    recent: RecentMatchesResponse | None = None
+    upcoming: UpcomingMatchesResponse | None = None
+    profile: PlayerProfileResponse | None = None
+    segment_errors: list[SegmentError] = Field(default_factory=list)

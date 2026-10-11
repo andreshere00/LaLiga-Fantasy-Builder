@@ -179,5 +179,11 @@ def test_ratio_invalid_text_raises() -> None:
     assert risk_level("nulo") is None
     assert hierarchy_rank("misterioso", {"dios": 1}) is None
     assert minutes_note("algo raro", starter=True).event == "unknown"
+
+
+def test_minutes_note_emoji_prefix_parses_full_ninety() -> None:
+    note = minutes_note("\u23f1\ufe0f 90'", starter=False)
+    assert note.minutes == 90
+    assert note.event == "full"
     assert dash_decimal("1.234,50") == 1234.5
     assert es_decimal("12") == 12

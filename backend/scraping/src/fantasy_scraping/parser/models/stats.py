@@ -22,7 +22,7 @@ class StatLine(ParserModel):
     """
 
     count: int | None = None
-    points: float = 0.0
+    points: float | None = None
     status: StatStatus = "unavailable"
     source: StatSource | None = None
     reason: str | None = None
@@ -31,7 +31,7 @@ class StatLine(ParserModel):
 def line(
     *,
     count: int | None = None,
-    points: float = 0.0,
+    points: float | None = None,
     status: StatStatus = "ok",
     source: StatSource | None = "futbolfantasy",
     reason: str | None = None,
@@ -42,17 +42,17 @@ def line(
 
 def unavailable(reason: str) -> StatLine:
     """A metric the delivered HTML did not publish."""
-    return line(status="unavailable", source=None, reason=reason, points=0.0)
+    return line(status="unavailable", source=None, reason=reason)
 
 
 def not_applicable(reason: str = "goalkeeper_only") -> StatLine:
     """A goalkeeper metric on an outfield player, or the reverse case."""
-    return line(status="not_applicable", source=None, reason=reason, points=0.0)
+    return line(status="not_applicable", source=None, reason=reason)
 
 
 def implied_zero() -> StatLine:
     """The expand layer exists and this event is not in the published list."""
-    return line(count=0, points=0.0, status="implied_zero", reason=None)
+    return line(count=0, status="implied_zero", reason=None)
 
 
 def unavailable_minutes() -> StatLine:
@@ -69,6 +69,7 @@ class DaznStats(ParserModel):
     big_chances_created: StatLine = Field(default_factory=lambda: unavailable("layer_missing"))
     balls_into_box: StatLine = Field(default_factory=lambda: unavailable("layer_missing"))
     penalties_committed: StatLine = Field(default_factory=lambda: unavailable("layer_missing"))
+    penalties_won: StatLine = Field(default_factory=lambda: unavailable("layer_missing"))
     penalties_saved: StatLine = Field(default_factory=lambda: unavailable("layer_missing"))
     saves: StatLine = Field(default_factory=lambda: unavailable("layer_missing"))
     clearances: StatLine = Field(default_factory=lambda: unavailable("layer_missing"))

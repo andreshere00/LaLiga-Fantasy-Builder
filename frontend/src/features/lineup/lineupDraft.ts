@@ -138,6 +138,7 @@ function pitchSlotFromLineupAndSquad(
   if (card) {
     return {
       id: slot.id,
+      masterPlayerId: card.masterPlayerId ?? slot.masterPlayerId ?? null,
       name: card.name ?? slot.name,
       photoUrl: card.photoUrl ?? slot.photoUrl ?? null,
       teamBadgeUrl: slot.teamBadgeUrl ?? card.teamBadgeUrl ?? null,
@@ -146,10 +147,11 @@ function pitchSlotFromLineupAndSquad(
     };
   }
   if (!slot.name?.trim()) {
-    return { id: slot.id, name: "", isEmpty: true };
+    return { id: slot.id, masterPlayerId: null, name: "", isEmpty: true };
   }
   return {
     id: slot.id,
+    masterPlayerId: slot.masterPlayerId ?? null,
     name: slot.name,
     photoUrl: slot.photoUrl ?? null,
     teamBadgeUrl: slot.teamBadgeUrl ?? null,
@@ -164,14 +166,23 @@ function slotViewFromId(
   squadById: ReadonlyMap<string, SquadCard>,
 ): LineupSlotView {
   if (!id || isEmptySlotId(id)) {
-    return { id: id || emptySlotId(role, 0), name: "", isEmpty: true };
+    return {
+      id: id || emptySlotId(role, 0),
+      masterPlayerId: null,
+      name: "",
+      isEmpty: true,
+    };
   }
   const card = squadById.get(id);
-  const slot: LineupSlotView = { id, name: card?.name ?? "" };
+  const slot: LineupSlotView = {
+    id,
+    masterPlayerId: card?.masterPlayerId ?? null,
+    name: card?.name ?? "",
+  };
   if (card) {
     return pitchSlotFromLineupAndSquad(slot, card);
   }
-  return { id, name: "", isEmpty: true };
+  return { id, masterPlayerId: null, name: "", isEmpty: true };
 }
 
 function roleSlotCount(role: LineupRole, tactical: readonly number[]): number {
@@ -195,7 +206,12 @@ export function groupsForPitchDisplay(
     for (let index = 0; index < required; index += 1) {
       const slot = existing[index];
       if (slot?.isEmpty || !slot?.id || isEmptySlotId(slot.id)) {
-        players.push({ id: emptySlotId(role, index), name: "", isEmpty: true });
+        players.push({
+          id: emptySlotId(role, index),
+          masterPlayerId: null,
+          name: "",
+          isEmpty: true,
+        });
         continue;
       }
       players.push(pitchSlotFromLineupAndSquad(slot, squadById.get(slot.id)));

@@ -57,6 +57,11 @@ field = "penalties_committed"
 json_key = "penaltis_cometidos"
 
 [[stats]]
+slug = "penaltis-provocados"
+field = "penalties_won"
+json_key = "penaltis_provocados"
+
+[[stats]]
 slug = "penaltis-fallados"
 field = "penalties_missed"
 json_key = "penaltis_fallados"

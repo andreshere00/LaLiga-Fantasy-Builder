@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 
 import {
   formDisplayPoints,
+  formAverageLastThree,
   formFromCalendarWeeks,
   formPoints,
   formRecentPoints,
@@ -29,6 +30,12 @@ describe("form helpers", () => {
 
   it("formDisplayPoints_keeps_newest_three_scores", () => {
     expect(formDisplayPoints([8, 4, 2, 1, 0])).toEqual([8, 4, 2]);
+  });
+
+  it("formAverageLastThree_averages_only_the_latest_three_scores", () => {
+    expect(formAverageLastThree([12, 21, 21, 4])).toBe(18);
+    expect(formAverageLastThree([12, 21])).toBe(16.5);
+    expect(formAverageLastThree([])).toBeNull();
   });
 
   it("formRecentWindow_slides_to_older_matchweeks", () => {
@@ -105,10 +112,11 @@ describe("form helpers", () => {
     expect(formRecentWeekNumbers(lastStats, 7)).toEqual([7, 6]);
   });
 
-  it("marketRow_uses_calendar_form_when_lastStats_missing", () => {
+  it("marketRow_uses_calendar_form_average_when_lastStats_missing", () => {
     const statsByWeek = new Map<number, Map<string, number>>([
-      [7, new Map([["9", 3]])],
-      [6, new Map([["9", 5]])],
+      [9, new Map([["9", 12]])],
+      [8, new Map([["9", 21]])],
+      [7, new Map([["9", 21]])],
     ]);
     const row = marketRow(
       { id: "m1", playerMaster: { id: "9", nickname: "A", positionId: 4 } },
@@ -116,12 +124,12 @@ describe("form helpers", () => {
       {
         catalog: new Map(),
         history: new Map(),
-        calendarForm: { weekNumbers: [7, 6], statsByWeek, playedThrough: 7 },
+        calendarForm: { weekNumbers: [9, 8, 7], statsByWeek, playedThrough: 9 },
       },
     );
-    expect(row.form).toBe(8);
-    expect(row.formRecent).toEqual([3, 5]);
-    expect(row.formRecentWeeks).toEqual([7, 6]);
+    expect(row.form).toBe(18);
+    expect(row.formRecent).toEqual([12, 21, 21]);
+    expect(row.formRecentWeeks).toEqual([9, 8, 7]);
   });
 
   it("marketRow_keeps_coach_name_without_suffix", () => {

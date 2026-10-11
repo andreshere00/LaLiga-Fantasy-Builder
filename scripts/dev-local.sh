@@ -7,6 +7,7 @@ cd "$ROOT"
 
 test -f backend/auth/.env || cp backend/auth/.env.example backend/auth/.env
 test -f backend/api/.env || cp backend/api/.env.example backend/api/.env
+test -f backend/scraping/.env || cp backend/scraping/.env.example backend/scraping/.env
 
 if ! command -v uv >/dev/null 2>&1; then
   echo "uv is required. Install deps: uv run poe install" >&2
@@ -20,10 +21,17 @@ cleanup() {
 trap cleanup EXIT INT TERM
 
 echo "Starting auth on :8000, API on :8001, frontend on :3000"
+echo "Starting scraping on :8002"
 echo "Keycloak (if needed): docker compose up -d keycloak"
+
+# The API and scraper share this token for the private scrape endpoints.
+SCRAPING_BASE_URL="${SCRAPING_BASE_URL:-http://localhost:8002}"
+SCRAPING_SERVICE_TOKEN="${SCRAPING_SERVICE_TOKEN:-$(sed -n 's/^SCRAPING_SERVICE_TOKEN=//p' backend/scraping/.env | head -n 1)}"
+export SCRAPING_BASE_URL SCRAPING_SERVICE_TOKEN
 
 uv run --directory backend/auth uvicorn fantasy_auth.main:app --reload --port 8000 &
 uv run --directory backend/api uvicorn fantasy_api.main:app --reload --port 8001 &
+uv run --directory backend/scraping uvicorn fantasy_scraping.main:create_app --factory --reload --port 8002 &
 
 if command -v bun >/dev/null 2>&1; then
   (cd frontend && bun run dev) &

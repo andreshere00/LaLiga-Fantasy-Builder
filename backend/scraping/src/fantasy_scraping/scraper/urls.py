@@ -8,6 +8,7 @@ from fantasy_scraping.scraper.errors import HostNotAllowedError, InvalidRequestE
 HOST: str = "www.futbolfantasy.com"
 BASE: str = f"https://{HOST}"
 SLUG_RE: re.Pattern[str] = re.compile(r"^[a-z0-9]+(?:-[a-z0-9]+)*$")
+PLAYER_SLUG_RE: re.Pattern[str] = re.compile(r"^-?[a-z0-9]+(?:-[a-z0-9]+)*-?$")
 SEASON_RE: re.Pattern[str] = re.compile(r"^\d{4}-\d{2}$")
 ALLOWED_PREFIXES: tuple[str, ...] = (
     "/jugadores/",
@@ -62,7 +63,10 @@ def laliga_slug(season: str) -> str:
 
 def player_url(slug: str, season_slug: str) -> str:
     """Build a player page URL for one competition-season route."""
-    return f"{BASE}/jugadores/{check_slug(slug)}/{check_slug(season_slug)}"
+    # Published player routes can have an edge dash; keep the path alphabet strict.
+    if not PLAYER_SLUG_RE.fullmatch(slug):
+        raise InvalidRequestError("invalid player slug")
+    return f"{BASE}/jugadores/{slug}/{check_slug(season_slug)}"
 
 
 def widget_url(widget_id: str) -> str:

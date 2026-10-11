@@ -55,9 +55,10 @@ class Availability(ParserModel):
 
 
 class Form(ParserModel):
-    """Form widget. ``visual_only`` is set when the DOM has no number."""
+    """Form widget with a numeric value or a published arrow rating."""
 
     value: float | None = None
+    rating: Literal["bad", "mid", "good", "very_good"] | None = None
     visual_only: bool = False
 
 
@@ -179,11 +180,15 @@ class RecentMatch(ParserModel):
     matchday: int | None = None
     competition: Competition = Competition.OTHER
     competition_raw: str | None = None
+    home_team: str | None = None
+    away_team: str | None = None
+    opponent: str | None = None
     score: Score | None = None
     player_side: PlayerSide | None = None
     minutes: MinutesNote
     stats: DaznStats | None = None
     stats_source: Literal["futbolfantasy"] | None = None
+    week_points: int | None = None
 
 
 class UpcomingMatch(ParserModel):
@@ -195,6 +200,9 @@ class UpcomingMatch(ParserModel):
     is_home: bool | None = None
     competition: Competition = Competition.OTHER
     competition_raw: str | None = None
+    home_team: str | None = None
+    away_team: str | None = None
+    opponent: str | None = None
 
 
 class MatchesBlock(ParserModel):

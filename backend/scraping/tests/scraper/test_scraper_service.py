@@ -45,7 +45,7 @@ async def test_resolve_player_route_namesake_with_team_reuses_downloaded_page(
 ) -> None:
     from fantasy_scraping.scraper.cache import MemoryCache
 
-    site.teams = {"gueye": "getafe", "idrissa-gueye": "getafe", "lamine-gueye": "barcelona"}
+    site.teams = {"gueye": "getafe", "lamine-gueye": "barcelona"}
     service = ScraperService(make_client(site), MemoryCache(clock), settings, aliases={})
 
     route = await service.resolve_player_route("Gueye", "Getafe CF", season=SEASON)
@@ -144,7 +144,7 @@ async def test_health_reports_index_after_build(service: ScraperService) -> None
     await service.get_linked_data()
 
     after = service.health()
-    assert after["index"] == "loaded" and after["index_players"] == 18
+    assert after["index"] == "loaded" and after["index_players"] == 19
     assert after["cache"]["hits"] >= 0
 
 

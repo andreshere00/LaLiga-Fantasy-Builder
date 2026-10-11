@@ -57,7 +57,7 @@ def test_players_batch_returns_per_item_errors_inside_200(client: TestClient) ->
 def test_linked_data_summary_returns_counts_only(client: TestClient) -> None:
     response = client.get("/internal/scrape/linked-data", headers=TOKEN)
 
-    assert response.json()["players"] == 18 and "player_slugs" not in response.json()
+    assert response.json()["players"] == 19 and "player_slugs" not in response.json()
     assert client.post("/internal/scrape/linked-data/refresh", headers=TOKEN).status_code == 200
 
 

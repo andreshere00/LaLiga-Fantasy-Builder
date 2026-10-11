@@ -122,6 +122,37 @@
   background: var(--surface-press);
 }
 
+.navigation-wrap {
+  position: relative;
+  display: flex;
+  flex: 1;
+  min-width: 0;
+}
+
+.navigation-button {
+  display: none;
+  align-items: center;
+  gap: 8px;
+  border: 0;
+  border-radius: 0;
+  padding: 0 12px;
+  background: var(--white);
+  color: var(--ink);
+  font: inherit;
+  cursor: pointer;
+}
+
+.navigation-button:is(:hover, :focus-visible, [aria-expanded="true"]) {
+  background: var(--surface-press);
+  color: var(--red);
+}
+
+.navigation-icon {
+  width: 20px;
+  height: 20px;
+  flex: 0 0 auto;
+}
+
 .nav-tabs {
   display: flex;
   align-items: stretch;
@@ -162,6 +193,11 @@
   display: block;
   width: clamp(20px, 3.2vw, 28px);
   height: clamp(20px, 3.2vw, 28px);
+}
+
+.nav-tab[href="/players"] .nav-tab-icon-wrap img {
+  width: clamp(17px, 2.75vw, 24px);
+  height: clamp(17px, 2.75vw, 24px);
 }
 
 .nav-tab-label {
@@ -284,4 +320,66 @@
 
 .profile-name {
   font-weight: 700;
+}
+
+@media (max-width: 960px) {
+  .league-wrap {
+    flex: 0 1 auto;
+    min-width: 0;
+    max-width: 40%;
+  }
+
+  .league-chip {
+    width: 100%;
+    min-width: 0;
+  }
+
+  .league-name {
+    min-width: 0;
+  }
+
+  .navigation-wrap {
+    flex: 1;
+  }
+
+  .navigation-button {
+    display: inline-flex;
+    justify-content: center;
+    width: 100%;
+    box-sizing: border-box;
+  }
+
+  .navigation-wrap .nav-tabs {
+    display: none;
+    position: absolute;
+    top: 100%;
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: 50;
+    width: 12rem;
+    padding: 6px 0;
+    background: var(--white);
+    border-radius: 0;
+    box-shadow: var(--shadow-surface);
+  }
+
+  .navigation-wrap .nav-tabs.is-open {
+    display: flex;
+    flex-direction: column;
+  }
+
+  .navigation-wrap .nav-tab {
+    min-height: 44px;
+    padding: 0 8px;
+  }
+
+  .nav-actions {
+    margin-left: 0;
+  }
+}
+
+@media (max-width: 480px) {
+  .navigation-button-label {
+    display: none;
+  }
 }

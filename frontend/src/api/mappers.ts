@@ -1,4 +1,4 @@
-import teamsMasterFile from "../../../assets/teams_master.json";
+import { clubMediaFromId } from "./clubMedia";
 
 export type ManagerInfo = {
   id?: string | number | null;
@@ -54,6 +54,7 @@ export type PlayerMedia = {
 
 export type LineupSlotView = {
   id: string;
+  masterPlayerId: string | null;
   name: string;
   isEmpty?: boolean;
   photoUrl?: string | null;
@@ -66,6 +67,7 @@ export type ScoreTone = "red" | "yellow" | "green" | "blue";
 
 export type FixtureScoreLookup = {
   week: number | null;
+  defaultPoints?: number;
   pointsByMasterId?: ReadonlyMap<string, number>;
   mvpByMasterId?: ReadonlySet<string>;
 };
@@ -79,6 +81,7 @@ export type LineupGroup = {
 
 export type SquadCard = {
   id: string;
+  masterPlayerId: string | null;
   name: string;
   captain: boolean;
   positionId: number | null;
@@ -178,6 +181,16 @@ export function weekPointsFromLastStats(master: unknown, week: number): number |
   return null;
 }
 
+/** Scheduled fixtures have matchState 1; other supplied states expose live scores. */
+export function fixtureHasStarted(fixture: unknown): boolean {
+  const record = asRecord(fixture);
+  const state = asFiniteNumber(record?.matchState);
+  if (state != null) return state !== 1;
+  const date = record?.matchDate ?? record?.date;
+  const kickoff = typeof date === "string" ? Date.parse(date) : NaN;
+  return Number.isFinite(kickoff) && kickoff <= Date.now();
+}
+
 /** Index of master ``playerId`` → matchweek points from calendar stats. */
 export function weekPointsByMasterId(stats: unknown): Map<string, number> {
   return weekScoreIndex(stats).pointsByMasterId;
@@ -222,6 +235,9 @@ export function fixturePointsFromSlot(
   const record = asRecord(slot);
   if (!record) return null;
   const master = asRecord(record.playerMaster);
+  const masterId = masterIdFromLineupSlot(record, master);
+  const calendarPoints = masterId ? lookup?.pointsByMasterId?.get(masterId) : undefined;
+  if (calendarPoints != null) return calendarPoints;
   const fromSlot =
     asFiniteNumber(record.weekPoints) ??
     asFiniteNumber(record.points) ??
@@ -232,9 +248,8 @@ export function fixturePointsFromSlot(
     const fromHistory = weekPointsFromLastStats(master, week);
     if (fromHistory != null) return fromHistory;
   }
-  const masterId = masterIdFromLineupSlot(record, master);
   if (masterId && lookup?.pointsByMasterId) {
-    return lookup.pointsByMasterId.get(masterId) ?? null;
+    return lookup.pointsByMasterId.get(masterId) ?? lookup.defaultPoints ?? null;
   }
   return null;
 }
@@ -414,7 +429,7 @@ function avatarNameKey(value: unknown): string | null {
 function firstImageUrl(value: unknown, depth = 0): string | null {
   const direct = asHttpUrl(value);
   if (direct) return direct;
-  if (depth > 3) return null;
+  if (depth > 6) return null;
   if (Array.isArray(value)) {
     for (const item of value) {
       const found = firstImageUrl(item, depth + 1);
@@ -591,10 +606,10 @@ export function lastPlayedWeek(current: CurrentWeek): number {
   return 0;
 }
 
-/** Whether per-player fixture scores may be shown for the selected matchweek. */
+/** Whether per-player fixture scores (including live scores) may be shown for the selected matchweek. */
 export function fixtureScoresVisibleForWeek(week: number, current: CurrentWeek): boolean {
   if (week < 1) return false;
-  return week <= lastPlayedWeek(current);
+  return week <= maxWeek(current);
 }
 
 export function maxWeek(current: CurrentWeek): number {
@@ -650,51 +665,13 @@ function teamBadgeUrlFromTeamRecord(team: unknown): string | null {
   return text(record.badgeColor) ?? text(record.badgeWhite) ?? null;
 }
 
-function buildTeamBadgeByTeamIdMap(): ReadonlyMap<string, string> {
-  const map = new Map<string, string>();
-  if (!Array.isArray(teamsMasterFile)) return map;
-  for (const entry of teamsMasterFile) {
-    const record = asRecord(entry);
-    const badge = teamBadgeUrlFromTeamRecord(entry);
-    if (!badge) continue;
-    const id = idText(record?.id);
-    const dspId = idText(record?.dspId);
-    if (id) map.set(id, badge);
-    if (dspId) map.set(dspId, badge);
-  }
-  return map;
-}
-
-const TEAM_BADGE_BY_TEAM_ID = buildTeamBadgeByTeamIdMap();
-
-function buildTeamNameByTeamIdMap(): ReadonlyMap<string, string> {
-  const map = new Map<string, string>();
-  if (!Array.isArray(teamsMasterFile)) return map;
-  for (const entry of teamsMasterFile) {
-    const record = asRecord(entry);
-    const name = text(record?.name) ?? text(record?.shortName);
-    if (!name) continue;
-    const id = idText(record?.id);
-    const dspId = idText(record?.dspId);
-    if (id) map.set(id, name);
-    if (dspId) map.set(dspId, name);
-  }
-  return map;
-}
-
-const TEAM_NAME_BY_TEAM_ID = buildTeamNameByTeamIdMap();
-
 function teamBadgeFromTeamId(teamId: unknown): string | null {
-  const id = idText(teamId);
-  if (!id) return null;
-  return TEAM_BADGE_BY_TEAM_ID.get(id) ?? null;
+  return clubMediaFromId(teamId)?.badge ?? null;
 }
 
 /** Resolves a club display name from a Fantasy team id (``id`` or ``dspId`` in teams master). */
 export function teamNameFromTeamId(teamId: unknown): string | null {
-  const id = idText(teamId);
-  if (!id) return null;
-  return TEAM_NAME_BY_TEAM_ID.get(id) ?? null;
+  return clubMediaFromId(teamId)?.name ?? null;
 }
 
 function teamNameFromTeamRecord(team: unknown): string | null {
@@ -723,6 +700,34 @@ function resolveTeamBadgeUrl(team: unknown, teamId: unknown): string | null {
   );
 }
 
+function httpImageUrl(value: unknown): string | null {
+  const raw = text(value);
+  if (!raw) return null;
+  if (raw.startsWith("//")) return `https:${raw}`;
+  if (/^https?:\/\//i.test(raw)) return raw;
+  return null;
+}
+
+function photoFromImages(images: unknown): string | null {
+  const record = asRecord(images);
+  if (!record) return httpImageUrl(images);
+  const transparent =
+    asRecord(record.transparent) ??
+    asRecord(record.transparentColor) ??
+    asRecord(record.photo);
+  if (transparent) {
+    for (const key of ["512x512", "256x256", "128x128", "64x64"]) {
+      const url = httpImageUrl(transparent[key]);
+      if (url) return url;
+    }
+    for (const value of Object.values(transparent)) {
+      const url = httpImageUrl(value);
+      if (url) return url;
+    }
+  }
+  return firstImageUrl(record);
+}
+
 /** Reads the club name from a player master record (inline team or teams master lookup). */
 export function teamNameFromPlayerMaster(master: unknown): string | null {
   const record = asRecord(master);
@@ -733,13 +738,14 @@ export function teamNameFromPlayerMaster(master: unknown): string | null {
 export function mediaFromPlayerMaster(master: unknown): PlayerMedia {
   const record = asRecord(master);
   if (!record) return { photoUrl: null, teamBadgeUrl: null };
-  const images = asRecord(record.images);
-  const transparent = asRecord(images?.transparent);
   const photoUrl =
-    text(transparent?.["256x256"]) ??
-    text(transparent?.["128x128"]) ??
-    text(transparent?.["64x64"]) ??
-    null;
+    httpImageUrl(record.photoUrl) ??
+    httpImageUrl(record.imageUrl) ??
+    firstImageUrl(record.avatar) ??
+    firstImageUrl(record.photo) ??
+    firstImageUrl(record.image) ??
+    firstImageUrl(record.profileImage) ??
+    photoFromImages(record.images);
   const teamBadgeUrl = resolveTeamBadgeUrl(record.team, record.teamId);
   return { photoUrl, teamBadgeUrl };
 }
@@ -811,7 +817,11 @@ export function slotView(
 ): LineupSlotView {
   const record = asRecord(slot);
   if (!record) {
-    return { id: idText(slot) ?? `slot-${index}`, name: EMPTY_NAME };
+    return {
+      id: idText(slot) ?? `slot-${index}`,
+      masterPlayerId: null,
+      name: EMPTY_NAME,
+    };
   }
   const master = asRecord(record.playerMaster);
   const name =
@@ -820,6 +830,7 @@ export function slotView(
   const media = mediaFromLineupSlot(record, catalogByMasterId);
   return {
     id,
+    masterPlayerId: idText(master?.id),
     name: name ?? EMPTY_NAME,
     ...media,
     fixturePoints: fixturePointsFromSlot(record, scoreLookup),
@@ -842,6 +853,7 @@ export function enrichSquadMapFromLineup(
       if (!existing) {
         merged.set(player.id, {
           id: player.id,
+          masterPlayerId: player.masterPlayerId,
           name: player.name,
           captain: false,
           positionId: null,
@@ -962,10 +974,9 @@ export function squadCards(
     const masterId = idText(master?.id);
     const week = scoreLookup?.week ?? null;
     const fixturePoints =
+      (masterId ? scoreLookup?.pointsByMasterId?.get(masterId) : null) ??
       (week != null ? weekPointsFromLastStats(master, week) : null) ??
-      (masterId && scoreLookup?.pointsByMasterId
-        ? (scoreLookup.pointsByMasterId.get(masterId) ?? null)
-        : null);
+      scoreLookup?.defaultPoints ?? null;
     const isMvp =
       isMvpFlag(record) ||
       isMvpFlag(master) ||
@@ -973,6 +984,7 @@ export function squadCards(
       Boolean(masterId && scoreLookup?.mvpByMasterId?.has(masterId));
     return {
       id,
+      masterPlayerId: masterId,
       name,
       captain: captainId != null && id === captainId,
       positionId,

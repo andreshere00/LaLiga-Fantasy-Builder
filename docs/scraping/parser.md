@@ -91,6 +91,13 @@ Outside LaLiga, `dazn_points` is `0` with reason `league_only`. Goalkeeper
 metrics on an outfield player are `not_applicable`. Two yellows stay two
 yellows; they are not a red card.
 
+The profile status extractor reads numeric form when published and maps
+FutbolFantasy arrow classes (`arrow-1` through `arrow-4`) to categorical
+ratings (`very_good`, `good`, `mid`, `bad`). A visual rating is marked
+`visual_only` and does not invent a numeric value. Starter likelihood pairs the
+`Titular Jn` matchweek label with the percentage inside the same lineup box to
+avoid reading another player's probability.
+
 The API should copy these field names into `fantasy_api`. It should not import
 this package.
 

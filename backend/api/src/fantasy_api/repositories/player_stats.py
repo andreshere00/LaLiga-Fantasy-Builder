@@ -50,14 +50,27 @@ class PlayerStatsRepository:
         name: str,
         season_slug: str,
         team: str | None,
+        player_id: str,
+        full_name: str | None,
     ) -> Any:
-        """Fetch parsed FutbolFantasy JSON from the scraping service."""
+        """Fetch parsed FutbolFantasy JSON from the scraping service.
+
+        Args:
+            name: Catalog nickname used for route resolution.
+            season_slug: Season key such as ``2026-27``.
+            team: Optional catalog team name.
+            player_id: Master player id, never a squad-entry id.
+            full_name: Optional catalog full name for route resolution.
+        """
         params = {
             "player_name": _clean_param(name),
             "season": _clean_param(season_slug),
+            "player_id": _clean_param(player_id),
         }
         if team:
             params["team"] = _clean_param(team)
+        if full_name:
+            params["full_name"] = _clean_param(full_name)
         return await self._scraping.get_json(_FUTBOLFANTASY_PATH, params)
 
     async def get_forecast(self, lat: float, lon: float) -> Any:

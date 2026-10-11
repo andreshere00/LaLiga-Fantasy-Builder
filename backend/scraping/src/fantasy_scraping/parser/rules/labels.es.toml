@@ -1,9 +1,11 @@
 [hierarchy]
 dios = 1
-estrella = 2
-titular = 3
+clave = 2
+importante = 3
 rotacion = 4
-suplente = 5
+revulsivo = 5
+reserva = 6
+otro = 7
 
 [[labels]]
 label = "Nombre"
@@ -114,6 +116,18 @@ normaliser = "ratio"
 group = "attack"
 
 [[labels]]
+label = "Tiros a puerta / Tiros:"
+path = "season_stats.attack.shots_on_target"
+normaliser = "ratio"
+group = "attack"
+
+[[labels]]
+label = "Goles / Tiros:"
+path = "season_stats.attack.goals_per_shot"
+normaliser = "ratio"
+group = "attack"
+
+[[labels]]
 label = "Goles por tiro"
 path = "season_stats.attack.goals_per_shot"
 normaliser = "ratio"
@@ -169,6 +183,12 @@ group = "attack"
 
 [[labels]]
 label = "Córners"
+path = "season_stats.attack.corners_won"
+normaliser = "es_int"
+group = "attack"
+
+[[labels]]
+label = "Córners forzados"
 path = "season_stats.attack.corners_won"
 normaliser = "es_int"
 group = "attack"
@@ -240,6 +260,12 @@ normaliser = "es_int"
 group = "defense"
 
 [[labels]]
+label = "Pases interceptados"
+path = "season_stats.defense.interceptions"
+normaliser = "es_int"
+group = "defense"
+
+[[labels]]
 label = "Balones robados"
 path = "season_stats.defense.ball_steals"
 normaliser = "es_int"
@@ -247,6 +273,12 @@ group = "defense"
 
 [[labels]]
 label = "Despejes"
+path = "season_stats.defense.effective_clearances"
+normaliser = "es_int"
+group = "defense"
+
+[[labels]]
+label = "Despejes efectivos"
 path = "season_stats.defense.effective_clearances"
 normaliser = "es_int"
 group = "defense"

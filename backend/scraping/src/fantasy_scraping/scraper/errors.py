@@ -34,6 +34,13 @@ class PlayerNotFoundError(ScrapingError):
     detail = "player not found"
 
 
+class PlayerAliasUnavailableError(PlayerNotFoundError):
+    """Known player ID has aliases but no verified source profile route."""
+
+    category = "player_alias_unavailable"
+    detail = "player is no longer available in the league competition"
+
+
 class HostNotAllowedError(ScrapingError):
     """Host not allowed."""
 

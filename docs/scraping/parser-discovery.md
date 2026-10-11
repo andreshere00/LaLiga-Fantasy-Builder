@@ -15,10 +15,10 @@ Used by `tests/parser/fixtures/futbolfantasy/*.html`.
 |---------|---------|
 | Canonical, title, club, widget link | `link[rel=canonical]`, `a.club`, `a.widget-mercado` |
 | Identity | `h1 .name`, `h1 .shirt`, `h1 .pos`, `img.badge` |
-| Availability, form, start odds, risk, hierarchy | Classes in `futbolfantasy.toml` (`p.disponibilidad`, `.titular`, …) |
+| Availability, form, start odds, risk, hierarchy | Legacy classes in `futbolfantasy.toml`; live fallbacks include `span.lesion`, sibling disponible text, `strong` with `Titular Jn`, percentage scoped to the same `.cuadro`, `img[alt^='Riesgo de lesión']`, `span.jerarquia-value` |
 | Personal data | `dl.personal` (`dt` / `dd` pairs) |
 | JSON-LD | `script[type=application/ld+json]` when present |
-| Injuries | `section.lesiones`, `table.historial` |
+| Injuries | `section.lesiones`, `table.historial`; live list `li.noticiaJugador.lesionJugador` under `.historial-lesiones` |
 | News | `ul.noticias` |
 | Last five / next five | `ul.ultimos`, `ul.proximos` |
 | Upcoming competition hints | `a.partido` (`data-date`, `data-time`, logo `alt`) |
@@ -38,15 +38,21 @@ Same data, different DOM. Fallbacks are in `futbolfantasy.toml` and calendar/
 |---------|-------------------------|
 | Identity | `h1.jugador-nombre` (`11. Name`), `section.jugador_principal .position-box` |
 | Personal | `#profile-datos-personales` (`.info-left` / `.info-right` pairs); label **Pie preferido** |
-| Last five | `#profile-partidos` calendar `.day` (not `ul.ultimos`) |
-| Next five | Header “Próximos 5 partidos” + following `.calendar .day` |
+| Last five | `#profile-partidos` calendar `.day` (not `ul.ultimos`); `data-tooltip`, rival `alt`, competition logo `alt` |
+| Next five | Header “Próximos 5 partidos” + following `.calendar .day`; kickoff `HH:MM` (no trailing `h`) |
 | Season totals | `#profile-stats-puntos .statsglobales` (often `d-none`; still in HTML) |
 | Per-match table | `#profile-stats-puntos table.tablestats tbody tr.plegado[data-local]` (`fixtures_live` spec) |
 | Per-match stat layers | Same hidden cells as fixtures when present (`span.stat-val`, poligono JSON) |
 | Club / widget on live profile | Team links under `.jugador_principal`; market widget id often **only in JS** (scraper `probes.widget_id` regex) |
+| Max profitable bid (`p.puja`) | Absent on the 2026-10-05 Raphinha profile HTML (server response); expect `null` + `field_missing` |
 
 JSON-LD is optional on live pages. The DOM wins; JSON-LD fills gaps and emits
 `jsonld_mismatch` when both sides disagree.
+
+The status parser maps FutbolFantasy form arrows (`arrow-1` to `arrow-4`) to
+categorical ratings when no numeric form is published. For starter likelihood,
+it reads the `Titular Jn` label and percentage from the same lineup box so
+adjacent player cards cannot supply the wrong percentage.
 
 Scoring mode read: `data-modo` must be `LaLiga Fantasy Oficial`. Other modes
 are listed and their numbers are ignored.

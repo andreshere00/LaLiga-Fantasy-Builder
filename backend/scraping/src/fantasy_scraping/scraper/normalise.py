@@ -6,7 +6,7 @@ import unicodedata
 _EXTRA: dict[int, str] = str.maketrans(
     {"ø": "o", "ß": "ss", "đ": "d", "ł": "l", "æ": "ae", "œ": "oe", "ı": "i", "þ": "th"}
 )
-_DROPPED = re.compile(r"['’.]")
+_DROPPED = re.compile(r"['’]")
 _NON_SLUG = re.compile(r"[^a-z0-9]+")
 _SUFFIX = re.compile(r"-\d+$")
 
@@ -27,4 +27,4 @@ def normalise(text: str) -> str:
 
 def base_slug(slug: str) -> str:
     """Drop a trailing numeric disambiguator (``lamine-gueye-1`` becomes ``lamine-gueye``)."""
-    return _SUFFIX.sub("", slug)
+    return _SUFFIX.sub("", slug.strip("-"))

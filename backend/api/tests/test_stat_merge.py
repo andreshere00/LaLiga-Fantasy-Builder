@@ -9,6 +9,24 @@ from fantasy_api.services.stat_merge import merge_fixture_stats
 # ---- Happy path ---- #
 
 
+def test_merge_fixture_stats_combines_catalog_points_with_scraped_count() -> None:
+    catalog = {
+        StatKey.GOALS: ScrapedStat(count=3, points=30),
+    }
+    scrape = {
+        StatKey.GOALS: ScrapedStat(count=3, points=None),
+    }
+    stats, warnings = merge_fixture_stats(
+        [
+            (StatSource.FANTASY_CATALOG, catalog),
+            (StatSource.FUTBOLFANTASY, scrape),
+        ]
+    )
+    assert stats.goals.count == 3
+    assert stats.goals.fantasy_points == 30
+    assert not warnings
+
+
 def test_merge_fixture_stats_first_layer_wins() -> None:
     fantasy = {
         StatKey.GOALS: ScrapedStat(count=1, points=10),

@@ -42,6 +42,7 @@ _STAT_ROWS: tuple[tuple[str, str, str | None], ...] = (
     ("Ocasiones claras creadas", "big_chances_created", None),
     ("Balones al área", "balls_into_box", "pen_area_entries"),
     ("Penaltis cometidos", "penalties_committed", "penalty_conceded"),
+    ("Penaltis provocados", "penalties_won", "penalty_won"),
     ("Penaltis parados", "penalties_saved", "penalty_save"),
     ("Paradas", "saves", "saves"),
     ("Despejes efectivos", "clearances", "effective_clearance"),
@@ -306,14 +307,16 @@ def _line_count(line: StatLine | None) -> str:
 
 
 def _line_points(line: StatLine | None) -> str:
-    if line is None:
+    if line is None or line.points is None:
         return "—"
     if line.status in {"unavailable", "not_applicable"} and line.count is None:
         return "—"
     return _format_points(line.points)
 
 
-def _format_points(value: float) -> str:
+def _format_points(value: float | None) -> str:
+    if value is None:
+        return "—"
     if float(value).is_integer():
         return fmt_int(int(value))
     return fmt_decimal(float(value), 2)

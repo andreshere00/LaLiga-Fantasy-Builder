@@ -41,7 +41,7 @@ New LaLiga features go in `backend/api`: `api/` → `services/` →
 |--------|--------|------|-------|
 | Leagues | `/leagues` | JWT + bearer | Reads |
 | Teams | `/teams` | JWT + bearer | Lineup PUT is a full replace |
-| Players | `/players` | Mixed | Catalog and market value are public; `/players/{id}/stats/*` needs JWT (scraped segments use scraping service) |
+| Players | `/players` | Mixed | Catalog and market value are public; `/players/{id}/stats/*` needs JWT (scraped segments use scraping service). **`GET .../stats/detail`** aggregates segments; partial segment failure is **200** + `segment_errors` (see [Players API](docs/api/players/README.md)). |
 | Calendar | `/calendar` | JWT; public upstream | No LaLiga bearer |
 | Market | `/market` | JWT + bearer | Mutations medium confidence; CLI is read-only |
 | Buyout | `/buyout` | JWT + bearer | Medium confidence; CLI is read-only |

@@ -56,3 +56,21 @@ async def test_forecast_upstream_500_raises() -> None:
         await client.forecast(41.38, 2.12)
     await client.aclose()
     assert exc.value.category == "weather_unavailable"
+    assert exc.value.status_code == 503
+    assert exc.value.provider_status == 503
+
+
+@pytest.mark.asyncio
+async def test_forecast_http_401_stays_503_and_keeps_provider_status() -> None:
+    client = OpenWeatherClient(
+        api_key=SecretStr("weather-key"),
+        base_url="https://weather.test",
+        timeout_seconds=5.0,
+        transport=httpx.MockTransport(lambda r: httpx.Response(401, text="bad key")),
+    )
+    with pytest.raises(UpstreamError) as exc:
+        await client.forecast(41.38, 2.12)
+    await client.aclose()
+    assert exc.value.status_code == 503
+    assert exc.value.provider_status == 401
+    assert "bad key" not in str(exc.value)

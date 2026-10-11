@@ -64,20 +64,15 @@ class OpenWeatherClient:
             logger.warning("weather request failed: %s", type(exc).__name__)
             raise UpstreamError(
                 "weather unavailable",
-                status_code=503,
+                status_code=None,
                 category="weather_unavailable",
             ) from None
-        if response.status_code in {401, 429} or response.status_code >= 500:
-            raise UpstreamError(
-                "weather unavailable",
-                status_code=503,
-                category="weather_unavailable",
-            )
         if response.status_code < 200 or response.status_code >= 300:
             raise UpstreamError(
                 "weather unavailable",
                 status_code=503,
                 category="weather_unavailable",
+                provider_status=response.status_code,
             )
         try:
             return response.json()

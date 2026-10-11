@@ -7,6 +7,8 @@ import lineupActive from "../../assets/nav_tab_lineup_active.svg";
 import lineupIdle from "../../assets/nav_tab_lineup.svg";
 import marketActive from "../../assets/nav_tab_market_active.svg";
 import marketIdle from "../../assets/nav_tab_market.svg";
+import playersActive from "../../assets/button_players_red.svg";
+import playersIdle from "../../assets/button_players_gray.svg";
 import { useLeague } from "../lineup/LeagueProvider";
 import { PersonIcon, TrophyIcon } from "./icons";
 import { ProfilePhoto } from "./ProfilePhoto";
@@ -29,16 +31,19 @@ export function Header() {
     selected?.team?.manager?.avatar?.trim() ||
     selected?.team?.manager?.profileImage?.trim() ||
     null;
-  const [openMenu, setOpenMenu] = useState<"league" | "profile" | null>(null);
+  const [openMenu, setOpenMenu] = useState<"league" | "profile" | "navigation" | null>(null);
   const [leagueCursor, setLeagueCursor] = useState(0);
   const leagueRef = useRef<HTMLDivElement>(null);
   const profileRef = useRef<HTMLDivElement>(null);
+  const navigationRef = useRef<HTMLDivElement>(null);
   const leagueButtonRef = useRef<HTMLButtonElement>(null);
   const profileButtonRef = useRef<HTMLButtonElement>(null);
+  const navigationButtonRef = useRef<HTMLButtonElement>(null);
   const leagueOptionRefs = useRef<Array<HTMLButtonElement | null>>([]);
   const leagueTitleId = useId();
   const leagueNameId = useId();
   const profileTitleId = useId();
+  const navigationId = useId();
   const signedIn = status !== "signed-out" && status !== "loading";
   const canSelectLeague = leagues.length > 0;
   const selectedLeagueIndex = selected
@@ -57,16 +62,24 @@ export function Header() {
       setOpenMenu(null);
       if (openMenu === "league") leagueButtonRef.current?.focus();
       if (openMenu === "profile") profileButtonRef.current?.focus();
+      if (openMenu === "navigation") navigationButtonRef.current?.focus();
     };
     const onPointerDown = (event: PointerEvent) => {
-      const root = openMenu === "league" ? leagueRef.current : profileRef.current;
+      const root = openMenu === "league"
+        ? leagueRef.current
+        : openMenu === "profile" ? profileRef.current : navigationRef.current;
       if (root && !root.contains(event.target as Node)) setOpenMenu(null);
+    };
+    const onResize = () => {
+      if (openMenu === "navigation" && window.innerWidth > 960) setOpenMenu(null);
     };
     window.addEventListener("keydown", onKey);
     window.addEventListener("pointerdown", onPointerDown);
+    window.addEventListener("resize", onResize);
     return () => {
       window.removeEventListener("keydown", onKey);
       window.removeEventListener("pointerdown", onPointerDown);
+      window.removeEventListener("resize", onResize);
     };
   }, [openMenu]);
 
@@ -151,28 +164,60 @@ export function Header() {
             </ul>
           ) : null}
         </div>
-        <nav className="nav-tabs" aria-label="Sections">
-          <NavLink to="/" end className="nav-tab">
-            {({ isActive }) => (
-              <>
-                <span className="nav-tab-icon-wrap" aria-hidden="true">
-                  <img src={isActive ? lineupActive : lineupIdle} alt="" />
-                </span>
-                <span className="nav-tab-label">Lineup</span>
-              </>
-            )}
-          </NavLink>
-          <NavLink to="/market" className="nav-tab">
-            {({ isActive }) => (
-              <>
-                <span className="nav-tab-icon-wrap" aria-hidden="true">
-                  <img src={isActive ? marketActive : marketIdle} alt="" />
-                </span>
-                <span className="nav-tab-label">Market</span>
-              </>
-            )}
-          </NavLink>
-        </nav>
+        <div className="navigation-wrap" ref={navigationRef}>
+          <button
+            ref={navigationButtonRef}
+            type="button"
+            className="navigation-button"
+            aria-label="Navigation"
+            aria-expanded={openMenu === "navigation"}
+            aria-controls={navigationId}
+            onClick={() =>
+              setOpenMenu((current) => (current === "navigation" ? null : "navigation"))
+            }
+          >
+            <svg className="navigation-icon" viewBox="0 0 24 24" aria-hidden="true">
+              <path d="M4 6h16M4 12h16M4 18h16" fill="none" stroke="currentColor" strokeWidth="2" />
+            </svg>
+            <span className="navigation-button-label">Navigation</span>
+          </button>
+          <nav
+            className={`nav-tabs${openMenu === "navigation" ? " is-open" : ""}`}
+            id={navigationId}
+            aria-label="Sections"
+          >
+            <NavLink to="/" end className="nav-tab" onClick={() => setOpenMenu(null)}>
+              {({ isActive }) => (
+                <>
+                  <span className="nav-tab-icon-wrap" aria-hidden="true">
+                    <img src={isActive ? lineupActive : lineupIdle} alt="" />
+                  </span>
+                  <span className="nav-tab-label">Lineup</span>
+                </>
+              )}
+            </NavLink>
+            <NavLink to="/market" className="nav-tab" onClick={() => setOpenMenu(null)}>
+              {({ isActive }) => (
+                <>
+                  <span className="nav-tab-icon-wrap" aria-hidden="true">
+                    <img src={isActive ? marketActive : marketIdle} alt="" />
+                  </span>
+                  <span className="nav-tab-label">Market</span>
+                </>
+              )}
+            </NavLink>
+            <NavLink to="/players" className="nav-tab" onClick={() => setOpenMenu(null)}>
+              {({ isActive }) => (
+                <>
+                  <span className="nav-tab-icon-wrap" aria-hidden="true">
+                    <img src={isActive ? playersActive : playersIdle} alt="" />
+                  </span>
+                  <span className="nav-tab-label">Players</span>
+                </>
+              )}
+            </NavLink>
+          </nav>
+        </div>
         <div className="nav-actions">
           {signedIn ? (
             <button type="button" className="logout-btn" onClick={() => void logout()}>

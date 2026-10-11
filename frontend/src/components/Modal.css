@@ -17,6 +17,13 @@
   text-align: center;
 }
 
+.modal-card.is-square,
+.modal-card.is-square button,
+.modal-card.is-square a,
+.modal-card.is-square .hover-tooltip-panel {
+  border-radius: 0;
+}
+
 .modal-title {
   margin: 0 0 12px;
   font-size: 1.125rem;

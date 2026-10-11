@@ -47,6 +47,15 @@ def test_resolve_player_id_alias_short_circuits(resolver: RouteResolver) -> None
     assert result.candidates[0].slug == "vinicius-junior"
 
 
+def test_resolve_catalog_nickname_alias_short_circuits(resolver: RouteResolver) -> None:
+    resolver = RouteResolver(SLUGS, {"2324": "jose-maria-gimenez"})
+
+    result = resolver.resolve("Giménez", player_id="2324")
+
+    assert result.candidates[0].metric == "alias"
+    assert result.candidates[0].slug == "jose-maria-gimenez"
+
+
 def test_resolve_nickname_alias_short_circuits(resolver: RouteResolver) -> None:
     assert resolver.resolve("Vini Jr.").candidates[0].slug == "vinicius-junior"
 

@@ -6,7 +6,7 @@ map of what each part owns.
 ## Repository layout
 
 ```text
-frontend/          React app — lineup and market (Bun, Vite). Nginx in Docker.
+frontend/          React app — lineup, market, and player profiles (Bun, Vite). Nginx in Docker.
 backend/auth/      Sessions, Keycloak login, LaLiga vault, internal JWT
 backend/api/       Fantasy features. Calls LaLiga with a bearer from auth
 backend/scraping/  Private scraper + parser on port 8002 (`internal` + `egress`)
@@ -93,11 +93,12 @@ Token rules and CSRF are in
 
 ### Frontend
 
-`frontend/` is the browser app (lineup at `/`, market at `/market`). It signs
+`frontend/` is the browser app (lineup at `/`, market at `/market`, player
+catalog at `/players`, and player profiles at `/players/:playerId`). It signs
 in through auth, keeps the internal JWT in memory, and calls the API for
-leagues, standings, lineups, squads, and market/buyout actions. Market bids
-and release-clause payment are user-confirmed in the UI only; CLIs stay
-read-only. It does not call LaLiga directly or persist tokens. Detail:
+leagues, standings, lineups, squads, player data, and market/buyout actions.
+Market bids and release-clause payment are user-confirmed in the UI only; CLIs
+stay read-only. It does not call LaLiga directly or persist tokens. Detail:
 [Frontend](frontend.md).
 
 In Docker, Nginx on port 3000 serves the built app and proxies `/auth`,
@@ -137,6 +138,12 @@ adapters/     HTTP, JWKS, JWT, Postgres, Redis, and AES-GCM implementations
 - maps auth and upstream failures into stable API errors;
 - exposes OpenAPI/Swagger from committed `backend/api/openapi.json`.
 
+Player stats are aggregated by `PlayerStatsService`: catalog data and recent
+Fantasy matchweek statistics come from LaLiga Fantasy, while profile and
+fixture segments can use the private FutbolFantasy scraping service. Partial
+segment failures are returned as sanitized `segment_errors` by the detail
+aggregate; the browser never receives scraped HTML.
+
 The API does not open encrypted credentials, refresh LaLiga tokens, or accept
 auth session cookies.
 
@@ -169,7 +176,7 @@ do not share a generic proxy class.
 |--------|---------------|-----------------|---------|
 | Leagues | `/leagues/...` | `{CMP}/leagues/...` | GET (reads) |
 | Teams | `/teams/...` | `{CMP}/teams/...` | GET + PUT (lineup write) |
-| Players | `/players/...` | `{CMP}/players`, `{CMP}/player/...` | GET (catalog + market value public; league card authenticated) |
+| Players | `/players/...` | `{CMP}/players`, `{CMP}/player/...` | GET (catalog + market value public; league card and stats authenticated) |
 | Calendar | `/calendar/...` | `{CMP}/week/...`, `{CMP}/calendar`, stats host | GET (internal JWT; public upstream via `get_public_json`) |
 | Market | `/market/...` | `{CMP}/league/{leagueId}/market/...` | GET + POST/PUT/DELETE (reads High; mutations Medium) |
 | Buyout | `/buyout/...` | `{CMP}/league/{leagueId}/buyout/...`, `.../player-team/.../check-shield`, `.../shield/player` | GET + POST/PUT (Medium) |
@@ -242,11 +249,13 @@ network and on `egress` (outbound internet). It is not on `public`. Host port
 8002 is published for local Compose only.
 
 The scraper resolves player names (sitemap + Hamming/Levenshtein), downloads
-profile, market widget, club calendar, and competition pages with caching and
-rate limits. `/internal/scrape/*` requires `X-Service-Token`. The parser in the
-same image turns `ScrapedPage` HTML into JSON/Markdown (`fantasy-parse` or
-`ParserService`). Uvicorn runs a **single worker** so the in-process limiter
-matches deployment. Detail: [Scraping](scraping/README.md).
+FutbolFantasy pages with caching and rate limits, and serves parsed player
+profile data to the API. The parser extracts profile form ratings and starter
+probability as well as other player status fields. `/internal/scrape/*`
+requires `X-Service-Token`. The parser in the same image turns `ScrapedPage`
+HTML into JSON/Markdown (`fantasy-parse` or `ParserService`). Uvicorn runs a
+**single worker** so the in-process limiter matches deployment. Detail:
+[Scraping](scraping/README.md).
 
 ### Auth-to-LaLiga boundary
 

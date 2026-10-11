@@ -2,6 +2,7 @@ export type { Availability } from "./model/availability";
 export { availabilityOf } from "./model/availability";
 export {
   FORM_DISPLAY_MATCHES,
+  formAverageLastThree,
   formDisplayPoints,
   formFromCalendarWeeks,
   formPoints,

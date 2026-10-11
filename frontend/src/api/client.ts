@@ -1,5 +1,16 @@
 import { ApiError, NeedsReauthError } from "./errors";
 
+export type PlayerStatsDetailQuery = {
+  last?: number;
+  competition?: string[];
+  limit?: number;
+  preset?: string;
+  from?: string;
+  to?: string;
+  include_weather?: boolean;
+  include_stats?: boolean;
+};
+
 export type FetchLike = (input: string, init?: RequestInit) => Promise<Response>;
 
 export type GetJsonOptions = {
@@ -20,9 +31,32 @@ export const paths = {
   weekFixtures: (week: number) => `/api/calendar/weeks/${week}`,
   weekStats: (week: number) => `/api/calendar/weeks/${week}/stats`,
   playersCatalog: () => "/api/players",
+  playerLeague: (playerId: string, leagueId: string) =>
+    `/api/players/${segment(playerId)}/league/${segment(leagueId)}`,
   market: (leagueId: string) => `/api/market/leagues/${segment(leagueId)}`,
   playerMarketValue: (playerId: string) =>
     `/api/players/${segment(playerId)}/market-value`,
+  playerStatsDetail: (playerId: string, query?: PlayerStatsDetailQuery) => {
+    const base = `/api/players/${segment(playerId)}/stats/detail`;
+    if (!query) return base;
+    const params = new URLSearchParams();
+    if (query.last != null) params.set("last", String(query.last));
+    for (const competition of query.competition ?? []) {
+      params.append("competition", competition);
+    }
+    if (query.limit != null) params.set("limit", String(query.limit));
+    if (query.preset) params.set("preset", query.preset);
+    if (query.from) params.set("from", query.from);
+    if (query.to) params.set("to", query.to);
+    if (query.include_weather != null) {
+      params.set("include_weather", query.include_weather ? "true" : "false");
+    }
+    if (query.include_stats != null) {
+      params.set("include_stats", query.include_stats ? "true" : "false");
+    }
+    const qs = params.toString();
+    return qs ? `${base}?${qs}` : base;
+  },
   leagueTeams: (leagueId: string) => `/api/leagues/${segment(leagueId)}/teams`,
   team: (leagueId: string, teamId: string) =>
     `/api/leagues/${segment(leagueId)}/teams/${segment(teamId)}`,

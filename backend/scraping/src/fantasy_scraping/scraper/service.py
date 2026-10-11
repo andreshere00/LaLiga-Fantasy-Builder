@@ -13,7 +13,6 @@ from fantasy_scraping.scraper.downloader import PageDownloader
 from fantasy_scraping.scraper.errors import (
     AmbiguousPlayerError,
     InvalidRequestError,
-    PlayerNotFoundError,
     ScrapingError,
     UnexpectedContentError,
 )
@@ -26,6 +25,11 @@ from fantasy_scraping.scraper.models import (
     PlayerRoute,
     ScrapeOptions,
     ScrapeOutcome,
+)
+from fantasy_scraping.scraper.name_aliases import (
+    AliasValue,
+    build_player_alias_records,
+    index_player_alias_records,
 )
 from fantasy_scraping.scraper.normalise import normalise
 from fantasy_scraping.scraper.probes import (
@@ -42,7 +46,8 @@ from fantasy_scraping.scraper.urls import check_season, laliga_slug, player_url
 
 LOGGER: logging.Logger = logging.getLogger(__name__)
 MAX_BATCH: int = 25
-TEAM_PROBES: int = 3
+# Probe every candidate returned by RouteResolver when a team must disambiguate.
+TEAM_PROBES: int = 5
 DEFAULT_INCLUDE: frozenset[PageKind] = frozenset({PageKind.PLAYER})
 
 
@@ -54,10 +59,17 @@ def _scrape_error(exc: ScrapingError) -> dict[str, object]:
     return body
 
 
-def load_aliases() -> dict[str, str]:
-    """Read the committed ``aliases.json``."""
-    text = resources.files("fantasy_scraping.scraper").joinpath("data/aliases.json").read_text()
-    return json.loads(text)
+def load_aliases() -> dict[str, AliasValue]:
+    """Build the validated route index from the reviewed identity inventory."""
+    text = (
+        resources.files("fantasy_scraping.scraper").joinpath("data/player_names.json").read_text()
+    )
+    inventory = json.loads(text)
+    players = inventory.get("players") if isinstance(inventory, dict) else None
+    if not isinstance(players, list) or not all(isinstance(player, dict) for player in players):
+        raise ValueError("invalid player identity inventory")
+    records = build_player_alias_records(players)
+    return index_player_alias_records(records)
 
 
 def current_season(now: datetime | None = None) -> str:
@@ -75,7 +87,7 @@ class ScraperService:
         client: ScrapingHttpClient,
         cache: PageCache,
         settings: ScraperSettings,
-        aliases: Mapping[str, str] | None = None,
+        aliases: Mapping[str, AliasValue] | None = None,
     ) -> None:
         """Compose the repositories.
 
@@ -90,7 +102,7 @@ class ScraperService:
         self._settings: ScraperSettings = settings
         self._links: LinkedDataProvider = LinkedDataProvider(client, cache, settings)
         self._pages: PageDownloader = PageDownloader(client, cache, settings)
-        self._aliases: Mapping[str, str] = aliases if aliases is not None else load_aliases()
+        self._aliases: Mapping[str, AliasValue] = aliases if aliases is not None else load_aliases()
         self._resolver: tuple[datetime, RouteResolver] | None = None
 
     async def get_linked_data(self, *, refresh: bool = False) -> LinkedData:
@@ -155,6 +167,8 @@ class ScraperService:
         needs_team_check = resolution.ambiguous or (winner.metric == "alias" and team_norm)
         if needs_team_check:
             if not team_norm:
+                raise AmbiguousPlayerError(slugs)
+            if len(resolution.candidates) > TEAM_PROBES:
                 raise AmbiguousPlayerError(slugs)
             if len(matching_team_slugs(team_norm, data.team_slugs)) != 1:
                 raise AmbiguousPlayerError(slugs)
@@ -230,8 +244,14 @@ class ScraperService:
                         route, season, kind=PageKind.COMPETITION, target=slug, options=options
                     )
                 )
-            except PlayerNotFoundError:
-                LOGGER.warning("competition_page_missing slug=%s player=%s", slug, route.slug)
+            except ScrapingError as exc:
+                LOGGER.warning(
+                    "competition_page_unavailable slug=%s player=%s category=%s status=%s",
+                    slug,
+                    route.slug,
+                    exc.category,
+                    exc.status_code,
+                )
         return pages
 
     async def scrape_player(
@@ -358,9 +378,10 @@ class ScraperService:
         season: str,
         team_slugs: tuple[str, ...],
     ) -> Candidate | None:
-        """Return the first candidate whose profile club matches the requested team."""
+        """Return a unique candidate whose profile club matches the requested team."""
         if len(matching_team_slugs(team_norm, team_slugs)) != 1:
             return None
+        matches: list[Candidate] = []
         for candidate in candidates:
             route = PlayerRoute(
                 slug=candidate.slug, url="", distance=candidate.distance, metric=candidate.metric
@@ -370,8 +391,10 @@ class ScraperService:
             if probed is None:
                 raise UnexpectedContentError()
             if team_matches(team_norm, probed, team_slugs):
-                return candidate
-        return None
+                matches.append(candidate)
+        if len(matches) > 1:
+            raise AmbiguousPlayerError([candidate.slug for candidate in matches])
+        return matches[0] if matches else None
 
     async def _club_page(
         self, season: str, team: str, options: ScrapeOptions | None

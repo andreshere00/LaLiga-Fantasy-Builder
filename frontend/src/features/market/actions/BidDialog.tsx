@@ -9,6 +9,7 @@ import { isValidBidAmount, type BidActionKind } from "./marketActions";
 
 type BidDialogProps = {
   open: boolean;
+  squareCorners?: boolean;
   row: MarketRow | null;
   kind: BidActionKind | null;
   money: number | null;
@@ -34,6 +35,7 @@ function clampAndFormat(raw: string, bidFloor: number): string {
 
 export function BidDialog({
   open,
+  squareCorners = false,
   row,
   kind,
   money,
@@ -79,6 +81,7 @@ export function BidDialog({
   return (
     <Modal
       open={open}
+      squareCorners={squareCorners}
       title={TITLES[kind]}
       onClose={onClose}
       closeOnBackdrop={!pending}

@@ -37,6 +37,39 @@ uv run fantasy-parse page.html --url URL --slug SLUG --season 2026-27 \
   --fetched-at 2026-10-04T12:00:00+00:00 --json
 ```
 
+The profile parser extracts numeric form when available, otherwise preserves
+the FutbolFantasy form arrow as a categorical rating. It also scopes starter
+likelihood to the lineup box containing the player's matchweek label. See the
+[parser guide](../../docs/scraping/parser.md) and
+[selector contract](../../docs/scraping/parser-discovery.md).
+
+## Player name aliases
+
+The reviewed public catalog snapshot contains **829 footballers** (25 coaches
+excluded). `scraper/data/player_names.json` records their Fantasy master IDs,
+published names and source URLs. The scraper derives full-name, source-slug,
+team-id, team-name and generated-alias records by master player ID at startup. It contains
+**826 confirmed profile routes**, plus explicit unavailable routes (`slug: null`)
+for Nájera (`2970`), Albert García (`3278`), and Kinareikin (`3280`). A profile route
+does not guarantee that FutbolFantasy publishes statistics for every season.
+
+Aliases cover nicknames, given names, surnames, full names, initials before and
+after surnames, and two-surname forms where those names are published. Periods,
+accents and spacing are normalized. The loader validates the records and builds
+the ID/name lookup index once at startup. Shared aliases retain all candidates; a
+master player ID takes precedence. Missing routes are not guessed from similar
+names. Stored teams are catalog snapshots; live club verification remains in
+place. See the [alias maintenance guide](../../docs/scraping/player-aliases.md).
+
+After reviewing identity changes, normalize the inventory offline:
+
+```bash
+cd backend/scraping
+uv run python scripts/generate_player_aliases.py
+```
+
+Restart the scraping service after updating its bundled alias inventory.
+
 ## Environment
 
 | Variable | Required | Notes |

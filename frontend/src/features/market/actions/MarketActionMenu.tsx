@@ -1,4 +1,5 @@
 import { useEffect, useId, useRef, useState } from "react";
+import { Link } from "react-router-dom";
 
 import bidIconUrl from "../../../assets/button_bid.svg";
 import { bidAmountTooltipLabel } from "../bidTooltip";
@@ -21,6 +22,8 @@ type MarketActionMenuProps = {
   row: MarketRow;
   context: MarketActionContext;
   actions: MarketActionsApi;
+  detailsPlayer?: { id: string; name: string };
+  detailsReturnTo?: "/market" | "/players";
 };
 
 function menuItemTooltip(
@@ -36,20 +39,27 @@ function menuItemTooltip(
   if (offer.type !== "pay-clause") return offer.disabledReason ?? null;
   if (clauseTimeLocked) {
     const countdown = unlockLabel
-      ? `Time remaining to activate the release clause: ${unlockLabel}`
+      ? `Time remaining to expire the release clause: ${unlockLabel}`
       : null;
     return countdown ? `${CLAUSE_BLOCKED_MESSAGE}\n${countdown}` : CLAUSE_BLOCKED_MESSAGE;
   }
   return offer.disabledReason ?? CLAUSE_BLOCKED_MESSAGE;
 }
 
-export function MarketActionMenu({ row, context, actions }: MarketActionMenuProps) {
+export function MarketActionMenu({
+  row,
+  context,
+  actions,
+  detailsPlayer,
+  detailsReturnTo,
+}: MarketActionMenuProps) {
   const menuId = useId();
   const [open, setOpen] = useState(false);
   const bidTooltipId = useId();
   const rootRef = useRef<HTMLDivElement>(null);
   const triggerRef = useRef<HTMLButtonElement>(null);
   const offers = resolveMarketActionOffers(row, context);
+  const showPlayerDetails = detailsPlayer != null && row.positionId !== 5;
 
   useEffect(() => {
     if (!open) return;
@@ -69,7 +79,7 @@ export function MarketActionMenu({ row, context, actions }: MarketActionMenuProp
     };
   }, [open]);
 
-  if (offers.length === 0) return null;
+  if (offers.length === 0 && !showPlayerDetails) return null;
 
   const bidded = row.myBid != null;
   const bidMoney = row.myBid?.money;
@@ -80,11 +90,12 @@ export function MarketActionMenu({ row, context, actions }: MarketActionMenuProp
 
   return (
     <div
-      className={
+      className={[
         bidded
           ? "market-actions has-hover-tooltip-panel is-bid-tooltip-target"
-          : "market-actions"
-      }
+          : "market-actions",
+        open ? "is-open" : "",
+      ].filter(Boolean).join(" ")}
       ref={rootRef}
     >
       <button
@@ -162,6 +173,19 @@ export function MarketActionMenu({ row, context, actions }: MarketActionMenuProp
               </li>
             );
           })}
+          {showPlayerDetails && detailsPlayer ? (
+            <li className="market-actions-menu-item">
+              <Link
+                className="market-actions-item players-action-link"
+                role="menuitem"
+                to={`/players/${encodeURIComponent(detailsPlayer.id)}`}
+                state={detailsReturnTo ? { returnTo: detailsReturnTo } : undefined}
+                onClick={() => setOpen(false)}
+              >
+                Player details
+              </Link>
+            </li>
+          ) : null}
         </ul>
       ) : null}
     </div>
