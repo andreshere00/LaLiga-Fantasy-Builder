@@ -6,10 +6,8 @@ Catalog and market value are **public**; the league card is authenticated
 
 Segmented player stats (FutbolFantasy via the scraping service, LaLiga catalog
 and market history, optional OpenWeather) live under `/players/{player_id}/stats/*`.
-See [player-stats-endpoint plan](../../plans/player-stats-endpoint.md),
-[player detail aggregate plan](../../plans/player-detail-endpoint.md) (UI should
-prefer **`/stats/detail`** over client-side `--segment all`), and
-[scraping service](../../scraping/README.md).
+The UI should prefer **`/stats/detail`** over client-side `--segment all`.
+See the [scraping service](../../scraping/README.md) for scraper behavior.
 
 ## Routes
 
@@ -76,9 +74,8 @@ rows is disabled.
   only when their explained action total, either alone or together with DAZN,
   agrees with the match total. Otherwise the API retains the unavailable value
   and adds a `computed_points_mismatch` warning.
-- Availability is available as `injury.availability_text`; structured
-  `profile.availability` is described in
-  [list-availability.md](../../plans/list-availability.md).
+- Availability is available as `injury.availability_text` and in the
+  structured `profile.availability` field.
 
 Models: `fantasy_api.schemas.players` (catalog/league card) and
 `fantasy_api.schemas.player_stats` (stats segments). Catalog `weekPoints` stays
