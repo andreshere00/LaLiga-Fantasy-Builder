@@ -25,7 +25,7 @@ export const PLAYERS_COLUMN_BASE_LABELS: Record<PlayersColumnKey, string> = {
   form: "Form",
   marketValue: "Value",
   owner: "Owned by",
-  availability: "Avail.",
+  availability: "Availability",
   position: "Pos.",
 };
 

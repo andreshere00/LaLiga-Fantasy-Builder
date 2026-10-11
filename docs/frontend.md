@@ -77,7 +77,7 @@ club crest. Clicking a populated card opens a player menu with **Market options*
 and **Player details** (coaches have no details route). Market actions retain the
 existing ownership, listing, balance and availability rules.
 
-**Swap players** is available only for footballers in your editable lineup.
+**Swap player** is available only for footballers in your editable lineup.
 Choosing it on a pitch player opens the squad replacement picker. Choosing it on
 a bench player asks you to select a pitch player in the same position. During
 replacement selection, card clicks choose players directly. Changes remain a
@@ -118,6 +118,15 @@ requests. `needs_reauth` prompts the user to link LaLiga again. See
 | Live clock for countdowns | `frontend/src/hooks/useNow.ts` |
 
 ## Lineup screen
+
+The user's current-fixture pitch provides two loading actions. **Load last saved
+lineup** discards local edits and restores `GET /teams/{team_id}/lineup`.
+**Load original lineup for FX** loads the fixture snapshot from
+`GET /teams/{team_id}/lineup/week/{week}`, including its formation and captain.
+The scoring action is enabled after the fixture starts and a snapshot is available;
+an unavailable snapshot is never replaced by the latest saved lineup. Loading either
+lineup changes the local draft only. Loading a different scoring snapshot enables
+Save, which must be used explicitly to replace the saved lineup.
 
 Code: `frontend/src/features/lineup/`.
 

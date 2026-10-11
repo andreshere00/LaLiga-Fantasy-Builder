@@ -8,6 +8,9 @@ import footballIconUrl from "../../assets/boxicons_football-filled.svg";
 import moneyIconUrl from "../../assets/button_money.svg";
 import saveCartridgeIconUrl from "../../assets/save_cartridge.svg";
 import fieldUrl from "../../assets/football_field.svg";
+import originalFixtureBlackUrl from "../../assets/button_original_fixture_black.svg";
+import originalFixtureWhiteUrl from "../../assets/button_original_fixture_white.svg";
+import originalFixtureGrayUrl from "../../assets/button_original_fixture_gray.svg";
 import { pitchRowGapFraction, pitchRows } from "./pitchLayout";
 import { SQUAD_PICKER_EMPTY_MESSAGE } from "./playerTileCopy";
 import { squadCountLabel } from "./squadPanel";
@@ -271,6 +274,54 @@ export function LineupPage() {
         <div className="column column-pitch">
           <div className="pitch">
             <img src={fieldUrl} alt="" />
+            {board.ownSquad && !board.isPastFixture ? (
+              <div className="pitch-lineup-load-controls">
+                <span
+                  className="pitch-scoring-lineup-control has-hover-tooltip-panel"
+                  tabIndex={board.originalLineupMessage ? 0 : undefined}
+                  aria-describedby={board.originalLineupMessage ? "scoring-lineup-hint" : undefined}
+                >
+                  <button
+                    type="button"
+                    className="pitch-original-lineup-button is-primary"
+                    disabled={!board.originalLineupAvailable || board.savePending}
+                    aria-describedby={board.originalLineupMessage ? "scoring-lineup-hint" : undefined}
+                    onClick={() => {
+                      setSwapCandidate(null);
+                      board.restoreOriginalLineup();
+                    }}
+                  >
+                    <span className="pitch-original-lineup-icons" aria-hidden="true">
+                      <img className="pitch-original-lineup-icon is-default" src={originalFixtureWhiteUrl} alt="" />
+                      <img className="pitch-original-lineup-icon is-hover" src={originalFixtureWhiteUrl} alt="" />
+                      <img className="pitch-original-lineup-icon is-disabled" src={originalFixtureGrayUrl} alt="" />
+                    </span>
+                    <span>Load original lineup for {scoreWeekLabel(board.week)}</span>
+                  </button>
+                  {board.originalLineupMessage ? (
+                    <span id="scoring-lineup-hint" className="hover-tooltip-panel is-align-end" role="tooltip">
+                      {board.originalLineupMessage}
+                    </span>
+                  ) : null}
+                </span>
+                <button
+                  type="button"
+                  className="pitch-original-lineup-button"
+                  disabled={!board.lastSavedLineupAvailable || board.savePending}
+                  onClick={() => {
+                    setSwapCandidate(null);
+                    board.restoreLastSavedLineup();
+                  }}
+                >
+                  <span className="pitch-original-lineup-icons" aria-hidden="true">
+                    <img className="pitch-original-lineup-icon is-default" src={originalFixtureBlackUrl} alt="" />
+                    <img className="pitch-original-lineup-icon is-hover" src={originalFixtureWhiteUrl} alt="" />
+                    <img className="pitch-original-lineup-icon is-disabled" src={originalFixtureGrayUrl} alt="" />
+                  </span>
+                  <span>Load last saved lineup</span>
+                </button>
+              </div>
+            ) : null}
             {board.opponentLineupLocked ? (
               <button
                 type="button"

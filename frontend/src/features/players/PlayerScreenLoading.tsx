@@ -19,14 +19,14 @@ export function PlayersScreenLoading() {
       </div>
       <div className="players-loading-table" aria-hidden="true">
         <div className="players-loading-head">
-          {Array.from({ length: 10 }, (_, index) => (
+          {Array.from({ length: 9 }, (_, index) => (
             <LoadingBlock key={index} />
           ))}
         </div>
         {Array.from({ length: 7 }, (_, row) => (
           <div className="players-loading-row" key={row}>
             <LoadingBlock className="players-loading-avatar" />
-            {Array.from({ length: 9 }, (_, cell) => (
+            {Array.from({ length: 8 }, (_, cell) => (
               <LoadingBlock key={cell} />
             ))}
           </div>

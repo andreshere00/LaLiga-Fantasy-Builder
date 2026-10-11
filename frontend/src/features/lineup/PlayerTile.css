@@ -239,11 +239,12 @@
 }
 
 .lineup-unplayed-tooltip {
-  top: calc(5% + 2rem);
+  top: auto;
   right: auto;
-  bottom: auto;
+  bottom: calc(100% + 0.45rem);
   left: 50%;
   z-index: 40;
+  width: max-content;
   max-width: min(18rem, calc(100vw - 32px));
   transform: translateX(-50%);
   border-radius: 0;
@@ -255,4 +256,9 @@
 
 .player-tile.is-unplayed-fixture:is(:hover, :focus-visible) {
   z-index: 30;
+}
+
+.pitch-tile-motion:has(.player-tile.is-unplayed-fixture:is(:hover, :focus-visible)) {
+  position: relative;
+  z-index: 40;
 }

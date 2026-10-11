@@ -131,6 +131,11 @@ export type LineupBoard = {
   pickSquadPlayer: (playerId: string) => void;
   swapSquadPlayer: (selection: PitchSelection, playerId: string) => void;
   saveLineup: () => void;
+  originalLineupAvailable: boolean;
+  restoreOriginalLineup: () => void;
+  originalLineupMessage: string | null;
+  lastSavedLineupAvailable: boolean;
+  restoreLastSavedLineup: () => void;
   saveDisabled: boolean;
   saveNoChangesTooltip: string | null;
   savePending: boolean;
@@ -168,6 +173,7 @@ function displayName(
 type StoredDraft = {
   draft: LineupDraft;
   dirty: boolean;
+  captainId?: string | null;
 };
 
 type SaveLineupVariables = {
@@ -348,22 +354,37 @@ export function useLineupBoard(options: UseLineupBoardOptions = {}): LineupBoard
     queryFn: ({ signal }) => getJson(paths.weekStats(week), token, { signal }),
   });
 
+  const currentFixtureStarted = [weekStatsQuery.data, fixturesQuery.data].some(
+    (fixtures) => Array.isArray(fixtures) && fixtures.some(fixtureHasStarted),
+  );
+
   const lineupQuery = useQuery({
     queryKey: [
       "lineup",
       leagueKey,
       activeTeamId,
       week,
-      lineupUsesCurrent ? "current" : "week",
+      lineupUsesCurrent && activeTeamId === callerId ? "current" : "week",
     ],
     enabled: enabled && activeTeamId != null && weekReady,
-    queryFn: ({ signal }) =>
-      lineupUsesCurrent
-        ? getJson(paths.lineup(activeTeamId ?? ""), token, { signal })
-        : getJson(paths.lineupWeek(activeTeamId ?? "", week), token, { signal }),
+    queryFn: ({ signal }) => {
+      const teamId = activeTeamId ?? "";
+      if (lineupUsesCurrent && teamId === callerId) {
+        return getJson(paths.lineup(teamId), token, { signal });
+      }
+      return getJson(paths.lineupWeek(teamId, week), token, { signal });
+    },
   });
 
   const lineupPending = lineupQuery.isPending;
+  const scoringLineupQuery = useQuery({
+    queryKey: ["lineup", leagueKey, activeTeamId, week, "week"],
+    enabled: enabled && weekReady && lineupUsesCurrent && currentFixtureStarted &&
+      activeTeamId != null && activeTeamId === callerId,
+    queryFn: ({ signal }) =>
+      getJson(paths.lineupWeek(activeTeamId ?? "", week), token, { signal }),
+    retry: false,
+  });
   const catalogByMasterId = useMemo(
     () => catalogMediaByMasterId(catalogQuery.data),
     [catalogQuery.data],
@@ -409,8 +430,15 @@ export function useLineupBoard(options: UseLineupBoardOptions = {}): LineupBoard
     [lineupPayload, catalogByMasterId, scoreLookup],
   );
   const serverTactical = lineupPayload == null ? null : tacticalOf(lineupPayload);
-  const captainId =
-    lineupPayload == null ? null : captainFromLineup(lineupPayload);
+  const serverCaptainId = lineupPayload == null ? null : captainFromLineup(lineupPayload);
+  const captainId = activeDraft?.captainId !== undefined
+    ? activeDraft.captainId : serverCaptainId;
+  const scoringGroups = useMemo(
+    () => groupsFromLineup(scoringLineupQuery.data, catalogByMasterId, scoreLookup),
+    [scoringLineupQuery.data, catalogByMasterId, scoreLookup],
+  );
+  const scoringDraft = draftFromGroups(scoringGroups, tacticalOf(scoringLineupQuery.data));
+  const scoringCaptainId = captainFromLineup(scoringLineupQuery.data);
   useEffect(() => {
     if (lineupPending || activeTeamId == null || lineupQuery.data == null) return;
     if (leagueKey.length === 0) return;
@@ -421,7 +449,9 @@ export function useLineupBoard(options: UseLineupBoardOptions = {}): LineupBoard
       tacticalOf(lineupQuery.data),
     );
     if (!nextDraft) return;
-    const stored: StoredDraft = { draft: nextDraft, dirty: false };
+    const stored: StoredDraft = {
+      draft: nextDraft, dirty: false, captainId: captainFromLineup(lineupQuery.data),
+    };
     draftsRef.current.set(sourceKey, stored);
     if (activeKeyRef.current === sourceKey) setActiveDraft(stored);
   }, [
@@ -443,6 +473,7 @@ export function useLineupBoard(options: UseLineupBoardOptions = {}): LineupBoard
     teamQuery.error,
     ...peerTeamQueries.map((query) => query.error),
     lineupQuery.error,
+    scoringLineupQuery.error,
     weekStatsQuery.error,
   ]);
 
@@ -498,14 +529,17 @@ export function useLineupBoard(options: UseLineupBoardOptions = {}): LineupBoard
   );
 
   const pitchSquadById = useMemo(() => {
-    if (lineupPayload == null) return squadById;
+    const withScoringPlayers = enrichSquadMapFromLineup(
+      squadById, scoringLineupQuery.data, catalogByMasterId, scoreLookup,
+    );
+    if (lineupPayload == null) return withScoringPlayers;
     return enrichSquadMapFromLineup(
-      squadById,
+      withScoringPlayers,
       lineupPayload,
       catalogByMasterId,
       scoreLookup,
     );
-  }, [lineupPayload, squadById, catalogByMasterId, scoreLookup]);
+  }, [lineupPayload, scoringLineupQuery.data, squadById, catalogByMasterId, scoreLookup]);
 
   const tacticalForDisplay =
     draft && editable ? draft.tactical : serverTactical;
@@ -544,7 +578,7 @@ export function useLineupBoard(options: UseLineupBoardOptions = {}): LineupBoard
       );
       const current = draftsRef.current.get(sourceKey);
       if (current) {
-        const clean: StoredDraft = { draft: current.draft, dirty: false };
+        const clean: StoredDraft = { ...current, dirty: false };
         draftsRef.current.set(sourceKey, clean);
         if (activeKeyRef.current === sourceKey) setActiveDraft(clean);
       }
@@ -642,8 +676,6 @@ export function useLineupBoard(options: UseLineupBoardOptions = {}): LineupBoard
     return formatFixtureCountdown(kickoffMs, nowMs);
   }, [current.openingWeekDate, fixturesQuery.data, lineupUsesCurrent, nowMs]);
 
-  const currentFixtureStarted = Array.isArray(weekStatsQuery.data) &&
-    weekStatsQuery.data.some(fixtureHasStarted);
   const unplayedFixtureScoreTooltipLabel = useMemo((): string | null => {
     if (!lineupUsesCurrent || currentFixtureStarted) return null;
     if (currentFixtureCountdown != null) {
@@ -652,7 +684,7 @@ export function useLineupBoard(options: UseLineupBoardOptions = {}): LineupBoard
     return unplayedFixtureScoreTooltipFallback();
   }, [currentFixtureCountdown, lineupUsesCurrent, currentFixtureStarted]);
 
-  const opponentLineupLocked = lineupUsesCurrent && !editable;
+  const opponentLineupLocked = lineupUsesCurrent && !editable && !currentFixtureStarted;
   const opponentLineupUnavailableMessageLabel = useMemo((): string | null => {
     if (!opponentLineupLocked) return null;
     if (currentFixtureCountdown != null) {
@@ -682,9 +714,11 @@ export function useLineupBoard(options: UseLineupBoardOptions = {}): LineupBoard
             setRequestedWeek(weekBeforePeekRef.current);
             weekBeforePeekRef.current = null;
           }
-        } else if (lineupUsesCurrent && playedWeek >= 1) {
+        } else if (lineupUsesCurrent && playedWeek >= 1 && !currentFixtureStarted) {
           weekBeforePeekRef.current = week;
           setRequestedWeek(playedWeek);
+        } else if (lineupUsesCurrent && currentFixtureStarted) {
+          weekBeforePeekRef.current = week;
         }
         setPickedTeamId(teamId);
         setPitchSelection(null);
@@ -756,6 +790,7 @@ export function useLineupBoard(options: UseLineupBoardOptions = {}): LineupBoard
       const stored: StoredDraft = {
         draft: applyFormationCode(draft, squad, code),
         dirty: true,
+        captainId,
       };
       draftsRef.current.set(sourceKey, stored);
       setActiveDraft(stored);
@@ -785,6 +820,7 @@ export function useLineupBoard(options: UseLineupBoardOptions = {}): LineupBoard
       const stored: StoredDraft = {
         draft: applyPitchPick(draft, pitchSelection, playerId, squad),
         dirty: true,
+        captainId,
       };
       draftsRef.current.set(sourceKey, stored);
       setActiveDraft(stored);
@@ -796,10 +832,54 @@ export function useLineupBoard(options: UseLineupBoardOptions = {}): LineupBoard
       if (activeKeyRef.current !== sourceKey) return;
       const next = applyPitchPick(draft, selection, playerId, squad);
       if (next === draft) return;
-      const stored: StoredDraft = { draft: next, dirty: true };
+      const stored: StoredDraft = { draft: next, dirty: true, captainId };
       draftsRef.current.set(sourceKey, stored);
       setActiveDraft(stored);
       setPitchSelection(null);
+    },
+    originalLineupAvailable: editable && currentFixtureStarted &&
+      scoringDraft != null && hasPlayers(scoringGroups),
+    originalLineupMessage: !currentFixtureStarted
+      ? "The scoring lineup becomes available when this fixture starts."
+      : scoringLineupQuery.isPending
+        ? "Loading the scoring lineup…"
+        : scoringLineupQuery.isError && scoringLineupQuery.data === undefined &&
+            !(scoringLineupQuery.error instanceof ApiError && scoringLineupQuery.error.status === 404)
+          ? "The scoring lineup could not be loaded."
+          : scoringDraft == null || !hasPlayers(scoringGroups)
+            ? "The scoring lineup for this fixture is not available yet."
+            : null,
+    restoreOriginalLineup: () => {
+      if (!editable || !currentFixtureStarted || !activeTeamId ||
+          saveMutation.isPending || !scoringDraft) return;
+      const sourceKey = lineupSourceKey(leagueKey, activeTeamId, week);
+      if (activeKeyRef.current !== sourceKey || !hasPlayers(scoringGroups)) return;
+      const saved = draftFromGroups(serverGroups, serverTactical);
+      const stored: StoredDraft = {
+        draft: scoringDraft,
+        dirty: JSON.stringify(scoringDraft) !== JSON.stringify(saved) ||
+          scoringCaptainId !== serverCaptainId,
+        captainId: scoringCaptainId,
+      };
+      draftsRef.current.set(sourceKey, stored);
+      setActiveDraft(stored);
+      setPitchSelection(null);
+      setSquadSearch("");
+      saveMutation.reset();
+    },
+    lastSavedLineupAvailable: editable && draftDirty && lineupPayload != null,
+    restoreLastSavedLineup: () => {
+      if (!editable || !draftDirty || !activeTeamId || saveMutation.isPending) return;
+      const sourceKey = lineupSourceKey(leagueKey, activeTeamId, week);
+      if (activeKeyRef.current !== sourceKey || lineupPayload == null) return;
+      const original = draftFromGroups(serverGroups, serverTactical);
+      if (!original) return;
+      const stored: StoredDraft = { draft: original, dirty: false, captainId: serverCaptainId };
+      draftsRef.current.set(sourceKey, stored);
+      setActiveDraft(stored);
+      setPitchSelection(null);
+      setSquadSearch("");
+      saveMutation.reset();
     },
     saveLineup: () => {
       if (!draft || !draftDirty || !activeTeamId || leagueKey.length === 0) return;

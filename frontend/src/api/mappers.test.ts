@@ -545,9 +545,9 @@ describe("matchday bounds", () => {
     expect(lastPlayedWeek({ weekNumber: 1 })).toBe(0);
   });
 
-  it("fixtureScoresVisibleForWeek_hides_open_matchweek", () => {
+  it("fixtureScoresVisibleForWeek_includes_open_matchweek", () => {
     const current = { previousWeek: 7, weekNumber: 8 };
-    expect(fixtureScoresVisibleForWeek(8, current)).toBe(false);
+    expect(fixtureScoresVisibleForWeek(8, current)).toBe(true);
     expect(fixtureScoresVisibleForWeek(7, current)).toBe(true);
     expect(fixtureScoresVisibleForWeek(1, current)).toBe(true);
   });

@@ -3,13 +3,15 @@
 }
 
 .player-match-section,
-.player-fantasy-section {
+.player-fantasy-section,
+.player-market-value-section {
   overflow: hidden;
 }
 
 .player-match-section > h2,
 .player-fantasy-section > h2,
-.player-form-section > h2 {
+.player-form-section > h2,
+.player-market-value-section > h2 {
   margin: -1rem -1.25rem 1rem;
   padding: 0.45rem 1rem;
   background: var(--red);
@@ -24,6 +26,16 @@
 }
 
 .player-detail-panel.player-detail-section.player-form-section > h2 {
+  margin: -1rem -1.25rem 1rem;
+  padding: 0.45rem 1rem;
+  background: var(--red);
+  color: var(--white);
+  text-align: center;
+  font-size: 1.5rem;
+  line-height: 1.25;
+}
+
+.player-detail-panel.player-detail-section.player-market-value-section > h2 {
   margin: -1rem -1.25rem 1rem;
   padding: 0.45rem 1rem;
   background: var(--red);

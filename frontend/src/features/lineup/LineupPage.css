@@ -705,6 +705,107 @@
   pointer-events: none;
 }
 
+.pitch-lineup-load-controls {
+  position: absolute;
+  top: 2.5%;
+  left: 2.5%;
+  right: 2.5%;
+  z-index: 10;
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 8px;
+  pointer-events: none;
+}
+
+.pitch-original-lineup-button {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex: 0 1 auto;
+  width: auto;
+  max-width: min(24rem, 44%);
+  padding: 8px;
+  border: 0;
+  border-radius: 0;
+  background: var(--white);
+  color: var(--ink);
+  box-shadow: var(--shadow-surface);
+  font: inherit;
+  font-size: clamp(0.65rem, 0.8vw, 0.85rem);
+  font-weight: 700;
+  line-height: 1.3;
+  text-align: left;
+  cursor: pointer;
+}
+
+.pitch-lineup-load-controls > *,
+.pitch-lineup-load-controls .pitch-original-lineup-button {
+  pointer-events: auto;
+}
+
+.pitch-scoring-lineup-control {
+  flex: 0 1 auto;
+  display: block;
+  min-width: 0;
+  max-width: min(24rem, 44%);
+}
+
+.pitch-lineup-load-controls > .pitch-original-lineup-button {
+  min-width: 0;
+}
+
+.pitch-scoring-lineup-control .pitch-original-lineup-button {
+  width: auto;
+  max-width: 100%;
+}
+
+.pitch-original-lineup-button.is-primary,
+.pitch-original-lineup-button.is-primary:disabled {
+  background: var(--red);
+  color: var(--white);
+}
+
+.pitch-original-lineup-icons {
+  flex: 0 0 24px;
+  width: 24px;
+  height: 24px;
+}
+
+.pitch .pitch-original-lineup-icon {
+  width: 24px;
+  height: 24px;
+  object-fit: contain;
+}
+
+.pitch-original-lineup-icon:is(.is-hover, .is-disabled) {
+  display: none;
+}
+
+.pitch-original-lineup-button:is(:hover, :focus-visible):not(:disabled) {
+  background: var(--red);
+  color: var(--white);
+}
+
+.pitch-original-lineup-button:is(:hover, :focus-visible):not(:disabled) .is-default,
+.pitch-original-lineup-button:disabled .is-default {
+  display: none;
+}
+
+.pitch-original-lineup-button:is(:hover, :focus-visible):not(:disabled) .is-hover,
+.pitch-original-lineup-button:disabled .is-disabled {
+  display: block;
+}
+
+.pitch-original-lineup-button:disabled {
+  color: var(--gray);
+  cursor: default;
+}
+
+.pitch-scoring-lineup-control .pitch-original-lineup-button:disabled {
+  pointer-events: none;
+}
+
 .pitch-line {
   width: 100%;
   display: flex;

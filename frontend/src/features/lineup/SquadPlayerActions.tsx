@@ -246,7 +246,7 @@ export function SquadPlayerActions({
                 close();
                 onSwap();
               }}>
-                Swap players
+                Swap player
               </button>
             ) : null}
           </div>

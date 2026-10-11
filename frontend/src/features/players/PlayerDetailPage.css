@@ -77,9 +77,13 @@
 .player-detail-header-actions {
   grid-column: 3;
   grid-row: 1;
+  position: relative;
+  z-index: 25;
   display: flex;
   gap: 0.5rem;
-  align-items: center;
+  align-items: flex-start;
+  justify-content: flex-end;
+  min-width: 0;
 }
 
 @media (max-width: 1100px) {
@@ -100,8 +104,30 @@
 
 .player-detail-header-actions .squad-tile-slot {
   display: flex;
-  align-items: center;
-  gap: 0.5rem;
+  align-items: flex-start;
+  width: 2rem;
+  height: 2rem;
+  flex: 0 0 2rem;
+}
+
+.player-detail-header-actions .squad-player-hit-area {
+  width: 2rem;
+  height: 2rem;
+}
+
+.player-detail-header-actions .squad-tile-controls {
+  position: relative;
+  inset: auto;
+  z-index: 5;
+  width: 2rem;
+  height: 2rem;
+  aspect-ratio: 1;
+}
+
+.player-detail-header-actions .squad-info-menu {
+  top: calc(100% + 0.25rem);
+  right: 0;
+  left: auto;
 }
 
 .player-detail-header-actions .player-detail-squad-hit {
@@ -225,6 +251,24 @@
 .player-detail-deltas .is-down {
   color: var(--red);
   font-weight: 700;
+}
+
+.player-detail-deltas .player-detail-market-delta {
+  font-weight: 400;
+  white-space: nowrap;
+}
+
+.player-detail-market-delta svg {
+  display: inline-block;
+  width: 1em;
+  height: 1em;
+  margin-inline-end: 0.15em;
+  fill: none;
+  stroke: currentColor;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  stroke-width: 2;
+  vertical-align: -0.12em;
 }
 
 .player-detail-market-custom {

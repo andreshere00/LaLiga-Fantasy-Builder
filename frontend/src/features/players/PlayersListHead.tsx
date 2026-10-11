@@ -17,13 +17,12 @@ type PlayersListHeadProps = {
 
 const COLUMN_ORDER: PlayersColumnKey[] = [
   "name",
-  "team",
+  "position",
   "fsyp",
   "form",
   "marketValue",
-  "owner",
   "availability",
-  "position",
+  "owner",
 ];
 
 type HeadCellProps = {

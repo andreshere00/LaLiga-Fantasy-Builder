@@ -1,15 +1,25 @@
 .players-page .players-list .players-head-row,
 .players-page .players-row {
   grid-template-columns:
-    72px minmax(8rem, 1.05fr) minmax(6rem, 0.85fr) minmax(4.5rem, 0.55fr)
-    minmax(10rem, 1.05fr) minmax(9rem, 1fr) minmax(8.5rem, 1fr)
-    minmax(8.5rem, 0.95fr) minmax(4rem, 0.45fr) minmax(8.5rem, 0.9fr);
+    72px minmax(7rem, 0.82fr) minmax(3.5rem, 0.38fr) minmax(4rem, 0.45fr)
+    minmax(8rem, 0.9fr) minmax(8rem, 0.92fr)
+    minmax(7.5rem, 0.82fr) minmax(7rem, 0.78fr) minmax(7rem, 0.7fr);
   gap: 12px;
 }
 
+.players-team-filter {
+  display: flex;
+  flex: 0 1 12rem;
+  flex-direction: column;
+  gap: 6px;
+  font-size: 0.75rem;
+  font-weight: 700;
+}
+
 .market-page.players-page {
-  width: min(100%, 1600px);
-  max-width: 1600px;
+  box-sizing: border-box;
+  width: min(1400px, calc(100% - 32px));
+  max-width: 1400px;
 }
 
 @media (min-width: 801px) and (max-width: 1350px) {
@@ -19,7 +29,7 @@
 
   .players-page .players-list .players-head-row,
   .players-page .players-list .players-row {
-    min-width: 1252px;
+    min-width: 1160px;
   }
 }
 
@@ -51,7 +61,6 @@
   text-overflow: ellipsis;
 }
 
-.players-page .players-list .players-team-cell,
 .players-page .players-list .players-value-cell,
 .players-page .players-list .players-owner-cell,
 .players-page .players-list .market-cell-availability {
@@ -233,7 +242,7 @@
 
   .players-page .players-list .players-head-row,
   .players-page .players-list .players-row {
-    grid-template-columns: 72px minmax(0, 1.35fr) minmax(0, 1fr) minmax(5rem, auto);
+    grid-template-columns: 72px minmax(0, 1fr) minmax(5rem, auto);
     align-items: center;
     gap: 6px;
     min-width: 0;
@@ -244,8 +253,8 @@
     align-self: center;
   }
 
-  .players-page .players-list .players-head-row > :nth-child(n + 4):nth-child(-n + 9),
-  .players-page .players-list .players-row > :nth-child(n + 4):nth-child(-n + 9) {
+  .players-page .players-list .players-head-row > :nth-child(n + 3):nth-child(-n + 8),
+  .players-page .players-list .players-row > :nth-child(n + 3):nth-child(-n + 8) {
     display: none;
   }
 
@@ -261,10 +270,6 @@
 
   .players-page .players-list .players-row .market-name {
     max-width: 100%;
-  }
-
-  .players-page .players-list .players-row .players-team-cell {
-    overflow-wrap: anywhere;
   }
 
   .players-details-heading-full {

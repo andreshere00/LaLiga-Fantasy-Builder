@@ -12,6 +12,8 @@ import { useLineupBoard, type LineupBoard } from "./useLineupBoard";
 
 const api = vi.hoisted(() => ({
   failedLineups: new Set<string>(),
+  scoringLineups: {} as Record<string, unknown>,
+  fixtureStarted: false,
   league: null as FantasyLeague | null,
   getJson: vi.fn(),
   putJson: vi.fn(),
@@ -157,7 +159,7 @@ function respond(path: string): unknown {
     };
   }
   if (path === paths.weekFixtures(8)) {
-    return [{ matchDate: "2026-10-11T16:15:00+02:00" }];
+    return [{ matchDate: "2026-10-11T16:15:00+02:00", matchState: api.fixtureStarted ? 2 : 1 }];
   }
   if (path === paths.playersCatalog()) return [];
   const standingMatch = /^\/api\/leagues\/([^/]+)\/standing(?:\/\d+)?$/.exec(path);
@@ -165,6 +167,8 @@ function respond(path: string): unknown {
   if (/^\/api\/leagues\/[^/]+\/teams$/.test(path)) return [];
   const teamMatch = /^\/api\/leagues\/([^/]+)\/teams\/([^/]+)$/.exec(path);
   if (teamMatch) return teams[`${teamMatch[1]}:${teamMatch[2]}`] ?? { players: [] };
+  const scoringMatch = /^\/api\/teams\/([^/]+)\/lineup\/week\/(\d+)$/.exec(path);
+  if (scoringMatch) return api.scoringLineups[`${scoringMatch[1]}:${scoringMatch[2]}`] ?? [];
   const lineupMatch = /^\/api\/teams\/([^/]+)\/lineup$/.exec(path);
   if (lineupMatch) {
     const teamId = lineupMatch[1] ?? "";
@@ -230,6 +234,8 @@ describe("useLineupBoard", () => {
       defaultOptions: { queries: { retry: false }, mutations: { retry: false } },
     });
     api.failedLineups.clear();
+    api.scoringLineups = {};
+    api.fixtureStarted = false;
     api.league = leagueA;
     api.getJson.mockReset();
     api.putJson.mockReset();
@@ -339,6 +345,90 @@ describe("useLineupBoard", () => {
         }),
       );
     });
+  });
+
+  it("useLineupBoard_restore_last_saved_discards_swaps_and_formation_without_saving", async () => {
+    const { result } = renderHook(() => useLineupBoard(), { wrapper: Wrapper });
+    await waitFor(() => {
+      expect(result.current.editable).toBe(true);
+      expect(result.current.formationCode).toBe("4,4,2");
+      expect(result.current.squadLoading).toBe(false);
+    });
+    await swapInBench(result);
+    act(() => result.current.setFormationCode("5,3,2"));
+    expect(result.current.lastSavedLineupAvailable).toBe(true);
+
+    act(() => result.current.restoreLastSavedLineup());
+
+    expect(result.current.formationCode).toBe("4,4,2");
+    expect(idsForRole(result.current, "defender")).toEqual(CALLER_XI.def);
+    expect(result.current.lastSavedLineupAvailable).toBe(false);
+    expect(result.current.saveDisabled).toBe(true);
+    expect(result.current.pitchSelection).toBeNull();
+    expect(api.putJson).not.toHaveBeenCalled();
+
+    act(() => result.current.selectTeam("team-b"));
+    await waitFor(() => expect(result.current.selectedTeamId).toBe("team-b"));
+    act(() => {
+      result.current.selectTeam("team-a");
+      result.current.goToWeek(8);
+    });
+    await waitFor(() => {
+      expect(result.current.selectedTeamId).toBe("team-a");
+      expect(result.current.formationCode).toBe("4,4,2");
+      expect(idsForRole(result.current, "defender")).toEqual(CALLER_XI.def);
+      expect(result.current.lastSavedLineupAvailable).toBe(false);
+    });
+  });
+
+  it("useLineupBoard_loads_fixture_scoring_snapshot_separately_from_last_saved", async () => {
+    api.fixtureStarted = true;
+    const scoring = lineupFor({ ...CALLER_XI, def: ["historic-d", "d2", "d3", "d4"] });
+    api.scoringLineups["team-a:8"] = {
+      ...scoring,
+      formation: { ...scoring.formation, captain: "gk" },
+    };
+    const { result } = renderHook(() => useLineupBoard(), { wrapper: Wrapper });
+    await waitFor(() => {
+      expect(result.current.originalLineupAvailable).toBe(true);
+      expect(idsForRole(result.current, "defender")).toEqual(CALLER_XI.def);
+    });
+
+    act(() => result.current.restoreOriginalLineup());
+
+    expect(idsForRole(result.current, "defender")).toEqual(["historic-d", "d2", "d3", "d4"]);
+    expect(result.current.groups.flatMap((group) => group.players)
+      .find((player) => player.id === "historic-d")?.name).toBe("historic-d");
+    expect(result.current.captainId).toBe("gk");
+    expect(result.current.lastSavedLineupAvailable).toBe(true);
+    expect(result.current.saveDisabled).toBe(false);
+    expect(api.getJson).toHaveBeenCalledWith(paths.lineupWeek("team-a", 8), "token", expect.anything());
+    expect(api.putJson).not.toHaveBeenCalled();
+
+    act(() => result.current.restoreLastSavedLineup());
+
+    expect(idsForRole(result.current, "defender")).toEqual(CALLER_XI.def);
+    expect(result.current.captainId).toBeNull();
+    expect(result.current.saveDisabled).toBe(true);
+    expect(result.current.originalLineupAvailable).toBe(true);
+  });
+
+  it("useLineupBoard_missing_scoring_snapshot_does_not_substitute_last_saved", async () => {
+    api.fixtureStarted = true;
+    const { result } = renderHook(() => useLineupBoard(), { wrapper: Wrapper });
+    await waitFor(() => {
+      expect(result.current.originalLineupMessage).toContain("not available yet");
+      expect(result.current.formationCode).toBe("4,4,2");
+      expect(result.current.squadLoading).toBe(false);
+    });
+    await swapInBench(result);
+
+    act(() => result.current.restoreOriginalLineup());
+
+    expect(result.current.originalLineupAvailable).toBe(false);
+    expect(idsForRole(result.current, "defender")).toContain("d5");
+    expect(result.current.lastSavedLineupAvailable).toBe(true);
+    expect(api.putJson).not.toHaveBeenCalled();
   });
 
   // ---- Error paths ---- //

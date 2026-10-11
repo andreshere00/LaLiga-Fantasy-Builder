@@ -189,7 +189,7 @@ export function formatChartAxisDate(raw: string): string {
 
 export function deltaRelPercent(value: number | null | undefined): string | null {
   if (value == null || !Number.isFinite(value)) return null;
-  return `${value.toFixed(2)}%`;
+  return `${value > 0 ? "+" : ""}${value.toFixed(2)}%`;
 }
 
 export type DetailSegmentBlocks = {

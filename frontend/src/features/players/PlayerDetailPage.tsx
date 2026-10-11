@@ -351,7 +351,6 @@ function PlayerDetailBody({ masterId }: PlayerDetailBodyProps) {
     squadMarketValue: marketListing.squadMarketValue,
   };
   const showMarketMenu = marketRow != null && ownSquadCard == null;
-  const showBookmark = !showMarketMenu && ownSquadCard == null;
   const rangeInvalid =
     marketCustomDraftFrom !== "" &&
     marketCustomDraftTo !== "" &&
@@ -445,13 +444,11 @@ function PlayerDetailBody({ masterId }: PlayerDetailBodyProps) {
           {showMarketMenu && marketRow ? (
             <MarketActionMenu row={marketRow} context={actionContext} actions={marketActions} />
           ) : null}
-          {showBookmark ? (
-            <PlayerBookmarkButton
-              pressed={favorites.has(masterId)}
-              playerName={name}
-              onToggle={() => setFavorites(toggleFavoritePlayerId(userId, masterId))}
-            />
-          ) : null}
+          <PlayerBookmarkButton
+            pressed={favorites.has(masterId)}
+            playerName={name}
+            onToggle={() => setFavorites(toggleFavoritePlayerId(userId, masterId))}
+          />
         </div>
       </header>
 
@@ -541,7 +538,7 @@ function PlayerDetailBody({ masterId }: PlayerDetailBodyProps) {
         )}
       </section>
 
-      <section className="player-detail-panel player-detail-section">
+      <section className="player-detail-panel player-detail-section player-market-value-section">
         <h2>Market value</h2>
         <div className="player-detail-market-presets">
           {MARKET_PRESETS.map((value) => (
@@ -644,11 +641,25 @@ function PlayerDetailBody({ masterId }: PlayerDetailBodyProps) {
             <p className="player-detail-deltas">
               <strong>{currentValue != null ? formatEuro(currentValue) : MISSING_STAT}</strong>
               {" · "}
-              <span className={changeTone}>
-                {deltaAbs != null ? formatEuro(deltaAbs) : MISSING_STAT}
+              <span className={`player-detail-market-delta ${changeTone}`}>
+                {deltaAbs != null && deltaAbs > 0 ? (
+                  <svg viewBox="0 0 24 24" aria-hidden="true">
+                    <path d="M12 19V5m0 0-7 7m7-7 7 7" />
+                  </svg>
+                ) : null}
+                {deltaAbs != null
+                  ? `${deltaAbs > 0 ? "+" : ""}${formatEuro(deltaAbs)}`
+                  : MISSING_STAT}
               </span>
               {" · "}
-              <span className={changeTone}>{deltaRelPercent(deltaRel) ?? MISSING_STAT}</span>
+              <span className={`player-detail-market-delta ${changeTone}`}>
+                {deltaRel != null && deltaRel > 0 ? (
+                  <svg viewBox="0 0 24 24" aria-hidden="true">
+                    <path d="M12 19V5m0 0-7 7m7-7 7 7" />
+                  </svg>
+                ) : null}
+                {deltaRelPercent(deltaRel) ?? MISSING_STAT}
+              </span>
             </p>
             <div className="player-detail-chart">
               <ResponsiveContainer width="100%" height={260}>

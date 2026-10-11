@@ -152,8 +152,8 @@ function PlayersListRow({
       <span className="market-name-wrap" data-label="Player">
         <span className="market-name">{row.name}</span>
       </span>
-      <span className="market-cell players-team-cell" data-label="Team" title={row.teamName ?? undefined}>
-        {row.teamName ?? "-"}
+      <span className="market-cell" data-label="Position">
+        <PositionCell positionId={row.positionId} />
       </span>
       <span className="market-cell market-fsyp-cell" data-label="FSYP">
         <FsypCell
@@ -179,14 +179,11 @@ function PlayersListRow({
           </span>
         )}
       </span>
-      <span className="market-cell players-owner-cell" data-label="Owned by" title={row.ownedBy}>
-        {ownerCell}
-      </span>
       <span className="market-cell market-cell-availability" data-label="Availability">
         <AvailabilityCell availability={row.availability} />
       </span>
-      <span className="market-cell" data-label="Position">
-        <PositionCell positionId={row.positionId} />
+      <span className="market-cell players-owner-cell" data-label="Owned by" title={row.ownedBy}>
+        {ownerCell}
       </span>
       <span className="market-cell players-actions-cell" data-label="Actions">
         {ownSquadCard ? (
@@ -336,6 +333,18 @@ function PlayersList() {
           placeholder="Name, team or owner"
           inputId="players-search"
         />
+        <label className="players-team-filter" htmlFor="players-team-filter">
+          Team
+          <select
+            id="players-team-filter"
+            className="market-filter-select"
+            value={urlState.filters.team}
+            onChange={(event) => setFilters({ team: event.target.value })}
+          >
+            <option value="">All teams</option>
+            {teams.map((team) => <option key={team} value={team}>{team}</option>)}
+          </select>
+        </label>
       </div>
       {board.isDegraded ? (
         <p className="market-notice status-copy" role="status">

@@ -15,7 +15,7 @@ const COPY: Record<Exclude<AuthStatus, "ready">, GateCopy> = {
   },
   "signed-out": {
     title: "Sign in",
-    body: "Log in to load your league, lineup, and ranking.",
+    body: "Log in to operate within LaLiga Fantasy application by using a web interface.",
     action: "login",
   },
   unlinked: {

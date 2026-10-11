@@ -47,12 +47,12 @@ export function FormCell({ row }: { row: FormCellRow }) {
               ].filter(Boolean).join(" ")}
               tabIndex={week === row.pendingFormWeek ? 0 : undefined}
               aria-describedby={week === row.pendingFormWeek ? pendingTooltipId : undefined}
-              title={week === row.pendingFormWeek ? "This fixture has not been played yet." : undefined}
+              title={week === row.pendingFormWeek ? "Last fixture has not been played yet." : undefined}
             >
               <PlayerScoreBadge points={points} />
               {week === row.pendingFormWeek ? (
                 <span id={pendingTooltipId} className="hover-tooltip-panel is-align-start" role="tooltip">
-                  This fixture has not been played yet. Its 0 is excluded from form averages.
+                  Last fixture has not been played yet. Excluded last match from average.
                 </span>
               ) : null}
               <span className="market-form-week" aria-hidden="true">

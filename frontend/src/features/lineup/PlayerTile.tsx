@@ -146,7 +146,7 @@ export function PlayerTile({
       ) : null}
       {unplayedFixture ? (
         <span id={unplayedTooltipId} className="hover-tooltip-panel is-align-start lineup-unplayed-tooltip" role="tooltip">
-          This fixture has not been played yet. The 0 is a placeholder and is excluded from form averages.
+          Last fixture has not been played yet.
         </span>
       ) : null}
       <TeamBadge url={teamBadgeUrl} />
