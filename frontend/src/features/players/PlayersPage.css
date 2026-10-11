@@ -32,6 +32,19 @@
   z-index: 30;
 }
 
+.players-page .players-list > .players-row:hover {
+  z-index: 35;
+}
+
+.players-page .players-list > .players-row[role="link"] {
+  cursor: pointer;
+}
+
+.players-page .players-list > .players-row[role="link"]:focus-visible {
+  outline: 2px solid var(--cyan);
+  outline-offset: 2px;
+}
+
 .players-page .players-list .market-cell {
   min-width: 0;
   overflow: hidden;
@@ -45,7 +58,7 @@
   font-size: 0.86rem;
 }
 
-.players-page .players-list .market-cell:is(.market-form, .market-value, .market-cell-availability, .players-actions-cell) {
+.players-page .players-list .market-cell:is(.market-fsyp-cell, .market-form, .market-value, .market-cell-availability, .players-actions-cell) {
   overflow: visible;
 }
 
@@ -197,11 +210,16 @@
 }
 
 .market-row.is-favorite {
-  background: var(--red-soft);
+  background: var(--white);
 }
 
 .market-row.is-favorite .market-name {
   color: var(--red);
+}
+
+.market-row.is-favorite .market-card .player-tile,
+.market-row.is-favorite .market-card .player-tile:is(:hover, :active) {
+  background-color: var(--red);
 }
 
 @media (max-width: 800px) {
@@ -262,4 +280,9 @@
     flex-wrap: nowrap;
     overflow: visible;
   }
+}
+
+.players-page .market-fsyp-cell:hover .market-fsyp-tooltip {
+  opacity: 1;
+  visibility: visible;
 }

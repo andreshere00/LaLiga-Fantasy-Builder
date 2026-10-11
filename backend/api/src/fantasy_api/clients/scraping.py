@@ -75,10 +75,21 @@ class ScrapingClient:
                 category="scraping_unavailable",
             ) from None
         if response.status_code == 404:
+            category = "stats_source_not_found"
+            try:
+                error_body = response.json()
+            except ValueError:
+                error_body = None
+            if isinstance(error_body, dict) and error_body.get("error") in {
+                "player_not_found",
+                "player_alias_unavailable",
+            }:
+                # Preserve this safe category without exposing the upstream body or detail.
+                category = str(error_body["error"])
             raise UpstreamError(
                 "stats source not found",
                 status_code=404,
-                category="stats_source_not_found",
+                category=category,
             )
         if response.status_code in {429, 503}:
             raise UpstreamError(

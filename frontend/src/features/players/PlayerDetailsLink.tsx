@@ -10,6 +10,7 @@ type PlayerDetailsLinkProps = {
   className?: string;
   /** Gray player card by default, red when the market or players row is hovered. */
   card?: boolean;
+  returnTo?: "/market" | "/players";
 };
 
 /** Navigates to the player detail screen with an info icon. */
@@ -18,12 +19,14 @@ export function PlayerDetailsLink({
   playerName,
   className,
   card = false,
+  returnTo,
 }: PlayerDetailsLinkProps) {
   const match = useMatch(`/players/${playerId}`);
   const active = match != null;
   return (
     <Link
       to={`/players/${encodeURIComponent(playerId)}`}
+      state={returnTo ? { returnTo } : undefined}
       className={["player-details-link", className].filter(Boolean).join(" ")}
       aria-label={`${playerName}, view details`}
     >

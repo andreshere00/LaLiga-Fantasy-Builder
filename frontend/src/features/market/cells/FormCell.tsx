@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useId, useState } from "react";
 
 import { scoreWeekLabel } from "../../../api/mappers";
 import { PlayerScoreBadge } from "../../lineup/PlayerTile";
@@ -7,12 +7,18 @@ type FormCellRow = {
   id: string;
   formRecent: readonly number[];
   formRecentWeeks: readonly number[];
+  pendingFormWeek?: number;
 };
 
 export function FormCell({ row }: { row: FormCellRow }) {
   const [startIndex, setStartIndex] = useState(0);
+  const pendingTooltipId = useId();
   const view = formWindowChronological(
-    formRecentWindow(row.formRecent, row.formRecentWeeks, startIndex),
+    formRecentWindow(
+      row.pendingFormWeek ? [0, ...row.formRecent] : row.formRecent,
+      row.pendingFormWeek ? [row.pendingFormWeek, ...row.formRecentWeeks] : row.formRecentWeeks,
+      startIndex,
+    ),
   );
 
   if (view.points.length === 0) return <>—</>;
@@ -20,7 +26,7 @@ export function FormCell({ row }: { row: FormCellRow }) {
   const ariaParts = view.weeks.map((week, index) => {
     const points = view.points[index];
     const label = scoreWeekLabel(week);
-    return `${label}: ${points}`;
+    return `${label}: ${points}${week === row.pendingFormWeek ? " (match has not been played yet; excluded from averages)" : ""}`;
   });
 
   const goPast = () => setStartIndex(view.offset + 1);
@@ -33,10 +39,24 @@ export function FormCell({ row }: { row: FormCellRow }) {
           const week = view.weeks[index];
           const key = `${row.id}-form-w${week}`;
           return (
-            <span key={key} className="market-form-badge-stack">
+            <span
+              key={key}
+              className={[
+                "market-form-badge-stack",
+                week === row.pendingFormWeek ? "has-hover-tooltip-panel is-unplayed-fixture" : "",
+              ].filter(Boolean).join(" ")}
+              tabIndex={week === row.pendingFormWeek ? 0 : undefined}
+              aria-describedby={week === row.pendingFormWeek ? pendingTooltipId : undefined}
+              title={week === row.pendingFormWeek ? "This fixture has not been played yet." : undefined}
+            >
               <PlayerScoreBadge points={points} />
+              {week === row.pendingFormWeek ? (
+                <span id={pendingTooltipId} className="hover-tooltip-panel is-align-start" role="tooltip">
+                  This fixture has not been played yet. Its 0 is excluded from form averages.
+                </span>
+              ) : null}
               <span className="market-form-week" aria-hidden="true">
-                {scoreWeekLabel(week)}
+                {scoreWeekLabel(week)}{week === row.pendingFormWeek ? " ⚠" : ""}
               </span>
             </span>
           );

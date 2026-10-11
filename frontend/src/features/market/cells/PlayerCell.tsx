@@ -32,6 +32,7 @@ export function PlayerCell({ row, now, columnLabel = "Player" }: PlayerCellProps
             playerName={row.name}
             className="market-player-details-link"
             card
+            returnTo="/market"
           />
         ) : null}
         <PlayerTile

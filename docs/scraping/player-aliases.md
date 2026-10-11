@@ -10,16 +10,51 @@ identity includes its source URLs.
 
 | File | Purpose |
 |------|---------|
-| `backend/scraping/src/fantasy_scraping/scraper/data/player_names.json` | Reviewed IDs, nicknames, available full names, profile routes and per-player aliases |
-| `backend/scraping/src/fantasy_scraping/scraper/data/aliases.json` | Generated name/ID → route index consumed by the resolver |
+| `backend/scraping/src/fantasy_scraping/scraper/data/player_names.json` | Reviewed IDs, nicknames, available full names, profile routes and source provenance |
+| `backend/scraping/src/fantasy_scraping/scraper/data/aliases.json` | Generated records grouped by master player ID; compiled into a lookup index at service startup |
 | `backend/scraping/scripts/generate_player_aliases.py` | Offline regeneration from reviewed identities |
 
 826 footballers have confirmed profile routes. Three have published identities
 but no confirmed FutbolFantasy route: Mario Nájera (`2970`), Albert García
 (`3278`), and Yakiv Kinareikin (`3280`). Their name variants remain in the
-inventory; their ID entries in the runtime index are empty lists. Requests with
-those IDs return `player_not_found` instead of falling back to a different person.
+grouped registry with `slug: null`; their ID entries in the in-memory index are
+empty lists. Requests with those IDs return `player_not_found` instead of falling
+back to a different person.
 Revisit these entries when the source adds profiles.
+
+## Grouped registry
+
+Each master player ID owns one record with `full_name`, `slug`, `team_id`, `team`,
+and `aliases`. Full names and teams retain their published spelling; aliases are
+normalized lookup names. Missing full names, teams, or source routes remain `null`.
+Team IDs identify Fantasy clubs, not league managers' squads or squad entries.
+
+Example with an abbreviated alias list (the generated record contains all variants):
+
+```json
+{
+  "2614": {
+    "full_name": "Carlos Romero Serrano",
+    "slug": "carlos-romero",
+    "team_id": "20",
+    "team": "Villarreal CF",
+    "aliases": ["c-romero", "carlos", "carlos-romero", "romero"]
+  }
+}
+```
+
+The generator derives aliases from the reviewed identity fields. Generated arrays
+are stored only in `aliases.json`, avoiding duplicate lists in the source inventory.
+The loader validates record fields, source route shapes, normalized aliases and
+numeric master IDs before building a reverse name index. Malformed records fail
+loading rather than silently changing the lookup behavior.
+
+The in-memory index supports constant-time ID and name lookups without scanning
+the grouped file per request. A shared alias retains all matching source routes.
+The resolver's interface is unchanged: it consumes this compiled index, including
+explicit unavailable IDs. Team fields describe the reviewed catalog snapshot;
+they do not replace live profile club verification, since transfers can make a
+snapshot stale.
 
 ## Name patterns
 
@@ -57,8 +92,8 @@ two-surname patterns for those players.
 
 1. A Fantasy **master player ID** selects its reviewed route. Never use a squad
    entry's `playerTeamId` here.
-2. Name aliases resolve before fuzzy matching. A unique alias stores one slug;
-   shared aliases store every distinct slug in a sorted list.
+2. Name aliases resolve before fuzzy matching. At startup, a unique alias maps to
+   one slug in memory; shared aliases map to every distinct slug in a sorted list.
 3. A supplied full name narrows a shared nickname. When ambiguity remains, the
    existing club verification is used. Multiple same-club matches remain
    ambiguous. Groups above the five-profile probe limit remain ambiguous.
@@ -80,8 +115,8 @@ not prove that a requested competition/season has statistics.
 3. Review full names, positions and namesakes. A matching surname or current club
    alone is insufficient proof. Record source URLs. Keep `slug: null` with
    `route_status: "source_not_found"` when no route is confirmed.
-4. Update reviewed names and routes in `player_names.json`. Its `aliases` arrays
-   are generated; edit the name fields rather than those arrays.
+4. Update reviewed names, teams and routes in `player_names.json`. Edit those
+   source fields rather than the generated records in `aliases.json`.
 5. Regenerate offline:
 
    ```bash
@@ -92,6 +127,11 @@ not prove that a requested competition/season has statistics.
 6. Review and commit both JSON files together. Restart the scraping process to
    load the new aliases and clear its in-memory route cache.
 
-The generator rejects duplicate IDs, conflicting ID routes and invalid route
+The generator rejects duplicate IDs, invalid ID keys and invalid route
 slugs. It preserves collisions and produces deterministic output. No LaLiga
 bearer or personal session data is needed to regenerate the index.
+
+Club verification prefers an exact sitemap club slug (or its configured canonical
+alias) before trying partial token matches. This keeps a first team such as Real
+Sociedad distinct from Real Sociedad B when resolving player profiles. Diacritics
+in names such as Luka Sučić are normalized to ASCII slugs (`luka-sucic`).

@@ -1,4 +1,4 @@
-import { useEffect, type CSSProperties } from "react";
+import { useEffect, useState, type CSSProperties } from "react";
 import { useSearchParams } from "react-router-dom";
 
 import { pointsLabel, possessiveName, scoreWeekLabel } from "../../api/mappers";
@@ -16,8 +16,9 @@ import { OpponentLineupNotice } from "./OpponentLineupNotice";
 import { PitchMotionProvider, PitchTileMotion } from "./PitchMotion";
 import { PlayedFixtureNotice } from "./PlayedFixtureNotice";
 import { PlayerTile } from "./PlayerTile";
+import { roleFromPositionId } from "./lineupDraft";
 import { SquadPlayerActions } from "./SquadPlayerActions";
-import { PlayerDetailsLink } from "../players/PlayerDetailsLink";
+import { LineupMarketOptions } from "./LineupMarketOptions";
 import { TeamValueBox } from "./TeamValueBox";
 import { useLineupBoard } from "./useLineupBoard";
 import { useSquadSales } from "./useSquadSales";
@@ -39,6 +40,16 @@ export function LineupPage() {
   const [searchParams] = useSearchParams();
   const board = useLineupBoard({ initialTeamId: searchParams.get("team") });
   const squadSales = useSquadSales();
+  const [swapCandidate, setSwapCandidate] = useState<{
+    playerId: string;
+    positionId: number | null;
+    name: string;
+    teamId: string | null;
+    week: number;
+  } | null>(null);
+  const activeSwap = board.editable && swapCandidate?.teamId === board.selectedTeamId &&
+    swapCandidate.week === board.week ? swapCandidate : null;
+
   const currentFixtureTooltip = board.unplayedFixtureScoreTooltip;
   const owner = possessiveName(board.titleName);
   const { pitchSelection, selectPitchPlayer } = board;
@@ -277,6 +288,12 @@ export function LineupPage() {
               </p>
             ) : null}
             {board.pitchEmpty ? <p className="pitch-note">Lineup unavailable</p> : null}
+            {activeSwap ? (
+              <div className="lineup-swap-notice" role="status">
+                Select a player on the pitch in the same position to swap with {activeSwap.name}.
+                <button type="button" className="squad-sale-secondary" onClick={() => setSwapCandidate(null)}>Cancel</button>
+              </div>
+            ) : null}
             <PitchMotionProvider key={`${board.selectedTeamId}-${board.week}`}>
             <div className="pitch-rows">
               {board.groups.map((group) => {
@@ -301,42 +318,60 @@ export function LineupPage() {
                               board.pitchSelection?.playerId === player.id &&
                               board.pitchSelection.role === group.role;
                             const empty = player.isEmpty === true;
-                            const interactive =
-                              board.editable || (board.isPastFixture && !empty);
+                            const squadPlayer = board.squad.find((card) => card.id === player.id) ?? {
+                              id: player.id,
+                              masterPlayerId: player.masterPlayerId,
+                              name: player.name,
+                              captain: player.id === board.captainId,
+                              positionId: { goalkeeper: 1, defender: 2, midfield: 3, striker: 4 }[group.role],
+                              photoUrl: player.photoUrl ?? null,
+                              teamBadgeUrl: player.teamBadgeUrl ?? null,
+                              marketValue: null,
+                              onMarket: false,
+                              listingId: null,
+                              salePrice: null,
+                            };
+                            const tile = (onSelect: () => void) => (
+                              <PlayerTile
+                                name={player.name}
+                                captain={!empty && player.id === board.captainId}
+                                variant="pitch"
+                                empty={empty}
+                                photoUrl={player.photoUrl}
+                                teamBadgeUrl={player.teamBadgeUrl}
+                                fixturePoints={board.fixtureScoresVisible && !empty ? player.fixturePoints : null}
+                                unplayedFixture={board.week === board.maxWeek && player.fixturePoints === 0}
+                                isMvp={board.fixtureScoresVisible && player.isMvp === true}
+                                interactive={!empty || board.editable}
+                                selected={selected}
+                                onSelect={onSelect}
+                              />
+                            );
                             return (
-                              <PitchTileMotion
-                                key={player.id}
-                                order={tileOrder.get(player.id) ?? 0}
-                                lift={interactive}
-                              >
-                              <div className="pitch-tile-wrap">
-                                <PlayerTile
-                                  name={player.name}
-                                  captain={!empty && player.id === board.captainId}
-                                  variant="pitch"
-                                  empty={empty}
-                                  photoUrl={player.photoUrl}
-                                  teamBadgeUrl={player.teamBadgeUrl}
-                                  fixturePoints={
-                                    board.fixtureScoresVisible && !empty
-                                      ? player.fixturePoints
-                                      : null
+                              <PitchTileMotion key={player.id} order={tileOrder.get(player.id) ?? 0} lift={!empty || board.editable}>
+                                {empty || picking || activeSwap ? tile(() => {
+                                  if (activeSwap) {
+                                    if (roleFromPositionId(activeSwap.positionId) !== group.role) return;
+                                    board.swapSquadPlayer({ role: group.role, playerId: player.id }, activeSwap.playerId);
+                                    setSwapCandidate(null);
+                                  } else {
+                                    board.selectPitchPlayer(group.role, player.id);
                                   }
-                                  isMvp={board.fixtureScoresVisible && player.isMvp === true}
-                                  interactive={interactive}
-                                  selected={selected}
-                                  onSelect={() =>
-                                    board.selectPitchPlayer(group.role, player.id)
-                                  }
-                                />
-                                {!empty && player.masterPlayerId ? (
-                                  <PlayerDetailsLink
-                                    playerId={player.masterPlayerId}
-                                    playerName={player.name}
-                                    className="pitch-details-link"
-                                  />
-                                ) : null}
-                              </div>
+                                }) : (
+                                  <SquadPlayerActions
+                                    key={`${board.selectedTeamId}-${board.week}-${player.id}`}
+                                    player={squadPlayer}
+                                    sales={squadSales}
+                                    cardMenu
+                                    ownPlayer={board.ownSquad}
+                                    onSwap={board.editable ? () => board.selectPitchPlayer(group.role, player.id) : undefined}
+                                    opponentMarketOptions={(open, onClose) => (
+                                      <LineupMarketOptions player={squadPlayer} open={open} onClose={onClose} />
+                                    )}
+                                  >
+                                    {tile}
+                                  </SquadPlayerActions>
+                                )}
                               </PitchTileMotion>
                             );
                           })}
@@ -404,38 +439,48 @@ export function LineupPage() {
                     key={`${board.selectedTeamId}-${board.squadPage}-${picking}`}
                   >
                     {board.squadPanelPlayers.map((player) => {
-                      const tile = (
+                      const tile = (onSelect: () => void) => (
                         <PlayerTile
                           name={player.name}
                           captain={player.captain}
                           variant="squad"
                           photoUrl={player.photoUrl}
                           teamBadgeUrl={player.teamBadgeUrl}
-                          fixturePoints={
-                            board.fixtureScoresVisible ? player.fixturePoints : null
-                          }
+                          fixturePoints={board.fixtureScoresVisible ? player.fixturePoints : null}
+                          unplayedFixture={board.week === board.maxWeek && player.fixturePoints === 0}
                           isMvp={board.fixtureScoresVisible && player.isMvp === true}
-                          interactive={picking}
-                          onSelect={
-                            picking ? () => board.pickSquadPlayer(player.id) : undefined
-                          }
+                          interactive
+                          onSelect={onSelect}
                         />
                       );
-                      if (board.ownSquad && !picking) {
-                        return (
-                          <SquadPlayerActions
-                            key={player.id}
-                            player={player}
-                            sales={squadSales}
-                          >
-                            {tile}
-                          </SquadPlayerActions>
-                        );
+                      if (picking) {
+                        return <div className="squad-tile-slot" key={player.id}>{tile(() => board.pickSquadPlayer(player.id))}</div>;
                       }
+                      const pitchSlot = board.groups.flatMap((group) =>
+                        group.players.map((slot) => ({ slot, role: group.role })),
+                      ).find(({ slot }) => slot.id === player.id);
                       return (
-                        <div className="squad-tile-slot" key={player.id}>
+                        <SquadPlayerActions
+                          key={`${board.selectedTeamId}-${board.week}-${player.id}`}
+                          player={player}
+                          sales={squadSales}
+                          cardMenu
+                          ownPlayer={board.ownSquad}
+                          onSwap={board.editable && roleFromPositionId(player.positionId) != null ? () => {
+                            setSwapCandidate(null);
+                            if (pitchSlot) {
+                              board.selectPitchPlayer(pitchSlot.role, player.id);
+                            } else {
+                              setSwapCandidate({ playerId: player.id, positionId: player.positionId,
+                                name: player.name, teamId: board.selectedTeamId, week: board.week });
+                            }
+                          } : undefined}
+                          opponentMarketOptions={(open, onClose) => (
+                            <LineupMarketOptions player={player} open={open} onClose={onClose} />
+                          )}
+                        >
                           {tile}
-                        </div>
+                        </SquadPlayerActions>
                       );
                     })}
                   </div>

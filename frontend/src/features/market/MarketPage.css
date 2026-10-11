@@ -19,14 +19,6 @@
   display: none;
 }
 
-.market-list > .market-data-row:is(:hover, :focus-within) .market-player-details-link .is-for-gray {
-  display: none;
-}
-
-.market-list > .market-data-row:is(:hover, :focus-within) .market-player-details-link .is-for-red {
-  display: block;
-}
-
 .pitch-tile-wrap {
   position: relative;
 }
@@ -321,20 +313,6 @@
   border: 1px solid color-mix(in srgb, var(--ink) 12%, transparent);
 }
 
-@media (hover: hover) {
-  .market-list > .market-data-row:is(:hover, :focus-within) {
-    background-color: var(--red-soft);
-  }
-
-  .market-list > .market-data-row:is(:hover, :focus-within) .market-card .player-tile {
-    background-color: var(--red);
-  }
-
-  .market-list > .market-data-row:is(:hover, :focus-within) .market-value-change.is-mid {
-    color: var(--black);
-  }
-}
-
 .market-data-row {
   transform-origin: center top;
   transition: background-color var(--control-fill-duration) var(--control-fill-ease);
@@ -547,10 +525,9 @@
   width: 72px;
 }
 
-@media (hover: hover) {
-  .market-data-row:is(:hover, :focus-within) .market-card .player-tile:is(:hover, :active) {
-    background-color: var(--red);
-  }
+/* Table cards keep their resting color when hovering a row or photo. */
+.market-data-row .market-card .player-tile:is(:hover, :active) {
+  background-color: var(--tile);
 }
 
 .market-name-wrap {
@@ -1121,4 +1098,14 @@ a.market-actions-item {
     content: attr(data-label) ": ";
     font-weight: 700;
   }
+}
+
+.market-form-badge-stack.is-unplayed-fixture .hover-tooltip-panel {
+  bottom: calc(100% + 0.45rem);
+  left: 50%;
+  transform: translateX(-50%);
+}
+
+.market-form-badge-stack.is-unplayed-fixture {
+  cursor: help;
 }

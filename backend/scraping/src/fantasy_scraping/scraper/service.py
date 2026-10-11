@@ -1,11 +1,12 @@
 """Scraper orchestrator. No HTTP, parsing or FastAPI imports."""
 
 import asyncio
-import json
 import logging
 from collections.abc import Mapping, Sequence
 from datetime import UTC, datetime
 from importlib import resources
+
+from pydantic import TypeAdapter
 
 from fantasy_scraping.models.page import PageKind, ScrapedPage
 from fantasy_scraping.scraper.cache import PageCache, route_key
@@ -26,7 +27,11 @@ from fantasy_scraping.scraper.models import (
     ScrapeOptions,
     ScrapeOutcome,
 )
-from fantasy_scraping.scraper.name_aliases import AliasValue
+from fantasy_scraping.scraper.name_aliases import (
+    AliasValue,
+    PlayerAliasRecord,
+    index_player_alias_records,
+)
 from fantasy_scraping.scraper.normalise import normalise
 from fantasy_scraping.scraper.probes import (
     competition_slugs,
@@ -56,9 +61,10 @@ def _scrape_error(exc: ScrapingError) -> dict[str, object]:
 
 
 def load_aliases() -> dict[str, AliasValue]:
-    """Read the committed ``aliases.json``."""
+    """Validate grouped player records and build the in-memory route index."""
     text = resources.files("fantasy_scraping.scraper").joinpath("data/aliases.json").read_text()
-    return json.loads(text)
+    records = TypeAdapter(dict[str, PlayerAliasRecord]).validate_json(text, strict=True)
+    return index_player_alias_records(records)
 
 
 def current_season(now: datetime | None = None) -> str:

@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useId, useState } from "react";
 import "../../components/TooltipPanel.css";
 import "./PlayerTile.css";
 
@@ -17,6 +17,7 @@ type PlayerTileProps = {
   photoFallbackUrls?: readonly (string | null | undefined)[];
   teamBadgeUrl?: string | null;
   fixturePoints?: number | null;
+  unplayedFixture?: boolean;
   isMvp?: boolean;
   selected?: boolean;
   interactive?: boolean;
@@ -84,11 +85,13 @@ export function PlayerTile({
   photoFallbackUrls = [],
   teamBadgeUrl = null,
   fixturePoints = null,
+  unplayedFixture = false,
   isMvp = false,
   selected = false,
   interactive = false,
   onSelect,
 }: PlayerTileProps) {
+  const unplayedTooltipId = useId();
   const className = [
     "player-tile",
     variant === "squad" ? "squad-tile" : "pitch-tile",
@@ -97,6 +100,7 @@ export function PlayerTile({
     captain ? "is-captain" : "",
     selected ? "is-selected" : "",
     interactive ? "is-interactive" : "",
+    unplayedFixture ? "has-hover-tooltip-panel is-unplayed-fixture" : "",
   ]
     .filter(Boolean)
     .join(" ");
@@ -140,6 +144,11 @@ export function PlayerTile({
       {fixturePoints != null ? (
         <PlayerScoreBadge points={fixturePoints} isMvp={isMvp} />
       ) : null}
+      {unplayedFixture ? (
+        <span id={unplayedTooltipId} className="hover-tooltip-panel is-align-start lineup-unplayed-tooltip" role="tooltip">
+          This fixture has not been played yet. The 0 is a placeholder and is excluded from form averages.
+        </span>
+      ) : null}
       <TeamBadge url={teamBadgeUrl} />
       {showName ? (
         <>
@@ -159,6 +168,7 @@ export function PlayerTile({
         className={className}
         aria-label={label}
         aria-pressed={selected}
+        aria-describedby={unplayedFixture ? unplayedTooltipId : undefined}
         onClick={onSelect}
       >
         {body}
@@ -170,6 +180,7 @@ export function PlayerTile({
     <div
       className={className}
       aria-label={empty || !showName ? label : captain ? `${name}, captain` : undefined}
+      aria-describedby={unplayedFixture ? unplayedTooltipId : undefined}
     >
       {body}
     </div>

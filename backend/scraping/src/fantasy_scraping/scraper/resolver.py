@@ -4,7 +4,11 @@ from collections.abc import Callable, Iterable, Mapping
 from dataclasses import dataclass
 
 from fantasy_scraping.scraper.distance import banded_levenshtein, padded_hamming
-from fantasy_scraping.scraper.errors import InvalidRequestError, PlayerNotFoundError
+from fantasy_scraping.scraper.errors import (
+    InvalidRequestError,
+    PlayerAliasUnavailableError,
+    PlayerNotFoundError,
+)
 from fantasy_scraping.scraper.models import Candidate
 from fantasy_scraping.scraper.name_aliases import AliasValue
 from fantasy_scraping.scraper.normalise import base_slug, normalise
@@ -64,7 +68,10 @@ class RouteResolver:
         if not queries:
             raise InvalidRequestError("invalid name")
         if player_id and player_id in self._aliases:
-            return self._alias_resolution(self._aliases[player_id])
+            identity = self._aliases[player_id]
+            if identity == []:
+                raise PlayerAliasUnavailableError()
+            return self._alias_resolution(identity)
         matches = [self._aliases[q] for q in queries if q in self._aliases]
         if matches:
             targets = [set([value] if isinstance(value, str) else value) for value in matches]

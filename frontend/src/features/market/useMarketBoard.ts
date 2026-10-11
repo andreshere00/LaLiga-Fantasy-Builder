@@ -1,6 +1,7 @@
 import { useEffect, useMemo } from "react";
 import { useQueries, useQuery, type UseQueryResult } from "@tanstack/react-query";
 
+import { calendarFormContext } from "./model/form";
 import { getJson, paths } from "../../api/client";
 import {
   CALENDAR_STALE_MS,
@@ -18,7 +19,6 @@ import {
   squadCards,
   squadPlayerCountFromTeam,
   teamValueFromPayload,
-  weekPointsByMasterId,
 } from "../../api/mappers";
 import { teamMoneyFromPayload, useTeamMoneyQuery } from "../../api/queries";
 import type { CurrentWeek } from "../../api/mappers";
@@ -76,22 +76,6 @@ function combineBatch(results: readonly UseQueryResult<unknown, Error>[]): Query
   };
 }
 
-function calendarFormFromStats(
-  weekNumbers: readonly number[],
-  statsData: readonly unknown[],
-  playedThrough: number,
-): {
-  weekNumbers: readonly number[];
-  statsByWeek: Map<number, Map<string, number>>;
-  playedThrough: number;
-} {
-  const statsByWeek = new Map<number, Map<string, number>>();
-  weekNumbers.forEach((week, index) => {
-    statsByWeek.set(week, weekPointsByMasterId(statsData[index]));
-  });
-  return { weekNumbers, statsByWeek, playedThrough };
-}
-
 /** Loads the league market, joins it with the catalog and value histories. */
 export function useMarketBoard(): MarketBoard {
   const { accessToken } = useAuth();
@@ -130,10 +114,11 @@ export function useMarketBoard(): MarketBoard {
     return lastPlayedWeek(currentWeekQuery.data as CurrentWeek);
   }, [currentWeekQuery.data]);
 
-  const formWeekNumbers = useMemo(() => {
-    if (playedThrough < 1) return [];
-    return recentFormWeekNumbers(playedThrough);
-  }, [playedThrough]);
+  const currentWeek = (currentWeekQuery.data as CurrentWeek | undefined)?.weekNumber ?? 0;
+  const formWeekNumbers = useMemo(
+    () => recentFormWeekNumbers(currentWeek),
+    [currentWeek],
+  );
 
   const items = useMemo(() => marketItems(market), [market]);
   const playerIds = useMemo(
@@ -171,7 +156,8 @@ export function useMarketBoard(): MarketBoard {
     queries: formWeekNumbers.map((week) => ({
       queryKey: ["calendar", "stats", week],
       enabled: enabled && formWeekNumbers.length > 0,
-      staleTime: HISTORY_STALE_MS,
+      staleTime: week === currentWeek ? 30_000 : HISTORY_STALE_MS,
+      refetchInterval: week === currentWeek ? 30_000 : false,
       queryFn: ({ signal }: { signal: AbortSignal }) =>
         getJson(paths.weekStats(week), token, { signal }),
     })),
@@ -215,8 +201,8 @@ export function useMarketBoard(): MarketBoard {
   );
 
   const calendarForm = useMemo(
-    () => calendarFormFromStats(formWeekNumbers, weekStats.data, playedThrough),
-    [formWeekNumbers, playedThrough, weekStats.data],
+    () => calendarFormContext(formWeekNumbers, weekStats.data, playedThrough, currentWeek),
+    [formWeekNumbers, playedThrough, currentWeek, weekStats.data],
   );
 
   const userBidsByMarketIdMap = useMemo(

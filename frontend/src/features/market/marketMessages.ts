@@ -19,7 +19,7 @@ export const CLAUSE_BLOCKED_MESSAGE =
 
 /** Tooltip copy for the time left until a release clause can be activated. */
 export function clauseUnlockTooltip(countdown: string): string {
-  return `Time remaining to activate the release clause: ${countdown}`;
+  return `Release clause ends on: ${countdown}`;
 }
 
 export type MarketBidKind = "hire" | "purchase" | "modify";

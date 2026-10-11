@@ -31,6 +31,7 @@ import {
   defaultWeek,
   enrichSquadMapFromLineup,
   fixtureScoresVisibleForWeek,
+  fixtureHasStarted,
   formationLabel,
   freeFormationCodesFromLineup,
   groupsFromLineup,
@@ -128,6 +129,7 @@ export type LineupBoard = {
   pitchSelection: PitchSelection | null;
   selectPitchPlayer: (role: PitchSelection["role"], playerId: string) => void;
   pickSquadPlayer: (playerId: string) => void;
+  swapSquadPlayer: (selection: PitchSelection, playerId: string) => void;
   saveLineup: () => void;
   saveDisabled: boolean;
   saveNoChangesTooltip: string | null;
@@ -340,8 +342,9 @@ export function useLineupBoard(options: UseLineupBoardOptions = {}): LineupBoard
 
   const weekStatsQuery = useQuery({
     queryKey: ["calendar", "stats", week],
-    enabled: accessToken != null && weekReady && !lineupUsesCurrent,
-    staleTime: 5 * 60 * 1000,
+    enabled: accessToken != null && weekReady,
+    staleTime: lineupUsesCurrent ? 30_000 : 5 * 60 * 1000,
+    refetchInterval: lineupUsesCurrent ? 30_000 : false,
     queryFn: ({ signal }) => getJson(paths.weekStats(week), token, { signal }),
   });
 
@@ -387,11 +390,13 @@ export function useLineupBoard(options: UseLineupBoardOptions = {}): LineupBoard
     [weekStatsQuery.data],
   );
   const scoreLookup = useMemo(
-    () =>
-      lineupUsesCurrent
-        ? undefined
-        : { week, pointsByMasterId, mvpByMasterId },
-    [lineupUsesCurrent, week, pointsByMasterId, mvpByMasterId],
+    () => ({
+      week,
+      pointsByMasterId,
+      mvpByMasterId,
+      defaultPoints: lineupUsesCurrent && weekStatsQuery.isSuccess ? 0 : undefined,
+    }),
+    [lineupUsesCurrent, week, pointsByMasterId, mvpByMasterId, weekStatsQuery.isSuccess],
   );
 
   const lineupPayload =
@@ -637,13 +642,15 @@ export function useLineupBoard(options: UseLineupBoardOptions = {}): LineupBoard
     return formatFixtureCountdown(kickoffMs, nowMs);
   }, [current.openingWeekDate, fixturesQuery.data, lineupUsesCurrent, nowMs]);
 
+  const currentFixtureStarted = Array.isArray(weekStatsQuery.data) &&
+    weekStatsQuery.data.some(fixtureHasStarted);
   const unplayedFixtureScoreTooltipLabel = useMemo((): string | null => {
-    if (!lineupUsesCurrent) return null;
+    if (!lineupUsesCurrent || currentFixtureStarted) return null;
     if (currentFixtureCountdown != null) {
       return unplayedFixtureScoreTooltip(currentFixtureCountdown);
     }
     return unplayedFixtureScoreTooltipFallback();
-  }, [currentFixtureCountdown, lineupUsesCurrent]);
+  }, [currentFixtureCountdown, lineupUsesCurrent, currentFixtureStarted]);
 
   const opponentLineupLocked = lineupUsesCurrent && !editable;
   const opponentLineupUnavailableMessageLabel = useMemo((): string | null => {
@@ -779,6 +786,17 @@ export function useLineupBoard(options: UseLineupBoardOptions = {}): LineupBoard
         draft: applyPitchPick(draft, pitchSelection, playerId, squad),
         dirty: true,
       };
+      draftsRef.current.set(sourceKey, stored);
+      setActiveDraft(stored);
+      setPitchSelection(null);
+    },
+    swapSquadPlayer: (selection, playerId) => {
+      if (!draft || !editable || activeTeamId == null || leagueKey.length === 0) return;
+      const sourceKey = lineupSourceKey(leagueKey, activeTeamId, week);
+      if (activeKeyRef.current !== sourceKey) return;
+      const next = applyPitchPick(draft, selection, playerId, squad);
+      if (next === draft) return;
+      const stored: StoredDraft = { draft: next, dirty: true };
       draftsRef.current.set(sourceKey, stored);
       setActiveDraft(stored);
       setPitchSelection(null);

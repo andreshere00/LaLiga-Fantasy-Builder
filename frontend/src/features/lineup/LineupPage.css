@@ -1142,3 +1142,14 @@
     animation: none;
   }
 }
+
+.lineup-swap-notice {
+  position: relative;
+  z-index: 10;
+  padding: 0.75rem;
+  background: var(--white);
+  box-shadow: var(--shadow-surface);
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}

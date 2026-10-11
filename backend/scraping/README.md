@@ -47,16 +47,19 @@ likelihood to the lineup box containing the player's matchweek label. See the
 
 The reviewed public catalog snapshot contains **829 footballers** (25 coaches
 excluded). `scraper/data/player_names.json` records their Fantasy master IDs,
-published names, source URLs, and generated name variants. `aliases.json` is the
-runtime route index: **826 confirmed profile routes**, plus explicit unavailable
-IDs for Nájera (`2970`), Albert García (`3278`), and Kinareikin (`3280`). A profile
-route does not guarantee that FutbolFantasy publishes statistics for every season.
+published names and source URLs. `aliases.json` groups full names, source slugs,
+team IDs, team names and generated aliases by master player ID. It contains
+**826 confirmed profile routes**, plus explicit unavailable routes (`slug: null`)
+for Nájera (`2970`), Albert García (`3278`), and Kinareikin (`3280`). A profile route
+does not guarantee that FutbolFantasy publishes statistics for every season.
 
 Aliases cover nicknames, given names, surnames, full names, initials before and
 after surnames, and two-surname forms where those names are published. Periods,
-accents and spacing are normalized. Shared aliases retain all candidates; a
+accents and spacing are normalized. The loader validates the records and builds
+the ID/name lookup index once at startup. Shared aliases retain all candidates; a
 master player ID takes precedence. Missing routes are not guessed from similar
-names. See the [alias maintenance guide](../../docs/scraping/player-aliases.md).
+names. Stored teams are catalog snapshots; live club verification remains in
+place. See the [alias maintenance guide](../../docs/scraping/player-aliases.md).
 
 After reviewing identity changes, regenerate both files offline:
 

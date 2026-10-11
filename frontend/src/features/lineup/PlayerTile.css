@@ -232,3 +232,27 @@
   font-weight: 700;
   box-shadow: 0 0 0 1px var(--black);
 }
+
+/* Lineup scores occupy the corner opposite the club crest. */
+.lineup-page .player-tile > .player-score-badge {
+  left: 6.6667%;
+}
+
+.lineup-unplayed-tooltip {
+  top: calc(5% + 2rem);
+  right: auto;
+  bottom: auto;
+  left: 50%;
+  z-index: 40;
+  max-width: min(18rem, calc(100vw - 32px));
+  transform: translateX(-50%);
+  border-radius: 0;
+}
+
+.player-tile.is-unplayed-fixture {
+  cursor: help;
+}
+
+.player-tile.is-unplayed-fixture:is(:hover, :focus-visible) {
+  z-index: 30;
+}

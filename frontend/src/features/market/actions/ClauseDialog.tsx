@@ -4,6 +4,7 @@ import type { MarketRow } from "../model/row";
 
 type ClauseDialogProps = {
   open: boolean;
+  squareCorners?: boolean;
   row: MarketRow | null;
   amount: number;
   pending: boolean;
@@ -14,6 +15,7 @@ type ClauseDialogProps = {
 
 export function ClauseDialog({
   open,
+  squareCorners = false,
   row,
   amount,
   pending,
@@ -26,6 +28,7 @@ export function ClauseDialog({
   return (
     <Modal
       open={open}
+      squareCorners={squareCorners}
       title="Pay release clause"
       onClose={onClose}
       closeOnBackdrop={!pending}

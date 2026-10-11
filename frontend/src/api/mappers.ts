@@ -67,6 +67,7 @@ export type ScoreTone = "red" | "yellow" | "green" | "blue";
 
 export type FixtureScoreLookup = {
   week: number | null;
+  defaultPoints?: number;
   pointsByMasterId?: ReadonlyMap<string, number>;
   mvpByMasterId?: ReadonlySet<string>;
 };
@@ -180,6 +181,16 @@ export function weekPointsFromLastStats(master: unknown, week: number): number |
   return null;
 }
 
+/** Scheduled fixtures have matchState 1; other supplied states expose live scores. */
+export function fixtureHasStarted(fixture: unknown): boolean {
+  const record = asRecord(fixture);
+  const state = asFiniteNumber(record?.matchState);
+  if (state != null) return state !== 1;
+  const date = record?.matchDate ?? record?.date;
+  const kickoff = typeof date === "string" ? Date.parse(date) : NaN;
+  return Number.isFinite(kickoff) && kickoff <= Date.now();
+}
+
 /** Index of master ``playerId`` → matchweek points from calendar stats. */
 export function weekPointsByMasterId(stats: unknown): Map<string, number> {
   return weekScoreIndex(stats).pointsByMasterId;
@@ -224,6 +235,9 @@ export function fixturePointsFromSlot(
   const record = asRecord(slot);
   if (!record) return null;
   const master = asRecord(record.playerMaster);
+  const masterId = masterIdFromLineupSlot(record, master);
+  const calendarPoints = masterId ? lookup?.pointsByMasterId?.get(masterId) : undefined;
+  if (calendarPoints != null) return calendarPoints;
   const fromSlot =
     asFiniteNumber(record.weekPoints) ??
     asFiniteNumber(record.points) ??
@@ -234,9 +248,8 @@ export function fixturePointsFromSlot(
     const fromHistory = weekPointsFromLastStats(master, week);
     if (fromHistory != null) return fromHistory;
   }
-  const masterId = masterIdFromLineupSlot(record, master);
   if (masterId && lookup?.pointsByMasterId) {
-    return lookup.pointsByMasterId.get(masterId) ?? null;
+    return lookup.pointsByMasterId.get(masterId) ?? lookup.defaultPoints ?? null;
   }
   return null;
 }
@@ -593,10 +606,10 @@ export function lastPlayedWeek(current: CurrentWeek): number {
   return 0;
 }
 
-/** Whether per-player fixture scores may be shown for the selected matchweek. */
+/** Whether per-player fixture scores (including live scores) may be shown for the selected matchweek. */
 export function fixtureScoresVisibleForWeek(week: number, current: CurrentWeek): boolean {
   if (week < 1) return false;
-  return week <= lastPlayedWeek(current);
+  return week <= maxWeek(current);
 }
 
 export function maxWeek(current: CurrentWeek): number {
@@ -999,10 +1012,9 @@ export function squadCards(
     const masterId = idText(master?.id);
     const week = scoreLookup?.week ?? null;
     const fixturePoints =
+      (masterId ? scoreLookup?.pointsByMasterId?.get(masterId) : null) ??
       (week != null ? weekPointsFromLastStats(master, week) : null) ??
-      (masterId && scoreLookup?.pointsByMasterId
-        ? (scoreLookup.pointsByMasterId.get(masterId) ?? null)
-        : null);
+      scoreLookup?.defaultPoints ?? null;
     const isMvp =
       isMvpFlag(record) ||
       isMvpFlag(master) ||

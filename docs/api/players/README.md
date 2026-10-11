@@ -44,7 +44,8 @@ rows is disabled.
   because scraping is disabled (`SCRAPING_BASE_URL` unset). **`market` is never
   disabled.** **`upcoming` is not disabled** for a missing OpenWeather key.
 - Typical **`SegmentError.code`** values: `disabled`, `scraping_unavailable`,
-  `stats_source_not_found`, `stats_not_applicable` (coach entries have no
+  `stats_source_not_found`, `player_alias_unavailable` (the known master player
+  ID has no verified profile route), `stats_not_applicable` (coach entries have no
   player profile on the scraping source), `scraping_error`, and other
   `UpstreamError.category` strings from the segment that failed. **`detail`**
   is a fixed, sanitised message (never raw upstream bodies).

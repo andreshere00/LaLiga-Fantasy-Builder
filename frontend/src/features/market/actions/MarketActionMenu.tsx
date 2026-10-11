@@ -23,6 +23,7 @@ type MarketActionMenuProps = {
   context: MarketActionContext;
   actions: MarketActionsApi;
   detailsPlayer?: { id: string; name: string };
+  detailsReturnTo?: "/market" | "/players";
 };
 
 function menuItemTooltip(
@@ -45,7 +46,13 @@ function menuItemTooltip(
   return offer.disabledReason ?? CLAUSE_BLOCKED_MESSAGE;
 }
 
-export function MarketActionMenu({ row, context, actions, detailsPlayer }: MarketActionMenuProps) {
+export function MarketActionMenu({
+  row,
+  context,
+  actions,
+  detailsPlayer,
+  detailsReturnTo,
+}: MarketActionMenuProps) {
   const menuId = useId();
   const [open, setOpen] = useState(false);
   const bidTooltipId = useId();
@@ -172,6 +179,7 @@ export function MarketActionMenu({ row, context, actions, detailsPlayer }: Marke
                 className="market-actions-item players-action-link"
                 role="menuitem"
                 to={`/players/${encodeURIComponent(detailsPlayer.id)}`}
+                state={detailsReturnTo ? { returnTo: detailsReturnTo } : undefined}
                 onClick={() => setOpen(false)}
               >
                 Player details

@@ -1,4 +1,4 @@
-import { asFiniteNumber, asRecord } from "../../../api/mappers";
+import { asFiniteNumber, asRecord, idText, fixtureHasStarted, weekPointsByMasterId } from "../../../api/mappers";
 
 export const FORM_MATCHES = 5;
 export const FORM_DISPLAY_MATCHES = 3;
@@ -20,7 +20,7 @@ function formWeekRows(
       (row): row is { week: number; points: number } =>
         row.points != null && row.week >= 1,
     );
-  if (playedThrough != null && playedThrough >= 1) {
+  if (playedThrough != null && playedThrough >= 0) {
     rows = rows.filter((row) => row.week <= playedThrough);
   }
   return rows.sort((left, right) => right.week - left.week);
@@ -158,4 +158,70 @@ export function formFromCalendarWeeks(
     .slice(0, FORM_MATCHES)
     .reduce((sum, points) => sum + points, 0);
   return { form: formRecent.length === 0 ? null : form, formRecent };
+}
+
+/** Calendar scores from fixtures that have started, separate from scheduled zeroes. */
+export function calendarFormContext(
+  weekNumbers: readonly number[],
+  statsData: readonly unknown[],
+  playedThrough: number,
+  currentWeek: number,
+) {
+  const statsByWeek = new Map<number, Map<string, number>>();
+  const pendingByWeek = new Map<number, Set<string>>();
+  weekNumbers.forEach((week, index) => {
+    const matches = Array.isArray(statsData[index]) ? statsData[index] : [];
+    const pending = new Set<string>();
+    for (const match of matches) {
+      if (fixtureHasStarted(match)) continue;
+      const record = asRecord(match);
+      for (const key of ["local", "visitor"]) {
+        const players = asRecord(record?.[key])?.players;
+        if (!Array.isArray(players)) continue;
+        for (const player of players) {
+          const id = idText(asRecord(player)?.id);
+          if (id) pending.add(id);
+        }
+      }
+    }
+    pendingByWeek.set(week, pending);
+    statsByWeek.set(week, weekPointsByMasterId(
+      matches.filter(fixtureHasStarted),
+    ));
+  });
+  return { weekNumbers, statsByWeek, pendingByWeek, playedThrough, currentWeek };
+}
+
+/** Merge played history with live scores without averaging scheduled placeholders. */
+export function playerFormHistory(
+  playerId: string | null,
+  lastStats: unknown,
+  calendar?: {
+    playedThrough: number;
+    currentWeek?: number;
+    weekNumbers: readonly number[];
+    statsByWeek: ReadonlyMap<number, ReadonlyMap<string, number>>;
+    pendingByWeek?: ReadonlyMap<number, ReadonlySet<string>>;
+  },
+) {
+  const rows = new Map(formWeekRows(lastStats, calendar?.playedThrough).map(
+    (row) => [row.week, row.points],
+  ));
+  if (calendar && playerId) {
+    for (const week of calendar.weekNumbers) {
+      if (calendar.pendingByWeek?.get(week)?.has(playerId)) {
+        rows.delete(week);
+        continue;
+      }
+      const points = calendar.statsByWeek.get(week)?.get(playerId);
+      if (points != null) rows.set(week, points);
+    }
+  }
+  const sorted = [...rows].sort(([left], [right]) => right - left);
+  const currentWeek = calendar?.currentWeek;
+  return {
+    recent: sorted.map(([, points]) => points),
+    weeks: sorted.map(([week]) => week),
+    pendingFormWeek: currentWeek && !rows.has(currentWeek) ? currentWeek : undefined,
+  };
 }

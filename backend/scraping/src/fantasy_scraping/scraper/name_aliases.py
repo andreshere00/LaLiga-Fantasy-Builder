@@ -4,10 +4,42 @@ from collections import defaultdict
 from collections.abc import Iterable, Mapping
 from itertools import product
 
+from pydantic import BaseModel, ConfigDict, field_validator
+
 from fantasy_scraping.scraper.normalise import normalise
 from fantasy_scraping.scraper.urls import PLAYER_SLUG_RE
 
 type AliasValue = str | list[str]
+
+
+class PlayerAliasRecord(BaseModel):
+    """Reviewed identity and normalized lookup names for one Fantasy master ID."""
+
+    model_config = ConfigDict(extra="forbid", strict=True)
+
+    full_name: str | None
+    slug: str | None
+    team_id: str | None
+    team: str | None
+    aliases: list[str]
+
+    @field_validator("slug")
+    @classmethod
+    def validate_slug(cls, value: str | None) -> str | None:
+        """Reject unverified route shapes before constructing the lookup index."""
+        if value is not None and not PLAYER_SLUG_RE.fullmatch(value):
+            raise ValueError("invalid player route in identity inventory")
+        return value
+
+    @field_validator("aliases")
+    @classmethod
+    def validate_aliases(cls, values: list[str]) -> list[str]:
+        """Require normalized nonnumeric names distinct from master player IDs."""
+        if any(not v or v.isdigit() or normalise(v) != v for v in values):
+            raise ValueError("player aliases must be normalized nonnumeric names")
+        return sorted(set(values))
+
+
 _PARTICLES = frozenset(
     {"da", "das", "de", "del", "di", "dos", "el", "la", "le", "ter", "van", "von"}
 )
@@ -61,31 +93,57 @@ def name_variants(name: str) -> set[str]:
     return {v for v in variants if v and v not in _PARTICLES and len(v) > 1}
 
 
-def build_aliases(players: Iterable[Mapping[str, object]]) -> dict[str, AliasValue]:
-    """Index verified routes by master player ID and all published name forms.
+def build_player_alias_records(
+    players: Iterable[Mapping[str, object]],
+) -> dict[str, PlayerAliasRecord]:
+    """Group reviewed routes and generated names by Fantasy master player ID.
 
     Args:
-        players: Identity records with ``id``, ``slug`` and optional name fields.
-            Records without a verified source route are omitted from this index.
+        players: Published identity inventory, including unavailable source routes.
 
     Returns:
-        ID aliases plus name aliases. Colliding names retain every route instead
-        of overwriting another player's identity.
+        Deterministically ordered records with source routes and identity metadata.
+    """
+    records: dict[str, PlayerAliasRecord] = {}
+    for player in players:
+        player_id = str(player["id"])
+        if not player_id.isascii() or not player_id.isdigit():
+            raise ValueError("invalid Fantasy master player ID")
+        if player_id in records:
+            raise ValueError("duplicate player IDs in identity inventory")
+        records[player_id] = PlayerAliasRecord.model_validate(
+            {
+                "full_name": player.get("full_name"),
+                "slug": player.get("slug"),
+                "team_id": player.get("catalog_team_id"),
+                "team": player.get("catalog_team"),
+                "aliases": player_aliases(player),
+            }
+        )
+    return dict(sorted(records.items(), key=lambda pair: int(pair[0])))
+
+
+def index_player_alias_records(records: Mapping[str, PlayerAliasRecord]) -> dict[str, AliasValue]:
+    """Compile grouped records into fast ID and collision-preserving name lookups.
+
+    Args:
+        records: Validated per-player identities from the bundled registry.
+
+    Returns:
+        Master ID and normalized name to source routes. Unavailable IDs map to
+        empty lists, preventing fuzzy fallback to another player. Team metadata
+        is a catalog snapshot; live profile club verification remains authoritative.
     """
     targets: dict[str, set[str]] = defaultdict(set)
-    ids: dict[str, str] = {}
-    for player in players:
-        slug = player.get("slug")
-        if not isinstance(slug, str) or not slug:
+    ids: dict[str, AliasValue] = {}
+    for player_id, player in records.items():
+        if not player_id.isascii() or not player_id.isdigit():
+            raise ValueError("invalid Fantasy master player ID")
+        ids[player_id] = player.slug if player.slug is not None else []
+        if player.slug is None:
             continue
-        if not PLAYER_SLUG_RE.fullmatch(slug):
-            raise ValueError("invalid player route in identity inventory")
-        player_id = str(player["id"])
-        if player_id in ids and ids[player_id] != slug:
-            raise ValueError("conflicting player ID aliases")
-        ids[player_id] = slug
-        for variant in player_aliases(player):
-            targets[variant].add(slug)
+        for variant in player.aliases:
+            targets[variant].add(player.slug)
     result: dict[str, AliasValue] = dict(sorted(ids.items(), key=lambda pair: int(pair[0])))
     for name, slugs in sorted(targets.items()):
         ordered = sorted(slugs)

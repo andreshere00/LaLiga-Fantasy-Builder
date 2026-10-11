@@ -1,5 +1,5 @@
 import { useCallback, useMemo, useState } from "react";
-import { Link, useSearchParams } from "react-router-dom";
+import { Link, useNavigate, useSearchParams } from "react-router-dom";
 
 import { useAuth } from "../../auth/AuthProvider";
 import { useNow } from "../../hooks/useNow";
@@ -74,10 +74,12 @@ function PlayersListRow({
   sales: ReturnType<typeof useSquadSales>;
   onToggleFavorite: () => void;
 }) {
+  const navigate = useNavigate();
   const formRow = {
     id: row.playerId,
     formRecent: row.formRecent,
     formRecentWeeks: row.formRecentWeeks,
+    pendingFormWeek: row.pendingFormWeek,
   };
   const rowClass = favorite
     ? "players-row is-favorite"
@@ -95,13 +97,14 @@ function PlayersListRow({
     row.ownedBy
   );
   const detailsOptions = row.positionId === 5 ? null : (
-    <details className="players-detail-options">
+      <details className="players-detail-options">
       <summary className="market-actions-trigger">Options</summary>
       <ul className="market-actions-menu">
         <li className="market-actions-menu-item">
           <Link
             className="market-actions-item players-action-link"
             to={`/players/${encodeURIComponent(row.playerId)}`}
+            state={{ returnTo: "/players" }}
           >
             Player details
           </Link>
@@ -110,7 +113,31 @@ function PlayersListRow({
     </details>
   );
   return (
-    <MarketRowMotion order={order} className={rowClass}>
+    <MarketRowMotion
+      order={order}
+      className={rowClass}
+      role="link"
+      tabIndex={0}
+      aria-label={`View details for ${row.name}`}
+      onClick={(event) => {
+        if (
+          event.target instanceof Element &&
+          event.target.closest("a, button, input, select, textarea, summary, [role='menuitem']")
+        ) {
+          return;
+        }
+        navigate(`/players/${encodeURIComponent(row.playerId)}`, {
+          state: { returnTo: "/players" },
+        });
+      }}
+      onKeyDown={(event) => {
+        if (event.target !== event.currentTarget || event.key !== "Enter") return;
+        event.preventDefault();
+        navigate(`/players/${encodeURIComponent(row.playerId)}`, {
+          state: { returnTo: "/players" },
+        });
+      }}
+    >
       <div className="market-card">
         <PlayerTile
           name={row.name}
@@ -163,7 +190,12 @@ function PlayersListRow({
       </span>
       <span className="market-cell players-actions-cell" data-label="Actions">
         {ownSquadCard ? (
-          <SquadPlayerActions player={ownSquadCard} sales={sales} triggerText="Options">
+          <SquadPlayerActions
+            player={ownSquadCard}
+            sales={sales}
+            triggerText="Options"
+            detailsReturnTo="/players"
+          >
             <span className="players-squad-actions-target" aria-hidden="true" />
           </SquadPlayerActions>
         ) : marketRow ? (
@@ -172,6 +204,7 @@ function PlayersListRow({
             context={actionContext}
             actions={actions}
             detailsPlayer={row.positionId === 5 ? undefined : { id: row.playerId, name: row.name }}
+            detailsReturnTo="/players"
           />
         ) : (
           detailsOptions

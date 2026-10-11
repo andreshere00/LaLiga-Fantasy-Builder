@@ -20,7 +20,7 @@ import infoIcon from "../../assets/button_info.svg";
 import infoRedIcon from "../../assets/button_info_red.svg";
 import "./SquadPlayerActions.css";
 
-type SaleView = "choose" | "list" | "modify" | "cancel" | "immediate";
+type SaleView = "options" | "choose" | "list" | "modify" | "cancel" | "immediate";
 
 const PLAYER_OPTIONS_HINT = "Click for player options";
 
@@ -29,11 +29,21 @@ export function SquadPlayerActions({
   sales,
   children,
   triggerText,
+  detailsReturnTo,
+  cardMenu = false,
+  ownPlayer = true,
+  onSwap,
+  opponentMarketOptions,
 }: {
   player: SquadCard;
   sales: SquadSalesApi;
-  children: ReactNode;
+  children: ReactNode | ((openOptions: () => void) => ReactNode);
+  cardMenu?: boolean;
+  ownPlayer?: boolean;
+  onSwap?: () => void;
+  opponentMarketOptions?: (open: boolean, onClose: () => void) => ReactNode;
   triggerText?: string;
+  detailsReturnTo?: "/market" | "/players";
 }) {
   const [open, setOpen] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
@@ -93,8 +103,11 @@ export function SquadPlayerActions({
   return (
     <>
       <div className="squad-tile-slot squad-player-hit-area">
-        {children}
-        <div className="squad-tile-controls">
+        {typeof children === "function" ? children(() => {
+          setView("options");
+          setOpen(true);
+        }) : children}
+        {!cardMenu ? <div className="squad-tile-controls">
           <button
             type="button"
             className={`player-details-link squad-details-link${triggerText ? " is-text-trigger" : ""}`}
@@ -128,6 +141,7 @@ export function SquadPlayerActions({
                 <Link
                   role="menuitem"
                   to={`/players/${encodeURIComponent(player.masterPlayerId)}`}
+                  state={detailsReturnTo ? { returnTo: detailsReturnTo } : undefined}
                   onClick={() => setMenuOpen(false)}
                 >
                   Player details
@@ -135,12 +149,14 @@ export function SquadPlayerActions({
               ) : null}
             </div>
           ) : null}
-        </div>
+        </div> : null}
       </div>
+      {opponentMarketOptions?.(open && view === "choose" && !ownPlayer, close)}
       <Modal
-        open={open}
+        open={open && (ownPlayer || view !== "choose")}
+        squareCorners={cardMenu}
         title={
-          view === "choose"
+          (view === "choose" || view === "options")
             ? player.name
             : view === "list"
               ? "Bring to market"
@@ -153,7 +169,7 @@ export function SquadPlayerActions({
         onClose={close}
         closeOnBackdrop={!pending}
         footer={
-          view === "choose" ? (
+          (view === "choose" || view === "options") ? (
             <button type="button" className="squad-sale-secondary" onClick={close}>
               Close
             </button>
@@ -211,6 +227,30 @@ export function SquadPlayerActions({
           )
         }
       >
+        {view === "options" ? (
+          <div className="squad-sale-choices">
+            <button type="button" className="squad-sale-choice" onClick={() => setView("choose")}>
+              Market options
+            </button>
+            {player.masterPlayerId && player.positionId !== 5 ? (
+              <Link
+                className="squad-sale-choice"
+                to={`/players/${encodeURIComponent(player.masterPlayerId)}`}
+                onClick={close}
+              >
+                Player details
+              </Link>
+            ) : null}
+            {onSwap ? (
+              <button type="button" className="squad-sale-choice" onClick={() => {
+                close();
+                onSwap();
+              }}>
+                Swap players
+              </button>
+            ) : null}
+          </div>
+        ) : null}
         {view === "choose" ? (
           <div className="squad-sale-choices">
             {listed ? (

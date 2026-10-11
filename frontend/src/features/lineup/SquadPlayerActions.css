@@ -144,9 +144,17 @@
 }
 
 .squad-sale-choice {
+  text-decoration: none;
   background: var(--white);
   color: var(--ink);
   border: 1px solid color-mix(in srgb, var(--ink) 12%, transparent);
+}
+
+.squad-sale-choices a.squad-sale-choice {
+  display: block;
+  box-sizing: border-box;
+  width: 100%;
+  text-align: center;
 }
 
 .squad-sale-choice:is(:hover, :active):not(:disabled),
@@ -199,4 +207,15 @@
   margin: 8px 0 0;
   font-size: 0.82rem;
   color: #c0392b;
+}
+
+.squad-info-menu,
+.squad-info-menu button,
+.squad-info-menu a,
+.squad-player-options-btn,
+.squad-sale-choice,
+.squad-sale-primary,
+.squad-sale-secondary,
+.squad-player-hit {
+  border-radius: 0;
 }

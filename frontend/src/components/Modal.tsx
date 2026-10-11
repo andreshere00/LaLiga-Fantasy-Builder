@@ -11,6 +11,7 @@ type ModalProps = {
   children: ReactNode;
   footer?: ReactNode;
   closeOnBackdrop?: boolean;
+  squareCorners?: boolean;
 };
 
 export function Modal({
@@ -20,6 +21,7 @@ export function Modal({
   children,
   footer,
   closeOnBackdrop = true,
+  squareCorners = false,
 }: ModalProps) {
   const titleId = useId();
   const closeRef = useRef<HTMLButtonElement>(null);
@@ -85,7 +87,7 @@ export function Modal({
             >
               <m.div
                 ref={cardRef}
-                className="modal-card"
+                className={squareCorners ? "modal-card is-square" : "modal-card"}
                 role="dialog"
                 aria-modal="true"
                 aria-labelledby={titleId}

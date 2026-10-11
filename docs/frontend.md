@@ -70,12 +70,27 @@ Player photos use available API media with fallback images from market listings
 and the selected roster. Team crests resolve from fixture/catalog media and fit
 inside fixed match-card tiles.
 
+### Lineup player actions
+
+Pitch and squad cards show fixture points in the upper-left corner, opposite the
+club crest. Clicking a populated card opens a player menu with **Market options**
+and **Player details** (coaches have no details route). Market actions retain the
+existing ownership, listing, balance and availability rules.
+
+**Swap players** is available only for footballers in your editable lineup.
+Choosing it on a pitch player opens the squad replacement picker. Choosing it on
+a bench player asks you to select a pitch player in the same position. During
+replacement selection, card clicks choose players directly. Changes remain a
+local draft until you save the lineup; past and opponent lineups cannot be edited.
+
 ### Players screen
 
 The Players table includes player photo, name, team, FSYP, form, market value,
 owner, availability, position, and context-sensitive actions. Search and
-column filters include a team list. Form badges and form filtering use the
-average of the last three played matchweeks. Row actions expose market options
+column filters include a team list. Form filtering and score averages use the last three played matches, including
+current-week matches once they start. Form badges also display scheduled current-week
+matches as zero with a warning; these placeholders are excluded from averages.
+The Players score tooltip appears only over the FSYP cell (or on keyboard focus). Row actions expose market options
 when available, plus the player-details route; bookmarks use distinct inactive
 and active colors. Rows use the same staggered spring entrance and reduced
 motion behavior as Market rows.
@@ -149,9 +164,9 @@ Code: `frontend/src/features/market/` (`model/`, `cells/`, `actions/`,
 |---|---------|---------|
 | 1 | `GET /api/market/leagues/{league_id}` | Listings and `userBids` ([Market snapshot](api/market/README.md)) |
 | 2 | `GET /api/players` | Catalog (names, photos, positions) |
-| 3 | `GET /api/calendar/current` | Last played matchweek for form |
+| 3 | `GET /api/calendar/current` | Current and previous matchweek for form |
 | 4 | `GET /api/players/{id}/market-value` | Per listed master id (trend + tooltips) |
-| 5 | `GET /api/calendar/weeks/{week}/stats` | Last three played weeks for form badges |
+| 5 | `GET /api/calendar/weeks/{week}/stats` | Played history plus current matchweek scores for form badges |
 | 6 | `GET /api/teams/{team_id}` | Caller squad size and squad value (eligibility) |
 | 7 | `GET /api/teams/{team_id}` (seller teams) | Opponent rosters when buyout lock times are missing on listings |
 
@@ -166,7 +181,7 @@ stale snapshots until Fantasy confirms the change (`model/pendingBids.ts`).
 | Player | Photo, name (red when you have a bid); bid amount tooltip on name |
 | Position | Abbrev badge (`GKP`, `DEF`, `MDF`, `ATK`, `COA`); hover shows full role name |
 | FSYP | Points plus season average; hover panel: total, season average, form (last 3) |
-| Form | Three played matchweeks at a time, oldest→newest; ‹ earlier, › later (full season) |
+| Form | Three matchweeks at a time, oldest→newest; current pending fixtures show 0 with a warning and are excluded from averages; ‹ earlier, › later (full season) |
 | Market value | Price on the first line, 5-day change on the next; hover: last, highest, lowest, 5d/14d ago with % vs current |
 | Availability | SVG icons + hover text for next matchday readiness |
 | Seal end | Countdown; **red** when under one hour remains |
@@ -211,3 +226,9 @@ User-facing copy constants: `marketMessages.ts`, `marketActionErrors.ts`,
 
 `frontend/src/features/market/**/*.test.ts`, plus `api/format.test.ts` and
 `client.test.ts` for shared helpers.
+
+Current-matchweek scores are loaded for both your lineup and opponents' lineups,
+including pitch and squad badges. The current calendar score takes precedence over
+cached player history. Current-week stats refresh every 30 seconds while the screen
+is open. Before a match is played, its displayed zero is a placeholder, not a played
+result for form averages.

@@ -8,11 +8,8 @@ import {
 } from "../../../api/mappers";
 import { availabilityOf, type Availability } from "../../market/model/availability";
 import {
-  formFromCalendarWeeks,
   formAverageLastThree,
-  formRecentPoints,
-  formRecentSeries,
-  formRecentWeekNumbers,
+  playerFormHistory,
 } from "../../market/model/form";
 import type { CalendarFormContext } from "../../market/model/row";
 
@@ -28,6 +25,7 @@ export type PlayerRow = {
   form: number | null;
   formRecent: readonly number[];
   formRecentWeeks: readonly number[];
+  pendingFormWeek?: number;
   averagePoints: number | null;
   marketValue: number | null;
   availability: Availability;
@@ -50,22 +48,7 @@ export function playerRowFromCatalog(
   const media = mediaFromPlayerMaster(master);
   const teamName = teamNameFromPlayerMaster(master);
   const positionId = asFiniteNumber(master.positionId);
-  const playedThrough =
-    calendarForm != null && calendarForm.playedThrough >= 1
-      ? calendarForm.playedThrough
-      : null;
-  let formRecent = formRecentPoints(master.lastStats, playedThrough);
-  let formRecentWeeks = formRecentWeekNumbers(master.lastStats, playedThrough);
-  if (formRecent.length === 0 && calendarForm) {
-    const fromCalendar = formFromCalendarWeeks(
-      playerId,
-      calendarForm.weekNumbers,
-      calendarForm.statsByWeek,
-    );
-    formRecent = fromCalendar.formRecent;
-    formRecentWeeks = calendarForm.weekNumbers.slice(0, formRecent.length);
-  }
-  const capped = formRecentSeries(formRecent, formRecentWeeks);
+  const capped = playerFormHistory(playerId, master.lastStats, calendarForm);
   const form = formAverageLastThree(capped.recent);
   return {
     playerId,
@@ -77,6 +60,7 @@ export function playerRowFromCatalog(
     form,
     formRecent: capped.recent,
     formRecentWeeks: capped.weeks,
+    pendingFormWeek: capped.pendingFormWeek,
     averagePoints: asFiniteNumber(master.averagePoints),
     marketValue: asFiniteNumber(master.marketValue),
     availability: availabilityOf(master.playerStatus),

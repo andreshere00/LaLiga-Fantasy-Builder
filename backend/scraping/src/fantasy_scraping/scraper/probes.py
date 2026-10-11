@@ -52,10 +52,16 @@ def _slug_from_href(href: str) -> str | None:
 
 def matching_team_slugs(team_norm: str, team_slugs: Iterable[str]) -> list[str]:
     """Return sitemap team slugs that match the normalised free-text team name."""
+    slugs = list(dict.fromkeys(team_slugs))
+    if team_norm in slugs:
+        return [team_norm]
     wanted = _canonical_team(team_norm)
+    exact = [slug for slug in slugs if _canonical_team(slug) == wanted]
+    if exact:
+        return exact
     left = set(wanted.split("-"))
     matched: list[str] = []
-    for slug in team_slugs:
+    for slug in slugs:
         right = set(slug.split("-"))
         if left <= right or right <= left:
             matched.append(slug)

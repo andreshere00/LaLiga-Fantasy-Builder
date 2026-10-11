@@ -1,6 +1,7 @@
 import { useMemo } from "react";
 import { useQueries, useQuery, type UseQueryResult } from "@tanstack/react-query";
 
+import { calendarFormContext } from "../market/model/form";
 import { getJson, paths } from "../../api/client";
 import type { CurrentWeek } from "../../api/mappers";
 import { lastPlayedWeek } from "../../api/mappers";
@@ -15,7 +16,6 @@ import { useLeague } from "../lineup/LeagueProvider";
 import { catalogById } from "../market/model/listing";
 import { FORM_MATCHES, recentFormWeekNumbers } from "../market/marketRows";
 import { leagueId } from "../../api/mappers";
-import { weekPointsByMasterId } from "../../api/mappers";
 import {
   ownerByMasterIdFromRosters,
   playerRowFromCatalog,
@@ -42,18 +42,6 @@ function combineBatch(results: readonly UseQueryResult<unknown, Error>[]): Query
     isLoading: results.some((query) => query.isLoading),
     isError: results.some((query) => query.isError),
   };
-}
-
-function calendarFormFromStats(
-  weekNumbers: readonly number[],
-  statsData: readonly unknown[],
-  playedThrough: number,
-) {
-  const statsByWeek = new Map<number, Map<string, number>>();
-  weekNumbers.forEach((week, index) => {
-    statsByWeek.set(week, weekPointsByMasterId(statsData[index]));
-  });
-  return { weekNumbers, statsByWeek, playedThrough };
 }
 
 export type PlayersBoard = {
@@ -102,16 +90,18 @@ export function usePlayersBoard(): PlayersBoard {
     return lastPlayedWeek(currentWeekQuery.data as CurrentWeek);
   }, [currentWeekQuery.data]);
 
-  const formWeekNumbers = useMemo(() => {
-    if (playedThrough < 1) return [];
-    return recentFormWeekNumbers(playedThrough, FORM_MATCHES);
-  }, [playedThrough]);
+  const currentWeek = (currentWeekQuery.data as CurrentWeek | undefined)?.weekNumber ?? 0;
+  const formWeekNumbers = useMemo(
+    () => recentFormWeekNumbers(currentWeek, FORM_MATCHES + 1),
+    [currentWeek],
+  );
 
   const weekStats = useQueries({
     queries: formWeekNumbers.map((week) => ({
       queryKey: ["calendar", "stats", week],
       enabled: enabled && formWeekNumbers.length > 0,
-      staleTime: CALENDAR_STALE_MS,
+      staleTime: week === currentWeek ? 30_000 : CALENDAR_STALE_MS,
+      refetchInterval: week === currentWeek ? 30_000 : false,
       queryFn: ({ signal }: { signal: AbortSignal }) =>
         getJson(paths.weekStats(week), token, { signal }),
     })),
@@ -135,8 +125,8 @@ export function usePlayersBoard(): PlayersBoard {
   }, [leagueTeamsQuery.data, rosterQueries.data]);
 
   const calendarForm = useMemo(
-    () => calendarFormFromStats(formWeekNumbers, weekStats.data, playedThrough),
-    [formWeekNumbers, playedThrough, weekStats.data],
+    () => calendarFormContext(formWeekNumbers, weekStats.data, playedThrough, currentWeek),
+    [formWeekNumbers, playedThrough, currentWeek, weekStats.data],
   );
 
   const rosterPhotos = useMemo(
