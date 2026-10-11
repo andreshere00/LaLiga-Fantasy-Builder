@@ -67,9 +67,14 @@ type FantasyWeek = {
   totalPoints: number | null;
 };
 
+type FantasyAverage = {
+  value: number;
+  sampleSize: number;
+};
+
 function fantasyCount(stats: Record<string, unknown>, key: string): number | null {
   const raw = stats[key];
-  const count = Array.isArray(raw) ? asFiniteNumber(raw[0]) : null;
+  const count = Array.isArray(raw) && raw.length === 2 ? asFiniteNumber(raw[0]) : null;
   return count != null && Number.isInteger(count) && count >= 0 ? count : null;
 }
 
@@ -100,19 +105,21 @@ function fantasyWeeks(catalogPlayer: unknown): FantasyWeek[] {
 function fantasyAverage(
   weeks: readonly FantasyWeek[],
   keys: readonly string[] | undefined,
-): number | null {
+): FantasyAverage | null {
   if (!keys || weeks.length === 0) return null;
   let total = 0;
-  let found = false;
+  let sampleSize = 0;
   for (const week of weeks) {
     const count = keys
       .map((key) => fantasyCount(week.stats, key))
       .find((value) => value != null) ?? null;
     if (count == null) continue;
     total += count;
-    found = true;
+    sampleSize += 1;
   }
-  return found ? Math.round((total / weeks.length) * 100) / 100 : null;
+  return sampleSize > 0
+    ? { value: Math.round((total / sampleSize) * 100) / 100, sampleSize }
+    : null;
 }
 
 /** Prefer season totals and fill missing averages from played Fantasy matchweeks. */
@@ -145,9 +152,9 @@ export function playerAverages(scrapedRows: unknown, catalogPlayer: unknown): Pl
     return {
       code: spec.code,
       label: published?.label ?? spec.label,
-      value: fallback,
+      value: fallback?.value ?? null,
       source: fallback != null ? "fantasy" : "unavailable",
-      sampleSize: fallback != null ? weeks.length : null,
+      sampleSize: fallback?.sampleSize ?? null,
     };
   });
   for (const [code, published] of scraped) {

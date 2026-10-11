@@ -403,6 +403,12 @@ def _link_recent(
 
 def _match_fixture(recent: RecentMatch, fixtures: list[FixtureRow]) -> FixtureRow | None:
     for fixture in fixtures:
+        if (
+            recent.competition != Competition.OTHER and fixture.competition != recent.competition
+        ) or (
+            recent.competition == Competition.OTHER and fixture.competition != Competition.LALIGA
+        ):
+            continue
         matchday = recent.matchday if fixture.date is None else None
         if same_fixture(
             fixture,

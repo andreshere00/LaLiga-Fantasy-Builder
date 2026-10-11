@@ -181,6 +181,7 @@ def test_apply_recent_dates_copies_blank_fixture_date() -> None:
                     ScrapedMatch(
                         date=date(2026, 9, 19),
                         matchweek=7,
+                        competition_raw="LaLiga",
                         home_score=1,
                         away_score=3,
                     )
@@ -200,3 +201,53 @@ def test_apply_recent_dates_copies_blank_fixture_date() -> None:
     )
     filled = _apply_recent_dates([row], wire)
     assert filled[0].fixture.date == date(2026, 9, 19)
+
+
+def test_apply_recent_dates_does_not_copy_date_between_competitions() -> None:
+    from fantasy_api.schemas.player_stats import FixtureRef, FixtureStats, FixtureStatsRow
+    from fantasy_api.schemas.scraped import ScrapedMatch, ScrapedMatches
+    from fantasy_api.services.player_stats import _apply_recent_dates
+
+    wire = parse_wire_document({"fixtures": [], "matches": {"recent": [], "upcoming": []}})
+    wire = wire.model_copy(
+        update={
+            "matches": ScrapedMatches(
+                recent=[
+                    ScrapedMatch(
+                        date=date(2026, 9, 17),
+                        matchweek=1,
+                        competition_raw="Champions League",
+                        home_score=1,
+                        away_score=0,
+                    )
+                ]
+            )
+        }
+    )
+    row = FixtureStatsRow(
+        fixture=FixtureRef(
+            date=None,
+            competition=Competition.LALIGA,
+            matchweek=1,
+            home_score=1,
+            away_score=0,
+        ),
+        stats=FixtureStats(),
+    )
+
+    filled = _apply_recent_dates([row], wire)
+
+    assert filled[0].fixture.date is None
+
+
+@pytest.mark.asyncio
+async def test_club_directory_checks_ttl_cache_on_every_lookup() -> None:
+    service = _service()
+    directory = MagicMock()
+    cache = MagicMock()
+    cache.get_or_fetch = AsyncMock(return_value=directory)
+    service._teams_master_cache = cache
+
+    assert await service._club_directory() is directory
+    assert await service._club_directory() is directory
+    assert cache.get_or_fetch.await_count == 2

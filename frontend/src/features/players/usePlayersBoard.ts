@@ -26,6 +26,7 @@ import {
 
 const FREE_AGENT = "Free Agent";
 const OWNER_PENDING = "…";
+const OWNER_UNAVAILABLE = "Unavailable";
 const ROSTER_STALE_MS = 5 * 60_000;
 
 type QueryBatch = {
@@ -138,13 +139,22 @@ export function usePlayersBoard(): PlayersBoard {
     enabled &&
     leagueKey !== "" &&
     (leagueTeamsQuery.isLoading || (teamIds.length > 0 && rosterQueries.isLoading));
+  const ownershipComplete =
+    enabled &&
+    leagueKey !== "" &&
+    !leagueTeamsQuery.isLoading &&
+    !leagueTeamsQuery.isError &&
+    !rosterQueries.isLoading &&
+    !rosterQueries.isError;
 
   const rows = useMemo(() => {
     const catalog = catalogById(catalogQuery.data);
     const list: PlayerRow[] = [];
     for (const [playerId, master] of catalog) {
       const owner = ownership.get(playerId);
-      const ownedBy = owner?.name ?? (ownershipPending ? OWNER_PENDING : FREE_AGENT);
+      const ownedBy = owner?.name ?? (
+        ownershipPending ? OWNER_PENDING : ownershipComplete ? FREE_AGENT : OWNER_UNAVAILABLE
+      );
       const row = playerRowFromCatalog(master, playerId, ownedBy, owner?.teamId ?? null, calendarForm);
       const fromRoster = rosterPhotos.get(playerId) ?? null;
       list.push({
@@ -155,16 +165,20 @@ export function usePlayersBoard(): PlayersBoard {
     }
     list.sort((left, right) => (right.points ?? -1) - (left.points ?? -1));
     return list;
-  }, [catalogQuery.data, ownership, ownershipPending, calendarForm, rosterPhotos]);
+  }, [catalogQuery.data, ownership, ownershipComplete, ownershipPending, calendarForm, rosterPhotos]);
 
   const isLoading = leaguesLoading || catalogQuery.isLoading;
 
-  const hasError = catalogQuery.isError;
+  const hasError = catalogQuery.isError && catalogQuery.data == null;
   const isDegraded =
     enabled &&
     !isLoading &&
     !hasError &&
-    (currentWeekQuery.isError || leagueTeamsQuery.isError || rosterQueries.isError || weekStats.isError);
+    (catalogQuery.isError ||
+      currentWeekQuery.isError ||
+      leagueTeamsQuery.isError ||
+      rosterQueries.isError ||
+      weekStats.isError);
 
   return {
     rows,

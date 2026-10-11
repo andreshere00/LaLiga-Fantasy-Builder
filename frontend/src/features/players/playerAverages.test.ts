@@ -39,6 +39,27 @@ describe("player averages", () => {
     expect(averages.find((row) => row.code === "PI")?.value).toBeNull();
   });
 
+  it("playerAverages_ignoresPointOnlyStatsWhenTheEventCountIsUnknown", () => {
+    const averages = playerAverages(
+      [],
+      {
+        lastStats: [
+          {
+            weekNumber: 1,
+            totalPoints: 8,
+            stats: { mins_played: [90, 2], goals: [6] },
+          },
+        ],
+      },
+    );
+
+    expect(averages.find((row) => row.code === "G")).toMatchObject({
+      value: null,
+      source: "unavailable",
+      sampleSize: null,
+    });
+  });
+
   it("highlightedAverages_selectsGoalkeeperMetricsAndHidesTheRestUntilDetails", () => {
     const averages = playerAverages([], null);
     const highlighted = highlightedAverages(averages, 1);

@@ -243,18 +243,27 @@ def _apply_recent_dates(
     recent = wire.matches.recent if wire.matches is not None else None
     if not recent:
         return rows
-    by_score: dict[tuple[int, int | None, int | None], date] = {}
+    by_fixture: dict[tuple[int, Competition, int | None, int | None], date | None] = {}
     for match in recent:
         if match.date is None or match.matchweek is None:
             continue
-        by_score[(match.matchweek, match.home_score, match.away_score)] = match.date
+        competition = competition_from_row(match.competition_raw)
+        if competition == Competition.OTHER:
+            continue
+        key = (match.matchweek, competition, match.home_score, match.away_score)
+        by_fixture[key] = None if key in by_fixture else match.date
     filled: list[FixtureStatsRow] = []
     for row in rows:
         if row.fixture.date is not None or row.fixture.matchweek is None:
             filled.append(row)
             continue
-        found = by_score.get(
-            (row.fixture.matchweek, row.fixture.home_score, row.fixture.away_score)
+        found = by_fixture.get(
+            (
+                row.fixture.matchweek,
+                row.fixture.competition,
+                row.fixture.home_score,
+                row.fixture.away_score,
+            )
         )
         if found is None:
             filled.append(row)
@@ -389,7 +398,6 @@ class PlayerStatsService:
         self._market_cache: dict[str, AsyncTtlCache[list[tuple[date, int]]]] = {}
         self._teams_master_cache = AsyncTtlCache[Any](settings.teams_master_ttl_seconds)
         self._weather_cache: dict[tuple[float, float], AsyncTtlCache[Any]] = {}
-        self._clubs: ClubDirectory | None = None
 
     async def index(self, player_id: str) -> PlayerStatsIndex:
         """Return the stats segment catalogue for a player."""
@@ -973,8 +981,6 @@ class PlayerStatsService:
 
     async def _club_directory(self) -> ClubDirectory:
         """Load the cached teams-master index used to resolve Fantasy team ids."""
-        if self._clubs is not None:
-            return self._clubs
 
         async def fetch() -> ClubDirectory:
             raw = await self._stats_repo.get_teams_master()
@@ -985,8 +991,7 @@ class PlayerStatsService:
                 aliases=load_alias_map(),
             )
 
-        self._clubs = await self._teams_master_cache.get_or_fetch(fetch)
-        return self._clubs
+        return await self._teams_master_cache.get_or_fetch(fetch)
 
     def _today(self) -> date:
         return self._clock().astimezone(MADRID_TZ).date()

@@ -84,7 +84,7 @@ def test_parse_futbolfantasy_raphinha_page_matches_published_totals() -> None:
 def test_match_fixture_null_fixture_date_matches_matchday_and_score() -> None:
     from datetime import date
 
-    from fantasy_scraping.parser.models.common import MinutesNote, Score
+    from fantasy_scraping.parser.models.common import Competition, MinutesNote, Score
     from fantasy_scraping.parser.models.futbolfantasy import FixtureMatch, FixtureRow, RecentMatch
     from fantasy_scraping.parser.models.stats import DaznStats
     from fantasy_scraping.parser.service import _match_fixture
@@ -92,6 +92,7 @@ def test_match_fixture_null_fixture_date_matches_matchday_and_score() -> None:
     recent = RecentMatch(
         date=date(2026, 9, 19),
         matchday=7,
+        competition=Competition.LALIGA,
         score=Score(home=1, away=3),
         minutes=MinutesNote(raw="76'", event="full", minutes=76),
     )
@@ -101,8 +102,36 @@ def test_match_fixture_null_fixture_date_matches_matchday_and_score() -> None:
         match=FixtureMatch(home_code="SEV", away_code="BAR", home_goals=1, away_goals=3),
         minutes_out=MinutesNote(raw="76'", event="full", minutes=76),
         stats=DaznStats(),
+        competition=Competition.LALIGA,
     )
     assert _match_fixture(recent, [fixture]) is fixture
+
+
+def test_match_fixture_different_competition_does_not_match_same_matchday_and_score() -> None:
+    from datetime import date
+
+    from fantasy_scraping.parser.models.common import Competition, MinutesNote, Score
+    from fantasy_scraping.parser.models.futbolfantasy import FixtureMatch, FixtureRow, RecentMatch
+    from fantasy_scraping.parser.models.stats import DaznStats
+    from fantasy_scraping.parser.service import _match_fixture
+
+    recent = RecentMatch(
+        date=date(2026, 9, 19),
+        matchday=1,
+        competition=Competition.CHAMPIONS_LEAGUE,
+        score=Score(home=1, away=0),
+        minutes=MinutesNote(raw="90'", event="full", minutes=90),
+    )
+    fixture = FixtureRow(
+        date=None,
+        matchday=1,
+        match=FixtureMatch(home_code="BAR", away_code="VAL", home_goals=1, away_goals=0),
+        minutes_out=MinutesNote(raw="90'", event="full", minutes=90),
+        stats=DaznStats(),
+        competition=Competition.LALIGA,
+    )
+
+    assert _match_fixture(recent, [fixture]) is None
 
 
 def test_parse_competition_companions_merges_recent_stats() -> None:

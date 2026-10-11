@@ -1,6 +1,6 @@
 import { useMemo, useState } from "react";
 import { useQueries, useQuery } from "@tanstack/react-query";
-import { Link, useLocation, useNavigate, useParams } from "react-router-dom";
+import { Link, useParams } from "react-router-dom";
 
 import { formatEuro } from "../../api/format";
 import { getJson, paths, type PlayerStatsDetailQuery } from "../../api/client";
@@ -67,7 +67,6 @@ import { PlayerFantasySection } from "./PlayerFantasySection";
 import { PlayerAveragesPanel } from "./PlayerAveragesPanel";
 import { playerAverages } from "./playerAverages";
 import { PlayerDetailScreenLoading } from "./PlayerScreenLoading";
-import { Modal } from "../../components/Modal";
 import daznIcon from "../../assets/dazn.png";
 import "./PlayerDetailPage.css";
 
@@ -159,8 +158,6 @@ type PlayerDetailBodyProps = {
 };
 
 function PlayerDetailBody({ masterId }: PlayerDetailBodyProps) {
-  const location = useLocation();
-  const navigate = useNavigate();
   const { user, accessToken } = useAuth();
   const userId = user?.user_id ?? null;
   const [last, setLast] = useState(5);
@@ -272,21 +269,6 @@ function PlayerDetailBody({ masterId }: PlayerDetailBodyProps) {
   const detail = asRecord(detailQuery.data);
   const detailReady = detail != null;
   const segmentErrors = Array.isArray(detail?.segment_errors) ? detail.segment_errors : [];
-  const unavailableSourceSegments = new Set(["fixtures", "recent", "upcoming", "profile"]);
-  const unavailableSegments = new Set(
-    segmentErrors.flatMap((entry) => {
-      const row = asRecord(entry);
-      return text(row?.code) === "player_alias_unavailable" && text(row?.segment)
-        ? [text(row?.segment) as string]
-        : [];
-    }),
-  );
-  const playerUnavailable =
-    unavailableSourceSegments.size === unavailableSegments.size &&
-    [...unavailableSourceSegments].every((segment) => unavailableSegments.has(segment));
-  const returnTo = asRecord(location.state)?.returnTo === "/market" ? "/market" : "/players";
-  const returnLabel = returnTo === "/market" ? "Back to market" : "Back to players";
-  const returnToOrigin = () => navigate(returnTo, { replace: true });
   const fixturesBlock = asRecord(detail?.fixtures);
   const marketBlock = asRecord(detail?.market);
   const recentBlock = asRecord(detail?.recent);
@@ -739,20 +721,6 @@ function PlayerDetailBody({ masterId }: PlayerDetailBodyProps) {
 
 
       {detailReady ? <PlayerFantasySection profile={profileBlock} /> : null}
-
-      <Modal
-        open={playerUnavailable}
-        title="Player no longer available"
-        onClose={returnToOrigin}
-        closeOnBackdrop={false}
-        footer={
-          <button type="button" className="modal-close" onClick={returnToOrigin}>
-            {returnLabel}
-          </button>
-        }
-      >
-        This player is no longer available in the league competition.
-      </Modal>
 
       <BidDialog
         open={marketActions.pendingBid != null}

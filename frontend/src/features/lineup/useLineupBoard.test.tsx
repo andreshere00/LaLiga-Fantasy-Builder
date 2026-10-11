@@ -480,7 +480,7 @@ describe("useLineupBoard", () => {
 
     const requested = api.getJson.mock.calls.map(([path]) => String(path));
     expect(requested).not.toContain(paths.lineup("team-a"));
-    expect(requested).toContain(paths.lineup("team-b"));
+    expect(requested).toContain(paths.lineupWeek("team-b", 8));
   });
 
   it("useLineupBoard_initialTeamId_unknown_falls_back_to_caller", async () => {
