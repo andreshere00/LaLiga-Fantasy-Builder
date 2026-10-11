@@ -96,7 +96,10 @@ then parse offline.
 The player profile parser reads FutbolFantasy's form arrow classes as categorical
 ratings: `arrow-4` → bad, `arrow-3` → mid, `arrow-2` → good, and `arrow-1` →
 very good. These ratings are returned as `profile.form.rating` without inventing
-a numeric form value.
+a numeric form value. Starter likelihood pairs the `Titular Jn` matchweek label
+with the percentage in the same lineup box to avoid capturing an adjacent
+player's value. See the [parser guide](parser.md) and
+[selector contract](parser-discovery.md).
 
 1. **Scrape** profile + market (and optional competition pages):
 

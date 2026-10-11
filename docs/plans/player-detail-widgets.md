@@ -123,10 +123,12 @@ misleading units.
 - Profile: Fantasy logo and heading, followed by icon/text rows for Hierarchy,
   Starter percentage and Injury risk. Use the existing mappings, but show a neutral
   state when a value is unknown rather than suggesting a positive status.
-- News: newspaper heading, up to ten actual articles with information icons, bold
-  publication dates, title text and bold “Read more…”. Use existing validated URLs
-  and safe external-link attributes. Scope black unvisited and red visited link
-  styling to this list. Dates or links absent from the API remain absent.
+- News: newspaper heading, up to ten actual articles from the API, five shown per
+  page with history navigation, information icons, bold publication dates, and
+  title text. Show bold “Read more…” only when a linked title overflows its
+  available line. Use existing validated URLs and safe external-link attributes.
+  Scope black unvisited and red visited link styling to this list. Dates or links
+  absent from the API remain absent.
 - Injury history: red injury heading icon; each row shows bold diagnosis, duration
   in days, and labeled start/end dates. Show “Currently” for an ongoing injury.
   History entries have no URLs in the current contract, so represent them as text;

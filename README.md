@@ -1,15 +1,15 @@
 # LaLiga Fantasy Builder
 
-Companion for a LaLiga Fantasy league: edit your lineup and manage market
-bids from the browser, backed by a small API that proxies Fantasy reads and
-writes with your linked account.
+Companion for a LaLiga Fantasy league: edit your lineup, browse player profiles,
+and manage market bids from the browser, backed by an API that proxies Fantasy
+data and user-confirmed writes with your linked account.
 
 ![Lineup screen](docs/images/lineup.png)
 
 | Topic | Doc |
 |-------|-----|
 | Architecture and trust boundaries | [docs/architecture.md](docs/architecture.md) |
-| UI behaviour (lineup + market) | [docs/frontend.md](docs/frontend.md) |
+| UI behaviour (lineup, market, players) | [docs/frontend.md](docs/frontend.md) |
 | API routes and CLIs | [docs/api/README.md](docs/api/README.md) |
 | Agent / contributor rules | [AGENTS.md](AGENTS.md) |
 
@@ -35,11 +35,23 @@ writes with your linked account.
   ago with %), bid amounts, balance and clause warnings.
 - **Seal end** turns red when less than one hour remains on a listing.
 
+### Players (`/players`)
+
+- Browse the player catalog with search, column filters, pagination, ownership,
+  availability, position, and recent form.
+- Use row actions for market operations and player details; bookmark players
+  for quick identification.
+- Open a profile for recent and upcoming fixtures, match conditions and
+  countdowns, Fantasy indicators, per-match averages, news, and injury history.
+- On narrow screens the table keeps the player photo, name, team, and details
+  actions visible.
+
 ### Platform
 
 - **Auth BFF** (`backend/auth`): sessions, OIDC, LaLiga vault, internal JWT.
 - **API** (`backend/api`): leagues, teams, players, calendar, market,
-  buyout — OpenAPI at http://localhost:8001/docs when running locally.
+  buyout — OpenAPI at http://localhost:8001/docs when running locally. Player
+  detail stats aggregate catalog, calendar, and private scraping data.
 - **Read-only CLIs** for market and buyout analysis; no automated bidding or
   clause payment in CLI or browser-session flows.
 
@@ -85,7 +97,7 @@ Per-service notes: [auth](backend/auth/README.md), [API](backend/api/README.md),
 
 | Path | Role |
 |------|------|
-| [`frontend/`](frontend/) | React lineup and market UI |
+| [`frontend/`](frontend/) | React lineup, market, players, and player-detail UI |
 | [`backend/auth/`](backend/auth/) | Sessions, Keycloak, LaLiga pairing, internal JWT |
 | [`backend/api/`](backend/api/) | Fantasy proxy routes and CLIs |
 | [`backend/scraping/`](backend/scraping/) | FutbolFantasy scraper + parser (port 8002, private) |

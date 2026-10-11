@@ -61,6 +61,11 @@ rows is disabled.
   widget. Arrow ratings have `visual_only: true` and no numeric value.
   **`profile.start_probability`** carries the published
   percentage and matchweek.
+- The profile screen builds its per-match average table from `profile.averages`
+  and fills missing supported metrics from the player's LaLiga Fantasy
+  `lastStats` catalog data. The fallback averages count only played weeks and
+  report their source and sample size in the UI; they do not change the API's
+  scraped average values.
 - Availability is available as `injury.availability_text`; structured
   `profile.availability` is described in
   [list-availability.md](../../plans/list-availability.md).

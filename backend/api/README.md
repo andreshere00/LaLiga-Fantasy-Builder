@@ -36,7 +36,7 @@ Set `AUTH_JWKS_URL` and `AUTH_INTERNAL_BASE_URL` when not using Compose.
 | `GET` | `/laliga/leagues-probe` | Fantasy leagues connectivity, redacted |
 | `GET` | `/leagues...` | [leagues](../../docs/api/leagues/README.md) |
 | `GET`/`PUT` | `/teams...` | [teams](../../docs/api/teams/README.md) |
-| `GET` | `/players...` | [players](../../docs/api/players/README.md). Catalog and history are public |
+| `GET` | `/players...` | [players](../../docs/api/players/README.md). Catalog and market value are public; league and stats routes use JWT |
 | `GET` | `/calendar/...` | Matchday, fixtures, stats. JWT required; Fantasy read is public |
 | `GET`/`POST`/… | `/market/...` | [market](../../docs/api/market/README.md) |
 | `GET`/`POST`/`PUT` | `/buyout/...` | [buyout](../../docs/api/buyout/README.md) |
@@ -44,6 +44,13 @@ Set `AUTH_JWKS_URL` and `AUTH_INTERNAL_BASE_URL` when not using Compose.
 New routes: [Adding endpoints](../../docs/api/adding-endpoints.md).
 Swagger: http://localhost:8001/docs. Regenerate with
 `uv run poe generate-openapi` ([details](../../docs/api/openapi.md)).
+
+Player detail stats combine Fantasy catalog and matchweek data with profile,
+fixture, and match information from the private scraping service. The aggregate
+`GET /players/{player_id}/stats/detail` returns successful segments alongside
+sanitized `segment_errors` when an optional source fails. See the
+[Players API guide](../../docs/api/players/README.md) for query filters,
+fallback values, and segment behavior.
 
 ## CLI
 

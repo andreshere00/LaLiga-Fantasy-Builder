@@ -15,7 +15,7 @@ Used by `tests/parser/fixtures/futbolfantasy/*.html`.
 |---------|---------|
 | Canonical, title, club, widget link | `link[rel=canonical]`, `a.club`, `a.widget-mercado` |
 | Identity | `h1 .name`, `h1 .shirt`, `h1 .pos`, `img.badge` |
-| Availability, form, start odds, risk, hierarchy | Legacy classes in `futbolfantasy.toml`; live fallbacks include `span.lesion`, sibling disponible text, `strong` with `Titular Jn`, `span.prob-2`, `img[alt^='Riesgo de lesión']`, `span.jerarquia-value` |
+| Availability, form, start odds, risk, hierarchy | Legacy classes in `futbolfantasy.toml`; live fallbacks include `span.lesion`, sibling disponible text, `strong` with `Titular Jn`, percentage scoped to the same `.cuadro`, `img[alt^='Riesgo de lesión']`, `span.jerarquia-value` |
 | Personal data | `dl.personal` (`dt` / `dd` pairs) |
 | JSON-LD | `script[type=application/ld+json]` when present |
 | Injuries | `section.lesiones`, `table.historial`; live list `li.noticiaJugador.lesionJugador` under `.historial-lesiones` |
@@ -48,6 +48,11 @@ Same data, different DOM. Fallbacks are in `futbolfantasy.toml` and calendar/
 
 JSON-LD is optional on live pages. The DOM wins; JSON-LD fills gaps and emits
 `jsonld_mismatch` when both sides disagree.
+
+The status parser maps FutbolFantasy form arrows (`arrow-1` to `arrow-4`) to
+categorical ratings when no numeric form is published. For starter likelihood,
+it reads the `Titular Jn` label and percentage from the same lineup box so
+adjacent player cards cannot supply the wrong percentage.
 
 Scoring mode read: `data-modo` must be `LaLiga Fantasy Oficial`. Other modes
 are listed and their numbers are ignored.

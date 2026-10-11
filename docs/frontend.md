@@ -1,9 +1,9 @@
 # Frontend
 
 React app in `frontend/` (Vite, Bun). It is the browser entry point for
-LaLiga Fantasy Builder: sign-in, league selection, lineup editing, and an
-interactive market board. It never calls LaLiga directly and keeps the
-internal JWT in memory only.
+LaLiga Fantasy Builder: sign-in, league selection, lineup editing, player
+catalog and profiles, and an interactive market board. It never calls LaLiga
+directly and keeps the internal JWT in memory only.
 
 - System map: [Architecture](architecture.md)
 - HTTP routes the UI calls: [API overview](api/README.md)
@@ -43,21 +43,47 @@ The shell header switches routes. The league dropdown applies to lineup, market,
 
 The player detail screen loads recent and upcoming matches, profile data, and
 weather from `GET /api/players/{id}/stats/detail`. Its match section shows up to
-five cards in each direction. Score badges identify wins, losses, and draws by
-color and text. Upcoming cards show an OpenWeather condition icon and available
-temperature, humidity, and wind values; unavailable forecast data leaves the
-fixture visible with a reason. The Form section shows LaLiga fixture cards with
-expandable per-match stats, including DAZN points. The Fantasy data section
-groups profile indicators, news links, and injury history into responsive
-columns. News and injury history show five records per page with independent
-newer/older navigation. Player photos use roster media as a fallback, and
-bookmarks distinguish inactive and active states by color. A partial API failure
-is reported by segment while successful groups remain visible.
-The player header separates club, FSYP, position, and availability into rows.
-It shows six position-specific averages in a compact table; the remaining
-statistics open under **Details**. Missing scraped averages use count data from
-recent played Fantasy matchweeks when a matching stat is available, with that
-shorter sample identified in the UI.
+five cards in each direction. Score badges are green for wins, red for losses,
+and yellow for draws. Upcoming cards show the OpenWeather condition icon and
+available temperature, humidity, and wind values; unavailable forecasts leave
+the fixture visible with a reason. A **View match timer** control shows the
+countdown to a confirmed kickoff.
+
+The **Form** section shows LaLiga fixture cards with expandable per-match stats,
+including DAZN points. The **Fantasy data** section groups profile indicators,
+news links, and injury history into responsive columns. News titles show
+**Read more…** only when the title overflows its available line. News and injury
+history show five records per page with independent newer/older navigation.
+Fantasy profile and injury-history columns have matching widths on desktop.
+
+The player header separates club, FSYP, position, and availability. Its compact
+averages table highlights six position-specific metrics; the remaining
+statistics open under **Details**. FutbolFantasy season averages take priority.
+When a supported scraped metric is missing, the UI averages that metric across
+played `lastStats` matchweeks from the LaLiga Fantasy catalog and identifies
+that source and sample size. Form arrow classes map to **Bad**, **Mid**,
+**Good**, and **Very good** labels; numeric form and starter probability are
+shown when the source publishes them. A partial API failure is reported by
+segment while successful groups remain visible.
+
+Player photos use available API media with fallback images from market listings
+and the selected roster. Team crests resolve from fixture/catalog media and fit
+inside fixed match-card tiles.
+
+### Players screen
+
+The Players table includes player photo, name, team, FSYP, form, market value,
+owner, availability, position, and context-sensitive actions. Search and
+column filters include a team list. Form badges and form filtering use the
+average of the last three played matchweeks. Row actions expose market options
+when available, plus the player-details route; bookmarks use distinct inactive
+and active colors. Rows use the same staggered spring entrance and reduced
+motion behavior as Market rows.
+
+At viewport widths of **800px or less**, the table condenses to the player
+photo, name, team, and details actions, with those four column headings shown.
+The Name and Team filters remain available; other data columns and their filters
+are hidden at that breakpoint. The loading state uses a table-shaped skeleton.
 
 ## Authentication
 
@@ -113,9 +139,9 @@ Code: `frontend/src/features/market/` (`model/`, `cells/`, `actions/`,
   icon that opens min/max or text controls (market value 1.000–1.000.000 €,
   whole-number points/form). **Clear filters** in the toolbar resets everything;
   **Clear column filter** resets only that column. Filter state stays on the page
-  across refetches; values use `useDeferredValue`. When the listings mount, each
-  row rises in with the same Motion spring and stagger as lineup pitch tiles
-  (`MarketMotionProvider`, `domAnimation`, `MotionConfig reducedMotion="user"`).
+  across refetches; values use `useDeferredValue`. When listings mount, each
+  row rises in with the same Motion spring and stagger as lineup pitch tiles.
+  The Players table reuses the same `MarketMotionProvider` and row animation.
 
 ### Data loading (`useMarketBoard`)
 
