@@ -1,7 +1,7 @@
 import "./MarketScreenLoading.css";
 
 const ROWS = Array.from({ length: 6 }, (_, index) => index);
-const COLUMNS = Array.from({ length: 10 }, (_, index) => index);
+const COLUMNS = Array.from({ length: 9 }, (_, index) => index);
 
 export function MarketScreenLoading() {
   return (

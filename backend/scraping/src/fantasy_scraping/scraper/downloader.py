@@ -75,7 +75,7 @@ class PageDownloader:
 
         async def fetch() -> ScrapedPage:
             response = await self._client.get(url)
-            return ScrapedPage(
+            page = ScrapedPage(
                 source=Source.FUTBOLFANTASY,
                 kind=kind,
                 url=url,
@@ -86,6 +86,10 @@ class PageDownloader:
                 player_slug=player_slug,
                 season_slug=season_slug,
             )
+            # Publish the result before the shared flight is removed. Otherwise a
+            # late concurrent caller can miss both the cache and the in-flight task.
+            self._cache.set(key, page, ttl, self._settings.swr_page_s)
+            return page
 
         try:
             page = await self._flight.run(key, fetch)
@@ -93,5 +97,4 @@ class PageDownloader:
             if hit:
                 return hit.value.model_copy(update={"from_cache": True})
             raise
-        self._cache.set(key, page, ttl, self._settings.swr_page_s)
         return page

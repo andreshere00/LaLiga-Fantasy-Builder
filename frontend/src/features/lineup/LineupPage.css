@@ -1250,9 +1250,14 @@
   }
 
   .squad-panel.side-panel-modal {
+    flex: none;
     height: auto;
     min-height: 0;
     max-height: none;
+  }
+
+  .squad-panel .side-panel-body {
+    flex: 0 0 auto;
   }
 
   .squad-panel .squad-panel-scroll {
@@ -1264,6 +1269,7 @@
   .squad-grid {
     grid-template-rows: repeat(4, auto);
     height: auto;
+    max-height: none;
   }
 
   .squad-grid .squad-tile {

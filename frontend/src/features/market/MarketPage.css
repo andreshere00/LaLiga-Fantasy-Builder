@@ -1076,27 +1076,76 @@ a.market-actions-item {
   color: var(--ink);
 }
 
-@media (max-width: 800px) {
-  .market-head {
+/* Preserve the table layout while hiding optional columns in priority order. */
+@media (max-width: 1100px) {
+  .market-page:not(.players-page) {
+    --market-table-columns:
+      72px minmax(7rem, 1fr) 3.5rem 4rem 8rem minmax(8rem, 1fr) 5rem 7rem;
+  }
+
+  .market-page:not(.players-page) .market-row {
+    grid-template-columns: var(--market-table-columns);
+  }
+
+  .market-page:not(.players-page) .market-name-wrap {
+    grid-column: span 1;
+  }
+
+  .market-page:not(.players-page) .market-head-player {
+    grid-column: span 2;
+  }
+
+  .market-page:not(.players-page) .market-name {
+    white-space: normal;
+    overflow-wrap: anywhere;
+  }
+
+  .market-page:not(.players-page) .market-head-cell-availability,
+  .market-page:not(.players-page) .market-data-row > :nth-child(7),
+  .market-page:not(.players-page) .market-loading-row > :nth-child(7) {
     display: none;
   }
 
-  .market-row {
-    grid-template-columns: 72px 1fr;
+  .market-page:not(.players-page) .market-loading-row > :nth-child(2) {
+    grid-column: span 1;
+  }
+}
+
+@media (max-width: 1000px) {
+  .market-page:not(.players-page) {
+    --market-table-columns: 72px minmax(7rem, 1fr) 3.5rem 4rem 8rem 5rem 7rem;
   }
 
-  .market-name-wrap {
-    grid-column: 2 / -1;
+  .market-page:not(.players-page) .market-head-cell-marketValue,
+  .market-page:not(.players-page) .market-data-row > :nth-child(6),
+  .market-page:not(.players-page) .market-loading-row > :nth-child(6) {
+    display: none;
+  }
+}
+
+@media (max-width: 860px) {
+  .market-page:not(.players-page) {
+    --market-table-columns: 72px minmax(7rem, 1fr) 3.5rem 4rem 5rem 7rem;
   }
 
-  .market-card {
-    grid-row: span 2;
+  .market-page:not(.players-page) .market-head-cell-form,
+  .market-page:not(.players-page) .market-data-row > :nth-child(5),
+  .market-page:not(.players-page) .market-loading-row > :nth-child(5) {
+    display: none;
+  }
+}
+
+@media (max-width: 644px) {
+  .market-page:not(.players-page) :is(.market-list, .market-loading-table) {
+    overflow-x: auto;
   }
 
-  .market-cell[data-label]::before,
-  .market-name[data-label]::before {
-    content: attr(data-label) ": ";
-    font-weight: 700;
+  .market-page:not(.players-page) :is(.market-row, .market-loading-row) {
+    min-width: 580px;
+  }
+
+  .market-page:not(.players-page) .market-list:has([aria-expanded="true"], details[open]) {
+    padding-bottom: 16rem;
   }
 }
 
