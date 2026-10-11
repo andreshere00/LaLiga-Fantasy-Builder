@@ -7974,7 +7974,7 @@
           "generated_at"
         ],
         "title": "PlayerDetailResponse",
-        "description": "Aggregate player details with optional segments and partial errors."
+        "description": "Aggregate player details with optional segments and partial errors.\n\nSuccessful segments are returned even when another segment fails. Failed\nrequested segments are absent and described in ``segment_errors``.\n\nAttributes:\n    player_id: Requested Fantasy master player id.\n    player: Resolved player identity shared by returned segments.\n    season: Season used for all returned data.\n    generated_at: Time the aggregate response was built.\n    fixtures: Optional fixture-stat segment.\n    market: Optional market-history segment.\n    recent: Optional recent-matches segment.\n    upcoming: Optional upcoming-matches segment.\n    profile: Optional scraped-profile segment.\n    segment_errors: Sanitised failures for requested optional segments."
       },
       "PlayerFixtureStatsResponse": {
         "properties": {
@@ -8969,7 +8969,7 @@
           "detail"
         ],
         "title": "SegmentError",
-        "description": "Sanitised reason that one detail segment could not be produced."
+        "description": "Sanitised reason that one requested detail segment could not be produced.\n\nAttributes:\n    segment: Detail segment that failed.\n    code: Stable error category safe to return to API clients.\n    detail: Bounded, sanitised diagnostic text."
       },
       "SegmentWarning": {
         "properties": {
