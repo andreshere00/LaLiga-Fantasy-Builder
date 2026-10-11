@@ -708,24 +708,36 @@
 .pitch-lineup-load-controls {
   position: absolute;
   top: 2.5%;
-  left: 2.5%;
   right: 2.5%;
   z-index: 10;
   display: flex;
-  align-items: flex-start;
-  justify-content: space-between;
-  gap: 8px;
+  justify-content: flex-end;
   pointer-events: none;
+}
+
+.pitch-lineup-load-menu {
+  position: relative;
+  width: 2.5rem;
+  min-width: 0;
+}
+
+.pitch-lineup-load-menu > summary {
+  list-style: none;
+}
+
+.pitch-lineup-load-menu > summary::-webkit-details-marker {
+  display: none;
 }
 
 .pitch-original-lineup-button {
   display: flex;
   align-items: center;
-  gap: 6px;
-  flex: 0 1 auto;
-  width: auto;
-  max-width: min(24rem, 44%);
-  padding: 8px;
+  gap: 0.75rem;
+  width: 100%;
+  min-width: 0;
+  max-width: none;
+  box-sizing: border-box;
+  padding: 0.75rem;
   border: 0;
   border-radius: 0;
   background: var(--white);
@@ -744,26 +756,49 @@
   pointer-events: auto;
 }
 
-.pitch-scoring-lineup-control {
-  flex: 0 1 auto;
-  display: block;
-  min-width: 0;
-  max-width: min(24rem, 44%);
+.pitch-lineup-load-trigger {
+  display: grid;
+  place-items: center;
+  width: 2.5rem;
+  height: 2.5rem;
+  padding: 0;
+  cursor: pointer;
 }
 
-.pitch-lineup-load-controls > .pitch-original-lineup-button {
+.pitch-lineup-load-options {
+  position: absolute;
+  top: calc(100% + 0.5rem);
+  right: 0;
+  display: grid;
+  gap: 0.75rem;
+  width: min(22rem, calc(100vw - 2rem));
+  box-sizing: border-box;
+  padding: 0.75rem;
+  background: var(--white);
+  box-shadow: var(--shadow-surface);
+}
+
+.pitch-scoring-lineup-control {
+  position: relative;
+  width: 100%;
+  display: block;
   min-width: 0;
+  max-width: none;
 }
 
 .pitch-scoring-lineup-control .pitch-original-lineup-button {
-  width: auto;
-  max-width: 100%;
+  width: 100%;
+  max-width: none;
 }
 
-.pitch-original-lineup-button.is-primary,
+.pitch-original-lineup-button.is-primary {
+  background: var(--white);
+  color: var(--ink);
+}
+
 .pitch-original-lineup-button.is-primary:disabled {
-  background: var(--red);
-  color: var(--white);
+  background: var(--white);
+  color: var(--gray);
 }
 
 .pitch-original-lineup-icons {

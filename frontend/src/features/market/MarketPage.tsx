@@ -12,6 +12,7 @@ import { useMarketActions } from "./actions/useMarketActions";
 import { marketColumnHeadings } from "./marketColumnHeadings";
 import { MarketListHead } from "./MarketListHead";
 import { MarketRowCells } from "./MarketRowView";
+import { MarketScreenLoading } from "./MarketScreenLoading";
 import { MARKET_CLEAR_FILTERS_LABEL, MARKET_SEARCH_NO_MATCHES } from "./marketMessages";
 import {
   activeFilterCount,
@@ -66,7 +67,7 @@ function MarketList() {
     setFilters(createEmptyMarketFilters());
   };
 
-  if (board.isLoading) return <p className="status-copy">Loading market…</p>;
+  if (board.isLoading) return <MarketScreenLoading />;
   if (board.noLeague) return <p className="status-copy">No leagues found for this account.</p>;
   if (board.hasError) {
     return (

@@ -62,6 +62,10 @@ docker compose --profile apps up --build
 help = "Run auth, API, scraping, and Vite on the host (start Keycloak separately if you need login)"
 cmd = "bash scripts/dev-local.sh"
 
+[tool.poe.tasks.dev-clean]
+help = "Clear stale app containers and Uvicorn processes, then run local development"
+cmd = "bash scripts/dev-clean.sh"
+
 [tool.poe.tasks.install]
 help = "Install root and backend deps, then enable git pre-commit hooks"
 shell = """

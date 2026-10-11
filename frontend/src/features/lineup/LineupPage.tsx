@@ -276,50 +276,65 @@ export function LineupPage() {
             <img src={fieldUrl} alt="" />
             {board.ownSquad && !board.isPastFixture ? (
               <div className="pitch-lineup-load-controls">
-                <span
-                  className="pitch-scoring-lineup-control has-hover-tooltip-panel"
-                  tabIndex={board.originalLineupMessage ? 0 : undefined}
-                  aria-describedby={board.originalLineupMessage ? "scoring-lineup-hint" : undefined}
-                >
-                  <button
-                    type="button"
-                    className="pitch-original-lineup-button is-primary"
-                    disabled={!board.originalLineupAvailable || board.savePending}
-                    aria-describedby={board.originalLineupMessage ? "scoring-lineup-hint" : undefined}
-                    onClick={() => {
-                      setSwapCandidate(null);
-                      board.restoreOriginalLineup();
-                    }}
+                <details className="pitch-lineup-load-menu">
+                  <summary
+                    className="pitch-original-lineup-button pitch-lineup-load-trigger"
+                    aria-label="Load previous lineups"
                   >
                     <span className="pitch-original-lineup-icons" aria-hidden="true">
-                      <img className="pitch-original-lineup-icon is-default" src={originalFixtureWhiteUrl} alt="" />
+                      <img className="pitch-original-lineup-icon is-default" src={originalFixtureBlackUrl} alt="" />
                       <img className="pitch-original-lineup-icon is-hover" src={originalFixtureWhiteUrl} alt="" />
-                      <img className="pitch-original-lineup-icon is-disabled" src={originalFixtureGrayUrl} alt="" />
                     </span>
-                    <span>Load original lineup for {scoreWeekLabel(board.week)}</span>
-                  </button>
-                  {board.originalLineupMessage ? (
-                    <span id="scoring-lineup-hint" className="hover-tooltip-panel is-align-end" role="tooltip">
-                      {board.originalLineupMessage}
+                  </summary>
+                  <div className="pitch-lineup-load-options">
+                    <span
+                      className="pitch-scoring-lineup-control has-hover-tooltip-panel"
+                      tabIndex={board.originalLineupMessage ? 0 : undefined}
+                      aria-describedby={board.originalLineupMessage ? "scoring-lineup-hint" : undefined}
+                    >
+                      <button
+                        type="button"
+                        className="pitch-original-lineup-button is-primary"
+                        disabled={!board.originalLineupAvailable || board.savePending}
+                        aria-describedby={board.originalLineupMessage ? "scoring-lineup-hint" : undefined}
+                        onClick={(event) => {
+                          event.currentTarget.closest("details")?.removeAttribute("open");
+                          setSwapCandidate(null);
+                          board.restoreOriginalLineup();
+                        }}
+                      >
+                        <span className="pitch-original-lineup-icons" aria-hidden="true">
+                          <img className="pitch-original-lineup-icon is-default" src={originalFixtureBlackUrl} alt="" />
+                          <img className="pitch-original-lineup-icon is-hover" src={originalFixtureWhiteUrl} alt="" />
+                          <img className="pitch-original-lineup-icon is-disabled" src={originalFixtureGrayUrl} alt="" />
+                        </span>
+                        <span>Load original lineup for {scoreWeekLabel(board.week)}</span>
+                      </button>
+                      {board.originalLineupMessage ? (
+                        <span id="scoring-lineup-hint" className="hover-tooltip-panel is-align-end" role="tooltip">
+                          {board.originalLineupMessage}
+                        </span>
+                      ) : null}
                     </span>
-                  ) : null}
-                </span>
-                <button
-                  type="button"
-                  className="pitch-original-lineup-button"
-                  disabled={!board.lastSavedLineupAvailable || board.savePending}
-                  onClick={() => {
-                    setSwapCandidate(null);
-                    board.restoreLastSavedLineup();
-                  }}
-                >
-                  <span className="pitch-original-lineup-icons" aria-hidden="true">
-                    <img className="pitch-original-lineup-icon is-default" src={originalFixtureBlackUrl} alt="" />
-                    <img className="pitch-original-lineup-icon is-hover" src={originalFixtureWhiteUrl} alt="" />
-                    <img className="pitch-original-lineup-icon is-disabled" src={originalFixtureGrayUrl} alt="" />
-                  </span>
-                  <span>Load last saved lineup</span>
-                </button>
+                    <button
+                      type="button"
+                      className="pitch-original-lineup-button"
+                      disabled={!board.lastSavedLineupAvailable || board.savePending}
+                      onClick={(event) => {
+                        event.currentTarget.closest("details")?.removeAttribute("open");
+                        setSwapCandidate(null);
+                        board.restoreLastSavedLineup();
+                      }}
+                    >
+                      <span className="pitch-original-lineup-icons" aria-hidden="true">
+                        <img className="pitch-original-lineup-icon is-default" src={originalFixtureBlackUrl} alt="" />
+                        <img className="pitch-original-lineup-icon is-hover" src={originalFixtureWhiteUrl} alt="" />
+                        <img className="pitch-original-lineup-icon is-disabled" src={originalFixtureGrayUrl} alt="" />
+                      </span>
+                      <span>Load last saved lineup</span>
+                    </button>
+                  </div>
+                </details>
               </div>
             ) : null}
             {board.opponentLineupLocked ? (

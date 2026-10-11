@@ -55,6 +55,28 @@ function weatherReason(value: unknown): string {
   }
 }
 
+function competitionHeading(fixture: Record<string, unknown> | null): string {
+  const raw = text(fixture?.competition_label) ?? text(fixture?.competition) ?? "";
+  const normalized = raw.toUpperCase().replace(/[^A-Z0-9]+/g, " ").trim();
+  let competition: string | null = null;
+
+  if (normalized.includes("CHAMPIONS") || normalized === "UCL") competition = "CHAMPIONS";
+  else if (normalized.includes("CONFERENCE") || normalized === "UECL") competition = "CONFERENCE";
+  else if (normalized.includes("EUROPA") || normalized === "UEL") competition = "EUROPA";
+  else if (normalized.includes("SUPERCOPA")) competition = "SUPERCOPA";
+  else if (normalized.includes("COPA DEL REY") || normalized === "COPA") competition = "COPA";
+  else if (
+    normalized === "LEAGUE" ||
+    normalized.includes("LALIGA") ||
+    normalized.includes("LA LIGA") ||
+    normalized.includes("PRIMERA DIVISION")
+  ) competition = "LEAGUE";
+
+  if (!competition) return "OTHERS";
+  const matchweek = asFiniteNumber(fixture?.matchweek);
+  return `${matchweek != null ? `F${matchweek}` : "F–"} · ${competition}`;
+}
+
 function MatchWeather({ match }: { match: Record<string, unknown> | null }) {
   const weather = asRecord(match?.weather);
   const snapshot = asRecord(weather?.snapshot);
@@ -174,9 +196,7 @@ function MatchCard({
   const awayScore = asFiniteNumber(fixture?.away_score);
   const homeOutcome = matchOutcome(homeScore, awayScore);
   const awayOutcome = matchOutcome(awayScore, homeScore);
-  const matchweek = asFiniteNumber(fixture?.matchweek);
-  const competition =
-    text(fixture?.competition_label) ?? text(fixture?.competition) ?? "Competition";
+  const competition = competitionHeading(fixture);
   const matchDate = text(fixture?.date) ?? text(matchRecord?.kickoff);
   const kickoff =
     text(matchRecord?.kickoff) ?? text(fixture?.kickoff) ?? text(fixture?.date);
@@ -188,7 +208,7 @@ function MatchCard({
   return (
     <li className={`player-match-card${upcoming ? " is-upcoming" : ""}`}>
       <p className="player-match-competition">
-        {matchweek != null ? `F${matchweek}` : "F–"} · {competition}
+        {competition}
       </p>
       <div className="player-match-teams">
         <div className="player-match-team">
