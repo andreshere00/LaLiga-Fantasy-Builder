@@ -93,6 +93,7 @@
 .fb-separator{border:0;height:1px;margin:16px 0;background:var(--fb-line)}
 .fb-toast{border:1px solid var(--fb-line);border-left:4px solid var(--fb-success);padding:16px;max-width:360px;color:var(--fb-secondary)}
 .fb-toast[data-tone="error"]{border-left-color:var(--fb-failure)}
+.fb-toast[data-tone="error"] .fb-toast-title{margin:0;color:var(--fb-secondary);font:600 20px/1.35 "At Aero",Arial,sans-serif;letter-spacing:normal;text-transform:none}
 .fb-tooltip{padding:8px 12px;max-width:260px;border-radius:0;border:1px solid var(--fb-control-line);background:var(--fb-surface);color:var(--fb-secondary);font:400 12px/1.4 "At Aero",Arial,sans-serif;box-shadow:none}
 .fb-skeleton{height:20px;background:var(--fb-subtle);animation:fb-pulse 1.4s ease-in-out infinite}
 @media(prefers-reduced-motion:reduce){:is(.fb-button,.fb-skeleton,.fb-pulse-ring__outer,.fb-pulse-ring__inner,.fb-button-spinner){animation:none;transition:none}.fb-pulse-ring__outer{opacity:1;transform:none}}

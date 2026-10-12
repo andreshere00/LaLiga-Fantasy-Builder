@@ -1,12 +1,16 @@
 import { Help } from "../../components/ui/Help";
+import { Select } from "@base-ui/react/select";
 import { Fragment, useEffect, useState, type CSSProperties } from "react";
 import { useSearchParams } from "react-router-dom";
 
 import { pointsLabel, possessiveName, scoreWeekLabel } from "../../api/mappers";
 import { PersonIcon, SearchIcon, WarningIcon } from "../shell/icons";
 import { ProfilePhoto } from "../shell/ProfilePhoto";
-import footballIconUrl from "../../assets/boxicons_football-filled.svg";
-import moneyIconUrl from "../../assets/button_money.svg";
+import builderIconUrl from "../../assets/icon_builder_black.svg";
+import infoIconUrl from "../../assets/button_info.svg";
+import infoIconDarkUrl from "../../assets/button_info_white.svg";
+import infoIconHoverUrl from "../../assets/button_info_red.svg";
+import infoIconDarkHoverUrl from "../../assets/button_info_red_white.svg";
 import saveCartridgeIconUrl from "../../assets/save_cartridge.svg";
 import { PitchMarkings } from "./PitchMarkings";
 import { PulseRing } from "../../components/ui/PulseRing";
@@ -26,9 +30,10 @@ import { LineupMarketOptions } from "./LineupMarketOptions";
 import { TeamValueBox } from "./TeamValueBox";
 import { useLineupBoard } from "./useLineupBoard";
 import { useSquadSales } from "./useSquadSales";
+import { LineupBuilderDialog } from "./LineupBuilderDialog";
 import "./LineupPage.css";
 
-const RECOMMEND_COPY = "Write your lineup preferences";
+const RECOMMEND_COPY = "Write your lineup preferences...";
 
 /** Swap layout tokens via data-layout-profile; see lineup-layout.css. */
 const LINEUP_LAYOUT_PROFILE = "desktop-16-9";
@@ -43,6 +48,7 @@ export function LineupPage() {
   const [searchParams] = useSearchParams();
   const board = useLineupBoard({ initialTeamId: searchParams.get("team") });
   const squadSales = useSquadSales();
+  const [builderOpen, setBuilderOpen] = useState(false);
   const [swapCandidate, setSwapCandidate] = useState<{
     playerId: string;
     positionId: number | null;
@@ -104,7 +110,7 @@ export function LineupPage() {
             <div className="control-block">
               <span className="field-label">Fixture</span>
               <CurrentFixtureTooltip message={currentFixtureTooltip}>
-                <div className="pager">
+                <div className="pager current-fixture-pager">
                   <button
                     type="button"
                     aria-label="Previous fixture"
@@ -141,19 +147,31 @@ export function LineupPage() {
             <div className="control-block formation-field">
               <span className="field-label">Formation</span>
               {board.editable ? (
-                <div className="select-wrap formation-select">
-                  <select
-                    aria-label="Formation"
-                    value={board.formationCode ?? ""}
-                    onChange={(event) => board.setFormationCode(event.target.value)}
-                  >
-                    {board.formationOptions.map((option) => (
-                      <option key={option.value} value={option.value}>
-                        {option.label}
-                      </option>
-                    ))}
-                  </select>
-                </div>
+                <Select.Root items={board.formationOptions} value={board.formationCode}
+                  onValueChange={(value) => { if (value) board.setFormationCode(value); }}>
+                  <Select.Trigger className="fb-select-trigger lineup-formation-trigger" aria-label="Formation">
+                    <Select.Value />
+                    <Select.Icon className="lineup-formation-icon" aria-hidden="true">
+                      <svg viewBox="0 0 18 18">
+                        <path d="m4 7 5 5 5-5" fill="none" stroke="currentColor" strokeWidth="1.5" />
+                      </svg>
+                    </Select.Icon>
+                  </Select.Trigger>
+                  <Select.Portal>
+                    <Select.Positioner sideOffset={4} className="fb-select-positioner">
+                      <Select.Popup className="fb-selection-popup">
+                        <Select.List>
+                          {board.formationOptions.map((option) => (
+                            <Select.Item key={option.value} value={option.value} className="fb-item">
+                              <Select.ItemText>{option.label}</Select.ItemText>
+                              <Select.ItemIndicator aria-hidden="true">✓</Select.ItemIndicator>
+                            </Select.Item>
+                          ))}
+                        </Select.List>
+                      </Select.Popup>
+                    </Select.Positioner>
+                  </Select.Portal>
+                </Select.Root>
               ) : (
                 <p className="formation-value">{board.formation}</p>
               )}
@@ -161,11 +179,11 @@ export function LineupPage() {
             <div className="control-block recommend">
               <span className="field-label">Build lineup</span>
               <div className="accent-control-shell">
-                <button type="button" className="recommend-button" disabled>
+                <button type="button" className="recommend-button" onClick={() => setBuilderOpen(true)}>
                   <span className="recommend-button-text">{RECOMMEND_COPY}</span>
                   <img
                     className="recommend-button-icon"
-                    src={footballIconUrl}
+                    src={builderIconUrl}
                     alt=""
                     aria-hidden="true"
                   />
@@ -208,7 +226,12 @@ export function LineupPage() {
             <div className="control-block team-value">
               <span className="field-label">Team value</span>
               <TeamValueBox
-                iconSrc={moneyIconUrl}
+                iconSrc={{
+                  light: infoIconUrl,
+                  dark: infoIconDarkUrl,
+                  lightHover: infoIconHoverUrl,
+                  darkHover: infoIconDarkHoverUrl,
+                }}
                 evolution={board.teamValueEvolution}
                 historyLoading={board.teamValueHistoryLoading}
                 onRequestHistory={board.requestTeamValueHistory}
@@ -563,6 +586,9 @@ export function LineupPage() {
         }
         onClose={board.dismissOpponentLineupNotice}
       />
+      <LineupBuilderDialog open={builderOpen} onClose={() => setBuilderOpen(false)}
+        ranking={board.ranking} squad={board.squad} selectedTeamId={board.selectedTeamId}
+        formations={board.formationOptions} />
     </section>
   );
 }

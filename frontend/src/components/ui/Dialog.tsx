@@ -10,11 +10,12 @@ type DialogProps = {
   footer?: ReactNode;
   closeOnBackdrop?: boolean;
   layout?: "dialog" | "sheet";
+  className?: string;
 };
 
 /** Accessible controlled dialog; sheet layout becomes a bottom panel on mobile. */
 export function Dialog({
-  open, title, onClose, children, footer, closeOnBackdrop = true, layout = "dialog",
+  open, title, onClose, children, footer, closeOnBackdrop = true, layout = "dialog", className = "",
 }: DialogProps) {
   const previousFocus = useRef<HTMLElement | null>(null);
   useEffect(() => {
@@ -28,7 +29,7 @@ export function Dialog({
       <Primitive.Portal>
         <Primitive.Backdrop className="fb-dialog-backdrop" />
         <Primitive.Viewport className={"fb-dialog-viewport fb-dialog-viewport--" + layout}>
-          <Primitive.Popup className={"fb-dialog fb-dialog--" + layout}
+          <Primitive.Popup className={"fb-dialog fb-dialog--" + layout + " " + className}
             finalFocus={() => previousFocus.current?.isConnected ? previousFocus.current : false}>
             <header className="fb-dialog-heading">
               <Primitive.Title className="fb-section-title">{title}</Primitive.Title>

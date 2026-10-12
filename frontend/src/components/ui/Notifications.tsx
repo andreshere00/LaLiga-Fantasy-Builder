@@ -17,7 +17,10 @@ function NotificationList() {
       <Toast.Viewport className="fb-toast-viewport">
         {toasts.map((toast) => (
           <Toast.Root key={toast.id} toast={toast} className="fb-toast" data-tone={toast.type}>
-            <Toast.Content><Toast.Title /><Toast.Description /></Toast.Content>
+            <Toast.Content>
+              <Toast.Title className="fb-toast-title" />
+              <Toast.Description />
+            </Toast.Content>
             <Toast.Close render={<Button variant="ghost" shape="square" size="icon"
               aria-label="Dismiss notification" />}>×</Toast.Close>
           </Toast.Root>

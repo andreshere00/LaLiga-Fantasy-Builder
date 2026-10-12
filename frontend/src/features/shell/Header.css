@@ -7,9 +7,22 @@
 .nav-tab:hover { background:var(--fb-coral); color:var(--fb-on-coral); }
 .nav-actions { display:flex; align-items:center; gap:8px; margin-left:auto; padding:8px 0; min-width:0; flex-wrap:wrap; }
 .league-chip,.logout-btn,.profile-btn,.theme-btn { display:inline-flex; align-items:center; justify-content:center; gap:12px; min-height:44px; padding:0 12px; border:1px solid var(--fb-control-line); border-radius: 0; font:500 14px/1.4 "At Aero",sans-serif; color:var(--fb-secondary); background:var(--fb-surface); cursor:pointer; }
+.theme-btn { position:relative; width:44px; height:44px; padding:0; gap:0; overflow:hidden; }
+.theme-config-icon { display:none; width:22px; height:22px; object-fit:contain; }
+.theme-config-icon--black { display:block; }
+.theme-config-icon--red,.theme-config-icon--gray { position:absolute; }
+.theme-btn:is(:hover,:focus-visible) .theme-config-icon--black,
+.theme-btn:is(:hover,:focus-visible) .theme-config-icon--white { display:none; }
+.theme-btn:is(:hover,:focus-visible) .theme-config-icon--red { display:block; }
+.theme-btn:active .theme-config-icon--red { display:none; }
+.theme-btn:active .theme-config-icon--gray { display:block; }
+:root[data-theme="dark"] .theme-config-icon--black { display:none; }
+:root[data-theme="dark"] .theme-config-icon--white { display:block; }
+:root[data-theme="dark"] .theme-btn:is(:hover,:focus-visible) .theme-config-icon--white { display:none; }
 .league-chip { max-width:240px; }
 .league-chip > span:first-child { overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
 .league-chip [data-slot="select-icon"] { flex-shrink:0; }
+.league-chip [data-slot="select-icon"] { display:flex; align-items:center; justify-content:center; line-height:1; }
 .league-chip:hover,.logout-btn:hover,.profile-btn:hover { background:var(--fb-coral); color:var(--fb-on-coral); }
 .league-chip:disabled,.logout-btn:disabled { opacity:.5; cursor:default; }
 .profile-btn-avatar { width:20px; height:20px; object-fit:cover; border-radius: 0; }

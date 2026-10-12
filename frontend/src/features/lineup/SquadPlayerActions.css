@@ -174,3 +174,12 @@
 .squad-sale-primary { background:var(--fb-primary); color:var(--fb-ink-on-status); border-radius: 0; }
 .squad-sale-secondary { border-radius: 0; }
 .squad-sale-choice { min-height:44px; border:1px solid var(--fb-control-line); color:var(--fb-secondary); }
+.fb-dialog.squad-player-actions-dialog button:not(.fb-button),
+.fb-dialog.squad-player-actions-dialog .fb-button,
+.fb-dialog.squad-player-actions-dialog .squad-sale-choice { border-radius:0; }
+.fb-dialog.squad-player-actions-dialog--options .fb-dialog-footer .squad-sale-secondary,
+.fb-dialog.squad-player-actions-dialog--choose .fb-dialog-footer .squad-sale-secondary {
+  border-color:var(--fb-primary);
+  background:var(--fb-primary);
+  color:#fff;
+}

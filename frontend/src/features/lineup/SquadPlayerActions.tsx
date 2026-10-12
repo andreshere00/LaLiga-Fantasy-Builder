@@ -137,6 +137,7 @@ export function SquadPlayerActions({
       {opponentMarketOptions?.(open && view === "choose" && !ownPlayer, close)}
       <Dialog
         open={open && (ownPlayer || view !== "choose")}
+        className={`squad-player-actions-dialog squad-player-actions-dialog--${view}`}
         title={
           (view === "choose" || view === "options")
             ? player.name
