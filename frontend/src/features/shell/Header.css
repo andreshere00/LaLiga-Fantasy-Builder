@@ -23,8 +23,8 @@
 :root[data-theme="dark"] .theme-btn:is(:hover,:focus-visible) .theme-config-icon--white { display:none; }
 .league-chip { position:relative; max-width:240px; justify-content:flex-start; padding-inline-end:40px; }
 .league-chip > span:first-child { flex:1; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
-.league-chip [data-slot="select-icon"] { flex-shrink:0; }
-.league-chip [data-slot="select-icon"] { position:absolute; inset-inline-end:12px; top:50%; display:flex; align-items:center; justify-content:center; line-height:0; transform:translateY(-50%); }
+.league-chip-icon { position:absolute; inset-inline-end:12px; top:50%; display:flex; align-items:center; justify-content:center; width:18px; height:18px; flex-shrink:0; line-height:0; transform:translateY(-50%); }
+.league-chip-icon svg { display:block; width:18px; height:18px; }
 .league-chip:hover,.logout-btn:hover,.profile-btn:hover { background:var(--fb-coral); color:var(--fb-on-coral); }
 .league-chip:disabled,.logout-btn:disabled { opacity:.5; cursor:default; }
 .profile-btn-avatar { width:20px; height:20px; object-fit:cover; border-radius: 0; }

@@ -49,7 +49,11 @@ export function Header() {
               disabled={leagues.length === 0}>
               <Select.Trigger className="league-chip" aria-label="League">
                 <Select.Value placeholder="No league" />
-                <Select.Icon aria-hidden="true">⌄</Select.Icon>
+                <Select.Icon className="league-chip-icon" aria-hidden="true">
+                  <svg viewBox="0 0 18 18">
+                    <path d="m4 7 5 5 5-5" fill="none" stroke="currentColor" strokeWidth="1.5" />
+                  </svg>
+                </Select.Icon>
               </Select.Trigger>
               <Select.Portal>
                 <Select.Positioner sideOffset={4} className="fb-select-positioner">
