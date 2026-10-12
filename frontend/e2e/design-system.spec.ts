@@ -92,7 +92,7 @@ for (const width of [800, 801]) {
     await page.setViewportSize({ width, height: 1000 });
     await page.goto("/players?q=Player");
     await expect(page.getByRole("heading", { name: "Players", exact: true })).toBeVisible();
-    await expect(page.locator(".market-head-cell-name")).toBeVisible();
+    await expect(page.locator(".players-player-heading")).toBeVisible();
     await expect(page.locator(".market-head-cell-team")).toBeVisible();
     if (width === 800) await expect(page.locator(".market-head-cell-fsyp")).toBeHidden();
     else await expect(page.locator(".market-head-cell-fsyp")).toBeVisible();

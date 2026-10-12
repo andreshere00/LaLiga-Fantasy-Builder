@@ -32,6 +32,7 @@ type Props = {
 };
 
 const EMPTY: PlayerOption[] = [];
+const EMPTY_SQUAD: SquadCard[] = [];
 
 function squadOptions(players: readonly SquadCard[], source: string): PlayerOption[] {
   return players.map((player) => ({
@@ -61,9 +62,11 @@ export function LineupBuilderDialog({
       selectedTeamId !== ownTeamId,
     queryFn: ({ signal }) => getJson(paths.team(id, ownTeamId), token, { signal }),
   });
-  const ownSquad = selectedTeamId === ownTeamId || !ownTeamQuery.data
+  const ownSquad = selectedTeamId === ownTeamId
     ? squad
-    : squadCards(playersOf(ownTeamQuery.data), null);
+    : ownTeamQuery.data
+      ? squadCards(playersOf(ownTeamQuery.data), null)
+      : EMPTY_SQUAD;
   const opponents = ranking.filter((team) => team.selectable && team.teamId !== selected?.team?.id);
   const rosterQueries = useQueries({
     queries: opponents.map((team) => ({
@@ -176,7 +179,10 @@ export function LineupBuilderDialog({
             {filteredOptions.length === 0 ? <p className="fb-helper">
               {open && (ownTeamQuery.isLoading || marketQuery?.isLoading ||
                 rosterQueries.some((query) => query.isLoading))
-                ? "Loading available players…" : "No players found."}
+                ? "Loading available players…"
+                : ownTeamQuery.isError || marketQuery?.isError || rosterQueries.some((query) => query.isError)
+                  ? "Some player sources could not be loaded."
+                  : "No players found."}
             </p> : null}
           </div>
           <div className="lineup-builder-chosen">
