@@ -5,7 +5,9 @@
 .nav-tab { display:flex; align-items:center; min-height:56px; padding:0 16px; color:var(--fb-secondary); text-decoration:none; border-bottom:3px solid transparent; font-size:14px; font-weight:500; text-transform:uppercase; transition:background-color .16s; }
 .nav-tab[aria-current="page"] { border-bottom-color:var(--fb-primary); color:var(--fb-tertiary); }
 .nav-tab:hover { background:var(--fb-coral); color:var(--fb-on-coral); }
-.nav-actions { display:flex; align-items:center; gap:8px; margin-left:auto; padding:8px 0; min-width:0; flex-wrap:wrap; }
+.nav-actions { position:relative; display:flex; align-items:center; margin-left:auto; padding:8px 0; min-width:0; }
+.nav-actions-panel { display:flex; align-items:center; gap:8px; min-width:0; flex-wrap:wrap; }
+.nav-options-trigger { display:none; }
 .league-chip,.logout-btn,.profile-btn,.theme-btn { display:inline-flex; align-items:center; justify-content:center; gap:12px; min-height:44px; padding:0 12px; border:1px solid var(--fb-control-line); border-radius: 0; font:500 14px/1.4 "At Aero",sans-serif; color:var(--fb-secondary); background:var(--fb-surface); cursor:pointer; }
 .theme-btn { position:relative; width:44px; height:44px; padding:0; gap:0; overflow:hidden; }
 .theme-config-icon { display:none; width:22px; height:22px; object-fit:contain; }
@@ -30,5 +32,27 @@
 .fb-select-positioner { z-index:110; }
 .fb-selection-popup { background:var(--fb-surface); color:var(--fb-secondary); border:1px solid var(--fb-control-line); max-height:min(400px,70dvh); min-width:var(--anchor-width); overflow:auto; }
 .fb-selection-popup .fb-item { display:flex; justify-content:space-between; gap:12px; }
-@media(max-width:1000px) { .header-content { gap:0 16px; } .nav-actions { width:100%; margin:0; border-top:1px solid var(--fb-line); } .nav-tabs { margin-left:auto; } }
-@media(max-width:600px) { .header-content { padding:0 16px; } .brand-bar { width:100%; padding-bottom:4px; } .nav-tabs { margin:0; width:100%; } .nav-tab { flex:1; padding:0 12px; justify-content:center; } .nav-actions { gap:6px; } .league-chip { max-width:100%; flex:1; } .logout-btn,.profile-btn { padding:0 8px; } }
+@media(max-width:1000px) {
+  .header-content { display:grid; grid-template-columns:minmax(0,1fr) auto; gap:0 16px; }
+  .brand-bar { grid-row:1; grid-column:1; }
+  .nav-tabs { grid-row:2; grid-column:1 / -1; width:100%; margin:0; justify-content:space-around; }
+  .nav-actions { grid-row:1; grid-column:2; width:auto; margin:0; padding:8px 0; }
+  .nav-options-trigger { display:flex; align-items:center; justify-content:center; gap:8px; min-width:44px; min-height:44px; padding:0 12px; border:1px solid var(--fb-control-line); background:var(--fb-surface); color:var(--fb-secondary); font:500 14px/1.4 "At Aero",sans-serif; cursor:pointer; }
+  .nav-options-trigger svg { width:20px; height:20px; }
+  .nav-options-trigger:hover,.nav-actions.is-open > .nav-options-trigger { background:var(--fb-coral); color:var(--fb-on-coral); }
+  .nav-actions-panel { position:absolute; z-index:120; top:calc(100% + 8px); right:0; display:none; flex-direction:column; align-items:stretch; gap:8px; width:min(320px,calc(100vw - 32px)); padding:12px; border:1px solid var(--fb-control-line); background:var(--fb-surface); box-shadow:0 8px 24px rgb(0 0 0 / 14%); }
+  .nav-actions.is-open > .nav-actions-panel { display:flex; }
+  .nav-actions-panel > :is(.league-chip,.logout-btn,.profile-btn) { width:100%; max-width:none; justify-content:flex-start; }
+  .nav-actions-panel .theme-btn { align-self:flex-start; }
+}
+@media(max-width:600px) {
+  .header-content { padding:0 16px; }
+  .brand-bar { width:auto; padding-bottom:4px; font-size:clamp(16px,5vw,20px); }
+  .nav-tab { flex:1; padding:0 12px; justify-content:center; }
+  .nav-actions { margin-left:auto; align-self:center; transform:translateY(5px); }
+  .nav-options-trigger { width:44px; padding:0; }
+  .nav-options-trigger span { display:none; }
+  .nav-actions-panel { right:0; }
+  .league-chip { flex:1; }
+  .logout-btn,.profile-btn { padding:0 8px; }
+}

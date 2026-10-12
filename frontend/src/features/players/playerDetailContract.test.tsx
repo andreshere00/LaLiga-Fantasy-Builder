@@ -45,7 +45,11 @@ describe("validated player detail consumers", () => {
     expect(statDisplay(row.stats.minutesPlayed, "minutesPlayed")).toBe("90 (2 p)");
     expect(statDisplay(row.stats.daznPoints, "daznPoints")).toBe("3");
     render(<><PlayerFantasySection profile={detail.profile!} />
-      <PlayerMatchesSection recent={detail.recent!} upcoming={detail.upcoming!} /></>);
+      <PlayerMatchesSection
+        recent={detail.recent!}
+        upcoming={detail.upcoming!}
+        playerTeamName={detail.player.teamName ?? null}
+      /></>);
     expect(screen.getByText("80%")).toBeTruthy();
     expect(screen.getByText("Matchday 9")).toBeTruthy();
     expect(screen.getByText("Ankle injury · 10 days")).toBeTruthy();

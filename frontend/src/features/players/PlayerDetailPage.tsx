@@ -332,6 +332,7 @@ function PlayerDetailBody({ masterId }: PlayerDetailBodyProps) {
             captain={false}
             variant="squad"
             showName={false}
+            fixturePoints={points}
             photoUrl={
               leagueMedia.photoUrl ??
               marketListing.row?.photoUrl ??
@@ -609,7 +610,11 @@ function PlayerDetailBody({ masterId }: PlayerDetailBodyProps) {
       </section>
 
       {detailReady ? (
-        <PlayerMatchesSection recent={recentBlock} upcoming={upcomingBlock} />
+        <PlayerMatchesSection
+          recent={recentBlock}
+          upcoming={upcomingBlock}
+          playerTeamName={teamName}
+        />
       ) : null}
 
 

@@ -8,7 +8,6 @@ import {
 import type { TeamValueEvolutionSnapshot } from "./teamValueEvolution";
 
 type TeamValueBoxProps = {
-  iconSrc: { light: string; dark: string; lightHover: string; darkHover: string };
   evolution: TeamValueEvolutionSnapshot | null;
   historyLoading?: boolean;
   onRequestHistory?: () => void;
@@ -24,7 +23,6 @@ function lookbackLine(
 }
 
 export function TeamValueBox({
-  iconSrc,
   evolution,
   historyLoading = false,
   onRequestHistory,
@@ -57,12 +55,6 @@ export function TeamValueBox({
       </> : null} trigger={<span className="value-box-tooltip-wrap"
         onPointerEnter={requestHistory} onFocus={requestHistory} />}>
         <span className="value-box-text">{display}</span>
-        <span className="value-box-icon" aria-hidden="true">
-          <img className="value-box-icon-light" src={iconSrc.light} alt="" />
-          <img className="value-box-icon-dark" src={iconSrc.dark} alt="" />
-          <img className="value-box-icon-light-hover" src={iconSrc.lightHover} alt="" />
-          <img className="value-box-icon-dark-hover" src={iconSrc.darkHover} alt="" />
-        </span>
       </Help>
     </div>
   );

@@ -1118,7 +1118,7 @@ a.market-actions-item {
 .market-value-change,.market-seal-end.is-urgent { color:var(--fb-secondary); }
 .market-seal-end.is-urgent { border-left:3px solid var(--fb-primary); padding-left:6px; }
 .market-availability { gap:6px; font-size:12px; }
-.market-form-nav-btn { width:44px; height:44px; min-width:44px; min-height:44px; color:var(--fb-secondary); font-size:14px; }
+.market-form-nav-btn { width:22px; height:22px; min-width:22px; min-height:22px; color:var(--fb-secondary); font-size:11px; }
 .market-form-badges .player-score-badge { width:44px; height:44px; }
 .market-form-badges .player-score-badge-value { font-size:14px; }
 .market-fsyp,.market-value-primary { font-variant-numeric:tabular-nums; }

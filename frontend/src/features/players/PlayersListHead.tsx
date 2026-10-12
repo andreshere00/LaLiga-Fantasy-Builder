@@ -6,7 +6,7 @@ import { PlayersColumnFilterFields } from "./PlayersColumnFilterFields";
 import { playersColumnBaseLabel, type PlayersColumnHeading, type PlayersColumnKey } from "./playersColumnHeadings";
 import type { PlayersFilters } from "./playersSearchParams";
 
-const COLUMNS: PlayersColumnKey[] = ["name", "team", "position", "fsyp", "form", "marketValue", "availability", "owner"];
+const COLUMNS: PlayersColumnKey[] = ["team", "position", "fsyp", "form", "marketValue", "availability", "owner"];
 
 export function PlayersListHead({ headings, filters, owners, teams, names = [], onFiltersChange }: {
   headings: Record<PlayersColumnKey, PlayersColumnHeading>;
@@ -19,7 +19,17 @@ export function PlayersListHead({ headings, filters, owners, teams, names = [], 
   const [editor, setEditor] = useState<{ column: PlayersColumnKey; draft: PlayersFilters } | null>(null);
   return (
     <li className="market-row market-head market-head-row players-head-row">
-      <span className="market-head-cell players-photo-heading">Player</span>
+      <span className="market-head-cell players-player-heading">
+        <span className="market-head-label">Player</span>
+        <button type="button" className={"market-head-filter" + (headings.name.filtered ? " is-active" : "")}
+          aria-label="Filter Player" aria-haspopup="dialog"
+          aria-expanded={editor?.column === "name"}
+          onClick={() => setEditor({ column: "name", draft: filters })}>
+          <svg viewBox="0 0 24 24" aria-hidden="true" className="market-head-filter-icon">
+            <path d="M4 5h16l-6 7v6l-4 2v-8L4 5Z" fill="none" stroke="currentColor" strokeWidth="1.5" />
+          </svg>
+        </button>
+      </span>
       {COLUMNS.map((column) => (
         <span key={column} className={"market-head-cell market-head-cell-" + column}>
           <span className="market-head-label">{headings[column].label}</span>

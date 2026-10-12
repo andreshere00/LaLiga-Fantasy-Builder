@@ -6,11 +6,7 @@ import { useSearchParams } from "react-router-dom";
 import { pointsLabel, possessiveName, scoreWeekLabel } from "../../api/mappers";
 import { PersonIcon, SearchIcon, WarningIcon } from "../shell/icons";
 import { ProfilePhoto } from "../shell/ProfilePhoto";
-import builderIconUrl from "../../assets/icon_builder_black.svg";
-import infoIconUrl from "../../assets/button_info.svg";
-import infoIconDarkUrl from "../../assets/button_info_white.svg";
-import infoIconHoverUrl from "../../assets/button_info_red.svg";
-import infoIconDarkHoverUrl from "../../assets/button_info_red_white.svg";
+import builderIconUrl from "../../assets/icon_builder_white.svg";
 import saveCartridgeIconUrl from "../../assets/save_cartridge.svg";
 import { PitchMarkings } from "./PitchMarkings";
 import { PulseRing } from "../../components/ui/PulseRing";
@@ -226,12 +222,6 @@ export function LineupPage() {
             <div className="control-block team-value">
               <span className="field-label">Team value</span>
               <TeamValueBox
-                iconSrc={{
-                  light: infoIconUrl,
-                  dark: infoIconDarkUrl,
-                  lightHover: infoIconHoverUrl,
-                  darkHover: infoIconDarkHoverUrl,
-                }}
                 evolution={board.teamValueEvolution}
                 historyLoading={board.teamValueHistoryLoading}
                 onRequestHistory={board.requestTeamValueHistory}

@@ -5,7 +5,7 @@ import { windKmhFromMs } from "./playerDetailFormat";
 import { useNow } from "../../hooks/useNow";
 import {
   fixtureDate,
-  matchOutcome,
+  matchOutcomeForTeam,
   sortMatchesByDate,
   teamMediaFromFixture,
   weatherConditionFromSnapshot,
@@ -171,9 +171,11 @@ function MatchTimer({ kickoff }: { kickoff: string | null }) {
 function MatchCard({
   match,
   upcoming,
+  playerTeamName,
 }: {
   match: unknown;
   upcoming: boolean;
+  playerTeamName: string | null;
 }) {
   const matchRecord = asRecord(match);
   const fixture = asRecord(matchRecord?.fixture) ?? matchRecord;
@@ -181,7 +183,13 @@ function MatchCard({
   const away = teamMediaFromFixture(fixture?.awayTeam);
   const homeScore = asFiniteNumber(fixture?.homeScore);
   const awayScore = asFiniteNumber(fixture?.awayScore);
-  const homeOutcome = matchOutcome(homeScore, awayScore);
+  const teamOutcome = matchOutcomeForTeam(
+    homeScore,
+    awayScore,
+    playerTeamName,
+    home?.name ?? text(fixture?.homeTeam),
+    away?.name ?? text(fixture?.awayTeam),
+  );
 
   const competition = competitionHeading(fixture);
   const matchDate = text(fixture?.date) ?? text(matchRecord?.kickoff);
@@ -193,7 +201,7 @@ function MatchCard({
     asFiniteNumber(matchRecord?.minutesPlayed);
 
   return (
-    <li className={`player-match-card is-${upcoming ? "upcoming" : homeOutcome}`}>
+    <li className={`player-match-card is-${upcoming ? "upcoming" : teamOutcome}`}>
       <p className="player-match-competition">
         {competition}
       </p>
@@ -238,10 +246,12 @@ function MatchGroup({
   title,
   matches,
   upcoming,
+  playerTeamName,
 }: {
   title: string;
   matches: unknown[];
   upcoming: boolean;
+  playerTeamName: string | null;
 }) {
   return (
     <div className={`player-match-group${upcoming ? " is-upcoming" : ""}`}>
@@ -258,7 +268,14 @@ function MatchGroup({
             const key = [fixture?.date, fixture?.homeTeam, fixture?.awayTeam, index]
               .map((part) => String(part ?? ""))
               .join("|");
-            return <MatchCard key={key} match={match} upcoming={upcoming} />;
+            return (
+              <MatchCard
+                key={key}
+                match={match}
+                upcoming={upcoming}
+                playerTeamName={playerTeamName}
+              />
+            );
           })}
         </ul>
       )}
@@ -269,9 +286,11 @@ function MatchGroup({
 export function PlayerMatchesSection({
   recent,
   upcoming,
+  playerTeamName,
 }: {
   recent: Record<string, unknown> | null;
   upcoming: Record<string, unknown> | null;
+  playerTeamName: string | null;
 }) {
   const recentMatches = Array.isArray(recent?.matches)
     ? sortMatchesByDate(recent.matches, "desc")
@@ -283,8 +302,18 @@ export function PlayerMatchesSection({
   return (
     <section className="player-detail-panel player-match-section" aria-labelledby="player-matches-title">
       <h2 id="player-matches-title">Previous &amp; Upcoming matches</h2>
-      <MatchGroup title="Previous 5 matches" matches={recentMatches} upcoming={false} />
-      <MatchGroup title="Upcoming 5 matches" matches={upcomingMatches} upcoming />
+      <MatchGroup
+        title="Previous 5 matches"
+        matches={recentMatches}
+        upcoming={false}
+        playerTeamName={playerTeamName}
+      />
+      <MatchGroup
+        title="Upcoming 5 matches"
+        matches={upcomingMatches}
+        upcoming
+        playerTeamName={playerTeamName}
+      />
     </section>
   );
 }

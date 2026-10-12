@@ -1,8 +1,10 @@
 import { Menu } from "@base-ui/react/menu";
+import { useQueries } from "@tanstack/react-query";
 import { NumberPagination } from "../../components/ui/NumberPagination";
 import { useCallback, useMemo, useState } from "react";
 import { Link, useSearchParams } from "react-router-dom";
 
+import { getJson, paths } from "../../api/client";
 import { useAuth } from "../../auth/AuthProvider";
 import { useNow } from "../../hooks/useNow";
 import { GatePanel } from "../gates/GatePanel";
@@ -19,11 +21,16 @@ import { MarketActionMenu } from "../market/actions/MarketActionMenu";
 import { useMarketActions } from "../market/actions/useMarketActions";
 import type { MarketActionContext } from "../market/actions/marketActions";
 import type { MarketRow } from "../market/model/row";
+import {
+  valueSeries,
+  valueVariation,
+  valueVariationPercent,
+  type ValuePoint,
+} from "../market/model/valueSeries";
 import { RichRow } from "../../components/ui/RichRow";
 import { useMarketBoard } from "../market/useMarketBoard";
 import type { SquadCard } from "../../api/mappers";
 import { MarketPlayerSearch } from "../market/MarketPlayerSearch";
-import { formatEuro } from "../../api/format";
 import availableIcon from "../../assets/button_available.svg";
 import { PlayerBookmarkButton } from "./PlayerBookmarkButton";
 import { PlayersScreenLoading } from "./PlayerScreenLoading";
@@ -56,6 +63,7 @@ function PlayersListRow({
   row,
   favorite,
   marketRow,
+  valueHistory,
   ownSquadCard,
   actionContext,
   actions,
@@ -65,6 +73,7 @@ function PlayersListRow({
   row: PlayerRow;
   favorite: boolean;
   marketRow: MarketRow | null;
+  valueHistory: readonly ValuePoint[];
   ownSquadCard: SquadCard | null;
   actionContext: MarketActionContext;
   actions: ReturnType<typeof useMarketActions>;
@@ -140,18 +149,12 @@ function PlayersListRow({
         <FormCell row={formRow} />
       </span>
       <span className="market-cell market-value players-value-cell" data-label="Market value">
-        {marketRow ? (
-          <ValueCell
-            marketValue={row.marketValue}
-            variation={marketRow.variation}
-            variationPercent={marketRow.variationPercent}
-            valueHistory={marketRow.valueHistory}
-          />
-        ) : (
-          <span className="market-value-primary" title={`Market value: ${formatEuro(row.marketValue)}`}>
-            {formatEuro(row.marketValue)}
-          </span>
-        )}
+        <ValueCell
+          marketValue={row.marketValue}
+          variation={valueVariation(valueHistory)}
+          variationPercent={valueVariationPercent(valueHistory)}
+          valueHistory={valueHistory}
+        />
       </span>
       <span className="market-cell market-cell-availability" data-label="Availability">
         <AvailabilityCell availability={row.availability} />
@@ -196,7 +199,7 @@ function PlayersList() {
   const actions = useMarketActions();
   const sales = useSquadSales();
   const now = useNow();
-  const { user } = useAuth();
+  const { user, accessToken } = useAuth();
   const userId = user?.userId ?? null;
   const [searchParams, setSearchParams] = useSearchParams();
   const urlState = useMemo(
@@ -220,6 +223,21 @@ function PlayersList() {
     const start = (currentPage - 1) * PLAYERS_PAGE_SIZE;
     return filtered.slice(start, start + PLAYERS_PAGE_SIZE);
   }, [currentPage, filtered, leaderboard]);
+  const valueHistories = useQueries({
+    queries: visibleRows.map((row) => ({
+      queryKey: ["players", "market-value", row.playerId],
+      enabled: accessToken != null,
+      staleTime: 5 * 60_000,
+      queryFn: ({ signal }: { signal: AbortSignal }) =>
+        getJson(paths.playerMarketValue(row.playerId), accessToken ?? "", { signal }),
+    })),
+  });
+  const valueHistoryByPlayer = new Map(
+    visibleRows.map((row, index) => [
+      row.playerId,
+      valueSeries(valueHistories[index]?.data),
+    ]),
+  );
   const filterCount = activePlayersFilterCount(urlState.filters);
   const columnHeadings = useMemo(
     () => playersColumnHeadings(urlState.filters),
@@ -335,6 +353,7 @@ function PlayersList() {
                 row={row}
                 favorite={favorites.has(row.playerId)}
                 marketRow={marketRowsByPlayer.get(row.playerId) ?? null}
+                valueHistory={valueHistoryByPlayer.get(row.playerId) ?? []}
                 ownSquadCard={ownSquadByPlayer.get(row.playerId) ?? null}
                 actionContext={actionContext}
                 actions={actions}
