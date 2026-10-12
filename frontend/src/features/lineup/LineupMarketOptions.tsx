@@ -5,7 +5,7 @@ import { MarketActionDialogs } from "../market/actions/MarketActionDialogs";
 import { resolveMarketActionOffers } from "../market/actions/marketActions";
 import { useMarketActions } from "../market/actions/useMarketActions";
 import { useMarketBoard } from "../market/useMarketBoard";
-import "../market/MarketPage.css";
+import "../../components/ui/RichList.css";
 
 type Props = { player: SquadCard; open: boolean; onClose: () => void };
 

@@ -9,6 +9,7 @@ This folder is the detailed map.
 |-----|----------|
 | [Architecture](architecture.md) | Services, login path, CRS, trust boundaries, errors |
 | [Frontend](frontend.md) | Lineup, market, and players UI, data loading, actions, and details |
+| [Frontend design-system migration plan](frontend-design-system-migration-plan.md) | Screen-by-screen commits, visual reference, staging boundaries, and acceptance checks |
 | [Authentication](authentication/authentication.md) | Sessions, internal JWT, LaLiga vault, CSRF |
 | [Scraping service](scraping/README.md) | Private scraper HTTP, player profile parsing, TTLs, Compose `egress`, CLIs |
 | [FutbolFantasy parser](scraping/parser.md) | Offline HTML → player JSON and Markdown |

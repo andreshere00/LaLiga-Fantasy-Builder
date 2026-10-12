@@ -7,6 +7,7 @@ directly and keeps the internal JWT in memory only.
 
 - System map: [Architecture](architecture.md)
 - HTTP routes the UI calls: [API overview](api/README.md)
+- Planned visual migration: [Design-system implementation plan](frontend-design-system-migration-plan.md)
 
 ## Screenshots
 

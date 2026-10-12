@@ -45,3 +45,19 @@
   font-style: italic;
   font-display: swap;
 }
+
+@font-face {
+  font-family: "Anton";
+  src: url("../assets/fonts/Anton-Regular.ttf") format("truetype");
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "At Aero";
+  src: url("../assets/fonts/AtAero-Semibold.otf") format("opentype");
+  font-weight: 600;
+  font-style: normal;
+  font-display: swap;
+}

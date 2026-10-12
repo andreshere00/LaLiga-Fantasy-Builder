@@ -1,0 +1,62 @@
+[
+  [
+    "Header and lineup command bar",
+    "Image 1",
+    "Replace the tall centered banner and rounded floating controls with a compact wordmark, three flat navigation links, and one square command panel. Group fixture, score and formation; place Save as the primary rounded action. Team value remains a neutral number, not a colored button. Build lineup remains visibly disabled until available.",
+    "Header.*; LineupPage.*; shared Button/NativeSelect"
+  ],
+  [
+    "Ranking, pitch and squad",
+    "Image 1",
+    "Use flat leaderboard rows with a coral selection rule. Keep the central football pitch recognizable, but use thin neutral field markings. Square player cards use a fixed portrait area, compact point marker and readable name strip. A neutral count accompanies the squad grid; on small screens rank and squad sections stack below the pitch.",
+    "PlayerTile.*; lineup-layout.css; LineupPage.*"
+  ],
+  [
+    "Market row and deal controls",
+    "Image 2",
+    "Consolidate photograph and player identity in one cell. Align position, points, three-fixture form, value change and status consistently. Use small square score blocks and label availability with a symbol plus text. Show a square integrated Options action; its menu leads to a proper confirmation dialog. A submitted-bid label is neutral, distinct from a new-action button.",
+    "MarketListHead; MarketRowView; MarketToolbar; MarketActionDialogs"
+  ],
+  [
+    "Player catalog and favorites",
+    "Image 3",
+    "Use the same row anatomy as Market with owner and favorite columns. Bookmark selection colors only the icon. Search and club select share a 44px baseline; the chevron sits 12px from the edge. Apply three-number sliding pagination. Player-name links open details; they do not make the entire multi-action row clickable.",
+    "PlayersPage.*; PlayersListHead; PlayerBookmarkButton.*"
+  ],
+  [
+    "Player summary and average metrics",
+    "Image 4",
+    "Replace the long single summary card with a square identity block and six equally weighted metric cells. Put Availability beside the name and its explanatory injury text underneath. Use neutral large metric values rather than coloring every number coral. Averages Details opens a collapsible region; favorite and options remain separate controls.",
+    "PlayerDetailPage.*; PlayerAveragesPanel; playerDetailWidgets.css"
+  ],
+  [
+    "Form / fixture cards",
+    "Image 4",
+    "Replace solid coral section banners and shadows with Anton section headings and a short coral rule. Period selectors are square attached controls. Fixture cards align opponents, date, minutes and points on common baselines. A missing/unplayed value displays \u2014 and a status label, never a zero.",
+    "PlayerFantasySection; playerDetailWidgets.css"
+  ],
+  [
+    "Market-value chart",
+    "Image 5",
+    "Use a theme-native neutral plot with subtle horizontal grid lines. Remove coral glow and drop shadows. Keep one coral value line; an optional dashed neutral trend line has an explicit legend. Put current value and signed change above the chart, with units on the axis. Period controls are square; Custom dates use Dialog plus Calendar.",
+    "PlayerDetailPage; market-value chart / Recharts configuration"
+  ],
+  [
+    "Previous / upcoming matches, timer and weather",
+    "Images 5\u20136",
+    "Use compact square match cards with small rectangular club marks, one central score line, competition/date and player minutes. Upcoming cards show kickoff and an expandable countdown rather than a separate floating action. Weather has a neutral icon and concise measurements; unavailable forecasts use an explicit message. Outcomes use text plus a small colored rail, not red/green score tiles everywhere.",
+    "PlayerMatchesSection; playerDetailWidgets.css; existing timer/weather data"
+  ],
+  [
+    "Fantasy profile, news and injury history",
+    "Images 7\u20138",
+    "Create three square panels with consistent header height and left-aligned content. Present hierarchy, starter likelihood, form and risk as aligned labeled rows. News becomes a dated list with source labels and clamped headlines; injury history becomes a structured timeline with current versus ended status. Replace Older/Newer buttons with three-number pagination. Keep provided source data and explanatory details intact.",
+    "playerDetailWidgets; PlayerDetailPage; list pagination"
+  ],
+  [
+    "Footer and small graphic elements",
+    "Image 8",
+    "Use a flat square footer with a thin divider and restrained text links. Standardize icons to 18\u201320px and badges to square rectangles; use semantic color only where it encodes status. Keep favorite hit targets neutral, focus outlines visible, headings at +0.03em tracking, and all panel backgrounds opaque.",
+    "Footer.*; shared tokens/fonts; badges and icon wrappers"
+  ]
+]

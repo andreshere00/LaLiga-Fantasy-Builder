@@ -47,7 +47,7 @@ import {
   type PlayersFilters,
 } from "./playersSearchParams";
 import { usePlayersBoard } from "./usePlayersBoard";
-import "../market/MarketPage.css";
+import "../../components/ui/RichList.css";
 import "./PlayersPage.css";
 
 function PlayersListRow({

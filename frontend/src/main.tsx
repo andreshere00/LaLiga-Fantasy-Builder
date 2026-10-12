@@ -14,3 +14,5 @@ createRoot(root).render(
     <App />
   </StrictMode>,
 );
+
+import "./styles/design-system.css";
