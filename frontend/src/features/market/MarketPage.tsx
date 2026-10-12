@@ -26,8 +26,8 @@ function MarketList() {
   const { user } = useAuth();
   const board = useMarketBoard();
   const favorites = useMemo(
-    () => readFavoritePlayerIds(user?.user_id ?? null),
-    [user?.user_id],
+    () => readFavoritePlayerIds(user?.userId ?? null),
+    [user?.userId],
   );
   const [filters, setFilters] = useState(createEmptyMarketFilters);
   const deferredFilters = useDeferredValue(filters);

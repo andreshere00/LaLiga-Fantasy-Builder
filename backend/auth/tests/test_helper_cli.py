@@ -344,7 +344,11 @@ def test_main_happy_path_posts_complete(
 
     post_response = MagicMock()
     post_response.is_success = True
-    post_response.json.return_value = {"ok": True, "manager_id": "mgr-1"}
+    post_response.json.return_value = {
+        "ok": True,
+        "user_id": "user-1",
+        "manager_id": "mgr-1",
+    }
 
     class FakeClient:
         def __init__(self, *args: Any, **kwargs: Any) -> None:
@@ -358,7 +362,7 @@ def test_main_happy_path_posts_complete(
 
         def post(self, url: str, json: dict[str, Any]) -> MagicMock:
             assert "/laliga/pairings/pair-1/complete" in url
-            assert json["secret"] == "sec-1"
+            assert json["secret"] == "secret-1"
             assert json["token_response"]["access_token"] == "at"
             return post_response
 
@@ -390,7 +394,7 @@ def test_main_happy_path_posts_complete(
             "--pairing",
             "pair-1",
             "--secret",
-            "sec-1",
+            "secret-1",
             "--api-base",
             "http://localhost:8000",
         ]
@@ -462,7 +466,7 @@ def test_main_empty_callback_returns_one(
     monkeypatch.setattr(helper, "_read_callback", lambda *_a, **_k: "")
 
     # Act
-    code = helper.main(["--pairing", "p", "--secret", "s"])
+    code = helper.main(["--pairing", "p", "--secret", "secret-1"])
 
     # Assert
     assert code == 1

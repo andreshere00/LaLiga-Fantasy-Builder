@@ -2,27 +2,83 @@
 
 from __future__ import annotations
 
+from typing import ClassVar
+
 from pydantic import BaseModel, ConfigDict, Field
 
-from fantasy_api.schemas.common import FlexibleModel
+from fantasy_api.schemas.common import FantasyWireModel, FantasyWriteModel
+from fantasy_api.schemas.leagues import PlayerMaster
 
 
-class MarketSnapshot(FlexibleModel):
+class MarketBid(FantasyWireModel):
+    """Bid or offer row nested in a market response."""
+
+    id: str | int | None = None
+    money: int | None = None
+    status: str | None = None
+    created_at: str | None = None
+    updated_at: str | None = None
+
+
+class MarketListing(FantasyWireModel):
+    """Player listing nested in a market snapshot."""
+
+    id: str | int | None = None
+    league_id: str | int | None = None
+    league_type: str | int | None = None
+    direct_offer: bool | None = None
+    discr: str | None = None
+    expiration_date: str | None = None
+    number_of_bids: int | None = None
+    number_of_offers: int | None = None
+    bid: MarketBid | None = None
+    player_master: PlayerMaster | None = None
+
+
+class MarketSnapshot(FantasyWireModel):
     """Current league market from ``GET /market/leagues/{leagueId}``."""
 
+    market_players: list[MarketListing] | None = None
+    user_bids: list[MarketBid] | None = None
 
-class MarketHistoryEntry(FlexibleModel):
+
+class MarketOffer(FantasyWireModel):
+    """Offer row returned for an owned squad entry."""
+
+    id: str | int | None = None
+    money: int | None = None
+    status: str | None = None
+    bidder_id: str | int | None = None
+    created_at: str | None = None
+
+
+class MarketHistoryEntry(FantasyWireModel):
     """One league market history row."""
 
     id: str | int | None = None
 
 
-class PlayerTeamOffers(FlexibleModel):
+class PlayerTeamOffers(FantasyWireModel):
     """Offers on an owned squad entry."""
 
+    empty_payload_allowed: ClassVar[bool] = True
 
-class MarketMutationResult(FlexibleModel):
+    offers: list[MarketOffer] | None = None
+    bids: list[MarketBid] | None = None
+
+
+class MarketMutationResult(FantasyWireModel):
     """Response from market write endpoints (may be empty)."""
+
+    empty_payload_allowed: ClassVar[bool] = True
+    ok: bool | None = None
+    id: str | int | None = None
+    status: str | None = None
+    message: str | None = None
+    market_id: str | int | None = None
+    bid_id: str | int | None = None
+    offer_id: str | int | None = None
+    sold: bool | None = None
 
 
 class BidWrite(BaseModel):
@@ -30,13 +86,13 @@ class BidWrite(BaseModel):
 
     model_config = ConfigDict(extra="forbid")
 
-    money: int = Field(gt=0)
+    money: int = Field(strict=True, gt=0)
 
 
 MAX_SALE_PRICE = 999_999_999
 
 
-class ListingWrite(BaseModel):
+class ListingWrite(FantasyWriteModel):
     """Request body for ``POST /market/leagues/{leagueId}/listings``.
 
     ``playerId`` is the squad-entry id (``playerTeamId``), not the master
@@ -45,13 +101,11 @@ class ListingWrite(BaseModel):
     current market value.
     """
 
-    model_config = ConfigDict(extra="forbid")
-
-    playerId: str | int
-    salePrice: int = Field(gt=0, le=MAX_SALE_PRICE)
+    player_id: str | int
+    sale_price: int = Field(strict=True, gt=0, le=MAX_SALE_PRICE)
 
 
-class ImmediateSaleWrite(BaseModel):
+class ImmediateSaleWrite(FantasyWriteModel):
     """Request body for ``POST /market/leagues/{leagueId}/immediate-sales``.
 
     ``playerId`` is the squad-entry id (``playerTeamId``), not the master
@@ -59,27 +113,21 @@ class ImmediateSaleWrite(BaseModel):
     and credits the balance.
     """
 
-    model_config = ConfigDict(extra="forbid")
-
-    playerId: str | int
+    player_id: str | int
 
 
-class DirectOfferWrite(BaseModel):
+class DirectOfferWrite(FantasyWriteModel):
     """Request body for ``POST /market/leagues/{leagueId}/direct-offers``.
 
     ``playerId`` is the squad-entry id (``playerTeamId``), not the master
     footballer id.
     """
 
-    model_config = ConfigDict(extra="forbid")
-
-    playerId: str | int
-    money: int = Field(gt=0)
+    player_id: str | int
+    money: int = Field(strict=True, gt=0)
 
 
-class AcceptOfferWrite(BaseModel):
+class AcceptOfferWrite(FantasyWriteModel):
     """Request body for accepting an offer on a listing."""
 
-    model_config = ConfigDict(extra="forbid")
-
-    offerMoney: int = Field(gt=0)
+    offer_money: int = Field(strict=True, gt=0)

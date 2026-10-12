@@ -4,7 +4,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { deleteJson, paths, postJson, putJson } from "../../../api/client";
 import { parseSquadPlayerId } from "../../../api/ids";
 import { upstreamPlayerIdBody } from "../../../api/mutationBodies";
-import { ApiError, NeedsReauthError } from "../../../api/errors";
+import { ApiContractError, ApiError, NeedsReauthError } from "../../../api/errors";
 import { useAuth } from "../../../auth/AuthProvider";
 import { useLeague } from "../../lineup/LeagueProvider";
 import { callerTeamId, leagueId } from "../../../api/mappers";
@@ -107,6 +107,7 @@ export function useMarketActions() {
   );
 
   const createBid = useMutation({
+    retry: false,
     mutationFn: async ({
       row,
       money,
@@ -139,6 +140,7 @@ export function useMarketActions() {
   });
 
   const modifyBid = useMutation({
+    retry: false,
     mutationFn: async ({ row, money }: { row: MarketRow; money: number }) => {
       const bidId = row.myBid?.id;
       if (!bidId || isLocalBidId(bidId)) throw new ApiError(400, "missing_bid");
@@ -155,6 +157,7 @@ export function useMarketActions() {
   });
 
   const cancelBid = useMutation({
+    retry: false,
     mutationFn: async (row: MarketRow) => {
       const bidId = row.myBid?.id;
       if (!bidId) throw new ApiError(400, "missing_bid");
@@ -177,6 +180,7 @@ export function useMarketActions() {
   });
 
   const payClause = useMutation({
+    retry: false,
     mutationFn: async ({ row, amount }: { row: MarketRow; amount: number }) => {
       const playerTeamId = row.playerTeamId;
       if (!playerTeamId) throw new ApiError(400, "missing_player");
@@ -189,10 +193,14 @@ export function useMarketActions() {
       setMessage(null);
       await refreshAfterMutation();
     },
-    onError: (error) => reportError(error, "clause"),
+    onError: async (error) => {
+      reportError(error, "clause");
+      if (error instanceof ApiContractError) await refreshAfterMutation();
+    },
   });
 
   const withdrawListing = useMutation({
+    retry: false,
     mutationFn: async (row: MarketRow) =>
       deleteJson(paths.marketListing(leagueKey, row.marketId), token),
     onSuccess: async () => {
@@ -200,7 +208,10 @@ export function useMarketActions() {
       setMessage(null);
       await refreshAfterMutation();
     },
-    onError: (error) => reportError(error, "withdraw"),
+    onError: async (error) => {
+      reportError(error, "withdraw");
+      if (error instanceof ApiContractError) await refreshAfterMutation();
+    },
   });
 
   const openBid = useCallback((row: MarketRow, kind: BidActionKind) => {

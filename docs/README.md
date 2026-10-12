@@ -31,6 +31,7 @@ This folder is the detailed map.
 | [OpenAPI / Swagger](api/openapi.md) | Regenerating `openapi.json` |
 | [Endpoint schemas](api/endpoint-schemas.md) | Generated — do not edit by hand |
 | [Proxy endpoint pitfalls](api/proxy-endpoint-pitfalls.md) | Fail-closed proxy patterns |
+| [Schema validation migration record](api/schema-validation-migration-plan.md) | Pydantic/Zod compliance results, endpoint inventory, and verification |
 
 ### Domains
 

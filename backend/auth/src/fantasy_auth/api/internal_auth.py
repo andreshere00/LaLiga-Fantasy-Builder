@@ -3,20 +3,11 @@
 from __future__ import annotations
 
 from fastapi import APIRouter, Header, Request
-from pydantic import BaseModel, Field
 
 from fantasy_auth.api.deps import get_container, require_csrf
+from fantasy_auth.api.schemas import InternalTokenResponse, JwksResponse
 
 router = APIRouter(tags=["auth"])
-
-
-class InternalTokenResponse(BaseModel):
-    """Short-lived internal JWT for the Fantasy API."""
-
-    access_token: str
-    token_type: str = "Bearer"
-    expires_in: int = Field(..., ge=1)
-    expires_at: int = Field(..., ge=1)
 
 
 @router.post("/auth/token", response_model=InternalTokenResponse)
@@ -43,11 +34,11 @@ async def exchange_session_for_token(
     )
 
 
-@router.get("/.well-known/jwks.json")
-async def jwks() -> dict:
+@router.get("/.well-known/jwks.json", response_model=JwksResponse)
+async def jwks() -> JwksResponse:
     """Publish the public JWKS used to verify internal JWTs.
 
     Returns:
         JWKS document with RSA signing keys.
     """
-    return dict(get_container().internal_tokens.public_jwks())
+    return JwksResponse.model_validate(dict(get_container().internal_tokens.public_jwks()))

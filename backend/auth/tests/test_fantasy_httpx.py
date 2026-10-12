@@ -69,3 +69,16 @@ async def test_get_current_user_500_raises_fantasy_error() -> None:
         await client.get_current_user("tok-1")
     assert exc.value.category == "fantasy_error"
     assert exc.value.status_code == 500
+
+
+@pytest.mark.asyncio
+async def test_get_current_user_invalid_profile_shape_raises_fantasy_error() -> None:
+    # Arrange
+    client = make_client(httpx.MockTransport(lambda _request: httpx.Response(200, json={"id": []})))
+
+    # Act / Assert
+    with pytest.raises(ProviderError) as exc:
+        await client.get_current_user("tok-1")
+    assert exc.value.category == "fantasy_error"
+    assert exc.value.status_code == 502
+    assert "unexpected shape" in str(exc.value)

@@ -404,6 +404,24 @@ def test_complete_redirect_links_account_and_clears_pending_pkce(
     assert cleared.laliga_b2c_state is None
 
 
+def test_complete_redirect_request_rejects_extra_fields(client: TestClient) -> None:
+    response = client.post(
+        "/laliga/pairings/complete-redirect",
+        json={"callback": "authredirect://example?state=x", "unexpected": True},
+    )
+
+    assert response.status_code == 422
+
+
+def test_complete_pairing_request_rejects_extra_fields(client: TestClient) -> None:
+    response = client.post(
+        "/laliga/pairings/pairing-1/complete",
+        json={"secret": "secret-123", "token_response": {}, "unexpected": True},
+    )
+
+    assert response.status_code == 422
+
+
 def test_create_pairing_requires_csrf_and_returns_secret(
     client: TestClient,
     container: AppContainer,

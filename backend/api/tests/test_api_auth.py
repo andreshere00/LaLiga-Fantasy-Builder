@@ -517,6 +517,38 @@ async def test_credentials_client_200_non_json_raises_upstream(
     assert exc_info.value.category == "auth_error"
 
 
+@pytest.mark.parametrize(
+    "payload",
+    [
+        {"bearer_token": None, "expires_at": 1},
+        {"bearer_token": "token", "expires_at": True},
+        {"expires_at": 1},
+        {"bearer_token": "token", "expires_at": 1, "unexpected": True},
+    ],
+)
+@pytest.mark.asyncio
+async def test_credentials_client_invalid_success_payload_raises_upstream(
+    rsa_pems: tuple[str, str],
+    payload: dict[str, object],
+) -> None:
+    private_pem, _public_pem = rsa_pems
+
+    def handler(_request: httpx.Request) -> httpx.Response:
+        return httpx.Response(200, json=payload)
+
+    client = AuthCredentialsClient(
+        base_url="http://auth.test",
+        service_token=SERVICE_TOKEN,
+        transport=httpx.MockTransport(handler),
+    )
+    token = mint_internal_jwt(private_pem, issuer=ISSUER, audience=AUDIENCE)
+
+    with pytest.raises(UpstreamError, match="auth response had an unexpected shape") as exc_info:
+        await client.get_laliga_bearer(token)
+    assert exc_info.value.status_code == 502
+    assert exc_info.value.category == "auth_error"
+
+
 def test_internal_jwt_validator_pyjwt_error_raises_unauthorized() -> None:
     # Arrange
     mock_client = MagicMock()

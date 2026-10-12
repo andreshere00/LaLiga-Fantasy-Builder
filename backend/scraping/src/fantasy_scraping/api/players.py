@@ -3,10 +3,11 @@
 from __future__ import annotations
 
 import re
-from typing import Annotated, Any
+from typing import Annotated
 
 from fastapi import APIRouter, Depends, HTTPException, Query, Request
 
+from fantasy_scraping.parser.models.futbolfantasy import FutbolFantasyPlayer
 from fantasy_scraping.parser.service import ParserService
 from fantasy_scraping.scraper.service import ScraperService
 from fantasy_scraping.scraper.urls import check_season
@@ -44,7 +45,7 @@ router = APIRouter(
 )
 
 
-@router.get("/futbolfantasy")
+@router.get("/futbolfantasy", response_model=FutbolFantasyPlayer)
 async def get_futbolfantasy_player(
     document: DocumentDep,
     player_name: Annotated[str, Query(min_length=1, max_length=80)],
@@ -52,7 +53,7 @@ async def get_futbolfantasy_player(
     team: Annotated[str | None, Query(max_length=80)] = None,
     player_id: Annotated[str | None, Query(max_length=10, pattern=r"^[0-9]+$")] = None,
     full_name: Annotated[str | None, Query(max_length=80)] = None,
-) -> Any:
+) -> FutbolFantasyPlayer:
     """Scrape, parse, and merge one player for the given season."""
     name = _clean_query(player_name, "player_name")
     season_key = check_season(season)
@@ -64,4 +65,4 @@ async def get_futbolfantasy_player(
         player_id=player_id,
         full_name=_clean_query(full_name, "full_name") if full_name else None,
     )
-    return player.model_dump(mode="json", by_alias=True)
+    return player

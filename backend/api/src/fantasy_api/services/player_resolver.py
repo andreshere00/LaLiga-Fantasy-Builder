@@ -65,7 +65,7 @@ class PlayerResolver:
                 if row.id is None:
                     continue
                 player_id = str(row.id)
-                team_id_raw = row.teamId
+                team_id_raw = row.team_id
                 team_id = int(team_id_raw) if team_id_raw is not None else None
                 team_name: str | None = None
                 if isinstance(row.team, dict):
@@ -77,9 +77,9 @@ class PlayerResolver:
                     slug=row.slug or row.nickname,
                     team_id=team_id,
                     team_name=team_name,
-                    position_id=int(row.positionId) if row.positionId is not None else None,
-                    fantasy_status=row.playerStatus,
-                    last_stats=row.lastStats,
+                    position_id=int(row.position_id) if row.position_id is not None else None,
+                    fantasy_status=row.player_status,
+                    last_stats=row.last_stats,
                 )
             self._stale_index = index
             self._stale_until = time.monotonic() + self._ttl * 4

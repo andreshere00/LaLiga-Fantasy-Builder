@@ -629,3 +629,32 @@ async def test_market_repository_encodes_league_path_segments() -> None:
         "/api/v1/competition/1/league/l%2Fe/market",
         "/api/v1/competition/1/league/l%2Fe/playerTeam/p%2Ft/offer",
     ]
+
+
+@pytest.mark.parametrize(
+    ("path", "body"),
+    [
+        (f"/market/leagues/{LEAGUE_ID}/m/bids", {"money": True}),
+        (f"/market/leagues/{LEAGUE_ID}/listings", {"playerId": "pt", "salePrice": True}),
+        (f"/market/leagues/{LEAGUE_ID}/direct-offers", {"playerId": "pt", "money": True}),
+        (f"/market/leagues/{LEAGUE_ID}/m/offers/o/accept", {"offerMoney": True}),
+        (f"/buyout/leagues/{LEAGUE_ID}/player-teams/pt/pay", {"buyoutClauseToPay": True}),
+        (f"/buyout/leagues/{LEAGUE_ID}/player-teams/pt/increase", {"buyoutClause": True}),
+    ],
+)
+def test_write_boolean_money_rejects_without_upstream(
+    rsa_pems: tuple[str, str], path: str, body: dict
+) -> None:
+    private, public = rsa_pems
+    calls = []
+
+    def handler(request: httpx.Request) -> httpx.Response:
+        calls.append(request)
+        return httpx.Response(200, json={})
+
+    with make_client(public, handler) as client:
+        response = client.post(
+            path, json=body, headers={"Authorization": f"Bearer {mint_internal_jwt(private)}"}
+        )
+    assert response.status_code == 422
+    assert calls == []

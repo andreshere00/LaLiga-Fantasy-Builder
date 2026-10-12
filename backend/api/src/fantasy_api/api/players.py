@@ -5,9 +5,8 @@ from __future__ import annotations
 from fastapi import APIRouter, Header, Path
 
 from fantasy_api.api.deps import get_container, get_current_user
-from fantasy_api.api.payload import as_model_list, parse_payload
+from fantasy_api.api.payload import as_model, as_model_list
 from fantasy_api.openapi import ERROR_RESPONSES
-from fantasy_api.schemas.payload import as_object
 from fantasy_api.schemas.players import CatalogPlayer, LeaguePlayer, PlayerMarketValue
 
 router = APIRouter(tags=["players"])
@@ -92,4 +91,4 @@ async def get_league_player(
     data = await get_container().players_service.get_league_player(
         internal_jwt, player_id, league_id
     )
-    return LeaguePlayer.model_validate(parse_payload(as_object, data))
+    return as_model(data, LeaguePlayer)

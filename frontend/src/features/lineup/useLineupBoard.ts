@@ -8,7 +8,7 @@ import {
 } from "@tanstack/react-query";
 
 import { getJson, paths, putJson } from "../../api/client";
-import { ApiError, NeedsReauthError } from "../../api/errors";
+import { ApiContractError, ApiError, NeedsReauthError } from "../../api/errors";
 import {
   CATALOG_STALE_MS,
   useCurrentWeekQuery,
@@ -565,6 +565,13 @@ export function useLineupBoard(options: UseLineupBoardOptions = {}): LineupBoard
   );
 
   const saveMutation = useMutation({
+    retry: false,
+    onError: async (error, variables) => {
+      if (error instanceof ApiContractError) {
+        await queryClient.refetchQueries({ queryKey: ["lineup", variables.leagueKey] });
+        await queryClient.refetchQueries({ queryKey: ["team", variables.leagueKey] });
+      }
+    },
     mutationFn: async (variables: SaveLineupVariables) =>
       putJson(paths.lineup(variables.teamId), token, variables.body),
     onSuccess: async (_data, variables) => {

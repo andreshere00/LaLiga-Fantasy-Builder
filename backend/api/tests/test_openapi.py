@@ -272,3 +272,15 @@ def test_swagger_openapi_route_matches_generated_schema() -> None:
     # Assert — Swagger uses the same generator (paths + security)
     assert set(live["paths"]) == set(generated["paths"])
     assert live["components"]["securitySchemes"] == generated["components"]["securitySchemes"]
+
+
+def test_endpoint_schema_check_detects_drift_without_writing(tmp_path: Path) -> None:
+    from fantasy_api.endpoint_schemas_doc import main as schema_main
+
+    target = tmp_path / "schemas.md"
+    args = ["--output", str(target)]
+    assert schema_main(args) == 0
+    assert schema_main([*args, "--check"]) == 0
+    target.write_text("stale schema document\n", encoding="utf-8")
+    assert schema_main([*args, "--check"]) == 1
+    assert target.read_text(encoding="utf-8") == "stale schema document\n"

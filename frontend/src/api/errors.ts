@@ -14,3 +14,11 @@ export class ApiError extends Error {
     this.name = "ApiError";
   }
 }
+
+/** A successful HTTP operation returned an unusable response. */
+export class ApiContractError extends Error {
+  constructor() {
+    super("The server returned an invalid response.");
+    this.name = "ApiContractError";
+  }
+}

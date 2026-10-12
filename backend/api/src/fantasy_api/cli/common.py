@@ -11,6 +11,17 @@ from typing import Any
 from urllib.parse import quote
 
 import httpx
+from pydantic import ValidationError
+
+from fantasy_api.cli.contracts import (
+    AuthTokenError,
+    InternalTokenResponse,
+    dump_validated_response,
+    query_adapter,
+    response_adapter,
+    safe_error_body,
+    validate_response,
+)
 
 DEFAULT_AUTH_BASE = "http://localhost:8000"
 DEFAULT_API_BASE = "http://localhost:8001"
@@ -125,16 +136,19 @@ def exchange_token(
         )
         return None
     if not response.is_success:
-        print(
-            f"Token exchange failed: {response.status_code} {response.text}",
-            file=sys.stderr,
-        )
+        try:
+            error = AuthTokenError.model_validate(response.json())
+            detail = error.detail or error.error
+        except (ValueError, ValidationError):
+            detail = "auth service request failed"
+        print(f"Token exchange failed: {response.status_code} {detail}", file=sys.stderr)
         return None
-    token = response.json().get("access_token")
-    if not token:
-        print("Token exchange response missing access_token", file=sys.stderr)
+    try:
+        token = InternalTokenResponse.model_validate(response.json())
+    except (ValueError, ValidationError):
+        print("Token exchange response had an unexpected shape", file=sys.stderr)
         return None
-    return str(token)
+    return token.access_token
 
 
 def api_get(
@@ -156,22 +170,43 @@ def api_get(
     Raises:
         RuntimeError: On non-success responses.
     """
+    request_path = path.split("?", maxsplit=1)[0]
+    try:
+        response_adapter(request_path)
+        query_schema = query_adapter(request_path)
+        checked_params: Mapping[str, Any] | None = params
+        if params:
+            if query_schema is None:
+                raise ValueError("query parameters are not supported for this API path")
+            serialized_params = dump_validated_response(query_schema.validate_python(dict(params)))
+            if not isinstance(serialized_params, dict):
+                raise ValueError("query schema did not produce an object")
+            checked_params = serialized_params
+    except (TypeError, ValueError, ValidationError) as exc:
+        raise RuntimeError(f"Invalid API request for {path}") from exc
+
     url = f"{api_base.rstrip('/')}{path}"
     headers = {"Accept": "application/json"}
     if jwt:
         headers["Authorization"] = f"Bearer {jwt}"
     with httpx.Client(timeout=60.0) as client:
-        response = client.get(url, headers=headers, params=params)
+        response = client.get(url, headers=headers, params=checked_params)
     if response.status_code == 401:
         body = safe_json(response)
         error = body.get("error") or "unauthorized"
-        detail = body.get("detail") or response.text
+        detail = body.get("detail") or "request unauthorized"
         raise RuntimeError(f"API {path} → {error}: {detail}")
     if not response.is_success:
+        body = safe_json(response)
+        detail = body.get("detail") or body.get("error") or "request failed"
         raise RuntimeError(
-            f"API {path} failed: {response.status_code} {response.text[:300]}",
+            f"API {path} failed: {response.status_code} {detail}",
         )
-    return response.json()
+    try:
+        result = validate_response(request_path, response.json())
+    except (ValueError, ValidationError):
+        raise RuntimeError(f"API {path} returned an unexpected response") from None
+    return dump_validated_response(result)
 
 
 def path_segment(value: str | int) -> str:
@@ -180,24 +215,19 @@ def path_segment(value: str | int) -> str:
 
 
 def safe_json(response: httpx.Response) -> dict[str, Any]:
-    """Parse a JSON object response or return an empty dict."""
+    """Parse a validated API error object or return an empty dict."""
     try:
         data = response.json()
     except json.JSONDecodeError:
         return {}
-    return data if isinstance(data, dict) else {}
+    return safe_error_body(data)
 
 
 def as_league_list(payload: Any) -> list[dict[str, Any]]:
-    """Normalize /leagues payload to a list of objects."""
-    if isinstance(payload, list):
-        return [item for item in payload if isinstance(item, dict)]
-    if isinstance(payload, dict):
-        nested = payload.get("leagues")
-        if isinstance(nested, list):
-            return [item for item in nested if isinstance(item, dict)]
-        return [payload]
-    return []
+    """Return the already-validated ``GET /leagues`` response rows."""
+    if not isinstance(payload, list) or not all(isinstance(item, dict) for item in payload):
+        raise RuntimeError("GET /leagues returned an unexpected response")
+    return payload
 
 
 def league_id(item: dict[str, Any]) -> Any:

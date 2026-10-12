@@ -7,7 +7,9 @@ import os
 import sys
 
 import httpx
+from pydantic import ValidationError
 
+from fantasy_auth.api.schemas import PairingCreateResponse
 from fantasy_auth.cli import helper as laliga_helper
 
 
@@ -155,21 +157,18 @@ def _create_pairing(
         )
         return None
     if not response.is_success:
-        print(
-            f"Create pairing failed: {response.status_code} {response.text}",
-            file=sys.stderr,
-        )
+        print(f"Create pairing failed: HTTP {response.status_code}", file=sys.stderr)
         return None
-    body = response.json()
-    required = ("pairing_id", "secret", "nonce", "expires_at")
-    if any(k not in body for k in required):
-        print(f"Unexpected pairing response: {body}", file=sys.stderr)
+    try:
+        body = PairingCreateResponse.model_validate(response.json())
+    except (ValueError, ValidationError):
+        print("Unexpected pairing response shape", file=sys.stderr)
         return None
     return {
-        "pairing_id": str(body["pairing_id"]),
-        "secret": str(body["secret"]),
-        "nonce": str(body["nonce"]),
-        "expires_at": str(body["expires_at"]),
+        "pairing_id": body.pairing_id,
+        "secret": body.secret,
+        "nonce": body.nonce,
+        "expires_at": str(body.expires_at),
     }
 
 

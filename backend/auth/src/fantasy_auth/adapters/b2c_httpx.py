@@ -6,7 +6,9 @@ from typing import Any
 from urllib.parse import urlencode
 
 import httpx
+from pydantic import ValidationError
 
+from fantasy_auth.adapters.schemas import B2CTokenResponse
 from fantasy_auth.domain.errors import InvalidGrant, ProviderError
 from fantasy_auth.domain.tokens import TokenBundle, normalize_bundle
 
@@ -168,19 +170,33 @@ class HttpxB2CClient:
             )
         try:
             body = response.json()
-        except Exception:
-            body = {"error": response.text}
+        except ValueError:
+            body = {}
 
         if response.is_success:
-            if not body.get("access_token") and not body.get("id_token"):
+            try:
+                token_response = B2CTokenResponse.model_validate(body)
+            except ValidationError:
+                raise ProviderError(
+                    "token response had an unexpected shape",
+                    status_code=response.status_code,
+                    category="token_error",
+                ) from None
+            if not token_response.access_token and not token_response.id_token:
                 raise ProviderError(
                     "token response missing access_token and id_token",
                     status_code=response.status_code,
                 )
-            return body
+            return token_response.model_dump(mode="python", exclude_none=True)
 
-        error = str(body.get("error") or "")
-        description = str(body.get("error_description") or error or "token request failed")
+        if not isinstance(body, dict):
+            body = {}
+        error = body.get("error") if isinstance(body.get("error"), str) else ""
+        description = (
+            body.get("error_description")
+            if isinstance(body.get("error_description"), str)
+            else error or "token request failed"
+        )
         if (
             response.status_code in (400, 401)
             or error == "invalid_grant"

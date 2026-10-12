@@ -121,9 +121,9 @@ type PlayerDetailBodyProps = {
 
 function PlayerDetailBody({ masterId }: PlayerDetailBodyProps) {
   const { user, accessToken } = useAuth();
-  const userId = user?.user_id ?? null;
+  const userId = user?.userId ?? null;
   const [last, setLast] = useState(5);
-  const [marketPreset, setMarketPreset] = useState<string>("season");
+  const [marketPreset, setMarketPreset] = useState<(typeof MARKET_PRESETS)[number]>("season");
   const [marketCustomFrom, setMarketCustomFrom] = useState("");
   const [marketCustomTo, setMarketCustomTo] = useState("");
   const [marketCustomDraftFrom, setMarketCustomDraftFrom] = useState("");
@@ -138,8 +138,8 @@ function PlayerDetailBody({ masterId }: PlayerDetailBodyProps) {
       last,
       competition: ["laliga"],
       limit: 5,
-      include_weather: true,
-      include_stats: true,
+      includeWeather: true,
+      includeStats: true,
     };
     if (
       marketUseCustomRange &&
@@ -704,5 +704,5 @@ export function PlayerDetailPage() {
       </p>
     );
   }
-  return <PlayerDetailBody key={user?.user_id ?? ""} masterId={masterId} />;
+  return <PlayerDetailBody key={user?.userId ?? ""} masterId={masterId} />;
 }

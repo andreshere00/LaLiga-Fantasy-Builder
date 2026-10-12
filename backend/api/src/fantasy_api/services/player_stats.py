@@ -10,6 +10,7 @@ from datetime import UTC, date, datetime
 from typing import Any
 from zoneinfo import ZoneInfo
 
+from fantasy_api.api.payload import as_model_list
 from fantasy_api.config import Settings
 from fantasy_api.domain.clubs import ClubDirectory, load_alias_map
 from fantasy_api.domain.errors import UpstreamError
@@ -25,7 +26,6 @@ from fantasy_api.domain.ttl_cache import AsyncTtlCache
 from fantasy_api.domain.venues import VenueDirectory, VenueEntry
 from fantasy_api.domain.weather import ForecastSlot, pick_slot
 from fantasy_api.repositories.player_stats import PlayerStatsRepository
-from fantasy_api.schemas.payload import as_object_list
 from fantasy_api.schemas.player_stats import (
     AveragePerMatch,
     Competition,
@@ -71,7 +71,7 @@ from fantasy_api.schemas.player_stats import (
     WeatherSnapshot,
 )
 from fantasy_api.schemas.scraped import FutbolFantasyWire, ScrapedStat
-from fantasy_api.services.payload import parse_payload
+from fantasy_api.schemas.stats_provider import MarketHistoryPoint, TeamsMasterRow
 from fantasy_api.services.player_resolver import PlayerResolver, ResolvedPlayer
 from fantasy_api.services.scraped_player import ScrapedDocument, ScrapedPlayerProvider
 from fantasy_api.services.stat_merge import merge_fixture_stats
@@ -623,7 +623,10 @@ class PlayerStatsService:
             raw = await self._stats_repo.get_market_history(player_id)
             if not isinstance(raw, list):
                 raise UpstreamError("unexpected market history", category="fantasy_error")
-            history, dropped_invalid = normalise_history(raw)
+            points = as_model_list(raw, MarketHistoryPoint)
+            history, dropped_invalid = normalise_history(
+                [point.model_dump(by_alias=True) for point in points]
+            )
             return history
 
         cache = self._market_cache.setdefault(
@@ -982,7 +985,7 @@ class PlayerStatsService:
 
         async def fetch() -> ClubDirectory:
             raw = await self._stats_repo.get_teams_master()
-            teams = parse_payload(as_object_list, raw)
+            teams = [team.model_dump(by_alias=True) for team in as_model_list(raw, TeamsMasterRow)]
             return ClubDirectory(
                 teams,
                 laliga_ids=await self._resolver.laliga_club_ids(),

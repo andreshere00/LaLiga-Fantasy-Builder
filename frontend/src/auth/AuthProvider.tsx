@@ -66,9 +66,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const armRefresh = useCallback(
     (csrfToken: string, token: AccessToken, refreshGeneration: number) => {
-      setAccessToken(token.access_token);
+      setAccessToken(token.accessToken);
       clearTimer();
-      const delay = refreshDelayMs(token.expires_at, Date.now());
+      const delay = refreshDelayMs(token.expiresAt, Date.now());
       timerRef.current = window.setTimeout(() => {
         if (generationRef.current !== refreshGeneration) return;
         const signal = sessionAbortRef.current.signal;
@@ -116,14 +116,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           return;
         }
         setUser(session.user);
-        csrfRef.current = session.csrf_token;
-        const token = await client.exchange(session.csrf_token, { signal });
+        csrfRef.current = session.csrfToken;
+        const token = await client.exchange(session.csrfToken, { signal });
         if (!current()) return;
-        armRefresh(session.csrf_token, token, generation);
+        armRefresh(session.csrfToken, token, generation);
         try {
           const connection = await client.connection({ signal });
           if (!current()) return;
-          setManagerName(connection.manager_name);
+          setManagerName(connection.managerName);
           setManagerAvatar(connection.avatar?.trim() || null);
           setStatus(resolveGate({ session, connection, needsReauth: false }));
         } catch {

@@ -13,6 +13,7 @@ from fastapi.responses import JSONResponse
 from pydantic import BaseModel
 
 from fantasy_scraping.api.players import router as players_router
+from fantasy_scraping.api.schemas import ErrorResponse
 from fantasy_scraping.config import Settings, get_settings
 from fantasy_scraping.parser.errors import ParserError
 from fantasy_scraping.scraper.cache import MemoryCache
@@ -99,18 +100,22 @@ def create_app(settings: Settings | None = None, service: ScraperService | None 
     async def parser_error(_request: Request, exc: ParserError) -> JSONResponse:
         """Map parser failures to stable API errors."""
         category = exc.code if exc.code else "scraping_error"
-        return JSONResponse(
-            status_code=502,
-            content={"error": category, "detail": exc.detail},
-        )
+        body = ErrorResponse(error=category, detail=exc.detail)
+        return JSONResponse(status_code=502, content=body.model_dump(mode="json"))
 
     @app.exception_handler(ScrapingError)
     async def scraping_error(_request: Request, exc: ScrapingError) -> JSONResponse:
         """Serialise failures as the repo-wide ``{error, detail}`` body."""
-        content: dict[str, object] = {"error": exc.category, "detail": exc.message}
-        if isinstance(exc, AmbiguousPlayerError):
-            content["candidates"] = exc.candidates
-        return JSONResponse(status_code=exc.status_code, content=content)
+        candidates = exc.candidates if isinstance(exc, AmbiguousPlayerError) else None
+        response_body = ErrorResponse(
+            error=exc.category,
+            detail=exc.message,
+            candidates=candidates,
+        )
+        return JSONResponse(
+            status_code=exc.status_code,
+            content=response_body.model_dump(mode="json", exclude_none=True),
+        )
 
     @app.get("/health/live", response_model=HealthResponse)
     @app.get("/health/ready", response_model=HealthResponse)

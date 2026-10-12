@@ -63,7 +63,7 @@ def test_main_with_league_id_filters_leagues(
             {"id": "1", "name": "A"},
             {"id": "42", "name": "B"},
         ],
-        ("GET", "/market/leagues/42"): {},
+        ("GET", "/market/leagues/42"): {"marketPlayers": [], "userBids": []},
         ("GET", "/market/leagues/42/history"): [],
     }
     patch_httpx_client(monkeypatch, routes)
@@ -92,7 +92,7 @@ def test_main_with_player_team_id_fetches_offers(
 ) -> None:
     routes = {
         ("GET", "/leagues"): [{"id": "42", "name": "Liga"}],
-        ("GET", "/market/leagues/42"): {},
+        ("GET", "/market/leagues/42"): {"marketPlayers": [], "userBids": []},
         ("GET", "/market/leagues/42/history"): [],
         ("GET", "/market/leagues/42/player-teams/pt-9/offers"): {
             "offers": [{"id": "o1"}],
@@ -192,7 +192,10 @@ def test_main_encodes_slash_league_id_in_paths(
         if path == "/leagues":
             return httpx.Response(200, json=[{"id": "a/b", "name": "Liga"}])
         if path == "/market/leagues/a%2Fb":
-            return httpx.Response(200, json={})
+            return httpx.Response(
+                200,
+                json={"marketPlayers": [], "userBids": []},
+            )
         if path == "/market/leagues/a%2Fb/history":
             return httpx.Response(200, json=[])
         return httpx.Response(404)

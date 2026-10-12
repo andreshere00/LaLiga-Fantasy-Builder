@@ -72,7 +72,7 @@ def test_main_with_explicit_team_id_skips_leagues(
         if request.url.path == "/teams/77/money":
             return httpx.Response(200, json={"teamMoney": 10})
         if request.url.path == "/teams/77/lineup":
-            return httpx.Response(200, json={})
+            return httpx.Response(200, json={"formation": {}})
         return httpx.Response(404)
 
     patch_httpx_client(monkeypatch, handler)
@@ -137,7 +137,15 @@ def test_exchange_token_then_fetch(
     def handler(request: httpx.Request) -> httpx.Response:
         if request.url.path == "/auth/token":
             assert request.headers.get("X-CSRF-Token") == "csrf"
-            return httpx.Response(200, json={"access_token": "jwt-1"})
+            return httpx.Response(
+                200,
+                json={
+                    "access_token": "jwt-1",
+                    "token_type": "Bearer",
+                    "expires_in": 300,
+                    "expires_at": 1_800_000_000,
+                },
+            )
         if request.url.path == "/leagues":
             assert request.headers["Authorization"] == "Bearer jwt-1"
             return httpx.Response(
@@ -147,7 +155,7 @@ def test_exchange_token_then_fetch(
         if request.url.path == "/teams/9/money":
             return httpx.Response(200, json={})
         if request.url.path == "/teams/9/lineup":
-            return httpx.Response(200, json={})
+            return httpx.Response(200, json={"formation": {}})
         return httpx.Response(404)
 
     patch_httpx_client(monkeypatch, handler)
@@ -265,7 +273,7 @@ def test_main_encodes_team_id_in_api_paths(
         if raw_path == "/teams/a%2Fb/money":
             return httpx.Response(200, json={"teamMoney": 1})
         if raw_path == "/teams/a%2Fb/lineup":
-            return httpx.Response(200, json={})
+            return httpx.Response(200, json={"formation": {}})
         return httpx.Response(404)
 
     patch_httpx_client(monkeypatch, handler)

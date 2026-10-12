@@ -429,7 +429,7 @@ class MarketQuery(StrictQuery):
     to: Date | None = None
 
     @model_validator(mode="after")
-    def _valiDate_window(self) -> MarketQuery:
+    def _validate_window(self) -> MarketQuery:
         preset = self.preset
         from_ = self.from_
         to = self.to

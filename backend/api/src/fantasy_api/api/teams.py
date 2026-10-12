@@ -5,9 +5,8 @@ from __future__ import annotations
 from fastapi import APIRouter, Header, Path
 
 from fantasy_api.api.deps import get_container, get_current_user
-from fantasy_api.api.payload import parse_payload
+from fantasy_api.api.payload import as_model
 from fantasy_api.openapi import ERROR_RESPONSES
-from fantasy_api.schemas.payload import as_object
 from fantasy_api.schemas.teams import LineupWrite, TeamLineup, TeamMoney
 
 router = APIRouter(tags=["teams"])
@@ -40,7 +39,7 @@ async def get_money(
     """
     _user, internal_jwt = await get_current_user(authorization)
     data = await get_container().teams_service.get_money(internal_jwt, team_id)
-    return TeamMoney.model_validate(parse_payload(as_object, data))
+    return as_model(data, TeamMoney)
 
 
 @router.get(
@@ -68,7 +67,7 @@ async def get_lineup(
     """
     _user, internal_jwt = await get_current_user(authorization)
     data = await get_container().teams_service.get_lineup(internal_jwt, team_id)
-    return TeamLineup.model_validate(parse_payload(as_object, data))
+    return as_model(data, TeamLineup)
 
 
 @router.get(
@@ -102,7 +101,7 @@ async def get_lineup_by_week(
         team_id,
         week,
     )
-    return TeamLineup.model_validate(parse_payload(as_object, data))
+    return as_model(data, TeamLineup)
 
 
 @router.put(
@@ -140,4 +139,4 @@ async def put_lineup(
         team_id,
         payload,
     )
-    return TeamLineup.model_validate(parse_payload(as_object, data))
+    return as_model(data, TeamLineup, allow_empty=True)

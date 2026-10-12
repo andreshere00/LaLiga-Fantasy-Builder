@@ -4,11 +4,20 @@ import os
 from urllib.parse import urlsplit
 
 import httpx
+from pydantic import BaseModel, ValidationError
 
+from fantasy_scraping.api.schemas import ErrorResponse
 from fantasy_scraping.scraper.errors import InvalidRequestError, ScrapingError
+from fantasy_scraping.scraper.models import PlayerRoute
+from fantasy_scraping.scraper.routes import ProbeResponse, ScrapePlayersResponse
 
 TIMEOUT_S: float = 30
 LOCAL_SUFFIXES: tuple[str, ...] = ("localhost", "127.0.0.1", "::1")
+_RESPONSE_MODELS: dict[tuple[str, str], type[BaseModel]] = {
+    ("GET", "/internal/scrape/routes"): PlayerRoute,
+    ("POST", "/internal/scrape/players"): ScrapePlayersResponse,
+    ("POST", "/internal/scrape/probe"): ProbeResponse,
+}
 
 
 class RemoteError(ScrapingError):
@@ -72,16 +81,25 @@ class RemoteScraper:
         Raises:
             RemoteError: The service answered non-2xx.
         """
+        response_model = _RESPONSE_MODELS.get((method.upper(), path))
+        if response_model is None:
+            raise InvalidRequestError("unsupported scraper endpoint")
         try:
             response = self._http.request(method, path, **kwargs)  # type: ignore[arg-type]
         except httpx.HTTPError as exc:
             raise RemoteError("upstream_unavailable", "scraper service unreachable") from exc
         if response.is_success:
-            return response.json()
+            try:
+                validated = response_model.model_validate(response.json())
+            except (ValueError, ValidationError):
+                raise RemoteError(
+                    "upstream_unavailable", "scraper service returned an unexpected response"
+                ) from None
+            return validated.model_dump(mode="json", by_alias=True)
         try:
-            body = response.json()
-            raise RemoteError(str(body["error"]), str(body["detail"]))
-        except ValueError, KeyError, TypeError:
+            body = ErrorResponse.model_validate(response.json())
+            raise RemoteError(body.error, body.detail or "scraper service request failed")
+        except ValueError, KeyError, TypeError, ValidationError:
             raise RemoteError(
                 "upstream_unavailable", f"scraper service answered {response.status_code}"
             ) from None

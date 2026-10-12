@@ -24,6 +24,8 @@ To add a route, follow [Adding endpoints](../adding-endpoints.md).
 
 All require `Authorization: Bearer <internal JWT>`. Read models use
 `extra="allow"`. Write bodies use `extra="forbid"`.
+Pydantic validates nested market responses and write bodies; the frontend uses Zod
+for camelCase requests and responses while preserving established Fantasy wire keys.
 
 Upstream confidence: current market and squad-entry offers are **High**;
 history and all mutations are **Medium** (community catalog).
@@ -100,3 +102,8 @@ uv run fantasy-browser-session market-analysis --json
 - `backend/api/tests/fixtures/market_captured_snapshot.json` — real upstream
   snapshot used in route tests (array / wrapper edge cases are covered separately
   in `tests/test_market.py`).
+
+Money request fields require positive integer JSON numbers; booleans, fractional
+amounts and numeric strings are rejected before an upstream write. Frontend
+mutations refresh affected reads when a successful HTTP response cannot be
+validated, and do not automatically retry the write.

@@ -211,7 +211,9 @@ def test_run_leagues_analysis_uses_api_transport() -> None:
                 200,
                 json=[{"id": "42", "team": {"id": "9"}, "week": 1}],
             )
-        return httpx.Response(200, json={"ok": True})
+        if request.url.path == "/leagues/42/teams/9":
+            return httpx.Response(200, json={"id": "9"})
+        return httpx.Response(200, json=[])
 
     # Act
     report = run_leagues_analysis(
@@ -344,7 +346,9 @@ def test_run_teams_analysis_uses_api_transport() -> None:
     def handler(request: httpx.Request) -> httpx.Response:
         if request.url.path == "/leagues":
             return httpx.Response(200, json=[{"id": "1", "team": {"id": "9"}}])
-        return httpx.Response(200, json={"ok": True})
+        if request.url.path.endswith("/money"):
+            return httpx.Response(200, json={})
+        return httpx.Response(200, json={"formation": {}})
 
     # Act
     report = run_teams_analysis(

@@ -15,13 +15,8 @@
         "description": "Start app OIDC login and set pending session cookies.\n\nReturns:\n    Redirect to the app identity provider.",
         "operationId": "auth_login_auth_login_get",
         "responses": {
-          "200": {
-            "description": "Successful Response",
-            "content": {
-              "application/json": {
-                "schema": {}
-              }
-            }
+          "302": {
+            "description": "Redirect to the application identity provider."
           }
         }
       }
@@ -56,12 +51,17 @@
         ],
         "responses": {
           "200": {
-            "description": "Successful Response",
+            "description": "JSON session view for non-browser clients.",
             "content": {
               "application/json": {
-                "schema": {}
+                "schema": {
+                  "$ref": "#/components/schemas/SessionViewResponse"
+                }
               }
             }
+          },
+          "302": {
+            "description": "Redirect to the frontend for browser clients."
           },
           "422": {
             "description": "Validation Error",
@@ -107,7 +107,9 @@
             "description": "Successful Response",
             "content": {
               "application/json": {
-                "schema": {}
+                "schema": {
+                  "$ref": "#/components/schemas/OkResponse"
+                }
               }
             }
           },
@@ -138,9 +140,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "additionalProperties": true,
-                  "type": "object",
-                  "title": "Response Auth Me Auth Me Get"
+                  "$ref": "#/components/schemas/SessionViewResponse"
                 }
               }
             }
@@ -212,9 +212,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "additionalProperties": true,
-                  "type": "object",
-                  "title": "Response Jwks  Well Known Jwks Json Get"
+                  "$ref": "#/components/schemas/JwksResponse"
                 }
               }
             }
@@ -347,13 +345,8 @@
         "description": "Redirect an authenticated browser to LaLiga, or home if already linked.\n\nArgs:\n    request: Incoming request. Reads the session cookie.\n\nReturns:\n    Redirect to B2C or the frontend origin.\n\nRaises:\n    SessionError: When the caller has no application session.",
         "operationId": "laliga_login_laliga_login_get",
         "responses": {
-          "200": {
-            "description": "Successful Response",
-            "content": {
-              "application/json": {
-                "schema": {}
-              }
-            }
+          "302": {
+            "description": "Redirect to the frontend or LaLiga login."
           }
         }
       }
@@ -382,9 +375,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "additionalProperties": true,
-                  "type": "object",
-                  "title": "Response Complete Redirect Laliga Pairings Complete Redirect Post"
+                  "$ref": "#/components/schemas/CompleteRedirectResponse"
                 }
               }
             }
@@ -437,9 +428,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "type": "object",
-                  "additionalProperties": true,
-                  "title": "Response Complete Pairing Laliga Pairings  Pairing Id  Complete Post"
+                  "$ref": "#/components/schemas/PairingCompleteResponse"
                 }
               }
             }
@@ -537,11 +526,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "type": "object",
-                  "additionalProperties": {
-                    "type": "boolean"
-                  },
-                  "title": "Response Delete Connection Laliga Connection Delete"
+                  "$ref": "#/components/schemas/OkResponse"
                 }
               }
             }
@@ -572,11 +557,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "additionalProperties": {
-                    "type": "string"
-                  },
-                  "type": "object",
-                  "title": "Response Health Live Health Live Get"
+                  "$ref": "#/components/schemas/HealthResponse"
                 }
               }
             }
@@ -597,11 +578,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "additionalProperties": {
-                    "type": "string"
-                  },
-                  "type": "object",
-                  "title": "Response Health Live Health Get"
+                  "$ref": "#/components/schemas/HealthResponse"
                 }
               }
             }
@@ -621,7 +598,19 @@
             "description": "Successful Response",
             "content": {
               "application/json": {
-                "schema": {}
+                "schema": {
+                  "$ref": "#/components/schemas/HealthReadyResponse"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Service Unavailable",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HealthNotReadyResponse"
+                }
               }
             }
           }
@@ -639,12 +628,33 @@
             "title": "Callback"
           }
         },
+        "additionalProperties": false,
         "type": "object",
         "required": [
           "callback"
         ],
         "title": "CompleteRedirectRequest",
         "description": "Native callback captured by the local URL handler."
+      },
+      "CompleteRedirectResponse": {
+        "properties": {
+          "ok": {
+            "type": "boolean",
+            "title": "Ok"
+          },
+          "frontend_origin": {
+            "type": "string",
+            "title": "Frontend Origin"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "ok",
+          "frontend_origin"
+        ],
+        "title": "CompleteRedirectResponse",
+        "description": "Native pairing redirect result."
       },
       "ConnectionStatusResponse": {
         "properties": {
@@ -691,12 +701,13 @@
             "title": "Avatar"
           }
         },
+        "additionalProperties": false,
         "type": "object",
         "required": [
           "linked"
         ],
         "title": "ConnectionStatusResponse",
-        "description": "Public LaLiga connection status (no secrets)."
+        "description": "Public LaLiga connection state; contains no credential material."
       },
       "HTTPValidationError": {
         "properties": {
@@ -710,6 +721,61 @@
         },
         "type": "object",
         "title": "HTTPValidationError"
+      },
+      "HealthNotReadyResponse": {
+        "properties": {
+          "status": {
+            "type": "string",
+            "title": "Status"
+          },
+          "detail": {
+            "type": "string",
+            "title": "Detail"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "status",
+          "detail"
+        ],
+        "title": "HealthNotReadyResponse",
+        "description": "Readiness response when a dependency is unavailable."
+      },
+      "HealthReadyResponse": {
+        "properties": {
+          "status": {
+            "type": "string",
+            "title": "Status"
+          },
+          "store": {
+            "type": "string",
+            "title": "Store"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "status",
+          "store"
+        ],
+        "title": "HealthReadyResponse",
+        "description": "Readiness response for a healthy runtime."
+      },
+      "HealthResponse": {
+        "properties": {
+          "status": {
+            "type": "string",
+            "title": "Status"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "status"
+        ],
+        "title": "HealthResponse",
+        "description": "Liveness response."
       },
       "InternalTokenResponse": {
         "properties": {
@@ -733,6 +799,7 @@
             "title": "Expires At"
           }
         },
+        "additionalProperties": false,
         "type": "object",
         "required": [
           "access_token",
@@ -741,6 +808,107 @@
         ],
         "title": "InternalTokenResponse",
         "description": "Short-lived internal JWT for the Fantasy API."
+      },
+      "JsonValue": {
+        "anyOf": [
+          {
+            "type": "string"
+          },
+          {
+            "type": "integer"
+          },
+          {
+            "type": "number"
+          },
+          {
+            "type": "boolean"
+          },
+          {
+            "items": {
+              "$ref": "#/components/schemas/JsonValue"
+            },
+            "type": "array"
+          },
+          {
+            "additionalProperties": {
+              "$ref": "#/components/schemas/JsonValue"
+            },
+            "type": "object"
+          },
+          {
+            "type": "null"
+          }
+        ]
+      },
+      "JsonWebKey": {
+        "properties": {
+          "kty": {
+            "type": "string",
+            "title": "Kty"
+          },
+          "use": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Use"
+          },
+          "kid": {
+            "type": "string",
+            "title": "Kid"
+          },
+          "alg": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Alg"
+          },
+          "n": {
+            "type": "string",
+            "title": "N"
+          },
+          "e": {
+            "type": "string",
+            "title": "E"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "kty",
+          "kid",
+          "n",
+          "e"
+        ],
+        "title": "JsonWebKey",
+        "description": "Public RSA key published for internal JWT verification."
+      },
+      "JwksResponse": {
+        "properties": {
+          "keys": {
+            "items": {
+              "$ref": "#/components/schemas/JsonWebKey"
+            },
+            "type": "array",
+            "title": "Keys"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "keys"
+        ],
+        "title": "JwksResponse",
+        "description": "JSON Web Key Set response."
       },
       "LaligaBearerResponse": {
         "properties": {
@@ -759,6 +927,7 @@
             "title": "Expires At"
           }
         },
+        "additionalProperties": false,
         "type": "object",
         "required": [
           "bearer_token",
@@ -766,6 +935,21 @@
         ],
         "title": "LaligaBearerResponse",
         "description": "Short-lived LaLiga bearer for Fantasy API calls."
+      },
+      "OkResponse": {
+        "properties": {
+          "ok": {
+            "type": "boolean",
+            "title": "Ok"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "ok"
+        ],
+        "title": "OkResponse",
+        "description": "Acknowledgement for completed auth mutations."
       },
       "PairingCompleteRequest": {
         "properties": {
@@ -775,11 +959,14 @@
             "title": "Secret"
           },
           "token_response": {
-            "additionalProperties": true,
+            "additionalProperties": {
+              "$ref": "#/components/schemas/JsonValue"
+            },
             "type": "object",
             "title": "Token Response"
           }
         },
+        "additionalProperties": false,
         "type": "object",
         "required": [
           "secret",
@@ -787,6 +974,53 @@
         ],
         "title": "PairingCompleteRequest",
         "description": "Helper-submitted token payload to finish pairing."
+      },
+      "PairingCompleteResponse": {
+        "properties": {
+          "ok": {
+            "type": "boolean",
+            "title": "Ok"
+          },
+          "user_id": {
+            "type": "string",
+            "title": "User Id"
+          },
+          "manager_id": {
+            "type": "string",
+            "title": "Manager Id"
+          },
+          "manager_name": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Manager Name"
+          },
+          "email": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Email"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "ok",
+          "user_id",
+          "manager_id"
+        ],
+        "title": "PairingCompleteResponse",
+        "description": "Public result from local helper pairing completion."
       },
       "PairingCreateResponse": {
         "properties": {
@@ -800,6 +1034,7 @@
           },
           "expires_at": {
             "type": "integer",
+            "minimum": 1.0,
             "title": "Expires At"
           },
           "nonce": {
@@ -807,6 +1042,7 @@
             "title": "Nonce"
           }
         },
+        "additionalProperties": false,
         "type": "object",
         "required": [
           "pairing_id",
@@ -816,6 +1052,62 @@
         ],
         "title": "PairingCreateResponse",
         "description": "One-time pairing credentials for the local helper."
+      },
+      "SessionUserResponse": {
+        "properties": {
+          "user_id": {
+            "type": "string",
+            "title": "User Id"
+          },
+          "email": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Email"
+          },
+          "name": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Name"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "user_id"
+        ],
+        "title": "SessionUserResponse",
+        "description": "Public app-user details in a browser session."
+      },
+      "SessionViewResponse": {
+        "properties": {
+          "user": {
+            "$ref": "#/components/schemas/SessionUserResponse"
+          },
+          "csrf_token": {
+            "type": "string",
+            "title": "Csrf Token"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "user",
+          "csrf_token"
+        ],
+        "title": "SessionViewResponse",
+        "description": "Public session data returned after login and by ``/auth/me``."
       },
       "ValidationError": {
         "properties": {

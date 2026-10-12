@@ -21,6 +21,12 @@ from fantasy_auth.api.middleware import (
     SecurityHeadersMiddleware,
     install_cors,
 )
+from fantasy_auth.api.schemas import (
+    AuthErrorResponse,
+    HealthNotReadyResponse,
+    HealthReadyResponse,
+    HealthResponse,
+)
 from fantasy_auth.config import Settings, get_settings
 from fantasy_auth.domain.errors import (
     AuthError,
@@ -131,16 +137,22 @@ def create_app(
     app.include_router(internal_credentials.router)
     app.include_router(pairings.router)
 
-    @app.get("/health", tags=["health"])
-    @app.get("/health/live", tags=["health"])
-    async def health_live() -> dict[str, str]:
-        return {"status": "ok"}
+    @app.get("/health", tags=["health"], response_model=HealthResponse)
+    @app.get("/health/live", tags=["health"], response_model=HealthResponse)
+    async def health_live() -> HealthResponse:
+        return HealthResponse(status="ok")
 
-    @app.get("/health/ready", tags=["health"])
+    @app.get(
+        "/health/ready",
+        tags=["health"],
+        response_model=HealthReadyResponse,
+        responses={503: {"model": HealthNotReadyResponse}},
+    )
     async def health_ready() -> JSONResponse:
         runtime = get_container() if container is None else container
         if runtime.settings.use_memory_store:
-            return JSONResponse({"status": "ok", "store": "memory"})
+            body = HealthReadyResponse(status="ok", store="memory")
+            return JSONResponse(body.model_dump(mode="json"))
         try:
             if runtime.pg_pool is not None:
                 async with runtime.pg_pool.acquire() as conn:
@@ -148,41 +160,40 @@ def create_app(
             if runtime.redis is not None:
                 await runtime.redis.ping()
         except Exception as exc:
+            body = HealthNotReadyResponse(
+                status="not_ready",
+                detail=str(exc),
+            )
             return JSONResponse(
                 status_code=503,
-                content={"status": "not_ready", "detail": str(exc)},
+                content=body.model_dump(mode="json"),
             )
-        return JSONResponse({"status": "ok", "store": "postgres+redis"})
+        body = HealthReadyResponse(status="ok", store="postgres+redis")
+        return JSONResponse(body.model_dump(mode="json"))
 
     @app.exception_handler(StartupError)
     async def startup_error_handler(
         _request: Request,
         exc: StartupError,
     ) -> JSONResponse:
-        return JSONResponse(
-            status_code=503,
-            content={"error": "startup_error", "detail": str(exc)},
-        )
+        body = AuthErrorResponse(error="startup_error", detail=str(exc))
+        return JSONResponse(status_code=503, content=body.model_dump(mode="json"))
 
     @app.exception_handler(SessionError)
     async def session_error_handler(
         _request: Request,
         exc: SessionError,
     ) -> JSONResponse:
-        return JSONResponse(
-            status_code=401,
-            content={"error": "unauthorized", "detail": str(exc)},
-        )
+        body = AuthErrorResponse(error="unauthorized", detail=str(exc))
+        return JSONResponse(status_code=401, content=body.model_dump(mode="json"))
 
     @app.exception_handler(OwnershipError)
     async def ownership_error_handler(
         _request: Request,
         exc: OwnershipError,
     ) -> JSONResponse:
-        return JSONResponse(
-            status_code=403,
-            content={"error": "forbidden", "detail": str(exc)},
-        )
+        body = AuthErrorResponse(error="forbidden", detail=str(exc))
+        return JSONResponse(status_code=403, content=body.model_dump(mode="json"))
 
     @app.exception_handler(PairingError)
     async def pairing_error_handler(
@@ -190,30 +201,24 @@ def create_app(
         exc: PairingError,
     ) -> JSONResponse:
         status = 429 if getattr(exc, "category", "") == "rate_limited" else 400
-        return JSONResponse(
-            status_code=status,
-            content={"error": exc.category, "detail": str(exc)},
-        )
+        body = AuthErrorResponse(error=exc.category, detail=str(exc))
+        return JSONResponse(status_code=status, content=body.model_dump(mode="json"))
 
     @app.exception_handler(NeedsReauth)
     async def needs_reauth_handler(
         _request: Request,
         exc: NeedsReauth,
     ) -> JSONResponse:
-        return JSONResponse(
-            status_code=401,
-            content={"error": "needs_reauth", "detail": str(exc)},
-        )
+        body = AuthErrorResponse(error="needs_reauth", detail=str(exc))
+        return JSONResponse(status_code=401, content=body.model_dump(mode="json"))
 
     @app.exception_handler(ValidationError)
     async def validation_error_handler(
         _request: Request,
         exc: ValidationError,
     ) -> JSONResponse:
-        return JSONResponse(
-            status_code=400,
-            content={"error": exc.category, "detail": str(exc)},
-        )
+        body = AuthErrorResponse(error=exc.category, detail=str(exc))
+        return JSONResponse(status_code=400, content=body.model_dump(mode="json"))
 
     @app.exception_handler(ProviderError)
     async def provider_error_handler(
@@ -221,9 +226,10 @@ def create_app(
         exc: ProviderError,
     ) -> JSONResponse:
         status = exc.status_code or 502
+        body = AuthErrorResponse(error=getattr(exc, "category", "provider_error"))
         return JSONResponse(
             status_code=status if 400 <= status < 600 else 502,
-            content={"error": getattr(exc, "category", "provider_error")},
+            content=body.model_dump(mode="json", exclude_none=True),
         )
 
     @app.exception_handler(AuthError)
@@ -231,10 +237,8 @@ def create_app(
         _request: Request,
         exc: AuthError,
     ) -> JSONResponse:
-        return JSONResponse(
-            status_code=400,
-            content={"error": "auth_error", "detail": str(exc)},
-        )
+        body = AuthErrorResponse(error="auth_error", detail=str(exc))
+        return JSONResponse(status_code=400, content=body.model_dump(mode="json"))
 
     return app
 

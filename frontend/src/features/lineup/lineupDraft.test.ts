@@ -141,7 +141,7 @@ describe("lineupDraft", () => {
     const draft = draftFromGroups(groups442(), [4, 4, 2])!;
     const body = lineupWriteBody(draft, "m1");
     expect(body.captain).toBe("m1");
-    expect(body.tactical_formation).toEqual([4, 4, 2]);
+    expect(body.tacticalFormation).toEqual([4, 4, 2]);
   });
 });
 

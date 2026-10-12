@@ -6,7 +6,7 @@ export function resolveGate(input: {
   needsReauth: boolean;
 }): GateStatus {
   if (!input.session) return "signed-out";
-  if (input.needsReauth || input.connection?.needs_reauth) return "needs-reauth";
+  if (input.needsReauth || input.connection?.needsReauth) return "needs-reauth";
   if (!input.connection?.linked) return "unlinked";
   return "ready";
 }

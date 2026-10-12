@@ -1,7 +1,7 @@
 """Scraper-side contracts. ``ScrapedPage`` lives in ``fantasy_scraping.models``."""
 
 from datetime import datetime
-from typing import Any, Literal
+from typing import Literal
 
 from pydantic import BaseModel, ConfigDict, Field
 
@@ -77,13 +77,23 @@ class LinkedData(BaseModel):
     fetched_at: datetime
 
 
+class ScrapeOutcomeError(BaseModel):
+    """Typed item-level error in a successful batch response."""
+
+    model_config = ConfigDict(extra="forbid")
+
+    error: str
+    detail: str
+    candidates: list[str] | None = None
+
+
 class ScrapeOutcome(BaseModel):
     """Per-player batch result."""
 
     ref: PlayerRef
     pages: list[ScrapedPage] | None = None
     route: PlayerRoute | None = None
-    error: dict[str, Any] | None = None
+    error: ScrapeOutcomeError | None = None
 
 
 __all__ = [
@@ -94,5 +104,6 @@ __all__ = [
     "PlayerRoute",
     "ScrapeOptions",
     "ScrapeOutcome",
+    "ScrapeOutcomeError",
     "ScrapedPage",
 ]

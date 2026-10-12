@@ -168,7 +168,7 @@ def test_main_unknown_shield_shape_prints_status_unknown(
 ) -> None:
     # Arrange
     routes = {
-        ("GET", "/buyout/leagues/42/player-teams/pt-9/shield"): {"ok": True},
+        ("GET", "/buyout/leagues/42/player-teams/pt-9/shield"): {"isShielded": None},
     }
     patch_httpx_client(monkeypatch, routes)
 

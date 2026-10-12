@@ -1,15 +1,18 @@
-import { ApiError, NeedsReauthError } from "./errors";
+import { ApiContractError, ApiError, NeedsReauthError } from "./errors";
+import {
+  endpointRequestSchema,
+  validateEndpointInput,
+  endpointResponseSchema,
+  errorResponseSchema,
+  pathSegmentSchema,
+  playerStatsDetailQuerySchema,
+  positivePathNumberSchema,
+  serializeEndpointRequest,
+  type ApiResponseDto,
+  type PlayerStatsDetailQuery,
+} from "./schemas";
 
-export type PlayerStatsDetailQuery = {
-  last?: number;
-  competition?: string[];
-  limit?: number;
-  preset?: string;
-  from?: string;
-  to?: string;
-  include_weather?: boolean;
-  include_stats?: boolean;
-};
+export type { PlayerStatsDetailQuery } from "./schemas";
 
 export type FetchLike = (input: string, init?: RequestInit) => Promise<Response>;
 
@@ -19,17 +22,21 @@ export type GetJsonOptions = {
 };
 
 function segment(value: string): string {
-  return encodeURIComponent(value);
+  return encodeURIComponent(pathSegmentSchema.parse(value));
+}
+
+function weekNumber(value: number): number {
+  return positivePathNumberSchema.parse(value);
 }
 
 export const paths = {
   leagues: () => "/api/leagues",
   standing: (leagueId: string) => `/api/leagues/${segment(leagueId)}/standing`,
   weekStanding: (leagueId: string, week: number) =>
-    `/api/leagues/${segment(leagueId)}/standing/${week}`,
+    `/api/leagues/${segment(leagueId)}/standing/${weekNumber(week)}`,
   currentWeek: () => "/api/calendar/current",
-  weekFixtures: (week: number) => `/api/calendar/weeks/${week}`,
-  weekStats: (week: number) => `/api/calendar/weeks/${week}/stats`,
+  weekFixtures: (week: number) => `/api/calendar/weeks/${weekNumber(week)}`,
+  weekStats: (week: number) => `/api/calendar/weeks/${weekNumber(week)}/stats`,
   playersCatalog: () => "/api/players",
   playerLeague: (playerId: string, leagueId: string) =>
     `/api/players/${segment(playerId)}/league/${segment(leagueId)}`,
@@ -39,21 +46,23 @@ export const paths = {
   playerStatsDetail: (playerId: string, query?: PlayerStatsDetailQuery) => {
     const base = `/api/players/${segment(playerId)}/stats/detail`;
     if (!query) return base;
+    const checkedQuery = playerStatsDetailQuerySchema.parse(query);
     const params = new URLSearchParams();
-    if (query.last != null) params.set("last", String(query.last));
-    for (const competition of query.competition ?? []) {
+    if (checkedQuery.last != null) params.set("last", String(checkedQuery.last));
+    for (const competition of checkedQuery.competition ?? []) {
       params.append("competition", competition);
     }
-    if (query.limit != null) params.set("limit", String(query.limit));
-    if (query.preset) params.set("preset", query.preset);
-    if (query.from) params.set("from", query.from);
-    if (query.to) params.set("to", query.to);
-    if (query.include_weather != null) {
-      params.set("include_weather", query.include_weather ? "true" : "false");
+    if (checkedQuery.limit != null) params.set("limit", String(checkedQuery.limit));
+    if (checkedQuery.preset) params.set("preset", checkedQuery.preset);
+    if (checkedQuery.from) params.set("from", checkedQuery.from);
+    if (checkedQuery.to) params.set("to", checkedQuery.to);
+    if (checkedQuery.includeWeather != null) {
+      params.set("include_weather", checkedQuery.includeWeather ? "true" : "false");
     }
-    if (query.include_stats != null) {
-      params.set("include_stats", query.include_stats ? "true" : "false");
+    if (checkedQuery.includeStats != null) {
+      params.set("include_stats", checkedQuery.includeStats ? "true" : "false");
     }
+    for (const include of checkedQuery.include ?? []) params.append("include", include);
     const qs = params.toString();
     return qs ? `${base}?${qs}` : base;
   },
@@ -62,7 +71,7 @@ export const paths = {
     `/api/leagues/${segment(leagueId)}/teams/${segment(teamId)}`,
   lineup: (teamId: string) => `/api/teams/${segment(teamId)}/lineup`,
   lineupWeek: (teamId: string, week: number) =>
-    `/api/teams/${segment(teamId)}/lineup/week/${week}`,
+    `/api/teams/${segment(teamId)}/lineup/week/${weekNumber(week)}`,
   teamMoney: (teamId: string) => `/api/teams/${segment(teamId)}/money`,
   marketDirectOffer: (leagueId: string) =>
     `/api/market/leagues/${segment(leagueId)}/direct-offers`,
@@ -90,7 +99,14 @@ async function sendJson(
   token: string,
   body: unknown,
   options: SendJsonOptions,
-): Promise<unknown> {
+): Promise<ApiResponseDto> {
+  validateEndpointInput(options.method, path);
+  const responseSchema = endpointResponseSchema(options.method, path);
+  const bodySchema = endpointRequestSchema(options.method, path);
+  if (!bodySchema && body !== undefined) {
+    throw new Error(`This endpoint does not accept a request body: ${options.method} ${path}`);
+  }
+  const checkedBody = bodySchema ? serializeEndpointRequest(options.method, path, body) : undefined;
   const fetchFn = options.fetchFn ?? fetch;
   const response = await fetchFn(path, {
     method: options.method,
@@ -100,18 +116,20 @@ async function sendJson(
       Authorization: `Bearer ${token}`,
       "Content-Type": "application/json",
     },
-    body: JSON.stringify(body),
+    body: checkedBody === undefined ? undefined : JSON.stringify(checkedBody),
     signal: options.signal,
   });
   if (!response.ok) await throwForStatus(response);
-  return response.json() as Promise<unknown>;
+  return parseResponse(response, responseSchema);
 }
 
 export async function getJson(
   path: string,
   token: string,
   options: GetJsonOptions = {},
-): Promise<unknown> {
+): Promise<ApiResponseDto> {
+  validateEndpointInput("GET", path);
+  const responseSchema = endpointResponseSchema("GET", path);
   const fetchFn = options.fetchFn ?? fetch;
   const response = await fetchFn(path, {
     credentials: "omit",
@@ -122,7 +140,7 @@ export async function getJson(
     signal: options.signal,
   });
   if (!response.ok) await throwForStatus(response);
-  return response.json() as Promise<unknown>;
+  return parseResponse(response, responseSchema);
 }
 
 export async function putJson(
@@ -130,7 +148,7 @@ export async function putJson(
   token: string,
   body: unknown,
   options: PutJsonOptions = {},
-): Promise<unknown> {
+): Promise<ApiResponseDto> {
   return sendJson(path, token, body, { ...options, method: "PUT" });
 }
 
@@ -139,7 +157,7 @@ export async function postJson(
   token: string,
   body: unknown,
   options: PostJsonOptions = {},
-): Promise<unknown> {
+): Promise<ApiResponseDto> {
   return sendJson(path, token, body, { ...options, method: "POST" });
 }
 
@@ -147,7 +165,9 @@ export async function deleteJson(
   path: string,
   token: string,
   options: GetJsonOptions = {},
-): Promise<unknown> {
+): Promise<ApiResponseDto> {
+  validateEndpointInput("DELETE", path);
+  const responseSchema = endpointResponseSchema("DELETE", path);
   const fetchFn = options.fetchFn ?? fetch;
   const response = await fetchFn(path, {
     method: "DELETE",
@@ -159,17 +179,27 @@ export async function deleteJson(
     signal: options.signal,
   });
   if (!response.ok) await throwForStatus(response);
-  return response.json() as Promise<unknown>;
+  return parseResponse(response, responseSchema);
 }
 
 async function throwForStatus(response: Response): Promise<never> {
   let code = "request_failed";
   try {
-    const body = (await response.json()) as { error?: unknown };
-    if (typeof body.error === "string") code = body.error;
+    const parsed = errorResponseSchema.safeParse(await response.json());
+    if (parsed.success && typeof parsed.data.error === "string") code = parsed.data.error;
   } catch {
     code = "request_failed";
   }
   if (response.status === 401 && code === "needs_reauth") throw new NeedsReauthError();
   throw new ApiError(response.status, code);
+}
+
+async function parseResponse(
+  response: Response, schema: ReturnType<typeof endpointResponseSchema>,
+): Promise<ApiResponseDto> {
+  try {
+    return schema.parse(await response.json());
+  } catch {
+    throw new ApiContractError();
+  }
 }

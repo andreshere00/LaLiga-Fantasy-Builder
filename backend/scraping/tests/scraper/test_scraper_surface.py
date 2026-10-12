@@ -236,6 +236,21 @@ def test_remote_scraper_sends_token_and_maps_errors(
     remote.close()
 
 
+def test_remote_scraper_rejects_unexpected_success_shape(monkeypatch: pytest.MonkeyPatch) -> None:
+    monkeypatch.setenv("SCRAPING_SERVICE_TOKEN", "tok")
+    remote = RemoteScraper(
+        "http://localhost",
+        transport=httpx.MockTransport(lambda _request: httpx.Response(200, json={"slug": []})),
+    )
+
+    with pytest.raises(RemoteError) as info:
+        remote.call("GET", "/internal/scrape/routes", params={"name": "Raphinha"})
+
+    assert info.value.category == "upstream_unavailable"
+    assert "unexpected response" in str(info.value)
+    remote.close()
+
+
 def test_cli_service_url_uses_remote_client(
     monkeypatch: pytest.MonkeyPatch, service: ScraperService, capsys
 ) -> None:

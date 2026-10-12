@@ -1,4 +1,5 @@
 import type { LineupGroup, LineupRole, LineupSlotView, SquadCard } from "../../api/mappers";
+import type { LineupWriteDto } from "../../api/schemas";
 import { normalizeSearchText } from "../../searchText";
 import { codeFromTactical, tacticalFromCode } from "./formations";
 
@@ -368,13 +369,13 @@ export function applyPitchPick(
 export function lineupWriteBody(
   draft: LineupDraft,
   captainId: string | null,
-): Record<string, unknown> {
-  const body: Record<string, unknown> = {
+): LineupWriteDto {
+  const body: LineupWriteDto = {
     goalkeeper: draft.goalkeeper[0],
     defender: draft.defender,
     midfield: draft.midfield,
     striker: draft.striker,
-    tactical_formation: [...draft.tactical],
+    tacticalFormation: [...draft.tactical],
   };
   const inLineup = allDraftPlayerIds(draft);
   if (captainId && inLineup.has(captainId)) body.captain = captainId;

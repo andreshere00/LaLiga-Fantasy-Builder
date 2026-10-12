@@ -78,3 +78,9 @@ Highlights:
 ```bash
 cd backend/auth && uv run pytest
 ```
+
+Browser-session API reads use independent Pydantic contracts with known nested
+Fantasy fields and recognized-field guards. Sparse money/offer responses and empty
+lineup write acknowledgements remain supported. Lineup writes preserve omitted
+premium fields using `exclude_unset=True`. Shared contract fixtures guard agreement
+with the API without importing `fantasy_api` into auth.
