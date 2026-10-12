@@ -22,7 +22,10 @@ export function Header() {
   return (
     <header className="app-header">
       <div className="header-content">
-        <Link to="/" className="brand-bar">LALIGA Fantasy Builder</Link>
+        <Link to="/" className="brand-bar">
+          <img src="/favicon.png" className="brand-logo" alt="" />
+          <span>LALIGA Fantasy Builder</span>
+        </Link>
         <nav className="nav-tabs" aria-label="Sections">
           <NavLink to="/" end className="nav-tab">Lineup</NavLink>
           <NavLink to="/market" className="nav-tab">Market</NavLink>
