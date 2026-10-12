@@ -844,3 +844,29 @@
 .player-match-weather-metrics { font-size:12px; line-height:1.5; }
 .player-match-player-stats,.player-match-date,.player-match-competition,.player-match-team-name { font-size:12px; }
 @media(max-width:650px) { .player-match-grid { grid-template-columns:1fr; } }
+
+/* Fantasy profile and history presentation. */
+.player-detail-page .player-fantasy-section > h2 { margin:0 0 20px; padding:0 0 12px; width:fit-content; background:transparent; color:var(--fb-tertiary); text-align:left; font:400 20px/1.3 Anton,sans-serif; letter-spacing:.03em; text-transform:uppercase; border-bottom:2px solid var(--fb-primary); }
+.player-fantasy-grid { grid-template-columns:repeat(3,minmax(0,1fr)); gap:16px; }
+.player-fantasy-column { padding:20px; border:1px solid var(--fb-line); }
+.player-fantasy-column > h3 { min-height:44px; justify-content:flex-start; font:400 20px/1.3 Anton,sans-serif; letter-spacing:.03em; text-transform:uppercase; }
+.player-fantasy-logo,.player-fantasy-heading-icon { width:20px; height:20px; }
+.player-fantasy-news-heading-icon { width:18px; height:18px; border-width:1px; }
+.player-fantasy-news-heading-icon::before,.player-fantasy-news-heading-icon::after { display:none; }
+.player-fantasy-profile-list > div { padding:8px 0; border-bottom:1px solid var(--fb-line); font-size:14px; }
+.player-fantasy-profile-list dt { font-weight:500; }
+.player-fantasy-profile-list dt img,.player-fantasy-form-icon { width:18px; height:18px; }
+.player-fantasy-form-rating { border-radius:0; font-size:12px; }
+.player-fantasy-form-rating.is-bad { color:var(--fb-ink-on-status); }
+.player-fantasy-news-list { gap:0; }
+.player-fantasy-news-list li { padding:12px 0; border-bottom:1px solid var(--fb-line); }
+.player-fantasy-news-list li > img { width:18px; height:18px; }
+.player-fantasy-news-list time { font-weight:400; color:var(--fb-muted); font-size:12px; }
+.player-fantasy-news-list .player-fantasy-news-link { display:block; font-size:14px; line-height:1.5; }
+.player-fantasy-news-title-line { display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; line-clamp:2; white-space:normal; }
+.player-fantasy-injury-list { gap:0; }
+.player-fantasy-injury-list li { text-align:left; border-left:2px solid var(--fb-line); padding:12px 0 12px 16px; font-size:14px; }
+.player-fantasy-injury-list li.is-current { border-left-color:var(--fb-warning); }
+.player-fantasy-column .fb-pagination { margin-top:16px; }
+.player-fantasy-empty { color:var(--fb-muted); text-align:left; }
+@media(max-width:1000px) { .player-fantasy-grid { grid-template-columns:1fr; } .player-fantasy-column:last-child { grid-column:auto; } }

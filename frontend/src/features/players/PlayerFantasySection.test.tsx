@@ -42,13 +42,13 @@ describe("PlayerFantasySection history pagination", () => {
     expect(screen.getByText("Injury 7 · 10 days")).toBeTruthy();
     expect(screen.queryByText("Injury 2 · 10 days")).toBeNull();
 
-    fireEvent.click(within(newsNav).getByRole("button", { name: "Older news" }));
+    fireEvent.click(within(newsNav).getByRole("button", { name: "Page 2" }));
     expect(within(newsNav).getByText("6–7 of 7")).toBeTruthy();
     expect(screen.getByText("News 2")).toBeTruthy();
     expect(screen.queryByText("News 7")).toBeNull();
     expect(within(injuryNav).getByText("1–5 of 7")).toBeTruthy();
 
-    fireEvent.click(within(injuryNav).getByRole("button", { name: "Older injury records" }));
+    fireEvent.click(within(injuryNav).getByRole("button", { name: "Page 2" }));
     expect(within(injuryNav).getByText("6–7 of 7")).toBeTruthy();
     expect(screen.getByText("Injury 2 · 10 days")).toBeTruthy();
   });

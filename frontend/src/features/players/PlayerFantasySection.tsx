@@ -1,3 +1,4 @@
+import { NumberPagination } from "../../components/ui/NumberPagination";
 import fantasyLogo from "../../assets/fantasy_logo.png";
 import fantasyNewsIcon from "../../assets/button_info.svg";
 import hierarchyGod from "../../assets/button_hierarchy_god.svg";
@@ -70,7 +71,7 @@ function NewsTitleLink({ href, title }: { href: string; title: string }) {
     if (!link || !titleElement) return;
 
     const measure = () => {
-      setIsTruncated(titleElement.scrollWidth > link.clientWidth + 1);
+      setIsTruncated(titleElement.scrollWidth > link.clientWidth + 1 || titleElement.scrollHeight > titleElement.clientHeight + 1);
     };
     measure();
     const observer = new ResizeObserver(measure);
@@ -83,6 +84,7 @@ function NewsTitleLink({ href, title }: { href: string; title: string }) {
       ref={linkRef}
       className="player-fantasy-news-link"
       href={href}
+      aria-label={title}
       target="_blank"
       rel="noopener noreferrer"
     >
@@ -118,27 +120,9 @@ function HistoryNavigator({
   const first = page * HISTORY_PAGE_SIZE + 1;
   const last = Math.min((page + 1) * HISTORY_PAGE_SIZE, total);
 
-  return (
-    <nav className="player-history-navigator" aria-label={`${label} history pages`}>
-      <button
-        type="button"
-        onClick={() => onPageChange(page - 1)}
-        disabled={page === 0}
-        aria-label={`Newer ${label.toLowerCase()}`}
-      >
-        Newer
-      </button>
-      <span aria-live="polite">{first}–{last} of {total}</span>
-      <button
-        type="button"
-        onClick={() => onPageChange(page + 1)}
-        disabled={page >= pageCount - 1}
-        aria-label={`Older ${label.toLowerCase()}`}
-      >
-        Older
-      </button>
-    </nav>
-  );
+  return <NumberPagination page={page + 1} totalPages={pageCount}
+    onPageChange={(next) => onPageChange(next - 1)} label={label + " history pages"}
+    caption={first + "–" + last + " of " + total} />;
 }
 
 function displayDate(value: unknown): string | null {
@@ -254,7 +238,8 @@ function PlayerNewsList({ profile }: FantasySectionProps) {
   const [page, setPage] = useState(0);
   useEffect(() => setPage(0), [profile]);
   const pageCount = Math.ceil(news.length / HISTORY_PAGE_SIZE);
-  const visibleNews = news.slice(page * HISTORY_PAGE_SIZE, (page + 1) * HISTORY_PAGE_SIZE);
+  const currentPage = Math.min(page, Math.max(0, pageCount - 1));
+  const visibleNews = news.slice(currentPage * HISTORY_PAGE_SIZE, (currentPage + 1) * HISTORY_PAGE_SIZE);
 
   return (
     <section className="player-fantasy-column" aria-labelledby="player-fantasy-news-title">
@@ -293,7 +278,7 @@ function PlayerNewsList({ profile }: FantasySectionProps) {
           })}
           </ul>
           <HistoryNavigator
-            page={page}
+            page={currentPage}
             pageCount={pageCount}
             total={news.length}
             label="News"
@@ -322,7 +307,8 @@ function PlayerInjuryHistory({ profile }: FantasySectionProps) {
   const [page, setPage] = useState(0);
   useEffect(() => setPage(0), [profile]);
   const pageCount = Math.ceil(history.length / HISTORY_PAGE_SIZE);
-  const visibleHistory = history.slice(page * HISTORY_PAGE_SIZE, (page + 1) * HISTORY_PAGE_SIZE);
+  const currentPage = Math.min(page, Math.max(0, pageCount - 1));
+  const visibleHistory = history.slice(currentPage * HISTORY_PAGE_SIZE, (currentPage + 1) * HISTORY_PAGE_SIZE);
 
   return (
     <section className="player-fantasy-column" aria-labelledby="player-fantasy-injury-title">
@@ -345,7 +331,8 @@ function PlayerInjuryHistory({ profile }: FantasySectionProps) {
             const key = `${formatted.diagnosis}|${start ?? ""}|${index}`;
 
             return (
-              <li key={key}>
+              <li key={key} className={row.ongoing === true ? "is-current" : "is-ended"}>
+                <span className="fb-helper">{row.ongoing === true ? "Current injury" : end ? "Ended" : "End date unavailable"}</span>
                 <p className="player-fantasy-injury-diagnosis">
                   {formatted.diagnosis}{duration ? ` · ${duration}` : ""}
                 </p>
@@ -359,7 +346,7 @@ function PlayerInjuryHistory({ profile }: FantasySectionProps) {
           })}
           </ul>
           <HistoryNavigator
-            page={page}
+            page={currentPage}
             pageCount={pageCount}
             total={history.length}
             label="Injury records"
