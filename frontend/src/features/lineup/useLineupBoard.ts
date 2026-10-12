@@ -1,3 +1,4 @@
+import { notify } from "../../components/ui/Notifications";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
   keepPreviousData,
@@ -575,6 +576,7 @@ export function useLineupBoard(options: UseLineupBoardOptions = {}): LineupBoard
     mutationFn: async (variables: SaveLineupVariables) =>
       putJson(paths.lineup(variables.teamId), token, variables.body),
     onSuccess: async (_data, variables) => {
+      notify("Lineup saved");
       await queryClient.invalidateQueries({
         queryKey: ["lineup", variables.leagueKey, variables.teamId],
       });

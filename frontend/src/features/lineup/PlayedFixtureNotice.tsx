@@ -1,4 +1,4 @@
-import { Modal } from "../../components/Modal";
+import { Dialog } from "../../components/ui/Dialog";
 import { PAST_FIXTURE_LOCKED_MESSAGE } from "./lineupMessages";
 
 type PlayedFixtureNoticeProps = {
@@ -8,8 +8,8 @@ type PlayedFixtureNoticeProps = {
 
 export function PlayedFixtureNotice({ open, onClose }: PlayedFixtureNoticeProps) {
   return (
-    <Modal open={open} title="Lineup locked" onClose={onClose}>
+    <Dialog open={open} title="Lineup locked" onClose={onClose}>
       <p className="modal-body-plain">{PAST_FIXTURE_LOCKED_MESSAGE}</p>
-    </Modal>
+    </Dialog>
   );
 }

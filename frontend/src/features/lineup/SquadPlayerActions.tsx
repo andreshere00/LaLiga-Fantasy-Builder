@@ -3,7 +3,7 @@ import { Link } from "react-router-dom";
 
 import { formatEuro, formatIntegerAmount, parseIntegerAmount } from "../../api/format";
 import type { SquadCard } from "../../api/mappers";
-import { Modal } from "../../components/Modal";
+import { Dialog } from "../../components/ui/Dialog";
 import "../../components/TooltipPanel.css";
 import { NumericCounterField } from "../../components/NumericCounterField";
 import {
@@ -152,9 +152,8 @@ export function SquadPlayerActions({
         </div> : null}
       </div>
       {opponentMarketOptions?.(open && view === "choose" && !ownPlayer, close)}
-      <Modal
+      <Dialog
         open={open && (ownPlayer || view !== "choose")}
-        squareCorners={cardMenu}
         title={
           (view === "choose" || view === "options")
             ? player.name
@@ -359,7 +358,7 @@ export function SquadPlayerActions({
             ) : null}
           </>
         ) : null}
-      </Modal>
+      </Dialog>
     </>
   );
 }

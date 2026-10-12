@@ -1,5 +1,5 @@
 import type { SquadCard } from "../../api/mappers";
-import { Modal } from "../../components/Modal";
+import { Dialog } from "../../components/ui/Dialog";
 import { useNow } from "../../hooks/useNow";
 import { MarketActionDialogs } from "../market/actions/MarketActionDialogs";
 import { resolveMarketActionOffers } from "../market/actions/marketActions";
@@ -34,8 +34,8 @@ function OpponentMarketOptions({ player, onClose }: Omit<Props, "open">) {
 
   return (
     <>
-      <Modal open={!confirming} title={`${player.name} — Market options`} onClose={onClose}
-        closeOnBackdrop={!actions.actionPending} squareCorners>
+      <Dialog open={!confirming} title={`${player.name} — Market options`} onClose={onClose}
+        closeOnBackdrop={!actions.actionPending}>
         {board.isLoading ? <p role="status">Loading market options…</p> : board.hasError ? (
           <p role="alert">Market options could not be loaded.</p>
         ) : offers.length === 0 ? (
@@ -61,12 +61,11 @@ function OpponentMarketOptions({ player, onClose }: Omit<Props, "open">) {
           </div>
         )}
         {actions.message ? <p role="alert">{actions.message}</p> : null}
-      </Modal>
+      </Dialog>
       <MarketActionDialogs
         actions={actions}
         money={board.money}
         squadMarketValue={board.squadMarketValue}
-        squareCorners
       />
     </>
   );

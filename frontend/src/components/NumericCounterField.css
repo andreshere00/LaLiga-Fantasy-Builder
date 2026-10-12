@@ -8,14 +8,14 @@
 .numeric-counter-input {
   flex: 1 1 auto;
   min-width: 0;
-  height: 2.25rem;
+  height: 44px;
   margin: 0;
   padding: 0 10px;
-  border: 1px solid color-mix(in srgb, var(--ink) 12%, transparent);
+  border: 1px solid color-mix(in srgb, var(--fb-secondary) 12%, transparent);
   border-left: 0;
   border-right: 0;
   border-radius: 0;
-  background: var(--white);
+  background: var(--fb-surface);
   color: inherit;
   font: inherit;
   font-variant-numeric: tabular-nums;
@@ -23,20 +23,20 @@
 }
 
 .numeric-counter-btn {
-  flex: 0 0 2.25rem;
-  height: 2.25rem;
+  flex: 0 0 44px;
+  height: 44px;
   box-sizing: border-box;
   padding: 0;
-  border: 1px solid color-mix(in srgb, var(--ink) 12%, transparent);
-  background: var(--white);
+  border: 1px solid color-mix(in srgb, var(--fb-secondary) 12%, transparent);
+  background: var(--fb-surface);
   font: inherit;
   font-size: 1.05rem;
   font-weight: 700;
   line-height: 1;
   cursor: pointer;
   transition:
-    background-color var(--control-fill-duration) var(--control-fill-ease),
-    border-color var(--control-fill-duration) var(--control-fill-ease);
+    background-color var(--fb-color-duration) var(--fb-color-ease),
+    border-color var(--fb-color-duration) var(--fb-color-ease);
 }
 
 .numeric-counter-btn:first-child {
@@ -48,8 +48,8 @@
 }
 
 .numeric-counter-btn:is(:hover, :active):not(:disabled) {
-  background: var(--accent-press);
-  border-color: var(--accent-press);
+  background: var(--fb-coral);
+  border-color: var(--fb-coral);
 }
 
 .numeric-counter-btn:disabled {

@@ -1,4 +1,4 @@
-import { Modal } from "../../components/Modal";
+import { Dialog } from "../../components/ui/Dialog";
 
 type OpponentLineupNoticeProps = {
   open: boolean;
@@ -12,8 +12,8 @@ export function OpponentLineupNotice({
   onClose,
 }: OpponentLineupNoticeProps) {
   return (
-    <Modal open={open} title="Lineup unavailable" onClose={onClose}>
+    <Dialog open={open} title="Lineup unavailable" onClose={onClose}>
       <p className="modal-body-plain">{message}</p>
-    </Modal>
+    </Dialog>
   );
 }

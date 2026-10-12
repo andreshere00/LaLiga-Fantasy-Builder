@@ -120,3 +120,14 @@
 .fb-metric-grid dt { font-size:12px; color:var(--fb-muted); }
 .fb-metric-grid dd { margin:4px 0 0; font-size:24px; font-weight:500; font-variant-numeric:tabular-nums; }
 @media(max-width:600px) { .fb-dialog-viewport { padding:12px; } .fb-dialog { padding:20px; max-height:calc(100dvh - 24px); } .fb-dialog-viewport--sheet { padding:0; place-items:end stretch; } .fb-dialog--sheet { width:100%; height:auto; max-height:85dvh; } }
+
+:root { --fb-color-duration:160ms; --fb-color-ease:ease; }
+.fb-dialog button:not(.fb-button) { min-height:44px; border-radius:8px; font-weight:600; }
+.fb-dialog-footer button { padding:0 16px; border:1px solid var(--fb-control-line); background:var(--fb-surface); color:var(--fb-secondary); cursor:pointer; }
+.fb-dialog-footer :is(.market-dialog-primary,.squad-sale-primary) { background:var(--fb-primary); color:var(--fb-ink-on-status); border-color:var(--fb-primary); }
+.fb-dialog input,.fb-dialog select { min-height:44px; color:var(--fb-secondary); background:var(--fb-surface); }
+
+.fb-toast-viewport { position:fixed; bottom:16px; right:16px; z-index:150; display:grid; gap:8px; width:min(360px,calc(100vw - 32px)); }
+.fb-toast { display:flex; justify-content:space-between; gap:12px; }
+.fb-toast [data-slot] { min-width:0; }
+.fb-toast[data-limited] { display:none; }

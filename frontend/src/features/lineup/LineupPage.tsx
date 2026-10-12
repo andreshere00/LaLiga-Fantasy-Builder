@@ -7,7 +7,8 @@ import { ProfilePhoto } from "../shell/ProfilePhoto";
 import footballIconUrl from "../../assets/boxicons_football-filled.svg";
 import moneyIconUrl from "../../assets/button_money.svg";
 import saveCartridgeIconUrl from "../../assets/save_cartridge.svg";
-import fieldUrl from "../../assets/football_field.svg";
+import { PitchMarkings } from "./PitchMarkings";
+import { PulseRing } from "../../components/ui/PulseRing";
 import originalFixtureBlackUrl from "../../assets/button_original_fixture_black.svg";
 import originalFixtureWhiteUrl from "../../assets/button_original_fixture_white.svg";
 import originalFixtureGrayUrl from "../../assets/button_original_fixture_gray.svg";
@@ -70,7 +71,7 @@ export function LineupPage() {
   if (board.isLoading) {
     return (
       <section className="lineup-page" data-layout-profile={LINEUP_LAYOUT_PROFILE}>
-        <p className="status-copy">Loading lineup…</p>
+        <PulseRing label="Loading lineup…" />
       </section>
     );
   }
@@ -273,7 +274,7 @@ export function LineupPage() {
 
         <div className="column column-pitch">
           <div className="pitch">
-            <img src={fieldUrl} alt="" />
+            <PitchMarkings />
             {board.ownSquad && !board.isPastFixture ? (
               <div className="pitch-lineup-load-controls">
                 <details className="pitch-lineup-load-menu">

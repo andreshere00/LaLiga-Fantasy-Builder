@@ -1,3 +1,4 @@
+import { Notifications } from "../components/ui/Notifications";
 import { PulseRing } from "../components/ui/PulseRing";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { lazy, Suspense } from "react";
@@ -42,6 +43,7 @@ function LineupRoute() {
 export function App() {
   return (
     <QueryClientProvider client={queryClient}>
+      <Notifications>
       <AuthProvider>
         <BrowserRouter>
           <AppErrorBoundary>
@@ -71,6 +73,7 @@ export function App() {
           </AppErrorBoundary>
         </BrowserRouter>
       </AuthProvider>
+    </Notifications>
     </QueryClientProvider>
   );
 }
