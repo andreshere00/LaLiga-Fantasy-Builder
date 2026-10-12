@@ -71,20 +71,20 @@ const FIXTURE_LAST_STEPS = [5, 10, 20, 40, 60] as const;
 const MARKET_PRESETS = ["season", "30d", "14d", "10d", "5d"] as const;
 
 const STAT_SPECS = [
-  ["minutes_played", "Minutes"], ["goals", "Goals"], ["assists", "Assists"],
-  ["big_chances_created", "Big chances"], ["balls_into_box", "Balls into box"],
-  ["penalties_won", "Penalties won"], ["penalties_committed", "Penalties committed"],
-  ["penalties_saved", "Penalties saved"], ["saves", "Saves"], ["clearances", "Clearances"],
-  ["penalties_missed", "Penalties missed"], ["own_goals", "Own goals"],
-  ["goals_conceded", "Goals conceded"], ["yellow_cards", "Yellow cards"],
-  ["red_card", "Red card"], ["shots", "Shots"], ["successful_dribbles", "Dribbles"],
-  ["recoveries", "Recoveries"], ["balls_lost", "Balls lost"], ["dazn_points", "DAZN"],
+  ["minutesPlayed", "Minutes"], ["goals", "Goals"], ["assists", "Assists"],
+  ["bigChancesCreated", "Big chances"], ["ballsIntoBox", "Balls into box"],
+  ["penaltiesWon", "Penalties won"], ["penaltiesCommitted", "Penalties committed"],
+  ["penaltiesSaved", "Penalties saved"], ["saves", "Saves"], ["clearances", "Clearances"],
+  ["penaltiesMissed", "Penalties missed"], ["ownGoals", "Own goals"],
+  ["goalsConceded", "Goals conceded"], ["yellowCards", "Yellow cards"],
+  ["redCard", "Red card"], ["shots", "Shots"], ["successfulDribbles", "Dribbles"],
+  ["recoveries", "Recoveries"], ["ballsLost", "Balls lost"], ["daznPoints", "DAZN"],
 ] as const;
 
 function fixtureLabel(fixture: Record<string, unknown> | null): string {
   if (!fixture) return MISSING_STAT;
-  const home = clubDisplayName(text(fixture.home_team));
-  const away = clubDisplayName(text(fixture.away_team));
+  const home = clubDisplayName(text(fixture.homeTeam));
+  const away = clubDisplayName(text(fixture.awayTeam));
   if (home && away) return `${home} vs ${away}`;
   const opponent = clubDisplayName(text(fixture.opponent));
   if (opponent) return opponent;
@@ -106,8 +106,8 @@ function fixtureKey(fixture: Record<string, unknown> | null, index: number): str
   return entryKey(
     [
       text(fixture?.date),
-      text(fixture?.home_team),
-      text(fixture?.away_team),
+      text(fixture?.homeTeam),
+      text(fixture?.awayTeam),
       text(fixture?.opponent),
       text(fixture?.competition),
     ],
@@ -121,9 +121,9 @@ type PlayerDetailBodyProps = {
 
 function PlayerDetailBody({ masterId }: PlayerDetailBodyProps) {
   const { user, accessToken } = useAuth();
-  const userId = user?.user_id ?? null;
+  const userId = user?.userId ?? null;
   const [last, setLast] = useState(5);
-  const [marketPreset, setMarketPreset] = useState<string>("season");
+  const [marketPreset, setMarketPreset] = useState<(typeof MARKET_PRESETS)[number]>("season");
   const [marketCustomFrom, setMarketCustomFrom] = useState("");
   const [marketCustomTo, setMarketCustomTo] = useState("");
   const [marketCustomDraftFrom, setMarketCustomDraftFrom] = useState("");
@@ -138,8 +138,8 @@ function PlayerDetailBody({ masterId }: PlayerDetailBodyProps) {
       last,
       competition: ["laliga"],
       limit: 5,
-      include_weather: true,
-      include_stats: true,
+      includeWeather: true,
+      includeStats: true,
     };
     if (
       marketUseCustomRange &&
@@ -229,7 +229,7 @@ function PlayerDetailBody({ masterId }: PlayerDetailBodyProps) {
 
   const detail = asRecord(detailQuery.data);
   const detailReady = detail != null;
-  const segmentErrors = Array.isArray(detail?.segment_errors) ? detail.segment_errors : [];
+  const segmentErrors = Array.isArray(detail?.segmentErrors) ? detail.segmentErrors : [];
   const fixturesBlock = asRecord(detail?.fixtures);
   const marketBlock = asRecord(detail?.market);
   const recentBlock = asRecord(detail?.recent);
@@ -245,9 +245,9 @@ function PlayerDetailBody({ masterId }: PlayerDetailBodyProps) {
   const points = asFiniteNumber(catalogMaster?.points);
   const positionId =
     asFiniteNumber(catalogMaster?.positionId) ??
-    asFiniteNumber(asRecord(detail?.player)?.position_id);
+    asFiniteNumber(asRecord(detail?.player)?.positionId);
   const teamName =
-    text(asRecord(detail?.player)?.team_name) ??
+    text(asRecord(detail?.player)?.teamName) ??
     teamNameFromPlayerMaster(catalogMaster);
   const availability = availabilityOf(catalogMaster?.playerStatus);
 
@@ -278,9 +278,9 @@ function PlayerDetailBody({ masterId }: PlayerDetailBodyProps) {
     [marketSeries],
   );
 
-  const deltaAbs = asFiniteNumber(asRecord(marketBlock?.window)?.delta_abs);
-  const deltaRel = asFiniteNumber(asRecord(marketBlock?.window)?.delta_rel);
-  const currentValue = asFiniteNumber(marketBlock?.current_value);
+  const deltaAbs = asFiniteNumber(asRecord(marketBlock?.window)?.deltaAbs);
+  const deltaRel = asFiniteNumber(asRecord(marketBlock?.window)?.deltaRel);
+  const currentValue = asFiniteNumber(marketBlock?.currentValue);
   const changeTone = marketChangeTone(deltaRel);
   const averages = playerAverages(profileBlock?.averages, fantasyAveragesPlayer);
 
@@ -368,9 +368,9 @@ function PlayerDetailBody({ masterId }: PlayerDetailBodyProps) {
               <p>{positionLabel(positionId) ?? MISSING_STAT}</p>
               <p><AvailabilityCell availability={availability} /></p>
             </div>
-            {injury?.availability_text || injury?.diagnosis ? (
+            {injury?.availabilityText || injury?.diagnosis ? (
               <p className="player-detail-availability-reason">
-                {[text(injury.availability_text), text(injury.diagnosis)].filter(Boolean).join(" — ")}
+                {[text(injury.availabilityText), text(injury.diagnosis)].filter(Boolean).join(" — ")}
               </p>
             ) : null}
           </div>
@@ -428,7 +428,7 @@ function PlayerDetailBody({ masterId }: PlayerDetailBodyProps) {
               const record = asRecord(row);
               const fixture = asRecord(record?.fixture);
               const stats = asRecord(record?.stats);
-              const total = asFiniteNumber(record?.fantasy_points_total);
+              const total = asFiniteNumber(record?.fantasyPointsTotal);
               return (
                 <article className="player-form-card" key={fixtureKey(fixture, index)}>
                   <header className="player-form-card-heading">
@@ -440,7 +440,7 @@ function PlayerDetailBody({ masterId }: PlayerDetailBodyProps) {
                   <dl className="player-form-summary">
                     <div>
                       <dt>Minutes</dt>
-                      <dd>{asFiniteNumber(record?.minutes_played) ?? MISSING_STAT}</dd>
+                      <dd>{asFiniteNumber(record?.minutesPlayed) ?? MISSING_STAT}</dd>
                     </div>
                     <div>
                       <dt>Fantasy points</dt>
@@ -452,7 +452,7 @@ function PlayerDetailBody({ masterId }: PlayerDetailBodyProps) {
                       {STAT_SPECS.map(([key, label]) => (
                         <div key={key}>
                           <dt>
-                            {key === "dazn_points" ? (
+                            {key === "daznPoints" ? (
                               <>
                                 <img src={daznIcon} alt="" aria-hidden="true" /> DAZN
                               </>
@@ -472,7 +472,7 @@ function PlayerDetailBody({ masterId }: PlayerDetailBodyProps) {
               Total fantasy points
               <strong>
                 {fixtureRows.reduce((sum, row) => {
-                  const total = asFiniteNumber(asRecord(row)?.fantasy_points_total);
+                  const total = asFiniteNumber(asRecord(row)?.fantasyPointsTotal);
                   return sum + (total ?? 0);
                 }, 0)}
               </strong>
@@ -704,5 +704,5 @@ export function PlayerDetailPage() {
       </p>
     );
   }
-  return <PlayerDetailBody key={user?.user_id ?? ""} masterId={masterId} />;
+  return <PlayerDetailBody key={user?.userId ?? ""} masterId={masterId} />;
 }

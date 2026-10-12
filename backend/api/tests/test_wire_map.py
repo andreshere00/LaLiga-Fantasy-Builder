@@ -6,6 +6,7 @@ import json
 from datetime import date
 from pathlib import Path
 
+import pytest
 from fantasy_api.schemas.player_stats import Competition, InjuryRisk, StatKey
 from fantasy_api.services.wire_map import (
     competition_from_row,
@@ -18,6 +19,7 @@ from fantasy_api.services.wire_map import (
     stats_from_fantasy_week,
     stats_from_parser_layer,
 )
+from pydantic import ValidationError
 
 GOLDEN = Path(__file__).parent / "fixtures" / "scraping" / "futbolfantasy_raphinha.json"
 
@@ -94,6 +96,11 @@ def test_empty_fixture_stats_returns_defaults() -> None:
 
 def test_parse_match_date_invalid_returns_none() -> None:
     assert parse_match_date("not-a-date") is None
+
+
+def test_parse_wire_document_rejects_invalid_nested_provider_shape() -> None:
+    with pytest.raises(ValidationError):
+        parse_wire_document({"matches": {"recent": ["not-an-object"]}})
 
 
 # ---- Edge cases ---- #

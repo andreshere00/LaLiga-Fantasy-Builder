@@ -51,7 +51,7 @@ describe("mapDetailSegmentBlocks_segmentError_nullsBlock", () => {
     const blocks = mapDetailSegmentBlocks({
       fixtures: null,
       market: { window: { series: [] } },
-      segment_errors: [{ segment: "fixtures", detail: "timeout" }],
+      segmentErrors: [{ segment: "fixtures", detail: "timeout" }],
     });
     expect(blocks.fixtures).toBeNull();
     expect(blocks.market).not.toBeNull();
@@ -89,7 +89,7 @@ describe("formatInjuryHistoryEntry_withDatesAndDuration", () => {
       diagnosis: "Edema en el bíceps femoral",
       start: "2025-10-01",
       end: "2025-10-04",
-      duration_days: 3,
+      durationDays: 3,
       ongoing: false,
     });
     expect(entry.diagnosis).toBe("Edema en el bíceps femoral");
@@ -112,7 +112,7 @@ describe("formatInjuryHistoryEntry_datesWithoutDuration_computesInclusiveDays", 
 
 describe("statDisplay_daznField_readsDaznPoints", () => {
   it("statDisplay_usesDaznPointsNotCount", () => {
-    expect(statDisplay({ count: null, dazn_points: 2, source: "futbolfantasy" }, "dazn_points")).toBe(
+    expect(statDisplay({ count: null, daznPoints: 2, source: "futbolfantasy" }, "daznPoints")).toBe(
       "2",
     );
   });

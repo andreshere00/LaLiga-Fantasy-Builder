@@ -148,7 +148,7 @@ function displayDate(value: unknown): string | null {
 
 function durationLabel(row: Record<string, unknown>, fallback: string | null): string | null {
   if (row.ongoing === true) return "Currently";
-  const days = asFiniteNumber(row.duration_days) ?? asFiniteNumber(row.durationDays);
+  const days = asFiniteNumber(row.durationDays);
   if (days != null && days > 0) return `${days} ${days === 1 ? "day" : "days"}`;
   const localized = fallback?.match(/^(\d+) día(?:s)?$/);
   return localized ? `${localized[1]} ${localized[1] === "1" ? "day" : "days"}` : null;
@@ -156,9 +156,9 @@ function durationLabel(row: Record<string, unknown>, fallback: string | null): s
 
 function FantasyProfile({ profile }: FantasySectionProps) {
   const hierarchy = asRecord(profile?.hierarchy);
-  const startProbability = asRecord(profile?.start_probability);
+  const startProbability = asRecord(profile?.startProbability);
   const form = asRecord(profile?.form);
-  const injuryRisk = asRecord(profile?.injury_risk);
+  const injuryRisk = asRecord(profile?.injuryRisk);
   const hierarchyRaw = text(hierarchy?.label);
   const hierarchyKeyValue = hierarchyRaw ? normalizedFantasyValue(hierarchyRaw) : "";
   const hierarchyLabel = hierarchyRaw
@@ -242,8 +242,8 @@ function FantasyProfile({ profile }: FantasySectionProps) {
 function PlayerNewsList({ profile }: FantasySectionProps) {
   const news = Array.isArray(profile?.news)
     ? [...profile.news].sort((left, right) => {
-        const leftDate = Date.parse(text(asRecord(left)?.published_at) ?? "");
-        const rightDate = Date.parse(text(asRecord(right)?.published_at) ?? "");
+        const leftDate = Date.parse(text(asRecord(left)?.publishedAt) ?? "");
+        const rightDate = Date.parse(text(asRecord(right)?.publishedAt) ?? "");
         if (Number.isFinite(leftDate) && Number.isFinite(rightDate)) return rightDate - leftDate;
         if (Number.isFinite(leftDate) !== Number.isFinite(rightDate)) {
           return Number.isFinite(leftDate) ? -1 : 1;
@@ -271,14 +271,14 @@ function PlayerNewsList({ profile }: FantasySectionProps) {
             const row = asRecord(item);
             const title = text(row?.title) ?? "News article";
             const href = newsItemHref(row);
-            const published = newsDate(row?.published_at);
+            const published = newsDate(row?.publishedAt);
             const key = `${title}|${text(row?.url) ?? index}`;
 
             return (
               <li key={key}>
                 <img src={fantasyNewsIcon} alt="" aria-hidden="true" />
                 <div>
-                  {published ? <time dateTime={text(row?.published_at) ?? undefined}>{published} · </time> : null}
+                  {published ? <time dateTime={text(row?.publishedAt) ?? undefined}>{published} · </time> : null}
                   {href ? (
                     <NewsTitleLink href={href} title={title} />
                   ) : (
@@ -306,8 +306,8 @@ function PlayerNewsList({ profile }: FantasySectionProps) {
 }
 
 function PlayerInjuryHistory({ profile }: FantasySectionProps) {
-  const history = Array.isArray(profile?.injury_history)
-    ? [...profile.injury_history].sort((left, right) => {
+  const history = Array.isArray(profile?.injuryHistory)
+    ? [...profile.injuryHistory].sort((left, right) => {
         const leftRow = asRecord(left);
         const rightRow = asRecord(right);
         const leftDate = Date.parse(text(leftRow?.start ?? leftRow?.startDate) ?? "");

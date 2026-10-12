@@ -5,7 +5,7 @@ from __future__ import annotations
 from fastapi import APIRouter, Header, Path
 
 from fantasy_api.api.deps import get_container, get_current_user
-from fantasy_api.api.payload import parse_payload
+from fantasy_api.api.payload import as_model
 from fantasy_api.openapi import ERROR_RESPONSES
 from fantasy_api.schemas.buyout import (
     BuyoutMutationResult,
@@ -14,7 +14,6 @@ from fantasy_api.schemas.buyout import (
     ShieldStatus,
     ShieldWrite,
 )
-from fantasy_api.schemas.payload import as_object
 
 router = APIRouter(prefix="/buyout", tags=["buyout"])
 
@@ -45,7 +44,7 @@ async def check_shield(
         league_id,
         player_team_id,
     )
-    return ShieldStatus.model_validate(parse_payload(as_object, data))
+    return as_model(data, ShieldStatus)
 
 
 @router.post(
@@ -65,14 +64,14 @@ async def pay_buyout(
 ) -> BuyoutMutationResult:
     """Pay the buyout clause for a squad entry."""
     _user, internal_jwt = await get_current_user(authorization)
-    payload = body.model_dump(mode="json")
+    payload = body.model_dump(mode="json", by_alias=True)
     data = await get_container().buyout_service.pay_buyout(
         internal_jwt,
         league_id,
         player_team_id,
         payload,
     )
-    return BuyoutMutationResult.model_validate(parse_payload(as_object, data))
+    return as_model(data, BuyoutMutationResult)
 
 
 @router.post(
@@ -92,14 +91,14 @@ async def increase_buyout(
 ) -> BuyoutMutationResult:
     """Set or increase the buyout clause for a squad entry."""
     _user, internal_jwt = await get_current_user(authorization)
-    payload = body.model_dump(mode="json")
+    payload = body.model_dump(mode="json", by_alias=True)
     data = await get_container().buyout_service.increase_buyout(
         internal_jwt,
         league_id,
         player_team_id,
         payload,
     )
-    return BuyoutMutationResult.model_validate(parse_payload(as_object, data))
+    return as_model(data, BuyoutMutationResult)
 
 
 @router.put(
@@ -119,10 +118,10 @@ async def activate_shield(
     ``playerId`` in the body is the squad-entry id (``playerTeamId``).
     """
     _user, internal_jwt = await get_current_user(authorization)
-    payload = body.model_dump(mode="json")
+    payload = body.model_dump(mode="json", by_alias=True)
     data = await get_container().buyout_service.activate_shield(
         internal_jwt,
         league_id,
         payload,
     )
-    return BuyoutMutationResult.model_validate(parse_payload(as_object, data))
+    return as_model(data, BuyoutMutationResult)

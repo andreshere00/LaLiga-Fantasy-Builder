@@ -88,7 +88,15 @@ def test_exchange_token_then_fetch(
     def handler(request: httpx.Request) -> httpx.Response:
         if request.url.path == "/auth/token":
             assert request.headers.get("X-CSRF-Token") == "csrf"
-            return httpx.Response(200, json={"access_token": "jwt-1"})
+            return httpx.Response(
+                200,
+                json={
+                    "access_token": "jwt-1",
+                    "token_type": "Bearer",
+                    "expires_in": 300,
+                    "expires_at": 1_800_000_000,
+                },
+            )
         if request.url.path == "/leagues":
             assert request.headers["Authorization"] == "Bearer jwt-1"
             return httpx.Response(200, json=[])

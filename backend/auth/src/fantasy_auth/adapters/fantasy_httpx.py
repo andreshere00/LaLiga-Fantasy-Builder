@@ -5,7 +5,9 @@ from __future__ import annotations
 from typing import Any
 
 import httpx
+from pydantic import ValidationError
 
+from fantasy_auth.adapters.schemas import FantasyManagerProfile
 from fantasy_auth.domain.errors import ProviderError
 
 
@@ -60,4 +62,12 @@ class HttpxFantasyClient:
                 status_code=response.status_code,
                 category="fantasy_error",
             )
-        return response.json()
+        try:
+            profile = FantasyManagerProfile.model_validate(response.json())
+        except (ValueError, ValidationError):
+            raise ProviderError(
+                "fantasy profile had an unexpected shape",
+                status_code=502,
+                category="fantasy_error",
+            ) from None
+        return profile.model_dump(mode="python", by_alias=True, exclude_unset=True)

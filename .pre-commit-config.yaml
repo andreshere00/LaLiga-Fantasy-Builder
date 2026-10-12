@@ -33,15 +33,16 @@ repos:
         language: system
         pass_filenames: false
         files: >-
-          ^(backend/api/src/fantasy_api/(api/|schemas/|openapi\.py|main\.py|config\.py)
-          |backend/api/openapi\.json
-          |backend/api/pyproject\.toml
-          |backend/auth/src/fantasy_auth/(api/|openapi\.py|main\.py|config\.py)
-          |backend/auth/openapi\.json
-          |backend/auth/pyproject\.toml
-          |backend/scraping/src/fantasy_scraping/(scraper/routes\.py|openapi\.py|main\.py|models/)
-          |backend/scraping/openapi\.json
-          |backend/scraping/pyproject\.toml)$
+          (?x)^(backend/(api|auth|scraping)/src/[^/]+/(api/.*|schemas/.*|parser/models/.*|scraper/(routes|models)\.py|models/.*|openapi\.py|main\.py|config\.py|endpoint_schemas_doc\.py)
+          |backend/(api|auth|scraping)/(openapi\.json|pyproject\.toml)
+          |docs/api/endpoint-schemas\.md|scripts/.*openapi.*)$
+
+      - id: test-frontend
+        name: frontend tests and TypeScript build
+        entry: bash -c 'cd frontend && bun run test && bun run build'
+        language: system
+        pass_filenames: false
+        files: ^(frontend/|contracts/|backend/.*/openapi\.json$)
 
       - id: test
         name: test (pytest, ≥90% coverage)

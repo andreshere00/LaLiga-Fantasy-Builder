@@ -17,7 +17,9 @@ from pathlib import Path
 from urllib.parse import urlparse
 
 import httpx
+from pydantic import ValidationError
 
+from fantasy_auth.api.schemas import ConnectionStatusResponse
 from fantasy_auth.cli.pair import main as pair_laliga
 
 DEFAULT_API_BASE = "http://localhost:8000"
@@ -315,10 +317,11 @@ def _get_connection_status(
         response = client.get(f"{api_base.rstrip('/')}/laliga/connection")
     if not response.is_success:
         raise SetupError(f"connection check failed: HTTP {response.status_code}")
-    data = response.json()
-    if not isinstance(data, dict):
-        raise SetupError("connection check returned an invalid response")
-    return data
+    try:
+        status = ConnectionStatusResponse.model_validate(response.json())
+    except (ValueError, ValidationError):
+        raise SetupError("connection check returned an invalid response") from None
+    return status.model_dump(mode="json", exclude_unset=True)
 
 
 def _wait_for_server(process: subprocess.Popen[bytes]) -> None:

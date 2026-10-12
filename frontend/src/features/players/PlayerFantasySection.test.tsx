@@ -10,18 +10,18 @@ afterEach(cleanup);
 function profileWithHistory(count: number) {
   return {
     hierarchy: { label: "Key" },
-    start_probability: { percent: 80 },
-    injury_risk: { level: "low" },
+    startProbability: { percent: 80 },
+    injuryRisk: { level: "low" },
     news: Array.from({ length: count }, (_, index) => ({
       title: `News ${index + 1}`,
-      published_at: `2026-01-${String(index + 1).padStart(2, "0")}T12:00:00Z`,
+      publishedAt: `2026-01-${String(index + 1).padStart(2, "0")}T12:00:00Z`,
       url: `https://example.com/news-${index + 1}`,
     })),
-    injury_history: Array.from({ length: count }, (_, index) => ({
+    injuryHistory: Array.from({ length: count }, (_, index) => ({
       diagnosis: `Injury ${index + 1}`,
       start: `2025-01-${String(index + 1).padStart(2, "0")}`,
       end: `2025-02-${String(index + 1).padStart(2, "0")}`,
-      duration_days: 10,
+      durationDays: 10,
     })),
   };
 }

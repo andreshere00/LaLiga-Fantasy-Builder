@@ -25,6 +25,7 @@ from fantasy_scraping.scraper.models import (
     PlayerRoute,
     ScrapeOptions,
     ScrapeOutcome,
+    ScrapeOutcomeError,
 )
 from fantasy_scraping.scraper.name_aliases import (
     AliasValue,
@@ -51,12 +52,13 @@ TEAM_PROBES: int = 5
 DEFAULT_INCLUDE: frozenset[PageKind] = frozenset({PageKind.PLAYER})
 
 
-def _scrape_error(exc: ScrapingError) -> dict[str, object]:
+def _scrape_error(exc: ScrapingError) -> ScrapeOutcomeError:
     """Serialise a scraper failure for batch outcomes."""
-    body: dict[str, object] = {"error": exc.category, "detail": exc.message}
-    if isinstance(exc, AmbiguousPlayerError):
-        body["candidates"] = exc.candidates
-    return body
+    return ScrapeOutcomeError(
+        error=exc.category,
+        detail=exc.message,
+        candidates=exc.candidates if isinstance(exc, AmbiguousPlayerError) else None,
+    )
 
 
 def load_aliases() -> dict[str, AliasValue]:

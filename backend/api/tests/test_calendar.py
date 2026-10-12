@@ -12,6 +12,7 @@ from fantasy_api.api.deps import set_container
 from fantasy_api.clients.laliga_fantasy import LaligaFantasyClient
 from fantasy_api.main import create_app
 from fantasy_api.repositories.calendar import CalendarRepository
+from fantasy_api.schemas.calendar import CurrentWeek
 from fastapi.testclient import TestClient
 from jwt_mint import mint_internal_jwt
 from test_container import (
@@ -320,6 +321,44 @@ def test_get_current_week_unexpected_shape_returns_502(rsa_pems: tuple[str, str]
 
     assert response.status_code == 502
     assert response.json()["error"] == "fantasy_error"
+
+
+@pytest.mark.parametrize(
+    "payload",
+    [
+        {"weekNumber": "broken"},
+        {"unrelated": True},
+    ],
+)
+def test_get_current_week_invalid_object_returns_502(
+    rsa_pems: tuple[str, str],
+    payload: dict[str, object],
+) -> None:
+    private_pem, public_pem = rsa_pems
+    token = mint_internal_jwt(private_pem)
+
+    def fantasy_handler(_request: httpx.Request) -> httpx.Response:
+        return httpx.Response(200, json=payload)
+
+    with make_client(public_pem, fantasy_handler) as client:
+        response = client.get(
+            "/calendar/current",
+            headers={"Authorization": f"Bearer {token}"},
+        )
+
+    assert response.status_code == 502
+    assert response.json()["error"] == "fantasy_error"
+
+
+def test_current_week_fields_are_snake_case_with_camel_wire_aliases() -> None:
+    model = CurrentWeek.model_validate({"weekNumber": 8})
+
+    assert "week_number" in CurrentWeek.model_fields
+    assert "weekNumber" not in CurrentWeek.model_fields
+    assert model.week_number == 8
+    assert model.model_dump(mode="json", by_alias=True, exclude_none=True) == {
+        "weekNumber": 8,
+    }
 
 
 def test_get_week_stats_nested_validation_error_returns_502(

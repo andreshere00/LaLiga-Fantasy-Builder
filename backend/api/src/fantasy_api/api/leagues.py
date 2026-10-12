@@ -5,7 +5,7 @@ from __future__ import annotations
 from fastapi import APIRouter, Header, Path
 
 from fantasy_api.api.deps import get_container, get_current_user
-from fantasy_api.api.payload import as_model_list, parse_payload
+from fantasy_api.api.payload import as_model, as_model_list
 from fantasy_api.openapi import ERROR_RESPONSES
 from fantasy_api.schemas.leagues import (
     ActivityItem,
@@ -16,7 +16,7 @@ from fantasy_api.schemas.leagues import (
     TeamDetail,
     summarize_leagues_payload,
 )
-from fantasy_api.schemas.payload import as_object
+from fantasy_api.services.payload import parse_payload
 
 router = APIRouter(tags=["leagues"])
 
@@ -232,4 +232,4 @@ async def get_team(
         league_id,
         team_id,
     )
-    return TeamDetail.model_validate(parse_payload(as_object, data))
+    return as_model(data, TeamDetail)

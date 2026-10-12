@@ -39,7 +39,7 @@ export function matchOutcome(homeScore: number | null, awayScore: number | null)
 export function weatherConditionFromSnapshot(
   snapshot: Record<string, unknown> | null,
 ): WeatherCondition | null {
-  const code = asFiniteNumber(snapshot?.condition_code);
+  const code = asFiniteNumber(snapshot?.conditionCode);
   if (code != null) {
     if (code === 800) return "clear";
     if (code === 801) return "few_clouds";

@@ -172,9 +172,13 @@ async def test_scrape_players_failing_item_does_not_fail_batch(service: ScraperS
     outcomes = await service.scrape_players(refs, SEASON)
 
     assert outcomes[0].pages and outcomes[0].error is None
-    assert outcomes[1].error == {"error": "player_not_found", "detail": "player not found"}
-    assert outcomes[2].error and outcomes[2].error["error"] == "player_ambiguous"
-    assert 1 < len(outcomes[2].error["candidates"]) <= 5
+    assert outcomes[1].error is not None
+    assert outcomes[1].error.error == "player_not_found"
+    assert outcomes[1].error.detail == "player not found"
+    assert outcomes[2].error is not None
+    assert outcomes[2].error.error == "player_ambiguous"
+    assert outcomes[2].error.candidates is not None
+    assert 1 < len(outcomes[2].error.candidates) <= 5
 
 
 async def test_invalidate_slug_drops_only_that_player(

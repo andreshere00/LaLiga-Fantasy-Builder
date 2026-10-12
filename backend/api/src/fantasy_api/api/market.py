@@ -5,7 +5,7 @@ from __future__ import annotations
 from fastapi import APIRouter, Header, Path
 
 from fantasy_api.api.deps import get_container, get_current_user
-from fantasy_api.api.payload import as_model_list, parse_payload
+from fantasy_api.api.payload import as_model, as_model_list
 from fantasy_api.openapi import ERROR_RESPONSES
 from fantasy_api.schemas.market import (
     AcceptOfferWrite,
@@ -18,7 +18,7 @@ from fantasy_api.schemas.market import (
     MarketSnapshot,
     PlayerTeamOffers,
 )
-from fantasy_api.schemas.payload import as_market_snapshot, as_object
+from fantasy_api.schemas.payload import as_market_snapshot
 
 router = APIRouter(prefix="/market", tags=["market"])
 
@@ -42,7 +42,7 @@ async def get_market(
     """Return the current market, user bids, and offers for a league."""
     _user, internal_jwt = await get_current_user(authorization)
     data = await get_container().market_service.get_market(internal_jwt, league_id)
-    return MarketSnapshot.model_validate(parse_payload(as_market_snapshot, data))
+    return as_model(data, MarketSnapshot, as_market_snapshot)
 
 
 @router.get(
@@ -86,7 +86,7 @@ async def get_player_team_offers(
         league_id,
         player_team_id,
     )
-    return PlayerTeamOffers.model_validate(parse_payload(as_object, data))
+    return as_model(data, PlayerTeamOffers)
 
 
 @router.post(
@@ -104,14 +104,14 @@ async def create_bid(
 ) -> MarketMutationResult:
     """Create a bid on a market listing."""
     _user, internal_jwt = await get_current_user(authorization)
-    payload = body.model_dump(mode="json")
+    payload = body.model_dump(mode="json", by_alias=True)
     data = await get_container().market_service.create_bid(
         internal_jwt,
         league_id,
         market_id,
         payload,
     )
-    return MarketMutationResult.model_validate(parse_payload(as_object, data))
+    return as_model(data, MarketMutationResult)
 
 
 @router.put(
@@ -130,7 +130,7 @@ async def update_bid(
 ) -> MarketMutationResult:
     """Modify an existing bid."""
     _user, internal_jwt = await get_current_user(authorization)
-    payload = body.model_dump(mode="json")
+    payload = body.model_dump(mode="json", by_alias=True)
     data = await get_container().market_service.update_bid(
         internal_jwt,
         league_id,
@@ -138,7 +138,7 @@ async def update_bid(
         bid_id,
         payload,
     )
-    return MarketMutationResult.model_validate(parse_payload(as_object, data))
+    return as_model(data, MarketMutationResult)
 
 
 @router.delete(
@@ -162,7 +162,7 @@ async def cancel_bid(
         market_id,
         bid_id,
     )
-    return MarketMutationResult.model_validate(parse_payload(as_object, data))
+    return as_model(data, MarketMutationResult)
 
 
 @router.post(
@@ -182,13 +182,13 @@ async def create_listing(
     ``playerId`` in the body is the squad-entry id (``playerTeamId``).
     """
     _user, internal_jwt = await get_current_user(authorization)
-    payload = body.model_dump(mode="json")
+    payload = body.model_dump(mode="json", by_alias=True)
     data = await get_container().market_service.create_listing(
         internal_jwt,
         league_id,
         payload,
     )
-    return MarketMutationResult.model_validate(parse_payload(as_object, data))
+    return as_model(data, MarketMutationResult)
 
 
 @router.post(
@@ -209,13 +209,13 @@ async def create_immediate_sale(
     Fantasy credits the sale to the manager balance and removes the player.
     """
     _user, internal_jwt = await get_current_user(authorization)
-    payload = body.model_dump(mode="json")
+    payload = body.model_dump(mode="json", by_alias=True)
     data = await get_container().market_service.create_immediate_sale(
         internal_jwt,
         league_id,
         payload,
     )
-    return MarketMutationResult.model_validate(parse_payload(as_object, data))
+    return as_model(data, MarketMutationResult)
 
 
 @router.delete(
@@ -237,7 +237,7 @@ async def delete_listing(
         league_id,
         market_id,
     )
-    return MarketMutationResult.model_validate(parse_payload(as_object, data))
+    return as_model(data, MarketMutationResult)
 
 
 @router.post(
@@ -256,7 +256,7 @@ async def accept_offer(
 ) -> MarketMutationResult:
     """Accept an offer on a listing."""
     _user, internal_jwt = await get_current_user(authorization)
-    payload = body.model_dump(mode="json")
+    payload = body.model_dump(mode="json", by_alias=True)
     data = await get_container().market_service.accept_offer(
         internal_jwt,
         league_id,
@@ -264,7 +264,7 @@ async def accept_offer(
         offer_id,
         payload,
     )
-    return MarketMutationResult.model_validate(parse_payload(as_object, data))
+    return as_model(data, MarketMutationResult)
 
 
 @router.post(
@@ -288,7 +288,7 @@ async def reject_offer(
         market_id,
         offer_id,
     )
-    return MarketMutationResult.model_validate(parse_payload(as_object, data))
+    return as_model(data, MarketMutationResult)
 
 
 @router.post(
@@ -308,13 +308,13 @@ async def create_direct_offer(
     ``playerId`` in the body is the squad-entry id (``playerTeamId``).
     """
     _user, internal_jwt = await get_current_user(authorization)
-    payload = body.model_dump(mode="json")
+    payload = body.model_dump(mode="json", by_alias=True)
     data = await get_container().market_service.create_direct_offer(
         internal_jwt,
         league_id,
         payload,
     )
-    return MarketMutationResult.model_validate(parse_payload(as_object, data))
+    return as_model(data, MarketMutationResult)
 
 
 @router.delete(
@@ -338,4 +338,4 @@ async def cancel_offer(
         market_id,
         offer_id,
     )
-    return MarketMutationResult.model_validate(parse_payload(as_object, data))
+    return as_model(data, MarketMutationResult)

@@ -1,10 +1,11 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 
 import { deleteJson, paths, postJson } from "../../api/client";
+import { listingWriteSchema } from "../../api/schemas";
 import { parseSquadPlayerId } from "../../api/ids";
 import { upstreamPlayerIdBody } from "../../api/mutationBodies";
 import { leagueId } from "../../api/mappers";
-import { NeedsReauthError } from "../../api/errors";
+import { ApiContractError, NeedsReauthError } from "../../api/errors";
 import { useAuth } from "../../auth/AuthProvider";
 import { ListingReplaceError } from "./squadSale";
 import { useLeague } from "./LeagueProvider";
@@ -29,11 +30,13 @@ export function useSquadSales() {
   const { selected } = useLeague();
   const leagueKey = selected ? leagueId(selected) : "";
 
-  const onError = (error: unknown) => {
+  const onError = async (error: unknown) => {
     if (error instanceof NeedsReauthError) markNeedsReauth();
+    if (error instanceof ApiContractError) await refreshSquadSales(queryClient, leagueKey);
   };
 
   const listPlayer = useMutation({
+    retry: false,
     mutationFn: async (input: { playerTeamId: string; salePrice: number }) => {
       if (!accessToken || leagueKey === "") {
         throw new Error("Market listing requires a signed-in league.");
@@ -50,6 +53,7 @@ export function useSquadSales() {
   });
 
   const cancelListing = useMutation({
+    retry: false,
     mutationFn: async (marketId: string) => {
       if (!accessToken || leagueKey === "") {
         throw new Error("Cancelling an offer requires a signed-in league.");
@@ -61,33 +65,37 @@ export function useSquadSales() {
   });
 
   const modifyListing = useMutation({
+    retry: false,
     mutationFn: async (input: { playerTeamId: string; marketId: string; salePrice: number }) => {
       if (!accessToken || leagueKey === "") {
         throw new Error("Changing an offer requires a signed-in league.");
       }
-      await deleteJson(paths.marketListing(leagueKey, input.marketId), accessToken);
+      const squadId = parseSquadPlayerId(input.playerTeamId);
+      if (!squadId) throw new Error("Invalid squad player id.");
+      const listingPath = paths.marketListings(leagueKey);
+      const previousPath = paths.marketListing(leagueKey, input.marketId);
+      const body = listingWriteSchema.parse({
+        ...upstreamPlayerIdBody(squadId), salePrice: input.salePrice,
+      });
+      await deleteJson(previousPath, accessToken);
       try {
-        const squadId = parseSquadPlayerId(input.playerTeamId);
-        if (!squadId) throw new Error("Invalid squad player id.");
-        return await postJson(paths.marketListings(leagueKey), accessToken, {
-          ...upstreamPlayerIdBody(squadId),
-          salePrice: input.salePrice,
-        });
+        return await postJson(listingPath, accessToken, body);
       } catch (error) {
         if (error instanceof NeedsReauthError) throw error;
         throw new ListingReplaceError();
       }
     },
     onSuccess: () => refreshSquadSales(queryClient, leagueKey),
-    onError: (error) => {
-      onError(error);
+    onError: async (error) => {
+      await onError(error);
       if (error instanceof ListingReplaceError) {
-        void refreshSquadSales(queryClient, leagueKey);
+        await refreshSquadSales(queryClient, leagueKey);
       }
     },
   });
 
   const sellImmediately = useMutation({
+    retry: false,
     mutationFn: async (playerTeamId: string) => {
       if (!accessToken || leagueKey === "") {
         throw new Error("Immediate sale requires a signed-in league.");

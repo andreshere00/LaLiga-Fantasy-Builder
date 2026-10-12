@@ -3,43 +3,24 @@
 from __future__ import annotations
 
 from dataclasses import replace
-from typing import Any
 from urllib.parse import parse_qs, urlparse
 
 from fastapi import APIRouter, Header, Request
 from fastapi.responses import RedirectResponse
-from pydantic import BaseModel, Field
 
 from fantasy_auth.api.deps import get_container, get_current_user, require_csrf
+from fantasy_auth.api.schemas import (
+    CompleteRedirectRequest,
+    CompleteRedirectResponse,
+    ConnectionStatusResponse,
+    OkResponse,
+    PairingCompleteRequest,
+    PairingCompleteResponse,
+    PairingCreateResponse,
+)
 from fantasy_auth.domain.errors import PairingError, SessionError
 
 router = APIRouter(tags=["laliga"])
-
-
-class PairingCreateResponse(BaseModel):
-    """One-time pairing credentials for the local helper."""
-
-    pairing_id: str
-    secret: str
-    expires_at: int
-    nonce: str
-
-
-class PairingCompleteRequest(BaseModel):
-    """Helper-submitted token payload to finish pairing."""
-
-    secret: str = Field(..., min_length=8)
-    token_response: dict[str, Any]
-
-
-class ConnectionStatusResponse(BaseModel):
-    """Public LaLiga connection status (no secrets)."""
-
-    linked: bool
-    needs_reauth: bool = False
-    manager_id: str | None = None
-    manager_name: str | None = None
-    avatar: str | None = None
 
 
 @router.post("/laliga/pairings", response_model=PairingCreateResponse)
@@ -66,13 +47,13 @@ async def create_pairing(
     )
 
 
-class CompleteRedirectRequest(BaseModel):
-    """Native callback captured by the local URL handler."""
-
-    callback: str = Field(..., min_length=8)
-
-
-@router.get("/laliga/login")
+@router.get(
+    "/laliga/login",
+    response_class=RedirectResponse,
+    response_model=None,
+    status_code=302,
+    responses={302: {"description": "Redirect to the frontend or LaLiga login."}},
+)
 async def laliga_login(request: Request) -> RedirectResponse:
     """Redirect an authenticated browser to LaLiga, or home if already linked.
 
@@ -92,11 +73,14 @@ async def laliga_login(request: Request) -> RedirectResponse:
     return RedirectResponse(url=await browser_landing_url(session_id), status_code=302)
 
 
-@router.post("/laliga/pairings/complete-redirect")
+@router.post(
+    "/laliga/pairings/complete-redirect",
+    response_model=CompleteRedirectResponse,
+)
 async def complete_redirect(
     body: CompleteRedirectRequest,
     request: Request,
-) -> dict[str, Any]:
+) -> CompleteRedirectResponse:
     """Finish pairing from a native ``authredirect://`` callback.
 
     The URL handler posts the callback. Tokens stay inside auth. The response
@@ -149,15 +133,21 @@ async def complete_redirect(
             laliga_b2c_state=None,
         )
     )
-    return {"ok": True, "frontend_origin": container.settings.frontend_origin}
+    return CompleteRedirectResponse(
+        ok=True,
+        frontend_origin=container.settings.frontend_origin,
+    )
 
 
-@router.post("/laliga/pairings/{pairing_id}/complete")
+@router.post(
+    "/laliga/pairings/{pairing_id}/complete",
+    response_model=PairingCompleteResponse,
+)
 async def complete_pairing(
     pairing_id: str,
     body: PairingCompleteRequest,
     request: Request,
-) -> dict[str, Any]:
+) -> PairingCompleteResponse:
     """Complete pairing from the local PKCE helper (rate-limited).
 
     This endpoint is called by the helper CLI, not the browser, so it uses
@@ -187,13 +177,13 @@ async def complete_pairing(
         token_response=body.token_response,
     )
     profile = result.profile
-    return {
-        "ok": True,
-        "user_id": result.user_id,
-        "manager_id": profile.user_id,
-        "manager_name": profile.manager_name,
-        "email": profile.email,
-    }
+    return PairingCompleteResponse(
+        ok=True,
+        user_id=result.user_id,
+        manager_id=profile.user_id,
+        manager_name=profile.manager_name,
+        email=profile.email,
+    )
 
 
 @router.get("/laliga/connection", response_model=ConnectionStatusResponse)
@@ -218,11 +208,11 @@ async def get_connection(
     return ConnectionStatusResponse(**status)
 
 
-@router.delete("/laliga/connection")
+@router.delete("/laliga/connection", response_model=OkResponse)
 async def delete_connection(
     request: Request,
     x_csrf_token: str | None = Header(default=None, alias="X-CSRF-Token"),
-) -> dict[str, bool]:
+) -> OkResponse:
     """Remove sealed LaLiga tokens for the current user.
 
     Args:
@@ -234,7 +224,7 @@ async def delete_connection(
     """
     user = await require_csrf(request, x_csrf_token)
     await get_container().pairings.unlink(user.user_id)
-    return {"ok": True}
+    return OkResponse(ok=True)
 
 
 async def browser_landing_url(session_id: str) -> str:

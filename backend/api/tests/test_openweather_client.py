@@ -12,7 +12,7 @@ from pydantic import SecretStr
 
 
 @pytest.mark.asyncio
-async def test_forecast_success_returns_json() -> None:
+async def test_forecast_success_returns_validated_json() -> None:
     async def handler(request: httpx.Request) -> httpx.Response:
         assert "appid=weather-key" in str(request.url)
         return httpx.Response(200, json={"list": []})
@@ -74,3 +74,22 @@ async def test_forecast_http_401_stays_503_and_keeps_provider_status() -> None:
     assert exc.value.status_code == 503
     assert exc.value.provider_status == 401
     assert "bad key" not in str(exc.value)
+
+
+@pytest.mark.asyncio
+async def test_forecast_invalid_nested_payload_raises_weather_unavailable() -> None:
+    client = OpenWeatherClient(
+        api_key=SecretStr("weather-key"),
+        base_url="https://weather.test",
+        timeout_seconds=5.0,
+        transport=httpx.MockTransport(
+            lambda r: httpx.Response(200, json={"list": [{"weather": "broken"}]})
+        ),
+    )
+
+    with pytest.raises(UpstreamError) as exc:
+        await client.forecast(41.38, 2.12)
+
+    await client.aclose()
+    assert exc.value.category == "weather_unavailable"
+    assert exc.value.status_code == 503

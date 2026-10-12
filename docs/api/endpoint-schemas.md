@@ -185,7 +185,7 @@ No path, query, or body parameters.
 |-------|------|----------|-------------|-------------|
 | `ok` | boolean | yes |  |  |
 | `league_count` | integer | yes | min=0 |  |
-| `league_ids` | array[any] | no |  |  |
+| `league_ids` | array[string \| integer] | no |  |  |
 
 Full nested fields: [`LeaguesProbeResponse`](#leaguesproberesponse).
 
@@ -346,7 +346,7 @@ Each item:
 | `teamValue` | integer | no |  |  |
 | `manager` | Manager | no |  | Manager identity. |
 | `players` | array[SquadPlayer] | no |  |  |
-| `loanedPlayers` | array[any] | no |  |  |
+| `loanedPlayers` | array[JsonValue-Output] | no |  |  |
 
 
 ### `GET` `/leagues/{league_id}/teams/{team_id}`
@@ -379,7 +379,7 @@ Get team roster and clauses
 | `teamPoints` | integer | no |  |  |
 | `manager` | Manager | no |  | Manager identity. |
 | `players` | array[SquadPlayer] | no |  |  |
-| `loanedPlayers` | array[any] | no |  |  |
+| `loanedPlayers` | array[JsonValue-Output] | no |  |  |
 
 Full nested fields: [`TeamDetail`](#teamdetail).
 
@@ -431,7 +431,7 @@ Replace the current team lineup
 | body | `tactical_formation` | array[integer] | yes |  |  |
 | body | `coach` | string \| integer | no |  |  |
 | body | `captain` | string \| integer | no |  |  |
-| body | `bench` | object | no |  |  |
+| body | `bench` | JsonObject-Input | no |  |  |
 
 #### Outputs
 
@@ -609,6 +609,12 @@ Set or increase a buyout clause
 
 **HTTP 200:** `BuyoutMutationResult`
 
+| Field | Type | Required | Constraints | Description |
+|-------|------|----------|-------------|-------------|
+| `ok` | boolean | no |  |  |
+| `message` | string | no |  |  |
+
+Full nested fields: [`BuyoutMutationResult`](#buyoutmutationresult).
 
 
 ### `POST` `/buyout/leagues/{league_id}/player-teams/{player_team_id}/pay`
@@ -629,6 +635,12 @@ Pay a buyout clause
 
 **HTTP 200:** `BuyoutMutationResult`
 
+| Field | Type | Required | Constraints | Description |
+|-------|------|----------|-------------|-------------|
+| `ok` | boolean | no |  |  |
+| `message` | string | no |  |  |
+
+Full nested fields: [`BuyoutMutationResult`](#buyoutmutationresult).
 
 
 ### `GET` `/buyout/leagues/{league_id}/player-teams/{player_team_id}/shield`
@@ -648,6 +660,11 @@ Check shield status for a squad entry
 
 **HTTP 200:** `ShieldStatus`
 
+| Field | Type | Required | Constraints | Description |
+|-------|------|----------|-------------|-------------|
+| `isShielded` | boolean | no |  |  |
+
+Full nested fields: [`ShieldStatus`](#shieldstatus).
 
 
 ### `PUT` `/buyout/leagues/{league_id}/shield`
@@ -669,6 +686,12 @@ Activate shielding for a squad entry
 
 **HTTP 200:** `BuyoutMutationResult`
 
+| Field | Type | Required | Constraints | Description |
+|-------|------|----------|-------------|-------------|
+| `ok` | boolean | no |  |  |
+| `message` | string | no |  |  |
+
+Full nested fields: [`BuyoutMutationResult`](#buyoutmutationresult).
 
 
 ## Tag: `market`
@@ -691,6 +714,12 @@ Get current league market
 
 **HTTP 200:** `MarketSnapshot`
 
+| Field | Type | Required | Constraints | Description |
+|-------|------|----------|-------------|-------------|
+| `marketPlayers` | array[MarketListing] | no |  |  |
+| `userBids` | array[MarketBid] | no |  |  |
+
+Full nested fields: [`MarketSnapshot`](#marketsnapshot).
 
 
 ### `POST` `/market/leagues/{league_id}/direct-offers`
@@ -711,6 +740,18 @@ Send a direct offer to another manager
 
 **HTTP 200:** `MarketMutationResult`
 
+| Field | Type | Required | Constraints | Description |
+|-------|------|----------|-------------|-------------|
+| `ok` | boolean | no |  |  |
+| `id` | string \| integer | no |  |  |
+| `status` | string | no |  |  |
+| `message` | string | no |  |  |
+| `marketId` | string \| integer | no |  |  |
+| `bidId` | string \| integer | no |  |  |
+| `offerId` | string \| integer | no |  |  |
+| `sold` | boolean | no |  |  |
+
+Full nested fields: [`MarketMutationResult`](#marketmutationresult).
 
 
 ### `GET` `/market/leagues/{league_id}/history`
@@ -753,6 +794,18 @@ Sell a player immediately at half market value
 
 **HTTP 200:** `MarketMutationResult`
 
+| Field | Type | Required | Constraints | Description |
+|-------|------|----------|-------------|-------------|
+| `ok` | boolean | no |  |  |
+| `id` | string \| integer | no |  |  |
+| `status` | string | no |  |  |
+| `message` | string | no |  |  |
+| `marketId` | string \| integer | no |  |  |
+| `bidId` | string \| integer | no |  |  |
+| `offerId` | string \| integer | no |  |  |
+| `sold` | boolean | no |  |  |
+
+Full nested fields: [`MarketMutationResult`](#marketmutationresult).
 
 
 ### `POST` `/market/leagues/{league_id}/listings`
@@ -773,6 +826,18 @@ List a player for sale
 
 **HTTP 200:** `MarketMutationResult`
 
+| Field | Type | Required | Constraints | Description |
+|-------|------|----------|-------------|-------------|
+| `ok` | boolean | no |  |  |
+| `id` | string \| integer | no |  |  |
+| `status` | string | no |  |  |
+| `message` | string | no |  |  |
+| `marketId` | string \| integer | no |  |  |
+| `bidId` | string \| integer | no |  |  |
+| `offerId` | string \| integer | no |  |  |
+| `sold` | boolean | no |  |  |
+
+Full nested fields: [`MarketMutationResult`](#marketmutationresult).
 
 
 ### `GET` `/market/leagues/{league_id}/player-teams/{player_team_id}/offers`
@@ -792,6 +857,12 @@ Get offers on an owned squad entry
 
 **HTTP 200:** `PlayerTeamOffers`
 
+| Field | Type | Required | Constraints | Description |
+|-------|------|----------|-------------|-------------|
+| `offers` | array[MarketOffer] | no |  |  |
+| `bids` | array[MarketBid] | no |  |  |
+
+Full nested fields: [`PlayerTeamOffers`](#playerteamoffers).
 
 
 ### `DELETE` `/market/leagues/{league_id}/{market_id}`
@@ -811,6 +882,18 @@ Withdraw a market listing
 
 **HTTP 200:** `MarketMutationResult`
 
+| Field | Type | Required | Constraints | Description |
+|-------|------|----------|-------------|-------------|
+| `ok` | boolean | no |  |  |
+| `id` | string \| integer | no |  |  |
+| `status` | string | no |  |  |
+| `message` | string | no |  |  |
+| `marketId` | string \| integer | no |  |  |
+| `bidId` | string \| integer | no |  |  |
+| `offerId` | string \| integer | no |  |  |
+| `sold` | boolean | no |  |  |
+
+Full nested fields: [`MarketMutationResult`](#marketmutationresult).
 
 
 ### `POST` `/market/leagues/{league_id}/{market_id}/bids`
@@ -831,6 +914,18 @@ Create a bid on a market listing
 
 **HTTP 200:** `MarketMutationResult`
 
+| Field | Type | Required | Constraints | Description |
+|-------|------|----------|-------------|-------------|
+| `ok` | boolean | no |  |  |
+| `id` | string \| integer | no |  |  |
+| `status` | string | no |  |  |
+| `message` | string | no |  |  |
+| `marketId` | string \| integer | no |  |  |
+| `bidId` | string \| integer | no |  |  |
+| `offerId` | string \| integer | no |  |  |
+| `sold` | boolean | no |  |  |
+
+Full nested fields: [`MarketMutationResult`](#marketmutationresult).
 
 
 ### `PUT` `/market/leagues/{league_id}/{market_id}/bids/{bid_id}`
@@ -852,6 +947,18 @@ Modify a bid
 
 **HTTP 200:** `MarketMutationResult`
 
+| Field | Type | Required | Constraints | Description |
+|-------|------|----------|-------------|-------------|
+| `ok` | boolean | no |  |  |
+| `id` | string \| integer | no |  |  |
+| `status` | string | no |  |  |
+| `message` | string | no |  |  |
+| `marketId` | string \| integer | no |  |  |
+| `bidId` | string \| integer | no |  |  |
+| `offerId` | string \| integer | no |  |  |
+| `sold` | boolean | no |  |  |
+
+Full nested fields: [`MarketMutationResult`](#marketmutationresult).
 
 
 ### `DELETE` `/market/leagues/{league_id}/{market_id}/bids/{bid_id}`
@@ -872,6 +979,18 @@ Cancel a bid
 
 **HTTP 200:** `MarketMutationResult`
 
+| Field | Type | Required | Constraints | Description |
+|-------|------|----------|-------------|-------------|
+| `ok` | boolean | no |  |  |
+| `id` | string \| integer | no |  |  |
+| `status` | string | no |  |  |
+| `message` | string | no |  |  |
+| `marketId` | string \| integer | no |  |  |
+| `bidId` | string \| integer | no |  |  |
+| `offerId` | string \| integer | no |  |  |
+| `sold` | boolean | no |  |  |
+
+Full nested fields: [`MarketMutationResult`](#marketmutationresult).
 
 
 ### `DELETE` `/market/leagues/{league_id}/{market_id}/offers/{offer_id}`
@@ -892,6 +1011,18 @@ Cancel an offer
 
 **HTTP 200:** `MarketMutationResult`
 
+| Field | Type | Required | Constraints | Description |
+|-------|------|----------|-------------|-------------|
+| `ok` | boolean | no |  |  |
+| `id` | string \| integer | no |  |  |
+| `status` | string | no |  |  |
+| `message` | string | no |  |  |
+| `marketId` | string \| integer | no |  |  |
+| `bidId` | string \| integer | no |  |  |
+| `offerId` | string \| integer | no |  |  |
+| `sold` | boolean | no |  |  |
+
+Full nested fields: [`MarketMutationResult`](#marketmutationresult).
 
 
 ### `POST` `/market/leagues/{league_id}/{market_id}/offers/{offer_id}/accept`
@@ -913,6 +1044,18 @@ Accept an offer on a listing
 
 **HTTP 200:** `MarketMutationResult`
 
+| Field | Type | Required | Constraints | Description |
+|-------|------|----------|-------------|-------------|
+| `ok` | boolean | no |  |  |
+| `id` | string \| integer | no |  |  |
+| `status` | string | no |  |  |
+| `message` | string | no |  |  |
+| `marketId` | string \| integer | no |  |  |
+| `bidId` | string \| integer | no |  |  |
+| `offerId` | string \| integer | no |  |  |
+| `sold` | boolean | no |  |  |
+
+Full nested fields: [`MarketMutationResult`](#marketmutationresult).
 
 
 ### `POST` `/market/leagues/{league_id}/{market_id}/offers/{offer_id}/reject`
@@ -933,6 +1076,18 @@ Reject an offer on a listing
 
 **HTTP 200:** `MarketMutationResult`
 
+| Field | Type | Required | Constraints | Description |
+|-------|------|----------|-------------|-------------|
+| `ok` | boolean | no |  |  |
+| `id` | string \| integer | no |  |  |
+| `status` | string | no |  |  |
+| `message` | string | no |  |  |
+| `marketId` | string \| integer | no |  |  |
+| `bidId` | string \| integer | no |  |  |
+| `offerId` | string \| integer | no |  |  |
+| `sold` | boolean | no |  |  |
+
+Full nested fields: [`MarketMutationResult`](#marketmutationresult).
 
 
 ## Tag: `player-stats`
@@ -1199,15 +1354,15 @@ Each item:
 | `slug` | string | no |  |  |
 | `positionId` | integer | no |  |  |
 | `teamId` | integer \| string | no |  |  |
-| `team` | object | no |  |  |
+| `team` | JsonObject-Output | no |  |  |
 | `playerStatus` | string | no |  |  |
 | `points` | integer | no |  |  |
 | `averagePoints` | number \| integer | no |  |  |
-| `weekPoints` | any | no |  |  |
+| `weekPoints` | JsonValue-Output | no |  |  |
 | `marketValue` | integer | no |  |  |
 | `lastSeasonPoints` | integer | no |  |  |
-| `images` | object | no |  |  |
-| `lastStats` | array[any] | no |  |  |
+| `images` | JsonObject-Output | no |  |  |
+| `lastStats` | array[JsonValue-Output] | no |  |  |
 
 
 ### `GET` `/players/{player_id}/league/{league_id}`
@@ -1234,9 +1389,9 @@ Get player card contextualized to a league
 | `buyoutClauseLockedEndTime` | string | no |  |  |
 | `isShielded` | boolean | no |  |  |
 | `managerId` | integer \| string | no |  |  |
-| `manager` | object | no |  |  |
-| `playerMarket` | object | no |  |  |
-| `playerMaster` | object | no |  |  |
+| `manager` | Manager | no |  | Manager identity. |
+| `playerMarket` | PlayerMarket | no |  | Market listing for a player on a team. |
+| `playerMaster` | PlayerMaster | no |  | Master player card. |
 
 Full nested fields: [`LeaguePlayer`](#leagueplayer).
 
@@ -1307,7 +1462,10 @@ Nested models referenced by the operations above. All Fantasy proxy models use `
 
 ### `BuyoutMutationResult`
 
-Type: `object`
+| Field | Type | Required | Constraints | Description |
+|-------|------|----------|-------------|-------------|
+| `ok` | boolean | no |  |  |
+| `message` | string | no |  |  |
 
 ### `CatalogPlayer`
 
@@ -1319,15 +1477,15 @@ Type: `object`
 | `slug` | string | no |  |  |
 | `positionId` | integer | no |  |  |
 | `teamId` | integer \| string | no |  |  |
-| `team` | object | no |  |  |
+| `team` | JsonObject-Output | no |  |  |
 | `playerStatus` | string | no |  |  |
 | `points` | integer | no |  |  |
 | `averagePoints` | number \| integer | no |  |  |
-| `weekPoints` | any | no |  |  |
+| `weekPoints` | JsonValue-Output | no |  |  |
 | `marketValue` | integer | no |  |  |
 | `lastSeasonPoints` | integer | no |  |  |
-| `images` | object | no |  |  |
-| `lastStats` | array[any] | no |  |  |
+| `images` | JsonObject-Output | no |  |  |
+| `lastStats` | array[JsonValue-Output] | no |  |  |
 
 ### `ClubTeam`
 
@@ -1522,6 +1680,22 @@ Type: `string`
 | `level` | InjuryRisk | yes |  |  |
 | `raw` | string | no |  |  |
 
+### `JsonObject-Input`
+
+Type: `object`
+
+### `JsonObject-Output`
+
+Type: `object`
+
+### `JsonValue-Input`
+
+Type: `string`
+
+### `JsonValue-Output`
+
+Type: `string`
+
 ### `LaligaCredentialProbeResponse`
 
 | Field | Type | Required | Constraints | Description |
@@ -1553,9 +1727,9 @@ Type: `string`
 | `buyoutClauseLockedEndTime` | string | no |  |  |
 | `isShielded` | boolean | no |  |  |
 | `managerId` | integer \| string | no |  |  |
-| `manager` | object | no |  |  |
-| `playerMarket` | object | no |  |  |
-| `playerMaster` | object | no |  |  |
+| `manager` | Manager | no |  | Manager identity. |
+| `playerMarket` | PlayerMarket | no |  | Market listing for a player on a team. |
+| `playerMaster` | PlayerMaster | no |  | Master player card. |
 
 ### `LeagueTeam`
 
@@ -1573,7 +1747,7 @@ Type: `string`
 | `teamValue` | integer | no |  |  |
 | `manager` | Manager | no |  | Manager identity. |
 | `players` | array[SquadPlayer] | no |  |  |
-| `loanedPlayers` | array[any] | no |  |  |
+| `loanedPlayers` | array[JsonValue-Output] | no |  |  |
 
 ### `LeagueTeamSummary`
 
@@ -1588,6 +1762,7 @@ Type: `string`
 | `position` | integer | no |  |  |
 | `previousPosition` | integer | no |  |  |
 | `isAdmin` | boolean | no |  |  |
+| `manager` | Manager | no |  | Manager identity. |
 
 ### `LeagueType`
 
@@ -1604,17 +1779,17 @@ Type: `string`
 |-------|------|----------|-------------|-------------|
 | `ok` | boolean | yes |  |  |
 | `league_count` | integer | yes | min=0 |  |
-| `league_ids` | array[any] | no |  |  |
+| `league_ids` | array[string \| integer] | no |  |  |
 
 ### `LineupFormation`
 
 | Field | Type | Required | Constraints | Description |
 |-------|------|----------|-------------|-------------|
-| `goalkeeper` | array[any] | no |  |  |
-| `defender` | array[any] | no |  |  |
-| `midfield` | array[any] | no |  |  |
-| `striker` | array[any] | no |  |  |
-| `coach` | array[any] | no |  |  |
+| `goalkeeper` | array[JsonValue-Output] | no |  |  |
+| `defender` | array[JsonValue-Output] | no |  |  |
+| `midfield` | array[JsonValue-Output] | no |  |  |
+| `striker` | array[JsonValue-Output] | no |  |  |
+| `coach` | array[JsonValue-Output] | no |  |  |
 | `captain` | string \| integer | no |  |  |
 | `bench` | object | no |  |  |
 | `tacticalFormation` | array[integer] | no |  |  |
@@ -1630,7 +1805,7 @@ Type: `string`
 | `tactical_formation` | array[integer] | yes |  |  |
 | `coach` | string \| integer | no |  |  |
 | `captain` | string \| integer | no |  |  |
-| `bench` | object | no |  |  |
+| `bench` | JsonObject-Input | no |  |  |
 
 ### `ListingWrite`
 
@@ -1655,6 +1830,17 @@ Type: `string`
 | `id` | string | no |  |  |
 | `managerName` | string | no |  |  |
 | `avatar` | string | no |  |  |
+| `profileImage` | string | no |  |  |
+
+### `MarketBid`
+
+| Field | Type | Required | Constraints | Description |
+|-------|------|----------|-------------|-------------|
+| `id` | string \| integer | no |  |  |
+| `money` | integer | no |  |  |
+| `status` | string | no |  |  |
+| `createdAt` | string | no |  |  |
+| `updatedAt` | string | no |  |  |
 
 ### `MarketExtreme`
 
@@ -1669,9 +1855,43 @@ Type: `string`
 |-------|------|----------|-------------|-------------|
 | `id` | string \| integer | no |  |  |
 
+### `MarketListing`
+
+| Field | Type | Required | Constraints | Description |
+|-------|------|----------|-------------|-------------|
+| `id` | string \| integer | no |  |  |
+| `leagueId` | string \| integer | no |  |  |
+| `leagueType` | string \| integer | no |  |  |
+| `directOffer` | boolean | no |  |  |
+| `discr` | string | no |  |  |
+| `expirationDate` | string | no |  |  |
+| `numberOfBids` | integer | no |  |  |
+| `numberOfOffers` | integer | no |  |  |
+| `bid` | MarketBid | no |  | Bid or offer row nested in a market response. |
+| `playerMaster` | PlayerMaster | no |  | Master player card. |
+
 ### `MarketMutationResult`
 
-Type: `object`
+| Field | Type | Required | Constraints | Description |
+|-------|------|----------|-------------|-------------|
+| `ok` | boolean | no |  |  |
+| `id` | string \| integer | no |  |  |
+| `status` | string | no |  |  |
+| `message` | string | no |  |  |
+| `marketId` | string \| integer | no |  |  |
+| `bidId` | string \| integer | no |  |  |
+| `offerId` | string \| integer | no |  |  |
+| `sold` | boolean | no |  |  |
+
+### `MarketOffer`
+
+| Field | Type | Required | Constraints | Description |
+|-------|------|----------|-------------|-------------|
+| `id` | string \| integer | no |  |  |
+| `money` | integer | no |  |  |
+| `status` | string | no |  |  |
+| `bidderId` | string \| integer | no |  |  |
+| `createdAt` | string | no |  |  |
 
 ### `MarketPreset`
 
@@ -1701,7 +1921,10 @@ Type: `string`
 
 ### `MarketSnapshot`
 
-Type: `object`
+| Field | Type | Required | Constraints | Description |
+|-------|------|----------|-------------|-------------|
+| `marketPlayers` | array[MarketListing] | no |  |  |
+| `userBids` | array[MarketBid] | no |  |  |
 
 ### `MarketWindow`
 
@@ -1724,7 +1947,7 @@ Type: `object`
 | Field | Type | Required | Constraints | Description |
 |-------|------|----------|-------------|-------------|
 | `id` | integer | no |  |  |
-| `images` | object | no |  |  |
+| `images` | JsonObject-Output | no |  |  |
 | `name` | string | no |  |  |
 | `nickname` | string | no |  |  |
 | `positionId` | integer | no |  |  |
@@ -1878,7 +2101,7 @@ Type: `string`
 | `teamId` | integer | no |  |  |
 | `lastSeasonPoints` | integer | no |  |  |
 | `averagePoints` | number \| integer | no |  |  |
-| `images` | object | no |  |  |
+| `images` | JsonObject-Output | no |  |  |
 | `lastStats` | array[PlayerStatWeek] | no |  |  |
 | `team` | ClubTeam | no |  | Real-world club metadata on a player. |
 
@@ -1921,7 +2144,7 @@ Type: `string`
 | `weekNumber` | integer | no |  |  |
 | `totalPoints` | integer | no |  |  |
 | `isInIdealFormation` | boolean | no |  |  |
-| `stats` | object | no |  |  |
+| `stats` | JsonObject-Output | no |  |  |
 
 ### `PlayerStatsIndex`
 
@@ -1934,7 +2157,10 @@ Type: `string`
 
 ### `PlayerTeamOffers`
 
-Type: `object`
+| Field | Type | Required | Constraints | Description |
+|-------|------|----------|-------------|-------------|
+| `offers` | array[MarketOffer] | no |  |  |
+| `bids` | array[MarketBid] | no |  |  |
 
 ### `PremiumConfigurations`
 
@@ -2013,7 +2239,9 @@ Type: `object`
 
 ### `ShieldStatus`
 
-Type: `object`
+| Field | Type | Required | Constraints | Description |
+|-------|------|----------|-------------|-------------|
+| `isShielded` | boolean | no |  |  |
 
 ### `ShieldWrite`
 
@@ -2069,6 +2297,7 @@ Type: `object`
 | `teamValue` | integer | no |  |  |
 | `teamPoints` | integer | no |  |  |
 | `teamMoney` | integer | no |  |  |
+| `avatar` | string | no |  |  |
 | `manager` | Manager | no |  | Manager identity. |
 
 ### `StartProbability`
@@ -2107,7 +2336,7 @@ Type: `string`
 | `teamPoints` | integer | no |  |  |
 | `manager` | Manager | no |  | Manager identity. |
 | `players` | array[SquadPlayer] | no |  |  |
-| `loanedPlayers` | array[any] | no |  |  |
+| `loanedPlayers` | array[JsonValue-Output] | no |  |  |
 
 ### `TeamLineup`
 

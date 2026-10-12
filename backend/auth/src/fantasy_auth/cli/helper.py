@@ -15,9 +15,11 @@ from typing import Any
 from urllib.parse import parse_qs, urlparse
 
 import httpx
+from pydantic import ValidationError
 
 from fantasy_auth.adapters.b2c_httpx import HttpxB2CClient
 from fantasy_auth.adapters.pkce import generate_state, generate_verifier, s256_challenge
+from fantasy_auth.api.schemas import PairingCompleteRequest, PairingCompleteResponse
 from fantasy_auth.config import get_settings
 
 
@@ -167,18 +169,25 @@ def complete_pairing_from_callback(
         "refresh_token_expires_in": bundle.refresh_token_expires_in,
     }
     complete_url = f"{api_base.rstrip('/')}/laliga/pairings/{pairing_id}/complete"
-    payload = {"secret": secret, "token_response": token_response}
+    try:
+        payload = PairingCompleteRequest(
+            secret=secret,
+            token_response=token_response,
+        ).model_dump(mode="json", exclude_none=True)
+    except ValidationError:
+        raise PairingHelperError("Pairing request had an invalid shape") from None
     print("Completing pairing with auth service...", file=sys.stderr)
     with httpx.Client(timeout=30.0) as client:
         response = client.post(complete_url, json=payload)
     if not response.is_success:
         raise PairingHelperError(
-            f"Complete failed: {response.status_code} {response.text}",
+            f"Complete failed: HTTP {response.status_code}",
         )
-    body = response.json()
-    if not isinstance(body, dict):
-        raise PairingHelperError("Complete returned a non-object JSON body")
-    return body
+    try:
+        body = PairingCompleteResponse.model_validate(response.json())
+    except (ValueError, ValidationError):
+        raise PairingHelperError("Complete returned an unexpected response") from None
+    return body.model_dump(mode="json", exclude_unset=True)
 
 
 def main(argv: list[str] | None = None) -> int:

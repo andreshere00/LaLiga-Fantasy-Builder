@@ -176,6 +176,7 @@ def main(argv: list[str] | None = None) -> int:
         action="store_true",
         help="Build OpenAPI from the FastAPI app instead of reading openapi.json",
     )
+    parser.add_argument("--check", action="store_true", help="Check committed Markdown for drift")
     args = parser.parse_args(argv)
 
     openapi_file = args.openapi or default_openapi_path()
@@ -188,6 +189,8 @@ def main(argv: list[str] | None = None) -> int:
     content = generate_endpoint_schemas_doc(
         schema, openapi_path=Path("../../backend/api/openapi.json")
     )
+    if args.check:
+        return 0 if out_path.is_file() and out_path.read_text(encoding="utf-8") == content else 1
     write_endpoint_schemas_doc(content, out_path)
     print(f"Wrote endpoint schemas doc to {out_path}")
     return 0

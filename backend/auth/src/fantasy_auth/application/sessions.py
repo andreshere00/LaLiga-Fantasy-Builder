@@ -8,8 +8,10 @@ from typing import Any
 from uuid import uuid4
 
 import httpx
+from pydantic import ValidationError as PydanticValidationError
 
 from fantasy_auth.adapters.pkce import generate_state, generate_verifier, s256_challenge
+from fantasy_auth.adapters.schemas import AppOidcTokenResponse
 from fantasy_auth.domain.errors import SessionError, ValidationError
 from fantasy_auth.domain.users import AppUser, extract_app_user_from_claims
 from fantasy_auth.ports.identity import AppOidcValidator
@@ -262,7 +264,11 @@ class SessionService:
             response = await client.post(self._token_url, data=data)
         if not response.is_success:
             raise ValidationError(f"app idp token exchange failed: {response.status_code}")
-        return response.json()
+        try:
+            tokens = AppOidcTokenResponse.model_validate(response.json())
+        except (ValueError, PydanticValidationError):
+            raise ValidationError("app idp token response had an unexpected shape") from None
+        return tokens.model_dump(mode="python", exclude_unset=True)
 
     async def _user_from_validated_id_token(
         self,

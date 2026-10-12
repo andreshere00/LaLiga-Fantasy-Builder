@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from fastapi import APIRouter, Header, Request
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, ConfigDict, Field
 
 from fantasy_auth.api.deps import (
     get_container,
@@ -16,6 +16,8 @@ router = APIRouter(tags=["internal"])
 
 class LaligaBearerResponse(BaseModel):
     """Short-lived LaLiga bearer for Fantasy API calls."""
+
+    model_config = ConfigDict(extra="forbid")
 
     bearer_token: str
     token_type: str = "Bearer"

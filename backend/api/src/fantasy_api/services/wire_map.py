@@ -17,7 +17,11 @@ from fantasy_api.schemas.player_stats import (
     StatSource,
     default_stat_value,
 )
-from fantasy_api.schemas.scraped import FutbolFantasyWire, ScrapedStat
+from fantasy_api.schemas.scraped import (
+    FutbolFantasyWire,
+    RawScrapedDocument,
+    ScrapedStat,
+)
 
 MADRID = ZoneInfo("Europe/Madrid")
 
@@ -72,8 +76,11 @@ _RISK_MAP = {
 
 
 def parse_wire_document(raw: Mapping[str, Any]) -> FutbolFantasyWire:
-    """Validate tolerant wire models after camelCase normalisation."""
-    normalised = _normalise_document(raw)
+    """Validate the scraper response before normalising its camelCase fields."""
+    upstream = RawScrapedDocument.model_validate(raw)
+    normalised = _normalise_document(
+        upstream.model_dump(mode="python", by_alias=True, exclude_unset=True)
+    )
     return FutbolFantasyWire.model_validate(normalised)
 
 

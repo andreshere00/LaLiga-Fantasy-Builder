@@ -2,12 +2,22 @@
 
 from __future__ import annotations
 
-import json
 from dataclasses import dataclass
 from typing import Any
 
 import httpx
+from pydantic import ValidationError
 
+from fantasy_auth.api.schemas import (
+    AuthErrorResponse,
+    ConnectionStatusResponse,
+    InternalTokenResponse,
+)
+from fantasy_auth.cli.browser_session.contracts import (
+    require_recognized_response,
+    response_adapter,
+    validate_lineup_write,
+)
 from fantasy_auth.cli.browser_session.errors import BrowserSessionError
 
 
@@ -44,10 +54,18 @@ class AuthClient:
             raise BrowserSessionError(
                 f"POST /auth/token failed: {_error_detail(response)}",
             )
-        token = response.json().get("access_token") if _is_object(response) else None
-        if not token:
-            raise BrowserSessionError("POST /auth/token missing access_token")
-        return str(token)
+        try:
+            token = InternalTokenResponse.model_validate(response.json())
+        except ValidationError as exc:
+            if any(
+                error["loc"] == ("access_token",) and error["type"] == "missing"
+                for error in exc.errors()
+            ):
+                raise BrowserSessionError("POST /auth/token missing access_token") from None
+            raise BrowserSessionError("POST /auth/token returned an invalid response") from None
+        except ValueError:
+            raise BrowserSessionError("POST /auth/token returned an invalid response") from None
+        return token.access_token
 
     def is_linked(self) -> bool:
         """Return whether /laliga/connection reports a linked vault.
@@ -71,8 +89,13 @@ class AuthClient:
             raise BrowserSessionError(
                 f"GET /laliga/connection failed: HTTP {response.status_code}",
             )
-        data = response.json()
-        return bool(isinstance(data, dict) and data.get("linked"))
+        try:
+            status = ConnectionStatusResponse.model_validate(response.json())
+        except (ValueError, ValidationError):
+            raise BrowserSessionError(
+                "GET /laliga/connection returned an invalid response"
+            ) from None
+        return status.linked
 
     def _cookies(self) -> dict[str, str]:
         """Return auth cookie header values."""
@@ -99,8 +122,14 @@ class FantasyClient:
         Raises:
             BrowserSessionError: When the request fails.
         """
+        try:
+            adapter = response_adapter("GET", path)
+        except ValueError:
+            raise BrowserSessionError(
+                f"GET {path} has no browser-session response contract"
+            ) from None
         response = self._request("GET", path)
-        return response.json()
+        return _validated_api_json(response, adapter, "GET", path)
 
     def put_json(self, path: str, body: dict[str, Any]) -> Any:
         """PUT a JSON body with the internal JWT.
@@ -110,18 +139,20 @@ class FantasyClient:
             body: JSON object payload.
 
         Returns:
-            Parsed JSON body, or ``{}`` when the response is empty.
+            Parsed JSON body validated against the route response contract.
 
         Raises:
             BrowserSessionError: When the request fails or is not JSON.
         """
-        response = self._request("PUT", path, json_body=body)
-        if not response.content:
-            return {}
         try:
-            return response.json()
-        except json.JSONDecodeError as exc:
-            raise BrowserSessionError(f"API PUT {path} returned non-JSON") from exc
+            request_body = validate_lineup_write(body)
+            adapter = response_adapter("PUT", path)
+        except (ValueError, ValidationError):
+            raise BrowserSessionError(
+                f"PUT {path} has an invalid request or no response contract"
+            ) from None
+        response = self._request("PUT", path, json_body=request_body)
+        return _validated_api_json(response, adapter, "PUT", path)
 
     def _request(
         self,
@@ -219,19 +250,31 @@ def connection_linked(
 def _error_detail(response: httpx.Response) -> str:
     """Summarize an HTTP error body without leaking large payloads."""
     try:
-        data = response.json()
-    except json.JSONDecodeError:
+        error = AuthErrorResponse.model_validate(response.json())
+    except (ValueError, ValidationError):
         return f"HTTP {response.status_code}"
-    if isinstance(data, dict):
-        error = data.get("error") or ""
-        detail = data.get("detail") or ""
-        return f"HTTP {response.status_code} {error} {detail}".strip()
-    return f"HTTP {response.status_code}"
+    detail = error.detail or error.error
+    return f"HTTP {response.status_code} {error.error} {detail}".strip()
+
+
+def _validated_api_json(response: httpx.Response, adapter: Any, method: str, path: str) -> Any:
+    """Validate an API response and return JSON-compatible wire data."""
+    try:
+        validated = adapter.validate_python(response.json())
+        require_recognized_response(validated, allow_empty=method == "PUT")
+        return adapter.dump_python(
+            validated,
+            mode="json",
+            by_alias=True,
+            exclude_none=True,
+        )
+    except (ValueError, ValidationError):
+        raise BrowserSessionError(f"API {method} {path} returned an invalid response") from None
 
 
 def _is_object(response: httpx.Response) -> bool:
     """Return True when the response JSON is an object."""
     try:
         return isinstance(response.json(), dict)
-    except json.JSONDecodeError:
+    except ValueError:
         return False

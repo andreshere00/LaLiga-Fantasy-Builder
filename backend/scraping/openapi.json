@@ -510,7 +510,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "title": "Response Get Futbolfantasy Player Internal Players Futbolfantasy Get"
+                  "$ref": "#/components/schemas/FutbolFantasyPlayer"
                 }
               }
             }
@@ -616,6 +616,263 @@
   },
   "components": {
     "schemas": {
+      "AttackStats": {
+        "properties": {
+          "goals": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Goals"
+          },
+          "assists": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Assists"
+          },
+          "assistsWithoutGoal": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Assistswithoutgoal"
+          },
+          "penaltyGoals": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Penaltygoals"
+          },
+          "shotsOnTarget": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/Ratio"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "goalsPerShot": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/Ratio"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "woodworkShots": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Woodworkshots"
+          },
+          "clearChancesCreated": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Clearchancescreated"
+          },
+          "clearChancesMissed": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Clearchancesmissed"
+          },
+          "ownGoals": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Owngoals"
+          },
+          "passes": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/Ratio"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "keyPasses": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Keypasses"
+          },
+          "successfulDribbles": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Successfuldribbles"
+          },
+          "crosses": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/Ratio"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "cornersWon": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Cornerswon"
+          },
+          "cornersAccurate": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/Ratio"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "freeKicksAccurate": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/Ratio"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "directFreeKicksOnTarget": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/Ratio"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "title": "AttackStats",
+        "description": "Attack and chance-creation season totals."
+      },
+      "Availability": {
+        "properties": {
+          "status": {
+            "type": "string",
+            "enum": [
+              "available",
+              "doubtful",
+              "injured",
+              "suspended",
+              "unknown"
+            ],
+            "title": "Status"
+          },
+          "matchday": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Matchday"
+          },
+          "label": {
+            "type": "string",
+            "title": "Label"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "status",
+          "label"
+        ],
+        "title": "Availability",
+        "description": "Published availability label, plus the enum it mapped to."
+      },
+      "BodyZoneCount": {
+        "properties": {
+          "zone": {
+            "type": "string",
+            "title": "Zone"
+          },
+          "incidents": {
+            "type": "integer",
+            "title": "Incidents"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "zone",
+          "incidents"
+        ],
+        "title": "BodyZoneCount",
+        "description": "One zone on the injury map, copied verbatim."
+      },
       "CacheStats": {
         "properties": {
           "entries": {
@@ -669,6 +926,888 @@
         ],
         "title": "Candidate",
         "description": "One scored slug."
+      },
+      "Competition": {
+        "type": "string",
+        "enum": [
+          "laliga",
+          "conference_league",
+          "europa_league",
+          "champions_league",
+          "copa_del_rey",
+          "supercopa",
+          "other"
+        ],
+        "title": "Competition",
+        "description": "Competition family derived from the season slug or a matched fixture."
+      },
+      "CountPercent": {
+        "properties": {
+          "count": {
+            "type": "integer",
+            "title": "Count"
+          },
+          "percent": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Percent"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "count"
+        ],
+        "title": "CountPercent",
+        "description": "A count with an optional published percent."
+      },
+      "CurrentInjury": {
+        "properties": {
+          "diagnosis": {
+            "type": "string",
+            "title": "Diagnosis"
+          },
+          "since": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Since"
+          },
+          "ongoing": {
+            "type": "boolean",
+            "title": "Ongoing",
+            "default": true
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "diagnosis"
+        ],
+        "title": "CurrentInjury",
+        "description": "Medical state printed in the header. Absent when the header has none."
+      },
+      "DaznStats": {
+        "properties": {
+          "minutesPlayed": {
+            "$ref": "#/components/schemas/StatLine"
+          },
+          "goals": {
+            "$ref": "#/components/schemas/StatLine"
+          },
+          "assists": {
+            "$ref": "#/components/schemas/StatLine"
+          },
+          "bigChancesCreated": {
+            "$ref": "#/components/schemas/StatLine"
+          },
+          "ballsIntoBox": {
+            "$ref": "#/components/schemas/StatLine"
+          },
+          "penaltiesCommitted": {
+            "$ref": "#/components/schemas/StatLine"
+          },
+          "penaltiesWon": {
+            "$ref": "#/components/schemas/StatLine"
+          },
+          "penaltiesSaved": {
+            "$ref": "#/components/schemas/StatLine"
+          },
+          "saves": {
+            "$ref": "#/components/schemas/StatLine"
+          },
+          "clearances": {
+            "$ref": "#/components/schemas/StatLine"
+          },
+          "penaltiesMissed": {
+            "$ref": "#/components/schemas/StatLine"
+          },
+          "ownGoals": {
+            "$ref": "#/components/schemas/StatLine"
+          },
+          "goalsConceded": {
+            "$ref": "#/components/schemas/StatLine"
+          },
+          "yellowCards": {
+            "$ref": "#/components/schemas/StatLine"
+          },
+          "redCard": {
+            "$ref": "#/components/schemas/StatLine"
+          },
+          "shots": {
+            "$ref": "#/components/schemas/StatLine"
+          },
+          "successfulDribbles": {
+            "$ref": "#/components/schemas/StatLine"
+          },
+          "ballRecoveries": {
+            "$ref": "#/components/schemas/StatLine"
+          },
+          "ballsLost": {
+            "$ref": "#/components/schemas/StatLine"
+          },
+          "daznPoints": {
+            "$ref": "#/components/schemas/StatLine"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "title": "DaznStats",
+        "description": "The 19 fixed DAZN fields, in contract order."
+      },
+      "DefenseStats": {
+        "properties": {
+          "possessionsLost": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Possessionslost"
+          },
+          "errorsLeadingToGoal": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Errorsleadingtogoal"
+          },
+          "interceptions": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Interceptions"
+          },
+          "ballSteals": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Ballsteals"
+          },
+          "effectiveClearances": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Effectiveclearances"
+          },
+          "blockedShots": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Blockedshots"
+          },
+          "lastManSteals": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Lastmansteals"
+          },
+          "penaltiesScored": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/Ratio"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "penaltiesMissed": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Penaltiesmissed"
+          },
+          "penaltiesCommitted": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Penaltiescommitted"
+          },
+          "penaltiesWon": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Penaltieswon"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "title": "DefenseStats",
+        "description": "Losses, defensive actions and penalties."
+      },
+      "DisciplineStats": {
+        "properties": {
+          "foulsReceived": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Foulsreceived"
+          },
+          "foulsCommitted": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Foulscommitted"
+          },
+          "yellowCards": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Yellowcards"
+          },
+          "redCards": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Redcards"
+          },
+          "aerialDuelsWon": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Aerialduelswon"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "title": "DisciplineStats",
+        "description": "Fouls, cards and aerial duels."
+      },
+      "EventCount": {
+        "properties": {
+          "event": {
+            "type": "string",
+            "title": "Event"
+          },
+          "label": {
+            "type": "string",
+            "title": "Label"
+          },
+          "count": {
+            "type": "integer",
+            "title": "Count"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "event",
+          "label",
+          "count"
+        ],
+        "title": "EventCount",
+        "description": "Event count with no points column."
+      },
+      "EventStat": {
+        "properties": {
+          "event": {
+            "type": "string",
+            "title": "Event"
+          },
+          "label": {
+            "type": "string",
+            "title": "Label"
+          },
+          "count": {
+            "type": "integer",
+            "title": "Count"
+          },
+          "points": {
+            "type": "number",
+            "title": "Points",
+            "default": 0.0
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "event",
+          "label",
+          "count"
+        ],
+        "title": "EventStat",
+        "description": "Count plus optional fantasy points for one event."
+      },
+      "FantasyPoints": {
+        "properties": {
+          "mode": {
+            "type": "string",
+            "title": "Mode"
+          },
+          "matchesCounted": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Matchescounted"
+          },
+          "total": {
+            "$ref": "#/components/schemas/GrossNet"
+          },
+          "totalHome": {
+            "$ref": "#/components/schemas/GrossNet"
+          },
+          "totalAway": {
+            "$ref": "#/components/schemas/GrossNet"
+          },
+          "average": {
+            "$ref": "#/components/schemas/GrossNet"
+          },
+          "averageHome": {
+            "$ref": "#/components/schemas/GrossNet"
+          },
+          "averageAway": {
+            "$ref": "#/components/schemas/GrossNet"
+          },
+          "averageLast3": {
+            "$ref": "#/components/schemas/GrossNet"
+          },
+          "scoringModes": {
+            "items": {
+              "$ref": "#/components/schemas/ScoringMode"
+            },
+            "type": "array",
+            "title": "Scoringmodes"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "mode",
+          "total",
+          "totalHome",
+          "totalAway",
+          "average",
+          "averageHome",
+          "averageAway",
+          "averageLast3"
+        ],
+        "title": "FantasyPoints",
+        "description": "Aggregates for LaLiga Fantasy Oficial only."
+      },
+      "FixtureLayers": {
+        "properties": {
+          "statisticalPoints": {
+            "anyOf": [
+              {
+                "items": {
+                  "$ref": "#/components/schemas/EventStat"
+                },
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Statisticalpoints"
+          },
+          "relevo": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/RelevoLayer"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "events": {
+            "anyOf": [
+              {
+                "items": {
+                  "$ref": "#/components/schemas/EventCount"
+                },
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Events"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "title": "FixtureLayers",
+        "description": "Expandable match layers that the page actually published."
+      },
+      "FixtureMatch": {
+        "properties": {
+          "homeCode": {
+            "type": "string",
+            "title": "Homecode"
+          },
+          "awayCode": {
+            "type": "string",
+            "title": "Awaycode"
+          },
+          "homeGoals": {
+            "type": "integer",
+            "title": "Homegoals"
+          },
+          "awayGoals": {
+            "type": "integer",
+            "title": "Awaygoals"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "homeCode",
+          "awayCode",
+          "homeGoals",
+          "awayGoals"
+        ],
+        "title": "FixtureMatch",
+        "description": "Home and away codes and the score line."
+      },
+      "FixtureRow": {
+        "properties": {
+          "date": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Date"
+          },
+          "matchday": {
+            "type": "integer",
+            "title": "Matchday"
+          },
+          "match": {
+            "$ref": "#/components/schemas/FixtureMatch"
+          },
+          "playerSide": {
+            "anyOf": [
+              {
+                "type": "string",
+                "enum": [
+                  "home",
+                  "away"
+                ]
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Playerside"
+          },
+          "minutesOut": {
+            "$ref": "#/components/schemas/MinutesNote"
+          },
+          "stars": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Stars"
+          },
+          "grade": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Grade"
+          },
+          "daznPoints": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Daznpoints"
+          },
+          "weekPoints": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Weekpoints"
+          },
+          "iconEvents": {
+            "items": {
+              "$ref": "#/components/schemas/IconEvent"
+            },
+            "type": "array",
+            "title": "Iconevents"
+          },
+          "stats": {
+            "$ref": "#/components/schemas/DaznStats"
+          },
+          "extraEvents": {
+            "items": {
+              "$ref": "#/components/schemas/EventStat"
+            },
+            "type": "array",
+            "title": "Extraevents"
+          },
+          "layers": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/FixtureLayers"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "competition": {
+            "$ref": "#/components/schemas/Competition",
+            "default": "laliga"
+          },
+          "competitionSlug": {
+            "type": "string",
+            "title": "Competitionslug",
+            "default": ""
+          },
+          "starter": {
+            "type": "boolean",
+            "title": "Starter",
+            "default": false
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "matchday",
+          "match",
+          "minutesOut",
+          "stats"
+        ],
+        "title": "FixtureRow",
+        "description": "One LaLiga or competition match row."
+      },
+      "Form": {
+        "properties": {
+          "value": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Value"
+          },
+          "rating": {
+            "anyOf": [
+              {
+                "type": "string",
+                "enum": [
+                  "bad",
+                  "mid",
+                  "good",
+                  "very_good"
+                ]
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Rating"
+          },
+          "visualOnly": {
+            "type": "boolean",
+            "title": "Visualonly",
+            "default": false
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "title": "Form",
+        "description": "Form widget with a numeric value or a published arrow rating."
+      },
+      "FutbolFantasyPlayer": {
+        "properties": {
+          "schemaVersion": {
+            "type": "string",
+            "title": "Schemaversion",
+            "default": "1"
+          },
+          "meta": {
+            "$ref": "#/components/schemas/PageMeta"
+          },
+          "profile": {
+            "$ref": "#/components/schemas/PlayerProfile"
+          },
+          "matches": {
+            "$ref": "#/components/schemas/MatchesBlock"
+          },
+          "market": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/MarketBlock"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "seasonStats": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/SeasonStats"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "fantasyPoints": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/FantasyPoints"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "fixtures": {
+            "items": {
+              "$ref": "#/components/schemas/FixtureRow"
+            },
+            "type": "array",
+            "title": "Fixtures"
+          },
+          "missing": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Missing"
+          },
+          "warnings": {
+            "items": {
+              "$ref": "#/components/schemas/PartialParseWarning"
+            },
+            "type": "array",
+            "title": "Warnings"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "meta",
+          "profile",
+          "matches"
+        ],
+        "title": "FutbolFantasyPlayer",
+        "description": "Hierarchical player document produced from one or more FutbolFantasy pages.\n\nAttributes:\n    schema_version: Output schema id.\n    meta: Page identity and versions.\n    profile: Biography and status.\n    matches: Recent and upcoming widgets.\n    market: Market widget, when the HTML contained it.\n    season_stats: Season totals for this page's competition.\n    fantasy_points: LaLiga Fantasy Oficial aggregates.\n    fixtures: Match rows in published order before a merge sorts them.\n    missing: Sorted dotted paths the page did not expose.\n    warnings: Ordered section warnings."
+      },
+      "GoalkeeperStats": {
+        "properties": {
+          "saves": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Saves"
+          },
+          "standoutSaves": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Standoutsaves"
+          },
+          "claimedCrosses": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Claimedcrosses"
+          },
+          "goalsConceded": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Goalsconceded"
+          },
+          "goalLineSaves": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Goallinesaves"
+          },
+          "penaltiesSaved": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Penaltiessaved"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "title": "GoalkeeperStats",
+        "description": "Goalkeeper season block. Present only on goalkeeper pages."
+      },
+      "GrossNet": {
+        "properties": {
+          "gross": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Gross"
+          },
+          "net": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Net"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "title": "GrossNet",
+        "description": "Gross and net fantasy points. A dash on the page is null."
       },
       "HTTPValidationError": {
         "properties": {
@@ -737,6 +1876,219 @@
         "title": "HealthResponse",
         "description": "Liveness and readiness body."
       },
+      "Hierarchy": {
+        "properties": {
+          "label": {
+            "type": "string",
+            "title": "Label"
+          },
+          "rank": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Rank"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "label"
+        ],
+        "title": "Hierarchy",
+        "description": "Role in the squad. Unknown labels keep ``rank`` empty."
+      },
+      "IconEvent": {
+        "properties": {
+          "kind": {
+            "type": "string",
+            "title": "Kind"
+          },
+          "count": {
+            "type": "integer",
+            "title": "Count"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "kind",
+          "count"
+        ],
+        "title": "IconEvent",
+        "description": "Decoded icon in the events column."
+      },
+      "Identity": {
+        "properties": {
+          "shirtNumber": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Shirtnumber"
+          },
+          "displayName": {
+            "type": "string",
+            "title": "Displayname"
+          },
+          "positionCode": {
+            "anyOf": [
+              {
+                "type": "string",
+                "enum": [
+                  "POR",
+                  "DEF",
+                  "MED",
+                  "DEL"
+                ]
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Positioncode"
+          },
+          "clubBadge": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Clubbadge"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "displayName"
+        ],
+        "title": "Identity",
+        "description": "Header identity on the player sheet."
+      },
+      "InjuryEntry": {
+        "properties": {
+          "start": {
+            "type": "string",
+            "format": "date",
+            "title": "Start"
+          },
+          "end": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "End"
+          },
+          "ongoing": {
+            "type": "boolean",
+            "title": "Ongoing",
+            "default": false
+          },
+          "diagnosis": {
+            "type": "string",
+            "title": "Diagnosis"
+          },
+          "durationDays": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Durationdays"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "start",
+          "diagnosis"
+        ],
+        "title": "InjuryEntry",
+        "description": "One row of the injury history table."
+      },
+      "InjuryHistory": {
+        "properties": {
+          "bodyMap": {
+            "items": {
+              "$ref": "#/components/schemas/BodyZoneCount"
+            },
+            "type": "array",
+            "title": "Bodymap"
+          },
+          "bodyMapNote": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Bodymapnote"
+          },
+          "entries": {
+            "items": {
+              "$ref": "#/components/schemas/InjuryEntry"
+            },
+            "type": "array",
+            "title": "Entries"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "title": "InjuryHistory",
+        "description": "Body map plus history. An empty ``entries`` list means the table was empty."
+      },
+      "InjuryRisk": {
+        "properties": {
+          "level": {
+            "anyOf": [
+              {
+                "type": "string",
+                "enum": [
+                  "low",
+                  "medium",
+                  "high"
+                ]
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Level"
+          },
+          "label": {
+            "type": "string",
+            "title": "Label"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "label"
+        ],
+        "title": "InjuryRisk",
+        "description": "Published injury-risk label."
+      },
       "InvalidateRequest": {
         "properties": {
           "slug": {
@@ -770,6 +2122,145 @@
         "title": "InvalidateResponse",
         "description": "Number of dropped cache entries."
       },
+      "JsonLdPerson": {
+        "properties": {
+          "name": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Name"
+          },
+          "birthDate": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Birthdate"
+          },
+          "birthPlace": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Birthplace"
+          },
+          "nationalities": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Nationalities"
+          },
+          "heightCm": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Heightcm"
+          },
+          "url": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Url"
+          },
+          "sameAs": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Sameas"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "title": "JsonLdPerson",
+        "description": "Person node read from JSON-LD. Used to fill gaps and to cross-check."
+      },
+      "LabeledNumber": {
+        "properties": {
+          "label": {
+            "type": "string",
+            "title": "Label"
+          },
+          "value": {
+            "type": "number",
+            "title": "Value"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "label",
+          "value"
+        ],
+        "title": "LabeledNumber",
+        "description": "Named number inside an expandable layer."
+      },
+      "LabeledValue": {
+        "properties": {
+          "label": {
+            "type": "string",
+            "title": "Label"
+          },
+          "raw": {
+            "type": "string",
+            "title": "Raw"
+          },
+          "parsedInt": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Parsedint"
+          },
+          "parsedRatio": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/Ratio"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "label",
+          "raw"
+        ],
+        "title": "LabeledValue",
+        "description": "Season stat whose Spanish label is not in the map."
+      },
       "LinkedDataSummary": {
         "properties": {
           "players": {
@@ -794,6 +2285,371 @@
         "title": "LinkedDataSummary",
         "description": "Index counts; the 16k slugs are not returned."
       },
+      "MarketBlock": {
+        "properties": {
+          "currentValue": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Currentvalue"
+          },
+          "lastChange": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/MarketChange"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "maxRecent": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/MarketExtreme"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "minRecent": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/MarketExtreme"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "windowDays": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Windowdays"
+          },
+          "widgetSeason": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Widgetseason"
+          },
+          "dailyMoves": {
+            "items": {
+              "$ref": "#/components/schemas/MarketMove"
+            },
+            "type": "array",
+            "title": "Dailymoves"
+          },
+          "series": {
+            "anyOf": [
+              {
+                "items": {
+                  "$ref": "#/components/schemas/MarketPoint"
+                },
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Series"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "title": "MarketBlock",
+        "description": "FutbolFantasy market widget. Complementary to the Fantasy API series."
+      },
+      "MarketChange": {
+        "properties": {
+          "date": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Date"
+          },
+          "absolute": {
+            "type": "integer",
+            "title": "Absolute"
+          },
+          "percent": {
+            "type": "number",
+            "title": "Percent"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "absolute",
+          "percent"
+        ],
+        "title": "MarketChange",
+        "description": "Last published value change."
+      },
+      "MarketExtreme": {
+        "properties": {
+          "value": {
+            "type": "integer",
+            "title": "Value"
+          },
+          "date": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Date"
+          },
+          "derived": {
+            "type": "boolean",
+            "title": "Derived",
+            "default": false
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "value"
+        ],
+        "title": "MarketExtreme",
+        "description": "A max or min taken from the widget text or from a series."
+      },
+      "MarketMove": {
+        "properties": {
+          "date": {
+            "type": "string",
+            "format": "date",
+            "title": "Date"
+          },
+          "change": {
+            "type": "integer",
+            "title": "Change"
+          },
+          "value": {
+            "type": "integer",
+            "title": "Value"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "date",
+          "change",
+          "value"
+        ],
+        "title": "MarketMove",
+        "description": "One daily market row."
+      },
+      "MarketPoint": {
+        "properties": {
+          "date": {
+            "type": "string",
+            "format": "date",
+            "title": "Date"
+          },
+          "value": {
+            "type": "integer",
+            "title": "Value"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "date",
+          "value"
+        ],
+        "title": "MarketPoint",
+        "description": "One point of the market series, when the widget payload is in the HTML."
+      },
+      "MatchesBlock": {
+        "properties": {
+          "recent": {
+            "items": {
+              "$ref": "#/components/schemas/RecentMatch"
+            },
+            "type": "array",
+            "title": "Recent"
+          },
+          "upcoming": {
+            "items": {
+              "$ref": "#/components/schemas/UpcomingMatch"
+            },
+            "type": "array",
+            "title": "Upcoming"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "title": "MatchesBlock",
+        "description": "Header calendar widgets, in the order the page printed them."
+      },
+      "MaxProfitableBid": {
+        "properties": {
+          "label": {
+            "type": "string",
+            "title": "Label"
+          },
+          "amount": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Amount"
+          },
+          "profitable": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Profitable"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "label"
+        ],
+        "title": "MaxProfitableBid",
+        "description": "Maximum bid the page still calls profitable."
+      },
+      "MinutesNote": {
+        "properties": {
+          "raw": {
+            "type": "string",
+            "title": "Raw"
+          },
+          "event": {
+            "type": "string",
+            "enum": [
+              "full",
+              "subbed_off",
+              "subbed_on",
+              "unused",
+              "unknown"
+            ],
+            "title": "Event"
+          },
+          "minutes": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Minutes"
+          },
+          "minute": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Minute"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "raw",
+          "event"
+        ],
+        "title": "MinutesNote",
+        "description": "Minutes cell such as ``90'``, ``Sale 76'`` or ``Entra 62'``."
+      },
+      "NewsItem": {
+        "properties": {
+          "title": {
+            "type": "string",
+            "title": "Title"
+          },
+          "url": {
+            "type": "string",
+            "title": "Url"
+          },
+          "publishedOn": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Publishedon"
+          },
+          "source": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Source"
+          },
+          "summary": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Summary"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "title",
+          "url"
+        ],
+        "title": "NewsItem",
+        "description": "One news link from the player sheet."
+      },
       "PageKind": {
         "type": "string",
         "enum": [
@@ -804,6 +2660,504 @@
         ],
         "title": "PageKind",
         "description": "Which FutbolFantasy document a body represents."
+      },
+      "PageMeta": {
+        "properties": {
+          "source": {
+            "type": "string",
+            "const": "futbolfantasy",
+            "title": "Source"
+          },
+          "url": {
+            "type": "string",
+            "title": "Url"
+          },
+          "slug": {
+            "type": "string",
+            "title": "Slug"
+          },
+          "seasonUrl": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Seasonurl"
+          },
+          "seasonLabel": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Seasonlabel"
+          },
+          "club": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Club"
+          },
+          "totalsScope": {
+            "type": "string",
+            "const": "laliga",
+            "title": "Totalsscope",
+            "default": "laliga"
+          },
+          "marketWidgetUrl": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Marketwidgeturl"
+          },
+          "marketWidgetId": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Marketwidgetid"
+          },
+          "extractedOn": {
+            "type": "string",
+            "format": "date",
+            "title": "Extractedon"
+          },
+          "fetchedAt": {
+            "type": "string",
+            "title": "Fetchedat"
+          },
+          "parserVersion": {
+            "type": "string",
+            "title": "Parserversion"
+          },
+          "rulesVersion": {
+            "type": "string",
+            "title": "Rulesversion"
+          },
+          "layout": {
+            "type": "string",
+            "title": "Layout"
+          },
+          "inputSha256": {
+            "type": "string",
+            "title": "Inputsha256"
+          },
+          "staticBlocksVersion": {
+            "type": "string",
+            "title": "Staticblocksversion"
+          },
+          "jsonLd": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/JsonLdPerson"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "source",
+          "url",
+          "slug",
+          "extractedOn",
+          "fetchedAt",
+          "parserVersion",
+          "rulesVersion",
+          "layout",
+          "inputSha256",
+          "staticBlocksVersion"
+        ],
+        "title": "PageMeta",
+        "description": "Page identity. Totals on a player sheet are LaLiga-scoped."
+      },
+      "PartialParseWarning": {
+        "properties": {
+          "code": {
+            "type": "string",
+            "title": "Code"
+          },
+          "section": {
+            "type": "string",
+            "title": "Section"
+          },
+          "path": {
+            "type": "string",
+            "title": "Path"
+          },
+          "ruleId": {
+            "type": "string",
+            "title": "Ruleid"
+          },
+          "message": {
+            "type": "string",
+            "title": "Message"
+          },
+          "severity": {
+            "type": "string",
+            "enum": [
+              "info",
+              "warning",
+              "error"
+            ],
+            "title": "Severity",
+            "default": "warning"
+          },
+          "preview": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Preview"
+          },
+          "index": {
+            "type": "integer",
+            "title": "Index",
+            "default": 0
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "code",
+          "section",
+          "path",
+          "ruleId",
+          "message"
+        ],
+        "title": "PartialParseWarning",
+        "description": "Section-level warning. ``preview`` is cleaned text, never markup."
+      },
+      "Participation": {
+        "properties": {
+          "matchesPlayed": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Matchesplayed"
+          },
+          "starter": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/CountPercent"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "substitute": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/CountPercent"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "minutes": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Minutes"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "title": "Participation",
+        "description": "Matches, starts, substitute appearances and minutes."
+      },
+      "PersonalInfo": {
+        "properties": {
+          "fullName": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Fullname"
+          },
+          "ageYears": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Ageyears"
+          },
+          "birthDate": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Birthdate"
+          },
+          "birthPlace": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Birthplace"
+          },
+          "nationalities": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Nationalities"
+          },
+          "heightCm": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Heightcm"
+          },
+          "preferredFoot": {
+            "anyOf": [
+              {
+                "type": "string",
+                "enum": [
+                  "left",
+                  "right",
+                  "both"
+                ]
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Preferredfoot"
+          },
+          "contractEnd": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Contractend"
+          },
+          "social": {
+            "items": {
+              "$ref": "#/components/schemas/SocialLink"
+            },
+            "type": "array",
+            "title": "Social"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "title": "PersonalInfo",
+        "description": "Biographical block. Age is the published number, never recomputed."
+      },
+      "PlatformRole": {
+        "properties": {
+          "platform": {
+            "type": "string",
+            "title": "Platform"
+          },
+          "role": {
+            "type": "string",
+            "title": "Role"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "platform",
+          "role"
+        ],
+        "title": "PlatformRole",
+        "description": "Role string published for one fantasy platform."
+      },
+      "PlayerProfile": {
+        "properties": {
+          "identity": {
+            "$ref": "#/components/schemas/Identity"
+          },
+          "injury": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/CurrentInjury"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "availability": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/Availability"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "form": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/Form"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "startProbability": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/StartProbability"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "injuryRisk": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/InjuryRisk"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "hierarchy": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/Hierarchy"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "maxProfitableBid": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/MaxProfitableBid"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "personal": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/PersonalInfo"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "position": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/PositionInfo"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "platformRoles": {
+            "items": {
+              "$ref": "#/components/schemas/PlatformRole"
+            },
+            "type": "array",
+            "title": "Platformroles"
+          },
+          "injuryHistory": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/InjuryHistory"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "news": {
+            "items": {
+              "$ref": "#/components/schemas/NewsItem"
+            },
+            "type": "array",
+            "title": "News"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "identity"
+        ],
+        "title": "PlayerProfile",
+        "description": "Identity, status, biography, injuries and news."
       },
       "PlayerRef": {
         "properties": {
@@ -911,6 +3265,37 @@
         "title": "PlayerRoute",
         "description": "Resolved player page.\n\nAttributes:\n    slug: Route slug.\n    url: Player URL for the requested season.\n    distance: Winning distance.\n    candidates: At most five scored alternatives, best first.\n    metric: Metric that produced the winner.\n    team_verified: True when the team probe matched, None when not checked."
       },
+      "PositionInfo": {
+        "properties": {
+          "main": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Main"
+          },
+          "demarcations": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Demarcations"
+          },
+          "fieldMapAvailable": {
+            "type": "boolean",
+            "title": "Fieldmapavailable",
+            "default": false
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "title": "PositionInfo",
+        "description": "Main position and the demarcation list, in page order."
+      },
       "ProbeRequest": {
         "properties": {
           "name": {
@@ -987,6 +3372,244 @@
         "title": "ProbeResponse",
         "description": "Fragments per rule."
       },
+      "Ratio": {
+        "properties": {
+          "numerator": {
+            "type": "integer",
+            "title": "Numerator"
+          },
+          "denominator": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Denominator"
+          },
+          "percent": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Percent"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "numerator"
+        ],
+        "title": "Ratio",
+        "description": "Numerator, optional denominator, optional integer percent."
+      },
+      "RecentMatch": {
+        "properties": {
+          "date": {
+            "type": "string",
+            "format": "date",
+            "title": "Date"
+          },
+          "matchday": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Matchday"
+          },
+          "competition": {
+            "$ref": "#/components/schemas/Competition",
+            "default": "other"
+          },
+          "competitionRaw": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Competitionraw"
+          },
+          "homeTeam": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Hometeam"
+          },
+          "awayTeam": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Awayteam"
+          },
+          "opponent": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Opponent"
+          },
+          "score": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/Score"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "playerSide": {
+            "anyOf": [
+              {
+                "type": "string",
+                "enum": [
+                  "home",
+                  "away"
+                ]
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Playerside"
+          },
+          "minutes": {
+            "$ref": "#/components/schemas/MinutesNote"
+          },
+          "stats": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/DaznStats"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "statsSource": {
+            "anyOf": [
+              {
+                "type": "string",
+                "const": "futbolfantasy"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Statssource"
+          },
+          "weekPoints": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Weekpoints"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "date",
+          "minutes"
+        ],
+        "title": "RecentMatch",
+        "description": "One row of the last-five widget."
+      },
+      "RelevoLayer": {
+        "properties": {
+          "daznPoints": {
+            "type": "integer",
+            "title": "Daznpoints"
+          },
+          "breakdown": {
+            "items": {
+              "$ref": "#/components/schemas/LabeledNumber"
+            },
+            "type": "array",
+            "title": "Breakdown"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "daznPoints"
+        ],
+        "title": "RelevoLayer",
+        "description": "DAZN / Relevo breakdown. This is the only non-oficial layer that is read."
+      },
+      "Score": {
+        "properties": {
+          "home": {
+            "type": "integer",
+            "title": "Home"
+          },
+          "away": {
+            "type": "integer",
+            "title": "Away"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "home",
+          "away"
+        ],
+        "title": "Score",
+        "description": "Goals in the order the page printed them."
+      },
+      "ScoringMode": {
+        "properties": {
+          "platform": {
+            "type": "string",
+            "title": "Platform"
+          },
+          "variants": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Variants"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "platform"
+        ],
+        "title": "ScoringMode",
+        "description": "Another scoring product listed on the page. Its numbers are not read."
+      },
       "ScrapeOptions": {
         "properties": {
           "bypass_cache": {
@@ -1032,14 +3655,12 @@
           "error": {
             "anyOf": [
               {
-                "additionalProperties": true,
-                "type": "object"
+                "$ref": "#/components/schemas/ScrapeOutcomeError"
               },
               {
                 "type": "null"
               }
-            ],
-            "title": "Error"
+            ]
           }
         },
         "type": "object",
@@ -1048,6 +3669,40 @@
         ],
         "title": "ScrapeOutcome",
         "description": "Per-player batch result."
+      },
+      "ScrapeOutcomeError": {
+        "properties": {
+          "error": {
+            "type": "string",
+            "title": "Error"
+          },
+          "detail": {
+            "type": "string",
+            "title": "Detail"
+          },
+          "candidates": {
+            "anyOf": [
+              {
+                "items": {
+                  "type": "string"
+                },
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Candidates"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "error",
+          "detail"
+        ],
+        "title": "ScrapeOutcomeError",
+        "description": "Typed item-level error in a successful batch response."
       },
       "ScrapePlayersRequest": {
         "properties": {
@@ -1166,6 +3821,131 @@
         "title": "ScrapedPage",
         "description": "One downloaded document plus the fetch metadata the parser is allowed to read.\n\nAttributes:\n    source: Site family. Only ``futbolfantasy`` is accepted.\n    kind: Player sheet, market widget, club calendar, or competition page.\n    url: Absolute page URL.\n    fetched_at: Original fetch time in UTC. Cached pages keep this instant.\n    status_code: HTTP status. Anything other than 200 is rejected.\n    html: Response body as text. Session cookies are already removed.\n    from_cache: Informational. The parser does not branch on it.\n    season: Season key such as ``2026-27``.\n    player_slug: Route slug, checked against the canonical URL.\n    season_slug: Competition route such as ``laliga-26-27``."
       },
+      "SeasonStats": {
+        "properties": {
+          "view": {
+            "anyOf": [
+              {
+                "type": "string",
+                "enum": [
+                  "totals",
+                  "breakdown"
+                ]
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "View"
+          },
+          "matchesCounted": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Matchescounted"
+          },
+          "participation": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/Participation"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "attack": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/AttackStats"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "discipline": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/DisciplineStats"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "defense": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/DefenseStats"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "goalkeeper": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/GoalkeeperStats"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "other": {
+            "items": {
+              "$ref": "#/components/schemas/LabeledValue"
+            },
+            "type": "array",
+            "title": "Other"
+          },
+          "selectorCatalog": {
+            "items": {
+              "$ref": "#/components/schemas/StatGroup"
+            },
+            "type": "array",
+            "title": "Selectorcatalog"
+          },
+          "derivedFields": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Derivedfields"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "title": "SeasonStats",
+        "description": "LaLiga season totals. ``derived_fields`` lists totals summed from match cells."
+      },
+      "SocialLink": {
+        "properties": {
+          "network": {
+            "type": "string",
+            "title": "Network"
+          },
+          "url": {
+            "type": "string",
+            "title": "Url"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "network",
+          "url"
+        ],
+        "title": "SocialLink",
+        "description": "http or https profile link."
+      },
       "Source": {
         "type": "string",
         "enum": [
@@ -1173,6 +3953,210 @@
         ],
         "title": "Source",
         "description": "Third-party page family. FBref is not parsed."
+      },
+      "StartProbability": {
+        "properties": {
+          "matchday": {
+            "type": "integer",
+            "title": "Matchday"
+          },
+          "percent": {
+            "type": "integer",
+            "title": "Percent"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "matchday",
+          "percent"
+        ],
+        "title": "StartProbability",
+        "description": "Chance of starting the next matchday."
+      },
+      "StatGroup": {
+        "properties": {
+          "group": {
+            "type": "string",
+            "title": "Group"
+          },
+          "stats": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Stats"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "group"
+        ],
+        "title": "StatGroup",
+        "description": "One optgroup in the metric selector."
+      },
+      "StatLine": {
+        "properties": {
+          "count": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Count"
+          },
+          "points": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Points"
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "ok",
+              "implied_zero",
+              "partial",
+              "unavailable",
+              "not_applicable"
+            ],
+            "title": "Status",
+            "default": "unavailable"
+          },
+          "source": {
+            "anyOf": [
+              {
+                "type": "string",
+                "const": "futbolfantasy"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Source"
+          },
+          "reason": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Reason"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "title": "StatLine",
+        "description": "One DAZN metric on a match.\n\nAttributes:\n    count: Published count. Absent when the layer did not include the metric.\n    points: Fantasy points from the ``X p`` layer. A missing figure is ``0``.\n    status: How the count was obtained.\n    source: Which site published the count.\n    reason: Stable absence or caveat code."
+      },
+      "UpcomingMatch": {
+        "properties": {
+          "date": {
+            "type": "string",
+            "format": "date",
+            "title": "Date"
+          },
+          "matchday": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Matchday"
+          },
+          "kickoff": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Kickoff"
+          },
+          "isHome": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Ishome"
+          },
+          "competition": {
+            "$ref": "#/components/schemas/Competition",
+            "default": "other"
+          },
+          "competitionRaw": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Competitionraw"
+          },
+          "homeTeam": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Hometeam"
+          },
+          "awayTeam": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Awayteam"
+          },
+          "opponent": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Opponent"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "date"
+        ],
+        "title": "UpcomingMatch",
+        "description": "One row of the next-five widget."
       },
       "ValidationError": {
         "properties": {

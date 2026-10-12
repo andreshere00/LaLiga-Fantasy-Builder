@@ -220,7 +220,7 @@ function PlayersList() {
   const sales = useSquadSales();
   const now = useNow();
   const { user } = useAuth();
-  const userId = user?.user_id ?? null;
+  const userId = user?.userId ?? null;
   const [searchParams, setSearchParams] = useSearchParams();
   const urlState = useMemo(
     () => parsePlayersSearchParams(searchParams),

@@ -79,7 +79,9 @@ rows is disabled.
 
 Models: `fantasy_api.schemas.players` (catalog/league card) and
 `fantasy_api.schemas.player_stats` (stats segments). Catalog `weekPoints` stays
-untyped (upstream uses week objects; league rosters use a scalar).
+an explicit recursive JSON value (upstream uses week objects; league rosters use a scalar).
+Pydantic validates player and stats payloads, including query bounds; frontend API
+responses and query inputs use camelCase Zod contracts before entering UI state.
 
 ## Identifiers
 
@@ -105,3 +107,11 @@ uv run fantasy-players --player-id 7 --league-id 42 --jwt "$INTERNAL_JWT"
 uv run fantasy-player-stats --player-id 4288 --segment index --jwt "$INTERNAL_JWT"
 uv run fantasy-player-stats --player-id 4288 --segment detail --jwt "$INTERNAL_JWT"
 ```
+
+Catalog `teamId` accepts an integer or a decimal-digit string; malformed values
+produce a sanitized 502, with the resolver retaining its bounded stale-cache fallback.
+League cards validate known manager, market and master-player nested fields.
+Statistics validate `TeamsMasterRow` and `MarketHistoryPoint` provider DTOs before
+club lookup and history normalization; malformed samples fail the market segment.
+The frontend validates all stats query bounds and date-window combinations before
+fetch, including repeated `include` segments on the detail endpoint.

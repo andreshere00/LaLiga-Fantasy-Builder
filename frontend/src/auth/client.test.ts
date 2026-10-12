@@ -8,15 +8,15 @@ import { MemoryTokenStore } from "./tokenStore";
 import type { LaligaConnection, SessionView } from "./types";
 
 const SESSION: SessionView = {
-  user: { user_id: "user-1", email: "demo@fantasy-builder.local", name: "Demo" },
-  csrf_token: "csrf-1",
+  user: { userId: "user-1", email: "demo@fantasy-builder.local", name: "Demo" },
+  csrfToken: "csrf-1",
 };
 
 const LINKED: LaligaConnection = {
   linked: true,
-  needs_reauth: false,
-  manager_id: "mgr-1",
-  manager_name: "Andreshere",
+  needsReauth: false,
+  managerId: "mgr-1",
+  managerName: "Andreshere",
   avatar: "https://cdn.example/mgr.png",
 };
 
@@ -86,6 +86,35 @@ describe("AuthClient", () => {
     setItem.mockRestore();
   });
 
+  it("exchange_invalid_token_response_does_not_store_token", async () => {
+    const store = new MemoryTokenStore();
+    const client = new AuthClient(
+      vi.fn(async () =>
+        json({
+          access_token: "jwt-1",
+          token_type: "Bearer",
+          expires_in: true,
+          expires_at: 1_800_000_000,
+        }),
+      ),
+      store,
+    );
+
+    await expect(client.exchange("csrf-1")).rejects.toThrow();
+    expect(store.get()).toBeNull();
+  });
+
+  it("exchange_error_response_uses_validated_generic_error_without_detail", async () => {
+    const store = new MemoryTokenStore();
+    const client = new AuthClient(
+      vi.fn(async () => json({ error: "provider_error", detail: "private detail" }, 503)),
+      store,
+    );
+
+    await expect(client.exchange("csrf-1")).rejects.toThrow("Unable to exchange the session");
+    expect(store.get()).toBeNull();
+  });
+
   it("logout_after_exchange_clears_memory_token", async () => {
     const store = new MemoryTokenStore();
     const fetchFn = vi.fn(async (input: string) => {
@@ -112,7 +141,7 @@ describe("resolveGate", () => {
   it("connectionReady_linked_without_reauth_leaves_the_gate", () => {
     expect(connectionReady(LINKED)).toBe(true);
     expect(connectionReady({ ...LINKED, linked: false })).toBe(false);
-    expect(connectionReady({ ...LINKED, needs_reauth: true })).toBe(false);
+    expect(connectionReady({ ...LINKED, needsReauth: true })).toBe(false);
   });
 
   it("resolveGate_api_needs_reauth_returns_reconnect_state", () => {
@@ -122,7 +151,7 @@ describe("resolveGate", () => {
     expect(
       resolveGate({
         session: SESSION,
-        connection: { ...LINKED, needs_reauth: true },
+        connection: { ...LINKED, needsReauth: true },
         needsReauth: false,
       }),
     ).toBe("needs-reauth");

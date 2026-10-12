@@ -193,3 +193,16 @@ async def test_exchange_code_provider_error_on_missing_tokens() -> None:
     # Act / Assert
     with pytest.raises(ProviderError):
         await client.exchange_code(code="c", code_verifier="v", redirect_uri="r")
+
+
+@pytest.mark.asyncio
+async def test_exchange_code_rejects_invalid_token_field_types() -> None:
+    # Arrange
+    def handler(_request: httpx.Request) -> httpx.Response:
+        return httpx.Response(200, json={"access_token": 123, "id_token": "id"})
+
+    client = make_client(httpx.MockTransport(handler))
+
+    # Act / Assert
+    with pytest.raises(ProviderError, match="unexpected shape"):
+        await client.exchange_code(code="c", code_verifier="v", redirect_uri="r")

@@ -14,6 +14,8 @@ To add a route, follow [Adding endpoints](../adding-endpoints.md).
 
 All require `Authorization: Bearer <internal JWT>`. Models:
 `fantasy_api.schemas.teams` (`extra="allow"` on reads).
+Pydantic validates API inputs and outputs; lineup writes reject extra fields. The
+frontend validates its camelCase DTOs with Zod and maps them to the existing wire keys.
 
 ## Identifiers
 
@@ -39,3 +41,7 @@ cd backend/api
 uv run fantasy-teams --jwt "$INTERNAL_JWT"
 uv run fantasy-teams --team-id "$TEAM_ID" --week 5 --json
 ```
+
+Frontend lineup saves reconcile affected reads after an invalid successful response
+without retrying the PUT. Listing replacements validate the full replacement and
+both identifiers before cancelling the previous listing.

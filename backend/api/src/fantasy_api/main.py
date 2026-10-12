@@ -19,7 +19,7 @@ from fantasy_api.domain.errors import (
     UpstreamError,
 )
 from fantasy_api.openapi import API_DESCRIPTION, OPENAPI_TAGS, attach_openapi
-from fantasy_api.schemas.common import HealthResponse
+from fantasy_api.schemas.common import ErrorResponse, HealthResponse
 
 
 @asynccontextmanager
@@ -109,30 +109,24 @@ def create_app(
         _request: Request,
         exc: UnauthorizedError,
     ) -> JSONResponse:
-        return JSONResponse(
-            status_code=401,
-            content={"error": "unauthorized", "detail": str(exc)},
-        )
+        body = ErrorResponse(error="unauthorized", detail=str(exc))
+        return JSONResponse(status_code=401, content=body.model_dump(mode="json"))
 
     @app.exception_handler(NotFoundError)
     async def not_found_handler(
         _request: Request,
         exc: NotFoundError,
     ) -> JSONResponse:
-        return JSONResponse(
-            status_code=404,
-            content={"error": "not_found", "detail": str(exc)},
-        )
+        body = ErrorResponse(error="not_found", detail=str(exc))
+        return JSONResponse(status_code=404, content=body.model_dump(mode="json"))
 
     @app.exception_handler(NeedsReauthError)
     async def needs_reauth_handler(
         _request: Request,
         exc: NeedsReauthError,
     ) -> JSONResponse:
-        return JSONResponse(
-            status_code=401,
-            content={"error": "needs_reauth", "detail": str(exc)},
-        )
+        body = ErrorResponse(error="needs_reauth", detail=str(exc))
+        return JSONResponse(status_code=401, content=body.model_dump(mode="json"))
 
     @app.exception_handler(UpstreamError)
     async def upstream_handler(
@@ -140,9 +134,10 @@ def create_app(
         exc: UpstreamError,
     ) -> JSONResponse:
         status = exc.status_code or 502
+        body = ErrorResponse(error=exc.category, detail=str(exc))
         return JSONResponse(
             status_code=status if 400 <= status < 600 else 502,
-            content={"error": exc.category, "detail": str(exc)},
+            content=body.model_dump(mode="json"),
         )
 
     return app

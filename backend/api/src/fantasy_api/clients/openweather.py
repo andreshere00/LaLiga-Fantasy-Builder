@@ -3,12 +3,12 @@
 from __future__ import annotations
 
 import logging
-from typing import Any
 
 import httpx
-from pydantic import SecretStr
+from pydantic import SecretStr, ValidationError
 
 from fantasy_api.domain.errors import UpstreamError
+from fantasy_api.schemas.weather_provider import OpenWeatherForecast
 
 logger = logging.getLogger(__name__)
 
@@ -42,7 +42,7 @@ class OpenWeatherClient:
         """Close the shared HTTP client."""
         await self._http.aclose()
 
-    async def forecast(self, lat: float, lon: float) -> Any:
+    async def forecast(self, lat: float, lon: float) -> dict[str, object]:
         """Return the raw forecast document for a coordinate pair."""
         if not self.enabled:
             raise UpstreamError(
@@ -75,11 +75,12 @@ class OpenWeatherClient:
                 provider_status=response.status_code,
             )
         try:
-            return response.json()
-        except ValueError as exc:
+            forecast = OpenWeatherForecast.model_validate(response.json())
+        except (ValueError, ValidationError) as exc:
             logger.warning("weather non-json: %s", type(exc).__name__)
             raise UpstreamError(
                 "weather unavailable",
                 status_code=503,
                 category="weather_unavailable",
             ) from None
+        return forecast.model_dump(mode="python")

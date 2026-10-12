@@ -18,6 +18,9 @@ Authenticated LaLiga league reads proxied by `backend/api` under
 
 All require `Authorization: Bearer <internal JWT>`. Models:
 `fantasy_api.schemas.leagues` (`extra="allow"`).
+Python response DTO attributes use snake_case with aliases for Fantasy's camelCase
+wire keys; malformed provider fields fail as sanitized 502 errors. Frontend responses
+are parsed by the corresponding Zod endpoint schemas.
 
 `FantasyLeague.token` (private join code) is proxied on `GET /leagues`; the
 probe redacts bearers but not that field.

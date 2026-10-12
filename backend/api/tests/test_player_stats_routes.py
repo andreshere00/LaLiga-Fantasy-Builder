@@ -38,7 +38,7 @@ def rsa_pems() -> tuple[str, str]:
     return private_pem, public_pem
 
 
-def make_client(public_pem: str) -> TestClient:
+def make_client(public_pem: str, *, market_history: object | None = None) -> TestClient:
     scrape_calls: list[str] = []
     scrape_params: list[dict[str, str]] = []
     golden = json.loads(GOLDEN.read_text(encoding="utf-8"))
@@ -63,6 +63,8 @@ def make_client(public_pem: str) -> TestClient:
                 ],
             )
         if request.url.path.endswith("/market-value"):
+            if market_history is not None:
+                return httpx.Response(200, json=market_history)
             return httpx.Response(
                 200,
                 json=[
@@ -274,3 +276,24 @@ def test_unknown_player_returns_not_found(rsa_pems: tuple[str, str]) -> None:
         )
     assert response.status_code == 404
     assert response.json()["error"] == "not_found"
+
+
+@pytest.mark.parametrize(
+    "row",
+    [
+        {"date": "2026-01-01", "marketValue": "provider secret"},
+        {"date": 1234, "marketValue": 1},
+        {"date": "2026-01-01", "marketValue": True},
+    ],
+)
+def test_stats_market_invalid_provider_sample_returns_sanitized_502(
+    rsa_pems: tuple[str, str], row: dict
+) -> None:
+    private, public = rsa_pems
+    with make_client(public, market_history=[row]) as client:
+        response = client.get(
+            "/players/4288/stats/market",
+            headers={"Authorization": f"Bearer {mint_internal_jwt(private)}"},
+        )
+    assert response.status_code == 502
+    assert "provider secret" not in response.text

@@ -9,18 +9,43 @@ import pytest
 from cli_http_stub import clear_cli_credential_env, patch_httpx_client
 from fantasy_api.cli import player_stats as player_stats_cli
 
-INDEX = {"player": {"id": "4288"}, "segments": []}
-MARKET = {"window": {"end_value": 120}}
+ENVELOPE = {
+    "player_id": "4288",
+    "season": "2026-27",
+    "generated_at": "2026-10-12T10:00:00Z",
+}
+INDEX = {
+    "player": {"id": "4288"},
+    "season": "2026-27",
+    "generated_at": "2026-10-12T10:00:00Z",
+    "segments": [],
+}
+MARKET = {
+    **ENVELOPE,
+    "window": {
+        "from": "2026-01-01",
+        "to": "2026-10-01",
+        "days": 30,
+        "end_value": 120,
+    },
+}
 
 
 def _routes(extra: dict[tuple[str, str], object] | None = None) -> dict[tuple[str, str], object]:
     base: dict[tuple[str, str], object] = {
         ("GET", "/players/4288/stats"): INDEX,
-        ("GET", "/players/4288/stats/fixtures"): {"fixtures": []},
+        ("GET", "/players/4288/stats/fixtures"): {**ENVELOPE, "fixtures": []},
         ("GET", "/players/4288/stats/market"): MARKET,
-        ("GET", "/players/4288/stats/matches/recent"): {"matches": []},
-        ("GET", "/players/4288/stats/matches/upcoming"): {"matches": []},
-        ("GET", "/players/4288/stats/profile"): {"injury": {}},
+        ("GET", "/players/4288/stats/matches/recent"): {**ENVELOPE, "matches": []},
+        ("GET", "/players/4288/stats/matches/upcoming"): {**ENVELOPE, "matches": []},
+        ("GET", "/players/4288/stats/profile"): {
+            **ENVELOPE,
+            "injury": {},
+            "start_probability": {},
+            "injury_risk": {"level": "unknown"},
+            "max_profitable_bid": {},
+            "hierarchy": {},
+        },
     }
     if extra:
         base.update(extra)
@@ -87,17 +112,13 @@ def test_main_single_segment_market_with_query_params(
             "--segment",
             "market",
             "--preset",
-            "d30",
-            "--from",
-            "2026-09-01",
-            "--to",
-            "2026-10-01",
+            "30d",
             "--json",
         ],
     )
 
     assert code == 0
-    assert seen == ["d30"]
+    assert seen == ["30d"]
 
 
 def test_main_fixtures_and_matches_pass_optional_flags(
@@ -108,15 +129,15 @@ def test_main_fixtures_and_matches_pass_optional_flags(
 
     def fixtures_handler(request: httpx.Request) -> httpx.Response:
         seen["fixtures"] = dict(request.url.params.multi_items())
-        return httpx.Response(200, json={"fixtures": []})
+        return httpx.Response(200, json={**ENVELOPE, "fixtures": []})
 
     def recent_handler(request: httpx.Request) -> httpx.Response:
         seen["recent"] = dict(request.url.params.multi_items())
-        return httpx.Response(200, json={"matches": []})
+        return httpx.Response(200, json={**ENVELOPE, "matches": []})
 
     def upcoming_handler(request: httpx.Request) -> httpx.Response:
         seen["upcoming"] = dict(request.url.params.multi_items())
-        return httpx.Response(200, json={"matches": []})
+        return httpx.Response(200, json={**ENVELOPE, "matches": []})
 
     patch_httpx_client(
         monkeypatch,
@@ -189,6 +210,9 @@ def test_main_detail_segment_single_request(
 ) -> None:
     detail = {
         "player_id": "4288",
+        "player": {"id": "4288"},
+        "season": "2026-27",
+        "generated_at": "2026-10-12T10:00:00Z",
         "market": MARKET,
         "segment_errors": [
             {"segment": "fixtures", "code": "disabled", "detail": "segment disabled"}

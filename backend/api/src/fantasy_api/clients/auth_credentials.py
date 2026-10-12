@@ -3,15 +3,14 @@
 from __future__ import annotations
 
 import json
-from dataclasses import dataclass
 
 import httpx
+from pydantic import BaseModel, ConfigDict, StrictInt, StrictStr, ValidationError
 
 from fantasy_api.domain.errors import NeedsReauthError, UpstreamError
 
 
-@dataclass(frozen=True, slots=True)
-class LaligaBearer:
+class LaligaBearer(BaseModel):
     """LaLiga bearer returned by auth.
 
     Attributes:
@@ -20,9 +19,11 @@ class LaligaBearer:
         token_type: Usually ``Bearer``.
     """
 
-    bearer_token: str
-    expires_at: int
-    token_type: str = "Bearer"
+    model_config = ConfigDict(extra="forbid", frozen=True)
+
+    bearer_token: StrictStr
+    expires_at: StrictInt
+    token_type: StrictStr = "Bearer"
 
 
 class AuthCredentialsClient:
@@ -93,11 +94,14 @@ class AuthCredentialsClient:
                 status_code=502,
                 category="auth_error",
             ) from exc
-        return LaligaBearer(
-            bearer_token=str(data["bearer_token"]),
-            expires_at=int(data["expires_at"]),
-            token_type=str(data.get("token_type") or "Bearer"),
-        )
+        try:
+            return LaligaBearer.model_validate(data)
+        except ValidationError as exc:
+            raise UpstreamError(
+                "auth response had an unexpected shape",
+                status_code=502,
+                category="auth_error",
+            ) from exc
 
 
 def _safe_json(response: httpx.Response) -> dict:

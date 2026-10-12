@@ -6,6 +6,7 @@ from fastapi import APIRouter, Header, Request, Response
 from fastapi.responses import JSONResponse, RedirectResponse
 
 from fantasy_auth.api.deps import get_container, require_csrf
+from fantasy_auth.api.schemas import OkResponse, SessionViewResponse
 from fantasy_auth.domain.errors import SessionError
 
 router = APIRouter(tags=["auth"])
@@ -55,7 +56,13 @@ def _clear_session_cookies(response: Response) -> None:
         )
 
 
-@router.get("/auth/login")
+@router.get(
+    "/auth/login",
+    response_class=RedirectResponse,
+    response_model=None,
+    status_code=302,
+    responses={302: {"description": "Redirect to the application identity provider."}},
+)
 async def auth_login() -> RedirectResponse:
     """Start app OIDC login and set pending session cookies.
 
@@ -73,7 +80,17 @@ async def auth_login() -> RedirectResponse:
     return response
 
 
-@router.get("/auth/callback")
+@router.get(
+    "/auth/callback",
+    response_model=None,
+    responses={
+        200: {
+            "model": SessionViewResponse,
+            "description": "JSON session view for non-browser clients.",
+        },
+        302: {"description": "Redirect to the frontend for browser clients."},
+    },
+)
 async def auth_callback(
     request: Request,
     code: str,
@@ -102,14 +119,14 @@ async def auth_callback(
         code=code,
         state=state,
     )
-    body = {
-        "user": {
+    body = SessionViewResponse(
+        user={
             "user_id": view.user.user_id,
             "email": view.user.email,
             "name": view.user.name,
         },
-        "csrf_token": view.csrf_token,
-    }
+        csrf_token=view.csrf_token,
+    )
     if _wants_html(request.headers.get("accept")):
         from fantasy_auth.api.pairings import browser_landing_url
 
@@ -118,7 +135,7 @@ async def auth_callback(
             status_code=302,
         )
     else:
-        response = JSONResponse(content=body)
+        response = JSONResponse(content=body.model_dump(mode="json"))
     _set_session_cookies(
         response,
         session_id=session_id,
@@ -127,7 +144,7 @@ async def auth_callback(
     return response
 
 
-@router.post("/auth/logout")
+@router.post("/auth/logout", response_model=OkResponse)
 async def auth_logout(
     request: Request,
     x_csrf_token: str | None = Header(default=None, alias="X-CSRF-Token"),
@@ -145,13 +162,14 @@ async def auth_logout(
     if session_id:
         await require_csrf(request, x_csrf_token)
         await container.sessions.logout(session_id)
-    response = JSONResponse(content={"ok": True})
+    body = OkResponse(ok=True)
+    response = JSONResponse(content=body.model_dump(mode="json"))
     _clear_session_cookies(response)
     return response
 
 
-@router.get("/auth/me")
-async def auth_me(request: Request) -> dict:
+@router.get("/auth/me", response_model=SessionViewResponse)
+async def auth_me(request: Request) -> SessionViewResponse:
     """Return the current app user and CSRF token.
 
     Returns:
@@ -162,11 +180,11 @@ async def auth_me(request: Request) -> dict:
     if not session_id:
         raise SessionError()
     view = await container.sessions.get_me(session_id)
-    return {
-        "user": {
+    return SessionViewResponse(
+        user={
             "user_id": view.user.user_id,
             "email": view.user.email,
             "name": view.user.name,
         },
-        "csrf_token": view.csrf_token,
-    }
+        csrf_token=view.csrf_token,
+    )

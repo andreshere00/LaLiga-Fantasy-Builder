@@ -1,24 +1,13 @@
 import { clubMediaFromId } from "./clubMedia";
+import type {
+  CurrentWeekDto,
+  FantasyLeagueDto,
+  ManagerDto,
+  StandingRowDto,
+} from "./schemas";
 
-export type ManagerInfo = {
-  id?: string | number | null;
-  managerName?: string | null;
-  avatar?: string | null;
-  profileImage?: string | null;
-};
-
-export type StandingRow = {
-  position?: number | null;
-  points?: number | null;
-  teamId?: string | number | null;
-  manager?: ManagerInfo | null;
-  team?: {
-    id?: string | number | null;
-    teamValue?: number | null;
-    avatar?: string | null;
-    manager?: ManagerInfo | null;
-  } | null;
-};
+export type ManagerInfo = ManagerDto;
+export type StandingRow = StandingRowDto;
 
 export type RankingEntry = {
   teamId: string;
@@ -30,22 +19,8 @@ export type RankingEntry = {
   teamValue: number | null;
 };
 
-export type FantasyLeague = {
-  id?: string | number | null;
-  name?: string | null;
-  team?: {
-    id?: string | number | null;
-    money?: number | null;
-    teamValue?: number | null;
-    manager?: ManagerInfo | null;
-  } | null;
-};
-
-export type CurrentWeek = {
-  previousWeek?: number | null;
-  weekNumber?: number | null;
-  openingWeekDate?: string | null;
-};
+export type FantasyLeague = FantasyLeagueDto;
+export type CurrentWeek = CurrentWeekDto;
 
 export type PlayerMedia = {
   photoUrl: string | null;

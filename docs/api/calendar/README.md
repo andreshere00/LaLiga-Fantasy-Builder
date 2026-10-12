@@ -32,6 +32,8 @@ Upstream paths:
 
 All require `Authorization: Bearer <internal JWT>`. Models live in
 `fantasy_api.schemas.calendar` (`extra="allow"` for unknown upstream fields).
+The API validates known fields with Pydantic and maps malformed upstream payloads
+to sanitized 502 errors; the frontend parses calendar responses with Zod.
 
 ## Identifiers
 

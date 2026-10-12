@@ -6,7 +6,7 @@ import type { ReactNode } from "react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 import { paths } from "../../api/client";
-import { ApiError } from "../../api/errors";
+import { ApiContractError, ApiError } from "../../api/errors";
 import type { FantasyLeague, LineupRole } from "../../api/mappers";
 import { useLineupBoard, type LineupBoard } from "./useLineupBoard";
 
@@ -334,7 +334,7 @@ describe("useLineupBoard", () => {
         "token",
         expect.objectContaining({
           defender: ["d5", "d2", "d3", "d4"],
-          tactical_formation: [4, 4, 2],
+          tacticalFormation: [4, 4, 2],
         }),
       );
     });
@@ -345,6 +345,20 @@ describe("useLineupBoard", () => {
         }),
       );
     });
+  });
+
+  it("useLineupBoard_invalid_save_response_refreshes_reads_without_retry", async () => {
+    const refetch = vi.spyOn(queryClient, "refetchQueries");
+    api.putJson.mockRejectedValue(new ApiContractError());
+    const { result } = renderHook(() => useLineupBoard(), { wrapper: Wrapper });
+    await loadCallerBoard(result);
+    await swapInBench(result);
+    act(() => result.current.saveLineup());
+    await waitFor(() => {
+      expect(refetch).toHaveBeenCalledWith({ queryKey: ["lineup", "league-a"] });
+      expect(refetch).toHaveBeenCalledWith({ queryKey: ["team", "league-a"] });
+    });
+    expect(api.putJson).toHaveBeenCalledTimes(1);
   });
 
   it("useLineupBoard_restore_last_saved_discards_swaps_and_formation_without_saving", async () => {

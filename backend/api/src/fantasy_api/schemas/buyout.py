@@ -2,36 +2,40 @@
 
 from __future__ import annotations
 
-from pydantic import BaseModel, ConfigDict, Field
+from typing import ClassVar
 
-from fantasy_api.schemas.common import FlexibleModel
+from pydantic import Field
+
+from fantasy_api.schemas.common import FantasyWireModel, FantasyWriteModel
 
 
-class ShieldStatus(FlexibleModel):
+class ShieldStatus(FantasyWireModel):
     """Shield status from ``GET .../check-shield``."""
 
+    is_shielded: bool | None = None
 
-class BuyoutMutationResult(FlexibleModel):
+
+class BuyoutMutationResult(FantasyWireModel):
     """Response from buyout write endpoints (may be empty)."""
 
+    empty_payload_allowed: ClassVar[bool] = True
+    ok: bool | None = None
+    message: str | None = None
 
-class PayBuyoutWrite(BaseModel):
+
+class PayBuyoutWrite(FantasyWriteModel):
     """Request body for paying a buyout clause."""
 
-    model_config = ConfigDict(extra="forbid")
-
-    buyoutClauseToPay: int = Field(gt=0)
+    buyout_clause_to_pay: int = Field(strict=True, gt=0)
 
 
-class IncreaseBuyoutWrite(BaseModel):
+class IncreaseBuyoutWrite(FantasyWriteModel):
     """Request body for setting or increasing a buyout clause."""
 
-    model_config = ConfigDict(extra="forbid")
-
-    buyoutClause: int = Field(gt=0)
+    buyout_clause: int = Field(strict=True, gt=0)
 
 
-class ShieldWrite(BaseModel):
+class ShieldWrite(FantasyWriteModel):
     """Request body for ``PUT .../shield/player``.
 
     ``playerId`` is the squad-entry id (``playerTeamId``), not the master
@@ -39,8 +43,6 @@ class ShieldWrite(BaseModel):
     ``rewardedAd`` ``1``.
     """
 
-    model_config = ConfigDict(extra="forbid")
-
-    playerId: str | int
-    rewardedAdType: str
-    rewardedAd: int
+    player_id: str | int
+    rewarded_ad_type: str
+    rewarded_ad: int = Field(strict=True)

@@ -18,6 +18,8 @@ live-verified here).
 
 All require `Authorization: Bearer <internal JWT>`. Read models use
 `extra="allow"`. Write bodies use `extra="forbid"`.
+Pydantic validates shield responses and mutation requests; frontend buyout contracts
+use camelCase Zod schemas and map to the existing API wire format.
 
 The legacy `PUT .../buyout/player` increase contract is **not** proxied
 (low confidence; superseded by `POST .../increase`).
@@ -59,3 +61,8 @@ cd backend/auth
 uv run fantasy-browser-session buyout-analysis \
   --league-id 123 --player-team-id pt-9 --json
 ```
+
+Money request fields require positive integer JSON numbers; booleans, fractional
+amounts and numeric strings are rejected before an upstream write. Frontend
+mutations refresh affected reads when a successful HTTP response cannot be
+validated, and do not automatically retry the write.

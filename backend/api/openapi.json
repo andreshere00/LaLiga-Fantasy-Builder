@@ -5066,7 +5066,30 @@
         "description": "Request body for bid create/update."
       },
       "BuyoutMutationResult": {
-        "properties": {},
+        "properties": {
+          "ok": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Ok"
+          },
+          "message": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Message"
+          }
+        },
         "additionalProperties": true,
         "type": "object",
         "title": "BuyoutMutationResult",
@@ -5138,7 +5161,8 @@
                 "type": "integer"
               },
               {
-                "type": "string"
+                "type": "string",
+                "pattern": "^[0-9]+$"
               },
               {
                 "type": "null"
@@ -5149,14 +5173,12 @@
           "team": {
             "anyOf": [
               {
-                "additionalProperties": true,
-                "type": "object"
+                "$ref": "#/components/schemas/JsonObject-Output"
               },
               {
                 "type": "null"
               }
-            ],
-            "title": "Team"
+            ]
           },
           "playerStatus": {
             "anyOf": [
@@ -5196,12 +5218,13 @@
           },
           "weekPoints": {
             "anyOf": [
-              {},
+              {
+                "$ref": "#/components/schemas/JsonValue-Output"
+              },
               {
                 "type": "null"
               }
-            ],
-            "title": "Weekpoints"
+            ]
           },
           "marketValue": {
             "anyOf": [
@@ -5228,19 +5251,19 @@
           "images": {
             "anyOf": [
               {
-                "additionalProperties": true,
-                "type": "object"
+                "$ref": "#/components/schemas/JsonObject-Output"
               },
               {
                 "type": "null"
               }
-            ],
-            "title": "Images"
+            ]
           },
           "lastStats": {
             "anyOf": [
               {
-                "items": {},
+                "items": {
+                  "$ref": "#/components/schemas/JsonValue-Output"
+                },
                 "type": "array"
               },
               {
@@ -5455,6 +5478,7 @@
             "title": "Detail"
           }
         },
+        "additionalProperties": false,
         "type": "object",
         "required": [
           "error",
@@ -6270,6 +6294,80 @@
         ],
         "title": "InjuryRiskInfo"
       },
+      "JsonObject-Input": {
+        "additionalProperties": {
+          "$ref": "#/components/schemas/JsonValue-Input"
+        },
+        "type": "object"
+      },
+      "JsonObject-Output": {
+        "additionalProperties": {
+          "$ref": "#/components/schemas/JsonValue-Output"
+        },
+        "type": "object"
+      },
+      "JsonValue-Input": {
+        "anyOf": [
+          {
+            "type": "string"
+          },
+          {
+            "type": "integer"
+          },
+          {
+            "type": "number"
+          },
+          {
+            "type": "boolean"
+          },
+          {
+            "items": {
+              "$ref": "#/components/schemas/JsonValue-Input"
+            },
+            "type": "array"
+          },
+          {
+            "additionalProperties": {
+              "$ref": "#/components/schemas/JsonValue-Input"
+            },
+            "type": "object"
+          },
+          {
+            "type": "null"
+          }
+        ]
+      },
+      "JsonValue-Output": {
+        "anyOf": [
+          {
+            "type": "string"
+          },
+          {
+            "type": "integer"
+          },
+          {
+            "type": "number"
+          },
+          {
+            "type": "boolean"
+          },
+          {
+            "items": {
+              "$ref": "#/components/schemas/JsonValue-Output"
+            },
+            "type": "array"
+          },
+          {
+            "additionalProperties": {
+              "$ref": "#/components/schemas/JsonValue-Output"
+            },
+            "type": "object"
+          },
+          {
+            "type": "null"
+          }
+        ]
+      },
       "LaligaCredentialProbeResponse": {
         "properties": {
           "user_id": {
@@ -6414,38 +6512,32 @@
           "manager": {
             "anyOf": [
               {
-                "additionalProperties": true,
-                "type": "object"
+                "$ref": "#/components/schemas/Manager"
               },
               {
                 "type": "null"
               }
-            ],
-            "title": "Manager"
+            ]
           },
           "playerMarket": {
             "anyOf": [
               {
-                "additionalProperties": true,
-                "type": "object"
+                "$ref": "#/components/schemas/PlayerMarket"
               },
               {
                 "type": "null"
               }
-            ],
-            "title": "Playermarket"
+            ]
           },
           "playerMaster": {
             "anyOf": [
               {
-                "additionalProperties": true,
-                "type": "object"
+                "$ref": "#/components/schemas/PlayerMaster"
               },
               {
                 "type": "null"
               }
-            ],
-            "title": "Playermaster"
+            ]
           }
         },
         "additionalProperties": true,
@@ -6595,7 +6687,9 @@
           "loanedPlayers": {
             "anyOf": [
               {
-                "items": {},
+                "items": {
+                  "$ref": "#/components/schemas/JsonValue-Output"
+                },
                 "type": "array"
               },
               {
@@ -6713,6 +6807,16 @@
               }
             ],
             "title": "Isadmin"
+          },
+          "manager": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/Manager"
+              },
+              {
+                "type": "null"
+              }
+            ]
           }
         },
         "additionalProperties": true,
@@ -6783,7 +6887,16 @@
             "title": "League Count"
           },
           "league_ids": {
-            "items": {},
+            "items": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "integer"
+                }
+              ]
+            },
             "type": "array",
             "title": "League Ids"
           }
@@ -6802,7 +6915,9 @@
           "goalkeeper": {
             "anyOf": [
               {
-                "items": {},
+                "items": {
+                  "$ref": "#/components/schemas/JsonValue-Output"
+                },
                 "type": "array"
               },
               {
@@ -6814,7 +6929,9 @@
           "defender": {
             "anyOf": [
               {
-                "items": {},
+                "items": {
+                  "$ref": "#/components/schemas/JsonValue-Output"
+                },
                 "type": "array"
               },
               {
@@ -6826,7 +6943,9 @@
           "midfield": {
             "anyOf": [
               {
-                "items": {},
+                "items": {
+                  "$ref": "#/components/schemas/JsonValue-Output"
+                },
                 "type": "array"
               },
               {
@@ -6838,7 +6957,9 @@
           "striker": {
             "anyOf": [
               {
-                "items": {},
+                "items": {
+                  "$ref": "#/components/schemas/JsonValue-Output"
+                },
                 "type": "array"
               },
               {
@@ -6850,7 +6971,9 @@
           "coach": {
             "anyOf": [
               {
-                "items": {},
+                "items": {
+                  "$ref": "#/components/schemas/JsonValue-Output"
+                },
                 "type": "array"
               },
               {
@@ -6876,11 +6999,12 @@
           "bench": {
             "anyOf": [
               {
-                "additionalProperties": true,
-                "type": "object"
+                "$ref": "#/components/schemas/JsonObject-Output"
               },
               {
-                "items": {},
+                "items": {
+                  "$ref": "#/components/schemas/JsonValue-Output"
+                },
                 "type": "array"
               },
               {
@@ -7002,14 +7126,12 @@
           "bench": {
             "anyOf": [
               {
-                "additionalProperties": true,
-                "type": "object"
+                "$ref": "#/components/schemas/JsonObject-Input"
               },
               {
                 "type": "null"
               }
-            ],
-            "title": "Bench"
+            ]
           }
         },
         "additionalProperties": false,
@@ -7139,12 +7261,89 @@
               }
             ],
             "title": "Avatar"
+          },
+          "profileImage": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Profileimage"
           }
         },
         "additionalProperties": true,
         "type": "object",
         "title": "Manager",
         "description": "Manager identity."
+      },
+      "MarketBid": {
+        "properties": {
+          "id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Id"
+          },
+          "money": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Money"
+          },
+          "status": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Status"
+          },
+          "createdAt": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Createdat"
+          },
+          "updatedAt": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Updatedat"
+          }
+        },
+        "additionalProperties": true,
+        "type": "object",
+        "title": "MarketBid",
+        "description": "Bid or offer row nested in a market response."
       },
       "MarketExtreme": {
         "properties": {
@@ -7188,12 +7387,307 @@
         "title": "MarketHistoryEntry",
         "description": "One league market history row."
       },
+      "MarketListing": {
+        "properties": {
+          "id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Id"
+          },
+          "leagueId": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Leagueid"
+          },
+          "leagueType": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Leaguetype"
+          },
+          "directOffer": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Directoffer"
+          },
+          "discr": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Discr"
+          },
+          "expirationDate": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Expirationdate"
+          },
+          "numberOfBids": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Numberofbids"
+          },
+          "numberOfOffers": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Numberofoffers"
+          },
+          "bid": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/MarketBid"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "playerMaster": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/PlayerMaster"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        },
+        "additionalProperties": true,
+        "type": "object",
+        "title": "MarketListing",
+        "description": "Player listing nested in a market snapshot."
+      },
       "MarketMutationResult": {
-        "properties": {},
+        "properties": {
+          "ok": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Ok"
+          },
+          "id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Id"
+          },
+          "status": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Status"
+          },
+          "message": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Message"
+          },
+          "marketId": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Marketid"
+          },
+          "bidId": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Bidid"
+          },
+          "offerId": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Offerid"
+          },
+          "sold": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Sold"
+          }
+        },
         "additionalProperties": true,
         "type": "object",
         "title": "MarketMutationResult",
         "description": "Response from market write endpoints (may be empty)."
+      },
+      "MarketOffer": {
+        "properties": {
+          "id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Id"
+          },
+          "money": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Money"
+          },
+          "status": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Status"
+          },
+          "bidderId": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Bidderid"
+          },
+          "createdAt": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Createdat"
+          }
+        },
+        "additionalProperties": true,
+        "type": "object",
+        "title": "MarketOffer",
+        "description": "Offer row returned for an owned squad entry."
       },
       "MarketPreset": {
         "type": "string",
@@ -7323,7 +7817,36 @@
         "title": "MarketSeriesPoint"
       },
       "MarketSnapshot": {
-        "properties": {},
+        "properties": {
+          "marketPlayers": {
+            "anyOf": [
+              {
+                "items": {
+                  "$ref": "#/components/schemas/MarketListing"
+                },
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Marketplayers"
+          },
+          "userBids": {
+            "anyOf": [
+              {
+                "items": {
+                  "$ref": "#/components/schemas/MarketBid"
+                },
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Userbids"
+          }
+        },
         "additionalProperties": true,
         "type": "object",
         "title": "MarketSnapshot",
@@ -7452,14 +7975,12 @@
           "images": {
             "anyOf": [
               {
-                "additionalProperties": true,
-                "type": "object"
+                "$ref": "#/components/schemas/JsonObject-Output"
               },
               {
                 "type": "null"
               }
-            ],
-            "title": "Images"
+            ]
           },
           "name": {
             "anyOf": [
@@ -8342,14 +8863,12 @@
           "images": {
             "anyOf": [
               {
-                "additionalProperties": true,
-                "type": "object"
+                "$ref": "#/components/schemas/JsonObject-Output"
               },
               {
                 "type": "null"
               }
-            ],
-            "title": "Images"
+            ]
           },
           "lastStats": {
             "anyOf": [
@@ -8599,14 +9118,12 @@
           "stats": {
             "anyOf": [
               {
-                "additionalProperties": true,
-                "type": "object"
+                "$ref": "#/components/schemas/JsonObject-Output"
               },
               {
                 "type": "null"
               }
-            ],
-            "title": "Stats"
+            ]
           }
         },
         "additionalProperties": true,
@@ -8646,7 +9163,36 @@
         "title": "PlayerStatsIndex"
       },
       "PlayerTeamOffers": {
-        "properties": {},
+        "properties": {
+          "offers": {
+            "anyOf": [
+              {
+                "items": {
+                  "$ref": "#/components/schemas/MarketOffer"
+                },
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Offers"
+          },
+          "bids": {
+            "anyOf": [
+              {
+                "items": {
+                  "$ref": "#/components/schemas/MarketBid"
+                },
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Bids"
+          }
+        },
         "additionalProperties": true,
         "type": "object",
         "title": "PlayerTeamOffers",
@@ -9008,7 +9554,19 @@
         "title": "SegmentWarning"
       },
       "ShieldStatus": {
-        "properties": {},
+        "properties": {
+          "isShielded": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Isshielded"
+          }
+        },
         "additionalProperties": true,
         "type": "object",
         "title": "ShieldStatus",
@@ -9355,6 +9913,17 @@
             ],
             "title": "Teammoney"
           },
+          "avatar": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Avatar"
+          },
           "manager": {
             "anyOf": [
               {
@@ -9599,7 +10168,9 @@
           "loanedPlayers": {
             "anyOf": [
               {
-                "items": {},
+                "items": {
+                  "$ref": "#/components/schemas/JsonValue-Output"
+                },
                 "type": "array"
               },
               {
