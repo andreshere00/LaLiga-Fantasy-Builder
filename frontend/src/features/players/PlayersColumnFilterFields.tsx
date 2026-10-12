@@ -9,7 +9,7 @@ import {
 import type { PlayersColumnKey } from "./playersColumnHeadings";
 import type { PlayersFilters } from "./playersSearchParams";
 
-type PlayersColumnFilterPopoverProps = {
+type PlayersColumnFilterFieldsProps = {
   column: PlayersColumnKey;
   filters: PlayersFilters;
   owners: readonly string[];
@@ -18,16 +18,16 @@ type PlayersColumnFilterPopoverProps = {
   onClearColumn: () => void;
 };
 
-export function PlayersColumnFilterPopover({
+export function PlayersColumnFilterFields({
   column,
   filters,
   owners,
   teams,
   onChange,
   onClearColumn,
-}: PlayersColumnFilterPopoverProps) {
+}: PlayersColumnFilterFieldsProps) {
   return (
-    <div className="market-column-filter-popover">
+    <div className="market-column-filter-fields">
       {column === "name" ? (
         <FilterTextInput
           label="Player name"

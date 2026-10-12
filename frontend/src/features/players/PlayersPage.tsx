@@ -1,5 +1,7 @@
+import { NumberPagination } from "../../components/ui/NumberPagination";
+import { NativeSelect } from "../../components/ui/Fields";
 import { useCallback, useMemo, useState } from "react";
-import { Link, useNavigate, useSearchParams } from "react-router-dom";
+import { Link, useSearchParams } from "react-router-dom";
 
 import { useAuth } from "../../auth/AuthProvider";
 import { useNow } from "../../hooks/useNow";
@@ -71,7 +73,6 @@ function PlayersListRow({
   sales: ReturnType<typeof useSquadSales>;
   onToggleFavorite: () => void;
 }) {
-  const navigate = useNavigate();
   const formRow = {
     id: row.playerId,
     formRecent: row.formRecent,
@@ -113,27 +114,6 @@ function PlayersListRow({
     <MarketRowMotion
       order={order}
       className={rowClass}
-      role="link"
-      tabIndex={0}
-      aria-label={`View details for ${row.name}`}
-      onClick={(event) => {
-        if (
-          event.target instanceof Element &&
-          event.target.closest("a, button, input, select, textarea, summary, [role='menuitem']")
-        ) {
-          return;
-        }
-        navigate(`/players/${encodeURIComponent(row.playerId)}`, {
-          state: { returnTo: "/players" },
-        });
-      }}
-      onKeyDown={(event) => {
-        if (event.target !== event.currentTarget || event.key !== "Enter") return;
-        event.preventDefault();
-        navigate(`/players/${encodeURIComponent(row.playerId)}`, {
-          state: { returnTo: "/players" },
-        });
-      }}
     >
       <div className="market-card">
         <PlayerTile
@@ -147,8 +127,11 @@ function PlayersListRow({
         />
       </div>
       <span className="market-name-wrap" data-label="Player">
-        <span className="market-name">{row.name}</span>
+        {row.positionId === 5 ? <span className="market-name">{row.name}</span> : (
+          <Link className="market-name players-name-link" to={"/players/" + encodeURIComponent(row.playerId)} state={{ returnTo: "/players" }}>{row.name}</Link>
+        )}
       </span>
+      <span className="market-cell players-team-cell" data-label="Team">{row.teamName ?? "—"}</span>
       <span className="market-cell" data-label="Position">
         <PositionCell positionId={row.positionId} />
       </span>
@@ -329,7 +312,7 @@ function PlayersList() {
         />
         <label className="players-team-filter" htmlFor="players-team-filter">
           Team
-          <select
+          <NativeSelect
             id="players-team-filter"
             className="market-filter-select"
             value={urlState.filters.team}
@@ -337,7 +320,7 @@ function PlayersList() {
           >
             <option value="">All teams</option>
             {teams.map((team) => <option key={team} value={team}>{team}</option>)}
-          </select>
+          </NativeSelect>
         </label>
       </div>
       {board.isDegraded ? (
@@ -380,31 +363,9 @@ function PlayersList() {
         </MarketMotionProvider>
       )}
       {!leaderboard && filtered.length > PLAYERS_PAGE_SIZE ? (
-        <nav className="players-pagination" aria-label="Players pages">
-          <button
-            type="button"
-            className="players-pagination-button"
-            disabled={currentPage <= 1}
-            onClick={() =>
-              setSearchParams(withPlayersPage(searchParams, currentPage - 1), { replace: true })
-            }
-          >
-            Previous
-          </button>
-          <span>
-            Page {currentPage} of {totalPages}
-          </span>
-          <button
-            type="button"
-            className="players-pagination-button"
-            disabled={currentPage >= totalPages}
-            onClick={() =>
-              setSearchParams(withPlayersPage(searchParams, currentPage + 1), { replace: true })
-            }
-          >
-            Next
-          </button>
-        </nav>
+        <NumberPagination page={currentPage} totalPages={totalPages}
+          label="Players pages" onPageChange={(page) =>
+            setSearchParams(withPlayersPage(searchParams, page), { replace: true })} />
       ) : null}
       <MarketActionDialogs
         actions={actions}
