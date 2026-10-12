@@ -9,7 +9,7 @@ import {
 } from "./MarketFilterFields";
 import type { MarketFilters } from "./marketFilters";
 
-type MarketColumnFilterPopoverProps = {
+type MarketColumnFilterFieldsProps = {
   column: MarketColumnKey;
   filters: MarketFilters;
   sellers: readonly string[];
@@ -17,15 +17,15 @@ type MarketColumnFilterPopoverProps = {
   onClearColumn: () => void;
 };
 
-export function MarketColumnFilterPopover({
+export function MarketColumnFilterFields({
   column,
   filters,
   sellers,
   onChange,
   onClearColumn,
-}: MarketColumnFilterPopoverProps) {
+}: MarketColumnFilterFieldsProps) {
   return (
-    <div className="market-column-filter-popover">
+    <div className="market-column-filter-fields">
       {column === "player" ? (
         <FilterTextInput
           label="Player name"

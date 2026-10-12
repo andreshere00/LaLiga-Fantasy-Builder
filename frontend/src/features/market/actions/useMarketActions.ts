@@ -1,3 +1,4 @@
+import { notify } from "../../../components/ui/Notifications";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useCallback, useEffect, useRef, useState } from "react";
 
@@ -93,7 +94,9 @@ export function useMarketActions() {
         markNeedsReauth();
         return;
       }
-      setMessage(marketActionErrorMessage(error, kind));
+      const text = marketActionErrorMessage(error, kind);
+      setMessage(text);
+      notify(text, "error");
     },
     [markNeedsReauth],
   );
@@ -130,6 +133,7 @@ export function useMarketActions() {
     onSuccess: async (_data, variables) => {
       setPendingBid(null);
       setMessage(null);
+      notify("Bid updated");
       patchCachedBid(variables.row.marketId, {
         id: variables.row.myBid?.id ?? localBidId(variables.row.marketId),
         money: variables.money,
@@ -170,6 +174,7 @@ export function useMarketActions() {
     },
     onSuccess: async (_data, row) => {
       setMessage(null);
+      notify("Bid updated");
       patchCachedBid(row.marketId, null, row.myBid?.id ?? null);
       await refreshAfterMutation();
     },
@@ -191,6 +196,7 @@ export function useMarketActions() {
     onSuccess: async () => {
       setPendingClause(null);
       setMessage(null);
+      notify("Release clause paid");
       await refreshAfterMutation();
     },
     onError: async (error) => {
@@ -206,6 +212,7 @@ export function useMarketActions() {
     onSuccess: async () => {
       setPendingWithdraw(null);
       setMessage(null);
+      notify("Listing withdrawn");
       await refreshAfterMutation();
     },
     onError: async (error) => {

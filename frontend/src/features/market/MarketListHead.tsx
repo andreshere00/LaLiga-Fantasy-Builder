@@ -1,161 +1,46 @@
-import { useEffect, useId, useRef, useState } from "react";
-
+import { useState } from "react";
+import { Button } from "../../components/ui/Button";
+import { Dialog } from "../../components/ui/Dialog";
 import filterIconUrl from "../../assets/button_filter.svg";
-import type { MarketColumnHeading, MarketColumnKey } from "./marketColumnHeadings";
-import { marketColumnBaseLabel } from "./marketColumnHeadings";
-import { MarketColumnFilterPopover } from "./MarketColumnFilterPopover";
+import { MarketColumnFilterFields } from "./MarketColumnFilterFields";
 import { clearMarketColumnFilter, isMarketColumnFilterable } from "./marketColumnFilters";
+import { marketColumnBaseLabel, type MarketColumnHeading, type MarketColumnKey } from "./marketColumnHeadings";
 import type { MarketFilters } from "./marketFilters";
 
-type MarketListHeadProps = {
+const COLUMNS: MarketColumnKey[] = ["player", "position", "fsyp", "form", "marketValue", "availability", "sealEnd", "sellOptions"];
+
+export function MarketListHead({ headings, filters, sellers, onFiltersChange }: {
   headings: Record<MarketColumnKey, MarketColumnHeading>;
   filters: MarketFilters;
   sellers: readonly string[];
   onFiltersChange: (filters: MarketFilters) => void;
-};
-
-const COLUMN_ORDER: MarketColumnKey[] = [
-  "player",
-  "position",
-  "fsyp",
-  "form",
-  "marketValue",
-  "availability",
-  "sealEnd",
-  "sellOptions",
-];
-
-type HeadCellProps = {
-  column: MarketColumnKey;
-  heading: MarketColumnHeading;
-  className?: string;
-  filters: MarketFilters;
-  sellers: readonly string[];
-  openColumn: MarketColumnKey | null;
-  onOpenColumn: (column: MarketColumnKey | null) => void;
-  onFiltersChange: (filters: MarketFilters) => void;
-};
-
-function focusFirstPopoverControl(panel: HTMLElement | null): void {
-  if (!panel) return;
-  const target = panel.querySelector<HTMLElement>(
-    "input, select, textarea, button:not(.market-head-filter)",
-  );
-  target?.focus();
-}
-
-function HeadCell({
-  column,
-  heading,
-  className,
-  filters,
-  sellers,
-  openColumn,
-  onOpenColumn,
-  onFiltersChange,
-}: HeadCellProps) {
-  const wrapRef = useRef<HTMLSpanElement>(null);
-  const filterButtonRef = useRef<HTMLButtonElement>(null);
-  const popoverRef = useRef<HTMLDivElement>(null);
-  const buttonId = useId();
-  const popoverId = useId();
-  const open = openColumn === column;
-  const filterable = isMarketColumnFilterable(column);
-  const title = marketColumnBaseLabel(column);
-
-  useEffect(() => {
-    if (!open) return;
-    focusFirstPopoverControl(popoverRef.current);
-    const onPointerDown = (event: PointerEvent) => {
-      if (wrapRef.current?.contains(event.target as Node)) return;
-      onOpenColumn(null);
-    };
-    const onKeyDown = (event: KeyboardEvent) => {
-      if (event.key !== "Escape") return;
-      event.preventDefault();
-      onOpenColumn(null);
-      filterButtonRef.current?.focus();
-    };
-    window.addEventListener("pointerdown", onPointerDown);
-    window.addEventListener("keydown", onKeyDown);
-    return () => {
-      window.removeEventListener("pointerdown", onPointerDown);
-      window.removeEventListener("keydown", onKeyDown);
-    };
-  }, [open, onOpenColumn]);
-
+}) {
+  const [editor, setEditor] = useState<{ column: MarketColumnKey; draft: MarketFilters } | null>(null);
   return (
-    <span
-      ref={wrapRef}
-      className={`market-head-cell${className ? ` ${className}` : ""}`}
-    >
-      <span className="market-head-label">{title}</span>
-      <button
-        ref={filterButtonRef}
-        id={buttonId}
-        type="button"
-        className={`market-head-filter${heading.filtered ? " is-active" : ""}${!filterable ? " is-disabled" : ""}`}
-        aria-expanded={filterable ? open : undefined}
-        aria-controls={filterable ? popoverId : undefined}
-        aria-haspopup={filterable ? "dialog" : undefined}
-        aria-label={filterable ? `Filter ${title}` : undefined}
-        disabled={!filterable}
-        title={filterable ? undefined : `${title} cannot be filtered`}
-        onClick={() => {
-          if (!filterable) return;
-          onOpenColumn(open ? null : column);
-        }}
-      >
-        <img src={filterIconUrl} alt="" aria-hidden="true" className="market-head-filter-icon" />
-      </button>
-      {open && filterable ? (
-        <div
-          ref={popoverRef}
-          id={popoverId}
-          className="market-column-filter-popover-wrap"
-          role="dialog"
-          aria-labelledby={buttonId}
-        >
-          <MarketColumnFilterPopover
-            column={column}
-            filters={filters}
-            sellers={sellers}
-            onChange={onFiltersChange}
-            onClearColumn={() => {
-              onFiltersChange(clearMarketColumnFilter(filters, column));
-              onOpenColumn(null);
-              filterButtonRef.current?.focus();
-            }}
-          />
-        </div>
-      ) : null}
-    </span>
-  );
-}
-
-export function MarketListHead({
-  headings,
-  filters,
-  sellers,
-  onFiltersChange,
-}: MarketListHeadProps) {
-  const [openColumn, setOpenColumn] = useState<MarketColumnKey | null>(null);
-
-  return (
-    <li className={`market-row market-head${openColumn ? " is-filter-open" : ""}`}>
-      {COLUMN_ORDER.map((column) => (
-        <HeadCell
-          key={column}
-          column={column}
-          heading={headings[column]}
-          className={`${column === "player" ? "market-head-player " : ""}market-head-cell-${column}`}
-          filters={filters}
-          sellers={sellers}
-          openColumn={openColumn}
-          onOpenColumn={setOpenColumn}
-          onFiltersChange={onFiltersChange}
-        />
+    <li className="market-row market-head">
+      {COLUMNS.map((column) => (
+        <span key={column} className={(column === "player" ? "market-head-player " : "") + "market-head-cell market-head-cell-" + column}>
+          <span className="market-head-label">{marketColumnBaseLabel(column)}</span>
+          {isMarketColumnFilterable(column) ? (
+            <button type="button" className={"market-head-filter" + (headings[column].filtered ? " is-active" : "")}
+              aria-label={"Filter " + marketColumnBaseLabel(column)} aria-haspopup="dialog"
+              aria-expanded={editor?.column === column}
+              onClick={() => setEditor({ column, draft: filters })}>
+              <img src={filterIconUrl} alt="" aria-hidden="true" className="market-head-filter-icon" />
+            </button>
+          ) : null}
+        </span>
       ))}
+      <Dialog open={editor != null} layout="sheet"
+        title={editor ? "Filter " + marketColumnBaseLabel(editor.column) : "Market filters"}
+        onClose={() => setEditor(null)} footer={<>
+          <Button variant="outline" onClick={() => setEditor(null)}>Cancel</Button>
+          <Button onClick={() => { if (editor) onFiltersChange(editor.draft); setEditor(null); }}>Apply filters</Button>
+        </>}>
+        {editor ? <MarketColumnFilterFields column={editor.column} filters={editor.draft}
+          sellers={sellers} onChange={(draft) => setEditor({ ...editor, draft })}
+          onClearColumn={() => setEditor({ ...editor, draft: clearMarketColumnFilter(editor.draft, editor.column) })} /> : null}
+      </Dialog>
     </li>
   );
 }

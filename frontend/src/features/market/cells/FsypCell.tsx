@@ -1,4 +1,4 @@
-import { useId } from "react";
+import { Help } from "../../../components/ui/Help";
 
 import { pointsLabel } from "../../../api/mappers";
 import { averageLastPerformances, formatScoreAverage } from "../fsypStats";
@@ -11,22 +11,11 @@ type FsypCellProps = {
 };
 
 export function FsypCell({ points, averagePoints, formRecent }: FsypCellProps) {
-  const tooltipId = useId();
   const seasonAverage = formatScoreAverage(averagePoints);
   const formAverage = formatScoreAverage(averageLastPerformances(formRecent, 3));
 
   return (
-    <span className="market-fsyp has-hover-tooltip-panel market-fsyp-tooltip-target"
-      tabIndex={0}
-      aria-describedby={tooltipId}
-    >
-      <span className="market-fsyp-primary">{pointsLabel(points)}</span>
-      <span className="market-fsyp-average">{seasonAverage}</span>
-      <span
-        id={tooltipId}
-        className="hover-tooltip-panel is-align-start market-fsyp-tooltip"
-        role="tooltip"
-      >
+    <Help className="market-fsyp" content={<>
         <span className="market-fsyp-tooltip-line">
           Total score: {pointsLabel(points)}
         </span>
@@ -34,7 +23,10 @@ export function FsypCell({ points, averagePoints, formRecent }: FsypCellProps) {
         <span className="market-fsyp-tooltip-line">
           Last 3 matches average: {formAverage}
         </span>
-      </span>
-    </span>
+
+    </>}>
+      <span className="market-fsyp-primary">{pointsLabel(points)}</span>
+      <span className="market-fsyp-average">{seasonAverage}</span>
+    </Help>
   );
 }

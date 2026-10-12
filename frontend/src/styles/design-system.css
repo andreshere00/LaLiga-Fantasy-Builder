@@ -131,3 +131,6 @@
 .fb-toast { display:flex; justify-content:space-between; gap:12px; }
 .fb-toast [data-slot] { min-width:0; }
 .fb-toast[data-limited] { display:none; }
+
+.fb-help-positioner { z-index:140; }
+.fb-tooltip { white-space:pre-line; }
