@@ -1,6 +1,10 @@
+import { Menu } from "@base-ui/react/menu";
+import { useQueries } from "@tanstack/react-query";
+import { NumberPagination } from "../../components/ui/NumberPagination";
 import { useCallback, useMemo, useState } from "react";
-import { Link, useNavigate, useSearchParams } from "react-router-dom";
+import { Link, useSearchParams } from "react-router-dom";
 
+import { getJson, paths } from "../../api/client";
 import { useAuth } from "../../auth/AuthProvider";
 import { useNow } from "../../hooks/useNow";
 import { GatePanel } from "../gates/GatePanel";
@@ -17,11 +21,16 @@ import { MarketActionMenu } from "../market/actions/MarketActionMenu";
 import { useMarketActions } from "../market/actions/useMarketActions";
 import type { MarketActionContext } from "../market/actions/marketActions";
 import type { MarketRow } from "../market/model/row";
-import { MarketMotionProvider, MarketRowMotion } from "../market/MarketRowMotion";
+import {
+  valueSeries,
+  valueVariation,
+  valueVariationPercent,
+  type ValuePoint,
+} from "../market/model/valueSeries";
+import { RichRow } from "../../components/ui/RichRow";
 import { useMarketBoard } from "../market/useMarketBoard";
 import type { SquadCard } from "../../api/mappers";
 import { MarketPlayerSearch } from "../market/MarketPlayerSearch";
-import { formatEuro } from "../../api/format";
 import availableIcon from "../../assets/button_available.svg";
 import { PlayerBookmarkButton } from "./PlayerBookmarkButton";
 import { PlayersScreenLoading } from "./PlayerScreenLoading";
@@ -47,14 +56,14 @@ import {
   type PlayersFilters,
 } from "./playersSearchParams";
 import { usePlayersBoard } from "./usePlayersBoard";
-import "../market/MarketPage.css";
+import "../../components/ui/RichList.css";
 import "./PlayersPage.css";
 
 function PlayersListRow({
   row,
-  order,
   favorite,
   marketRow,
+  valueHistory,
   ownSquadCard,
   actionContext,
   actions,
@@ -62,16 +71,15 @@ function PlayersListRow({
   onToggleFavorite,
 }: {
   row: PlayerRow;
-  order: number;
   favorite: boolean;
   marketRow: MarketRow | null;
+  valueHistory: readonly ValuePoint[];
   ownSquadCard: SquadCard | null;
   actionContext: MarketActionContext;
   actions: ReturnType<typeof useMarketActions>;
   sales: ReturnType<typeof useSquadSales>;
   onToggleFavorite: () => void;
 }) {
-  const navigate = useNavigate();
   const formRow = {
     id: row.playerId,
     formRecent: row.formRecent,
@@ -94,46 +102,21 @@ function PlayersListRow({
     row.ownedBy
   );
   const detailsOptions = row.positionId === 5 ? null : (
-      <details className="players-detail-options">
-      <summary className="market-actions-trigger">Options</summary>
-      <ul className="market-actions-menu">
-        <li className="market-actions-menu-item">
-          <Link
-            className="market-actions-item players-action-link"
-            to={`/players/${encodeURIComponent(row.playerId)}`}
-            state={{ returnTo: "/players" }}
-          >
+    <Menu.Root>
+      <Menu.Trigger className="market-actions-trigger">Options</Menu.Trigger>
+      <Menu.Portal><Menu.Positioner align="end" sideOffset={4} className="fb-menu-positioner">
+        <Menu.Popup className="fb-menu-popup">
+          <Menu.Item className="market-actions-item" render={<Link
+            to={"/players/" + encodeURIComponent(row.playerId)} state={{ returnTo: "/players" }} />}>
             Player details
-          </Link>
-        </li>
-      </ul>
-    </details>
+          </Menu.Item>
+        </Menu.Popup>
+      </Menu.Positioner></Menu.Portal>
+    </Menu.Root>
   );
   return (
-    <MarketRowMotion
-      order={order}
+    <RichRow
       className={rowClass}
-      role="link"
-      tabIndex={0}
-      aria-label={`View details for ${row.name}`}
-      onClick={(event) => {
-        if (
-          event.target instanceof Element &&
-          event.target.closest("a, button, input, select, textarea, summary, [role='menuitem']")
-        ) {
-          return;
-        }
-        navigate(`/players/${encodeURIComponent(row.playerId)}`, {
-          state: { returnTo: "/players" },
-        });
-      }}
-      onKeyDown={(event) => {
-        if (event.target !== event.currentTarget || event.key !== "Enter") return;
-        event.preventDefault();
-        navigate(`/players/${encodeURIComponent(row.playerId)}`, {
-          state: { returnTo: "/players" },
-        });
-      }}
     >
       <div className="market-card">
         <PlayerTile
@@ -147,8 +130,11 @@ function PlayersListRow({
         />
       </div>
       <span className="market-name-wrap" data-label="Player">
-        <span className="market-name">{row.name}</span>
+        {row.positionId === 5 ? <span className="market-name">{row.name}</span> : (
+          <Link className="market-name players-name-link" to={"/players/" + encodeURIComponent(row.playerId)} state={{ returnTo: "/players" }}>{row.name}</Link>
+        )}
       </span>
+      <span className="market-cell players-team-cell" data-label="Team">{row.teamName ?? "—"}</span>
       <span className="market-cell" data-label="Position">
         <PositionCell positionId={row.positionId} />
       </span>
@@ -163,18 +149,12 @@ function PlayersListRow({
         <FormCell row={formRow} />
       </span>
       <span className="market-cell market-value players-value-cell" data-label="Market value">
-        {marketRow ? (
-          <ValueCell
-            marketValue={row.marketValue}
-            variation={marketRow.variation}
-            variationPercent={marketRow.variationPercent}
-            valueHistory={marketRow.valueHistory}
-          />
-        ) : (
-          <span className="market-value-primary" title={`Market value: ${formatEuro(row.marketValue)}`}>
-            {formatEuro(row.marketValue)}
-          </span>
-        )}
+        <ValueCell
+          marketValue={row.marketValue}
+          variation={valueVariation(valueHistory)}
+          variationPercent={valueVariationPercent(valueHistory)}
+          valueHistory={valueHistory}
+        />
       </span>
       <span className="market-cell market-cell-availability" data-label="Availability">
         <AvailabilityCell availability={row.availability} />
@@ -209,7 +189,7 @@ function PlayersListRow({
           onToggle={onToggleFavorite}
         />
       </span>
-    </MarketRowMotion>
+    </RichRow>
   );
 }
 
@@ -219,7 +199,7 @@ function PlayersList() {
   const actions = useMarketActions();
   const sales = useSquadSales();
   const now = useNow();
-  const { user } = useAuth();
+  const { user, accessToken } = useAuth();
   const userId = user?.userId ?? null;
   const [searchParams, setSearchParams] = useSearchParams();
   const urlState = useMemo(
@@ -243,6 +223,21 @@ function PlayersList() {
     const start = (currentPage - 1) * PLAYERS_PAGE_SIZE;
     return filtered.slice(start, start + PLAYERS_PAGE_SIZE);
   }, [currentPage, filtered, leaderboard]);
+  const valueHistories = useQueries({
+    queries: visibleRows.map((row) => ({
+      queryKey: ["players", "market-value", row.playerId],
+      enabled: accessToken != null,
+      staleTime: 5 * 60_000,
+      queryFn: ({ signal }: { signal: AbortSignal }) =>
+        getJson(paths.playerMarketValue(row.playerId), accessToken ?? "", { signal }),
+    })),
+  });
+  const valueHistoryByPlayer = new Map(
+    visibleRows.map((row, index) => [
+      row.playerId,
+      valueSeries(valueHistories[index]?.data),
+    ]),
+  );
   const filterCount = activePlayersFilterCount(urlState.filters);
   const columnHeadings = useMemo(
     () => playersColumnHeadings(urlState.filters),
@@ -326,19 +321,8 @@ function PlayersList() {
           label="Search players"
           placeholder="Name, team or owner"
           inputId="players-search"
+          suggestions={board.rows.map((row) => row.name)}
         />
-        <label className="players-team-filter" htmlFor="players-team-filter">
-          Team
-          <select
-            id="players-team-filter"
-            className="market-filter-select"
-            value={urlState.filters.team}
-            onChange={(event) => setFilters({ team: event.target.value })}
-          >
-            <option value="">All teams</option>
-            {teams.map((team) => <option key={team} value={team}>{team}</option>)}
-          </select>
-        </label>
       </div>
       {board.isDegraded ? (
         <p className="market-notice status-copy" role="status">
@@ -353,22 +337,23 @@ function PlayersList() {
       {visibleRows.length === 0 ? (
         <p className="status-copy">No players match your filters.</p>
       ) : (
-        <MarketMotionProvider>
+        <>
           <ul className="market-list players-list">
             <PlayersListHead
               headings={columnHeadings}
               filters={urlState.filters}
               owners={owners}
               teams={teams}
+              names={board.rows.map((row) => row.name)}
               onFiltersChange={(patch) => setFilters(patch)}
             />
-            {visibleRows.map((row, order) => (
+            {visibleRows.map((row) => (
               <PlayersListRow
                 key={row.playerId}
                 row={row}
-                order={order}
                 favorite={favorites.has(row.playerId)}
                 marketRow={marketRowsByPlayer.get(row.playerId) ?? null}
+                valueHistory={valueHistoryByPlayer.get(row.playerId) ?? []}
                 ownSquadCard={ownSquadByPlayer.get(row.playerId) ?? null}
                 actionContext={actionContext}
                 actions={actions}
@@ -377,34 +362,12 @@ function PlayersList() {
               />
             ))}
           </ul>
-        </MarketMotionProvider>
+        </>
       )}
       {!leaderboard && filtered.length > PLAYERS_PAGE_SIZE ? (
-        <nav className="players-pagination" aria-label="Players pages">
-          <button
-            type="button"
-            className="players-pagination-button"
-            disabled={currentPage <= 1}
-            onClick={() =>
-              setSearchParams(withPlayersPage(searchParams, currentPage - 1), { replace: true })
-            }
-          >
-            Previous
-          </button>
-          <span>
-            Page {currentPage} of {totalPages}
-          </span>
-          <button
-            type="button"
-            className="players-pagination-button"
-            disabled={currentPage >= totalPages}
-            onClick={() =>
-              setSearchParams(withPlayersPage(searchParams, currentPage + 1), { replace: true })
-            }
-          >
-            Next
-          </button>
-        </nav>
+        <NumberPagination page={currentPage} totalPages={totalPages}
+          label="Players pages" onPageChange={(page) =>
+            setSearchParams(withPlayersPage(searchParams, page), { replace: true })} />
       ) : null}
       <MarketActionDialogs
         actions={actions}

@@ -1,3 +1,4 @@
+import { Button } from "../components/ui/Button";
 import { Component, type ErrorInfo, type ReactNode } from "react";
 
 type Props = {
@@ -25,9 +26,9 @@ export class AppErrorBoundary extends Component<Props, State> {
         <section className="gate">
           <h1>Something went wrong</h1>
           <p>This page could not be displayed.</p>
-          <button type="button" onClick={() => window.location.reload()}>
+          <Button type="button" onClick={() => window.location.reload()}>
             Reload
-          </button>
+          </Button>
         </section>
       );
     }

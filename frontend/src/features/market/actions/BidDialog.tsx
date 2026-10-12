@@ -1,7 +1,7 @@
 import { useEffect, useId, useState } from "react";
 
 import { formatEuro, formatIntegerAmount, parseIntegerAmount } from "../../../api/format";
-import { Modal } from "../../../components/Modal";
+import { Dialog } from "../../../components/ui/Dialog";
 import { NumericCounterField } from "../../../components/NumericCounterField";
 import { MARKET_VALUE_FILTER_STEP } from "../marketFilterInputs";
 import type { MarketRow } from "../model/row";
@@ -9,7 +9,6 @@ import { isValidBidAmount, type BidActionKind } from "./marketActions";
 
 type BidDialogProps = {
   open: boolean;
-  squareCorners?: boolean;
   row: MarketRow | null;
   kind: BidActionKind | null;
   money: number | null;
@@ -35,7 +34,6 @@ function clampAndFormat(raw: string, bidFloor: number): string {
 
 export function BidDialog({
   open,
-  squareCorners = false,
   row,
   kind,
   money,
@@ -79,9 +77,8 @@ export function BidDialog({
   };
 
   return (
-    <Modal
+    <Dialog
       open={open}
-      squareCorners={squareCorners}
       title={TITLES[kind]}
       onClose={onClose}
       closeOnBackdrop={!pending}
@@ -136,6 +133,6 @@ export function BidDialog({
           {error}
         </p>
       ) : null}
-    </Modal>
+    </Dialog>
   );
 }

@@ -14,7 +14,7 @@ import {
 import { useAuth } from "../../auth/AuthProvider";
 import { useLeague } from "../lineup/LeagueProvider";
 import { catalogById } from "../market/model/listing";
-import { FORM_MATCHES, recentFormWeekNumbers } from "../market/marketRows";
+import { recentFormWeekNumbers } from "../market/marketRows";
 import { leagueId } from "../../api/mappers";
 import {
   ownerByMasterIdFromRosters,
@@ -93,7 +93,7 @@ export function usePlayersBoard(): PlayersBoard {
 
   const currentWeek = (currentWeekQuery.data as CurrentWeek | undefined)?.weekNumber ?? 0;
   const formWeekNumbers = useMemo(
-    () => recentFormWeekNumbers(currentWeek, FORM_MATCHES + 1),
+    () => recentFormWeekNumbers(currentWeek),
     [currentWeek],
   );
 

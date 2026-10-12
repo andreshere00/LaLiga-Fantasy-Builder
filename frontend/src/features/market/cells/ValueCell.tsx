@@ -1,4 +1,5 @@
-import { useId, type ReactElement } from "react";
+import type { ReactElement } from "react";
+import { Help } from "../../../components/ui/Help";
 
 import { formatEuro, formatPercent, formatSignedEuro } from "../../../api/format";
 import {
@@ -28,7 +29,6 @@ export function ValueCell({
   variationPercent: number | null;
   valueHistory: readonly ValuePoint[];
 }): ReactElement {
-  const tooltipId = useId();
   const absolute = formatSignedEuro(variation);
   const percent = formatPercent(variationPercent);
   const tone = variationPercentTone(variationPercent);
@@ -45,18 +45,7 @@ export function ValueCell({
     );
 
   return (
-    <span
-      className="market-value-line has-hover-tooltip-panel market-value-tooltip-target"
-      tabIndex={0}
-      aria-describedby={tooltipId}
-    >
-      <span className="market-value-primary">{formatEuro(marketValue)}</span>
-      <span className={`market-value-change ${tone}`}>{change}</span>
-      <span
-        id={tooltipId}
-        className="hover-tooltip-panel is-align-start market-value-tooltip"
-        role="tooltip"
-      >
+    <Help className="market-value-line" content={<>
         <span className="market-value-tooltip-line">
           Last market value: {formatMarketValueStat(stats.last)}
         </span>
@@ -73,7 +62,10 @@ export function ValueCell({
           Last 14 days market value:{" "}
           {formatMarketValueWithChange(stats.fourteenDaysAgo, stats.last)}
         </span>
-      </span>
-    </span>
+
+    </>}>
+      <span className="market-value-primary">{formatEuro(marketValue)}</span>
+      <span className={`market-value-change ${tone}`}>{change}</span>
+    </Help>
   );
 }

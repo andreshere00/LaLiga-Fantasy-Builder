@@ -217,6 +217,11 @@ export function playerFormHistory(
       if (points != null) rows.set(week, points);
     }
   }
+  const latestPlayedWeek = Math.max(calendar?.playedThrough ?? 0, 0, ...rows.keys());
+  for (let week = latestPlayedWeek; week >= 1; week -= 1) {
+    if (playerId && calendar?.pendingByWeek?.get(week)?.has(playerId)) continue;
+    if (!rows.has(week)) rows.set(week, 0);
+  }
   const sorted = [...rows].sort(([left], [right]) => right - left);
   const currentWeek = calendar?.currentWeek;
   return {

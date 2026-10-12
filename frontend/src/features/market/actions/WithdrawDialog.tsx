@@ -1,9 +1,8 @@
-import { Modal } from "../../../components/Modal";
+import { Dialog } from "../../../components/ui/Dialog";
 import type { MarketRow } from "../model/row";
 
 type WithdrawDialogProps = {
   open: boolean;
-  squareCorners?: boolean;
   row: MarketRow | null;
   pending: boolean;
   error?: string | null;
@@ -13,7 +12,6 @@ type WithdrawDialogProps = {
 
 export function WithdrawDialog({
   open,
-  squareCorners = false,
   row,
   pending,
   error = null,
@@ -23,9 +21,8 @@ export function WithdrawDialog({
   if (!row) return null;
 
   return (
-    <Modal
+    <Dialog
       open={open}
-      squareCorners={squareCorners}
       title="Withdraw from market"
       onClose={onClose}
       closeOnBackdrop={!pending}
@@ -54,6 +51,6 @@ export function WithdrawDialog({
           {error}
         </p>
       ) : null}
-    </Modal>
+    </Dialog>
   );
 }

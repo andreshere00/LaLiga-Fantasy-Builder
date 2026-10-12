@@ -5,12 +5,11 @@ import { windKmhFromMs } from "./playerDetailFormat";
 import { useNow } from "../../hooks/useNow";
 import {
   fixtureDate,
-  matchOutcome,
+  matchOutcomeForTeam,
   sortMatchesByDate,
   teamMediaFromFixture,
   weatherConditionFromSnapshot,
-  type MatchOutcome,
-  type WeatherCondition,
+    type WeatherCondition,
 } from "./playerDetailWidgets";
 import "./playerDetailWidgets.css";
 
@@ -35,7 +34,7 @@ const WEATHER_CONDITIONS: Record<WeatherCondition, string> = {
 
 function weatherIcon(condition: WeatherCondition | null): string {
   if (!condition) return "";
-  return WEATHER_ICONS[`../../assets/weather/icon_weather_${condition}_white.svg`] ?? "";
+  return WEATHER_ICONS[`../../assets/weather/icon_weather_${condition}_gray.svg`] ?? "";
 }
 
 function weatherReason(value: unknown): string {
@@ -119,18 +118,6 @@ function MatchWeather({ match }: { match: Record<string, unknown> | null }) {
   );
 }
 
-function outcomeLabel(outcome: MatchOutcome): string {
-  switch (outcome) {
-    case "win":
-      return "Won";
-    case "loss":
-      return "Lost";
-    case "draw":
-      return "Draw";
-    default:
-      return "Score unavailable";
-  }
-}
 
 function TeamCrest({ media }: { media: { badge: string } | null }) {
   const [failed, setFailed] = useState(false);
@@ -184,9 +171,11 @@ function MatchTimer({ kickoff }: { kickoff: string | null }) {
 function MatchCard({
   match,
   upcoming,
+  playerTeamName,
 }: {
   match: unknown;
   upcoming: boolean;
+  playerTeamName: string | null;
 }) {
   const matchRecord = asRecord(match);
   const fixture = asRecord(matchRecord?.fixture) ?? matchRecord;
@@ -194,8 +183,14 @@ function MatchCard({
   const away = teamMediaFromFixture(fixture?.awayTeam);
   const homeScore = asFiniteNumber(fixture?.homeScore);
   const awayScore = asFiniteNumber(fixture?.awayScore);
-  const homeOutcome = matchOutcome(homeScore, awayScore);
-  const awayOutcome = matchOutcome(awayScore, homeScore);
+  const teamOutcome = matchOutcomeForTeam(
+    homeScore,
+    awayScore,
+    playerTeamName,
+    home?.name ?? text(fixture?.homeTeam),
+    away?.name ?? text(fixture?.awayTeam),
+  );
+
   const competition = competitionHeading(fixture);
   const matchDate = text(fixture?.date) ?? text(matchRecord?.kickoff);
   const kickoff =
@@ -206,7 +201,7 @@ function MatchCard({
     asFiniteNumber(matchRecord?.minutesPlayed);
 
   return (
-    <li className={`player-match-card${upcoming ? " is-upcoming" : ""}`}>
+    <li className={`player-match-card is-${upcoming ? "upcoming" : teamOutcome}`}>
       <p className="player-match-competition">
         {competition}
       </p>
@@ -214,28 +209,20 @@ function MatchCard({
         <div className="player-match-team">
           <div className="player-match-crest-tile">
             <TeamCrest key={home?.badge ?? "home"} media={home} />
-            {homeScore != null ? (
-              <span className={`player-match-score is-${homeOutcome}`}>
-                <span className="visually-hidden">{outcomeLabel(homeOutcome)}: </span>
-                {homeScore}
-              </span>
-            ) : null}
           </div>
           <span className="player-match-team-name">{home?.name ?? text(fixture?.homeTeam) ?? "Home"}</span>
         </div>
         <div className="player-match-team">
           <div className="player-match-crest-tile">
             <TeamCrest key={away?.badge ?? "away"} media={away} />
-            {awayScore != null ? (
-              <span className={`player-match-score is-${awayOutcome}`}>
-                <span className="visually-hidden">{outcomeLabel(awayOutcome)}: </span>
-                {awayScore}
-              </span>
-            ) : null}
           </div>
           <span className="player-match-team-name">{away?.name ?? text(fixture?.awayTeam) ?? "Away"}</span>
         </div>
       </div>
+      {!upcoming ? <p className="player-match-result">
+        <strong>{homeScore ?? "—"} – {awayScore ?? "—"}</strong>
+        {fixture?.result ? <span>{fixture.result === "W" ? "Won" : fixture.result === "L" ? "Lost" : "Draw"}</span> : null}
+      </p> : null}
       <time className="player-match-date" dateTime={matchDate ?? undefined}>
         {date}
       </time>
@@ -259,10 +246,12 @@ function MatchGroup({
   title,
   matches,
   upcoming,
+  playerTeamName,
 }: {
   title: string;
   matches: unknown[];
   upcoming: boolean;
+  playerTeamName: string | null;
 }) {
   return (
     <div className={`player-match-group${upcoming ? " is-upcoming" : ""}`}>
@@ -279,7 +268,14 @@ function MatchGroup({
             const key = [fixture?.date, fixture?.homeTeam, fixture?.awayTeam, index]
               .map((part) => String(part ?? ""))
               .join("|");
-            return <MatchCard key={key} match={match} upcoming={upcoming} />;
+            return (
+              <MatchCard
+                key={key}
+                match={match}
+                upcoming={upcoming}
+                playerTeamName={playerTeamName}
+              />
+            );
           })}
         </ul>
       )}
@@ -290,9 +286,11 @@ function MatchGroup({
 export function PlayerMatchesSection({
   recent,
   upcoming,
+  playerTeamName,
 }: {
   recent: Record<string, unknown> | null;
   upcoming: Record<string, unknown> | null;
+  playerTeamName: string | null;
 }) {
   const recentMatches = Array.isArray(recent?.matches)
     ? sortMatchesByDate(recent.matches, "desc")
@@ -304,8 +302,18 @@ export function PlayerMatchesSection({
   return (
     <section className="player-detail-panel player-match-section" aria-labelledby="player-matches-title">
       <h2 id="player-matches-title">Previous &amp; Upcoming matches</h2>
-      <MatchGroup title="Previous 5 matches" matches={recentMatches} upcoming={false} />
-      <MatchGroup title="Upcoming 5 matches" matches={upcomingMatches} upcoming />
+      <MatchGroup
+        title="Previous 5 matches"
+        matches={recentMatches}
+        upcoming={false}
+        playerTeamName={playerTeamName}
+      />
+      <MatchGroup
+        title="Upcoming 5 matches"
+        matches={upcomingMatches}
+        upcoming
+        playerTeamName={playerTeamName}
+      />
     </section>
   );
 }

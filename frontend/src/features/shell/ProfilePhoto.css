@@ -1,0 +1,27 @@
+.fb-avatar {
+  display:inline-grid;
+  place-items:center;
+  width:100%;
+  height:100%;
+  overflow:hidden;
+  border-radius:0;
+  background:var(--fb-subtle);
+  color:var(--fb-secondary);
+  vertical-align:middle;
+}
+.fb-avatar-image {
+  display:block;
+  width:100%;
+  height:100%;
+  object-fit:cover;
+}
+.fb-avatar-fallback {
+  display:grid;
+  place-items:center;
+  width:100%;
+  height:100%;
+  color:inherit;
+}
+.fb-avatar-fallback > svg { display:block; width:70%; height:70%; }
+.profile-btn-avatar { width:20px; height:20px; flex:0 0 20px; }
+.profile-btn-avatar .fb-avatar-fallback > svg { width:14px; height:14px; }

@@ -19,10 +19,9 @@
   gap: 8px;
   min-width: var(--value-box-min, clamp(120px, 12vw, 168px));
   padding: 0 clamp(12px, 1.2vw, 16px);
-  min-height: 2.25rem;
-  background: var(--white);
-  border-radius: var(--value-box-radius, 0);
-  box-shadow: var(--shadow-surface);
+  min-height: 44px;
+  background: var(--fb-surface);
+  border-radius: 0;
   text-align: left;
   font-weight: 700;
   font-size: var(--value-box-font, 0.95rem);
@@ -57,8 +56,4 @@
 
 .value-box-block-shell.is-negative .value-box-block-text {
   color: #ff4b44;
-}
-
-.value-box-block-shell.has-hover-tooltip-panel .value-box-block-icon-btn {
-  cursor: help;
 }

@@ -36,44 +36,12 @@
   object-fit: contain;
 }
 
-.squad-info-menu {
-  position: absolute;
-  top: calc(100% + 0.25rem);
-  left: 0;
-  display: flex;
-  flex-direction: column;
-  min-width: 9.5rem;
-  background: var(--white);
-  border: 1px solid color-mix(in srgb, var(--ink) 12%, transparent);
-  box-shadow: var(--shadow-surface);
-}
-
-.squad-info-menu button,
-.squad-info-menu a {
-  padding: 0.45rem 0.65rem;
-  border: 0;
-  background: var(--white);
-  color: var(--ink);
-  font: inherit;
-  font-size: 0.82rem;
-  font-weight: 600;
-  text-align: left;
-  text-decoration: none;
-  cursor: pointer;
-}
-
-.squad-info-menu button:is(:hover, :focus-visible),
-.squad-info-menu a:is(:hover, :focus-visible) {
-  background: var(--red-soft);
-  color: var(--red);
-}
-
 .squad-player-options-btn {
   margin: 0;
   padding: 0.1rem 0.35rem;
-  border: 1px solid var(--line);
-  border-radius: 4px;
-  background: var(--white);
+  border: 1px solid var(--fb-line);
+  border-radius: 0;
+  background: var(--fb-surface);
   font-size: 0.65rem;
   cursor: pointer;
 }
@@ -117,11 +85,6 @@
   translate: -50% 0;
 }
 
-.squad-player-hit.has-hover-tooltip-panel[aria-expanded="true"] .hover-tooltip-panel.squad-player-hint {
-  opacity: 0;
-  visibility: hidden;
-}
-
 .squad-sale-choices {
   display: flex;
   flex-direction: column;
@@ -136,18 +99,17 @@
   font: inherit;
   font-weight: 700;
   cursor: pointer;
-  box-shadow: var(--shadow-surface);
   transition:
-    background-color var(--control-fill-duration) var(--control-fill-ease),
-    color var(--control-fill-duration) var(--control-fill-ease),
-    border-color var(--control-fill-duration) var(--control-fill-ease);
+    background-color var(--fb-color-duration) var(--fb-color-ease),
+    color var(--fb-color-duration) var(--fb-color-ease),
+    border-color var(--fb-color-duration) var(--fb-color-ease);
 }
 
 .squad-sale-choice {
   text-decoration: none;
-  background: var(--white);
-  color: var(--ink);
-  border: 1px solid color-mix(in srgb, var(--ink) 12%, transparent);
+  background: var(--fb-surface);
+  color: var(--fb-secondary);
+  border: 1px solid color-mix(in srgb, var(--fb-secondary) 12%, transparent);
 }
 
 .squad-sale-choices a.squad-sale-choice {
@@ -159,7 +121,7 @@
 
 .squad-sale-choice:is(:hover, :active):not(:disabled),
 .squad-sale-secondary:is(:hover, :active):not(:disabled) {
-  background: var(--accent-press);
+  background: var(--fb-coral);
 }
 
 .squad-sale-choice:disabled,
@@ -170,18 +132,18 @@
 }
 
 .squad-sale-primary {
-  background: var(--red);
-  color: var(--white);
+  background: var(--fb-primary);
+  color: var(--fb-surface);
 }
 
 .squad-sale-primary:is(:hover, :active):not(:disabled) {
-  background: var(--accent-press);
-  color: var(--black);
+  background: var(--fb-coral);
+  color: var(--fb-tertiary);
 }
 
 .squad-sale-secondary {
-  background: var(--white);
-  color: var(--ink);
+  background: var(--fb-surface);
+  color: var(--fb-secondary);
 }
 
 .squad-sale-copy,
@@ -209,13 +171,15 @@
   color: #c0392b;
 }
 
-.squad-info-menu,
-.squad-info-menu button,
-.squad-info-menu a,
-.squad-player-options-btn,
-.squad-sale-choice,
-.squad-sale-primary,
-.squad-sale-secondary,
-.squad-player-hit {
-  border-radius: 0;
+.squad-sale-primary { background:var(--fb-primary); color:var(--fb-ink-on-status); border-radius: 0; }
+.squad-sale-secondary { border-radius: 0; }
+.squad-sale-choice { min-height:44px; border:1px solid var(--fb-control-line); color:var(--fb-secondary); }
+.fb-dialog.squad-player-actions-dialog button:not(.fb-button),
+.fb-dialog.squad-player-actions-dialog .fb-button,
+.fb-dialog.squad-player-actions-dialog .squad-sale-choice { border-radius:0; }
+.fb-dialog.squad-player-actions-dialog--options .fb-dialog-footer .squad-sale-secondary,
+.fb-dialog.squad-player-actions-dialog--choose .fb-dialog-footer .squad-sale-secondary {
+  border-color:var(--fb-primary);
+  background:var(--fb-primary);
+  color:#fff;
 }

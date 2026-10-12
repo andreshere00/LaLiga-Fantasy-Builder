@@ -1,4 +1,5 @@
-import { useId } from "react";
+import { Help } from "../../../components/ui/Help";
+import { Link } from "react-router-dom";
 
 import bidIconUrl from "../../../assets/button_bid.svg";
 import shieldRedIconUrl from "../../../assets/button_shield_red.svg";
@@ -16,7 +17,6 @@ type PlayerCellProps = {
 };
 
 export function PlayerCell({ row, now, columnLabel = "Player" }: PlayerCellProps) {
-  const clauseTooltipId = useId();
   const clauseCountdown =
     row.sellerKind === "opponent" ? clauseUnlockCountdown(row.clauseUnlockAt, now) : null;
   const clauseTooltip =
@@ -45,14 +45,7 @@ export function PlayerCell({ row, now, columnLabel = "Player" }: PlayerCellProps
         />
       </div>
       <span className="market-name-wrap" data-label={columnLabel}>
-        <span
-          className={
-            bidded
-              ? "market-name-line has-hover-tooltip-panel is-bid-tooltip-target"
-              : "market-name-line"
-          }
-          tabIndex={bidded ? 0 : undefined}
-        >
+        <Help className="market-name-line" content={bidded && bidMoney != null ? bidAmountTooltipLabel(bidMoney) : null}>
           {bidded ? (
             <img className="market-bid-icon" src={bidIconUrl} alt="" aria-hidden />
           ) : null}
@@ -63,30 +56,13 @@ export function PlayerCell({ row, now, columnLabel = "Player" }: PlayerCellProps
                 .join(" ")
             }
           >
-            {row.name}
+            {row.playerId && row.positionId !== 5 ? <Link className="players-name-link" to={"/players/" + encodeURIComponent(row.playerId)} state={{ returnTo: "/market" }}>{row.name}</Link> : row.name}
           </span>
-          {bidded && bidMoney != null ? (
-            <span className="hover-tooltip-panel is-align-start" role="tooltip">
-              {bidAmountTooltipLabel(bidMoney)}
-            </span>
-          ) : null}
-        </span>
+        </Help>
         {clauseTooltip ? (
-          <span
-            className="market-clause-flag has-hover-tooltip-panel"
-            tabIndex={0}
-            aria-label={clauseTooltip}
-            aria-describedby={clauseTooltipId}
-          >
+          <Help content={clauseTooltip} className="market-clause-flag">
             <img className="market-clause-flag-icon" src={shieldRedIconUrl} alt="" aria-hidden />
-            <span
-              id={clauseTooltipId}
-              className="hover-tooltip-panel is-align-start"
-              role="tooltip"
-            >
-              {clauseTooltip}
-            </span>
-          </span>
+          </Help>
         ) : null}
       </span>
     </>

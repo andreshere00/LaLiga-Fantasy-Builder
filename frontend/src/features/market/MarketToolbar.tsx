@@ -33,6 +33,7 @@ type MarketToolbarProps = {
   onFiltersChange: (filters: MarketFilters) => void;
   activeFilterCount: number;
   onClearFilters: () => void;
+  suggestions?: readonly string[];
 };
 
 export function MarketToolbar({
@@ -42,6 +43,7 @@ export function MarketToolbar({
   onFiltersChange,
   activeFilterCount,
   onClearFilters,
+  suggestions,
 }: MarketToolbarProps) {
   return (
     <>
@@ -55,6 +57,7 @@ export function MarketToolbar({
             onChange={(query) => onFiltersChange({ ...filters, query })}
             activeFilterCount={activeFilterCount}
             onClearFilters={onClearFilters}
+            suggestions={suggestions}
           />
         ) : null}
         <MarketBalance money={money} />

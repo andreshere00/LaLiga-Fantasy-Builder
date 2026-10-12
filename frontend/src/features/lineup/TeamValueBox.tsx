@@ -1,4 +1,4 @@
-import { useId } from "react";
+import { Help } from "../../components/ui/Help";
 
 import { formatTeamValue } from "../../api/format";
 import {
@@ -8,7 +8,6 @@ import {
 import type { TeamValueEvolutionSnapshot } from "./teamValueEvolution";
 
 type TeamValueBoxProps = {
-  iconSrc: string;
   evolution: TeamValueEvolutionSnapshot | null;
   historyLoading?: boolean;
   onRequestHistory?: () => void;
@@ -24,37 +23,16 @@ function lookbackLine(
 }
 
 export function TeamValueBox({
-  iconSrc,
   evolution,
   historyLoading = false,
   onRequestHistory,
 }: TeamValueBoxProps) {
-  const tooltipId = useId();
   const display = formatTeamValue(evolution?.today ?? null);
-  const withTooltip = evolution != null;
   const requestHistory = () => onRequestHistory?.();
 
   return (
     <div className="value-box">
-      <span
-        className={
-          withTooltip
-            ? "value-box-tooltip-wrap has-hover-tooltip-panel"
-            : "value-box-tooltip-wrap"
-        }
-        tabIndex={withTooltip ? 0 : undefined}
-        aria-describedby={withTooltip ? tooltipId : undefined}
-        onPointerEnter={requestHistory}
-        onFocus={requestHistory}
-      >
-        <span className="value-box-text">{display}</span>
-        <img className="value-box-icon" src={iconSrc} alt="" aria-hidden="true" />
-        {withTooltip ? (
-          <span
-            id={tooltipId}
-            className="hover-tooltip-panel is-align-end team-value-tooltip"
-            role="tooltip"
-          >
+      <Help content={evolution ? <>
             <span className="team-value-tooltip-line">
               Today team value: {formatMarketValueStat(evolution.today)}
             </span>
@@ -74,9 +52,11 @@ export function TeamValueBox({
               Last 30 days team value:{" "}
               {lookbackLine(evolution.thirtyDaysAgo, evolution.today, historyLoading)}
             </span>
-          </span>
-        ) : null}
-      </span>
+      </> : null} trigger={<span className="value-box-tooltip-wrap"
+        tabIndex={evolution ? 0 : undefined}
+        onPointerEnter={requestHistory} onFocus={requestHistory} />}>
+        <span className="value-box-text">{display}</span>
+      </Help>
     </div>
   );
 }

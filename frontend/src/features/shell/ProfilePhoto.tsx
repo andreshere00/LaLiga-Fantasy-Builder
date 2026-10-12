@@ -1,4 +1,7 @@
-import { useEffect, useState, type ReactNode } from "react";
+import { Avatar } from "@base-ui/react/avatar";
+import type { ReactNode } from "react";
+
+import "./ProfilePhoto.css";
 
 type ProfilePhotoProps = {
   url: string | null;
@@ -7,22 +10,11 @@ type ProfilePhotoProps = {
 };
 
 export function ProfilePhoto({ url, className, fallback }: ProfilePhotoProps) {
-  const [failed, setFailed] = useState(false);
-
-  useEffect(() => {
-    setFailed(false);
-  }, [url]);
-
-  if (!url || failed) return fallback;
   return (
-    <img
-      className={className}
-      src={url}
-      alt=""
-      loading="lazy"
-      decoding="async"
-      referrerPolicy="no-referrer"
-      onError={() => setFailed(true)}
-    />
+    <Avatar.Root className={`fb-avatar ${className ?? ""}`}>
+      {url ? <Avatar.Image className="fb-avatar-image" src={url} alt="" loading="lazy"
+        decoding="async" referrerPolicy="no-referrer" /> : null}
+      <Avatar.Fallback className="fb-avatar-fallback">{fallback}</Avatar.Fallback>
+    </Avatar.Root>
   );
 }

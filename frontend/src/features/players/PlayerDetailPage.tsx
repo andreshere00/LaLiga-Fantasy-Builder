@@ -1,6 +1,7 @@
-import { useMemo, useState } from "react";
+import { PulseRing } from "../../components/ui/PulseRing";
+import { lazy, Suspense, useMemo, useState } from "react";
 import { useQueries, useQuery } from "@tanstack/react-query";
-import { Link, useParams } from "react-router-dom";
+import { Link, useLocation, useParams } from "react-router-dom";
 
 import { formatEuro } from "../../api/format";
 import { getJson, paths, type PlayerStatsDetailQuery } from "../../api/client";
@@ -37,6 +38,7 @@ import {
   CartesianGrid,
   Line,
   LineChart,
+  Legend,
   ResponsiveContainer,
   Tooltip,
   XAxis,
@@ -67,6 +69,8 @@ import { PlayerDetailScreenLoading } from "./PlayerScreenLoading";
 import daznIcon from "../../assets/dazn.png";
 import "./PlayerDetailPage.css";
 
+const DateRangeDialog = lazy(() => import("./DateRangeDialog").then((module) => ({ default: module.DateRangeDialog })));
+
 const FIXTURE_LAST_STEPS = [5, 10, 20, 40, 60] as const;
 const MARKET_PRESETS = ["season", "30d", "14d", "10d", "5d"] as const;
 
@@ -91,11 +95,6 @@ function fixtureLabel(fixture: Record<string, unknown> | null): string {
   return MISSING_STAT;
 }
 
-function isoDate(value: Date): string {
-  const month = String(value.getMonth() + 1).padStart(2, "0");
-  const day = String(value.getDate()).padStart(2, "0");
-  return `${value.getFullYear()}-${month}-${day}`;
-}
 
 function entryKey(parts: readonly (string | null | undefined)[], index: number): string {
   const label = parts.filter((part): part is string => part != null && part.length > 0).join("|");
@@ -120,16 +119,16 @@ type PlayerDetailBodyProps = {
 };
 
 function PlayerDetailBody({ masterId }: PlayerDetailBodyProps) {
+  const location = useLocation();
+  const returnTo = location.state?.returnTo === "/market" ? "/market" : "/players";
   const { user, accessToken } = useAuth();
   const userId = user?.userId ?? null;
   const [last, setLast] = useState(5);
   const [marketPreset, setMarketPreset] = useState<(typeof MARKET_PRESETS)[number]>("season");
   const [marketCustomFrom, setMarketCustomFrom] = useState("");
   const [marketCustomTo, setMarketCustomTo] = useState("");
-  const [marketCustomDraftFrom, setMarketCustomDraftFrom] = useState("");
-  const [marketCustomDraftTo, setMarketCustomDraftTo] = useState("");
+  const [dateEditorOpen, setDateEditorOpen] = useState(false);
   const [marketUseCustomRange, setMarketUseCustomRange] = useState(false);
-  const [lastDays, setLastDays] = useState("21");
   const [favorites, setFavorites] = useState(() => readFavoritePlayerIds(userId));
   const [showAdvancedStats, setShowAdvancedStats] = useState(false);
 
@@ -294,20 +293,15 @@ function PlayerDetailBody({ masterId }: PlayerDetailBodyProps) {
     squadMarketValue: marketListing.squadMarketValue,
   };
   const showMarketMenu = marketRow != null && ownSquadCard == null;
-  const rangeInvalid =
-    marketCustomDraftFrom !== "" &&
-    marketCustomDraftTo !== "" &&
-    marketCustomDraftFrom > marketCustomDraftTo;
-  const canApplyRange =
-    marketCustomDraftFrom !== "" && marketCustomDraftTo !== "" && !rangeInvalid;
 
   if (!detailReady && !detailQuery.isError) return <PlayerDetailScreenLoading />;
 
   return (
     <section className="player-detail-page">
-      <p className="player-detail-back">
-        <Link to="/players">← Back to players</Link>
-      </p>
+      <nav className="player-detail-back fb-breadcrumb" aria-label="Breadcrumb">
+        <Link to={returnTo}>{returnTo === "/market" ? "Market" : "Players"}</Link>
+        <span aria-hidden="true">/</span><span aria-current="page">{name}</span>
+      </nav>
       {detailQuery.isError ? (
         <p className="status-copy" role="alert">
           Player details could not be loaded.
@@ -338,6 +332,7 @@ function PlayerDetailBody({ masterId }: PlayerDetailBodyProps) {
             captain={false}
             variant="squad"
             showName={false}
+            fixturePoints={points}
             photoUrl={
               leagueMedia.photoUrl ??
               marketListing.row?.photoUrl ??
@@ -361,12 +356,12 @@ function PlayerDetailBody({ masterId }: PlayerDetailBodyProps) {
             }
           />
           <div className="player-detail-header-text">
-            <h1>{name}</h1>
+            <div className="player-detail-title-row"><h1>{name}</h1>
+              <AvailabilityCell availability={availability} /></div>
             <div className="player-detail-header-facts">
               <p>{teamName ?? MISSING_STAT}</p>
               <p>FSYP {points ?? MISSING_STAT}</p>
               <p>{positionLabel(positionId) ?? MISSING_STAT}</p>
-              <p><AvailabilityCell availability={availability} /></p>
             </div>
             {injury?.availabilityText || injury?.diagnosis ? (
               <p className="player-detail-availability-reason">
@@ -437,6 +432,7 @@ function PlayerDetailBody({ masterId }: PlayerDetailBodyProps) {
                       {fixtureDateLabel(fixture)}
                     </time>
                   </header>
+                  {total == null && asFiniteNumber(record?.minutesPlayed) == null ? <p className="fb-helper">Statistics unavailable</p> : null}
                   <dl className="player-form-summary">
                     <div>
                       <dt>Minutes</dt>
@@ -503,78 +499,17 @@ function PlayerDetailBody({ masterId }: PlayerDetailBodyProps) {
             className={marketUseCustomRange ? "is-active" : undefined}
             aria-pressed={marketUseCustomRange}
             onClick={() => {
-              setMarketUseCustomRange(true);
-              setMarketCustomDraftFrom(marketCustomFrom);
-              setMarketCustomDraftTo(marketCustomTo);
+              setDateEditorOpen(true);
             }}
           >
             Custom
           </button>
         </div>
-        {marketUseCustomRange ? (
-          <form
-            className="player-detail-market-custom"
-            onSubmit={(event) => {
-              event.preventDefault();
-              if (!canApplyRange) return;
-              setMarketCustomFrom(marketCustomDraftFrom);
-              setMarketCustomTo(marketCustomDraftTo);
-            }}
-          >
-            <label>
-              From
-              <input
-                type="date"
-                value={marketCustomDraftFrom}
-                onChange={(event) => setMarketCustomDraftFrom(event.target.value)}
-              />
-            </label>
-            <label>
-              To
-              <input
-                type="date"
-                value={marketCustomDraftTo}
-                onChange={(event) => setMarketCustomDraftTo(event.target.value)}
-              />
-            </label>
-            <label>
-              Last days
-              <input
-                type="number"
-                min={1}
-                max={400}
-                value={lastDays}
-                onChange={(event) => setLastDays(event.target.value)}
-              />
-            </label>
-            <button
-              type="button"
-              onClick={() => {
-                const days = Number(lastDays);
-                if (!Number.isInteger(days) || days < 1) return;
-                const to = new Date();
-                const from = new Date();
-                from.setDate(to.getDate() - days);
-                const fromIso = isoDate(from);
-                const toIso = isoDate(to);
-                setMarketCustomDraftFrom(fromIso);
-                setMarketCustomDraftTo(toIso);
-                setMarketCustomFrom(fromIso);
-                setMarketCustomTo(toIso);
-              }}
-            >
-              Apply last days
-            </button>
-            <button type="submit" disabled={!canApplyRange}>
-              Apply range
-            </button>
-            {rangeInvalid ? (
-              <p className="status-copy" role="alert">
-                From must be on or before to.
-              </p>
-            ) : null}
-          </form>
-        ) : null}
+        {dateEditorOpen ? <Suspense fallback={<PulseRing label="Loading calendar…" />}><DateRangeDialog from={marketCustomFrom} to={marketCustomTo}
+          onClose={() => setDateEditorOpen(false)} onApply={(from, to) => {
+            setMarketCustomFrom(from); setMarketCustomTo(to);
+            setMarketUseCustomRange(true); setDateEditorOpen(false);
+          }} /></Suspense> : null}
         {!detailReady ? null : marketBlock == null ? (
           <p className="status-copy">{NO_DATA_YET}</p>
         ) : marketSeries.length === 0 ? (
@@ -611,21 +546,17 @@ function PlayerDetailBody({ masterId }: PlayerDetailBodyProps) {
                   margin={{ top: 12, right: 16, left: 8, bottom: 20 }}
                 >
                   <CartesianGrid
-                    stroke="#ffffff"
-                    strokeDasharray="0 6"
-                    strokeOpacity={0.5}
-                    strokeWidth={2}
-                    strokeLinecap="round"
-                    vertical
+                    stroke="var(--fb-line)"
+                    strokeDasharray="3 3"
+                    vertical={false}
                     horizontal
                   />
                   <XAxis
                     dataKey="date"
                     tickFormatter={formatChartAxisDate}
                     minTickGap={28}
-                    stroke="#ffffff"
-                    tick={{ fill: "#ffffff", fontSize: 11 }}
-                    label={{ value: "Date", position: "insideBottom", offset: -8, fill: "#ffffff" }}
+                    stroke="var(--fb-muted)"
+                    tick={{ fill: "var(--fb-secondary)", fontSize: 11 }}
                   />
                   <YAxis
                     width={64}
@@ -633,27 +564,30 @@ function PlayerDetailBody({ masterId }: PlayerDetailBodyProps) {
                     tickCount={5}
                     allowDecimals={false}
                     tickFormatter={formatMarketChartTick}
-                    stroke="#ffffff"
-                    tick={{ fill: "#ffffff", fontSize: 11 }}
+                    stroke="var(--fb-muted)"
+                    tick={{ fill: "var(--fb-secondary)", fontSize: 11 }}
                     label={{
-                      value: "Market value",
+                      value: "Value (€)",
                       angle: -90,
                       position: "insideLeft",
-                      fill: "#ffffff",
+                      fill: "var(--fb-secondary)",
                     }}
                   />
+                  <Legend />
                   <Tooltip
+                    contentStyle={{ background: "var(--fb-surface)", color: "var(--fb-secondary)", border: "1px solid var(--fb-line)", borderRadius: 0 }}
+                    labelStyle={{ color: "var(--fb-secondary)" }}
                     labelFormatter={(label) => formatChartAxisDate(String(label ?? ""))}
                     formatter={(value, name) => [
                       formatEuro(Number(value)),
-                      name === "trend" ? "Tendency" : "Value",
+                      name === "Trend" ? "Trend" : "Value",
                     ]}
                   />
                   <Line
                     type="monotone"
                     dataKey="trend"
-                    name="trend"
-                    stroke="#FFC2BF"
+                    name="Trend"
+                    stroke="var(--fb-muted)"
                     strokeDasharray="5 4"
                     strokeWidth={2}
                     dot={false}
@@ -662,12 +596,11 @@ function PlayerDetailBody({ masterId }: PlayerDetailBodyProps) {
                   <Line
                     type="monotone"
                     dataKey="value"
-                    name="value"
+                    name="Value"
                     stroke="#FF4B44"
                     strokeWidth={2.5}
                     dot={false}
                     isAnimationActive={false}
-                    style={{ filter: "drop-shadow(0 0 4px #FF4B44)" }}
                   />
                 </LineChart>
               </ResponsiveContainer>
@@ -677,7 +610,11 @@ function PlayerDetailBody({ masterId }: PlayerDetailBodyProps) {
       </section>
 
       {detailReady ? (
-        <PlayerMatchesSection recent={recentBlock} upcoming={upcomingBlock} />
+        <PlayerMatchesSection
+          recent={recentBlock}
+          upcoming={upcomingBlock}
+          playerTeamName={teamName}
+        />
       ) : null}
 
 

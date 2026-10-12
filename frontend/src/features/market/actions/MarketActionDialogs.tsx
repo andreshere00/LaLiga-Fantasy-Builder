@@ -8,7 +8,6 @@ type MarketActionDialogsProps = {
   actions: MarketActionsApi;
   money: number | null;
   squadMarketValue: number | null;
-  squareCorners?: boolean;
 };
 
 /** Renders the shared confirmation dialogs for one market-action controller. */
@@ -16,7 +15,6 @@ export function MarketActionDialogs({
   actions,
   money,
   squadMarketValue,
-  squareCorners = false,
 }: MarketActionDialogsProps) {
   const bid = useRetained(actions.pendingBid);
   const clause = useRetained(actions.pendingClause);
@@ -25,7 +23,6 @@ export function MarketActionDialogs({
   return (
     <>
       <BidDialog
-        squareCorners={squareCorners}
         open={actions.pendingBid != null}
         row={bid?.row ?? null}
         kind={bid?.kind ?? null}
@@ -38,7 +35,6 @@ export function MarketActionDialogs({
         onConfirm={actions.submitBid}
       />
       <WithdrawDialog
-        squareCorners={squareCorners}
         open={actions.pendingWithdraw != null}
         row={withdraw}
         pending={actions.actionPending}
@@ -47,7 +43,6 @@ export function MarketActionDialogs({
         onConfirm={actions.confirmWithdraw}
       />
       <ClauseDialog
-        squareCorners={squareCorners}
         open={actions.pendingClause != null}
         row={clause?.row ?? null}
         amount={clause?.amount ?? 0}

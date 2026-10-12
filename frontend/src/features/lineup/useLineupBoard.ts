@@ -1,3 +1,4 @@
+import { notify } from "../../components/ui/Notifications";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
   keepPreviousData,
@@ -139,7 +140,6 @@ export type LineupBoard = {
   saveDisabled: boolean;
   saveNoChangesTooltip: string | null;
   savePending: boolean;
-  saveMessage: string | null;
   isPastFixture: boolean;
   fixtureScoresVisible: boolean;
   unplayedFixtureScoreTooltip: string | null;
@@ -567,6 +567,7 @@ export function useLineupBoard(options: UseLineupBoardOptions = {}): LineupBoard
   const saveMutation = useMutation({
     retry: false,
     onError: async (error, variables) => {
+      if (!(error instanceof NeedsReauthError)) notify("LINEUP COULD NOT BE SAVEDBu.", "error");
       if (error instanceof ApiContractError) {
         await queryClient.refetchQueries({ queryKey: ["lineup", variables.leagueKey] });
         await queryClient.refetchQueries({ queryKey: ["team", variables.leagueKey] });
@@ -575,6 +576,7 @@ export function useLineupBoard(options: UseLineupBoardOptions = {}): LineupBoard
     mutationFn: async (variables: SaveLineupVariables) =>
       putJson(paths.lineup(variables.teamId), token, variables.body),
     onSuccess: async (_data, variables) => {
+      notify("Lineup saved");
       await queryClient.invalidateQueries({
         queryKey: ["lineup", variables.leagueKey, variables.teamId],
       });
@@ -620,10 +622,6 @@ export function useLineupBoard(options: UseLineupBoardOptions = {}): LineupBoard
     }
   }, [squadPage, squadPageData.pageCount]);
 
-  const saveMessage =
-    saveMutation.error && !(saveMutation.error instanceof NeedsReauthError)
-      ? "Lineup could not be saved."
-      : null;
   const dismissPastFixtureNotice = useCallback(() => {
     setPastFixtureNoticeOpen(false);
   }, []);
@@ -915,7 +913,6 @@ export function useLineupBoard(options: UseLineupBoardOptions = {}): LineupBoard
         ? SAVE_NO_CHANGES_MESSAGE
         : null,
     savePending: saveMutation.isPending,
-    saveMessage,
     isPastFixture: !lineupUsesCurrent,
     fixtureScoresVisible,
     unplayedFixtureScoreTooltip: unplayedFixtureScoreTooltipLabel,

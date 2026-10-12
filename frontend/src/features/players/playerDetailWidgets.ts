@@ -36,6 +36,31 @@ export function matchOutcome(homeScore: number | null, awayScore: number | null)
   return homeScore > awayScore ? "win" : "loss";
 }
 
+function normalizedTeamName(value: string | null): string {
+  return value
+    ?.normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .toLocaleLowerCase()
+    .replace(/[^a-z0-9]/g, "") ?? "";
+}
+
+export function matchOutcomeForTeam(
+  homeScore: number | null,
+  awayScore: number | null,
+  playerTeamName: string | null,
+  homeTeamName: string | null,
+  awayTeamName: string | null,
+): MatchOutcome {
+  const playerTeam = normalizedTeamName(playerTeamName);
+  const homeTeam = normalizedTeamName(homeTeamName);
+  const awayTeam = normalizedTeamName(awayTeamName);
+  if (!playerTeam || !homeTeam || !awayTeam || homeTeam === awayTeam) return "unknown";
+
+  if (playerTeam === homeTeam) return matchOutcome(homeScore, awayScore);
+  if (playerTeam === awayTeam) return matchOutcome(awayScore, homeScore);
+  return "unknown";
+}
+
 export function weatherConditionFromSnapshot(
   snapshot: Record<string, unknown> | null,
 ): WeatherCondition | null {

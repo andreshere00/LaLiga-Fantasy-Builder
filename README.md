@@ -4,8 +4,6 @@ Companion for a LaLiga Fantasy league: edit your lineup, browse player profiles,
 and manage market bids from the browser, backed by an API that proxies Fantasy
 data and user-confirmed writes with your linked account.
 
-![Lineup screen](docs/images/lineup.png)
-
 | Topic | Doc |
 |-------|-----|
 | Architecture and trust boundaries | [docs/architecture.md](docs/architecture.md) |
@@ -54,6 +52,39 @@ data and user-confirmed writes with your linked account.
   detail stats aggregate catalog, calendar, and private scraping data.
 - **Read-only CLIs** for market and buyout analysis; no automated bidding or
   clause payment in CLI or browser-session flows.
+
+## Screenshots
+
+Product screenshots captured from the local app. League, roster, and player
+data reflect the session shown and can change over time.
+
+### Lineup
+
+![Lineup overview](docs/images/screenshots/lineup-overview.png)
+
+![Lineup builder preferences](docs/images/screenshots/lineup-builder-top.png)
+
+![Lineup builder formation and effort options](docs/images/screenshots/lineup-builder-options.png)
+
+![Lineup player actions](docs/images/screenshots/lineup-player-actions.png)
+
+### Market and player catalog
+
+![Market board](docs/images/screenshots/market-board.png)
+
+![Players catalog](docs/images/screenshots/players-catalog.png)
+
+### Player profile
+
+![Player profile overview](docs/images/screenshots/player-profile-overview.png)
+
+![Player Fantasy data, news, and injury history](docs/images/screenshots/player-fantasy-data.png)
+
+![Previous and upcoming matches](docs/images/screenshots/player-matches.png)
+
+![Player market-value chart](docs/images/screenshots/player-market-value.png)
+
+![Per-match averages details](docs/images/screenshots/player-averages-details.png)
 
 ## Quick start
 

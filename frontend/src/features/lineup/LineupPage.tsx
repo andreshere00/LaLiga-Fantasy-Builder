@@ -1,13 +1,15 @@
-import { useEffect, useState, type CSSProperties } from "react";
+import { Help } from "../../components/ui/Help";
+import { Select } from "@base-ui/react/select";
+import { Fragment, useEffect, useState, type CSSProperties } from "react";
 import { useSearchParams } from "react-router-dom";
 
 import { pointsLabel, possessiveName, scoreWeekLabel } from "../../api/mappers";
 import { PersonIcon, SearchIcon, WarningIcon } from "../shell/icons";
 import { ProfilePhoto } from "../shell/ProfilePhoto";
-import footballIconUrl from "../../assets/boxicons_football-filled.svg";
-import moneyIconUrl from "../../assets/button_money.svg";
+import builderIconUrl from "../../assets/icon_builder_white.svg";
 import saveCartridgeIconUrl from "../../assets/save_cartridge.svg";
-import fieldUrl from "../../assets/football_field.svg";
+import { PitchMarkings } from "./PitchMarkings";
+import { PulseRing } from "../../components/ui/PulseRing";
 import originalFixtureBlackUrl from "../../assets/button_original_fixture_black.svg";
 import originalFixtureWhiteUrl from "../../assets/button_original_fixture_white.svg";
 import originalFixtureGrayUrl from "../../assets/button_original_fixture_gray.svg";
@@ -16,7 +18,6 @@ import { SQUAD_PICKER_EMPTY_MESSAGE } from "./playerTileCopy";
 import { squadCountLabel } from "./squadPanel";
 import { CurrentFixtureTooltip } from "./CurrentFixtureTooltip";
 import { OpponentLineupNotice } from "./OpponentLineupNotice";
-import { PitchMotionProvider, PitchTileMotion } from "./PitchMotion";
 import { PlayedFixtureNotice } from "./PlayedFixtureNotice";
 import { PlayerTile } from "./PlayerTile";
 import { roleFromPositionId } from "./lineupDraft";
@@ -25,10 +26,10 @@ import { LineupMarketOptions } from "./LineupMarketOptions";
 import { TeamValueBox } from "./TeamValueBox";
 import { useLineupBoard } from "./useLineupBoard";
 import { useSquadSales } from "./useSquadSales";
-import "../../components/TooltipPanel.css";
+import { LineupBuilderDialog } from "./LineupBuilderDialog";
 import "./LineupPage.css";
 
-const RECOMMEND_COPY = "Write your lineup preferences";
+const RECOMMEND_COPY = "Write your lineup preferences...";
 
 /** Swap layout tokens via data-layout-profile; see lineup-layout.css. */
 const LINEUP_LAYOUT_PROFILE = "desktop-16-9";
@@ -43,6 +44,7 @@ export function LineupPage() {
   const [searchParams] = useSearchParams();
   const board = useLineupBoard({ initialTeamId: searchParams.get("team") });
   const squadSales = useSquadSales();
+  const [builderOpen, setBuilderOpen] = useState(false);
   const [swapCandidate, setSwapCandidate] = useState<{
     playerId: string;
     positionId: number | null;
@@ -70,7 +72,7 @@ export function LineupPage() {
   if (board.isLoading) {
     return (
       <section className="lineup-page" data-layout-profile={LINEUP_LAYOUT_PROFILE}>
-        <p className="status-copy">Loading lineup…</p>
+        <PulseRing label="Loading lineup…" />
       </section>
     );
   }
@@ -86,9 +88,6 @@ export function LineupPage() {
   const picking = board.pitchSelection != null;
   const saveNoChangesOnly =
     board.saveNoChangesTooltip != null && board.saveDisabled && !board.savePending;
-  const tileOrder = new Map(
-    board.groups.flatMap((group) => group.players).map((player, index) => [player.id, index]),
-  );
 
   return (
     <section className="lineup-page" data-layout-profile={LINEUP_LAYOUT_PROFILE}>
@@ -107,7 +106,7 @@ export function LineupPage() {
             <div className="control-block">
               <span className="field-label">Fixture</span>
               <CurrentFixtureTooltip message={currentFixtureTooltip}>
-                <div className="pager">
+                <div className="pager current-fixture-pager">
                   <button
                     type="button"
                     aria-label="Previous fixture"
@@ -144,19 +143,31 @@ export function LineupPage() {
             <div className="control-block formation-field">
               <span className="field-label">Formation</span>
               {board.editable ? (
-                <div className="select-wrap formation-select">
-                  <select
-                    aria-label="Formation"
-                    value={board.formationCode ?? ""}
-                    onChange={(event) => board.setFormationCode(event.target.value)}
-                  >
-                    {board.formationOptions.map((option) => (
-                      <option key={option.value} value={option.value}>
-                        {option.label}
-                      </option>
-                    ))}
-                  </select>
-                </div>
+                <Select.Root items={board.formationOptions} value={board.formationCode}
+                  onValueChange={(value) => { if (value) board.setFormationCode(value); }}>
+                  <Select.Trigger className="fb-select-trigger lineup-formation-trigger" aria-label="Formation">
+                    <Select.Value />
+                    <Select.Icon className="lineup-formation-icon" aria-hidden="true">
+                      <svg viewBox="0 0 18 18">
+                        <path d="m4 7 5 5 5-5" fill="none" stroke="currentColor" strokeWidth="1.5" />
+                      </svg>
+                    </Select.Icon>
+                  </Select.Trigger>
+                  <Select.Portal>
+                    <Select.Positioner sideOffset={4} className="fb-select-positioner">
+                      <Select.Popup className="fb-selection-popup">
+                        <Select.List>
+                          {board.formationOptions.map((option) => (
+                            <Select.Item key={option.value} value={option.value} className="fb-item">
+                              <Select.ItemText>{option.label}</Select.ItemText>
+                              <Select.ItemIndicator aria-hidden="true">✓</Select.ItemIndicator>
+                            </Select.Item>
+                          ))}
+                        </Select.List>
+                      </Select.Popup>
+                    </Select.Positioner>
+                  </Select.Portal>
+                </Select.Root>
               ) : (
                 <p className="formation-value">{board.formation}</p>
               )}
@@ -164,11 +175,11 @@ export function LineupPage() {
             <div className="control-block recommend">
               <span className="field-label">Build lineup</span>
               <div className="accent-control-shell">
-                <button type="button" className="recommend-button" disabled>
+                <button type="button" className="recommend-button" onClick={() => setBuilderOpen(true)}>
                   <span className="recommend-button-text">{RECOMMEND_COPY}</span>
                   <img
                     className="recommend-button-icon"
-                    src={footballIconUrl}
+                    src={builderIconUrl}
                     alt=""
                     aria-hidden="true"
                   />
@@ -177,21 +188,13 @@ export function LineupPage() {
             </div>
             <div className="control-block save-lineup">
               <span className="field-label">Save lineup</span>
-              <div
-                className={
-                  board.saveNoChangesTooltip
-                    ? "accent-control-shell save-lineup-shell has-hover-tooltip-panel"
-                    : "accent-control-shell save-lineup-shell"
-                }
-              >
+              <Help content={board.saveNoChangesTooltip}
+                trigger={<div className="accent-control-shell save-lineup-shell" />}>
                 <button
                   type="button"
                   className="save-lineup-button"
                   disabled={board.saveDisabled && !saveNoChangesOnly}
                   aria-disabled={saveNoChangesOnly ? true : undefined}
-                  aria-describedby={
-                    board.saveNoChangesTooltip ? "save-lineup-no-changes-tooltip" : undefined
-                  }
                   onClick={() => {
                     if (saveNoChangesOnly) return;
                     board.saveLineup();
@@ -207,28 +210,13 @@ export function LineupPage() {
                     aria-hidden="true"
                   />
                 </button>
-                {board.saveNoChangesTooltip ? (
-                  <span
-                    id="save-lineup-no-changes-tooltip"
-                    className="hover-tooltip-panel is-align-start"
-                    role="tooltip"
-                  >
-                    {board.saveNoChangesTooltip}
-                  </span>
-                ) : null}
-              </div>
-              {board.saveMessage ? (
-                <p className="save-lineup-message" role="alert">
-                  {board.saveMessage}
-                </p>
-              ) : null}
+              </Help>
             </div>
             </div>
             <div className="controls-zone controls-zone-end">
             <div className="control-block team-value">
               <span className="field-label">Team value</span>
               <TeamValueBox
-                iconSrc={moneyIconUrl}
                 evolution={board.teamValueEvolution}
                 historyLoading={board.teamValueHistoryLoading}
                 onRequestHistory={board.requestTeamValueHistory}
@@ -273,7 +261,7 @@ export function LineupPage() {
 
         <div className="column column-pitch">
           <div className="pitch">
-            <img src={fieldUrl} alt="" />
+            <PitchMarkings />
             {board.ownSquad && !board.isPastFixture ? (
               <div className="pitch-lineup-load-controls">
                 <details className="pitch-lineup-load-menu">
@@ -287,16 +275,12 @@ export function LineupPage() {
                     </span>
                   </summary>
                   <div className="pitch-lineup-load-options">
-                    <span
-                      className="pitch-scoring-lineup-control has-hover-tooltip-panel"
-                      tabIndex={board.originalLineupMessage ? 0 : undefined}
-                      aria-describedby={board.originalLineupMessage ? "scoring-lineup-hint" : undefined}
-                    >
+                    <Help content={board.originalLineupMessage}
+                      trigger={<span className="pitch-scoring-lineup-control" />}>
                       <button
                         type="button"
                         className="pitch-original-lineup-button is-primary"
                         disabled={!board.originalLineupAvailable || board.savePending}
-                        aria-describedby={board.originalLineupMessage ? "scoring-lineup-hint" : undefined}
                         onClick={(event) => {
                           event.currentTarget.closest("details")?.removeAttribute("open");
                           setSwapCandidate(null);
@@ -310,12 +294,7 @@ export function LineupPage() {
                         </span>
                         <span>Load original lineup for {scoreWeekLabel(board.week)}</span>
                       </button>
-                      {board.originalLineupMessage ? (
-                        <span id="scoring-lineup-hint" className="hover-tooltip-panel is-align-end" role="tooltip">
-                          {board.originalLineupMessage}
-                        </span>
-                      ) : null}
-                    </span>
+                    </Help>
                     <button
                       type="button"
                       className="pitch-original-lineup-button"
@@ -360,7 +339,7 @@ export function LineupPage() {
                 <button type="button" className="squad-sale-secondary" onClick={() => setSwapCandidate(null)}>Cancel</button>
               </div>
             ) : null}
-            <PitchMotionProvider key={`${board.selectedTeamId}-${board.week}`}>
+            <Fragment key={`${board.selectedTeamId}-${board.week}`}>
             <div className="pitch-rows">
               {board.groups.map((group) => {
                 const rows = pitchRows(group.players, group.role);
@@ -414,7 +393,7 @@ export function LineupPage() {
                               />
                             );
                             return (
-                              <PitchTileMotion key={player.id} order={tileOrder.get(player.id) ?? 0} lift={!empty || board.editable}>
+                              <div className="pitch-tile-motion" key={player.id}>
                                 {empty || picking || activeSwap ? tile(() => {
                                   if (activeSwap) {
                                     if (roleFromPositionId(activeSwap.positionId) !== group.role) return;
@@ -438,7 +417,7 @@ export function LineupPage() {
                                     {tile}
                                   </SquadPlayerActions>
                                 )}
-                              </PitchTileMotion>
+                              </div>
                             );
                           })}
                         </div>
@@ -448,7 +427,7 @@ export function LineupPage() {
                 );
               })}
             </div>
-            </PitchMotionProvider>
+            </Fragment>
           </div>
         </div>
 
@@ -592,6 +571,9 @@ export function LineupPage() {
         }
         onClose={board.dismissOpponentLineupNotice}
       />
+      <LineupBuilderDialog open={builderOpen} onClose={() => setBuilderOpen(false)}
+        ranking={board.ranking} squad={board.squad} selectedTeamId={board.selectedTeamId}
+        formations={board.formationOptions} />
     </section>
   );
 }

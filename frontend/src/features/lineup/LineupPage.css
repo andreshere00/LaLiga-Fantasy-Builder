@@ -22,7 +22,6 @@
   .squad-picker-search,
   .player-tile.is-interactive
 ) {
-  box-shadow: var(--shadow-surface);
 }
 
 .board-controls-title {
@@ -201,19 +200,6 @@
   width: 100%;
 }
 
-.save-lineup-shell.has-hover-tooltip-panel {
-  cursor: help;
-}
-
-.save-lineup-shell.has-hover-tooltip-panel .save-lineup-button:disabled {
-  pointer-events: none;
-}
-
-.board-controls .save-lineup-message {
-  align-self: stretch;
-  text-align: center;
-}
-
 .controls-cluster-end {
   justify-content: flex-end;
 }
@@ -232,8 +218,8 @@
 .pager,
 .value-box,
 .select-wrap select {
-  background: var(--white);
-  border-radius: var(--lineup-control-radius);
+  background: var(--fb-surface);
+  border-radius: 0;
 }
 
 .pager {
@@ -250,10 +236,6 @@
   overflow: visible;
 }
 
-.current-fixture-tooltip .hover-tooltip-panel {
-  z-index: 120;
-}
-
 .pager button,
 .pager span {
   display: flex;
@@ -262,7 +244,7 @@
   width: var(--lineup-pager-cell);
   height: var(--lineup-control-height);
   border: 0;
-  background: var(--white);
+  background: var(--fb-surface);
   font: inherit;
   font-size: var(--lineup-font-medium);
   font-weight: 700;
@@ -280,20 +262,19 @@
 }
 
 .pager button:not(:disabled) {
-  transition: background-color var(--control-fill-duration) var(--control-fill-ease);
+  transition: background-color var(--fb-color-duration) var(--fb-color-ease);
 }
 
 .pager button:is(:hover, :active):not(:disabled) {
-  background: var(--surface-press);
+  background: var(--fb-subtle);
 }
 
 .score-pill {
   display: inline-flex;
   overflow: visible;
-  border-radius: var(--lineup-control-radius);
+  border-radius: 0;
   font-weight: 700;
   background: transparent;
-  box-shadow: var(--shadow-surface);
 }
 
 .score-week,
@@ -308,12 +289,12 @@
 }
 
 .score-week {
-  background: var(--white);
+  background: var(--fb-surface);
 }
 
 .score-points {
-  background: var(--red);
-  color: var(--white);
+  background: var(--fb-primary);
+  color: var(--fb-surface);
 }
 
 .select-wrap {
@@ -328,7 +309,7 @@
   right: 12px;
   border-left: 5px solid transparent;
   border-right: 5px solid transparent;
-  border-top: 6px solid var(--black);
+  border-top: 6px solid var(--fb-tertiary);
   pointer-events: none;
 }
 
@@ -340,11 +321,11 @@
   font-size: var(--lineup-font-medium);
   font-weight: 700;
   cursor: pointer;
-  transition: background-color var(--control-fill-duration) var(--control-fill-ease);
+  transition: background-color var(--fb-color-duration) var(--fb-color-ease);
 }
 
 .select-wrap select:is(:hover, :active) {
-  background: var(--surface-press);
+  background: var(--fb-subtle);
 }
 
 .recommend {
@@ -366,18 +347,18 @@
   align-items: stretch;
   width: 100%;
   overflow: visible;
-  border-radius: var(--lineup-control-radius);
-  background: var(--red);
-  color: var(--white);
+  border-radius: 0;
+  background: var(--fb-primary);
+  color: var(--fb-surface);
   box-sizing: border-box;
   transition:
-    background-color var(--control-fill-duration) var(--control-fill-ease),
-    color var(--control-fill-duration) var(--control-fill-ease);
+    background-color var(--fb-color-duration) var(--fb-color-ease),
+    color var(--fb-color-duration) var(--fb-color-ease);
 }
 
 .accent-control-shell:has(:is(.save-lineup-button, .recommend-button):disabled) {
-  background: color-mix(in srgb, var(--red) 45%, var(--white));
-  color: var(--white);
+  background: color-mix(in srgb, var(--fb-primary) 45%, var(--fb-surface));
+  color: var(--fb-surface);
 }
 
 .accent-control-shell:not(:has(:is(.save-lineup-button, .recommend-button):disabled)):is(
@@ -385,8 +366,8 @@
     :has(.recommend-button:active),
     :has(.save-lineup-button:active:not(:disabled))
   ) {
-  background: var(--accent-press);
-  color: var(--black);
+  background: var(--fb-coral);
+  color: var(--fb-tertiary);
 }
 
 .formation-value {
@@ -394,8 +375,8 @@
   padding: 0 clamp(10px, 1vw, 14px);
   font-size: var(--lineup-font-medium);
   font-weight: 700;
-  background: var(--white);
-  border-radius: var(--lineup-control-radius);
+  background: var(--fb-surface);
+  border-radius: 0;
   display: inline-flex;
   align-items: center;
   font-variant-numeric: tabular-nums;
@@ -410,9 +391,8 @@
   height: 100%;
   margin: 0;
   border: 0;
-  border-radius: inherit;
+  border-radius: 0;
   background: transparent;
-  box-shadow: none;
   color: inherit;
   font: inherit;
   font-size: var(--lineup-font-medium);
@@ -453,9 +433,8 @@
   height: 100%;
   margin: 0;
   border: 0;
-  border-radius: inherit;
+  border-radius: 0;
   background: transparent;
-  box-shadow: none;
   color: inherit;
   font: inherit;
   font-size: var(--lineup-font-medium);
@@ -484,13 +463,6 @@
 
 .save-lineup-button:disabled {
   cursor: default;
-}
-
-.save-lineup-message {
-  margin: var(--lineup-controls-label-gap, calc(100vw / 80)) 0 0;
-  font-size: var(--lineup-font-small);
-  font-weight: 700;
-  color: var(--red);
 }
 
 .formation-select {
@@ -537,14 +509,6 @@
   white-space: nowrap;
 }
 
-.value-box-icon {
-  width: var(--lineup-control-icon);
-  height: var(--lineup-control-icon);
-  flex: 0 0 auto;
-  object-fit: contain;
-  display: block;
-}
-
 .value-box .value-box-tooltip-wrap {
   display: flex;
   align-items: center;
@@ -552,10 +516,6 @@
   gap: 8px;
   width: 100%;
   min-width: 0;
-}
-
-.value-box-tooltip-wrap.has-hover-tooltip-panel {
-  cursor: help;
 }
 
 .team-value-tooltip {
@@ -609,28 +569,28 @@
   padding: 0 12px;
   border: 0;
   border-radius: 0;
-  background: var(--white);
+  background: var(--fb-surface);
   text-align: left;
   font: inherit;
   font-size: var(--lineup-font-medium);
   cursor: pointer;
   transition:
-    background-color var(--control-fill-duration) var(--control-fill-ease),
-    color var(--control-fill-duration) var(--control-fill-ease);
+    background-color var(--fb-color-duration) var(--fb-color-ease),
+    color var(--fb-color-duration) var(--fb-color-ease);
 }
 
 .rank-row:is(:hover, :active):not(:disabled):not(.active) {
-  background: var(--surface-press);
+  background: var(--fb-subtle);
 }
 
 .rank-row.active {
-  background: var(--red);
-  color: var(--white);
+  background: var(--fb-primary);
+  color: var(--fb-surface);
 }
 
 .rank-row.active:is(:hover, :active):not(:disabled) {
-  background: var(--accent-press);
-  color: var(--black);
+  background: var(--fb-coral);
+  color: var(--fb-tertiary);
 }
 
 .rank-row:disabled {
@@ -647,13 +607,13 @@
   place-items: center;
   width: 22px;
   height: 22px;
-  border-radius: 50%;
+  border-radius: 0;
   background: #d9d9d9;
-  color: var(--ink);
+  color: var(--fb-secondary);
 }
 
 .rank-row.active .avatar {
-  background: var(--white);
+  background: var(--fb-surface);
 }
 
 .avatar svg {
@@ -665,7 +625,7 @@
   width: 100%;
   height: 100%;
   object-fit: cover;
-  border-radius: 50%;
+  border-radius: 0;
   display: block;
 }
 
@@ -740,9 +700,8 @@
   padding: 0.75rem;
   border: 0;
   border-radius: 0;
-  background: var(--white);
-  color: var(--ink);
-  box-shadow: var(--shadow-surface);
+  background: var(--fb-surface);
+  color: var(--fb-secondary);
   font: inherit;
   font-size: clamp(0.65rem, 0.8vw, 0.85rem);
   font-weight: 700;
@@ -774,8 +733,7 @@
   width: min(22rem, calc(100vw - 2rem));
   box-sizing: border-box;
   padding: 0.75rem;
-  background: var(--white);
-  box-shadow: var(--shadow-surface);
+  background: var(--fb-surface);
 }
 
 .pitch-scoring-lineup-control {
@@ -792,13 +750,13 @@
 }
 
 .pitch-original-lineup-button.is-primary {
-  background: var(--white);
-  color: var(--ink);
+  background: var(--fb-surface);
+  color: var(--fb-secondary);
 }
 
 .pitch-original-lineup-button.is-primary:disabled {
-  background: var(--white);
-  color: var(--gray);
+  background: var(--fb-surface);
+  color: var(--fb-subtle);
 }
 
 .pitch-original-lineup-icons {
@@ -818,8 +776,8 @@
 }
 
 .pitch-original-lineup-button:is(:hover, :focus-visible):not(:disabled) {
-  background: var(--red);
-  color: var(--white);
+  background: var(--fb-primary);
+  color: var(--fb-surface);
 }
 
 .pitch-original-lineup-button:is(:hover, :focus-visible):not(:disabled) .is-default,
@@ -833,7 +791,7 @@
 }
 
 .pitch-original-lineup-button:disabled {
-  color: var(--gray);
+  color: var(--fb-subtle);
   cursor: default;
 }
 
@@ -882,8 +840,8 @@
   margin: 0;
   padding: 12px;
   border: 0;
-  background: color-mix(in srgb, var(--ink) 28%, transparent);
-  color: var(--white);
+  background: color-mix(in srgb, var(--fb-secondary) 28%, transparent);
+  color: var(--fb-surface);
   font-size: var(--lineup-font-medium);
   font-weight: 700;
   text-align: center;
@@ -893,7 +851,6 @@
 .pitch-opponent-lock-label {
   max-width: min(18rem, 80%);
   line-height: 1.35;
-  text-shadow: 0 1px 2px rgb(0 0 0 / 35%);
 }
 
 .side-panel {
@@ -905,8 +862,8 @@
   padding: 0 8px 8px;
   box-sizing: border-box;
   overflow: hidden;
-  background: var(--white);
-  border-radius: 10px;
+  background: var(--fb-surface);
+  border-radius: 0;
 }
 
 .board-controls-bar.side-panel {
@@ -934,7 +891,7 @@
   flex: 1;
   min-height: 0;
   overflow-y: auto;
-  scrollbar-color: var(--cyan) var(--red-soft);
+  scrollbar-color: var(--cyan) var(--fb-coral);
   scrollbar-width: thin;
 }
 
@@ -943,13 +900,13 @@
 }
 
 .side-panel-scroll::-webkit-scrollbar-track {
-  background: var(--red-soft);
-  border-radius: 8px;
+  background: var(--fb-coral);
+  border-radius: 0;
 }
 
 .side-panel-scroll::-webkit-scrollbar-thumb {
   background: var(--cyan);
-  border-radius: 8px;
+  border-radius: 0;
 }
 
 .squad-panel .side-panel-scroll {
@@ -1032,8 +989,8 @@
   box-sizing: border-box;
   height: var(--lineup-control-height);
   padding: 0 clamp(10px, 1vw, 12px);
-  background: var(--white);
-  border-radius: var(--lineup-control-radius);
+  background: var(--fb-surface);
+  border-radius: 0;
 }
 
 .squad-picker-search-icon {
@@ -1077,20 +1034,7 @@
   justify-content: center;
 }
 
-@keyframes panel-content-in {
-  from {
-    opacity: 0;
-    transform: translateY(8px);
-  }
-
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
-}
-
 .squad-grid {
-  animation: panel-content-in 0.28s ease-out both;
   display: grid;
   grid-template-columns: repeat(2, minmax(0, var(--lineup-squad-tile-w)));
   grid-template-rows: repeat(4, minmax(0, 1fr));
@@ -1110,9 +1054,6 @@
 }
 
 .squad-grid .squad-tile {
-  box-shadow:
-    0 2px 6px rgb(0 0 0 / 18%),
-    0 6px 14px rgb(0 0 0 / 12%);
   width: auto;
   height: 100%;
   max-width: 100%;
@@ -1133,60 +1074,13 @@
   z-index: 1;
 }
 
+.squad-pager .pager > :is(button, span) {
+  height: calc(var(--lineup-control-height) - 2px);
+}
+
 .lineup-page .pager button,
 .lineup-page .rank-row {
   border-radius: 0;
-}
-
-.played-fixture-notice {
-  position: fixed;
-  inset: 0;
-  z-index: 20;
-  display: grid;
-  place-items: center;
-  padding: 24px;
-  background: rgb(0 0 0 / 28%);
-}
-
-.played-fixture-notice-card {
-  width: min(420px, 100%);
-  padding: 28px 24px 22px;
-  background: var(--white);
-  border-radius: 12px;
-  box-shadow: var(--shadow-surface);
-  text-align: center;
-}
-
-.played-fixture-notice-title {
-  margin: 0 0 12px;
-  font-size: var(--lineup-font-large);
-  font-weight: 500;
-}
-
-.played-fixture-notice-body {
-  margin: 0;
-  font-size: var(--lineup-font-medium);
-  line-height: 1.45;
-}
-
-.played-fixture-notice-close {
-  margin-top: 20px;
-  border: 0;
-  background: var(--red);
-  color: var(--white);
-  padding: 10px 22px;
-  font: inherit;
-  font-weight: 700;
-  cursor: pointer;
-  box-shadow: var(--shadow-surface);
-  transition:
-    background-color var(--control-fill-duration) var(--control-fill-ease),
-    color var(--control-fill-duration) var(--control-fill-ease);
-}
-
-.played-fixture-notice-close:is(:hover, :active) {
-  background: var(--accent-press);
-  color: var(--black);
 }
 
 @media (max-width: 1099px), (max-aspect-ratio: 4/3) {
@@ -1289,9 +1183,93 @@
   position: relative;
   z-index: 10;
   padding: 0.75rem;
-  background: var(--white);
-  box-shadow: var(--shadow-surface);
+  background: var(--fb-surface);
   display: flex;
   align-items: center;
   gap: 0.75rem;
 }
+
+/* Matchday command and square board surfaces. */
+.lineup-page { --lineup-control-height:44px; font-size:14px; }
+.board-controls-bar.side-panel { padding:24px; border:1px solid var(--fb-line); }
+.board-controls-title { text-align:left; padding:0; margin-bottom:20px; font:400 28px/1.2 Anton,sans-serif; letter-spacing:.03em; text-transform:uppercase; }
+.board-controls-title span { font:inherit; }
+.board-controls .field-label { text-align:left; margin-bottom:8px; font-size:12px; font-weight:500; text-transform:uppercase; color:var(--fb-muted); }
+.board-controls .controls-zone { justify-content:flex-start; }
+.board-controls .controls-zone-center { flex-wrap:wrap; }
+.board-controls .controls-zone-center .recommend { flex:1 1 180px; width:auto; }
+.board-controls .control-block { align-items:stretch; }
+.score-points { background:var(--fb-subtle); color:var(--fb-secondary); }
+.pager,.formation-select select,.formation-value,.squad-picker-search { border:1px solid var(--fb-control-line); }
+.select-wrap::after { top:50%; transform:translateY(-50%); }
+.select-wrap select { padding-inline:12px 44px; }
+.accent-control-shell { border-radius: 0; color:var(--fb-ink-on-status); }
+.accent-control-shell:has(.recommend-button:disabled) { background:var(--fb-subtle); color:var(--fb-muted); border:1px solid var(--fb-line); }
+.accent-control-shell:has(.save-lineup-button:disabled) { background:var(--fb-primary); color:var(--fb-ink-on-status); opacity:.5; }
+.save-lineup-button { justify-content:center; text-transform:uppercase; font-weight:600; }
+.save-lineup-button-text { text-align:center; }
+.save-lineup-button-icon,.recommend-button-icon { width:18px; height:18px; }
+.side-panel { border:1px solid var(--fb-line); }
+.side-panel-modal > .column-title { font:400 20px/1.3 Anton,sans-serif; letter-spacing:.03em; text-transform:uppercase; text-align:left; padding:20px 12px 0; margin-bottom:16px; }
+.rank-list { gap:0; }
+.rank-row { min-height:52px; border-bottom:1px solid var(--fb-line); }
+.rank-row.active { background:var(--fb-surface); color:var(--fb-secondary); border-left:3px solid var(--fb-primary); }
+.pitch { background:var(--fb-surface); }
+.pitch-markings { width:100%; height:100%; display:block; }
+.squad-grid { animation:none; }
+.pitch-opponent-lock { background:var(--fb-subtle); color:var(--fb-secondary); }
+.pitch-lineup-load-trigger { width:44px; height:44px; }
+.pitch-lineup-load-options { border:1px solid var(--fb-line); }
+.pitch-original-lineup-button { min-height:44px; }
+.value-box { color:var(--fb-secondary); font-weight:500; }
+.status-copy { font-size:14px; font-weight:400; line-height:1.5; }
+@media(max-width:1099px) { .board-controls .controls-zone { width:100%; justify-content:center; } .board-controls { align-items:center; gap:20px; } .board-controls .controls-zone-end .control-block { align-items:center; } }
+
+.accent-control-shell:has([aria-disabled="true"]) { opacity:.5; }
+
+.accent-control-shell { border-radius:8px; }
+.save-lineup-button-icon { filter:brightness(0); }
+
+/* Lineup toolbar visual fixes. */
+.accent-control-shell { border-radius:0; }
+.score-pill { border:1px solid var(--fb-control-line); box-sizing:border-box; }
+.score-week,.score-points { height:calc(var(--lineup-control-height) - 2px); }
+.current-fixture-tooltip { width:max-content; max-width:100%; }
+.pager { width:calc(var(--lineup-pager-cell) * 3 + 2px); grid-template-columns:repeat(3,minmax(0,1fr)); box-sizing:border-box; }
+.current-fixture-pager { position:relative; height:var(--lineup-control-height); border-color:transparent; }
+.current-fixture-pager > :is(button,span) { height:calc(var(--lineup-control-height) - 2px); }
+.current-fixture-pager::after { content:""; position:absolute; z-index:10; inset:-1px; box-sizing:border-box; border:1px solid var(--fb-control-line); pointer-events:none; }
+.pitch-lineup-load-menu { width:44px; }
+.pitch-lineup-load-trigger { width:44px; height:44px; box-sizing:border-box; padding:0; margin:0; }
+.team-value > .field-label { text-align:center; }
+.board-controls .controls-zone-end .control-block { align-items:center; }
+.value-box { justify-content:center; font-size:var(--lineup-font-large); border:1px solid var(--fb-control-line); box-sizing:border-box; }
+.value-box .value-box-tooltip-wrap { justify-content:center; }
+.value-box-text { flex:0 1 auto; text-align:center; }
+.save-lineup-button { border-radius:0; background:transparent; color:#fff; transition:color .16s ease,background-color .16s ease; }
+.accent-control-shell:has(.save-lineup-button:not(:disabled):not([aria-disabled="true"])) { background:var(--fb-primary); color:#fff; }
+.accent-control-shell:has(.save-lineup-button:not(:disabled):not([aria-disabled="true"]):hover) { background:var(--fb-coral); color:#000; }
+.accent-control-shell:has(.save-lineup-button:not(:disabled):not([aria-disabled="true"]):hover) .save-lineup-button { color:#000; }
+.accent-control-shell:has(.save-lineup-button:not(:disabled):not([aria-disabled="true"]):hover) .save-lineup-button-icon { filter:brightness(0); }
+.save-lineup-button:disabled,
+.save-lineup-button[aria-disabled="true"] { background:transparent; color:#fff; }
+.accent-control-shell:has(.save-lineup-button:disabled),
+.accent-control-shell:has(.save-lineup-button[aria-disabled="true"]) { background:#35353D; border-color:#35353D; color:#fff; opacity:1; }
+.accent-control-shell:has(.save-lineup-button:disabled):hover,
+.accent-control-shell:has(.save-lineup-button[aria-disabled="true"]):hover { background:#E5E5E5; color:#000; }
+.accent-control-shell:has(.save-lineup-button:disabled):hover .save-lineup-button,
+.accent-control-shell:has(.save-lineup-button[aria-disabled="true"]):hover .save-lineup-button { color:#000; }
+.accent-control-shell:has(.save-lineup-button:disabled):hover .save-lineup-button-icon,
+.accent-control-shell:has(.save-lineup-button[aria-disabled="true"]):hover .save-lineup-button-icon { filter:brightness(0); }
+.save-lineup-button-icon { filter:none; }
+.accent-control-shell:has(.save-lineup-button:not(:disabled):not([aria-disabled="true"])) .save-lineup-button-icon { filter:none; }
+.accent-control-shell:has(.save-lineup-button:disabled) .save-lineup-button-icon,
+.accent-control-shell:has(.save-lineup-button[aria-disabled="true"]) .save-lineup-button-icon { filter:none; opacity:1; }
+.recommend-button { align-items:center; font-size:14px; font-weight:500; }
+.recommend-button-icon { filter:none; }
+.accent-control-shell:has(.recommend-button) { background:var(--fb-primary); color:#fff; }
+.accent-control-shell:has(.recommend-button):hover { background:var(--fb-coral); color:#000; }
+.recommend-button { color:#fff; }
+.lineup-formation-trigger { min-width:var(--lineup-formation-control-min); min-height:var(--lineup-control-height); }
+.lineup-formation-icon { display:flex; align-items:center; justify-content:center; align-self:center; flex:0 0 18px; height:18px; line-height:0; }
+.lineup-formation-icon svg { display:block; width:18px; height:18px; }

@@ -30,21 +30,16 @@ describe("PlayedFixtureNotice", () => {
     fireEvent.click(board);
 
     const ok = await screen.findByRole("button", { name: "OK" });
+    const close = screen.getByRole("button", { name: "Close dialog" });
     await waitFor(() => {
-      expect(document.activeElement).toBe(ok);
+      expect(document.activeElement).toBe(close);
     });
-    const shell = document.querySelector(".app-shell");
-    expect(shell instanceof HTMLElement && shell.inert).toBe(true);
-
-    fireEvent.keyDown(window, { key: "Tab" });
-    expect(document.activeElement).toBe(ok);
+    expect(screen.queryByRole("button", { name: "Board" })).toBeNull();
 
     fireEvent.click(ok);
     await waitFor(() => {
       expect(screen.queryByRole("dialog")).toBeNull();
     });
-    const closedShell = document.querySelector(".app-shell");
-    expect(closedShell instanceof HTMLElement && closedShell.inert).toBe(false);
-    expect(document.activeElement).toBe(board);
+    await waitFor(() => expect(document.activeElement).toBe(board));
   });
 });

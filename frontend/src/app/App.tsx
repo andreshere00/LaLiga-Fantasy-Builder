@@ -1,3 +1,5 @@
+import { Notifications } from "../components/ui/Notifications";
+import { PulseRing } from "../components/ui/PulseRing";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { lazy, Suspense } from "react";
 import { BrowserRouter, Route, Routes } from "react-router-dom";
@@ -41,6 +43,7 @@ function LineupRoute() {
 export function App() {
   return (
     <QueryClientProvider client={queryClient}>
+      <Notifications>
       <AuthProvider>
         <BrowserRouter>
           <AppErrorBoundary>
@@ -55,7 +58,7 @@ export function App() {
                     <Route
                       path="/players/:playerId"
                       element={
-                        <Suspense fallback={<p className="status-copy">Loading player…</p>}>
+                        <Suspense fallback={<PulseRing label="Loading player…" />}>
                           <PlayerDetailPage />
                         </Suspense>
                       }
@@ -70,6 +73,7 @@ export function App() {
           </AppErrorBoundary>
         </BrowserRouter>
       </AuthProvider>
+    </Notifications>
     </QueryClientProvider>
   );
 }

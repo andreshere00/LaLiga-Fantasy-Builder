@@ -1,310 +1,41 @@
-.players-page {
-  --players-table-columns:
-    72px minmax(7rem, 0.82fr) minmax(3.5rem, 0.38fr) minmax(4rem, 0.45fr)
-    minmax(8rem, 0.9fr) minmax(8rem, 0.92fr)
-    minmax(7.5rem, 0.82fr) minmax(7rem, 0.78fr) minmax(7rem, 0.7fr);
+.market-page.players-page { max-width:1400px; width:100%; box-sizing:border-box; }
+.players-page { --players-table-columns:72px minmax(110px,1.5fr) minmax(80px,.8fr) 60px 72px 148px minmax(115px,1fr) minmax(110px,1fr) minmax(100px,.9fr) 108px; }
+.players-page .players-list :is(.players-head-row,.players-row) { grid-template-columns:var(--players-table-columns); gap:12px; }
+.players-page .players-list .market-name-wrap { grid-column:auto; }
+.players-actions-cell { display:flex; flex-wrap:wrap; align-items:center; gap:4px; }
+.players-name-link { color:var(--fb-secondary); text-decoration:none; }
+.players-name-link:hover { text-decoration:underline; }
+.players-owner-link { color:var(--fb-secondary); text-underline-offset:3px; }
+.players-free-agent { display:inline-flex; align-items:center; gap:6px; }
+.players-free-agent img { width:18px; height:18px; }
+.players-actions-cell .squad-tile-controls { position:static; width:auto; aspect-ratio:auto; }
+.players-actions-cell .squad-details-link.is-text-trigger { width:auto; min-height:44px; padding:0 10px; border:1px solid var(--fb-control-line); background:var(--fb-surface); color:var(--fb-secondary); font:500 14px/1.4 "At Aero",sans-serif; }
+.players-squad-actions-target { display:none; }
+.players-detail-options { position:relative; }
+.players-detail-options > summary { list-style:none; display:flex; align-items:center; cursor:pointer; }
+.players-detail-options > summary::-webkit-details-marker { display:none; }
+.players-action-link { color:inherit; text-decoration:none; }
+.players-page .fb-pagination { margin-top:20px; justify-content:center; }
+.players-page .market-cell { min-width:0; overflow-wrap:anywhere; font-size:14px; }
+.players-player-heading { grid-column:span 2; font-size:12px; text-transform:uppercase; }
+.players-row.is-favorite { background:var(--fb-surface); }
+@media(max-width:1280px) {
+ .players-page { --players-table-columns:72px minmax(100px,1.5fr) minmax(80px,.8fr) 60px 72px 148px minmax(115px,1fr) 108px; }
+ .players-page :is(.market-head-cell-availability,.market-head-cell-owner,[data-label="Availability"],[data-label="Owned by"]) { display:none; }
+}
+@media(max-width:1000px) {
+ .players-page { --players-table-columns:72px minmax(100px,1.5fr) minmax(80px,.8fr) 72px minmax(115px,1fr) 108px; }
+ .players-page :is(.market-head-cell-position,.market-head-cell-form,[data-label="Position"],[data-label="Form"]) { display:none; }
+}
+@media(max-width:800px) {
+ .players-page { --players-table-columns:72px minmax(78px,1fr) minmax(65px,.7fr) 80px; }
+ .players-page .players-list { overflow-x:auto; }
+ .players-page :is(.market-head-cell-fsyp,.market-head-cell-marketValue,[data-label="FSYP"],[data-label="Market value"]) { display:none; }
+ .players-page .players-list .market-head-row { display:grid; }
+ .players-page .market-row { padding:8px; gap:8px; }
+ .players-page .market-name { white-space:normal; overflow-wrap:anywhere; }
+ .players-page .market-row > [data-label]::before { content:none; }
+ .market-filter-row { flex-wrap:wrap; }
 }
 
-.players-page .players-list .players-head-row,
-.players-page .players-row {
-  grid-template-columns: var(--players-table-columns);
-  align-items: center;
-  gap: 12px;
-}
-
-.players-team-filter {
-  display: flex;
-  flex: 0 1 12rem;
-  flex-direction: column;
-  gap: 6px;
-  font-size: 0.75rem;
-  font-weight: 700;
-}
-
-.market-page.players-page {
-  box-sizing: border-box;
-  width: min(1400px, calc(100% - 32px));
-  max-width: 1400px;
-}
-
-.players-page .players-list .market-name-wrap {
-  grid-column: span 1;
-  min-width: 0;
-}
-
-.players-page .players-list > .players-row:focus-within {
-  z-index: 30;
-}
-
-.players-page .players-list > .players-row:hover {
-  z-index: 35;
-}
-
-.players-page .players-list > .players-row[role="link"] {
-  cursor: pointer;
-}
-
-.players-page .players-list > .players-row[role="link"]:focus-visible {
-  outline: 2px solid var(--cyan);
-  outline-offset: 2px;
-}
-
-.players-page .players-list .market-cell {
-  min-width: 0;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-
-.players-page .players-list .players-value-cell,
-.players-page .players-list .players-owner-cell,
-.players-page .players-list .market-cell-availability {
-  font-size: 0.86rem;
-}
-
-.players-page .players-list .market-cell:is(.market-fsyp-cell, .market-form, .market-value, .market-cell-availability, .players-actions-cell) {
-  overflow: visible;
-}
-
-.players-page .players-list .market-cell-availability {
-  overflow: visible;
-}
-
-.players-page .players-list .market-head-row .market-head-cell {
-  min-width: 0;
-  font-size: 0.84rem;
-}
-
-.players-page .players-list .market-head-row > .market-head-cell {
-  font-size: 0.84rem;
-}
-
-.players-details-heading-compact {
-  display: none;
-}
-
-.players-actions-cell {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: 0.35rem;
-}
-
-.players-actions-cell .squad-player-hit-area {
-  width: 1.5rem;
-  min-height: 1.5rem;
-}
-
-.players-squad-actions-target {
-  display: block;
-  width: 1.5rem;
-  height: 1.5rem;
-}
-
-.players-actions-cell .squad-tile-controls {
-  position: static;
-  width: auto;
-  aspect-ratio: auto;
-}
-
-.players-actions-cell .squad-details-link.is-text-trigger {
-  width: auto;
-  height: auto;
-  padding: 0.2rem 0.45rem;
-  border: 1px solid var(--red);
-  background: var(--red);
-  color: var(--white);
-  font: inherit;
-  font-size: 0.72rem;
-  font-weight: 700;
-  line-height: 1.2;
-  white-space: nowrap;
-  cursor: pointer;
-}
-
-.players-detail-options {
-  position: relative;
-}
-
-.players-detail-options > summary {
-  list-style: none;
-  cursor: pointer;
-}
-
-.players-detail-options > summary::-webkit-details-marker {
-  display: none;
-}
-
-.players-action-link {
-  color: inherit;
-  text-decoration: none;
-}
-
-.players-free-agent {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.35rem;
-  white-space: nowrap;
-}
-
-.players-free-agent img {
-  width: 1.1rem;
-  height: 1.1rem;
-  flex: 0 0 auto;
-}
-
-.players-owner-link {
-  color: inherit;
-  text-decoration: underline;
-  text-decoration-color: color-mix(in srgb, currentColor 38%, transparent);
-  text-underline-offset: 0.15em;
-}
-
-.players-owner-link:is(:hover, :focus-visible) {
-  color: var(--red);
-}
-
-.players-pagination-button {
-  min-width: 5.5rem;
-  padding: 0.35rem 0.7rem;
-  border: 1px solid color-mix(in srgb, var(--ink) 18%, transparent);
-  border-radius: 4px;
-  background: var(--white);
-  color: var(--ink);
-  font: inherit;
-  font-size: 0.9rem;
-  line-height: 1.2;
-  cursor: pointer;
-  transition:
-    background-color var(--control-fill-duration) var(--control-fill-ease),
-    border-color var(--control-fill-duration) var(--control-fill-ease);
-}
-
-.players-pagination-button:is(:hover, :focus-visible):not(:disabled) {
-  background: var(--accent-press);
-  border-color: var(--accent-press);
-}
-
-.player-details-link {
-  display: inline-flex;
-  line-height: 0;
-}
-
-.player-details-link img {
-  width: 1.25rem;
-  height: 1.25rem;
-}
-
-.players-pagination {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 1rem;
-  margin-top: 1rem;
-}
-
-.players-pagination button:disabled {
-  opacity: 0.4;
-  cursor: not-allowed;
-}
-
-.players-actions-cell .player-bookmark-icon {
-  width: 1.2rem;
-  height: 1.2rem;
-}
-
-.market-row.is-favorite {
-  background: var(--white);
-}
-
-.market-row.is-favorite .market-name {
-  color: var(--red);
-}
-
-.market-row.is-favorite .market-card .player-tile,
-.market-row.is-favorite .market-card .player-tile:is(:hover, :active) {
-  background-color: var(--red);
-}
-
-/* Keep headings and values aligned as optional columns disappear. */
-@media (max-width: 1280px) {
-  .players-page {
-    --players-table-columns:
-      72px minmax(7rem, 1fr) 3.5rem 4rem minmax(8rem, 0.9fr)
-      minmax(8rem, 1fr) minmax(7.5rem, 1fr) 7rem;
-  }
-
-  .players-page :is(.players-head-row, .players-row, .players-loading-head, .players-loading-row) > :nth-child(8) {
-    display: none;
-  }
-}
-
-@media (max-width: 1120px) {
-  .players-page {
-    --players-table-columns:
-      72px minmax(7rem, 1fr) 3.5rem 4rem minmax(8rem, 0.9fr) minmax(8rem, 1fr) 7rem;
-  }
-
-  .players-page :is(.players-head-row, .players-row, .players-loading-head, .players-loading-row) > :nth-child(7) {
-    display: none;
-  }
-}
-
-@media (max-width: 960px) {
-  .players-page {
-    --players-table-columns: 72px minmax(7rem, 1fr) 3.5rem 4rem 8rem 7rem;
-  }
-
-  .players-page :is(.players-head-row, .players-row, .players-loading-head, .players-loading-row) > :nth-child(6) {
-    display: none;
-  }
-}
-
-@media (max-width: 800px) {
-  .players-page {
-    --players-table-columns: 72px minmax(7rem, 1fr) 3.5rem 4rem 7rem;
-  }
-
-  .players-page :is(.players-head-row, .players-row, .players-loading-head, .players-loading-row) > :nth-child(5) {
-    display: none;
-  }
-
-  .players-page .players-list .players-head-row {
-    display: grid;
-  }
-
-  .players-page .players-list .players-row > .market-card {
-    grid-row: auto;
-  }
-
-  .players-page .players-list .market-name {
-    white-space: normal;
-    overflow-wrap: anywhere;
-  }
-
-  .players-page .players-list .players-row > [data-label]::before {
-    content: none;
-  }
-
-  .players-page .players-list .market-name-wrap {
-    grid-column: auto;
-  }
-}
-
-@media (max-width: 560px) {
-  .players-page :is(.players-list, .players-loading-table) {
-    overflow-x: auto;
-  }
-
-  .players-page :is(.players-head-row, .players-row, .players-loading-head, .players-loading-row) {
-    min-width: 488px;
-  }
-
-  .players-page .players-list:has([aria-expanded="true"], details[open]) {
-    padding-bottom: 16rem;
-  }
-}
-
-.players-page .market-fsyp-cell:hover .market-fsyp-tooltip {
-  opacity: 1;
-  visibility: visible;
-}
+@media(max-width:800px) { .players-team-cell { font-size:12px; line-height:1.4; } }

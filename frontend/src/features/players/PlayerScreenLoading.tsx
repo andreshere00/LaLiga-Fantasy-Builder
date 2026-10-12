@@ -1,3 +1,4 @@
+import { PulseRing } from "../../components/ui/PulseRing";
 import "./PlayerScreenLoading.css";
 
 function LoadingBlock({ className = "" }: { className?: string }) {
@@ -36,44 +37,6 @@ export function PlayersScreenLoading() {
   );
 }
 
-function LoadingPanel({ rows = 3 }: { rows?: number }) {
-  return (
-    <section className="player-detail-panel player-detail-loading-panel" aria-hidden="true">
-      <LoadingBlock className="player-detail-loading-heading" />
-      <div className="player-detail-loading-grid">
-        {Array.from({ length: rows }, (_, index) => (
-          <div className="player-detail-loading-card" key={index}>
-            <LoadingBlock />
-            <LoadingBlock />
-            <LoadingBlock />
-          </div>
-        ))}
-      </div>
-    </section>
-  );
-}
-
 export function PlayerDetailScreenLoading() {
-  return (
-    <section className="player-detail-page player-detail-loading-state" aria-busy="true">
-      <span className="visually-hidden" role="status">
-        Loading player details…
-      </span>
-      <div
-        className="player-detail-panel player-detail-header player-detail-loading-header"
-        aria-hidden="true"
-      >
-        <LoadingBlock className="player-detail-loading-photo" />
-        <div className="player-detail-loading-player-copy">
-          <LoadingBlock className="player-detail-loading-name" />
-          <LoadingBlock />
-        </div>
-        <LoadingBlock className="player-detail-loading-action" />
-      </div>
-      <LoadingPanel rows={5} />
-      <LoadingPanel rows={4} />
-      <LoadingPanel rows={3} />
-      <LoadingPanel rows={3} />
-    </section>
-  );
+  return <section className="player-detail-page" aria-busy="true"><PulseRing label="Loading player details…" /></section>;
 }

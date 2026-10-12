@@ -4,20 +4,11 @@
   min-width: 0;
   min-height: 0.75rem;
   overflow: hidden;
-  background: linear-gradient(100deg, #e4e4e7 20%, #f5f5f6 42%, #e4e4e7 64%);
+  background:var(--fb-subtle);
   background-size: 220% 100%;
-  animation: player-loading-shimmer 1.35s ease-in-out infinite;
+  animation:fb-pulse 1.4s ease-in-out infinite;
 }
 
-@keyframes player-loading-shimmer {
-  from {
-    background-position: 100% 0;
-  }
-
-  to {
-    background-position: -120% 0;
-  }
-}
 
 .players-loading-state {
   display: grid;
@@ -55,13 +46,13 @@
   align-items: center;
   gap: 12px;
   padding: 0.6rem 0.75rem;
-  border: 1px solid color-mix(in srgb, var(--ink) 12%, transparent);
-  background: var(--white);
+  border: 1px solid color-mix(in srgb, var(--fb-secondary) 12%, transparent);
+  background: var(--fb-surface);
 }
 
 .players-loading-head {
   min-height: 2.6rem;
-  background: color-mix(in srgb, var(--gray) 50%, var(--white));
+  background: color-mix(in srgb, var(--fb-subtle) 50%, var(--fb-surface));
 }
 
 .players-loading-head .player-loading-block {
@@ -139,8 +130,7 @@
   gap: 0.75rem;
   min-height: 5rem;
   padding: 0.85rem;
-  border: 1px solid color-mix(in srgb, var(--ink) 18%, transparent);
-  box-shadow: 0 2px 7px rgb(0 0 0 / 10%);
+  border: 1px solid color-mix(in srgb, var(--fb-secondary) 18%, transparent);
 }
 
 .player-detail-loading-card .player-loading-block:nth-child(1) {
@@ -179,6 +169,6 @@
 @media (prefers-reduced-motion: reduce) {
   .player-loading-block {
     animation: none;
-    background: #e7e7e9;
+    background:var(--fb-subtle);
   }
 }

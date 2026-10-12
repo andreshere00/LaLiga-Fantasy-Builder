@@ -5,9 +5,8 @@
 }
 
 .player-detail-panel {
-  background: var(--white);
-  border: 1px solid color-mix(in srgb, var(--ink) 12%, transparent);
-  box-shadow: var(--shadow-surface);
+  background: var(--fb-surface);
+  border: 1px solid color-mix(in srgb, var(--fb-secondary) 12%, transparent);
   padding: 1rem 1.25rem;
   margin-bottom: 12px;
 }
@@ -17,13 +16,13 @@
 }
 
 .player-detail-back a {
-  color: var(--ink);
+  color: var(--fb-secondary);
   font-weight: 600;
   text-decoration: none;
 }
 
 .player-detail-back a:is(:hover, :focus-visible) {
-  color: var(--red);
+  color: var(--fb-primary);
   text-decoration: underline;
 }
 
@@ -69,7 +68,7 @@
 }
 
 .player-detail-availability-reason {
-  color: var(--ink);
+  color: var(--fb-secondary);
   max-width: 36rem;
   margin: 0;
 }
@@ -166,21 +165,20 @@
 .player-detail-market-presets button {
   box-sizing: border-box;
   padding: 0.35rem 0.75rem;
-  border: 1px solid color-mix(in srgb, var(--ink) 12%, transparent);
-  background: var(--white);
+  border: 1px solid color-mix(in srgb, var(--fb-secondary) 12%, transparent);
+  background: var(--fb-surface);
   font: inherit;
   font-size: 0.82rem;
   font-weight: 600;
   cursor: pointer;
-  box-shadow: var(--shadow-surface);
   transition:
-    background-color var(--control-fill-duration) var(--control-fill-ease),
-    border-color var(--control-fill-duration) var(--control-fill-ease);
+    background-color var(--fb-color-duration) var(--fb-color-ease),
+    border-color var(--fb-color-duration) var(--fb-color-ease);
 }
 
 .player-detail-fixture-actions button:is(:hover, :active),
 .player-detail-market-presets button:is(:hover, :active) {
-  background: var(--surface-press);
+  background: var(--fb-subtle);
 }
 
 .player-detail-fixture-actions button.is-active,
@@ -207,13 +205,13 @@
 
 .player-detail-table th,
 .player-detail-table td {
-  border: 1px solid var(--line);
+  border: 1px solid var(--fb-line);
   padding: 0.35rem 0.5rem;
   text-align: left;
 }
 
 .player-detail-table thead th {
-  background: color-mix(in srgb, var(--gray) 55%, var(--white));
+  background: color-mix(in srgb, var(--fb-subtle) 55%, var(--fb-surface));
   font-weight: 700;
   white-space: nowrap;
 }
@@ -222,12 +220,12 @@
 .player-detail-table td:first-child {
   position: sticky;
   left: 0;
-  background: var(--white);
+  background: var(--fb-surface);
   z-index: 1;
 }
 
 .player-detail-news-list a {
-  color: var(--ink);
+  color: var(--fb-secondary);
   font-weight: 700;
   text-decoration: underline;
   text-underline-offset: 3px;
@@ -239,17 +237,17 @@
 }
 
 .player-detail-deltas .is-up {
-  color: var(--score-green);
+  color: var(--fb-success);
   font-weight: 700;
 }
 
 .player-detail-deltas .is-mid {
-  color: var(--score-yellow);
+  color: var(--fb-warning);
   font-weight: 700;
 }
 
 .player-detail-deltas .is-down {
-  color: var(--red);
+  color: var(--fb-primary);
   font-weight: 700;
 }
 
@@ -292,28 +290,26 @@
   box-sizing: border-box;
   height: 2.25rem;
   padding: 0 0.65rem;
-  border: 1px solid color-mix(in srgb, var(--ink) 12%, transparent);
-  background: var(--white);
+  border: 1px solid color-mix(in srgb, var(--fb-secondary) 12%, transparent);
+  background: var(--fb-surface);
   font: inherit;
   font-size: 0.82rem;
-  box-shadow: var(--shadow-surface);
 }
 
 .player-detail-market-custom button {
   box-sizing: border-box;
   height: 2.25rem;
   padding: 0 0.85rem;
-  border: 1px solid color-mix(in srgb, var(--ink) 12%, transparent);
-  background: var(--white);
+  border: 1px solid color-mix(in srgb, var(--fb-secondary) 12%, transparent);
+  background: var(--fb-surface);
   font: inherit;
   font-size: 0.82rem;
   font-weight: 600;
   cursor: pointer;
-  box-shadow: var(--shadow-surface);
 }
 
 .player-detail-market-custom button:not(:disabled):is(:hover, :active) {
-  background: var(--surface-press);
+  background: var(--fb-subtle);
 }
 
 .player-detail-market-custom button:disabled {
@@ -354,20 +350,20 @@
 }
 
 .player-detail-news-list a {
-  color: var(--ink);
+  color: var(--fb-secondary);
   font-weight: 600;
   text-decoration: underline;
   text-underline-offset: 2px;
 }
 
 .player-detail-news-list a:is(:hover, :focus-visible) {
-  color: var(--red);
+  color: var(--fb-primary);
 }
 
 .player-detail-news-source {
   font-size: 0.82rem;
   font-weight: 500;
-  color: color-mix(in srgb, var(--ink) 65%, transparent);
+  color: color-mix(in srgb, var(--fb-secondary) 65%, transparent);
 }
 
 .player-detail-injury-list {
@@ -388,7 +384,7 @@
   display: block;
   font-size: 0.82rem;
   font-weight: 500;
-  color: color-mix(in srgb, var(--ink) 65%, transparent);
+  color: color-mix(in srgb, var(--fb-secondary) 65%, transparent);
 }
 
 .player-detail-segment-errors .status-copy {
@@ -404,3 +400,32 @@
   font-weight: 600;
   font-size: 0.88rem;
 }
+
+.player-detail-page { color:var(--fb-secondary); }
+.player-detail-panel { padding:24px; border:1px solid var(--fb-line); margin-bottom:20px; }
+.player-detail-header { grid-template-columns:minmax(0,1fr) minmax(0,1.5fr) auto; gap:24px; }
+.player-detail-header-identity { align-self:stretch; align-items:center; }
+.player-detail-header-text h1 { font:400 32px/1.2 Anton,sans-serif; letter-spacing:.03em; text-transform:uppercase; color:var(--fb-tertiary); }
+.player-detail-title-row { display:flex; flex-wrap:wrap; align-items:center; gap:12px; }
+.player-detail-header-facts { display:flex; flex-wrap:wrap; gap:8px 16px; font-size:14px; }
+.player-detail-header-identity > .player-tile { height:200px; }
+.player-detail-header-identity .player-score-badge { left:6.6667%; }
+.player-detail-header-averages > h2 { font:400 20px/1.3 Anton,sans-serif; letter-spacing:.03em; text-transform:uppercase; color:var(--fb-tertiary); }
+.player-detail-page .player-form-section > h2 { font:400 20px/1.3 Anton,sans-serif; letter-spacing:.03em; text-transform:uppercase; margin:0 0 20px; padding:0 0 12px; background:transparent; color:var(--fb-tertiary); text-align:left; border-bottom:2px solid var(--fb-primary); width:fit-content; }
+.player-detail-page .player-form-card { border-color:var(--fb-line); }
+.player-detail-page .player-form-summary dd,.player-detail-page .player-form-total strong { color:var(--fb-secondary); }
+.player-detail-page .player-detail-fixture-actions button { min-height:44px; font-size:14px; font-weight:500; color:var(--fb-secondary); }
+.player-detail-page .player-detail-fixture-actions button.is-active { background:var(--fb-primary); color:var(--fb-ink-on-status); outline:0; border-color:var(--fb-primary); }
+.player-detail-page .player-detail-averages-details .player-detail-table thead th { background:var(--fb-subtle); color:var(--fb-secondary); }
+.player-detail-table { font-size:14px; }
+.player-detail-table :is(th,td) { padding:12px; }
+.player-detail-header-actions .squad-tile-slot,.player-detail-header-actions .squad-player-hit-area,.player-detail-header-actions .squad-tile-controls { width:44px; height:44px; flex-basis:44px; }
+@media(max-width:1100px) { .player-detail-header { grid-template-columns:minmax(0,1fr) auto; } }
+@media(max-width:600px) { .player-detail-header { grid-template-columns:1fr; } .player-detail-header-actions { grid-row:auto; grid-column:1; justify-content:flex-start; } .player-detail-header-averages { grid-row:auto; } .player-detail-panel { padding:20px; } .fb-metric-grid { grid-template-columns:repeat(2,minmax(0,1fr)); } }
+
+.player-detail-chart { background:var(--fb-surface); border:1px solid var(--fb-line); padding:12px; }
+.player-detail-market-presets button { min-height:44px; font-size:14px; color:var(--fb-secondary); }
+.player-detail-market-presets button.is-active { background:var(--fb-primary); color:var(--fb-ink-on-status); border-color:var(--fb-primary); outline:0; }
+.player-detail-deltas { display:flex; flex-wrap:wrap; gap:8px; align-items:center; font-size:14px; }
+.player-detail-deltas strong { font-size:24px; font-weight:500; }
+.player-detail-deltas :is(.is-up,.is-mid,.is-down) { color:var(--fb-secondary); }

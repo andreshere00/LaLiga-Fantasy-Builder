@@ -1,4 +1,5 @@
-import { Fragment } from "react";
+import { Collapsible } from "@base-ui/react/collapsible";
+import { Button } from "../../components/ui/Button";
 import {
   highlightedAverages,
   remainingAverages,
@@ -36,30 +37,22 @@ export function PlayerAveragesPanel({ rows, positionId }: PlayerAveragesPanelPro
         <p className="status-copy">Per-match averages are unavailable.</p>
       ) : (
         <>
-          <div className="player-detail-averages-preview-wrap">
-            <table className="player-detail-averages-preview" aria-label="Highlighted averages per match">
-              <tbody>
-                {Array.from({ length: Math.ceil(highlighted.length / 2) }, (_, index) => (
-                  <tr key={index}>
-                    {highlighted.slice(index * 2, index * 2 + 2).map((row) => (
-                      <Fragment key={row.code}>
-                        <th scope="row">{row.label}</th>
-                        <td title={averageSource(row)}>{averageValue(row)}</td>
-                      </Fragment>
-                    ))}
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
+          <dl className="fb-metric-grid">
+            {highlighted.map((row) => (
+              <div key={row.code} title={averageSource(row)}>
+                <dt>{row.label}</dt><dd>{averageValue(row)}</dd>
+              </div>
+            ))}
+          </dl>
           {fantasySampleSize != null ? (
             <p className="player-detail-averages-source-note">
               {`LaLiga Fantasy API fallback averages use ${fantasySampleSize} played matchweek${fantasySampleSize === 1 ? "" : "s"}.`}
             </p>
           ) : null}
           {remaining.length > 0 ? (
-            <details className="player-detail-averages-details">
-              <summary>Details</summary>
+            <Collapsible.Root className="player-detail-averages-details">
+              <Collapsible.Trigger render={<Button variant="outline" shape="square" />}>Details</Collapsible.Trigger>
+              <Collapsible.Panel>
               <div className="player-detail-table-wrap">
                 <table className="player-detail-table">
                   <thead>
@@ -80,7 +73,8 @@ export function PlayerAveragesPanel({ rows, positionId }: PlayerAveragesPanelPro
                   </tbody>
                 </table>
               </div>
-            </details>
+            </Collapsible.Panel>
+            </Collapsible.Root>
           ) : null}
         </>
       )}

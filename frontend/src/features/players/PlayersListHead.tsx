@@ -1,177 +1,57 @@
-import { useEffect, useId, useRef, useState } from "react";
-
-import filterIconUrl from "../../assets/button_filter.svg";
+import { useState } from "react";
+import { Button } from "../../components/ui/Button";
+import { Dialog } from "../../components/ui/Dialog";
 import { clearPlayersColumnFilter } from "./playersColumnFilters";
-import type { PlayersColumnHeading, PlayersColumnKey } from "./playersColumnHeadings";
-import { playersColumnBaseLabel } from "./playersColumnHeadings";
-import { PlayersColumnFilterPopover } from "./PlayersColumnFilterPopover";
+import { PlayersColumnFilterFields } from "./PlayersColumnFilterFields";
+import { playersColumnBaseLabel, type PlayersColumnHeading, type PlayersColumnKey } from "./playersColumnHeadings";
 import type { PlayersFilters } from "./playersSearchParams";
 
-type PlayersListHeadProps = {
+const COLUMNS: PlayersColumnKey[] = ["team", "position", "fsyp", "form", "marketValue", "availability", "owner"];
+
+export function PlayersListHead({ headings, filters, owners, teams, names = [], onFiltersChange }: {
   headings: Record<PlayersColumnKey, PlayersColumnHeading>;
   filters: PlayersFilters;
   owners: readonly string[];
   teams: readonly string[];
+  names?: readonly string[];
   onFiltersChange: (patch: Partial<PlayersFilters>) => void;
-};
-
-const COLUMN_ORDER: PlayersColumnKey[] = [
-  "name",
-  "position",
-  "fsyp",
-  "form",
-  "marketValue",
-  "availability",
-  "owner",
-];
-
-type HeadCellProps = {
-  column: PlayersColumnKey;
-  heading: PlayersColumnHeading;
-  className?: string;
-  filters: PlayersFilters;
-  owners: readonly string[];
-  teams: readonly string[];
-  openColumn: PlayersColumnKey | null;
-  onOpenColumn: (column: PlayersColumnKey | null) => void;
-  onFiltersChange: (patch: Partial<PlayersFilters>) => void;
-};
-
-function focusFirstPopoverControl(panel: HTMLElement | null): void {
-  if (!panel) return;
-  const target = panel.querySelector<HTMLElement>(
-    "input, select, textarea, button:not(.market-head-filter)",
-  );
-  target?.focus();
-}
-
-function HeadCell({
-  column,
-  heading,
-  className,
-  filters,
-  owners,
-  teams,
-  openColumn,
-  onOpenColumn,
-  onFiltersChange,
-}: HeadCellProps) {
-  const wrapRef = useRef<HTMLSpanElement>(null);
-  const filterButtonRef = useRef<HTMLButtonElement>(null);
-  const popoverRef = useRef<HTMLDivElement>(null);
-  const buttonId = useId();
-  const popoverId = useId();
-  const open = openColumn === column;
-  const title = playersColumnBaseLabel(column);
-
-  useEffect(() => {
-    if (!open) return;
-    focusFirstPopoverControl(popoverRef.current);
-    const onPointerDown = (event: PointerEvent) => {
-      if (wrapRef.current?.contains(event.target as Node)) return;
-      onOpenColumn(null);
-    };
-    const onKeyDown = (event: KeyboardEvent) => {
-      if (event.key !== "Escape") return;
-      event.preventDefault();
-      onOpenColumn(null);
-      filterButtonRef.current?.focus();
-    };
-    window.addEventListener("pointerdown", onPointerDown);
-    window.addEventListener("keydown", onKeyDown);
-    return () => {
-      window.removeEventListener("pointerdown", onPointerDown);
-      window.removeEventListener("keydown", onKeyDown);
-    };
-  }, [open, onOpenColumn]);
-
-  const applyFilters = (next: PlayersFilters) => {
-    onFiltersChange(next);
-  };
-
+}) {
+  const [editor, setEditor] = useState<{ column: PlayersColumnKey; draft: PlayersFilters } | null>(null);
   return (
-    <span ref={wrapRef} className={`market-head-cell${className ? ` ${className}` : ""}`}>
-      <span className="market-head-label">{heading.label}</span>
-      <button
-        ref={filterButtonRef}
-        id={buttonId}
-        type="button"
-        className={`market-head-filter${heading.filtered ? " is-active" : ""}`}
-        aria-expanded={open}
-        aria-controls={popoverId}
-        aria-haspopup="dialog"
-        aria-label={`Filter ${title}`}
-        onClick={() => onOpenColumn(open ? null : column)}
-      >
-        <img src={filterIconUrl} alt="" aria-hidden="true" className="market-head-filter-icon" />
-      </button>
-      {open ? (
-        <div
-          ref={popoverRef}
-          id={popoverId}
-          className="market-column-filter-popover-wrap"
-          role="dialog"
-          aria-labelledby={buttonId}
-        >
-          <PlayersColumnFilterPopover
-            column={column}
-            filters={filters}
-            owners={owners}
-            teams={teams}
-            onChange={applyFilters}
-            onClearColumn={() => {
-              applyFilters(clearPlayersColumnFilter(filters, column));
-              onOpenColumn(null);
-              filterButtonRef.current?.focus();
-            }}
-          />
-        </div>
-      ) : null}
-    </span>
-  );
-}
-
-export function PlayersListHead({
-  headings,
-  filters,
-  owners,
-  teams,
-  onFiltersChange,
-}: PlayersListHeadProps) {
-  const [openColumn, setOpenColumn] = useState<PlayersColumnKey | null>(null);
-
-  const patchFilters = (patch: Partial<PlayersFilters>) => {
-    onFiltersChange({ ...filters, ...patch });
-  };
-
-  return (
-    <li
-      className={[
-        "market-row market-head market-head-row players-head-row",
-        openColumn ? "is-filter-open" : "",
-      ]
-        .filter(Boolean)
-        .join(" ")}
-    >
-      <span className="market-head-cell">Player</span>
-      {COLUMN_ORDER.map((column) => (
-        <HeadCell
-          key={column}
-          column={column}
-          heading={headings[column]}
-          className={`market-head-cell-${column}`}
-          filters={filters}
-          owners={owners}
-          teams={teams}
-          openColumn={openColumn}
-          onOpenColumn={setOpenColumn}
-          onFiltersChange={patchFilters}
-        />
-      ))}
-      <span className="market-head-cell players-details-heading">
-        <span className="players-details-heading-full">Actions</span>
-        <span className="players-details-heading-compact">Details</span>
+    <li className="market-row market-head market-head-row players-head-row">
+      <span className="market-head-cell players-player-heading">
+        <span className="market-head-label">Player</span>
+        <button type="button" className={"market-head-filter" + (headings.name.filtered ? " is-active" : "")}
+          aria-label="Filter Player" aria-haspopup="dialog"
+          aria-expanded={editor?.column === "name"}
+          onClick={() => setEditor({ column: "name", draft: filters })}>
+          <svg viewBox="0 0 24 24" aria-hidden="true" className="market-head-filter-icon">
+            <path d="M4 5h16l-6 7v6l-4 2v-8L4 5Z" fill="none" stroke="currentColor" strokeWidth="1.5" />
+          </svg>
+        </button>
       </span>
+      {COLUMNS.map((column) => (
+        <span key={column} className={"market-head-cell market-head-cell-" + column}>
+          <span className="market-head-label">{headings[column].label}</span>
+          <button type="button" className={"market-head-filter" + (headings[column].filtered ? " is-active" : "")}
+            aria-label={"Filter " + playersColumnBaseLabel(column)} aria-haspopup="dialog"
+            aria-expanded={editor?.column === column}
+            onClick={() => setEditor({ column, draft: filters })}>
+            <svg viewBox="0 0 24 24" aria-hidden="true" className="market-head-filter-icon"><path d="M4 5h16l-6 7v6l-4 2v-8L4 5Z" fill="none" stroke="currentColor" strokeWidth="1.5" /></svg>
+          </button>
+        </span>
+      ))}
+      <span className="market-head-cell players-details-heading">Actions</span>
+      <Dialog open={editor != null} layout="sheet" className="market-filter-dialog"
+        title={editor ? "Filter " + playersColumnBaseLabel(editor.column) : "Player filters"}
+        onClose={() => setEditor(null)} footer={<>
+          <Button shape="square" variant="outline" onClick={() => setEditor(null)}>Cancel</Button>
+          <Button shape="square" onClick={() => { if (editor) onFiltersChange(editor.draft); setEditor(null); }}>Apply filters</Button>
+        </>}>
+        {editor ? <PlayersColumnFilterFields column={editor.column} filters={editor.draft}
+          owners={owners} teams={teams} names={names} onChange={(draft) => setEditor({ ...editor, draft })}
+          onClearColumn={() => setEditor({ ...editor, draft: clearPlayersColumnFilter(editor.draft, editor.column) })} /> : null}
+      </Dialog>
     </li>
   );
 }

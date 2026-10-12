@@ -4,17 +4,17 @@
   /* player_card.svg 300×400 → 75 : 225 : 20 : 80 (name through bottom edge) */
   grid-template-rows: 18.75% 56.25% 5% 20%;
   grid-template-columns: 1fr;
-  background: var(--tile);
+  background: var(--fb-subtle);
   border-radius: 0;
   box-sizing: border-box;
   aspect-ratio: var(--player-card-ratio, 3 / 4);
   height: auto;
   overflow: visible;
-  transition: background-color var(--control-fill-duration) var(--control-fill-ease);
+  transition: background-color var(--fb-color-duration) var(--fb-color-ease);
 }
 
 .player-tile:is(:hover, :active) {
-  background: var(--red);
+  background: var(--fb-primary);
 }
 
 .player-card-spacer,
@@ -37,11 +37,11 @@
 }
 
 .player-tile.is-empty {
-  background: var(--gray);
+  background: var(--fb-subtle);
 }
 
 .player-tile.is-empty:is(:hover, :active) {
-  background: var(--red);
+  background: var(--fb-primary);
 }
 
 .player-photo-frame {
@@ -86,7 +86,7 @@
 
 .player-name-empty {
   background: transparent;
-  color: var(--ink);
+  color: var(--fb-secondary);
 }
 
 .player-name-empty .player-name-label {
@@ -153,23 +153,23 @@
 }
 
 .player-score-badge.is-red {
-  background: var(--red);
-  color: var(--white);
+  background: var(--fb-primary);
+  color: var(--fb-surface);
 }
 
 .player-score-badge.is-yellow {
-  background: var(--score-yellow);
-  color: var(--black);
+  background: var(--fb-warning);
+  color: var(--fb-tertiary);
 }
 
 .player-score-badge.is-green {
-  background: var(--score-green);
-  color: var(--white);
+  background: var(--fb-success);
+  color: var(--fb-surface);
 }
 
 .player-score-badge.is-blue {
-  background: var(--score-blue);
-  color: var(--black);
+  background: var(--fb-cyan);
+  color: var(--fb-tertiary);
 }
 
 .player-team-badge {
@@ -205,8 +205,8 @@
   padding: 0 4px;
   box-sizing: border-box;
   overflow: hidden;
-  background: var(--white);
-  color: var(--black);
+  background: var(--fb-surface);
+  color: var(--fb-tertiary);
   font-size: var(--lineup-font-small, 0.75rem);
   position: relative;
   z-index: 4;
@@ -228,26 +228,13 @@
 }
 
 .player-tile.is-captain .player-name {
-  background: var(--white);
+  background: var(--fb-surface);
   font-weight: 700;
-  box-shadow: 0 0 0 1px var(--black);
 }
 
 /* Lineup scores occupy the corner opposite the club crest. */
 .lineup-page .player-tile > .player-score-badge {
   left: 6.6667%;
-}
-
-.lineup-unplayed-tooltip {
-  top: auto;
-  right: auto;
-  bottom: calc(100% + 0.45rem);
-  left: 50%;
-  z-index: 40;
-  width: max-content;
-  max-width: min(18rem, calc(100vw - 32px));
-  transform: translateX(-50%);
-  border-radius: 0;
 }
 
 .player-tile.is-unplayed-fixture {
@@ -262,3 +249,11 @@
   position: relative;
   z-index: 40;
 }
+
+.player-tile { border:1px solid var(--fb-line); background:var(--fb-subtle); }
+.player-tile.is-interactive { border:1px solid var(--fb-control-line); }
+.player-tile:is(:hover,:active) { background:var(--fb-subtle); }
+.player-name { justify-content:flex-start; text-align:left; border-top:1px solid var(--fb-line); }
+.player-name-label { text-align:left; }
+.player-tile.is-captain .player-name { border-top:2px solid var(--fb-primary); }
+.player-score-badge:is(.is-red,.is-green,.is-yellow,.is-blue) { color:var(--fb-ink-on-status); }

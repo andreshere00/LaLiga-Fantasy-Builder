@@ -1,10 +1,9 @@
 import { formatEuro } from "../../../api/format";
-import { Modal } from "../../../components/Modal";
+import { Dialog } from "../../../components/ui/Dialog";
 import type { MarketRow } from "../model/row";
 
 type ClauseDialogProps = {
   open: boolean;
-  squareCorners?: boolean;
   row: MarketRow | null;
   amount: number;
   pending: boolean;
@@ -15,7 +14,6 @@ type ClauseDialogProps = {
 
 export function ClauseDialog({
   open,
-  squareCorners = false,
   row,
   amount,
   pending,
@@ -26,9 +24,8 @@ export function ClauseDialog({
   if (!row) return null;
 
   return (
-    <Modal
+    <Dialog
       open={open}
-      squareCorners={squareCorners}
       title="Pay release clause"
       onClose={onClose}
       closeOnBackdrop={!pending}
@@ -57,6 +54,6 @@ export function ClauseDialog({
           {error}
         </p>
       ) : null}
-    </Modal>
+    </Dialog>
   );
 }
