@@ -1,0 +1,10 @@
+.fb-date-fields { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:12px; }
+.fb-date-fields label,.fb-date-shortcut label { display:flex; flex-direction:column; gap:6px; font-size:12px; }
+.fb-date-shortcut { display:flex; align-items:end; gap:12px; }
+.fb-date-shortcut label { flex:1; min-width:0; }
+.fb-calendar { --rdp-accent-color:var(--fb-tertiary); --rdp-accent-background-color:var(--fb-coral); --rdp-day_button-border-radius:0; --rdp-day_button-height:44px; --rdp-day_button-width:44px; --rdp-day-height:44px; --rdp-day-width:44px; --rdp-selected-border:1px solid var(--fb-primary); --rdp-range_start-color:#000; --rdp-range_end-color:#000; --rdp-range_start-background:var(--fb-primary); --rdp-range_end-background:var(--fb-primary); --rdp-range_middle-background-color:var(--fb-coral); --rdp-range_middle-color:var(--fb-on-coral); border:0; padding:0; margin:20px auto; width:fit-content; max-width:100%; }
+.fb-calendar button { border-radius:0; }
+.fb-calendar .rdp-month_caption { font:400 20px/1.3 Anton,sans-serif; letter-spacing:.03em; text-transform:uppercase; }
+.fb-calendar .rdp-months { max-width:100%; }
+
+.fb-calendar { min-width:308px; }

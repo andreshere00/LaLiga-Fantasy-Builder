@@ -9,8 +9,7 @@ import {
   sortMatchesByDate,
   teamMediaFromFixture,
   weatherConditionFromSnapshot,
-  type MatchOutcome,
-  type WeatherCondition,
+    type WeatherCondition,
 } from "./playerDetailWidgets";
 import "./playerDetailWidgets.css";
 
@@ -35,7 +34,7 @@ const WEATHER_CONDITIONS: Record<WeatherCondition, string> = {
 
 function weatherIcon(condition: WeatherCondition | null): string {
   if (!condition) return "";
-  return WEATHER_ICONS[`../../assets/weather/icon_weather_${condition}_white.svg`] ?? "";
+  return WEATHER_ICONS[`../../assets/weather/icon_weather_${condition}_gray.svg`] ?? "";
 }
 
 function weatherReason(value: unknown): string {
@@ -119,18 +118,6 @@ function MatchWeather({ match }: { match: Record<string, unknown> | null }) {
   );
 }
 
-function outcomeLabel(outcome: MatchOutcome): string {
-  switch (outcome) {
-    case "win":
-      return "Won";
-    case "loss":
-      return "Lost";
-    case "draw":
-      return "Draw";
-    default:
-      return "Score unavailable";
-  }
-}
 
 function TeamCrest({ media }: { media: { badge: string } | null }) {
   const [failed, setFailed] = useState(false);
@@ -195,7 +182,7 @@ function MatchCard({
   const homeScore = asFiniteNumber(fixture?.homeScore);
   const awayScore = asFiniteNumber(fixture?.awayScore);
   const homeOutcome = matchOutcome(homeScore, awayScore);
-  const awayOutcome = matchOutcome(awayScore, homeScore);
+
   const competition = competitionHeading(fixture);
   const matchDate = text(fixture?.date) ?? text(matchRecord?.kickoff);
   const kickoff =
@@ -206,7 +193,7 @@ function MatchCard({
     asFiniteNumber(matchRecord?.minutesPlayed);
 
   return (
-    <li className={`player-match-card${upcoming ? " is-upcoming" : ""}`}>
+    <li className={`player-match-card is-${upcoming ? "upcoming" : homeOutcome}`}>
       <p className="player-match-competition">
         {competition}
       </p>
@@ -214,28 +201,20 @@ function MatchCard({
         <div className="player-match-team">
           <div className="player-match-crest-tile">
             <TeamCrest key={home?.badge ?? "home"} media={home} />
-            {homeScore != null ? (
-              <span className={`player-match-score is-${homeOutcome}`}>
-                <span className="visually-hidden">{outcomeLabel(homeOutcome)}: </span>
-                {homeScore}
-              </span>
-            ) : null}
           </div>
           <span className="player-match-team-name">{home?.name ?? text(fixture?.homeTeam) ?? "Home"}</span>
         </div>
         <div className="player-match-team">
           <div className="player-match-crest-tile">
             <TeamCrest key={away?.badge ?? "away"} media={away} />
-            {awayScore != null ? (
-              <span className={`player-match-score is-${awayOutcome}`}>
-                <span className="visually-hidden">{outcomeLabel(awayOutcome)}: </span>
-                {awayScore}
-              </span>
-            ) : null}
           </div>
           <span className="player-match-team-name">{away?.name ?? text(fixture?.awayTeam) ?? "Away"}</span>
         </div>
       </div>
+      {!upcoming ? <p className="player-match-result">
+        <strong>{homeScore ?? "—"} – {awayScore ?? "—"}</strong>
+        {fixture?.result ? <span>{fixture.result === "W" ? "Won" : fixture.result === "L" ? "Lost" : "Draw"}</span> : null}
+      </p> : null}
       <time className="player-match-date" dateTime={matchDate ?? undefined}>
         {date}
       </time>

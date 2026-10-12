@@ -14,8 +14,8 @@
 .player-market-value-section > h2 {
   margin: -1rem -1.25rem 1rem;
   padding: 0.45rem 1rem;
-  background: var(--red);
-  color: var(--white);
+  background: var(--fb-primary);
+  color: var(--fb-surface);
   text-align: center;
   font-size: 1.5rem;
   line-height: 1.25;
@@ -28,8 +28,8 @@
 .player-detail-panel.player-detail-section.player-form-section > h2 {
   margin: -1rem -1.25rem 1rem;
   padding: 0.45rem 1rem;
-  background: var(--red);
-  color: var(--white);
+  background: var(--fb-primary);
+  color: var(--fb-surface);
   text-align: center;
   font-size: 1.5rem;
   line-height: 1.25;
@@ -38,8 +38,8 @@
 .player-detail-panel.player-detail-section.player-market-value-section > h2 {
   margin: -1rem -1.25rem 1rem;
   padding: 0.45rem 1rem;
-  background: var(--red);
-  color: var(--white);
+  background: var(--fb-primary);
+  color: var(--fb-surface);
   text-align: center;
   font-size: 1.5rem;
   line-height: 1.25;
@@ -54,9 +54,8 @@
 .player-form-card {
   min-width: 0;
   padding: 0.85rem;
-  border: 1px solid color-mix(in srgb, var(--ink) 22%, transparent);
-  background: var(--white);
-  box-shadow: 0 2px 7px rgb(0 0 0 / 14%);
+  border: 1px solid color-mix(in srgb, var(--fb-secondary) 22%, transparent);
+  background: var(--fb-surface);
 }
 
 .player-form-card-heading {
@@ -67,7 +66,7 @@
   justify-content: center;
   gap: 0.25rem;
   padding-bottom: 0.65rem;
-  border-bottom: 1px solid color-mix(in srgb, var(--ink) 18%, transparent);
+  border-bottom: 1px solid color-mix(in srgb, var(--fb-secondary) 18%, transparent);
   text-align: center;
 }
 
@@ -76,7 +75,7 @@
 }
 
 .player-form-card-heading time {
-  color: color-mix(in srgb, var(--ink) 72%, transparent);
+  color: color-mix(in srgb, var(--fb-secondary) 72%, transparent);
   font-size: 0.82rem;
 }
 
@@ -96,7 +95,7 @@
   justify-content: space-between;
   gap: 0.5rem;
   padding: 0.55rem 0.45rem;
-  border-bottom: 1px solid color-mix(in srgb, var(--ink) 13%, transparent);
+  border-bottom: 1px solid color-mix(in srgb, var(--fb-secondary) 13%, transparent);
 }
 
 .player-form-summary dt,
@@ -117,13 +116,13 @@
 }
 
 .player-form-summary dd {
-  color: var(--red);
+  color: var(--fb-primary);
 }
 
 .player-form-details {
   margin-top: 0.25rem;
   padding-top: 0.25rem;
-  border-top: 1px solid color-mix(in srgb, var(--ink) 22%, transparent);
+  border-top: 1px solid color-mix(in srgb, var(--fb-secondary) 22%, transparent);
 }
 
 .player-form-details dt {
@@ -145,13 +144,13 @@
   justify-content: space-between;
   margin: 0;
   padding: 0.8rem 0.9rem;
-  border: 1px solid color-mix(in srgb, var(--ink) 22%, transparent);
-  background: color-mix(in srgb, var(--gray) 42%, var(--white));
+  border: 1px solid color-mix(in srgb, var(--fb-secondary) 22%, transparent);
+  background: color-mix(in srgb, var(--fb-subtle) 42%, var(--fb-surface));
   font-weight: 700;
 }
 
 .player-form-total strong {
-  color: var(--red);
+  color: var(--fb-primary);
   font-size: 1.1rem;
   font-variant-numeric: tabular-nums;
 }
@@ -159,7 +158,7 @@
 .player-match-group + .player-match-group {
   margin-top: 1.75rem;
   padding-top: 1.25rem;
-  border-top: 1px solid color-mix(in srgb, var(--ink) 22%, transparent);
+  border-top: 1px solid color-mix(in srgb, var(--fb-secondary) 22%, transparent);
 }
 
 .player-match-group > h3 {
@@ -189,9 +188,8 @@
 .player-match-card {
   min-width: 0;
   padding: 0.75rem 0.6rem;
-  border: 1px solid color-mix(in srgb, var(--ink) 22%, transparent);
-  background: var(--white);
-  box-shadow: 0 2px 7px rgb(0 0 0 / 14%);
+  border: 1px solid color-mix(in srgb, var(--fb-secondary) 22%, transparent);
+  background: var(--fb-surface);
   text-align: center;
 }
 
@@ -210,7 +208,7 @@
   grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 0.5rem;
   padding-bottom: 0.65rem;
-  border-bottom: 1px solid color-mix(in srgb, var(--ink) 18%, transparent);
+  border-bottom: 1px solid color-mix(in srgb, var(--fb-secondary) 18%, transparent);
 }
 
 .player-match-team {
@@ -228,7 +226,7 @@
   aspect-ratio: 1;
   place-items: center;
   overflow: hidden;
-  background: var(--ink);
+  background: var(--fb-secondary);
 }
 
 .player-match-crest-tile > img {
@@ -244,7 +242,7 @@
 }
 
 .player-match-crest-tile > span:not(.player-match-score) {
-  color: var(--white);
+  color: var(--fb-surface);
   font-weight: 700;
 }
 
@@ -258,12 +256,11 @@
   padding: 0 0.2rem;
   box-sizing: border-box;
   place-items: center;
-  background: var(--white);
-  color: var(--black);
+  background: var(--fb-surface);
+  color: var(--fb-tertiary);
   font-size: 0.9rem;
   font-weight: 800;
   border: 0;
-  box-shadow: 0 2px 5px rgb(0 0 0 / 24%);
 }
 
 .player-match-score.is-win {
@@ -299,7 +296,7 @@
 }
 
 .player-match-timer summary {
-  color: var(--red);
+  color: var(--fb-primary);
   font-size: 0.78rem;
   font-weight: 700;
   cursor: pointer;
@@ -321,13 +318,13 @@
 .player-match-player-stats {
   margin: 0.45rem 0 0;
   font-size: 0.75rem;
-  color: color-mix(in srgb, var(--ink) 78%, transparent);
+  color: color-mix(in srgb, var(--fb-secondary) 78%, transparent);
 }
 
 .player-match-weather {
   margin-top: 0.4rem;
   padding-top: 0.55rem;
-  border-top: 1px solid color-mix(in srgb, var(--ink) 18%, transparent);
+  border-top: 1px solid color-mix(in srgb, var(--fb-secondary) 18%, transparent);
   text-align: center;
 }
 
@@ -342,7 +339,7 @@
   height: 3rem;
   margin: 0 auto 0.35rem;
   place-items: center;
-  background: var(--red);
+  background: var(--fb-primary);
 }
 
 .player-match-weather-icon img {
@@ -352,8 +349,8 @@
 }
 
 .player-match-weather-icon.is-unavailable {
-  background: var(--gray);
-  color: var(--ink);
+  background: var(--fb-subtle);
+  color: var(--fb-secondary);
   font-weight: 700;
 }
 
@@ -374,7 +371,7 @@
 .player-match-weather-unavailable,
 .player-match-empty {
   margin: 0.5rem 0;
-  color: color-mix(in srgb, var(--ink) 75%, transparent);
+  color: color-mix(in srgb, var(--fb-secondary) 75%, transparent);
   font-size: 0.85rem;
   text-align: center;
 }
@@ -388,9 +385,8 @@
 .player-fantasy-column {
   min-width: 0;
   padding: 0.9rem;
-  border: 1px solid color-mix(in srgb, var(--ink) 20%, transparent);
-  background: var(--white);
-  box-shadow: 0 2px 7px rgb(0 0 0 / 12%);
+  border: 1px solid color-mix(in srgb, var(--fb-secondary) 20%, transparent);
+  background: var(--fb-surface);
 }
 
 .player-fantasy-column > h3 {
@@ -401,7 +397,7 @@
   gap: 0.65rem;
   margin: 0 0 1rem;
   padding-bottom: 0.65rem;
-  border-bottom: 1px solid color-mix(in srgb, var(--ink) 18%, transparent);
+  border-bottom: 1px solid color-mix(in srgb, var(--fb-secondary) 18%, transparent);
   font-size: 1.1rem;
   text-align: center;
 }
@@ -409,7 +405,7 @@
 .player-detail-header-averages {
   min-width: 0;
   padding-left: 1.25rem;
-  border-left: 1px solid color-mix(in srgb, var(--ink) 18%, transparent);
+  border-left: 1px solid color-mix(in srgb, var(--fb-secondary) 18%, transparent);
 }
 
 @media (max-width: 1100px) {
@@ -418,7 +414,7 @@
     grid-row: 2;
     padding-top: 0.9rem;
     padding-left: 0;
-    border-top: 1px solid color-mix(in srgb, var(--ink) 18%, transparent);
+    border-top: 1px solid color-mix(in srgb, var(--fb-secondary) 18%, transparent);
     border-left: 0;
   }
 }
@@ -440,15 +436,14 @@
   table-layout: fixed;
   border-collapse: separate;
   border-spacing: 0;
-  border: 1px solid color-mix(in srgb, var(--ink) 20%, transparent);
-  box-shadow: 0 2px 7px rgb(0 0 0 / 12%);
+  border: 1px solid color-mix(in srgb, var(--fb-secondary) 20%, transparent);
   font-size: 0.85rem;
 }
 
 .player-detail-averages-preview th,
 .player-detail-averages-preview td {
   padding: 0.45rem 0.7rem;
-  border-bottom: 1px solid color-mix(in srgb, var(--ink) 12%, transparent);
+  border-bottom: 1px solid color-mix(in srgb, var(--fb-secondary) 12%, transparent);
 }
 
 .player-detail-averages-preview tr:last-child th,
@@ -458,26 +453,26 @@
 
 .player-detail-averages-preview th {
   width: 32%;
-  background: color-mix(in srgb, var(--gray) 35%, var(--white));
+  background: color-mix(in srgb, var(--fb-subtle) 35%, var(--fb-surface));
   font-weight: 600;
   text-align: left;
 }
 
 .player-detail-averages-preview td {
   width: 18%;
-  color: var(--red);
+  color: var(--fb-primary);
   font-weight: 700;
   font-variant-numeric: tabular-nums;
   text-align: right;
 }
 
 .player-detail-averages-preview td:nth-child(2) {
-  border-right: 1px solid color-mix(in srgb, var(--ink) 18%, transparent);
+  border-right: 1px solid color-mix(in srgb, var(--fb-secondary) 18%, transparent);
 }
 
 .player-detail-averages-source-note {
   margin: 0.45rem 0 0;
-  color: color-mix(in srgb, var(--ink) 70%, transparent);
+  color: color-mix(in srgb, var(--fb-secondary) 70%, transparent);
   font-size: 0.75rem;
 }
 
@@ -487,7 +482,7 @@
 
 .player-detail-averages-details summary {
   width: fit-content;
-  color: var(--red);
+  color: var(--fb-primary);
   font-size: 0.85rem;
   font-weight: 700;
   cursor: pointer;
@@ -507,9 +502,9 @@
 
 .player-detail-averages-details .player-detail-table thead th {
   padding: 0.5rem 0.7rem;
-  border-color: color-mix(in srgb, var(--white) 18%, transparent);
-  background: var(--ink);
-  color: var(--white);
+  border-color: color-mix(in srgb, var(--fb-surface) 18%, transparent);
+  background: var(--fb-secondary);
+  color: var(--fb-surface);
   letter-spacing: 0.02em;
 }
 
@@ -517,15 +512,15 @@
 .player-detail-averages-details .player-detail-table tbody td {
   padding: 0.45rem 0.7rem;
   border-width: 0 0 1px;
-  border-color: var(--line);
+  border-color: var(--fb-line);
 }
 
 .player-detail-averages-details .player-detail-table tbody tr:nth-child(even) > * {
-  background: color-mix(in srgb, var(--gray) 42%, var(--white));
+  background: color-mix(in srgb, var(--fb-subtle) 42%, var(--fb-surface));
 }
 
 .player-detail-averages-details .player-detail-table tbody tr:hover > * {
-  background: color-mix(in srgb, var(--red-soft) 35%, var(--white));
+  background: color-mix(in srgb, var(--fb-coral) 35%, var(--fb-surface));
 }
 
 .player-detail-averages-details .player-detail-table tbody th {
@@ -555,7 +550,7 @@
   display: block;
   width: 2.25rem;
   height: 1.75rem;
-  border: 3px solid var(--black);
+  border: 3px solid var(--fb-tertiary);
   box-sizing: border-box;
 }
 
@@ -563,7 +558,7 @@
 .player-fantasy-news-heading-icon::after {
   position: absolute;
   content: "";
-  background: var(--black);
+  background: var(--fb-tertiary);
 }
 
 .player-fantasy-news-heading-icon::before {
@@ -578,7 +573,6 @@
   right: 0.25rem;
   width: 0.85rem;
   height: 0.13rem;
-  box-shadow: 0 0.35rem var(--black), 0 0.7rem var(--black);
 }
 
 .player-fantasy-profile-list {
@@ -622,7 +616,7 @@
   min-width: 5rem;
   padding: 0.25rem 0.5rem;
   border: 1px solid transparent;
-  border-radius: 2px;
+  border-radius: 0;
   font-weight: 700;
   line-height: 1.2;
   text-align: center;
@@ -630,21 +624,21 @@
 
 .player-fantasy-form-rating.is-bad {
   background: #ff4b44;
-  color: var(--white);
-  border-color: color-mix(in srgb, #ff4b44 78%, var(--black));
+  color: var(--fb-surface);
+  border-color: color-mix(in srgb, #ff4b44 78%, var(--fb-tertiary));
 }
 
 .player-fantasy-form-rating.is-mid {
   background: #ffc413;
-  color: var(--black);
-  border-color: color-mix(in srgb, #ffc413 78%, var(--black));
+  color: var(--fb-tertiary);
+  border-color: color-mix(in srgb, #ffc413 78%, var(--fb-tertiary));
 }
 
 .player-fantasy-form-rating.is-good,
 .player-fantasy-form-rating.is-very_good {
   background: #10bd00;
-  color: var(--black);
-  border-color: color-mix(in srgb, #10bd00 78%, var(--black));
+  color: var(--fb-tertiary);
+  border-color: color-mix(in srgb, #10bd00 78%, var(--fb-tertiary));
 }
 
 .player-fantasy-profile-list dd {
@@ -685,7 +679,7 @@
 }
 
 .player-fantasy-news-list a {
-  color: var(--ink);
+  color: var(--fb-secondary);
   text-decoration: underline;
   text-underline-offset: 2px;
 }
@@ -708,12 +702,12 @@
 }
 
 .player-fantasy-news-list a:visited {
-  color: var(--red);
+  color: var(--fb-primary);
 }
 
 .player-fantasy-news-list a:hover,
 .player-fantasy-news-list a:focus-visible {
-  color: var(--red);
+  color: var(--fb-primary);
 }
 
 .player-fantasy-news-list a strong {
@@ -728,24 +722,24 @@
   gap: 0.5rem;
   margin-top: 0.8rem;
   padding-top: 0.65rem;
-  border-top: 1px solid color-mix(in srgb, var(--ink) 18%, transparent);
+  border-top: 1px solid color-mix(in srgb, var(--fb-secondary) 18%, transparent);
   font-size: 0.8rem;
 }
 
 .player-history-navigator button {
   min-height: 2rem;
   padding: 0.25rem 0.6rem;
-  border: 1px solid color-mix(in srgb, var(--ink) 24%, transparent);
-  background: var(--white);
-  color: var(--ink);
+  border: 1px solid color-mix(in srgb, var(--fb-secondary) 24%, transparent);
+  background: var(--fb-surface);
+  color: var(--fb-secondary);
   font: inherit;
   font-weight: 700;
   cursor: pointer;
 }
 
 .player-history-navigator button:is(:hover, :focus-visible):not(:disabled) {
-  border-color: var(--red);
-  color: var(--red);
+  border-color: var(--fb-primary);
+  color: var(--fb-primary);
 }
 
 .player-history-navigator button:disabled {
@@ -754,7 +748,7 @@
 }
 
 .player-fantasy-news-source {
-  color: color-mix(in srgb, var(--ink) 65%, transparent);
+  color: color-mix(in srgb, var(--fb-secondary) 65%, transparent);
   font-size: 0.76rem;
 }
 
@@ -772,7 +766,7 @@
 }
 
 .player-fantasy-empty {
-  color: color-mix(in srgb, var(--ink) 75%, transparent);
+  color: color-mix(in srgb, var(--fb-secondary) 75%, transparent);
   font-size: 0.88rem;
   text-align: center;
 }
@@ -831,3 +825,22 @@
     grid-column: auto;
   }
 }
+
+/* Neutral match and value panels. */
+.player-detail-page :is(.player-match-section,.player-market-value-section) > h2 { margin:0 0 20px; padding:0 0 12px; width:fit-content; background:transparent; color:var(--fb-tertiary); text-align:left; font:400 20px/1.3 Anton,sans-serif; letter-spacing:.03em; text-transform:uppercase; border-bottom:2px solid var(--fb-primary); }
+.player-match-grid { gap:12px; }
+.player-match-card { padding:16px 12px; border:1px solid var(--fb-line); }
+.player-match-card.is-win { border-left:3px solid var(--fb-success); }
+.player-match-card.is-loss { border-left:3px solid var(--fb-primary); }
+.player-match-card.is-draw { border-left:3px solid var(--fb-warning); }
+.player-match-group > h3 { justify-content:flex-start; font:400 20px/1.3 Anton,sans-serif; letter-spacing:.03em; text-transform:uppercase; }
+.player-match-group > h3 img { width:18px; height:18px; }
+.player-match-crest-tile { width:44px; height:44px; aspect-ratio:auto; background:var(--fb-subtle); }
+.player-match-crest-tile > span:not(.player-match-score) { color:var(--fb-secondary); }
+.player-match-result { display:flex; justify-content:center; gap:8px; align-items:center; margin:12px 0; font-size:14px; }
+.player-match-result strong { font-size:20px; font-weight:500; font-variant-numeric:tabular-nums; }
+.player-match-timer summary { min-height:44px; display:flex; align-items:center; justify-content:center; color:var(--fb-secondary); border:1px solid var(--fb-control-line); font-size:12px; }
+.player-match-weather-icon { width:24px; height:24px; background:transparent; }
+.player-match-weather-metrics { font-size:12px; line-height:1.5; }
+.player-match-player-stats,.player-match-date,.player-match-competition,.player-match-team-name { font-size:12px; }
+@media(max-width:650px) { .player-match-grid { grid-template-columns:1fr; } }

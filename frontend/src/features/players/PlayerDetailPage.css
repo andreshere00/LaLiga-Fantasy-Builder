@@ -420,3 +420,10 @@
 .player-detail-header-actions .squad-tile-slot,.player-detail-header-actions .squad-player-hit-area,.player-detail-header-actions .squad-tile-controls { width:44px; height:44px; flex-basis:44px; }
 @media(max-width:1100px) { .player-detail-header { grid-template-columns:minmax(0,1fr) auto; } }
 @media(max-width:600px) { .player-detail-header { grid-template-columns:1fr; } .player-detail-header-actions { grid-row:auto; grid-column:1; justify-content:flex-start; } .player-detail-header-averages { grid-row:auto; } .player-detail-panel { padding:20px; } .fb-metric-grid { grid-template-columns:repeat(2,minmax(0,1fr)); } }
+
+.player-detail-chart { background:var(--fb-surface); border:1px solid var(--fb-line); padding:12px; }
+.player-detail-market-presets button { min-height:44px; font-size:14px; color:var(--fb-secondary); }
+.player-detail-market-presets button.is-active { background:var(--fb-primary); color:var(--fb-ink-on-status); border-color:var(--fb-primary); outline:0; }
+.player-detail-deltas { display:flex; flex-wrap:wrap; gap:8px; align-items:center; font-size:14px; }
+.player-detail-deltas strong { font-size:24px; font-weight:500; }
+.player-detail-deltas :is(.is-up,.is-mid,.is-down) { color:var(--fb-secondary); }
