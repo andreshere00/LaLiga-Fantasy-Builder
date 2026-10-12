@@ -1,6 +1,6 @@
 import { useMemo, useState } from "react";
 import { useQueries, useQuery } from "@tanstack/react-query";
-import { Link, useParams } from "react-router-dom";
+import { Link, useLocation, useParams } from "react-router-dom";
 
 import { formatEuro } from "../../api/format";
 import { getJson, paths, type PlayerStatsDetailQuery } from "../../api/client";
@@ -120,6 +120,8 @@ type PlayerDetailBodyProps = {
 };
 
 function PlayerDetailBody({ masterId }: PlayerDetailBodyProps) {
+  const location = useLocation();
+  const returnTo = location.state?.returnTo === "/market" ? "/market" : "/players";
   const { user, accessToken } = useAuth();
   const userId = user?.userId ?? null;
   const [last, setLast] = useState(5);
@@ -305,9 +307,10 @@ function PlayerDetailBody({ masterId }: PlayerDetailBodyProps) {
 
   return (
     <section className="player-detail-page">
-      <p className="player-detail-back">
-        <Link to="/players">← Back to players</Link>
-      </p>
+      <nav className="player-detail-back fb-breadcrumb" aria-label="Breadcrumb">
+        <Link to={returnTo}>{returnTo === "/market" ? "Market" : "Players"}</Link>
+        <span aria-hidden="true">/</span><span aria-current="page">{name}</span>
+      </nav>
       {detailQuery.isError ? (
         <p className="status-copy" role="alert">
           Player details could not be loaded.
@@ -361,12 +364,12 @@ function PlayerDetailBody({ masterId }: PlayerDetailBodyProps) {
             }
           />
           <div className="player-detail-header-text">
-            <h1>{name}</h1>
+            <div className="player-detail-title-row"><h1>{name}</h1>
+              <AvailabilityCell availability={availability} /></div>
             <div className="player-detail-header-facts">
               <p>{teamName ?? MISSING_STAT}</p>
               <p>FSYP {points ?? MISSING_STAT}</p>
               <p>{positionLabel(positionId) ?? MISSING_STAT}</p>
-              <p><AvailabilityCell availability={availability} /></p>
             </div>
             {injury?.availabilityText || injury?.diagnosis ? (
               <p className="player-detail-availability-reason">
