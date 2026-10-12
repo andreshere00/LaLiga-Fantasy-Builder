@@ -18,18 +18,47 @@ Light is the default; an explicit preference is saved under `lfb-theme`.
 The app uses Base UI for dialogs, selection, menus, tooltips, collapsibles and
 toasts, with local CSS and native buttons/fields where appropriate.
 
-These screenshots use fictional, deterministic browser-test data and fallback
-portraits. They show the implemented UI, not a live Fantasy account.
+Automated browser checks use fictional deterministic data and fallback
+portraits. The product captures below show the local account as it appeared at
+capture time.
 
-![Lineup — command panel, neutral pitch and squad](images/design-system-lineup-light.png)
+Screenshot assets live under [`docs/images/`](images/).
 
-![Market — flat rich rows in dark mode](images/design-system-market-dark.png)
+### Product captures
 
-![Players — compact mobile view and numeric pagination](images/design-system-players-mobile.png)
+The following captures document the full local interface: lineup and builder,
+market and catalog tables, and the player profile's averages, form, match,
+market-value, Fantasy-data, and injury-history sections. Their values reflect
+the account and data available at capture time. The same gallery is embedded in
+the [project README](../README.md#screenshots).
 
-![Player detail — identity, averages, chart, fixtures and history](images/design-system-player-detail-light.png)
+#### Lineup
 
-Assets live under [`docs/images/`](images/).
+![Lineup overview](images/screenshots/lineup-overview.png)
+
+![Lineup builder preferences](images/screenshots/lineup-builder-top.png)
+
+![Lineup builder formation and effort options](images/screenshots/lineup-builder-options.png)
+
+![Lineup player actions](images/screenshots/lineup-player-actions.png)
+
+#### Market and player catalog
+
+![Market board](images/screenshots/market-board.png)
+
+![Players catalog](images/screenshots/players-catalog.png)
+
+#### Player profile
+
+![Player profile overview](images/screenshots/player-profile-overview.png)
+
+![Player Fantasy data, news, and injury history](images/screenshots/player-fantasy-data.png)
+
+![Previous and upcoming matches](images/screenshots/player-matches.png)
+
+![Player market-value chart](images/screenshots/player-market-value.png)
+
+![Per-match averages details](images/screenshots/player-averages-details.png)
 
 ## Running locally
 

@@ -485,8 +485,8 @@ Validation completed:
   calendar apply/cancel, four auth gates, the 800/801px catalog boundary,
   contact/not-found routes, and confirmed-response bid notification timing.
 - Screenshots were inspected for neutral panels, typography, missing media,
-  responsive overflow and both themes. Selected fixture screenshots are stored
-  in `docs/images/design-system-*.png` and linked from `docs/frontend.md`.
+  responsive overflow and both themes. Current product captures are stored in
+  `docs/images/screenshots/` and linked from `docs/frontend.md`.
 - No backend API route, schema, auth contract or generated OpenAPI changed.
 
 Bundle comparison (Vite production output, before → after):

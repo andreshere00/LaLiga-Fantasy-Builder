@@ -55,7 +55,7 @@ behaviour (eligibility, bidded state, tooltips, pending-bid cache) is documented
 there — not duplicated here. Automated `fantasy-market` and browser-session
 flows remain **read-only**.
 
-![Market UI — listings table](../../images/market.png)
+![Market UI — listings table](../../images/screenshots/market-board.png)
 
 ## Identifiers
 
