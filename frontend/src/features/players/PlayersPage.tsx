@@ -1,3 +1,4 @@
+import { Menu } from "@base-ui/react/menu";
 import { NumberPagination } from "../../components/ui/NumberPagination";
 import { NativeSelect } from "../../components/ui/Fields";
 import { useCallback, useMemo, useState } from "react";
@@ -19,7 +20,7 @@ import { MarketActionMenu } from "../market/actions/MarketActionMenu";
 import { useMarketActions } from "../market/actions/useMarketActions";
 import type { MarketActionContext } from "../market/actions/marketActions";
 import type { MarketRow } from "../market/model/row";
-import { MarketMotionProvider, MarketRowMotion } from "../market/MarketRowMotion";
+import { RichRow } from "../../components/ui/RichRow";
 import { useMarketBoard } from "../market/useMarketBoard";
 import type { SquadCard } from "../../api/mappers";
 import { MarketPlayerSearch } from "../market/MarketPlayerSearch";
@@ -54,7 +55,6 @@ import "./PlayersPage.css";
 
 function PlayersListRow({
   row,
-  order,
   favorite,
   marketRow,
   ownSquadCard,
@@ -64,7 +64,6 @@ function PlayersListRow({
   onToggleFavorite,
 }: {
   row: PlayerRow;
-  order: number;
   favorite: boolean;
   marketRow: MarketRow | null;
   ownSquadCard: SquadCard | null;
@@ -95,24 +94,20 @@ function PlayersListRow({
     row.ownedBy
   );
   const detailsOptions = row.positionId === 5 ? null : (
-      <details className="players-detail-options">
-      <summary className="market-actions-trigger">Options</summary>
-      <ul className="market-actions-menu">
-        <li className="market-actions-menu-item">
-          <Link
-            className="market-actions-item players-action-link"
-            to={`/players/${encodeURIComponent(row.playerId)}`}
-            state={{ returnTo: "/players" }}
-          >
+    <Menu.Root>
+      <Menu.Trigger className="market-actions-trigger">Options</Menu.Trigger>
+      <Menu.Portal><Menu.Positioner align="end" sideOffset={4} className="fb-menu-positioner">
+        <Menu.Popup className="fb-menu-popup">
+          <Menu.Item className="market-actions-item" render={<Link
+            to={"/players/" + encodeURIComponent(row.playerId)} state={{ returnTo: "/players" }} />}>
             Player details
-          </Link>
-        </li>
-      </ul>
-    </details>
+          </Menu.Item>
+        </Menu.Popup>
+      </Menu.Positioner></Menu.Portal>
+    </Menu.Root>
   );
   return (
-    <MarketRowMotion
-      order={order}
+    <RichRow
       className={rowClass}
     >
       <div className="market-card">
@@ -192,7 +187,7 @@ function PlayersListRow({
           onToggle={onToggleFavorite}
         />
       </span>
-    </MarketRowMotion>
+    </RichRow>
   );
 }
 
@@ -336,7 +331,7 @@ function PlayersList() {
       {visibleRows.length === 0 ? (
         <p className="status-copy">No players match your filters.</p>
       ) : (
-        <MarketMotionProvider>
+        <>
           <ul className="market-list players-list">
             <PlayersListHead
               headings={columnHeadings}
@@ -345,11 +340,10 @@ function PlayersList() {
               teams={teams}
               onFiltersChange={(patch) => setFilters(patch)}
             />
-            {visibleRows.map((row, order) => (
+            {visibleRows.map((row) => (
               <PlayersListRow
                 key={row.playerId}
                 row={row}
-                order={order}
                 favorite={favorites.has(row.playerId)}
                 marketRow={marketRowsByPlayer.get(row.playerId) ?? null}
                 ownSquadCard={ownSquadByPlayer.get(row.playerId) ?? null}
@@ -360,7 +354,7 @@ function PlayersList() {
               />
             ))}
           </ul>
-        </MarketMotionProvider>
+        </>
       )}
       {!leaderboard && filtered.length > PLAYERS_PAGE_SIZE ? (
         <NumberPagination page={currentPage} totalPages={totalPages}

@@ -133,7 +133,7 @@ export function useMarketActions() {
     onSuccess: async (_data, variables) => {
       setPendingBid(null);
       setMessage(null);
-      notify("Bid updated");
+      notify("Bid submitted");
       patchCachedBid(variables.row.marketId, {
         id: variables.row.myBid?.id ?? localBidId(variables.row.marketId),
         money: variables.money,
@@ -153,6 +153,7 @@ export function useMarketActions() {
     onSuccess: async (_data, variables) => {
       setPendingBid(null);
       setMessage(null);
+      notify("Bid updated");
       const bidId = variables.row.myBid?.id ?? localBidId(variables.row.marketId);
       patchCachedBid(variables.row.marketId, { id: bidId, money: variables.money });
       await refreshAfterMutation();

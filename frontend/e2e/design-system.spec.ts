@@ -1,0 +1,128 @@
+import { test, expect } from "@playwright/test";
+import { mockApplication } from "./fixtures";
+
+const routes = [
+  { path: "/", heading: /Demo Manager.*lineup/i, name: "lineup" },
+  { path: "/market", heading: "Market", name: "market" },
+  { path: "/players?q=Player", heading: "Players", name: "players" },
+  { path: "/players/1", heading: "Player 01", name: "detail" },
+];
+
+for (const theme of ["light", "dark"]) {
+  for (const width of [375, 800, 1024, 1440]) {
+    for (const route of routes) {
+      test(route.name + " " + theme + " " + width, async ({ page }, info) => {
+        await page.setViewportSize({ width, height: 1000 });
+        await mockApplication(page);
+        await page.addInitScript((value) => localStorage.setItem("lfb-theme", value), theme);
+        const errors: string[] = [];
+        page.on("pageerror", (error) => errors.push(error.message));
+        await page.goto(route.path);
+        await expect(page.getByRole("heading", { level: 1, name: route.heading })).toBeVisible();
+        await expect(page.locator("html")).toHaveAttribute("data-theme", theme);
+        await page.evaluate(() => document.fonts.ready);
+        expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
+        expect(errors).toEqual([]);
+        await page.screenshot({ path: info.outputPath(route.name + "-" + theme + "-" + width + ".png"), fullPage: true });
+      });
+    }
+  }
+}
+
+test("filters trap keyboard focus, cancel without applying, and restore focus", async ({ page }) => {
+  await mockApplication(page);
+  await page.goto("/market");
+  const trigger = page.getByRole("button", { name: "Filter Player", exact: true });
+  await trigger.click();
+  const dialog = page.getByRole("dialog");
+  await expect(dialog).toBeVisible();
+  await page.getByLabel("Player name", { exact: true }).fill("No match");
+  for (let i = 0; i < 8; i++) {
+    await page.keyboard.press("Tab");
+    await expect.poll(() => page.evaluate(() => !!document.activeElement?.closest('[role="dialog"]'))).toBe(true);
+  }
+  await page.getByRole("button", { name: "Cancel", exact: true }).click();
+  await expect(trigger).toBeFocused();
+  await expect(page.locator(".market-data-row")).toHaveCount(7);
+  await trigger.click();
+  await expect(page.getByLabel("Player name", { exact: true })).toHaveValue("");
+  await page.getByLabel("Player name", { exact: true }).fill("No match");
+  await page.getByRole("button", { name: "Apply filters", exact: true }).click();
+  await expect(page.locator(".market-data-row")).toHaveCount(0);
+});
+
+test("custom calendar cancels edits, applies confirmed dates, and follows the dark theme", async ({ page }) => {
+  await mockApplication(page);
+  await page.goto("/players/1");
+  await page.getByRole("button", { name: "Switch to dark theme" }).click();
+  const custom = page.getByRole("button", { name: "Custom", exact: true });
+  await custom.click();
+  await expect(page.getByRole("dialog")).toBeVisible();
+  await expect(page.getByRole("grid")).toBeVisible();
+  await page.getByLabel("From", { exact: true }).fill("2026-10-01");
+  await page.getByLabel("To", { exact: true }).fill("2026-10-12");
+  await page.getByRole("button", { name: "Cancel", exact: true }).click();
+  await expect(custom).toBeFocused();
+  await custom.click();
+  await expect(page.getByLabel("From", { exact: true })).toHaveValue("");
+  await page.getByLabel("From", { exact: true }).fill("2026-10-01");
+  await page.getByLabel("To", { exact: true }).fill("2026-10-12");
+  const request = page.waitForRequest((req) => req.url().includes("/stats/detail?") && req.url().includes("from=2026-10-01"));
+  await page.getByRole("button", { name: "Apply range", exact: true }).click();
+  await request;
+  await expect(page.getByRole("dialog")).toHaveCount(0);
+});
+
+for (const gate of ["signed-out", "unlinked", "needs-reauth", "unavailable"]) {
+  test("access gate " + gate, async ({ page }) => {
+    await mockApplication(page);
+    if (gate === "signed-out") await page.route("**/auth/me", (route) => route.fulfill({ status: 401, json: { error: "unauthorized" } }));
+    else await page.route("**/laliga/connection", (route) => gate === "unavailable"
+      ? route.fulfill({ status: 503, json: { error: "unavailable" } })
+      : route.fulfill({ json: { linked: gate !== "unlinked", needsReauth: gate === "needs-reauth", managerId: "demo", managerName: null, avatar: null } }));
+    await page.goto("/");
+    const headings = { "signed-out": "Sign in", unlinked: "Connect LaLiga", "needs-reauth": "Reconnect LaLiga", unavailable: "Connection check failed" };
+    await expect(page.getByRole("heading", { name: headings[gate as keyof typeof headings], exact: true })).toBeVisible();
+  });
+}
+
+for (const width of [800, 801]) {
+  test("catalog breakpoint " + width, async ({ page }) => {
+    await mockApplication(page);
+    await page.setViewportSize({ width, height: 1000 });
+    await page.goto("/players?q=Player");
+    await expect(page.getByRole("heading", { name: "Players", exact: true })).toBeVisible();
+    await expect(page.locator(".market-head-cell-name")).toBeVisible();
+    await expect(page.locator(".market-head-cell-team")).toBeVisible();
+    if (width === 800) await expect(page.locator(".market-head-cell-fsyp")).toBeHidden();
+    else await expect(page.locator(".market-head-cell-fsyp")).toBeVisible();
+  });
+}
+
+for (const path of ["/contact", "/unknown-route"]) {
+  test("supporting screen " + path, async ({ page }) => {
+    await mockApplication(page);
+    await page.goto(path);
+    await expect(page.getByRole("heading", { level: 1, name: path === "/contact" ? "Contact" : "Page not found", exact: true })).toBeVisible();
+  });
+}
+
+test("bid feedback waits for a confirmed mocked response", async ({ page }) => {
+  await mockApplication(page);
+  let release: () => void = () => {};
+  const response = new Promise<void>((resolve) => { release = resolve; });
+  await page.route("**/api/market/leagues/l1/m14/bids", async (route) => {
+    expect(route.request().postDataJSON()).toEqual({ money: 3300000 });
+    await response;
+    await route.fulfill({ json: { id: "fixture-bid" } });
+  });
+  await page.goto("/market");
+  await page.getByRole("button", { name: "Options", exact: true }).first().click();
+  await page.getByRole("menuitem", { name: "Hire", exact: true }).click();
+  await expect(page.getByRole("dialog", { name: "Hire player" })).toBeVisible();
+  await page.getByRole("button", { name: "Confirm", exact: true }).click();
+  await expect(page.getByRole("button", { name: "Sending…", exact: true })).toBeDisabled();
+  await expect(page.locator(".fb-toast")).toHaveCount(0);
+  release();
+  await expect(page.locator(".fb-toast").getByText("Bid submitted", { exact: true })).toBeVisible();
+});

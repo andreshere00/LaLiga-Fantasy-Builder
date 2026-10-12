@@ -1,4 +1,5 @@
-import { useId, useState } from "react";
+import { Help } from "../../../components/ui/Help";
+import { useState } from "react";
 
 import { scoreWeekLabel } from "../../../api/mappers";
 import { PlayerScoreBadge } from "../../lineup/PlayerTile";
@@ -12,7 +13,6 @@ type FormCellRow = {
 
 export function FormCell({ row }: { row: FormCellRow }) {
   const [startIndex, setStartIndex] = useState(0);
-  const pendingTooltipId = useId();
   const view = formWindowChronological(
     formRecentWindow(
       row.pendingFormWeek ? [0, ...row.formRecent] : row.formRecent,
@@ -39,26 +39,13 @@ export function FormCell({ row }: { row: FormCellRow }) {
           const week = view.weeks[index];
           const key = `${row.id}-form-w${week}`;
           return (
-            <span
-              key={key}
-              className={[
-                "market-form-badge-stack",
-                week === row.pendingFormWeek ? "has-hover-tooltip-panel is-unplayed-fixture" : "",
-              ].filter(Boolean).join(" ")}
-              tabIndex={week === row.pendingFormWeek ? 0 : undefined}
-              aria-describedby={week === row.pendingFormWeek ? pendingTooltipId : undefined}
-              title={week === row.pendingFormWeek ? "Last fixture has not been played yet." : undefined}
-            >
+            <Help key={key} className="market-form-badge-stack"
+              content={week === row.pendingFormWeek ? "Last fixture has not been played yet. Excluded last match from average." : null}>
               <PlayerScoreBadge points={points} />
-              {week === row.pendingFormWeek ? (
-                <span id={pendingTooltipId} className="hover-tooltip-panel is-align-start" role="tooltip">
-                  Last fixture has not been played yet. Excluded last match from average.
-                </span>
-              ) : null}
               <span className="market-form-week" aria-hidden="true">
                 {scoreWeekLabel(week)}{week === row.pendingFormWeek ? " ⚠" : ""}
               </span>
-            </span>
+            </Help>
           );
         })}
       </span>

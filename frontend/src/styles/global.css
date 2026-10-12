@@ -1,50 +1,11 @@
-*,
-*::before,
-*::after {
-  box-sizing: border-box;
-}
-
-body {
-  margin: 0;
-  min-height: 100vh;
-  background: var(--gray);
-  color: var(--black);
-}
-
-button,
-input,
-select,
-textarea {
-  font-family: inherit;
-}
-
-button:focus-visible,
-select:focus-visible,
-a:focus-visible,
-input:focus-visible {
-  outline: 2px solid var(--cyan);
-  outline-offset: 2px;
-}
-
-:focus:not(:focus-visible) {
-  outline: none;
-}
-
-.app-shell {
-  min-height: 100vh;
-  display: flex;
-  flex-direction: column;
-}
-
-.app-main {
-  flex: 1 1 auto;
-  min-height: 0;
-}
-
-.notice {
-  margin: 0;
-  padding: 8px 20px;
-  background: var(--red-soft);
-  color: var(--black);
-  font-weight: 700;
-}
+*,*::before,*::after { box-sizing:border-box; }
+body { margin:0; min-height:100vh; background:var(--fb-bg); color:var(--fb-secondary); }
+button,input,select,textarea { font-family:inherit; }
+button { color:inherit; }
+:is(button,select,a,input,textarea,summary,[tabindex]):focus-visible { outline:2px solid var(--fb-focus); outline-offset:3px; }
+.app-shell { min-height:100vh; display:flex; flex-direction:column; }
+.app-main { flex:1 1 auto; min-height:0; }
+.notice { margin:0; padding:12px 24px; background:var(--fb-coral); color:var(--fb-on-coral); }
+h1,h2,h3 { font-family:Anton,sans-serif; font-weight:400; letter-spacing:.03em; text-transform:uppercase; color:var(--fb-tertiary); }
+.visually-hidden { position:absolute; width:1px; height:1px; padding:0; margin:-1px; overflow:hidden; clip:rect(0,0,0,0); white-space:nowrap; border:0; }
+@media(prefers-reduced-motion:reduce) { *,*::before,*::after { animation-duration:0s !important; transition-duration:0s !important; } }

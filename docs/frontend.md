@@ -7,15 +7,27 @@ directly and keeps the internal JWT in memory only.
 
 - System map: [Architecture](architecture.md)
 - HTTP routes the UI calls: [API overview](api/README.md)
-- Planned visual migration: [Design-system implementation plan](frontend-design-system-migration-plan.md)
+- Completed visual migration: [Design-system migration record](frontend-design-system-migration-plan.md)
 
-## Screenshots
+## Visual system and screenshots
 
-![Lineup screen — formation controls, standings, pitch, and squad](images/lineup.png)
+The app uses Anton display headings, AT Aero body/actions, neutral square
+surfaces, thin borders and coral primary actions. The header's **Dark/Light**
+control switches the whole document, including portaled overlays and charts.
+Light is the default; an explicit preference is saved under `lfb-theme`.
+The app uses Base UI for dialogs, selection, menus, tooltips, collapsibles and
+toasts, with local CSS and native buttons/fields where appropriate.
 
-![Market screen — listings table with actions and money toolbar](images/market.png)
+These screenshots use fictional, deterministic browser-test data and fallback
+portraits. They show the implemented UI, not a live Fantasy account.
 
-![Lineup — players list, pitch, and squad grid](images/lineup-pitch-squad.jpg)
+![Lineup — command panel, neutral pitch and squad](images/design-system-lineup-light.png)
+
+![Market — flat rich rows in dark mode](images/design-system-market-dark.png)
+
+![Players — compact mobile view and numeric pagination](images/design-system-players-mobile.png)
+
+![Player detail — identity, averages, chart, fixtures and history](images/design-system-player-detail-light.png)
 
 Assets live under [`docs/images/`](images/).
 
@@ -44,8 +56,8 @@ The shell header switches routes. The league dropdown applies to lineup, market,
 
 The player detail screen loads recent and upcoming matches, profile data, and
 weather from `GET /api/players/{id}/stats/detail`. Its match section shows up to
-five cards in each direction. Score badges are green for wins, red for losses,
-and yellow for draws. Upcoming cards show the OpenWeather condition icon and
+five cards in each direction, with a central score and labeled outcomes. Small
+status rails distinguish results. Upcoming cards show a neutral weather icon and
 available temperature, humidity, and wind values; unavailable forecasts leave
 the fixture visible with a reason. A **View match timer** control shows the
 countdown to a confirmed kickoff.
@@ -53,12 +65,12 @@ countdown to a confirmed kickoff.
 The **Form** section shows LaLiga fixture cards with expandable per-match stats,
 including DAZN points. The **Fantasy data** section groups profile indicators,
 news links, and injury history into responsive columns. News titles show
-**Read more…** only when the title overflows its available line. News and injury
-history show five records per page with independent newer/older navigation.
+**Read more** only when the title exceeds its two-line region. News and injury
+history show five records per page with independent sliding three-number navigation.
 Fantasy profile and injury-history columns have matching widths on desktop.
 
-The player header separates club, FSYP, position, and availability. Its compact
-averages table highlights six position-specific metrics; the remaining
+The player header separates club, FSYP, position, and availability. Six equal
+metric cells highlight position-specific averages; the remaining
 statistics open under **Details**. FutbolFantasy season averages take priority.
 When a supported scraped metric is missing, the UI averages that metric across
 played `lastStats` matchweeks from the LaLiga Fantasy catalog and identifies
@@ -69,7 +81,10 @@ segment while successful groups remain visible.
 
 Player photos use available API media with fallback images from market listings
 and the selected roster. Team crests resolve from fixture/catalog media and fit
-inside fixed match-card tiles.
+inside fixed match-card tiles. Failed portrait and crest requests use safe
+fallbacks. Custom value periods open a dialog with a keyboard-accessible
+calendar, From/To fields and a Last days shortcut. Only **Apply range** updates
+the query; Cancel leaves the current chart period intact.
 
 ### Lineup player actions
 
@@ -92,12 +107,14 @@ column filters include a team list. Form filtering and score averages use the la
 current-week matches once they start. Form badges also display scheduled current-week
 matches as zero with a warning; these placeholders are excluded from averages.
 The Players score tooltip appears only over the FSYP cell (or on keyboard focus). Row actions expose market options
-when available, plus the player-details route; bookmarks use distinct inactive
-and active colors. Rows use the same staggered spring entrance and reduced
-motion behavior as Market rows.
+when available, plus explicit player-name/details links. Favorite selection
+changes only the bookmark icon; its surface stays neutral. Rich rows have thin
+dividers without entrance motion. Filters edit a draft in a desktop side panel
+or mobile bottom panel; Apply writes the existing URL state, while Cancel or
+Escape discards edits. Catalog pagination uses a sliding three-number window.
 
 At viewport widths of **800px or less**, the table condenses to the player
-photo, name, team, and details actions, with those four column headings shown.
+photo, name, team, and actions, with those four column headings shown.
 The Name and Team filters remain available; other data columns and their filters
 are hidden at that breakpoint. The loading state uses a table-shaped skeleton.
 
@@ -114,8 +131,9 @@ requests. `needs_reauth` prompts the user to link LaLiga again. See
 |------|----------|
 | API paths and JSON helpers | `frontend/src/api/client.ts`, `format.ts`, `mappers.ts` |
 | TanStack Query hooks | `frontend/src/api/queries.ts` |
-| Modal and money display | `frontend/src/components/Modal.tsx`, `ValueBox.tsx` |
-| Hover tooltip panel styles | `frontend/src/components/TooltipPanel.css` |
+| Dialogs and money display | `frontend/src/components/ui/Dialog.tsx`, `frontend/src/components/ValueBox.tsx` |
+| Tooltip, pagination, notifications and controls | `frontend/src/components/ui/` |
+| Theme roles and typography | `frontend/src/styles/design-system.css`, `fonts.css`, `theme.ts` |
 | Live clock for countdowns | `frontend/src/hooks/useNow.ts` |
 
 ## Lineup screen
@@ -159,14 +177,16 @@ Code: `frontend/src/features/market/` (`model/`, `cells/`, `actions/`,
 - Negative balance shows a warning icon with a tooltip: balance must be positive
   before the next matchday to score.
 - **Search and filters** (`marketFilters.ts`, column header filter icons): toolbar
-  `query` matches player, seller and team; column popovers use separate `player`
+  `query` matches player, seller and team; column editors use separate `player`
   and `seller` strings (AND with `query`). Each filterable table column has a funnel
   icon that opens min/max or text controls (market value 1.000–1.000.000 €,
   whole-number points/form). **Clear filters** in the toolbar resets everything;
   **Clear column filter** resets only that column. Filter state stays on the page
-  across refetches; values use `useDeferredValue`. When listings mount, each
-  row rises in with the same Motion spring and stagger as lineup pitch tiles.
-  The Players table reuses the same `MarketMotionProvider` and row animation.
+  across refetches; values use `useDeferredValue`. Column filters open a
+  responsive side/bottom dialog with local draft values. **Apply filters**
+  commits the draft; Cancel, Escape and backdrop dismissal discard it.
+  **Clear column filter** clears that field in the draft; Apply confirms it.
+  Market and Players share the same flat rich-row presentation.
 
 ### Data loading (`useMarketBoard`)
 
@@ -188,13 +208,13 @@ stale snapshots until Fantasy confirms the change (`model/pendingBids.ts`).
 
 | Column | Notes |
 |--------|--------|
-| Player | Photo, name (red when you have a bid); bid amount tooltip on name |
+| Player | Photo and explicit name link; bid icon and amount tooltip when you have a bid |
 | Position | Abbrev badge (`GKP`, `DEF`, `MDF`, `ATK`, `COA`); hover shows full role name |
 | FSYP | Points plus season average; hover panel: total, season average, form (last 3) |
 | Form | Three matchweeks at a time, oldest→newest; current pending fixtures show 0 with a warning and are excluded from averages; ‹ earlier, › later (full season) |
 | Market value | Price on the first line, 5-day change on the next; hover: last, highest, lowest, 5d/14d ago with % vs current |
 | Availability | SVG icons + hover text for next matchday readiness |
-| Seal end | Countdown; **red** when under one hour remains |
+| Seal end | Countdown with a coral status rail when under one hour remains |
 | Sell options | Seller link (`/?team=…`) or `LALIGA`; **Options** / **Bidded** action menu. On your own listings the menu offers **Withdraw from market** (confirmation modal, `DELETE /api/market/leagues/{id}/{marketId}`) and a disabled **Immediate sell** entry until a documented Fantasy route exists |
 
 ### Actions (user-confirmed only)
@@ -214,17 +234,17 @@ euro amounts (es-ES). CLIs and browser-session flows stay read-only.
 - Squad cap: fewer than 24 players and `players + active bids < 24` for new bids.
 - Positive balance: bid amount ≥ market value and &lt; spending power.
 - Negative balance: debt after bid ≤ 20% of squad market value.
-- Coaches (`positionId` 5): **Hire** disabled; hover shows premium-only message
+- Coaches (`positionId` 5): **Hire** disabled; menu shows the premium-only explanation
   (`marketMessages.ts`).
 
-**Hover warnings on disabled menu items:**
+**Explanations on disabled menu items:**
 
 - Locked release clause: cannot activate yet + countdown until unlock (from
   listing or seller roster `buyoutClauseLockedEndTime`).
 - Coach hire: LaLiga Fantasy premium subscribers only.
 
-**Bidded UX:** gray **Bidded** trigger with bid icon, **Modify bid**, red
-**Cancel bid**; bid amount tooltips on name and button.
+**Bidded UX:** neutral **Bidded** trigger with bid icon, **Modify bid** and
+**Cancel bid** actions; bid amount tooltips on name and button.
 
 **Errors:** upstream bid `400` / `fantasy_error` maps to a refresh-and-retry
 message when listing state changed (`marketActionErrors.ts`).
@@ -242,3 +262,23 @@ including pitch and squad badges. The current calendar score takes precedence ov
 cached player history. Current-week stats refresh every 30 seconds while the screen
 is open. Before a match is played, its displayed zero is a placeholder, not a played
 result for form averages.
+
+## Validation
+
+From `frontend/`:
+
+```bash
+bun run lint
+bun run test
+bun run build
+bunx playwright install chromium
+bun run test:browser
+```
+
+Browser tests run an isolated Vite server on port 3100. They intercept auth/API
+requests with fictional fixtures and block external requests; no live bids,
+sales or clause payments are performed. The suite covers both themes at
+375/800/1024/1440px, the catalog's 800/801px boundary, access gates, supporting
+routes, filter focus/cancellation, calendar apply/cancel, and confirmed-response
+notification timing. Screenshot artifacts go to `frontend/test-results/` by
+default; `PLAYWRIGHT_OUTPUT_DIR` can override the location.

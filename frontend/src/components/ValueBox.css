@@ -57,7 +57,3 @@
 .value-box-block-shell.is-negative .value-box-block-text {
   color: #ff4b44;
 }
-
-.value-box-block-shell.has-hover-tooltip-panel .value-box-block-icon-btn {
-  cursor: help;
-}

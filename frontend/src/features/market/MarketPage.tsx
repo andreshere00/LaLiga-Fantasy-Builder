@@ -17,7 +17,7 @@ import {
   createEmptyMarketFilters,
   sellerOptions,
 } from "./marketFilters";
-import { MarketMotionProvider, MarketRowMotion } from "./MarketRowMotion";
+import { RichRow } from "../../components/ui/RichRow";
 import { MarketToolbar } from "./MarketToolbar";
 import { useMarketBoard } from "./useMarketBoard";
 import "./MarketPage.css";
@@ -72,7 +72,7 @@ function MarketList() {
   }
 
   return (
-    <MarketMotionProvider>
+    <>
       <MarketToolbar
         money={board.money}
         showSearch={board.rows.length > 0}
@@ -111,10 +111,9 @@ function MarketList() {
             sellers={sellers}
             onFiltersChange={setFilters}
           />
-          {visibleRows.map((row, order) => (
-            <MarketRowMotion
+          {visibleRows.map((row) => (
+            <RichRow
               key={row.id}
-              order={order}
               className={favoriteMarketRowClass(row.playerId, favorites)}
             >
               <MarketRowCells
@@ -124,7 +123,7 @@ function MarketList() {
                 actions={marketActions}
                 columnHeadings={columnHeadings}
               />
-            </MarketRowMotion>
+            </RichRow>
           ))}
         </ul>
       )}
@@ -133,7 +132,7 @@ function MarketList() {
         money={board.money}
         squadMarketValue={board.squadMarketValue}
       />
-    </MarketMotionProvider>
+    </>
   );
 }
 

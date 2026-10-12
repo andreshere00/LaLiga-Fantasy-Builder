@@ -237,18 +237,6 @@
   left: 6.6667%;
 }
 
-.lineup-unplayed-tooltip {
-  top: auto;
-  right: auto;
-  bottom: calc(100% + 0.45rem);
-  left: 50%;
-  z-index: 40;
-  width: max-content;
-  max-width: min(18rem, calc(100vw - 32px));
-  transform: translateX(-50%);
-  border-radius: 0;
-}
-
 .player-tile.is-unplayed-fixture {
   cursor: help;
 }

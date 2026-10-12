@@ -86,6 +86,6 @@
 @media (prefers-reduced-motion: reduce) {
   .market-loading-block {
     animation: none;
-    background: #e7e7e9;
+    background:var(--fb-subtle);
   }
 }

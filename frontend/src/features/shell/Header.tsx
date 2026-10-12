@@ -1,3 +1,4 @@
+import { ThemeToggle } from "./ThemeToggle";
 import { Select } from "@base-ui/react/select";
 import { useState } from "react";
 import { Link, NavLink } from "react-router-dom";
@@ -27,6 +28,7 @@ export function Header() {
           <NavLink to="/players" className="nav-tab">Players</NavLink>
         </nav>
         <div className="nav-actions">
+          <ThemeToggle />
           <Select.Root items={items} value={selected ? leagueId(selected) : null}
             onValueChange={(value) => { if (value) selectLeague(value); }}
             disabled={leagues.length === 0}>

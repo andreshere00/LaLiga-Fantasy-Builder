@@ -1,3 +1,4 @@
+import { notify } from "../../components/ui/Notifications";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 
 import { deleteJson, paths, postJson } from "../../api/client";
@@ -32,6 +33,7 @@ export function useSquadSales() {
 
   const onError = async (error: unknown) => {
     if (error instanceof NeedsReauthError) markNeedsReauth();
+    else notify("Market action could not be completed.", "error");
     if (error instanceof ApiContractError) await refreshSquadSales(queryClient, leagueKey);
   };
 
@@ -48,7 +50,10 @@ export function useSquadSales() {
         salePrice: input.salePrice,
       });
     },
-    onSuccess: () => refreshSquadSales(queryClient, leagueKey),
+    onSuccess: () => {
+      notify("Player listed");
+      return refreshSquadSales(queryClient, leagueKey);
+    },
     onError,
   });
 
@@ -60,7 +65,10 @@ export function useSquadSales() {
       }
       return deleteJson(paths.marketListing(leagueKey, marketId), accessToken);
     },
-    onSuccess: () => refreshSquadSales(queryClient, leagueKey),
+    onSuccess: () => {
+      notify("Listing cancelled");
+      return refreshSquadSales(queryClient, leagueKey);
+    },
     onError,
   });
 
@@ -85,7 +93,10 @@ export function useSquadSales() {
         throw new ListingReplaceError();
       }
     },
-    onSuccess: () => refreshSquadSales(queryClient, leagueKey),
+    onSuccess: () => {
+      notify("Listing updated");
+      return refreshSquadSales(queryClient, leagueKey);
+    },
     onError: async (error) => {
       await onError(error);
       if (error instanceof ListingReplaceError) {
@@ -108,7 +119,10 @@ export function useSquadSales() {
         upstreamPlayerIdBody(squadId),
       );
     },
-    onSuccess: () => refreshSquadSales(queryClient, leagueKey),
+    onSuccess: () => {
+      notify("Player sold");
+      return refreshSquadSales(queryClient, leagueKey);
+    },
     onError,
   });
 

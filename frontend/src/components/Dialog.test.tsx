@@ -4,7 +4,7 @@ import { cleanup, fireEvent, render, screen } from "@testing-library/react";
 import { useState } from "react";
 import { afterEach, describe, expect, it, vi } from "vitest";
 
-import { Modal } from "./Modal";
+import { Dialog } from "./ui/Dialog";
 
 afterEach(cleanup);
 
@@ -15,7 +15,7 @@ function Host({ onClose }: { onClose: () => void }) {
       <button type="button" onClick={() => setTick((value) => value + 1)}>
         rerender
       </button>
-      <Modal
+      <Dialog
         open
         title="Bid"
         onClose={() => onClose()}
@@ -27,15 +27,15 @@ function Host({ onClose }: { onClose: () => void }) {
         }
       >
         <input aria-label="amount" />
-      </Modal>
+      </Dialog>
     </div>
   );
 }
 
 // ---- Happy path ---- //
 
-describe("Modal", () => {
-  it("Modal_parent_rerender_keeps_focus_on_the_focused_control", () => {
+describe("Dialog", () => {
+  it("Dialog_parent_rerender_keeps_focus_on_the_focused_control", () => {
     render(<Host onClose={() => {}} />);
     const confirm = screen.getByRole("button", { name: "Confirm" });
     confirm.focus();
@@ -45,11 +45,11 @@ describe("Modal", () => {
     expect(document.activeElement).toBe(confirm);
   });
 
-  it("Modal_escape_calls_latest_onClose", () => {
+  it("Dialog_escape_calls_latest_onClose", () => {
     const onClose = vi.fn();
     render(<Host onClose={onClose} />);
 
-    fireEvent.keyDown(window, { key: "Escape" });
+    fireEvent.keyDown(document.activeElement ?? document.body, { key: "Escape" });
 
     expect(onClose).toHaveBeenCalledTimes(1);
   });

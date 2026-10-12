@@ -200,14 +200,6 @@
   width: 100%;
 }
 
-.save-lineup-shell.has-hover-tooltip-panel {
-  cursor: help;
-}
-
-.save-lineup-shell.has-hover-tooltip-panel .save-lineup-button:disabled {
-  pointer-events: none;
-}
-
 .board-controls .save-lineup-message {
   align-self: stretch;
   text-align: center;
@@ -247,10 +239,6 @@
   display: inline-flex;
   cursor: help;
   overflow: visible;
-}
-
-.current-fixture-tooltip .hover-tooltip-panel {
-  z-index: 120;
 }
 
 .pager button,
@@ -548,10 +536,6 @@
   gap: 8px;
   width: 100%;
   min-width: 0;
-}
-
-.value-box-tooltip-wrap.has-hover-tooltip-panel {
-  cursor: help;
 }
 
 .team-value-tooltip {
@@ -1070,20 +1054,7 @@
   justify-content: center;
 }
 
-@keyframes panel-content-in {
-  from {
-    opacity: 0;
-    transform: translateY(8px);
-  }
-
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
-}
-
 .squad-grid {
-  animation: panel-content-in 0.28s ease-out both;
   display: grid;
   grid-template-columns: repeat(2, minmax(0, var(--lineup-squad-tile-w)));
   grid-template-rows: repeat(4, minmax(0, 1fr));
@@ -1126,55 +1097,6 @@
 .lineup-page .pager button,
 .lineup-page .rank-row {
   border-radius: 0;
-}
-
-.played-fixture-notice {
-  position: fixed;
-  inset: 0;
-  z-index: 20;
-  display: grid;
-  place-items: center;
-  padding: 24px;
-  background: rgb(0 0 0 / 28%);
-}
-
-.played-fixture-notice-card {
-  width: min(420px, 100%);
-  padding: 28px 24px 22px;
-  background: var(--fb-surface);
-  border-radius: 0;
-  text-align: center;
-}
-
-.played-fixture-notice-title {
-  margin: 0 0 12px;
-  font-size: var(--lineup-font-large);
-  font-weight: 500;
-}
-
-.played-fixture-notice-body {
-  margin: 0;
-  font-size: var(--lineup-font-medium);
-  line-height: 1.45;
-}
-
-.played-fixture-notice-close {
-  margin-top: 20px;
-  border: 0;
-  background: var(--fb-primary);
-  color: var(--fb-surface);
-  padding: 10px 22px;
-  font: inherit;
-  font-weight: 700;
-  cursor: pointer;
-  transition:
-    background-color var(--fb-color-duration) var(--fb-color-ease),
-    color var(--fb-color-duration) var(--fb-color-ease);
-}
-
-.played-fixture-notice-close:is(:hover, :active) {
-  background: var(--fb-coral);
-  color: var(--fb-tertiary);
 }
 
 @media (max-width: 1099px), (max-aspect-ratio: 4/3) {
@@ -1297,7 +1219,7 @@
 .pager,.formation-select select,.formation-value,.squad-picker-search { border:1px solid var(--fb-control-line); }
 .select-wrap::after { top:50%; transform:translateY(-50%); }
 .select-wrap select { padding-inline:12px 44px; }
-.accent-control-shell { border-radius:8px; color:var(--fb-ink-on-status); }
+.accent-control-shell { border-radius: 0; color:var(--fb-ink-on-status); }
 .accent-control-shell:has(.recommend-button:disabled) { background:var(--fb-subtle); color:var(--fb-muted); border:1px solid var(--fb-line); }
 .accent-control-shell:has(.save-lineup-button:disabled) { background:var(--fb-primary); color:var(--fb-ink-on-status); opacity:.5; }
 .save-lineup-button { justify-content:center; text-transform:uppercase; font-weight:600; }
@@ -1318,3 +1240,8 @@
 .value-box { color:var(--fb-secondary); font-weight:500; }
 .status-copy { font-size:14px; font-weight:400; line-height:1.5; }
 @media(max-width:1099px) { .board-controls .controls-zone { width:100%; justify-content:flex-start; } .board-controls { align-items:stretch; gap:20px; } .board-controls .controls-zone-end .control-block { align-items:flex-start; } }
+
+.accent-control-shell:has([aria-disabled="true"]) { opacity:.5; }
+
+.accent-control-shell { border-radius:8px; }
+.save-lineup-button-icon { filter:brightness(0); }

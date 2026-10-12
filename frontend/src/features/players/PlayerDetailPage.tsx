@@ -1,5 +1,5 @@
-import { DateRangeDialog } from "./DateRangeDialog";
-import { useMemo, useState } from "react";
+import { PulseRing } from "../../components/ui/PulseRing";
+import { lazy, Suspense, useMemo, useState } from "react";
 import { useQueries, useQuery } from "@tanstack/react-query";
 import { Link, useLocation, useParams } from "react-router-dom";
 
@@ -68,6 +68,8 @@ import { playerAverages } from "./playerAverages";
 import { PlayerDetailScreenLoading } from "./PlayerScreenLoading";
 import daznIcon from "../../assets/dazn.png";
 import "./PlayerDetailPage.css";
+
+const DateRangeDialog = lazy(() => import("./DateRangeDialog").then((module) => ({ default: module.DateRangeDialog })));
 
 const FIXTURE_LAST_STEPS = [5, 10, 20, 40, 60] as const;
 const MARKET_PRESETS = ["season", "30d", "14d", "10d", "5d"] as const;
@@ -429,6 +431,7 @@ function PlayerDetailBody({ masterId }: PlayerDetailBodyProps) {
                       {fixtureDateLabel(fixture)}
                     </time>
                   </header>
+                  {total == null && asFiniteNumber(record?.minutesPlayed) == null ? <p className="fb-helper">Statistics unavailable</p> : null}
                   <dl className="player-form-summary">
                     <div>
                       <dt>Minutes</dt>
@@ -501,11 +504,11 @@ function PlayerDetailBody({ masterId }: PlayerDetailBodyProps) {
             Custom
           </button>
         </div>
-        {dateEditorOpen ? <DateRangeDialog from={marketCustomFrom} to={marketCustomTo}
+        {dateEditorOpen ? <Suspense fallback={<PulseRing label="Loading calendar…" />}><DateRangeDialog from={marketCustomFrom} to={marketCustomTo}
           onClose={() => setDateEditorOpen(false)} onApply={(from, to) => {
             setMarketCustomFrom(from); setMarketCustomTo(to);
             setMarketUseCustomRange(true); setDateEditorOpen(false);
-          }} /> : null}
+          }} /></Suspense> : null}
         {!detailReady ? null : marketBlock == null ? (
           <p className="status-copy">{NO_DATA_YET}</p>
         ) : marketSeries.length === 0 ? (
@@ -553,7 +556,6 @@ function PlayerDetailBody({ masterId }: PlayerDetailBodyProps) {
                     minTickGap={28}
                     stroke="var(--fb-muted)"
                     tick={{ fill: "var(--fb-secondary)", fontSize: 11 }}
-                    label={{ value: "Date", position: "insideBottom", offset: -8, fill: "var(--fb-secondary)" }}
                   />
                   <YAxis
                     width={64}

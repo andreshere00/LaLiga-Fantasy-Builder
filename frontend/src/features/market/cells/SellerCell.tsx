@@ -1,4 +1,4 @@
-import { useId } from "react";
+import { Help } from "../../../components/ui/Help";
 import { Link } from "react-router-dom";
 
 import shieldIconUrl from "../../../assets/button_shield.svg";
@@ -31,24 +31,15 @@ function SellerName({ seller, sellerTeamId }: { seller: string; sellerTeamId: st
 }
 
 function ClauseUnlockTimer({ row, now }: { row: MarketRow; now: number }) {
-  const tooltipId = useId();
   if (row.sellerKind !== "opponent") return null;
   const full = clauseUnlockCountdown(row.clauseUnlockAt, now);
   if (full == null) return null;
   const tooltip = clauseUnlockTooltip(full);
   return (
-    <span
-      className="market-clause-timer has-hover-tooltip-panel"
-      tabIndex={0}
-      aria-label={tooltip}
-      aria-describedby={tooltipId}
-    >
+    <Help content={tooltip} className="market-clause-timer">
       <img className="market-clause-timer-icon" src={shieldIconUrl} alt="" aria-hidden />
       <span aria-hidden="true">{remainingLabel(row.clauseUnlockAt, now)}</span>
-      <span id={tooltipId} className="hover-tooltip-panel is-align-start" role="tooltip">
-        {tooltip}
-      </span>
-    </span>
+    </Help>
   );
 }
 

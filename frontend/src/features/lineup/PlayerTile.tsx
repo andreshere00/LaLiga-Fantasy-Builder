@@ -1,9 +1,9 @@
-import { useId, useState } from "react";
-import "../../components/TooltipPanel.css";
+import { useState } from "react";
+import { Help } from "../../components/ui/Help";
 import "./PlayerTile.css";
 
 import { scoreTone } from "../../api/mappers";
-import { WarningIcon } from "../shell/icons";
+import { PersonIcon, WarningIcon } from "../shell/icons";
 import { NOT_SELECTED_PLAYER_LABEL } from "./playerTileCopy";
 
 type PlayerTileProps = {
@@ -40,10 +40,11 @@ export function PlayerScoreBadge({
 }
 
 function TeamBadge({ url }: { url: string | null | undefined }) {
-  if (!url) return null;
+  const [failed, setFailed] = useState(false);
+  if (!url || failed) return null;
   return (
     <span className="player-badge" aria-hidden="true">
-      <img className="player-team-badge" src={url} alt="" loading="lazy" decoding="async" />
+      <img className="player-team-badge" src={url} onError={() => setFailed(true)} alt="" loading="lazy" decoding="async" />
     </span>
   );
 }
@@ -68,7 +69,7 @@ function PlayerPhoto({ candidates }: { candidates: readonly string[] }) {
         />
       ) : (
         <span className="player-empty-icon">
-          <WarningIcon />
+          <PersonIcon />
         </span>
       )}
     </div>
@@ -91,7 +92,6 @@ export function PlayerTile({
   interactive = false,
   onSelect,
 }: PlayerTileProps) {
-  const unplayedTooltipId = useId();
   const className = [
     "player-tile",
     variant === "squad" ? "squad-tile" : "pitch-tile",
@@ -100,7 +100,7 @@ export function PlayerTile({
     captain ? "is-captain" : "",
     selected ? "is-selected" : "",
     interactive ? "is-interactive" : "",
-    unplayedFixture ? "has-hover-tooltip-panel is-unplayed-fixture" : "",
+    unplayedFixture ? "is-unplayed-fixture" : "",
   ]
     .filter(Boolean)
     .join(" ");
@@ -144,12 +144,7 @@ export function PlayerTile({
       {fixturePoints != null ? (
         <PlayerScoreBadge points={fixturePoints} isMvp={isMvp} />
       ) : null}
-      {unplayedFixture ? (
-        <span id={unplayedTooltipId} className="hover-tooltip-panel is-align-start lineup-unplayed-tooltip" role="tooltip">
-          Last fixture has not been played yet.
-        </span>
-      ) : null}
-      <TeamBadge url={teamBadgeUrl} />
+      <TeamBadge key={teamBadgeUrl ?? "no-badge"} url={teamBadgeUrl} />
       {showName ? (
         <>
           <div className="player-card-gap" aria-hidden="true" />
@@ -161,28 +156,13 @@ export function PlayerTile({
     </>
   );
 
+  const help = unplayedFixture ? "Last fixture has not been played yet." : null;
   if (interactive && onSelect) {
-    return (
-      <button
-        type="button"
-        className={className}
-        aria-label={label}
-        aria-pressed={selected}
-        aria-describedby={unplayedFixture ? unplayedTooltipId : undefined}
-        onClick={onSelect}
-      >
-        {body}
-      </button>
-    );
+    return <Help content={help} trigger={<button type="button" className={className}
+      aria-label={label} aria-pressed={selected} onClick={onSelect} />}>{body}</Help>;
   }
-
-  return (
-    <div
-      className={className}
-      aria-label={empty || !showName ? label : captain ? `${name}, captain` : undefined}
-      aria-describedby={unplayedFixture ? unplayedTooltipId : undefined}
-    >
-      {body}
-    </div>
-  );
+  return <Help content={help} trigger={<div className={className}
+    aria-label={empty || !showName ? label : captain ? name + ", captain" : undefined} />}>
+    {body}
+  </Help>;
 }

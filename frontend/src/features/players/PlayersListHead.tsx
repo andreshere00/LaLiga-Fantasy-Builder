@@ -1,7 +1,6 @@
 import { useState } from "react";
 import { Button } from "../../components/ui/Button";
 import { Dialog } from "../../components/ui/Dialog";
-import filterIconUrl from "../../assets/button_filter.svg";
 import { clearPlayersColumnFilter } from "./playersColumnFilters";
 import { PlayersColumnFilterFields } from "./PlayersColumnFilterFields";
 import { playersColumnBaseLabel, type PlayersColumnHeading, type PlayersColumnKey } from "./playersColumnHeadings";
@@ -27,7 +26,7 @@ export function PlayersListHead({ headings, filters, owners, teams, onFiltersCha
             aria-label={"Filter " + playersColumnBaseLabel(column)} aria-haspopup="dialog"
             aria-expanded={editor?.column === column}
             onClick={() => setEditor({ column, draft: filters })}>
-            <img src={filterIconUrl} alt="" aria-hidden="true" className="market-head-filter-icon" />
+            <svg viewBox="0 0 24 24" aria-hidden="true" className="market-head-filter-icon"><path d="M4 5h16l-6 7v6l-4 2v-8L4 5Z" fill="none" stroke="currentColor" strokeWidth="1.5" /></svg>
           </button>
         </span>
       ))}

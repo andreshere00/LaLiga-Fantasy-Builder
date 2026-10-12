@@ -38,3 +38,5 @@
  .market-filter-row { flex-wrap:wrap; }
  .players-team-filter { flex:1 1 100%; }
 }
+
+@media(max-width:800px) { .players-page .market-head-cell { flex-wrap:wrap; } .players-team-cell { font-size:12px; line-height:1.4; } }

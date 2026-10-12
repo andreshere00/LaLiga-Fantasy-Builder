@@ -32,7 +32,7 @@ export function Dialog({
             finalFocus={() => previousFocus.current?.isConnected ? previousFocus.current : false}>
             <header className="fb-dialog-heading">
               <Primitive.Title className="fb-section-title">{title}</Primitive.Title>
-              <Primitive.Close render={<Button variant="ghost" shape="square" size="icon"
+              <Primitive.Close disabled={!closeOnBackdrop} render={<Button variant="ghost" shape="square" size="icon"
                 aria-label="Close dialog" />}>×</Primitive.Close>
             </header>
             <div className="modal-body fb-dialog-body">{children}</div>

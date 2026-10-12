@@ -1,10 +1,11 @@
-import { useEffect, useId, useState, type ReactNode } from "react";
+import { Menu } from "@base-ui/react/menu";
+import { Help } from "../../components/ui/Help";
+import { useEffect, useId, useRef, useState, type ReactNode } from "react";
 import { Link } from "react-router-dom";
 
 import { formatEuro, formatIntegerAmount, parseIntegerAmount } from "../../api/format";
 import type { SquadCard } from "../../api/mappers";
 import { Dialog } from "../../components/ui/Dialog";
-import "../../components/TooltipPanel.css";
 import { NumericCounterField } from "../../components/NumericCounterField";
 import {
   LISTING_PRICE_STEP,
@@ -50,7 +51,7 @@ export function SquadPlayerActions({
   const [view, setView] = useState<SaleView>("choose");
   const [rawPrice, setRawPrice] = useState("");
   const inputId = useId();
-  const hintId = useId();
+  const menuTrigger = useRef<HTMLButtonElement>(null);
   const pending =
     sales.listPlayer.isPending ||
     sales.modifyListing.isPending ||
@@ -108,47 +109,29 @@ export function SquadPlayerActions({
           setOpen(true);
         }) : children}
         {!cardMenu ? <div className="squad-tile-controls">
-          <button
-            type="button"
-            className={`player-details-link squad-details-link${triggerText ? " is-text-trigger" : ""}`}
-            aria-label={triggerText ? `${player.name}, options` : `${player.name}, view details`}
-            aria-haspopup="menu"
-            aria-expanded={menuOpen}
-            aria-describedby={triggerText ? undefined : hintId}
-            onClick={() => setMenuOpen((current) => !current)}
-          >
-            {triggerText ? triggerText : <img src={menuOpen ? infoRedIcon : infoIcon} alt="" aria-hidden />}
-            {!triggerText ? (
-              <span id={hintId} className="hover-tooltip-panel squad-player-hint" role="tooltip">
-                {PLAYER_OPTIONS_HINT}
-              </span>
-            ) : null}
-          </button>
-          {menuOpen ? (
-            <div className="squad-info-menu" role="menu" aria-label={`${player.name} options`}>
-              <button
-                type="button"
-                role="menuitem"
-                onClick={() => {
-                  setMenuOpen(false);
-                  setView("choose");
-                  setOpen(true);
-                }}
-              >
-                Market options
-              </button>
-              {player.masterPlayerId && player.positionId !== 5 ? (
-                <Link
-                  role="menuitem"
-                  to={`/players/${encodeURIComponent(player.masterPlayerId)}`}
-                  state={detailsReturnTo ? { returnTo: detailsReturnTo } : undefined}
-                  onClick={() => setMenuOpen(false)}
-                >
-                  Player details
-                </Link>
-              ) : null}
-            </div>
-          ) : null}
+          <Menu.Root open={menuOpen} onOpenChange={setMenuOpen}>
+            <Help content={triggerText ? null : PLAYER_OPTIONS_HINT}>
+              <Menu.Trigger ref={menuTrigger}
+                className={"player-details-link squad-details-link" + (triggerText ? " is-text-trigger" : "")}
+                aria-label={player.name + ", options"}>
+                {triggerText ?? <img src={menuOpen ? infoRedIcon : infoIcon} alt="" aria-hidden />}
+              </Menu.Trigger>
+            </Help>
+            <Menu.Portal><Menu.Positioner sideOffset={4} className="fb-menu-positioner">
+              <Menu.Popup className="fb-menu-popup" aria-label={player.name + " options"}>
+                <Menu.Item className="market-actions-item" onClick={() => {
+                  menuTrigger.current?.focus(); setView("choose"); setOpen(true);
+                }}>Market options</Menu.Item>
+                {player.masterPlayerId && player.positionId !== 5 ? (
+                  <Menu.Item className="market-actions-item" render={<Link
+                    to={"/players/" + encodeURIComponent(player.masterPlayerId)}
+                    state={detailsReturnTo ? { returnTo: detailsReturnTo } : undefined} />}>
+                    Player details
+                  </Menu.Item>
+                ) : null}
+              </Menu.Popup>
+            </Menu.Positioner></Menu.Portal>
+          </Menu.Root>
         </div> : null}
       </div>
       {opponentMarketOptions?.(open && view === "choose" && !ownPlayer, close)}

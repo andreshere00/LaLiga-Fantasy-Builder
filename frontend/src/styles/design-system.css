@@ -134,3 +134,7 @@
 
 .fb-help-positioner { z-index:140; }
 .fb-tooltip { white-space:pre-line; }
+
+:is(.save-lineup-message,.market-dialog-error,.squad-sale-error) { color:var(--fb-secondary); border-left:3px solid var(--fb-failure); padding-left:12px; line-height:1.5; }
+.fb-dialog button:disabled { cursor:not-allowed; opacity:.5; }
+.fb-tooltip span { display:block; }

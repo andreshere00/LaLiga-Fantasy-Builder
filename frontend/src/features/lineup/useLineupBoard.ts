@@ -568,6 +568,7 @@ export function useLineupBoard(options: UseLineupBoardOptions = {}): LineupBoard
   const saveMutation = useMutation({
     retry: false,
     onError: async (error, variables) => {
+      if (!(error instanceof NeedsReauthError)) notify("Lineup could not be saved.", "error");
       if (error instanceof ApiContractError) {
         await queryClient.refetchQueries({ queryKey: ["lineup", variables.leagueKey] });
         await queryClient.refetchQueries({ queryKey: ["team", variables.leagueKey] });

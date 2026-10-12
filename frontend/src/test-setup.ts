@@ -1,3 +1,1 @@
-import { MotionGlobalConfig } from "motion/react";
-
-MotionGlobalConfig.skipAnimations = true;
+// Shared browser-like test setup.

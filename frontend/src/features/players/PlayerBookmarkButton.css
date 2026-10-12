@@ -1,3 +1,3 @@
-.player-bookmark-btn { display:inline-grid; place-items:center; width:44px; height:44px; border:1px solid var(--fb-control-line); border-radius:0; background:var(--fb-surface); padding:0; color:var(--fb-secondary); cursor:pointer; }
+.player-bookmark-btn { display:inline-grid; place-items:center; width:44px; height:44px; border:1px solid var(--fb-control-line); border-radius: 0; background:var(--fb-surface); padding:0; color:var(--fb-secondary); cursor:pointer; }
 .player-bookmark-icon { display:block; width:18px; height:18px; }
 .player-bookmark-btn.is-active .player-bookmark-icon { color:var(--fb-primary); }

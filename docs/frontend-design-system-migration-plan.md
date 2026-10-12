@@ -1,13 +1,16 @@
 # Frontend design-system migration plan
 
-Status: proposed implementation; no production UI changes made by this plan.
+Status: implemented on 2026-10-12 in the nine commit stages below.
+
+The original plan is retained as the implementation record. See the completion
+record at the end for validation results and implementation decisions.
 
 Adapt the existing frontend to `output/design-system` through independently
 reviewable, buildable commits. After shared foundations, organize changes by
 screen, including the controls, overlays, loading states and errors belonging
 to that screen. Keep the application usable between commits.
 
-## Design references and current implementation
+## Design references and baseline implementation
 
 Use these local artifacts as the source of truth, in this order:
 
@@ -26,12 +29,12 @@ Use these local artifacts as the source of truth, in this order:
    [NumberPagination](../output/design-system/code/NumberPagination.tsx) and
    [PulseRing](../output/design-system/code/PulseRing.tsx).
 
-The frontend currently uses React 19, Vite, React Router, TanStack Query,
-Motion and Recharts, with feature CSS and native/custom controls. It has no
+Before migration, the frontend used React 19, Vite, React Router, TanStack Query,
+Motion and Recharts, with feature CSS and native/custom controls. It had no
 shadcn/Base UI dependency or Tailwind setup. The reference is an adaptation
 specification, not a drop-in replacement stylesheet.
 
-Important existing dependencies:
+Dependencies identified at planning time:
 
 - `PlayersPage.tsx` imports `MarketPage.css`, market cells, search, row motion,
   action menus/dialogs and `PlayerTile`. Changing market CSS globally would
@@ -47,7 +50,7 @@ Important existing dependencies:
 - The actual route inventory also includes `/contact`, the not-found screen,
   auth gates and the application error boundary. These need migration even
   though they are not illustrated in the widget examples.
-- `output/` is currently untracked. Before implementation, selectively track
+- `output/` was untracked at planning time. Before implementation, selectively track
   the design inputs used for acceptance so later commits can reproduce the
   reference. Avoid a blanket add of unrelated output artifacts.
 
@@ -451,3 +454,49 @@ A screen commit is ready when:
 
 Completion means all rows are implemented and verified, both themes work
 throughout the app, and each screen's migration can be identified in Git history.
+
+## Completion record — 2026-10-12
+
+All nine stages are implemented. Stages 01–08 are recorded as the corresponding
+screen commits; stage 09 finishes root theme rollout, removes legacy Modal,
+manual hover panels, motion wrappers/dependency and obsolete style rules,
+and updates the documentation and browser fixtures.
+
+Implementation decisions:
+
+- Complex controls use Base UI directly behind local components and CSS,
+  retaining the existing Vite/CSS architecture without adding Tailwind.
+- The filter sheet uses one controlled Base UI Dialog with desktop side-panel
+  and mobile bottom-panel positioning. It does not add gesture interactions
+  or duplicate filter state across two overlay implementations.
+- Rich rows retain labeled-list semantics; detailed statistics remain tables.
+- Light is the default. The header theme control persists an explicit choice,
+  and document-root variables also theme portals and Recharts labels.
+- The date/calendar editor is a separate lazy chunk, loaded when Custom opens.
+- Notifications are issued in confirmed mutation callbacks; persistent form
+  errors and eligibility checks remain in their existing feature controllers.
+
+Validation completed:
+
+- Baseline: lint, 371 tests and production build passed.
+- Final: lint, **377 tests across 53 files**, and production build passed.
+- **43 Chromium browser checks** passed using intercepted auth/API responses:
+  32 screen/theme/width combinations, filter focus/draft cancellation, custom
+  calendar apply/cancel, four auth gates, the 800/801px catalog boundary,
+  contact/not-found routes, and confirmed-response bid notification timing.
+- Screenshots were inspected for neutral panels, typography, missing media,
+  responsive overflow and both themes. Selected fixture screenshots are stored
+  in `docs/images/design-system-*.png` and linked from `docs/frontend.md`.
+- No backend API route, schema, auth contract or generated OpenAPI changed.
+
+Bundle comparison (Vite production output, before → after):
+
+| Artifact | Baseline | Final |
+|----------|----------|-------|
+| Main JavaScript | 708.07 kB / 213.40 kB gzip | 807.17 kB / 248.77 kB gzip |
+| Player Detail JavaScript | 453.08 kB / 127.10 kB gzip | 471.86 kB / 132.20 kB gzip |
+| On-demand calendar JavaScript | None | 69.79 kB / 20.73 kB gzip |
+
+Base UI supplies the additional accessible control behavior. The production
+build retains its pre-existing large-chunk advisory. Font assets add the real
+Anton and AT Aero Semibold faces required by the briefing.

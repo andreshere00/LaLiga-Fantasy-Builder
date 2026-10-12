@@ -169,6 +169,6 @@
 @media (prefers-reduced-motion: reduce) {
   .player-loading-block {
     animation: none;
-    background: #e7e7e9;
+    background:var(--fb-subtle);
   }
 }
