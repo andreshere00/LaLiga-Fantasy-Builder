@@ -128,8 +128,8 @@ describe("form helpers", () => {
       },
     );
     expect(row.form).toBe(18);
-    expect(row.formRecent).toEqual([12, 21, 21]);
-    expect(row.formRecentWeeks).toEqual([9, 8, 7]);
+    expect(row.formRecent).toEqual([12, 21, 21, 0, 0, 0, 0, 0, 0]);
+    expect(row.formRecentWeeks).toEqual([9, 8, 7, 6, 5, 4, 3, 2, 1]);
   });
 
   it("marketRow_keeps_coach_name_without_suffix", () => {

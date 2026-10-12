@@ -13,6 +13,7 @@ type MarketColumnFilterFieldsProps = {
   column: MarketColumnKey;
   filters: MarketFilters;
   sellers: readonly string[];
+  names?: readonly string[];
   onChange: (filters: MarketFilters) => void;
   onClearColumn: () => void;
 };
@@ -21,6 +22,7 @@ export function MarketColumnFilterFields({
   column,
   filters,
   sellers,
+  names = [],
   onChange,
   onClearColumn,
 }: MarketColumnFilterFieldsProps) {
@@ -32,6 +34,7 @@ export function MarketColumnFilterFields({
           value={filters.player}
           onChange={(player) => onChange({ ...filters, player })}
           placeholder="Search by name"
+          suggestions={names}
         />
       ) : null}
 
@@ -74,10 +77,12 @@ export function MarketColumnFilterFields({
             value={filters.seller}
             onChange={(seller) => onChange({ ...filters, seller })}
             placeholder="LaLiga or manager"
+            suggestions={sellers}
           />
           {sellers.length > 0 ? (
             <FilterSellerSelect
               sellers={sellers}
+              value={filters.seller}
               onPick={(seller) => onChange({ ...filters, seller })}
             />
           ) : null}

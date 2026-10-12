@@ -8,12 +8,14 @@ import {
 } from "../market/MarketFilterFields";
 import type { PlayersColumnKey } from "./playersColumnHeadings";
 import type { PlayersFilters } from "./playersSearchParams";
+import { NativeSelect } from "../../components/ui/Fields";
 
 type PlayersColumnFilterFieldsProps = {
   column: PlayersColumnKey;
   filters: PlayersFilters;
   owners: readonly string[];
   teams: readonly string[];
+  names?: readonly string[];
   onChange: (filters: PlayersFilters) => void;
   onClearColumn: () => void;
 };
@@ -23,6 +25,7 @@ export function PlayersColumnFilterFields({
   filters,
   owners,
   teams,
+  names = [],
   onChange,
   onClearColumn,
 }: PlayersColumnFilterFieldsProps) {
@@ -34,6 +37,7 @@ export function PlayersColumnFilterFields({
           value={filters.player}
           onChange={(player) => onChange({ ...filters, player })}
           placeholder="Search by name"
+          suggestions={names}
         />
       ) : null}
 
@@ -44,20 +48,19 @@ export function PlayersColumnFilterFields({
             value={filters.team}
             onChange={(team) => onChange({ ...filters, team })}
             placeholder="Club name"
+            suggestions={teams}
           />
           {teams.length > 0 ? (
             <label className="market-column-filter-text">
               Pick a team
-              <select
+              <NativeSelect
                 className="market-filter-select"
-                value=""
-                onChange={(event) => {
-                  if (event.target.value) onChange({ ...filters, team: event.target.value });
-                }}
+                value={teams.includes(filters.team) ? filters.team : ""}
+                onChange={(event) => onChange({ ...filters, team: event.target.value })}
               >
                 <option value="">Choose…</option>
                 {teams.map((team) => <option key={team} value={team}>{team}</option>)}
-              </select>
+              </NativeSelect>
             </label>
           ) : null}
         </>
@@ -70,10 +73,12 @@ export function PlayersColumnFilterFields({
             value={filters.owner}
             onChange={(owner) => onChange({ ...filters, owner })}
             placeholder="Manager or Free Agent"
+            suggestions={owners}
           />
           {owners.length > 0 ? (
             <FilterSellerSelect
               sellers={owners}
+              value={filters.owner}
               onPick={(owner) => onChange({ ...filters, owner })}
             />
           ) : null}

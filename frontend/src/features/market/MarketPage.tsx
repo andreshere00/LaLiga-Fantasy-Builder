@@ -80,6 +80,7 @@ function MarketList() {
         onFiltersChange={setFilters}
         activeFilterCount={filterCount}
         onClearFilters={clearFilters}
+        suggestions={board.rows.map((row) => row.name)}
       />
       {board.isDegraded ? (
         <p className="market-notice status-copy" role="status">
@@ -109,6 +110,7 @@ function MarketList() {
             headings={columnHeadings}
             filters={filters}
             sellers={sellers}
+            names={board.rows.map((row) => row.name)}
             onFiltersChange={setFilters}
           />
           {visibleRows.map((row) => (

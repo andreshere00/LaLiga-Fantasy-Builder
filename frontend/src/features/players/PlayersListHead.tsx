@@ -8,11 +8,12 @@ import type { PlayersFilters } from "./playersSearchParams";
 
 const COLUMNS: PlayersColumnKey[] = ["name", "team", "position", "fsyp", "form", "marketValue", "availability", "owner"];
 
-export function PlayersListHead({ headings, filters, owners, teams, onFiltersChange }: {
+export function PlayersListHead({ headings, filters, owners, teams, names = [], onFiltersChange }: {
   headings: Record<PlayersColumnKey, PlayersColumnHeading>;
   filters: PlayersFilters;
   owners: readonly string[];
   teams: readonly string[];
+  names?: readonly string[];
   onFiltersChange: (patch: Partial<PlayersFilters>) => void;
 }) {
   const [editor, setEditor] = useState<{ column: PlayersColumnKey; draft: PlayersFilters } | null>(null);
@@ -31,14 +32,14 @@ export function PlayersListHead({ headings, filters, owners, teams, onFiltersCha
         </span>
       ))}
       <span className="market-head-cell players-details-heading">Actions</span>
-      <Dialog open={editor != null} layout="sheet"
+      <Dialog open={editor != null} layout="sheet" className="market-filter-dialog"
         title={editor ? "Filter " + playersColumnBaseLabel(editor.column) : "Player filters"}
         onClose={() => setEditor(null)} footer={<>
-          <Button variant="outline" onClick={() => setEditor(null)}>Cancel</Button>
-          <Button onClick={() => { if (editor) onFiltersChange(editor.draft); setEditor(null); }}>Apply filters</Button>
+          <Button shape="square" variant="outline" onClick={() => setEditor(null)}>Cancel</Button>
+          <Button shape="square" onClick={() => { if (editor) onFiltersChange(editor.draft); setEditor(null); }}>Apply filters</Button>
         </>}>
         {editor ? <PlayersColumnFilterFields column={editor.column} filters={editor.draft}
-          owners={owners} teams={teams} onChange={(draft) => setEditor({ ...editor, draft })}
+          owners={owners} teams={teams} names={names} onChange={(draft) => setEditor({ ...editor, draft })}
           onClearColumn={() => setEditor({ ...editor, draft: clearPlayersColumnFilter(editor.draft, editor.column) })} /> : null}
       </Dialog>
     </li>

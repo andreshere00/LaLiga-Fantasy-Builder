@@ -8,10 +8,11 @@ import type { MarketFilters } from "./marketFilters";
 
 const COLUMNS: MarketColumnKey[] = ["player", "position", "fsyp", "form", "marketValue", "availability", "sealEnd", "sellOptions"];
 
-export function MarketListHead({ headings, filters, sellers, onFiltersChange }: {
+export function MarketListHead({ headings, filters, sellers, names = [], onFiltersChange }: {
   headings: Record<MarketColumnKey, MarketColumnHeading>;
   filters: MarketFilters;
   sellers: readonly string[];
+  names?: readonly string[];
   onFiltersChange: (filters: MarketFilters) => void;
 }) {
   const [editor, setEditor] = useState<{ column: MarketColumnKey; draft: MarketFilters } | null>(null);
@@ -30,14 +31,14 @@ export function MarketListHead({ headings, filters, sellers, onFiltersChange }: 
           ) : null}
         </span>
       ))}
-      <Dialog open={editor != null} layout="sheet"
+      <Dialog open={editor != null} layout="sheet" className="market-filter-dialog"
         title={editor ? "Filter " + marketColumnBaseLabel(editor.column) : "Market filters"}
         onClose={() => setEditor(null)} footer={<>
-          <Button variant="outline" onClick={() => setEditor(null)}>Cancel</Button>
-          <Button onClick={() => { if (editor) onFiltersChange(editor.draft); setEditor(null); }}>Apply filters</Button>
+          <Button shape="square" variant="outline" onClick={() => setEditor(null)}>Cancel</Button>
+          <Button shape="square" onClick={() => { if (editor) onFiltersChange(editor.draft); setEditor(null); }}>Apply filters</Button>
         </>}>
         {editor ? <MarketColumnFilterFields column={editor.column} filters={editor.draft}
-          sellers={sellers} onChange={(draft) => setEditor({ ...editor, draft })}
+          sellers={sellers} names={names} onChange={(draft) => setEditor({ ...editor, draft })}
           onClearColumn={() => setEditor({ ...editor, draft: clearMarketColumnFilter(editor.draft, editor.column) })} /> : null}
       </Dialog>
     </li>

@@ -8,6 +8,7 @@ type MarketPlayerSearchProps = {
   label?: string;
   placeholder?: string;
   inputId?: string;
+  suggestions?: readonly string[];
 };
 
 export function MarketPlayerSearch({
@@ -18,6 +19,7 @@ export function MarketPlayerSearch({
   label = "Search market",
   placeholder = "Name, seller or team",
   inputId = "market-player-search",
+  suggestions = [],
 }: MarketPlayerSearchProps) {
   return (
     <div className="market-search">
@@ -36,7 +38,13 @@ export function MarketPlayerSearch({
             value={value}
             onChange={(event) => onChange(event.target.value)}
             placeholder={placeholder}
+            list={suggestions.length ? `${inputId}-suggestions` : undefined}
           />
+          <datalist id={`${inputId}-suggestions`}>
+            {[...new Set(suggestions)].map((suggestion) => (
+              <option key={suggestion} value={suggestion} />
+            ))}
+          </datalist>
         </div>
         {activeFilterCount > 0 ? (
           <button type="button" className="market-filter-clear" onClick={onClearFilters}>

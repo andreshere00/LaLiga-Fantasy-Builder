@@ -1,6 +1,5 @@
 import { Menu } from "@base-ui/react/menu";
 import { NumberPagination } from "../../components/ui/NumberPagination";
-import { NativeSelect } from "../../components/ui/Fields";
 import { useCallback, useMemo, useState } from "react";
 import { Link, useSearchParams } from "react-router-dom";
 
@@ -304,19 +303,8 @@ function PlayersList() {
           label="Search players"
           placeholder="Name, team or owner"
           inputId="players-search"
+          suggestions={board.rows.map((row) => row.name)}
         />
-        <label className="players-team-filter" htmlFor="players-team-filter">
-          Team
-          <NativeSelect
-            id="players-team-filter"
-            className="market-filter-select"
-            value={urlState.filters.team}
-            onChange={(event) => setFilters({ team: event.target.value })}
-          >
-            <option value="">All teams</option>
-            {teams.map((team) => <option key={team} value={team}>{team}</option>)}
-          </NativeSelect>
-        </label>
       </div>
       {board.isDegraded ? (
         <p className="market-notice status-copy" role="status">
@@ -338,6 +326,7 @@ function PlayersList() {
               filters={urlState.filters}
               owners={owners}
               teams={teams}
+              names={board.rows.map((row) => row.name)}
               onFiltersChange={(patch) => setFilters(patch)}
             />
             {visibleRows.map((row) => (

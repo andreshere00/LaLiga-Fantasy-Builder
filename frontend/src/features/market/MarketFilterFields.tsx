@@ -1,4 +1,5 @@
-import { useEffect, useState } from "react";
+import { useEffect, useId, useState } from "react";
+import { NativeSelect } from "../../components/ui/Fields";
 
 import { formatIntegerAmount } from "../../api/format";
 import { NumericCounterField } from "../../components/NumericCounterField";
@@ -213,12 +214,15 @@ export function FilterTextInput({
   value,
   onChange,
   placeholder,
+  suggestions = [],
 }: {
   label: string;
   value: string;
   onChange: (value: string) => void;
   placeholder: string;
+  suggestions?: readonly string[];
 }) {
+  const listId = useId();
   return (
     <label className="market-column-filter-text">
       {label}
@@ -228,7 +232,13 @@ export function FilterTextInput({
         value={value}
         onChange={(event) => onChange(event.target.value)}
         placeholder={placeholder}
+        list={suggestions.length ? listId : undefined}
       />
+      <datalist id={listId}>
+        {[...new Set(suggestions)].map((suggestion) => (
+          <option key={suggestion} value={suggestion} />
+        ))}
+      </datalist>
     </label>
   );
 }
@@ -236,19 +246,19 @@ export function FilterTextInput({
 export function FilterSellerSelect({
   sellers,
   onPick,
+  value = "",
 }: {
   sellers: readonly string[];
   onPick: (seller: string) => void;
+  value?: string;
 }) {
   return (
     <label className="market-column-filter-text">
       Pick a seller
-      <select
+      <NativeSelect
         className="market-filter-select"
-        value=""
-        onChange={(event) => {
-          if (event.target.value) onPick(event.target.value);
-        }}
+        value={sellers.includes(value) ? value : ""}
+        onChange={(event) => onPick(event.target.value)}
       >
         <option value="">Choose…</option>
         {sellers.map((seller) => (
@@ -256,7 +266,7 @@ export function FilterSellerSelect({
             {seller}
           </option>
         ))}
-      </select>
+      </NativeSelect>
     </label>
   );
 }
