@@ -56,7 +56,7 @@ function weatherReason(value: unknown): string {
 }
 
 function competitionHeading(fixture: Record<string, unknown> | null): string {
-  const raw = text(fixture?.competition_label) ?? text(fixture?.competition) ?? "";
+  const raw = text(fixture?.competitionLabel) ?? text(fixture?.competition) ?? "";
   const normalized = raw.toUpperCase().replace(/[^A-Z0-9]+/g, " ").trim();
   let competition: string | null = null;
 
@@ -81,10 +81,10 @@ function MatchWeather({ match }: { match: Record<string, unknown> | null }) {
   const weather = asRecord(match?.weather);
   const snapshot = asRecord(weather?.snapshot);
   const condition = weatherConditionFromSnapshot(snapshot);
-  const temperature = asFiniteNumber(snapshot?.temperature_c);
-  const feelsLike = asFiniteNumber(snapshot?.feels_like_c);
-  const humidity = asFiniteNumber(snapshot?.humidity_pct);
-  const wind = windKmhFromMs(asFiniteNumber(snapshot?.wind_speed_ms));
+  const temperature = asFiniteNumber(snapshot?.temperatureC);
+  const feelsLike = asFiniteNumber(snapshot?.feelsLikeC);
+  const humidity = asFiniteNumber(snapshot?.humidityPct);
+  const wind = windKmhFromMs(asFiniteNumber(snapshot?.windSpeedMs));
 
   return (
     <div className="player-match-weather">
@@ -190,10 +190,10 @@ function MatchCard({
 }) {
   const matchRecord = asRecord(match);
   const fixture = asRecord(matchRecord?.fixture) ?? matchRecord;
-  const home = teamMediaFromFixture(fixture?.home_team);
-  const away = teamMediaFromFixture(fixture?.away_team);
-  const homeScore = asFiniteNumber(fixture?.home_score);
-  const awayScore = asFiniteNumber(fixture?.away_score);
+  const home = teamMediaFromFixture(fixture?.homeTeam);
+  const away = teamMediaFromFixture(fixture?.awayTeam);
+  const homeScore = asFiniteNumber(fixture?.homeScore);
+  const awayScore = asFiniteNumber(fixture?.awayScore);
   const homeOutcome = matchOutcome(homeScore, awayScore);
   const awayOutcome = matchOutcome(awayScore, homeScore);
   const competition = competitionHeading(fixture);
@@ -201,9 +201,9 @@ function MatchCard({
   const kickoff =
     text(matchRecord?.kickoff) ?? text(fixture?.kickoff) ?? text(fixture?.date);
   const date = fixtureDate(matchDate);
-  const points = asFiniteNumber(matchRecord?.fantasy_points_total);
+  const points = asFiniteNumber(matchRecord?.fantasyPointsTotal);
   const minutes = asFiniteNumber(asRecord(matchRecord?.minutes)?.minutes) ??
-    asFiniteNumber(matchRecord?.minutes_played);
+    asFiniteNumber(matchRecord?.minutesPlayed);
 
   return (
     <li className={`player-match-card${upcoming ? " is-upcoming" : ""}`}>
@@ -221,7 +221,7 @@ function MatchCard({
               </span>
             ) : null}
           </div>
-          <span className="player-match-team-name">{home?.name ?? text(fixture?.home_team) ?? "Home"}</span>
+          <span className="player-match-team-name">{home?.name ?? text(fixture?.homeTeam) ?? "Home"}</span>
         </div>
         <div className="player-match-team">
           <div className="player-match-crest-tile">
@@ -233,7 +233,7 @@ function MatchCard({
               </span>
             ) : null}
           </div>
-          <span className="player-match-team-name">{away?.name ?? text(fixture?.away_team) ?? "Away"}</span>
+          <span className="player-match-team-name">{away?.name ?? text(fixture?.awayTeam) ?? "Away"}</span>
         </div>
       </div>
       <time className="player-match-date" dateTime={matchDate ?? undefined}>
@@ -276,7 +276,7 @@ function MatchGroup({
         <ul className="player-match-grid">
           {matches.slice(0, 5).map((match, index) => {
             const fixture = asRecord(asRecord(match)?.fixture);
-            const key = [fixture?.date, fixture?.home_team, fixture?.away_team, index]
+            const key = [fixture?.date, fixture?.homeTeam, fixture?.awayTeam, index]
               .map((part) => String(part ?? ""))
               .join("|");
             return <MatchCard key={key} match={match} upcoming={upcoming} />;

@@ -21,17 +21,17 @@ export function statCount(value: unknown): string {
   return count != null ? String(count) : MISSING_STAT;
 }
 
-/** Count plus fantasy points. DAZN is stored on `dazn_points`, not `count`. */
+/** Count plus fantasy points. DAZN is stored on `daznPoints`, not `count`. */
 export function statDisplay(value: unknown, key?: string): string {
   const record = asRecord(value);
   if (!record) return MISSING_STAT;
   if (text(record.source) === "unavailable") return MISSING_STAT;
-  if (key === "dazn_points") {
-    const dazn = asFiniteNumber(record.dazn_points);
+  if (key === "daznPoints") {
+    const dazn = asFiniteNumber(record.daznPoints);
     return dazn != null ? String(dazn) : MISSING_STAT;
   }
   const count = asFiniteNumber(record.count);
-  const points = asFiniteNumber(record.fantasy_points);
+  const points = asFiniteNumber(record.fantasyPoints);
   if (count == null && points == null) return MISSING_STAT;
   const countText = count != null ? String(count) : MISSING_STAT;
   if (points == null) return countText;
@@ -47,8 +47,8 @@ export function fixtureDateLabel(fixture: Record<string, unknown> | null): strin
 }
 
 export function scoreLabel(fixture: Record<string, unknown> | null): string | null {
-  const home = asFiniteNumber(fixture?.home_score);
-  const away = asFiniteNumber(fixture?.away_score);
+  const home = asFiniteNumber(fixture?.homeScore);
+  const away = asFiniteNumber(fixture?.awayScore);
   if (home == null || away == null) return null;
   return `${home}-${away}`;
 }
@@ -129,7 +129,6 @@ export function formatInjuryHistoryEntry(
   const end = formatInjuryHistoryDate(item?.end ?? item?.endDate);
   const ongoing = item?.ongoing === true;
   const durationDays =
-    asFiniteNumber(item?.duration_days) ??
     asFiniteNumber(item?.durationDays) ??
     inclusiveInjuryDays(item?.start ?? item?.startDate, item?.end ?? item?.endDate);
 
@@ -198,12 +197,12 @@ export type DetailSegmentBlocks = {
   profile: Record<string, unknown> | null;
 };
 
-/** Nulls segments listed in `segment_errors`; other segments stay when present. */
+/** Nulls segments listed in `segmentErrors`; other segments stay when present. */
 export function mapDetailSegmentBlocks(body: unknown): DetailSegmentBlocks {
   const detail = asRecord(body);
   const errors = new Set<string>();
-  if (Array.isArray(detail?.segment_errors)) {
-    for (const entry of detail.segment_errors) {
+  if (Array.isArray(detail?.segmentErrors)) {
+    for (const entry of detail.segmentErrors) {
       const segment = text(asRecord(entry)?.segment);
       if (segment) errors.add(segment);
     }

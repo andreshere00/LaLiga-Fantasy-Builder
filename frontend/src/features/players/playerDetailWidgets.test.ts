@@ -18,12 +18,12 @@ describe("player detail widget formatters", () => {
   });
 
   it("weatherConditionFromSnapshot_mapsOpenWeatherCodesAndFallbackIcons", () => {
-    expect(weatherConditionFromSnapshot({ condition_code: 800 })).toBe("clear");
-    expect(weatherConditionFromSnapshot({ condition_code: 804 })).toBe("overcast");
-    expect(weatherConditionFromSnapshot({ condition_code: 301 })).toBe("drizzle");
-    expect(weatherConditionFromSnapshot({ condition_code: 500 })).toBe("rain");
-    expect(weatherConditionFromSnapshot({ condition_code: 521 })).toBe("shower_rain");
-    expect(weatherConditionFromSnapshot({ condition_code: 511 })).toBe("rain");
+    expect(weatherConditionFromSnapshot({ conditionCode: 800 })).toBe("clear");
+    expect(weatherConditionFromSnapshot({ conditionCode: 804 })).toBe("overcast");
+    expect(weatherConditionFromSnapshot({ conditionCode: 301 })).toBe("drizzle");
+    expect(weatherConditionFromSnapshot({ conditionCode: 500 })).toBe("rain");
+    expect(weatherConditionFromSnapshot({ conditionCode: 521 })).toBe("shower_rain");
+    expect(weatherConditionFromSnapshot({ conditionCode: 511 })).toBe("rain");
     expect(weatherConditionFromSnapshot({ icon: "04n" })).toBe("broken_clouds");
     expect(weatherConditionFromSnapshot({ icon: "unknown" })).toBeNull();
   });
