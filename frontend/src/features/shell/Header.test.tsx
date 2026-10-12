@@ -54,16 +54,17 @@ describe("Header", () => {
       </BrowserRouter>,
     );
 
-    const trigger = screen.getByRole("button", { name: "Alpha" });
-    expect(screen.queryByRole("button", { name: "League" })).toBeNull();
-    fireEvent.click(trigger);
-    fireEvent.keyDown(screen.getByRole("listbox"), { key: "ArrowDown" });
+    const trigger = screen.getByRole("combobox", { name: "League" });
+    expect(trigger.textContent).toContain("Alpha");
+    fireEvent.keyDown(trigger, { key: "ArrowDown" });
+    const alpha = await screen.findByRole("option", { name: "Alpha" });
+    fireEvent.keyDown(alpha, { key: "ArrowDown" });
 
     await waitFor(() => {
       expect(document.activeElement).toBe(screen.getByRole("option", { name: "Beta" }));
     });
     fireEvent.click(screen.getByRole("option", { name: "Beta" }));
     expect(harness.selectLeague).toHaveBeenCalledWith("b");
-    expect(document.activeElement).toBe(trigger);
+    await waitFor(() => expect(document.activeElement).toBe(trigger));
   });
 });

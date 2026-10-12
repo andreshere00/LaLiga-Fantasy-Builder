@@ -1,3 +1,4 @@
+import { PulseRing } from "../components/ui/PulseRing";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { lazy, Suspense } from "react";
 import { BrowserRouter, Route, Routes } from "react-router-dom";
@@ -55,7 +56,7 @@ export function App() {
                     <Route
                       path="/players/:playerId"
                       element={
-                        <Suspense fallback={<p className="status-copy">Loading player…</p>}>
+                        <Suspense fallback={<PulseRing label="Loading player…" />}>
                           <PlayerDetailPage />
                         </Suspense>
                       }

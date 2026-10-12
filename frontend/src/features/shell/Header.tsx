@@ -1,271 +1,71 @@
-import { useEffect, useId, useRef, useState, type KeyboardEvent } from "react";
+import { Select } from "@base-ui/react/select";
+import { useState } from "react";
 import { Link, NavLink } from "react-router-dom";
-
 import { leagueId, leagueLabel } from "../../api/mappers";
 import { useAuth } from "../../auth/AuthProvider";
-import lineupActive from "../../assets/nav_tab_lineup_active.svg";
-import lineupIdle from "../../assets/nav_tab_lineup.svg";
-import marketActive from "../../assets/nav_tab_market_active.svg";
-import marketIdle from "../../assets/nav_tab_market.svg";
-import playersActive from "../../assets/button_players_red.svg";
-import playersIdle from "../../assets/button_players_gray.svg";
+import { Dialog } from "../../components/ui/Dialog";
 import { useLeague } from "../lineup/LeagueProvider";
-import { PersonIcon, TrophyIcon } from "./icons";
+import { PersonIcon } from "./icons";
 import { ProfilePhoto } from "./ProfilePhoto";
 import "./Header.css";
-
-function leagueCursorForKey(current: number, count: number, key: string): number | null {
-  if (count <= 0) return null;
-  if (key === "Home") return 0;
-  if (key === "End") return count - 1;
-  if (key === "ArrowDown") return Math.min(count - 1, current + 1);
-  if (key === "ArrowUp") return Math.max(0, current - 1);
-  return null;
-}
 
 export function Header() {
   const { status, user, managerName, managerAvatar, notice, login, logout } = useAuth();
   const { leagues, selected, selectLeague } = useLeague();
-  const profilePhotoUrl =
-    managerAvatar?.trim() ||
-    selected?.team?.manager?.avatar?.trim() ||
-    selected?.team?.manager?.profileImage?.trim() ||
-    null;
-  const [openMenu, setOpenMenu] = useState<"league" | "profile" | "navigation" | null>(null);
-  const [leagueCursor, setLeagueCursor] = useState(0);
-  const leagueRef = useRef<HTMLDivElement>(null);
-  const profileRef = useRef<HTMLDivElement>(null);
-  const navigationRef = useRef<HTMLDivElement>(null);
-  const leagueButtonRef = useRef<HTMLButtonElement>(null);
-  const profileButtonRef = useRef<HTMLButtonElement>(null);
-  const navigationButtonRef = useRef<HTMLButtonElement>(null);
-  const leagueOptionRefs = useRef<Array<HTMLButtonElement | null>>([]);
-  const leagueTitleId = useId();
-  const leagueNameId = useId();
-  const profileTitleId = useId();
-  const navigationId = useId();
+  const [profileOpen, setProfileOpen] = useState(false);
   const signedIn = status !== "signed-out" && status !== "loading";
-  const canSelectLeague = leagues.length > 0;
-  const selectedLeagueIndex = selected
-    ? leagues.findIndex((league) => leagueId(league) === leagueId(selected))
-    : -1;
-
-  useEffect(() => {
-    if (openMenu !== "league") return;
-    leagueOptionRefs.current[leagueCursor]?.focus();
-  }, [leagueCursor, openMenu]);
-
-  useEffect(() => {
-    if (!openMenu) return;
-    const onKey = (event: globalThis.KeyboardEvent) => {
-      if (event.key !== "Escape") return;
-      setOpenMenu(null);
-      if (openMenu === "league") leagueButtonRef.current?.focus();
-      if (openMenu === "profile") profileButtonRef.current?.focus();
-      if (openMenu === "navigation") navigationButtonRef.current?.focus();
-    };
-    const onPointerDown = (event: PointerEvent) => {
-      const root = openMenu === "league"
-        ? leagueRef.current
-        : openMenu === "profile" ? profileRef.current : navigationRef.current;
-      if (root && !root.contains(event.target as Node)) setOpenMenu(null);
-    };
-    const onResize = () => {
-      if (openMenu === "navigation" && window.innerWidth > 960) setOpenMenu(null);
-    };
-    window.addEventListener("keydown", onKey);
-    window.addEventListener("pointerdown", onPointerDown);
-    window.addEventListener("resize", onResize);
-    return () => {
-      window.removeEventListener("keydown", onKey);
-      window.removeEventListener("pointerdown", onPointerDown);
-      window.removeEventListener("resize", onResize);
-    };
-  }, [openMenu]);
-
+  const profilePhotoUrl = managerAvatar?.trim() || selected?.team?.manager?.avatar?.trim()
+    || selected?.team?.manager?.profileImage?.trim() || null;
+  const items = leagues.map((league) => ({ value: leagueId(league), label: leagueLabel(league) }));
   return (
     <header className="app-header">
-      <Link to="/" className="brand-bar">
-        LALIGA Fantasy Builder
-      </Link>
-      <div className="nav-bar">
-        <div className="league-wrap" ref={leagueRef}>
-          <button
-            ref={leagueButtonRef}
-            type="button"
-            className="league-chip"
-            aria-labelledby={leagueNameId}
-            aria-expanded={openMenu === "league"}
-            aria-controls={leagueTitleId}
-            aria-haspopup="listbox"
-            disabled={!canSelectLeague}
-            onClick={() => {
-              if (openMenu === "league") {
-                setOpenMenu(null);
-                return;
-              }
-              setLeagueCursor(selectedLeagueIndex < 0 ? 0 : selectedLeagueIndex);
-              setOpenMenu("league");
-            }}
-            onKeyDown={(event: KeyboardEvent<HTMLButtonElement>) => {
-              if (!canSelectLeague) return;
-              if (event.key !== "ArrowDown" && event.key !== "ArrowUp") return;
-              event.preventDefault();
-              setLeagueCursor(selectedLeagueIndex < 0 ? 0 : selectedLeagueIndex);
-              setOpenMenu("league");
-            }}
-          >
-            <TrophyIcon />
-            <span id={leagueNameId} className="league-name">
-              {leagueLabel(selected)}
-            </span>
-            {canSelectLeague ? (
-              <span className="league-caret" aria-hidden="true" />
-            ) : null}
-          </button>
-          {openMenu === "league" && canSelectLeague ? (
-            <ul
-              className="league-menu"
-              id={leagueTitleId}
-              role="listbox"
-              aria-labelledby={leagueNameId}
-              onKeyDown={(event: KeyboardEvent<HTMLUListElement>) => {
-                const next = leagueCursorForKey(leagueCursor, leagues.length, event.key);
-                if (next == null) return;
-                event.preventDefault();
-                setLeagueCursor(next);
-              }}
-            >
-              {leagues.map((league, index) => {
-                const id = leagueId(league);
-                const active = selected ? leagueId(selected) === id : false;
-                return (
-                  <li key={id || leagueLabel(league)}>
-                    <button
-                      ref={(node) => {
-                        leagueOptionRefs.current[index] = node;
-                      }}
-                      type="button"
-                      role="option"
-                      tabIndex={index === leagueCursor ? 0 : -1}
-                      aria-selected={active}
-                      className={active ? "is-active" : undefined}
-                      onClick={() => {
-                        selectLeague(id);
-                        setOpenMenu(null);
-                        leagueButtonRef.current?.focus();
-                      }}
-                    >
-                      {leagueLabel(league)}
-                    </button>
-                  </li>
-                );
-              })}
-            </ul>
-          ) : null}
-        </div>
-        <div className="navigation-wrap" ref={navigationRef}>
-          <button
-            ref={navigationButtonRef}
-            type="button"
-            className="navigation-button"
-            aria-label="Navigation"
-            aria-expanded={openMenu === "navigation"}
-            aria-controls={navigationId}
-            onClick={() =>
-              setOpenMenu((current) => (current === "navigation" ? null : "navigation"))
-            }
-          >
-            <svg className="navigation-icon" viewBox="0 0 24 24" aria-hidden="true">
-              <path d="M4 6h16M4 12h16M4 18h16" fill="none" stroke="currentColor" strokeWidth="2" />
-            </svg>
-            <span className="navigation-button-label">Navigation</span>
-          </button>
-          <nav
-            className={`nav-tabs${openMenu === "navigation" ? " is-open" : ""}`}
-            id={navigationId}
-            aria-label="Sections"
-          >
-            <NavLink to="/" end className="nav-tab" onClick={() => setOpenMenu(null)}>
-              {({ isActive }) => (
-                <>
-                  <span className="nav-tab-icon-wrap" aria-hidden="true">
-                    <img src={isActive ? lineupActive : lineupIdle} alt="" />
-                  </span>
-                  <span className="nav-tab-label">Lineup</span>
-                </>
-              )}
-            </NavLink>
-            <NavLink to="/market" className="nav-tab" onClick={() => setOpenMenu(null)}>
-              {({ isActive }) => (
-                <>
-                  <span className="nav-tab-icon-wrap" aria-hidden="true">
-                    <img src={isActive ? marketActive : marketIdle} alt="" />
-                  </span>
-                  <span className="nav-tab-label">Market</span>
-                </>
-              )}
-            </NavLink>
-            <NavLink to="/players" className="nav-tab" onClick={() => setOpenMenu(null)}>
-              {({ isActive }) => (
-                <>
-                  <span className="nav-tab-icon-wrap" aria-hidden="true">
-                    <img src={isActive ? playersActive : playersIdle} alt="" />
-                  </span>
-                  <span className="nav-tab-label">Players</span>
-                </>
-              )}
-            </NavLink>
-          </nav>
-        </div>
+      <div className="header-content">
+        <Link to="/" className="brand-bar">LALIGA Fantasy Builder</Link>
+        <nav className="nav-tabs" aria-label="Sections">
+          <NavLink to="/" end className="nav-tab">Lineup</NavLink>
+          <NavLink to="/market" className="nav-tab">Market</NavLink>
+          <NavLink to="/players" className="nav-tab">Players</NavLink>
+        </nav>
         <div className="nav-actions">
-          {signedIn ? (
-            <button type="button" className="logout-btn" onClick={() => void logout()}>
-              Log out
-            </button>
-          ) : (
-            <button
-              type="button"
-              className="logout-btn"
-              onClick={login}
-              disabled={status === "loading"}
-            >
-              Log in
-            </button>
-          )}
-          <div className="profile-wrap" ref={profileRef}>
-            <button
-              ref={profileButtonRef}
-              type="button"
-              className="profile-btn"
-              aria-expanded={openMenu === "profile"}
-              aria-controls={profileTitleId}
-              onClick={() =>
-                setOpenMenu((current) => (current === "profile" ? null : "profile"))
-              }
-            >
-              <ProfilePhoto
-                url={profilePhotoUrl}
-                className="profile-btn-avatar"
-                fallback={<PersonIcon />}
-              />
-              Profile
-            </button>
-            {openMenu === "profile" ? (
-              <div className="profile-panel" id={profileTitleId}>
-                <p className="profile-name">{user?.name?.trim() || "Not signed in"}</p>
-                {user?.email ? <p>{user.email}</p> : null}
-                {managerName ? <p>{managerName}</p> : null}
-              </div>
-            ) : null}
-          </div>
+          <Select.Root items={items} value={selected ? leagueId(selected) : null}
+            onValueChange={(value) => { if (value) selectLeague(value); }}
+            disabled={leagues.length === 0}>
+            <Select.Trigger className="league-chip" aria-label="League">
+              <Select.Value placeholder="No league" />
+              <Select.Icon aria-hidden="true">⌄</Select.Icon>
+            </Select.Trigger>
+            <Select.Portal>
+              <Select.Positioner sideOffset={4} className="fb-select-positioner">
+                <Select.Popup className="fb-selection-popup">
+                  <Select.List>
+                    {items.map((item) => (
+                      <Select.Item key={item.value} value={item.value} className="fb-item">
+                        <Select.ItemText>{item.label}</Select.ItemText>
+                        <Select.ItemIndicator aria-hidden="true">✓</Select.ItemIndicator>
+                      </Select.Item>
+                    ))}
+                  </Select.List>
+                </Select.Popup>
+              </Select.Positioner>
+            </Select.Portal>
+          </Select.Root>
+          <button type="button" className="logout-btn" disabled={status === "loading"}
+            onClick={signedIn ? () => void logout() : login}>
+            {signedIn ? "Log out" : "Log in"}
+          </button>
+          <button type="button" className="profile-btn" aria-haspopup="dialog"
+            aria-expanded={profileOpen} onClick={() => setProfileOpen(true)}>
+            <ProfilePhoto url={profilePhotoUrl} className="profile-btn-avatar" fallback={<PersonIcon />} />
+            Profile
+          </button>
         </div>
       </div>
-      {notice ? (
-        <p className="notice" role="status">
-          {notice}
-        </p>
-      ) : null}
+      <Dialog open={profileOpen} title="Profile" onClose={() => setProfileOpen(false)}>
+        <p className="profile-name">{user?.name?.trim() || "Not signed in"}</p>
+        {user?.email ? <p>{user.email}</p> : null}
+        {managerName ? <p>{managerName}</p> : null}
+      </Dialog>
+      {notice ? <p className="notice" role="status">{notice}</p> : null}
     </header>
   );
 }

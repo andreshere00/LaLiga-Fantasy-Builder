@@ -1,3 +1,5 @@
+import { Button } from "../../components/ui/Button";
+import { PulseRing } from "../../components/ui/PulseRing";
 import type { AuthStatus } from "../../auth/types";
 import { useAuth } from "../../auth/AuthProvider";
 import "./GatePanel.css";
@@ -46,24 +48,24 @@ export function GatePanel({ status }: { status: Exclude<AuthStatus, "ready"> }) 
   return (
     <section className="gate">
       {status === "loading" ? (
-        <span className="gate-loading-indicator" role="status" aria-label="Loading" />
+        <PulseRing label="Checking your session…" />
       ) : null}
       <h1>{copy.title}</h1>
       <p>{copy.body}</p>
       {copy.action === "login" ? (
-        <button type="button" onClick={login}>
+        <Button type="button" onClick={login}>
           Log in
-        </button>
+        </Button>
       ) : null}
       {copy.action === "laliga" ? (
-        <button type="button" onClick={connectLaliga}>
+        <Button type="button" onClick={connectLaliga}>
           Connect LaLiga
-        </button>
+        </Button>
       ) : null}
       {copy.action === "retry" ? (
-        <button type="button" onClick={() => void reload()}>
+        <Button type="button" onClick={() => void reload()}>
           Retry
-        </button>
+        </Button>
       ) : null}
     </section>
   );
