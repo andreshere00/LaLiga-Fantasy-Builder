@@ -211,11 +211,6 @@ export function LineupPage() {
                   />
                 </button>
               </Help>
-              {board.saveMessage ? (
-                <p className="save-lineup-message" role="alert">
-                  {board.saveMessage}
-                </p>
-              ) : null}
             </div>
             </div>
             <div className="controls-zone controls-zone-end">

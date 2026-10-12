@@ -200,11 +200,6 @@
   width: 100%;
 }
 
-.board-controls .save-lineup-message {
-  align-self: stretch;
-  text-align: center;
-}
-
 .controls-cluster-end {
   justify-content: flex-end;
 }
@@ -468,13 +463,6 @@
 
 .save-lineup-button:disabled {
   cursor: default;
-}
-
-.save-lineup-message {
-  margin: var(--lineup-controls-label-gap, calc(100vw / 80)) 0 0;
-  font-size: var(--lineup-font-small);
-  font-weight: 700;
-  color: var(--fb-primary);
 }
 
 .formation-select {
@@ -1244,7 +1232,7 @@
 
 /* Lineup toolbar visual fixes. */
 .accent-control-shell { border-radius:0; }
-.score-pill { border:1px solid var(--fb-tertiary); box-sizing:border-box; }
+.score-pill { border:1px solid var(--fb-control-line); box-sizing:border-box; }
 .score-week,.score-points { height:calc(var(--lineup-control-height) - 2px); }
 .current-fixture-tooltip { width:max-content; max-width:100%; }
 .pager { width:calc(var(--lineup-pager-cell) * 3 + 2px); grid-template-columns:repeat(3,minmax(0,1fr)); box-sizing:border-box; }
@@ -1255,7 +1243,7 @@
 .pitch-lineup-load-trigger { width:44px; height:44px; box-sizing:border-box; padding:0; margin:0; }
 .team-value > .field-label { text-align:center; }
 .board-controls .controls-zone-end .control-block { align-items:center; }
-.value-box { justify-content:center; font-size:var(--lineup-font-large); }
+.value-box { justify-content:center; font-size:var(--lineup-font-large); border:1px solid var(--fb-control-line); box-sizing:border-box; }
 .value-box .value-box-tooltip-wrap { justify-content:center; }
 .value-box-text { flex:0 1 auto; text-align:center; }
 .save-lineup-button { border-radius:0; background:transparent; color:#fff; transition:color .16s ease,background-color .16s ease; }
@@ -1267,6 +1255,12 @@
 .save-lineup-button[aria-disabled="true"] { background:transparent; color:#fff; }
 .accent-control-shell:has(.save-lineup-button:disabled),
 .accent-control-shell:has(.save-lineup-button[aria-disabled="true"]) { background:#35353D; border-color:#35353D; color:#fff; opacity:1; }
+.accent-control-shell:has(.save-lineup-button:disabled):hover,
+.accent-control-shell:has(.save-lineup-button[aria-disabled="true"]):hover { background:#E5E5E5; color:#000; }
+.accent-control-shell:has(.save-lineup-button:disabled):hover .save-lineup-button,
+.accent-control-shell:has(.save-lineup-button[aria-disabled="true"]):hover .save-lineup-button { color:#000; }
+.accent-control-shell:has(.save-lineup-button:disabled):hover .save-lineup-button-icon,
+.accent-control-shell:has(.save-lineup-button[aria-disabled="true"]):hover .save-lineup-button-icon { filter:brightness(0); }
 .save-lineup-button-icon { filter:none; }
 .accent-control-shell:has(.save-lineup-button:not(:disabled):not([aria-disabled="true"])) .save-lineup-button-icon { filter:none; }
 .accent-control-shell:has(.save-lineup-button:disabled) .save-lineup-button-icon,
