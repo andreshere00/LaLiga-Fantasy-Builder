@@ -1,0 +1,48 @@
+.market-balance-actions { display:flex; align-items:flex-end; gap:16px; margin-left:auto; }
+.market-balance-actions .value-box-block { margin-left:0; }
+.market-offers-trigger { position:relative; min-height:44px; }
+.fb-button.market-offers-trigger.has-offers {
+  background:var(--fb-primary); border-color:var(--fb-primary); color:#FFFFFF;
+}
+.fb-button.market-offers-trigger.has-offers:hover {
+  background:var(--fb-primary); border-color:var(--fb-primary); color:#FFFFFF;
+}
+.market-offers-trigger.has-offers .market-offers-count {
+  background:#FFFFFF; color:var(--fb-primary);
+}
+.market-offers-trigger > span { display:flex; align-items:center; gap:8px; }
+.market-offers-trigger img { width:22px; height:22px; }
+.market-offers-icon-dark { display:none; }
+[data-theme="dark"] .market-offers-icon-light { display:none; }
+[data-theme="dark"] .market-offers-icon-dark { display:block; }
+.market-offers-count { min-width:22px; height:22px; padding:0 5px; display:grid; place-items:center; background:var(--fb-primary); color:var(--fb-ink-on-status); font-size:12px; font-weight:700; }
+.fb-dialog.market-offers-panel { width:min(480px,calc(100vw - 24px)); }
+.market-offers-intro { margin:0 0 16px; }
+.market-offers-list { list-style:none; margin:20px 0 0; padding:0; }
+.market-offer { padding:20px 0; border-top:1px solid var(--fb-line); }
+.market-offer-player { display:flex; align-items:center; gap:12px; }
+.market-offer-player img { width:48px; height:64px; object-fit:contain; background:var(--fb-subtle); border:1px solid var(--fb-line); }
+.market-offer h3 { margin:0; font-size:16px; }
+.market-offer p { margin:8px 0; overflow-wrap:anywhere; }
+.market-offer-money { display:block; margin-block:16px; font-size:20px; color:var(--fb-tertiary); }
+.market-offer-expiry {
+  display:flex; align-items:center; gap:8px; width:fit-content; padding:8px 12px;
+  border:1px solid var(--fb-line); background:var(--fb-subtle); font-weight:600;
+}
+.market-offer-expiry img { width:22px; height:22px; flex-shrink:0; }
+.market-offer-expiry.is-urgent { border-color:var(--fb-primary); }
+.market-offer-expiry.is-unknown { color:var(--fb-muted); }
+[data-theme="dark"] .market-offer-expiry:not(.is-urgent) img { filter:invert(1); }
+.market-offer-actions { display:flex; gap:12px; margin-top:16px; }
+.market-offer-actions > button { flex:1; }
+.market-offer-confirmation { padding:12px; border:1px solid var(--fb-control-line); background:var(--fb-subtle); }
+.market-offer-unavailable { font-size:13px; }
+.market-offers-error { color:var(--fb-primary); }
+.market-offers-empty { text-align:center; padding:40px 12px; }
+.market-offers-empty img { width:48px; height:48px; }
+.market-offers-panel button { border-radius:0; }
+@media(max-width:600px) {
+  .market-balance-actions { gap:8px; }
+  .market-offers-label { display:none; }
+  .fb-dialog.market-offers-panel { width:100%; }
+}

@@ -205,6 +205,30 @@ Code: `frontend/src/features/market/` (`model/`, `cells/`, `actions/`,
 - **Balance** from `GET /api/teams/{team_id}/money` (league object fallback).
 - Negative balance shows a warning icon with a tooltip: balance must be positive
   before the next matchday to score.
+- **Offers** beside the balance opens a modal side panel (bottom panel on mobile),
+  following the shadcn Sheet pattern on the existing Base UI dialog. Its translucent
+  backdrop leaves the market visible. The supplied notification icons adapt to the
+  theme and pending count. Offers load asynchronously when the market screen appears;
+  they never block the market table. The entire notification button turns red as soon
+  as a pending offer arrives, even while other offer reads are still loading, and
+  returns to its normal appearance when none remain. Close, Escape and backdrop dismissal restore focus to
+  the trigger; dismissal is blocked while an offer response is being sent.
+- The panel reads `/api/market/leagues/{id}/player-teams/{playerTeamId}/offers`
+  for the caller's squad, independently of market filters and listings. Reads are
+  cached for 30 seconds, refreshed on opening and manually, and polled every minute
+  while open. Partial failures preserve available offers and mark the count incomplete.
+  `isFromMarket: true` identifies LaLiga offers. Missing sender data without that
+  flag is not assumed to mean LaLiga. Bids remain visible but cannot
+  be answered through offer endpoints.
+- Pending offers with valid identifiers and whole-euro amounts can be rejected or
+  accepted. Acceptance confirms the player, sender and exact amount before sending
+  `offerMoney`; expired offers are excluded. Changed amounts and unknown statuses
+  block confirmation. Writes are never automatically retried. Confirmed responses
+  update the count and refresh market, offers, squad, lineup, balance and leagues;
+  unusable success responses refresh reads so the user can check the outcome.
+- Each offer displays a clock and time remaining, refreshed every minute, alongside
+  its exact expiry date. The clock turns red at one hour or less. Expiries below
+  one minute show `<1m`; absent or invalid dates show an unavailable indicator.
 - **Search and filters** (`marketFilters.ts`, column header filter icons): toolbar
   `query` matches player, seller and team; column editors use separate `player`
   and `seller` strings (AND with `query`). Each filterable table column has a funnel

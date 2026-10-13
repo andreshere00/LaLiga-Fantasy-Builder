@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 import pytest
-from fantasy_api.schemas.payload import as_market_snapshot
+from fantasy_api.schemas.payload import as_market_snapshot, as_player_team_offers
 
 
 def test_as_market_snapshot_null_returns_empty_lists() -> None:
@@ -28,3 +28,29 @@ def test_as_market_snapshot_unwraps_nested_market_object() -> None:
 def test_as_market_snapshot_passes_through_snapshot_object() -> None:
     snapshot = {"marketPlayers": [{"id": "m1"}], "userBids": []}
     assert as_market_snapshot(snapshot) == snapshot
+
+
+# ---- Happy path ---- #
+
+
+def test_as_player_team_offers_empty_array_returns_empty_offers() -> None:
+    assert as_player_team_offers([]) == {"offers": []}
+
+
+def test_as_player_team_offers_bare_array_wraps_offers() -> None:
+    offers = [{"id": "o-1", "money": 2_000_000, "status": "pending", "isFromMarket": True}]
+    assert as_player_team_offers(offers) == {"offers": offers}
+
+
+def test_as_player_team_offers_legacy_object_preserves_envelope() -> None:
+    payload = {"offers": [{"id": "o-1"}], "bids": []}
+    assert as_player_team_offers(payload) == payload
+
+
+# ---- Error paths ---- #
+
+
+@pytest.mark.parametrize("payload", [None, "unexpected", 42, [None], [42], [[]], [{}]])
+def test_as_player_team_offers_unexpected_shape_raises_value_error(payload: object) -> None:
+    with pytest.raises(ValueError):
+        as_player_team_offers(payload)

@@ -30,6 +30,20 @@ for camelCase requests and responses while preserving established Fantasy wire k
 Upstream confidence: current market and squad-entry offers are **High**;
 history and all mutations are **Medium** (community catalog).
 
+## Squad-entry offer response shape
+
+Live reads verified on 2026-10-13 return a **bare array**, including `[]` when
+there are no offers. `as_player_team_offers` normalizes it to
+`{ "offers": [...] }` for the API and frontend. Existing object envelopes are
+retained. Malformed rows, unexpected scalars and non-JSON successes still return
+502; they are not converted into an empty list.
+
+Observed offer fields include `id`, `money`, `status`, `createdAt`, `updatedAt`,
+`isFromMarket` and `expirationDate`. The frontend uses `isFromMarket: true` to
+label a market offer as LaLiga even when there is no bidder name. Missing bidder
+data without this flag does not imply LaLiga. Action ids still come from the
+offer and authenticated squad listing; missing listing ids disable actions.
+
 ## Current market snapshot shape
 
 `GET /market/leagues/{league_id}` runs upstream JSON through
@@ -50,7 +64,10 @@ array, null, and nested `market` cases in `tests/test_market.py`.
 ## Frontend integration
 
 The [market screen](../frontend.md#market-screen) uses this domain for listings,
-`userBids`, and bid mutations (`POST` / `PUT` / `DELETE` on `…/bids`). UI
+`userBids`, bid mutations (`POST` / `PUT` / `DELETE` on `…/bids`), and a received-offer
+notification panel using the existing squad-entry offer read and accept/reject routes.
+`MarketOffer` declares optional bidder, listing, date and `isFromMarket`
+metadata; unknown upstream fields are still preserved. UI
 behaviour (eligibility, bidded state, tooltips, pending-bid cache) is documented
 there — not duplicated here. Automated `fantasy-market` and browser-session
 flows remain **read-only**.

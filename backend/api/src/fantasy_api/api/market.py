@@ -18,7 +18,7 @@ from fantasy_api.schemas.market import (
     MarketSnapshot,
     PlayerTeamOffers,
 )
-from fantasy_api.schemas.payload import as_market_snapshot
+from fantasy_api.schemas.payload import as_market_snapshot, as_player_team_offers
 
 router = APIRouter(prefix="/market", tags=["market"])
 
@@ -86,7 +86,7 @@ async def get_player_team_offers(
         league_id,
         player_team_id,
     )
-    return as_model(data, PlayerTeamOffers)
+    return as_model(data, PlayerTeamOffers, as_player_team_offers)
 
 
 @router.post(

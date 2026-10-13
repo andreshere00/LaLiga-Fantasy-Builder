@@ -37,6 +37,28 @@ def as_market_snapshot(data: Any) -> dict[str, Any]:
     return record
 
 
+def as_player_team_offers(data: Any) -> dict[str, Any]:
+    """Normalize the observed bare offer array, retaining legacy object envelopes.
+
+    Empty arrays mean there are no offers. Other unexpected values still fail closed.
+
+    Args:
+        data: Upstream JSON array or existing offer object envelope.
+
+    Returns:
+        An object envelope with the upstream offers preserved.
+
+    Raises:
+        ValueError: When the payload is not an offer array or JSON object.
+    """
+    if isinstance(data, list):
+        for offer in data:
+            if not isinstance(offer, dict) or not {"id", "money", "status"}.intersection(offer):
+                raise ValueError("expected offer objects in squad-entry offer array")
+        return {"offers": data}
+    return as_object(data)
+
+
 def as_object(data: Any) -> dict[str, Any]:
     """Require a JSON object payload.
 

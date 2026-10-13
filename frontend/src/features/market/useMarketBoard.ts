@@ -48,6 +48,7 @@ const HISTORY_STALE_MS = CALENDAR_STALE_MS;
 export type MarketBoard = {
   rows: MarketRow[];
   ownSquadCards: SquadCard[];
+  ownSquadAvailable: boolean;
   money: number | null;
   callerTeamId: string | null;
   squadPlayerCount: number | null;
@@ -280,6 +281,7 @@ export function useMarketBoard(): MarketBoard {
   return {
     rows,
     ownSquadCards,
+    ownSquadAvailable: teamQuery.isSuccess,
     money,
     callerTeamId: teamId,
     squadPlayerCount,
