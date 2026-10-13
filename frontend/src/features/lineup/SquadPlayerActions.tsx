@@ -7,6 +7,7 @@ import { formatEuro, formatIntegerAmount, parseIntegerAmount } from "../../api/f
 import type { SquadCard } from "../../api/mappers";
 import { Dialog } from "../../components/ui/Dialog";
 import { NumericCounterField } from "../../components/NumericCounterField";
+import { useMarketOffersMenu } from "../market/offers/MarketOffersContext";
 import {
   LISTING_PRICE_STEP,
   MAX_LISTING_PRICE,
@@ -46,6 +47,7 @@ export function SquadPlayerActions({
   triggerText?: string;
   detailsReturnTo?: "/market" | "/players";
 }) {
+  const offersMenu = useMarketOffersMenu();
   const [open, setOpen] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
   const [view, setView] = useState<SaleView>("choose");
@@ -122,6 +124,12 @@ export function SquadPlayerActions({
                 <Menu.Item className="market-actions-item" onClick={() => {
                   menuTrigger.current?.focus(); setView("choose"); setOpen(true);
                 }}>Market options</Menu.Item>
+                {ownPlayer && offersMenu && !/^player-\d+$/.test(player.id) ? (
+                  <Menu.Item className="market-actions-item" onClick={() => {
+                    menuTrigger.current?.focus();
+                    offersMenu.openForPlayer(player.id, player.name);
+                  }}>View offers for this player</Menu.Item>
+                ) : null}
                 {player.masterPlayerId && player.positionId !== 5 ? (
                   <Menu.Item className="market-actions-item" render={<Link
                     to={"/players/" + encodeURIComponent(player.masterPlayerId)}
@@ -215,6 +223,14 @@ export function SquadPlayerActions({
             <button type="button" className="squad-sale-choice" onClick={() => setView("choose")}>
               Market options
             </button>
+            {ownPlayer && offersMenu && !/^player-\d+$/.test(player.id) ? (
+              <button type="button" className="squad-sale-choice" onClick={() => {
+                offersMenu.openForPlayer(player.id, player.name);
+                close();
+              }}>
+                View offers for this player
+              </button>
+            ) : null}
             {player.masterPlayerId && player.positionId !== 5 ? (
               <Link
                 className="squad-sale-choice"

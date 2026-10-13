@@ -2,7 +2,7 @@ import { useState } from "react";
 import { Help } from "../../components/ui/Help";
 import "./PlayerTile.css";
 
-import { scoreTone } from "../../api/mappers";
+import { scoreTone, scoreWeekLabel } from "../../api/mappers";
 import { PersonIcon, WarningIcon } from "../shell/icons";
 import { NOT_SELECTED_PLAYER_LABEL } from "./playerTileCopy";
 
@@ -17,6 +17,7 @@ type PlayerTileProps = {
   photoFallbackUrls?: readonly (string | null | undefined)[];
   teamBadgeUrl?: string | null;
   fixturePoints?: number | null;
+  fixtureWeek?: number;
   unplayedFixture?: boolean;
   isMvp?: boolean;
   selected?: boolean;
@@ -86,6 +87,7 @@ export function PlayerTile({
   photoFallbackUrls = [],
   teamBadgeUrl = null,
   fixturePoints = null,
+  fixtureWeek,
   unplayedFixture = false,
   isMvp = false,
   selected = false,
@@ -156,7 +158,10 @@ export function PlayerTile({
     </>
   );
 
-  const help = unplayedFixture ? "Last fixture has not been played yet." : null;
+  const help = unplayedFixture
+    ? `Fixture ${fixtureWeek == null ? "" : scoreWeekLabel(fixtureWeek)}`
+      + " has not been played yet."
+    : null;
   if (interactive && onSelect) {
     return <Help content={help} trigger={<button type="button" className={className}
       aria-label={label} aria-pressed={selected} onClick={onSelect} />}>{body}</Help>;

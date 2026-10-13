@@ -7672,6 +7672,42 @@
             ],
             "title": "Bidderid"
           },
+          "bidderName": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Biddername"
+          },
+          "marketId": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Marketid"
+          },
+          "expirationDate": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Expirationdate"
+          },
           "createdAt": {
             "anyOf": [
               {
@@ -7682,6 +7718,28 @@
               }
             ],
             "title": "Createdat"
+          },
+          "updatedAt": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Updatedat"
+          },
+          "isFromMarket": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Isfrommarket"
           }
         },
         "additionalProperties": true,

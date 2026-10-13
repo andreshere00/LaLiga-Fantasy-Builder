@@ -122,7 +122,19 @@ def test_get_market_history_returns_list(rsa_pems: tuple[str, str]) -> None:
 def test_get_player_team_offers_proxies_path(rsa_pems: tuple[str, str]) -> None:
     _private_pem, public_pem = rsa_pems
     token = mint_internal_jwt(_private_pem)
-    upstream = {"offers": [{"id": "o1"}]}
+    upstream = {
+        "offers": [
+            {
+                "id": "o1",
+                "money": 2_000_000,
+                "status": "pending",
+                "bidderName": "LaLiga",
+                "marketId": "mk-1",
+                "expirationDate": "2026-10-14T12:00:00Z",
+            },
+            {"id": "o2", "money": 2_100_000, "status": "pending", "bidderId": 7},
+        ],
+    }
 
     def handler(request: httpx.Request) -> httpx.Response:
         _assert_fantasy_auth(request)
@@ -136,7 +148,45 @@ def test_get_player_team_offers_proxies_path(rsa_pems: tuple[str, str]) -> None:
         )
 
     assert response.status_code == 200
-    assert response.json()["offers"][0]["id"] == "o1"
+    assert response.json() == upstream
+    assert LALIGA_BEARER not in response.text
+
+
+@pytest.mark.parametrize("empty", [False, True])
+def test_get_player_team_offers_observed_bare_array_returns_normalized_offers(
+    rsa_pems: tuple[str, str], empty: bool
+) -> None:
+    private_pem, public_pem = rsa_pems
+    upstream = (
+        []
+        if empty
+        else [
+            {
+                "id": "offer-1",
+                "money": 2_000_000,
+                "status": "pending",
+                "createdAt": "2026-10-13T12:31:00Z",
+                "updatedAt": "2026-10-13T12:31:00Z",
+                "isFromMarket": True,
+                "expirationDate": "2026-10-14T12:31:00Z",
+            }
+        ]
+    )
+
+    def handler(request: httpx.Request) -> httpx.Response:
+        _assert_fantasy_auth(request)
+        assert request.url.path.endswith("/league/lg-1/playerTeam/pt-9/offer")
+        return httpx.Response(200, json=upstream)
+
+    with make_client(public_pem, handler) as client:
+        response = client.get(
+            f"/market/leagues/{LEAGUE_ID}/player-teams/pt-9/offers",
+            headers={"Authorization": f"Bearer {mint_internal_jwt(private_pem)}"},
+        )
+
+    assert response.status_code == 200
+    assert response.json() == {"offers": upstream}
+    assert LALIGA_BEARER not in response.text
 
 
 def test_create_bid_posts_money(rsa_pems: tuple[str, str]) -> None:
@@ -354,6 +404,36 @@ def test_cancel_bid_delete_proxies_cancel_suffix(rsa_pems: tuple[str, str]) -> N
 
 
 # ---- Error paths ---- #
+
+
+@pytest.mark.parametrize(
+    "upstream",
+    [
+        {"offers": [{"id": "o1", "bidderName": {"unexpected": True}}]},
+        {"offers": [{"id": "o1", "expirationDate": []}]},
+        {"offers": [{"id": "o1", "marketId": {"unexpected": True}}]},
+        {"offers": "unexpected"},
+        ["unexpected"],
+        [{"unexpected": True}],
+        [{"id": "o1", "isFromMarket": "unexpected"}],
+    ],
+)
+def test_get_player_team_offers_invalid_metadata_returns_502(
+    rsa_pems: tuple[str, str], upstream: object
+) -> None:
+    private_pem, public_pem = rsa_pems
+
+    def handler(_request: httpx.Request) -> httpx.Response:
+        return httpx.Response(200, json=upstream)
+
+    with make_client(public_pem, handler) as client:
+        response = client.get(
+            f"/market/leagues/{LEAGUE_ID}/player-teams/pt-9/offers",
+            headers={"Authorization": f"Bearer {mint_internal_jwt(private_pem)}"},
+        )
+
+    assert response.status_code == 502
+    assert LALIGA_BEARER not in response.text
 
 
 def test_get_market_rejects_missing_bearer(rsa_pems: tuple[str, str]) -> None:

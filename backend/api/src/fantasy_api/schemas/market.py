@@ -49,7 +49,12 @@ class MarketOffer(FantasyWireModel):
     money: int | None = None
     status: str | None = None
     bidder_id: str | int | None = None
+    bidder_name: str | None = None
+    market_id: str | int | None = None
+    expiration_date: str | None = None
     created_at: str | None = None
+    updated_at: str | None = None
+    is_from_market: bool | None = None
 
 
 class MarketHistoryEntry(FantasyWireModel):

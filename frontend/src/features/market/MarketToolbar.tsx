@@ -4,6 +4,7 @@ import moneyWarningIconUrl from "../../assets/button_warning.svg";
 import moneyIconUrl from "../../assets/button_money.svg";
 import { MarketPlayerSearch } from "./MarketPlayerSearch";
 import type { MarketFilters } from "./marketFilters";
+import type { ReactNode } from "react";
 
 type MarketBalanceProps = {
   money: number | null;
@@ -34,6 +35,7 @@ type MarketToolbarProps = {
   activeFilterCount: number;
   onClearFilters: () => void;
   suggestions?: readonly string[];
+  notifications?: ReactNode;
 };
 
 export function MarketToolbar({
@@ -44,6 +46,7 @@ export function MarketToolbar({
   activeFilterCount,
   onClearFilters,
   suggestions,
+  notifications,
 }: MarketToolbarProps) {
   return (
     <>
@@ -60,7 +63,10 @@ export function MarketToolbar({
             suggestions={suggestions}
           />
         ) : null}
-        <MarketBalance money={money} />
+        <div className="market-balance-actions">
+          {notifications}
+          <MarketBalance money={money} />
+        </div>
       </div>
     </>
   );

@@ -67,6 +67,7 @@ export async function mockApplication(page: Page) {
     else if (p.endsWith("/market-value")) body = [{ date: "2026-10-07", marketValue: 2000000 }, { date: "2026-10-12", marketValue: 2100000 }];
     else if (p.includes("/players/") && p.includes("/league/")) body = slots[0];
     else if (p === "/api/market/leagues/l1") body = marketFixture;
+    else if (/\/player-teams\/[^/]+\/offers$/.test(p)) body = { offers: [] };
     else if (p.endsWith("/teams")) body = [team];
     else if (p.includes("/lineup")) body = lineup;
     else if (p.endsWith("/money")) body = { teamMoney: 50000000 };

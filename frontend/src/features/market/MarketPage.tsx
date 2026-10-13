@@ -21,8 +21,14 @@ import { RichRow } from "../../components/ui/RichRow";
 import { MarketToolbar } from "./MarketToolbar";
 import { useMarketBoard } from "./useMarketBoard";
 import "./MarketPage.css";
+import { MarketOffers } from "./offers/MarketOffers";
+import { MarketOffersProvider } from "./offers/MarketOffersContext";
 
 function MarketList() {
+  return <MarketOffersProvider><MarketListContent /></MarketOffersProvider>;
+}
+
+function MarketListContent() {
   const { user } = useAuth();
   const board = useMarketBoard();
   const favorites = useMemo(
@@ -81,6 +87,8 @@ function MarketList() {
         activeFilterCount={filterCount}
         onClearFilters={clearFilters}
         suggestions={board.rows.map((row) => row.name)}
+        notifications={<MarketOffers cards={board.ownSquadCards}
+          squadAvailable={board.ownSquadAvailable} />}
       />
       {board.isDegraded ? (
         <p className="market-notice status-copy" role="status">

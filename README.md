@@ -27,6 +27,9 @@ data and user-confirmed writes with your linked account.
 - **Bids:** hire LaLiga listings, purchase opponent listings, modify or cancel
   your bids; UI reflects `userBids` and listing `bid` state with optimistic
   updates and refetch reconciliation.
+- **Received offers:** review, accept, or reject incoming offers from the
+  notification panel on the market screen, or from a player's Options menu on
+  market, lineup, and Players screens.
 - **Release clauses:** pay opponent buyouts when unlocked (confirmed dialog);
   tooltips explain lock countdown or premium-only coach hires.
 - **Hover detail:** FSYP breakdown, market-value history (high/low and 5d/14d
@@ -62,6 +65,8 @@ data reflect the session shown and can change over time.
 
 ![Lineup overview](docs/images/screenshots/lineup-overview.png)
 
+![Lineup screen in dark mode](docs/images/screenshots/lineup-dark-mode.png)
+
 ![Lineup builder preferences](docs/images/screenshots/lineup-builder-top.png)
 
 ![Lineup builder formation and effort options](docs/images/screenshots/lineup-builder-options.png)
@@ -71,6 +76,8 @@ data reflect the session shown and can change over time.
 ### Market and player catalog
 
 ![Market board](docs/images/screenshots/market-board.png)
+
+![Market offers notification button with pending offer count](docs/images/screenshots/market-offers.png)
 
 ![Players catalog](docs/images/screenshots/players-catalog.png)
 

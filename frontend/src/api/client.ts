@@ -41,6 +41,11 @@ export const paths = {
   playerLeague: (playerId: string, leagueId: string) =>
     `/api/players/${segment(playerId)}/league/${segment(leagueId)}`,
   market: (leagueId: string) => `/api/market/leagues/${segment(leagueId)}`,
+  playerTeamOffers: (leagueId: string, playerTeamId: string) =>
+    `/api/market/leagues/${segment(leagueId)}/player-teams/${segment(playerTeamId)}/offers`,
+  marketOfferResponse: (
+    leagueId: string, marketId: string, offerId: string, action: "accept" | "reject",
+  ) => `/api/market/leagues/${segment(leagueId)}/${segment(marketId)}/offers/${segment(offerId)}/${action}`,
   playerMarketValue: (playerId: string) =>
     `/api/players/${segment(playerId)}/market-value`,
   playerStatsDetail: (playerId: string, query?: PlayerStatsDetailQuery) => {

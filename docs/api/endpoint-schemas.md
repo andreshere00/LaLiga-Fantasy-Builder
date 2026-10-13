@@ -1891,7 +1891,12 @@ Type: `string`
 | `money` | integer | no |  |  |
 | `status` | string | no |  |  |
 | `bidderId` | string \| integer | no |  |  |
+| `bidderName` | string | no |  |  |
+| `marketId` | string \| integer | no |  |  |
+| `expirationDate` | string | no |  |  |
 | `createdAt` | string | no |  |  |
+| `updatedAt` | string | no |  |  |
+| `isFromMarket` | boolean | no |  |  |
 
 ### `MarketPreset`
 

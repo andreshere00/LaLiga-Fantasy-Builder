@@ -40,7 +40,9 @@ export function FormCell({ row }: { row: FormCellRow }) {
           const key = `${row.id}-form-w${week}`;
           return (
             <Help key={key} className="market-form-badge-stack"
-              content={week === row.pendingFormWeek ? "Last fixture has not been played yet. Excluded last match from average." : null}>
+              content={week === row.pendingFormWeek
+                ? `Fixture ${scoreWeekLabel(week)} has not been played yet. Excluded last match from average.`
+                : null}>
               <PlayerScoreBadge points={points} />
               <span className="market-form-week" aria-hidden="true">
                 {scoreWeekLabel(week)}{week === row.pendingFormWeek ? " ⚠" : ""}

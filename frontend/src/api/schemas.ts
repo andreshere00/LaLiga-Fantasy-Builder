@@ -666,7 +666,16 @@ export const marketHistorySchema = responseSchema(
   z.array(readObject({ id: nullableId.optional() })),
 );
 export const playerTeamOffersSchema = responseSchema(
-  readObject({ offers: z.array(marketBidSchema).optional(), bids: z.array(marketBidSchema).optional() }),
+  readObject({
+    offers: z.array(readObject({
+      id: nullableId.optional(), money: nullableNumber.optional(), status: nullableString.optional(),
+      bidderId: nullableId.optional(), bidderName: nullableString.optional(),
+      marketId: nullableId.optional(), expirationDate: nullableString.optional(),
+      createdAt: nullableString.optional(), updatedAt: nullableString.optional(),
+      isFromMarket: z.boolean().nullable().optional(),
+    })).optional(),
+    bids: z.array(marketBidSchema).optional(),
+  }),
   true,
 );
 export const marketMutationResultSchema = responseSchema(
