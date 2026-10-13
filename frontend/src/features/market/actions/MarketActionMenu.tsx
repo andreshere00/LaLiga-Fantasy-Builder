@@ -18,6 +18,7 @@ import {
   type MarketActionOffer,
 } from "./marketActions";
 import type { MarketActionsApi } from "./useMarketActions";
+import { useMarketOffersMenu } from "../offers/MarketOffersContext";
 
 type MarketActionMenuProps = {
   row: MarketRow;
@@ -49,12 +50,15 @@ function menuItemTooltip(
 
 export function MarketActionMenu({ row, context, actions, detailsPlayer, detailsReturnTo }: MarketActionMenuProps) {
   const trigger = useRef<HTMLButtonElement>(null);
+  const offersMenu = useMarketOffersMenu();
   const offers = resolveMarketActionOffers(row, context);
   const showPlayerDetails = detailsPlayer != null && row.positionId !== 5;
+  const showPlayerOffers = offersMenu != null && row.sellerKind === "self"
+    && row.playerTeamId != null;
   const bidded = row.myBid != null;
   const clauseTimeLocked = isClauseTimeLocked(row, context.now);
   const unlockLabel = clauseTimeLocked ? clauseUnlockCountdown(row.clauseUnlockAt, context.now) : null;
-  if (offers.length === 0 && !showPlayerDetails) return null;
+  if (offers.length === 0 && !showPlayerDetails && !showPlayerOffers) return null;
   return (
     <div className="market-actions">
       <Menu.Root>
@@ -82,6 +86,12 @@ export function MarketActionMenu({ row, context, actions, detailsPlayer, details
                 </Menu.Item>
               );
             })}
+            {showPlayerOffers ? (
+              <Menu.Item className="market-actions-item" onClick={() => {
+                trigger.current?.focus();
+                offersMenu.openForPlayer(row.playerTeamId!, row.name);
+              }}>View offers for this player</Menu.Item>
+            ) : null}
             {showPlayerDetails && detailsPlayer ? (
               <Menu.Item render={<Link to={"/players/" + encodeURIComponent(detailsPlayer.id)}
                 state={detailsReturnTo ? { returnTo: detailsReturnTo } : undefined} />}

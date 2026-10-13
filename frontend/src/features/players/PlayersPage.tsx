@@ -43,6 +43,8 @@ import {
 } from "./playersFilters";
 import { playersColumnHeadings } from "./playersColumnHeadings";
 import { PlayersListHead } from "./PlayersListHead";
+import { MarketOffers } from "../market/offers/MarketOffers";
+import { MarketOffersProvider } from "../market/offers/MarketOffersContext";
 import { readFavoritePlayerIds, toggleFavoritePlayerId } from "./favorites";
 import type { PlayerRow } from "./model/playerRow";
 import {
@@ -312,6 +314,8 @@ function PlayersList() {
       <div className="market-toolbar">
         <h1>Players</h1>
       </div>
+      <MarketOffers showTrigger={false} cards={marketBoard.ownSquadCards}
+        squadAvailable={marketBoard.ownSquadAvailable} />
       <div className="market-filter-row">
         <MarketPlayerSearch
           value={urlState.filters.query}
@@ -383,7 +387,7 @@ export function PlayersPage() {
   if (status !== "ready") return <GatePanel status={status} />;
   return (
     <section className="market-page players-page">
-      <PlayersList />
+      <MarketOffersProvider><PlayersList /></MarketOffersProvider>
     </section>
   );
 }

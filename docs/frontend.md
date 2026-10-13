@@ -207,7 +207,7 @@ Code: `frontend/src/features/market/` (`model/`, `cells/`, `actions/`,
 - **Balance** from `GET /api/teams/{team_id}/money` (league object fallback).
 - Negative balance shows a warning icon with a tooltip: balance must be positive
   before the next matchday to score.
-- **Offers** beside the balance opens a modal side panel (bottom panel on mobile),
+- **Offers** beside the market balance opens a modal side panel (bottom panel on mobile),
   following the shadcn Sheet pattern on the existing Base UI dialog. Its translucent
   backdrop leaves the market visible. The supplied notification icons adapt to the
   theme and pending count. Offers load asynchronously when the market screen appears;
@@ -215,6 +215,9 @@ Code: `frontend/src/features/market/` (`model/`, `cells/`, `actions/`,
   as a pending offer arrives, even while other offer reads are still loading, and
   returns to its normal appearance when none remain. Close, Escape and backdrop dismissal restore focus to
   the trigger; dismissal is blocked while an offer response is being sent.
+- Your own players have **View offers for this player** in their Options menus
+  on the lineup, Players, and market screens. It opens the panel filtered to that
+  player's incoming offers; the market toolbar notification count covers the full squad.
 - The panel reads `/api/market/leagues/{id}/player-teams/{playerTeamId}/offers`
   for the caller's squad, independently of market filters and listings. Reads are
   cached for 30 seconds, refreshed on opening and manually, and polled every minute

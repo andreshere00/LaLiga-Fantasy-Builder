@@ -27,6 +27,9 @@ import { TeamValueBox } from "./TeamValueBox";
 import { useLineupBoard } from "./useLineupBoard";
 import { useSquadSales } from "./useSquadSales";
 import { LineupBuilderDialog } from "./LineupBuilderDialog";
+import { MarketOffers } from "../market/offers/MarketOffers";
+import { MarketOffersProvider } from "../market/offers/MarketOffersContext";
+import { useOwnSquadOffers } from "../market/offers/useOwnSquadOffers";
 import "./LineupPage.css";
 
 const RECOMMEND_COPY = "Write your lineup preferences...";
@@ -41,8 +44,13 @@ function scorePointsLabel(weekLoading: boolean, points: number | null): string {
 }
 
 export function LineupPage() {
+  return <MarketOffersProvider><LineupPageContent /></MarketOffersProvider>;
+}
+
+function LineupPageContent() {
   const [searchParams] = useSearchParams();
   const board = useLineupBoard({ initialTeamId: searchParams.get("team") });
+  const squadOffers = useOwnSquadOffers();
   const squadSales = useSquadSales();
   const [builderOpen, setBuilderOpen] = useState(false);
   const [swapCandidate, setSwapCandidate] = useState<{
@@ -91,6 +99,8 @@ export function LineupPage() {
 
   return (
     <section className="lineup-page" data-layout-profile={LINEUP_LAYOUT_PROFILE}>
+      <MarketOffers showTrigger={false} cards={squadOffers.cards}
+        squadAvailable={squadOffers.squadAvailable} />
       {board.errorMessage ? (
         <p className="status-copy" role="alert">
           {board.errorMessage}
@@ -385,6 +395,7 @@ export function LineupPage() {
                                 photoUrl={player.photoUrl}
                                 teamBadgeUrl={player.teamBadgeUrl}
                                 fixturePoints={board.fixtureScoresVisible && !empty ? player.fixturePoints : null}
+                                fixtureWeek={board.week}
                                 unplayedFixture={board.week === board.maxWeek && player.fixturePoints === 0}
                                 isMvp={board.fixtureScoresVisible && player.isMvp === true}
                                 interactive={!empty || board.editable}
@@ -492,6 +503,7 @@ export function LineupPage() {
                           photoUrl={player.photoUrl}
                           teamBadgeUrl={player.teamBadgeUrl}
                           fixturePoints={board.fixtureScoresVisible ? player.fixturePoints : null}
+                          fixtureWeek={board.week}
                           unplayedFixture={board.week === board.maxWeek && player.fixturePoints === 0}
                           isMvp={board.fixtureScoresVisible && player.isMvp === true}
                           interactive

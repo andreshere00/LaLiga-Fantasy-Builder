@@ -19,26 +19,30 @@ import clockBlackIcon from "../../../assets/icon_clock_black.svg";
 import clockGrayIcon from "../../../assets/icon_clock_gray.svg";
 import clockRedIcon from "../../../assets/icon_clock_red.svg";
 import { ONE_HOUR_MS, remainingLabel } from "../model/valueSeries";
+import { useMarketOffersMenu } from "./MarketOffersContext";
 import { receivedOffers, type ReceivedOffer } from "./receivedOffers";
 import "./MarketOffers.css";
 
-type Props = { cards: SquadCard[]; squadAvailable: boolean };
+type Props = { cards: SquadCard[]; squadAvailable: boolean; showTrigger?: boolean };
 
 /** Remounts local confirmation state when the selected league changes. */
-export function MarketOffers({ cards, squadAvailable }: Props) {
+export function MarketOffers({ cards, squadAvailable, showTrigger = true }: Props) {
   const { selected } = useLeague();
   const id = selected ? leagueId(selected) : "";
   const teamId = selected ? callerTeamId(selected) : null;
   return <OffersPanel key={id} cards={cards} squadAvailable={squadAvailable}
-    leagueKey={id} teamId={teamId} />;
+    showTrigger={showTrigger} leagueKey={id} teamId={teamId} />;
 }
 
-function OffersPanel({ cards, squadAvailable, leagueKey, teamId }: Props & {
+function OffersPanel({ cards, squadAvailable, showTrigger, leagueKey, teamId }: Props & {
   leagueKey: string; teamId: string | null;
 }) {
   const { accessToken, markNeedsReauth } = useAuth();
   const queryClient = useQueryClient();
-  const [open, setOpen] = useState(false);
+  const offersMenu = useMarketOffersMenu();
+  const open = offersMenu?.isOpen ?? false;
+  const target = offersMenu?.target ?? null;
+  const targetPlayerTeamId = target?.playerTeamId ?? null;
   const [confirmation, setConfirmation] = useState<ReceivedOffer | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [answered, setAnswered] = useState<ReadonlySet<string>>(new Set());
@@ -76,6 +80,26 @@ function OffersPanel({ cards, squadAvailable, leagueKey, teamId }: Props & {
   const pendingCount = offers.filter((offer) => !offer.isBid && offer.status === "pending").length;
   const hasOffers = pendingCount > 0;
   const fetching = queries.some((query) => query.isFetching);
+  const targetIndex = targetPlayerTeamId
+    ? players.findIndex((player) => player.id === targetPlayerTeamId)
+    : -1;
+  const targetQuery = targetIndex >= 0 ? queries[targetIndex] : null;
+  const visibleOffers = targetPlayerTeamId
+    ? offers.filter((offer) => offer.playerTeamId === targetPlayerTeamId)
+    : offers;
+  useEffect(() => {
+    if (open && targetPlayerTeamId) {
+      void queryClient.invalidateQueries({
+        queryKey: ["market-offers", leagueKey, targetPlayerTeamId],
+      });
+    }
+  }, [leagueKey, open, queryClient, targetPlayerTeamId]);
+  const panelLoading = target
+    ? enabled && squadAvailable && targetQuery?.isPending === true
+    : loading;
+  const panelDegraded = target
+    ? !squadAvailable || targetIndex < 0 || targetQuery?.isError === true
+    : degraded;
 
   async function refresh() {
     await Promise.all([
@@ -137,7 +161,7 @@ function OffersPanel({ cards, squadAvailable, leagueKey, teamId }: Props & {
 
   function close() {
     if (sending.current) return;
-    setOpen(false);
+    offersMenu?.close();
     setConfirmation(null);
     setError(null);
   }
@@ -149,12 +173,12 @@ function OffersPanel({ cards, squadAvailable, leagueKey, teamId }: Props & {
 
   return (
     <>
-      <Button variant="outline" shape="square"
+      {showTrigger ? <Button variant="outline" shape="square"
         className={`market-offers-trigger${hasOffers ? " has-offers" : ""}`}
         aria-label={`Market offers${pendingCount ? `, ${pendingCount} pending` : ""}${degraded ? ", incomplete" : ""}`}
         aria-haspopup="dialog" aria-expanded={open} disabled={!enabled}
         onClick={() => {
-          setOpen(true);
+          offersMenu?.openAll();
           void queryClient.invalidateQueries({ queryKey: ["market-offers", leagueKey] });
         }}>
         <img className="market-offers-icon-light"
@@ -163,12 +187,15 @@ function OffersPanel({ cards, squadAvailable, leagueKey, teamId }: Props & {
           src={hasOffers ? whiteIcon : !enabled || loading ? grayIcon : whiteIcon} alt="" />
         <span className="market-offers-label">Offers</span>
         {pendingCount > 0 ? <span className="market-offers-count">{pendingCount}</span> : null}
-      </Button>
-      <Dialog open={open} title="Market offers" onClose={close} layout="sheet"
+      </Button> : null}
+      <Dialog open={open} title={target ? `${target.playerName} offers` : "Market offers"}
+        onClose={close} layout="sheet"
         className="market-offers-panel" closeOnBackdrop={!response.isPending}
         footer={<Button variant="outline" shape="square" onClick={close}
           disabled={response.isPending}>Close</Button>}>
-        <p className="market-offers-intro">Received offers for your squad in this league.</p>
+        <p className="market-offers-intro">{target
+          ? `Received offers for ${target.playerName} in this league.`
+          : "Received offers for your squad in this league."}</p>
         <Button ref={refreshButton} variant="outline" shape="square" disabled={response.isPending || fetching}
           onClick={() => {
             void queryClient.invalidateQueries({ queryKey: ["market-offers", leagueKey] });
@@ -176,21 +203,21 @@ function OffersPanel({ cards, squadAvailable, leagueKey, teamId }: Props & {
           }}>
           Refresh offers
         </Button>
-        {loading ? <p role="status">Loading offers…</p> : null}
-        {degraded ? <p role="alert">Some offers could not be loaded. The list and count may be incomplete.</p> : null}
+        {panelLoading ? <p role="status">Loading offers…</p> : null}
+        {panelDegraded ? <p role="alert">Some offers could not be loaded. The list and count may be incomplete.</p> : null}
         {error ? <p className="market-offers-error" role="alert">{error}</p> : null}
         {confirmation && !offers.some((offer) => offer.key === confirmation.key) ? <div role="alert">
           <p>This offer is no longer available.</p>
           <Button autoFocus variant="outline" shape="square" disabled={response.isPending}
             onClick={() => setConfirmation(null)}>Cancel confirmation</Button>
         </div> : null}
-        {!loading && !degraded && offers.length === 0 ? <div className="market-offers-empty">
+        {!panelLoading && !panelDegraded && visibleOffers.length === 0 ? <div className="market-offers-empty">
           <img src={grayIcon} alt="" />
-          <p>No pending offers.</p>
+          <p>{target ? `No pending offers for ${target.playerName}.` : "No pending offers."}</p>
           <p>Offers from LaLiga and other managers will appear here.</p>
         </div> : null}
         <ul className="market-offers-list">
-          {offers.map((offer) => <li key={offer.key} className="market-offer"
+          {visibleOffers.map((offer) => <li key={offer.key} className="market-offer"
             aria-busy={response.isPending && response.variables?.offer.key === offer.key || undefined}>
             <div className="market-offer-player">
               {offer.player.photoUrl ? <img src={offer.player.photoUrl} alt="" /> : null}

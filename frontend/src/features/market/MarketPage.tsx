@@ -22,8 +22,13 @@ import { MarketToolbar } from "./MarketToolbar";
 import { useMarketBoard } from "./useMarketBoard";
 import "./MarketPage.css";
 import { MarketOffers } from "./offers/MarketOffers";
+import { MarketOffersProvider } from "./offers/MarketOffersContext";
 
 function MarketList() {
+  return <MarketOffersProvider><MarketListContent /></MarketOffersProvider>;
+}
+
+function MarketListContent() {
   const { user } = useAuth();
   const board = useMarketBoard();
   const favorites = useMemo(
