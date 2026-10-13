@@ -72,6 +72,8 @@ data reflect the session shown and can change over time.
 
 ![Market board](docs/images/screenshots/market-board.png)
 
+![Market offers notification button with pending offer count](docs/images/screenshots/market-offers.png)
+
 ![Players catalog](docs/images/screenshots/players-catalog.png)
 
 ### Player profile

@@ -46,6 +46,8 @@ the [project README](../README.md#screenshots).
 
 ![Market board](images/screenshots/market-board.png)
 
+![Market offers notification button with pending offer count](images/screenshots/market-offers.png)
+
 ![Players catalog](images/screenshots/players-catalog.png)
 
 #### Player profile
