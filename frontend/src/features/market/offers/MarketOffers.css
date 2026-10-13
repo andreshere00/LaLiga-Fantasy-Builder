@@ -2,13 +2,13 @@
 .market-balance-actions .value-box-block { margin-left:0; }
 .market-offers-trigger { position:relative; min-height:44px; }
 .fb-button.market-offers-trigger.has-offers {
-  background:var(--fb-primary); border-color:var(--fb-primary); color:#FFFFFF;
+  background:var(--fb-primary); border-color:var(--fb-primary); color:var(--fb-ink-on-status);
 }
 .fb-button.market-offers-trigger.has-offers:hover {
-  background:var(--fb-primary); border-color:var(--fb-primary); color:#FFFFFF;
+  background:var(--fb-primary); border-color:var(--fb-primary); color:var(--fb-ink-on-status);
 }
 .market-offers-trigger.has-offers .market-offers-count {
-  background:#FFFFFF; color:var(--fb-primary);
+  background:#FFFFFF; color:var(--fb-ink-on-status);
 }
 .market-offers-trigger > span { display:flex; align-items:center; gap:8px; }
 .market-offers-trigger img { width:22px; height:22px; }
