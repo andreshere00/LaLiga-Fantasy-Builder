@@ -556,7 +556,7 @@ function PlayerDetailBody({ masterId }: PlayerDetailBodyProps) {
                     tickFormatter={formatChartAxisDate}
                     minTickGap={28}
                     stroke="var(--fb-muted)"
-                    tick={{ fill: "var(--fb-secondary)", fontSize: 11 }}
+                    tick={{ fill: "var(--fb-secondary)", fontSize: 12 }}
                   />
                   <YAxis
                     width={64}
@@ -565,7 +565,7 @@ function PlayerDetailBody({ masterId }: PlayerDetailBodyProps) {
                     allowDecimals={false}
                     tickFormatter={formatMarketChartTick}
                     stroke="var(--fb-muted)"
-                    tick={{ fill: "var(--fb-secondary)", fontSize: 11 }}
+                    tick={{ fill: "var(--fb-secondary)", fontSize: 12 }}
                     label={{
                       value: "Value (€)",
                       angle: -90,

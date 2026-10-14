@@ -68,7 +68,7 @@
   --lineup-font-title: clamp(17px, 1.85vw, 21px);
   --lineup-font-large: clamp(18px, 1.55vw, 22px);
   --lineup-font-medium: clamp(13px, 1vw, 16px);
-  --lineup-font-small: clamp(11px, 0.82vw, 13px);
+  --lineup-font-small: clamp(12px, 0.82vw, 14px);
 }
 
 @media (max-width: 1099px), (max-aspect-ratio: 4/3) {

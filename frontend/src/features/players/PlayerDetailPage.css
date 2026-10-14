@@ -168,7 +168,7 @@
   border: 1px solid color-mix(in srgb, var(--fb-secondary) 12%, transparent);
   background: var(--fb-surface);
   font: inherit;
-  font-size: 0.82rem;
+  font-size: 12px;
   font-weight: 600;
   cursor: pointer;
   transition:
@@ -281,7 +281,7 @@
   display: flex;
   flex-direction: column;
   gap: 0.25rem;
-  font-size: 0.78rem;
+  font-size: 12px;
   font-weight: 700;
 }
 
@@ -293,7 +293,7 @@
   border: 1px solid color-mix(in srgb, var(--fb-secondary) 12%, transparent);
   background: var(--fb-surface);
   font: inherit;
-  font-size: 0.82rem;
+  font-size: 12px;
 }
 
 .player-detail-market-custom button {
@@ -303,7 +303,7 @@
   border: 1px solid color-mix(in srgb, var(--fb-secondary) 12%, transparent);
   background: var(--fb-surface);
   font: inherit;
-  font-size: 0.82rem;
+  font-size: 12px;
   font-weight: 600;
   cursor: pointer;
 }
@@ -361,7 +361,7 @@
 }
 
 .player-detail-news-source {
-  font-size: 0.82rem;
+  font-size: 12px;
   font-weight: 500;
   color: color-mix(in srgb, var(--fb-secondary) 65%, transparent);
 }
@@ -382,7 +382,7 @@
 
 .player-detail-injury-meta {
   display: block;
-  font-size: 0.82rem;
+  font-size: 12px;
   font-weight: 500;
   color: color-mix(in srgb, var(--fb-secondary) 65%, transparent);
 }

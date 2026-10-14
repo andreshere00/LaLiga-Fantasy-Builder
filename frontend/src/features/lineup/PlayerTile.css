@@ -207,7 +207,7 @@
   overflow: hidden;
   background: var(--fb-surface);
   color: var(--fb-tertiary);
-  font-size: var(--lineup-font-small, 0.75rem);
+  font-size: var(--lineup-font-small, 12px);
   position: relative;
   z-index: 4;
   isolation: isolate;

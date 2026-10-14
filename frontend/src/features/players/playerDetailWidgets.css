@@ -43,7 +43,7 @@
 
 .player-form-card-heading time {
   color: color-mix(in srgb, var(--fb-secondary) 72%, transparent);
-  font-size: 0.82rem;
+  font-size: 12px;
 }
 
 .player-form-summary,
@@ -69,14 +69,14 @@
 .player-form-details dt {
   min-width: 0;
   overflow-wrap: anywhere;
-  font-size: 0.78rem;
+  font-size: 12px;
 }
 
 .player-form-summary dd,
 .player-form-details dd {
   flex: 0 0 auto;
   margin: 0;
-  font-size: 0.84rem;
+  font-size: 12px;
   font-weight: 700;
   font-variant-numeric: tabular-nums;
   text-align: right;
@@ -164,7 +164,7 @@
   min-height: 1.2em;
   margin: 0 0 0.5rem;
   overflow: hidden;
-  font-size: 0.82rem;
+  font-size: 12px;
   font-weight: 700;
   text-overflow: ellipsis;
   white-space: nowrap;
@@ -211,7 +211,7 @@
 .player-match-team-name {
   max-width: 100%;
   overflow: hidden;
-  font-size: 0.82rem;
+  font-size: 12px;
   font-weight: 700;
   text-overflow: ellipsis;
   white-space: nowrap;
@@ -220,7 +220,7 @@
 .player-match-date {
   display: block;
   margin-top: 0.45rem;
-  font-size: 0.85rem;
+  font-size: 12px;
 }
 
 .player-match-timer {
@@ -230,7 +230,7 @@
 
 .player-match-timer summary {
   color: var(--fb-primary);
-  font-size: 0.78rem;
+  font-size: 12px;
   font-weight: 700;
   cursor: pointer;
   list-style-position: inside;
@@ -241,7 +241,7 @@
   justify-content: center;
   gap: 0.4rem;
   margin: 0.35rem 0 0;
-  font-size: 0.76rem;
+  font-size: 12px;
 }
 
 .player-match-timer strong {
@@ -250,7 +250,7 @@
 
 .player-match-player-stats {
   margin: 0.45rem 0 0;
-  font-size: 0.75rem;
+  font-size: 12px;
   color: color-mix(in srgb, var(--fb-secondary) 78%, transparent);
 }
 
@@ -263,7 +263,7 @@
 
 .player-match-weather h4 {
   margin: 0 0 0.3rem;
-  font-size: 0.83rem;
+  font-size: 12px;
 }
 
 .player-match-weather-icon {
@@ -290,14 +290,14 @@
 .player-match-weather-condition {
   min-height: 1.1em;
   margin: 0 0 0.2rem;
-  font-size: 0.8rem;
+  font-size: 12px;
 }
 
 .player-match-weather-metrics {
   margin: 0;
   padding: 0;
   list-style: none;
-  font-size: 0.65rem;
+  font-size: 12px;
   line-height: 1.25;
 }
 
@@ -305,7 +305,7 @@
 .player-match-empty {
   margin: 0.5rem 0;
   color: color-mix(in srgb, var(--fb-secondary) 75%, transparent);
-  font-size: 0.85rem;
+  font-size: 12px;
   text-align: center;
 }
 
@@ -361,7 +361,7 @@
 .player-detail-averages-source-note {
   margin: 0.45rem 0 0;
   color: color-mix(in srgb, var(--fb-secondary) 70%, transparent);
-  font-size: 0.75rem;
+  font-size: 12px;
 }
 
 .player-detail-averages-details {
@@ -371,7 +371,7 @@
 .player-detail-averages-details summary {
   width: fit-content;
   color: var(--fb-primary);
-  font-size: 0.85rem;
+  font-size: 12px;
   font-weight: 700;
   cursor: pointer;
 }
@@ -385,7 +385,7 @@
   border-collapse: separate;
   border-spacing: 0;
   overflow: hidden;
-  font-size: 0.82rem;
+  font-size: 12px;
 }
 
 .player-detail-averages-details .player-detail-table thead th {
@@ -537,7 +537,7 @@
 .player-fantasy-matchday {
   display: block;
   color:var(--fb-muted);
-  font-size: 0.8em;
+  font-size: 12px;
 }
 
 .player-fantasy-news-list,
@@ -605,12 +605,12 @@
 
 .player-fantasy-news-source {
   color: color-mix(in srgb, var(--fb-secondary) 65%, transparent);
-  font-size: 0.76rem;
+  font-size: 12px;
 }
 
 .player-fantasy-injury-list li {
   text-align: center;
-  font-size: 0.84rem;
+  font-size: 12px;
 }
 
 .player-fantasy-injury-list p {

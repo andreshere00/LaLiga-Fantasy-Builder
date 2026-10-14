@@ -703,7 +703,7 @@
   background: var(--fb-surface);
   color: var(--fb-secondary);
   font: inherit;
-  font-size: clamp(0.65rem, 0.8vw, 0.85rem);
+  font-size: clamp(12px, 0.8vw, 14px);
   font-weight: 700;
   line-height: 1.3;
   text-align: left;
