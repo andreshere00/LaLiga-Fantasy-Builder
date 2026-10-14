@@ -4,10 +4,34 @@ import { useQuery } from "@tanstack/react-query";
 import { getJson, paths, type PlayerStatsDetailQuery } from "./client";
 import { NeedsReauthError } from "./errors";
 import { asCurrentWeek, asFiniteNumber, asRecord } from "./mappers";
+import { competitionStandingsSchema } from "./schemas";
 import { useAuth } from "../auth/AuthProvider";
 
 export const CATALOG_STALE_MS = 60 * 60 * 1000;
 export const CALENDAR_STALE_MS = 5 * 60_000;
+export const STANDINGS_CACHE_MS = 60 * 60_000;
+
+/** Keep standings fresh and retained for at least one hour of the signed-in session. */
+export function useCompetitionStandingsQuery(
+  competitionId = 1, season?: number, enabled = true,
+) {
+  const { accessToken, user } = useAuth();
+  const userId = user?.userId ?? null;
+  return useQuery({
+    queryKey: ["competition-standings", userId, competitionId, season ?? "current", "completed"],
+    enabled: enabled && accessToken != null && userId != null,
+    staleTime: STANDINGS_CACHE_MS,
+    gcTime: STANDINGS_CACHE_MS,
+    refetchOnMount: true,
+    refetchOnWindowFocus: true,
+    refetchOnReconnect: true,
+    refetchInterval: false,
+    queryFn: ({ signal }) => getJson(
+      paths.competitionStandings(competitionId, season), accessToken ?? "", { signal },
+    ),
+    select: competitionStandingsSchema.parse,
+  });
+}
 
 export function useReauthOnError(errors: readonly unknown[]): void {
   const { markNeedsReauth } = useAuth();

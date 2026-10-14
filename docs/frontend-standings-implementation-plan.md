@@ -1,6 +1,6 @@
 # Frontend plan: LALIGA standings below Players Ranking
 
-Status: planned UI; API transport/response contracts are implemented.
+Status: planned UI; API transport, response contracts, and one-hour session query are implemented.
 
 ## Placement and behavior
 
@@ -43,14 +43,21 @@ Left sidebar               Pitch             Squad
    “Players Ranking” consistently without representing these rows as real
    football clubs. Keep state in `useLineupBoard`; extraction owns presentation.
 
-2. **Add a dedicated standings query.** Implement
-   `useCompetitionStandingsQuery(competitionId, season, enabled)` in `api/queries.ts`.
-   Key by `['competition-standings', competitionId, season ?? 'current', 'completed']`;
+2. **Use the dedicated standings query.**
+   `useCompetitionStandingsQuery(competitionId, season, enabled)` is implemented in
+   `api/queries.ts`. Key by
+   `['competition-standings', userId, competitionId, season ?? 'current', 'completed']`;
    do not key by Fantasy league, manager selection, or fixture week. Enable after
    app login, pass the Query abort signal to `getJson`, and validate/select the
-   `CompetitionStandingsDto`. Use an hourly stale interval aligned with the current
-   API source; disable background/hidden-tab polling. Refresh on visible focus or
-   an explicit user action when stale. Do not show or request a live mode until
+   `CompetitionStandingsDto`. Require both `staleTime` and `gcTime` to be at least
+   `3_600_000` ms: successful data stays fresh for one hour and inactive data is
+   retained for one hour after the widget unmounts. Navigation, focus, reconnect,
+   and JWT rotation must reuse fresh data. JWTs do not appear in cache keys.
+   Disable background/hidden-tab polling. After the hour, refresh on stale
+   remount/focus/reconnect; an explicit user refresh can fetch earlier. Keep the
+   cache in memory for the signed-in application session and clear it on logout
+   or session expiration. A full page reload starts a new in-memory cache.
+   Do not show or request a live mode until
    the backend supports it. Route a standings error to this panel only, so it
    cannot block the pitch or Fantasy manager ranking.
 
@@ -109,7 +116,9 @@ API path helper and Python/auth/Zod response contract tests already cover the
 transport layer; reuse `contracts/standings-response.json` for synthetic UI data.
 
 Component/query tests cover all twenty rows and eleven fields, first load,
-provider unavailability, invalid-contract errors, stale cached data after a
+provider unavailability, invalid-contract errors, reuse after 59 minutes away,
+refresh after the one-hour freshness boundary, user isolation, logout/expiration
+cleanup, JWT rotation without cache loss, stale cached data after a
 failed refresh, auth gating, cancellation, and manager selection unchanged.
 Use browser tests for actual overflow: wheel/touch and keyboard can reach the
 last manager and the twentieth LALIGA club independently; headings remain visible;

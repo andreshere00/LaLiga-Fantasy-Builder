@@ -94,6 +94,13 @@ refresh. League metadata and Fantasy club identity use 24-hour caches. This
 keeps one instance's warm requests off the provider; each worker has its own
 cache, so quota planning must account for the number of deployed workers.
 
+The frontend standings query also uses a one-hour freshness window and retains
+unused data for one hour after the widget unmounts. This cache is scoped to the
+signed-in user, survives route navigation and JWT refresh, and is cleared on
+logout/session expiration. It is in-memory; a full page reload starts a new
+client cache. The server's shared standings cache remains independent of session
+lifetimes and still checks the caller's JWT before serving a cache hit.
+
 Malformed JSON, provider error envelopes (including HTTP 200 errors), wrong
 competition/season, incomplete tables, conflicting fixtures, and unresolved
 club ids return sanitized 502 `standings_error`. Upstream auth failures are
