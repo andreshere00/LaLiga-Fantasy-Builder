@@ -33,8 +33,12 @@ for (const theme of ["light", "dark"]) {
           await hierarchy.hover();
           await expect(page.getByRole("tooltip")).toContainText("player's role on the team");
           await expect(hierarchy.locator("dd")).toHaveCSS("text-align", "center");
-          await expect(hierarchy.locator("dd")).toHaveCSS("font-size", "16px");
+          await expect(hierarchy.locator("dd")).toHaveCSS("font-size", "20px");
           await expect(hierarchy.locator("dd")).toHaveCSS("justify-content", "center");
+          await expect(summary.locator("dt img, dt svg")).toHaveCount(0);
+          await expect(hierarchy.locator("dd img")).toBeVisible();
+          await expect(summary.locator(`.player-form-rating-icon.is-${theme}`)).toBeVisible();
+          await expect(summary.locator(`.player-form-rating-icon.is-${theme === "light" ? "dark" : "light"}`)).toBeHidden();
           const riskIcon = summary.locator(".player-fantasy-risk-icon.is-unknown");
           await expect(riskIcon).toBeVisible();
           await expect(summary.getByText("Unknown", { exact: true })).toBeVisible();

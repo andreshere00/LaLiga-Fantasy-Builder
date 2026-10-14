@@ -14,6 +14,14 @@ import injuryGreen from "../../assets/button_injury_green.svg";
 import injuryYellow from "../../assets/button_injury_yellow.svg";
 import injuryRed from "../../assets/button_injury_red.svg";
 import injuryGray from "../../assets/button_injury_gray.svg";
+import formGoodLight from "../../assets/icon_good_form_light.svg";
+import formGoodDark from "../../assets/icon_good_form_dark.svg";
+import formMidLight from "../../assets/icon_mid_form_light.svg";
+import formMidDark from "../../assets/icon_mid_form_dark.svg";
+import formPoorLight from "../../assets/icon_poor_form_light.svg";
+import formPoorDark from "../../assets/icon_poor_form_dark.svg";
+import formVeryGoodLight from "../../assets/icon_very_good_form_light.svg";
+import formVeryGoodDark from "../../assets/icon_very_good_form_dark.svg";
 import { useEffect, useRef, useState } from "react";
 import { asFiniteNumber, asRecord, text } from "../../api/mappers";
 import { formatInjuryHistoryEntry, newsItemHref } from "./playerDetailFormat";
@@ -42,6 +50,8 @@ const HIERARCHY_LABELS: Record<string, string> = {
 };
 
 const FORM_RATINGS: Record<string, { label: string; code: string }> = {
+  poor: { label: "Poor", code: "bad" },
+  average: { label: "Average", code: "mid" },
   bad: { label: "Poor", code: "bad" },
   malo: { label: "Poor", code: "bad" },
   mid: { label: "Average", code: "mid" },
@@ -50,6 +60,13 @@ const FORM_RATINGS: Record<string, { label: string; code: string }> = {
   bueno: { label: "Good", code: "good" },
   very_good: { label: "Very good", code: "very_good" },
   muy_bueno: { label: "Very good", code: "very_good" },
+};
+
+const FORM_ICONS: Record<string, { light: string; dark: string }> = {
+  bad: { light: formPoorLight, dark: formPoorDark },
+  mid: { light: formMidLight, dark: formMidDark },
+  good: { light: formGoodLight, dark: formGoodDark },
+  very_good: { light: formVeryGoodLight, dark: formVeryGoodDark },
 };
 
 const INJURY_RISK_LABELS: Record<string, string> = {
@@ -156,6 +173,7 @@ export function PlayerFantasySummary({ profile }: FantasySectionProps) {
   const formValue = asFiniteNumber(form?.value);
   const formRatingRaw = text(form?.rating);
   const formRating = formRatingRaw ? FORM_RATINGS[normalizedFantasyValue(formRatingRaw)] : null;
+  const formIcons = formRating ? FORM_ICONS[formRating.code] : null;
   const injuryRaw = text(injuryRisk?.raw) ?? text(injuryRisk?.level);
   const injuryLabel = injuryRaw
     ? INJURY_RISK_LABELS[normalizedFantasyValue(injuryRaw)] ?? injuryRaw
@@ -188,14 +206,23 @@ export function PlayerFantasySummary({ profile }: FantasySectionProps) {
       aria-label="Fantasy profile">
       <Help content="Indicates the player's role on the team. From highest to lowest importance: God, Key player, Important, Rotation, Impact substitute, Reserve."
         trigger={<div tabIndex={0} className="player-fantasy-summary-block" />}>
-        <dt><img src={hierarchyIcon} alt="" aria-hidden="true" />Hierarchy:</dt>
-        <dd>{hierarchyLabel}<Separator /></dd>
+        <dt>Hierarchy</dt>
+        <dd>
+          <span className="player-fantasy-summary-value">
+            <img src={hierarchyIcon} alt="" aria-hidden="true" />
+            <span>{hierarchyLabel}</span>
+          </span>
+          <Separator />
+        </dd>
       </Help>
       <Help content="Probability that the player starts the game from the first minute."
         trigger={<div tabIndex={0} className="player-fantasy-summary-block" />}>
-        <dt><img src={starterIcon} alt="" aria-hidden="true" />Starter likelihood:</dt>
+        <dt>Starter likelihood</dt>
         <dd>
-          {startPercent != null ? `${startPercent}%` : "Unavailable"}
+          <span className="player-fantasy-summary-value">
+            <img src={starterIcon} alt="" aria-hidden="true" />
+            <span>{startPercent != null ? `${startPercent}%` : "Unavailable"}</span>
+          </span>
           {startMatchweek != null ? (
             <span className="player-fantasy-matchday">Matchday {startMatchweek}</span>
           ) : null}
@@ -204,25 +231,31 @@ export function PlayerFantasySummary({ profile }: FantasySectionProps) {
       </Help>
       <Help content="The player's form and performance in recent matches: poor, average, good, or very good."
         trigger={<div tabIndex={0} className="player-fantasy-summary-block" />}>
-        <dt>
-          <svg className="player-fantasy-form-icon" viewBox="0 0 24 24" aria-hidden="true">
-            <path d="M3 17.5 8.2 12l3.5 3.2L20.5 6" />
-            <path d="M15.5 6h5v5" />
-          </svg>
-          Form:
-        </dt>
+        <dt>Form</dt>
         <dd>
-          {formRating ? (
-            <span className={`player-fantasy-form-rating is-${formRating.code}`}>{formRating.label}</span>
-          ) : formValue != null ? String(formValue) : "Unavailable"}
+          <span className="player-fantasy-summary-value">
+            {formIcons ? <>
+              <img className="player-form-rating-icon is-light" src={formIcons.light}
+                alt="" aria-hidden="true" />
+              <img className="player-form-rating-icon is-dark" src={formIcons.dark}
+                alt="" aria-hidden="true" />
+            </> : null}
+            <span>{formRating?.label ?? (formValue != null ? String(formValue) : "Unavailable")}</span>
+          </span>
           <Separator />
         </dd>
       </Help>
       <Help content="Indicates the player's injury risk based on recent injuries. For players new to the league, the risk may be Unknown."
         trigger={<div tabIndex={0} className="player-fantasy-summary-block" />}>
-        <dt><img className={`player-fantasy-risk-icon${riskIcon === injuryGray ? " is-unknown" : ""}`}
-          src={riskIcon} alt="" aria-hidden="true" />Injury risk:</dt>
-        <dd>{injuryLabel}<Separator /></dd>
+        <dt>Injury risk</dt>
+        <dd>
+          <span className="player-fantasy-summary-value">
+            <img className={`player-fantasy-risk-icon${riskIcon === injuryGray ? " is-unknown" : ""}`}
+              src={riskIcon} alt="" aria-hidden="true" />
+            <span>{injuryLabel}</span>
+          </span>
+          <Separator />
+        </dd>
       </Help>
     </dl>
   );
