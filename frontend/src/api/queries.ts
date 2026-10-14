@@ -46,6 +46,7 @@ export function useCurrentWeekQuery(enabled: boolean) {
     queryKey: ["calendar", "current"],
     enabled: enabled && accessToken != null,
     staleTime: CALENDAR_STALE_MS,
+    refetchInterval: 30_000,
     queryFn: ({ signal }) => getJson(paths.currentWeek(), token, { signal }),
   });
 }

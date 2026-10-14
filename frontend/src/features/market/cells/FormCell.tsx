@@ -1,4 +1,3 @@
-import { Help } from "../../../components/ui/Help";
 import { useState } from "react";
 
 import { scoreWeekLabel } from "../../../api/mappers";
@@ -15,8 +14,8 @@ export function FormCell({ row }: { row: FormCellRow }) {
   const [startIndex, setStartIndex] = useState(0);
   const view = formWindowChronological(
     formRecentWindow(
-      row.pendingFormWeek ? [0, ...row.formRecent] : row.formRecent,
-      row.pendingFormWeek ? [row.pendingFormWeek, ...row.formRecentWeeks] : row.formRecentWeeks,
+      row.formRecent,
+      row.formRecentWeeks,
       startIndex,
     ),
   );
@@ -26,7 +25,7 @@ export function FormCell({ row }: { row: FormCellRow }) {
   const ariaParts = view.weeks.map((week, index) => {
     const points = view.points[index];
     const label = scoreWeekLabel(week);
-    return `${label}: ${points}${week === row.pendingFormWeek ? " (match has not been played yet; excluded from averages)" : ""}`;
+    return `${label}: ${points}`;
   });
 
   const goPast = () => setStartIndex(view.offset + 1);
@@ -39,15 +38,12 @@ export function FormCell({ row }: { row: FormCellRow }) {
           const week = view.weeks[index];
           const key = `${row.id}-form-w${week}`;
           return (
-            <Help key={key} className="market-form-badge-stack"
-              content={week === row.pendingFormWeek
-                ? `Fixture ${scoreWeekLabel(week)} has not been played yet. Excluded last match from average.`
-                : null}>
+            <span key={key} className="market-form-badge-stack">
               <PlayerScoreBadge points={points} />
               <span className="market-form-week" aria-hidden="true">
-                {scoreWeekLabel(week)}{week === row.pendingFormWeek ? " ⚠" : ""}
+                {scoreWeekLabel(week)}
               </span>
-            </Help>
+            </span>
           );
         })}
       </span>

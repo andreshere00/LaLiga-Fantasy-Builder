@@ -253,7 +253,6 @@ export function useLineupBoard(options: UseLineupBoardOptions = {}): LineupBoard
   );
   const weekReady = currentQuery.isSuccess || currentQuery.isError;
   const lineupUsesCurrent = week === nextWeek;
-  const fixtureScoresVisible = fixtureScoresVisibleForWeek(week, current);
 
   const weekQuery = useQuery({
     queryKey: ["standing", leagueKey, week],
@@ -266,6 +265,7 @@ export function useLineupBoard(options: UseLineupBoardOptions = {}): LineupBoard
     queryKey: ["calendar", "fixtures", week],
     enabled: enabled && weekReady && lineupUsesCurrent,
     staleTime: 5 * 60 * 1000,
+    refetchInterval: lineupUsesCurrent ? 30_000 : false,
     queryFn: ({ signal }) => getJson(paths.weekFixtures(week), token, { signal }),
   });
 
@@ -357,6 +357,10 @@ export function useLineupBoard(options: UseLineupBoardOptions = {}): LineupBoard
   const currentFixtureStarted = [weekStatsQuery.data, fixturesQuery.data].some(
     (fixtures) => Array.isArray(fixtures) && fixtures.some(fixtureHasStarted),
   );
+  const scoreFixtures = Array.isArray(fixturesQuery.data) && fixturesQuery.data.length > 0
+    ? fixturesQuery.data
+    : Array.isArray(weekStatsQuery.data) ? weekStatsQuery.data : [];
+  const fixtureScoresVisible = fixtureScoresVisibleForWeek(week, current, scoreFixtures);
 
   const lineupQuery = useQuery({
     queryKey: [
@@ -415,9 +419,10 @@ export function useLineupBoard(options: UseLineupBoardOptions = {}): LineupBoard
       week,
       pointsByMasterId,
       mvpByMasterId,
-      defaultPoints: lineupUsesCurrent && weekStatsQuery.isSuccess ? 0 : undefined,
+      defaultPoints: lineupUsesCurrent && fixtureScoresVisible && weekStatsQuery.isSuccess
+        ? 0 : undefined,
     }),
-    [lineupUsesCurrent, week, pointsByMasterId, mvpByMasterId, weekStatsQuery.isSuccess],
+    [lineupUsesCurrent, fixtureScoresVisible, week, pointsByMasterId, mvpByMasterId, weekStatsQuery.isSuccess],
   );
 
   const lineupPayload =
@@ -741,9 +746,8 @@ export function useLineupBoard(options: UseLineupBoardOptions = {}): LineupBoard
       setOpponentLineupNoticeOpen(false);
       setSquadSearch("");
     },
-    scorePoints: activeTeamId
-      ? (weekPointsForTeam(weekRows, activeTeamId) ??
-        (fixtureScoresVisible ? lineupFixtureTotal(groups) : null))
+    scorePoints: activeTeamId && fixtureScoresVisible
+      ? (weekPointsForTeam(weekRows, activeTeamId) ?? lineupFixtureTotal(groups))
       : null,
     weekLoading: weekQuery.isLoading,
     formation:
