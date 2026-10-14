@@ -5419,7 +5419,7 @@
           "rules_version": {
             "type": "string",
             "title": "Rules Version",
-            "default": "2026-10-14.1"
+            "default": "2026-10-15.1"
           },
           "generated_at": {
             "type": "string",

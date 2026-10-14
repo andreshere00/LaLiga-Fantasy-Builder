@@ -171,7 +171,7 @@ class BuildResponse(FlexibleModel):
     """Replayable recommendations and truthful bounded-search status."""
 
     build_id: str
-    rules_version: str = "2026-10-14.1"
+    rules_version: str = "2026-10-15.1"
     generated_at: datetime
     league_id: str
     team_id: str

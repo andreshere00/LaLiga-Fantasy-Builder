@@ -24,18 +24,19 @@ def opponent_points(position: int) -> int:
 def fantasy_average(value: Decimal) -> int:
     """Resolve overlapping published average boundaries consistently."""
     if value > 10:
-        return 3
+        return 4
     if value > Decimal("7.5"):
-        return 2
+        return 3
     if value >= 5:
-        return 1
+        return 2
     return next(
         points
         for end, points in (
-            (Decimal("1.5"), -3),
+            (Decimal("1.5"), -5),
             (Decimal("2.5"), -2),
-            (Decimal(4), -1),
-            (Decimal(5), 0),
+            (Decimal(3), -1),
+            (Decimal(4), 0),
+            (Decimal(5), 1),
         )
         if value < end
     )
@@ -44,12 +45,20 @@ def fantasy_average(value: Decimal) -> int:
 def dazn_average(value: Decimal) -> int:
     """Score played-match DAZN averages without counting absences as zero."""
     if value > Decimal("2.5"):
-        return 5
-    if value >= 2:
         return 3
-    if value >= Decimal("1.5"):
-        return 2
-    return 1 if value >= 1 else 0
+    return next(
+        (
+            points
+            for start, points in (
+                (Decimal(2), 2),
+                (Decimal("1.5"), 1),
+                (Decimal(1), 0),
+                (Decimal("0.5"), -1),
+            )
+            if value >= start
+        ),
+        -2,
+    )
 
 
 def probability_points(value: int) -> int:
@@ -57,7 +66,7 @@ def probability_points(value: int) -> int:
     return next(
         points
         for start, points in (
-            (91, 5),
+            (91, 4),
             (81, 3),
             (61, 2),
             (51, 1),

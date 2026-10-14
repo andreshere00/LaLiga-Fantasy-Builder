@@ -3,6 +3,7 @@
 **Status:** Implemented read-only builder with conservative source gates, validated with mocked integration and browser tests.
 See [implementation guide](api/lineup-builder.md) for exact supported source contracts and remaining live-data gates.
 **Prepared, researched and implemented:** 2026-10-14.
+**Scoring criteria revised:** 2026-10-15 (`2026-10-15.1`).
 
 ## 1. Objective and source of truth
 
@@ -12,9 +13,11 @@ matchday that has not started. Connect it to the existing **Build lineup** dialo
 
 The operational specification is
 `/Users/aherencia/Documents/Obsidian Vault/Professional/LaLiga Fantasy Builder/Operational Workflow for the Automatic Lineup Builder.md`.
-The source inspected for this plan has SHA-256
-`93124e108428de918fe9a8ab815c43a6edfb3ab758ed06905e83e8dbe734ab9b`.
+The source inspected for the scoring revision has SHA-256
+`b8e8992551c48b609b8fd055db0f830e9e51f0dd5112ef67a9deba0bc3431409`.
 Re-read it before implementation and reconcile changes if the hash differs.
+The author clarified the overlapping Fantasy-average rows on 2026-10-15:
+the -5 band applies below 1.5, and -2 applies from 1.5 up to 2.5.
 Its ten sections govern behavior. The researched scoring/football defaults below
 are adopted **builder policies**, distinct from published game rules; proposed
 API shapes and module names remain implementation design choices. Evidence,
@@ -341,10 +344,14 @@ table-driven tests. They are builder policies, not official suitability-scoring
 standards. The [research record](lineup-builder-research.md) gives evidence and
 separates published football/game rules from implementation choices.
 
-- Fantasy averages: `<1.5 → -3`, `[1.5,2.5) → -2`, `[2.5,4) → -1`,
-  `[4,5) → 0`, `[5,7.5] → +1`, `(7.5,10] → +2`, `>10 → +3`.
-- DAZN averages: `<1 → 0`, `[1,1.5) → +1`, `[1.5,2) → +2`,
-  `[2,2.5] → +3`, `>2.5 → +5`.
+- Fantasy averages: `<1.5 → -5`, `[1.5,2.5) → -2`, `[2.5,3) → -1`,
+  `[3,4) → 0`, `[4,5) → +1`, `[5,7.5] → +2`, `(7.5,10] → +3`, `>10 → +4`.
+- DAZN averages: `<0.5 → -2`, `[0.5,1) → -1`, `[1,1.5) → 0`,
+  `[1.5,2) → +1`, `[2,2.5] → +2`, `>2.5 → +3`.
+- Starting probability 91–100% awards +4; other probability and role bands are
+  unchanged. Standalone probability bounds are [-5,+4], and the combined
+  role/probability/impact-substitute family has achievable bounds [-8,+8].
+  Fantasy-average bounds are [-5,+4]; DAZN-average bounds are [-2,+3].
 - Expensive-player values in millions: `[0,10) → 0`, `[10,15) → -1`,
   `[15,25) → -2`, `[25,50) → -3`, `[50,80) → -4`, `[80,120) → -5`,
   `[120,180] → -8`, `>180 → -10`. Growth exactly +1% gets no additional

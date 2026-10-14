@@ -65,19 +65,50 @@ def pool() -> list[ScoredPlayer]:
 @pytest.mark.parametrize(
     "value,expected",
     [
-        ("1.49", -3),
+        ("-1", -5),
+        ("0", -5),
+        ("1.4999", -5),
         ("1.5", -2),
+        ("2", -2),
+        ("2.4999", -2),
         ("2.5", -1),
-        ("4", 0),
-        ("5", 1),
-        ("7.5", 1),
-        ("7.5001", 2),
-        ("10", 2),
-        ("10.1", 3),
+        ("2.9999", -1),
+        ("3", 0),
+        ("3.9999", 0),
+        ("4", 1),
+        ("4.9999", 1),
+        ("5", 2),
+        ("7.5", 2),
+        ("7.5001", 3),
+        ("10", 3),
+        ("10.0001", 4),
     ],
 )
 def test_fantasy_average_boundaries_matches_policy(value: str, expected: int) -> None:
     assert policy.fantasy_average(Decimal(value)) == expected
+
+
+@pytest.mark.parametrize(
+    "average,raw,normalized", [("1", -5, "-1"), ("3", 0, "0"), ("5", 2, ".5"), ("11", 4, "1")]
+)
+def test_score_player_revised_fantasy_average_updates_section_bounds(
+    average: str, raw: int, normalized: str
+) -> None:
+    scored = score_player(
+        player(1, 1),
+        PlayerEvidence(
+            status="available", market_growth=Decimal(0), fantasy_average=Decimal(average)
+        ),
+        NOW,
+        START,
+    )
+    basic = scored.sections[0]
+    assert basic.lineup_raw == raw
+    assert basic.lineup_lower == -5
+    assert basic.lineup_upper == 4
+    assert basic.lineup_normalized == Decimal(normalized)
+    assert basic.effective_weight == 1
+    assert scored.lineup_score == Decimal(normalized)
 
 
 @pytest.mark.parametrize(
@@ -132,8 +163,10 @@ def test_expensive_penalty_boundaries_matches_policy(value: int, expected: int) 
         (60, 1),
         (61, 2),
         (81, 3),
-        (91, 5),
-        (100, 5),
+        (80, 2),
+        (90, 3),
+        (91, 4),
+        (100, 4),
     ],
 )
 def test_probability_points_boundaries_matches_policy(probability: int, expected: int) -> None:
@@ -141,10 +174,62 @@ def test_probability_points_boundaries_matches_policy(probability: int, expected
 
 
 @pytest.mark.parametrize(
-    "value,expected", [(".9", 0), ("1", 1), ("1.5", 2), ("2", 3), ("2.5", 3), ("2.6", 5)]
+    "value,expected",
+    [
+        ("-.1", -2),
+        ("0", -2),
+        (".4999", -2),
+        (".5", -1),
+        (".9999", -1),
+        ("1", 0),
+        ("1.4999", 0),
+        ("1.5", 1),
+        ("1.9999", 1),
+        ("2", 2),
+        ("2.5", 2),
+        ("2.5001", 3),
+    ],
 )
 def test_dazn_average_boundaries_matches_policy(value: str, expected: int) -> None:
     assert policy.dazn_average(Decimal(value)) == expected
+
+
+@pytest.mark.parametrize(
+    "average,raw,normalized", [("0", -2, "-1"), (".5", -1, "-.5"), ("1", 0, "0"), ("3", 3, "1")]
+)
+def test_score_player_revised_dazn_bands_preserve_negative_and_zero_scores(
+    average: str, raw: int, normalized: str
+) -> None:
+    scored = score_player(
+        player(1, 1),
+        PlayerEvidence(status="available", market_growth=Decimal(0), dazn_average=Decimal(average)),
+        NOW,
+        START,
+    )
+    recent = scored.sections[2]
+    assert recent.lineup_raw == raw
+    assert recent.lineup_lower == -2
+    assert recent.lineup_upper == 3
+    assert recent.lineup_normalized == Decimal(normalized)
+    assert recent.effective_weight == Decimal(".1") / Decimal(".35")
+    assert scored.lineup_score == recent.lineup_normalized * recent.effective_weight
+
+
+@pytest.mark.parametrize("role,raw,upper", [(None, 4, 4), ("Dios", 8, 8), ("Clave", 7, 8)])
+def test_score_player_revised_probability_maximum_uses_achievable_bounds(
+    role: str | None, raw: int, upper: int
+) -> None:
+    scored = score_player(
+        player(1, 1),
+        PlayerEvidence(status="available", market_growth=Decimal(0), probability=100, role=role),
+        NOW,
+        START,
+    )
+    indicators = scored.sections[1]
+    assert indicators.lineup_raw == raw
+    assert indicators.lineup_upper == upper
+    assert indicators.lineup_normalized == Decimal(raw) / upper
+    assert scored.lineup_score == indicators.lineup_normalized / 2
 
 
 @pytest.mark.parametrize(

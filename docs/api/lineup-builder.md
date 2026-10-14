@@ -43,6 +43,41 @@ Market growth uses exact endpoint values over five elapsed days (six daily
 samples); the existing stats route's `delta_rel` is percentage-valued and is not
 mistaken for a decimal ratio. Rest uses Decimal half-up rounding.
 
+### Scoring revision `2026-10-15.1`
+
+The updated operational criteria change Fantasy averages, DAZN averages, and
+the highest starting-probability band. The author clarified that the overlapping
+"below 2" Fantasy-average row means below 1.5. Shared endpoints retain the
+repository's convention: an exact lower boundary belongs to the higher band,
+except 7.5/10 Fantasy and 2.5 DAZN, whose upper bands explicitly require "above".
+
+| Fantasy average | Lineup rule points |
+|---|---:|
+| Below 1.5 | -5 |
+| 1.5 to below 2.5 | -2 |
+| 2.5 to below 3 | -1 |
+| 3 to below 4 | 0 |
+| 4 to below 5 | +1 |
+| 5 through 7.5 | +2 |
+| Above 7.5 through 10 | +3 |
+| Above 10 | +4 |
+
+| Played-match DAZN average | Lineup rule points |
+|---|---:|
+| Below 0.5 | -2 |
+| 0.5 to below 1 | -1 |
+| 1 to below 1.5 | 0 |
+| 1.5 to below 2 | +1 |
+| 2 through 2.5 | +2 |
+| Above 2.5 | +3 |
+
+Starting probability 91–100% now awards +4. Other probability bands, roles,
+and the Impact Substitute bonus are unchanged. Normalization uses updated
+attainable bounds: Fantasy averages [-5,+4], DAZN averages [-2,+3], standalone
+probability [-5,+4], and joint role/probability/impact bonus [-8,+8]. Section
+weights, trading rules, eligibility and financial checks remain unchanged.
+The browser reads revised scores and rule evidence directly from the response.
+
 Best-first search considers the whole positional pool, mandatory players first,
 with an admissible score bound. It returns owned XIs before external XIs, then
 lineup-score sum, projected cash, forwards, and seeded final ties. Trading scores

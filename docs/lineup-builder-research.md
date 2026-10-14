@@ -3,6 +3,9 @@
 **Researched:** 2026-10-14. Read with the
 [implementation plan](lineup-builder-implementation-plan.md).
 The original Obsidian workflow remains the operational authority.
+The scoring tables were revised on 2026-10-15; current intervals and the author's
+clarified Fantasy-average cutoff are recorded in plan section 7 and the
+[feature guide](api/lineup-builder.md#scoring-revision-2026-10-151).
 This investigation used official LaLiga/UEFA guidance, FútbolFantasy's own
 explanation of its indicators, and the repository's parser/API contracts.
 No live account transactions, new login, or paid LLM requests were performed.

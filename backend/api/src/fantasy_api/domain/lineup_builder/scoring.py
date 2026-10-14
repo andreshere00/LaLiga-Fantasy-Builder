@@ -103,8 +103,8 @@ def score_player(
             if facts.fantasy_average is not None
             else None
         ),
-        -3,
-        3,
+        -5,
+        4,
         facts.fantasy_average,
     )
     add(
@@ -150,7 +150,7 @@ def score_player(
             "starting_probability",
             policy.probability_points(probability) if probability is not None else None,
             -5,
-            5,
+            4,
             probability,
         )
         add(1, "squad_role", ROLES.get(facts.role), -3, 4, facts.role)
@@ -166,8 +166,8 @@ def score_player(
         2,
         "dazn_average",
         policy.dazn_average(facts.dazn_average) if facts.dazn_average is not None else None,
-        0,
-        5,
+        -2,
+        3,
         facts.dazn_average,
     )
     growth = facts.market_growth

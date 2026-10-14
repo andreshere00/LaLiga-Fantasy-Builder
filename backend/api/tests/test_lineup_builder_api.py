@@ -3,6 +3,7 @@
 # ---- Mocks, fixtures & helpers ---- #
 
 from datetime import UTC, datetime, timedelta
+from decimal import Decimal
 from types import SimpleNamespace
 from unittest.mock import AsyncMock
 
@@ -330,9 +331,19 @@ def test_build_lineup_authenticated_reads_only_returns_owned_xi(rsa_pems) -> Non
         )
     assert result.status_code == 200, result.text
     body = result.json()
+    assert body["rules_version"] == "2026-10-15.1"
     assert body["team_id"] == "caller"
     assert body["search_complete"] is True
     assert len(body["candidates"][0]["starters"]) == 11
+    first = body["candidates"][0]["starters"][0]
+    probability = next(
+        criterion
+        for section in first["sections"]
+        for criterion in section["criteria"]
+        if criterion["rule_id"] == "role_and_starting_probability"
+    )
+    assert Decimal(probability["lineup"]) == 7
+    assert Decimal(probability["lineup_upper"]) == 8
     assert body["candidates"][0]["trading_plan"]["squad_count"] == 11
     assert body["candidates"][0]["trading_plan"]["projected_cash"] == 1000
     assert all(request.method == "GET" for request in requests)
