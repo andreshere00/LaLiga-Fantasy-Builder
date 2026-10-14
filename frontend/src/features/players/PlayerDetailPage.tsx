@@ -369,10 +369,12 @@ function PlayerDetailBody({ masterId }: PlayerDetailBodyProps) {
                 {[text(injury.availabilityText), text(injury.diagnosis)].filter(Boolean).join(" — ")}
               </p>
             ) : null}
-            <Separator />
-            <PlayerFantasySummary profile={profileBlock} />
           </div>
         </div>
+        <section className="player-detail-fantasy-overview" aria-labelledby="player-summary-fantasy-title">
+          <h2 id="player-summary-fantasy-title">FANTASY DATA</h2>
+          <PlayerFantasySummary profile={profileBlock} />
+        </section>
         {detailReady || catalogMaster || leagueMaster ? (
           <PlayerAveragesPanel rows={averages} positionId={positionId} />
         ) : null}

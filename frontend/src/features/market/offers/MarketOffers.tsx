@@ -66,7 +66,7 @@ function OffersPanel({ cards, squadAvailable, showTrigger, leagueKey, teamId }: 
       enabled: enabled && squadAvailable,
       staleTime: 30_000,
       refetchOnWindowFocus: true,
-      refetchInterval: open ? 60_000 : false,
+      refetchInterval: 60_000,
       queryFn: ({ signal }: { signal: AbortSignal }) =>
         getJson(paths.playerTeamOffers(leagueKey, card.id), accessToken ?? "", { signal }),
     })),
@@ -78,6 +78,13 @@ function OffersPanel({ cards, squadAvailable, showTrigger, leagueKey, teamId }: 
   const offers = queries.flatMap((query, index) => receivedOffers(players[index], query.data, now))
     .filter((offer) => !answered.has(offer.key));
   const pendingCount = offers.filter((offer) => !offer.isBid && offer.status === "pending").length;
+  const pendingPlayerIds = JSON.stringify([...new Set(offers
+    .filter((offer) => !offer.isBid)
+    .map((offer) => offer.playerTeamId))].sort());
+  const reportPendingOffers = offersMenu?.reportPendingOffers;
+  useEffect(() => {
+    reportPendingOffers?.(leagueKey, JSON.parse(pendingPlayerIds) as string[]);
+  }, [leagueKey, pendingPlayerIds, reportPendingOffers]);
   const hasOffers = pendingCount > 0;
   const fetching = queries.some((query) => query.isFetching);
   const targetIndex = targetPlayerTeamId

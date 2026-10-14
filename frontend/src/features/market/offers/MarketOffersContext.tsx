@@ -3,6 +3,8 @@ import { createContext, useCallback, useContext, useMemo, useState, type ReactNo
 type MarketOffersTarget = { playerTeamId: string; playerName: string } | null;
 
 type MarketOffersContextValue = {
+  pendingOffers: { leagueKey: string; playerTeamIds: readonly string[] } | null;
+  reportPendingOffers: (leagueKey: string, playerTeamIds: readonly string[]) => void;
   isOpen: boolean;
   target: MarketOffersTarget;
   openAll: () => void;
@@ -13,6 +15,13 @@ type MarketOffersContextValue = {
 const MarketOffersContext = createContext<MarketOffersContextValue | null>(null);
 
 export function MarketOffersProvider({ children }: { children: ReactNode }) {
+  const [pendingOffers, setPendingOffers] = useState<MarketOffersContextValue["pendingOffers"]>(null);
+  const reportPendingOffers = useCallback((leagueKey: string, playerTeamIds: readonly string[]) => {
+    setPendingOffers((previous) => previous?.leagueKey === leagueKey
+      && previous.playerTeamIds.length === playerTeamIds.length
+      && previous.playerTeamIds.every((id, index) => id === playerTeamIds[index])
+      ? previous : { leagueKey, playerTeamIds });
+  }, []);
   const [view, setView] = useState<{ isOpen: boolean; target: MarketOffersTarget }>({
     isOpen: false,
     target: null,
@@ -22,8 +31,8 @@ export function MarketOffersProvider({ children }: { children: ReactNode }) {
     setView({ isOpen: true, target: { playerTeamId, playerName } });
   }, []);
   const close = useCallback(() => setView({ isOpen: false, target: null }), []);
-  const value = useMemo(() => ({ ...view, openAll, openForPlayer, close }),
-    [view, openAll, openForPlayer, close]);
+  const value = useMemo(() => ({ ...view, pendingOffers, reportPendingOffers, openAll, openForPlayer, close }),
+    [view, pendingOffers, reportPendingOffers, openAll, openForPlayer, close]);
 
   return <MarketOffersContext.Provider value={value}>{children}</MarketOffersContext.Provider>;
 }

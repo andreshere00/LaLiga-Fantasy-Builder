@@ -1,5 +1,6 @@
 import { NumberPagination } from "../../components/ui/NumberPagination";
 import { Separator } from "../../components/ui/Separator";
+import { Help } from "../../components/ui/Help";
 import fantasyNewsIcon from "../../assets/button_info.svg";
 import hierarchyGod from "../../assets/button_hierarchy_god.svg";
 import hierarchyKey from "../../assets/button_hierarchy_key.svg";
@@ -41,10 +42,10 @@ const HIERARCHY_LABELS: Record<string, string> = {
 };
 
 const FORM_RATINGS: Record<string, { label: string; code: string }> = {
-  bad: { label: "Bad", code: "bad" },
-  malo: { label: "Bad", code: "bad" },
-  mid: { label: "Mid", code: "mid" },
-  regular: { label: "Mid", code: "mid" },
+  bad: { label: "Poor", code: "bad" },
+  malo: { label: "Poor", code: "bad" },
+  mid: { label: "Average", code: "mid" },
+  regular: { label: "Average", code: "mid" },
   good: { label: "Good", code: "good" },
   bueno: { label: "Good", code: "good" },
   very_good: { label: "Very good", code: "very_good" },
@@ -52,6 +53,8 @@ const FORM_RATINGS: Record<string, { label: string; code: string }> = {
 };
 
 const INJURY_RISK_LABELS: Record<string, string> = {
+  unknown: "Unknown",
+  desconocido: "Unknown",
   bajo: "Low",
   low: "Low",
   medio: "Medium",
@@ -183,11 +186,13 @@ export function PlayerFantasySummary({ profile }: FantasySectionProps) {
   return (
     <dl className="player-fantasy-profile-list player-detail-fantasy-summary"
       aria-label="Fantasy profile">
-      <div>
+      <Help content="Indicates the player's role on the team. From highest to lowest importance: God, Key player, Important, Rotation, Impact substitute, Reserve."
+        trigger={<div tabIndex={0} className="player-fantasy-summary-block" />}>
         <dt><img src={hierarchyIcon} alt="" aria-hidden="true" />Hierarchy:</dt>
         <dd>{hierarchyLabel}<Separator /></dd>
-      </div>
-      <div>
+      </Help>
+      <Help content="Probability that the player starts the game from the first minute."
+        trigger={<div tabIndex={0} className="player-fantasy-summary-block" />}>
         <dt><img src={starterIcon} alt="" aria-hidden="true" />Starter likelihood:</dt>
         <dd>
           {startPercent != null ? `${startPercent}%` : "Unavailable"}
@@ -196,8 +201,9 @@ export function PlayerFantasySummary({ profile }: FantasySectionProps) {
           ) : null}
           <Separator />
         </dd>
-      </div>
-      <div>
+      </Help>
+      <Help content="The player's form and performance in recent matches: poor, average, good, or very good."
+        trigger={<div tabIndex={0} className="player-fantasy-summary-block" />}>
         <dt>
           <svg className="player-fantasy-form-icon" viewBox="0 0 24 24" aria-hidden="true">
             <path d="M3 17.5 8.2 12l3.5 3.2L20.5 6" />
@@ -211,11 +217,13 @@ export function PlayerFantasySummary({ profile }: FantasySectionProps) {
           ) : formValue != null ? String(formValue) : "Unavailable"}
           <Separator />
         </dd>
-      </div>
-      <div>
-        <dt><img src={riskIcon} alt="" aria-hidden="true" />Injury risk:</dt>
+      </Help>
+      <Help content="Indicates the player's injury risk based on recent injuries. For players new to the league, the risk may be Unknown."
+        trigger={<div tabIndex={0} className="player-fantasy-summary-block" />}>
+        <dt><img className={`player-fantasy-risk-icon${riskIcon === injuryGray ? " is-unknown" : ""}`}
+          src={riskIcon} alt="" aria-hidden="true" />Injury risk:</dt>
         <dd>{injuryLabel}<Separator /></dd>
-      </div>
+      </Help>
     </dl>
   );
 }

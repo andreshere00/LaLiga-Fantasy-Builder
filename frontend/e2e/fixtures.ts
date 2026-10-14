@@ -29,7 +29,7 @@ const lineup = { teamId: "t1", weekNumber: 8, formation: {
 const envelope = { playerId: "1", season: "2026-27", generatedAt: "2026-10-12T12:00:00Z" };
 const match = { competition: "laliga", competitionLabel: "LaLiga", homeTeam: "BAR", awayTeam: "RMA",
   date: "2026-10-10T16:00:00Z", matchweek: 7, homeScore: 2, awayScore: 1, result: "W" };
-const detail = {
+export const detail = {
   ...envelope, player: { id: "1", name: "Player 01", teamName: "FC Barcelona", positionId: 1 },
   fixtures: { ...envelope, fixtures: [1, 2, 3].map((i) => ({ fixture: { ...match, matchweek: i + 4 },
     minutesPlayed: 90, fantasyPointsTotal: 8, stats: { saves: { count: 3 }, daznPoints: { daznPoints: 2 } } })) },
