@@ -528,6 +528,56 @@
         }
       }
     },
+    "/internal/scrape/standings": {
+      "get": {
+        "tags": [
+          "internal"
+        ],
+        "summary": "Get Official Standings",
+        "description": "Return the current official table for API-side fixture reconciliation.",
+        "operationId": "get_official_standings_internal_scrape_standings_get",
+        "parameters": [
+          {
+            "name": "x-service-token",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Service-Token"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/OfficialStandingsSnapshot"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/internal/health": {
       "get": {
         "summary": "Internal Health",
@@ -2649,6 +2699,128 @@
         ],
         "title": "NewsItem",
         "description": "One news link from the player sheet."
+      },
+      "OfficialClub": {
+        "properties": {
+          "id": {
+            "type": "integer",
+            "exclusiveMinimum": 0.0,
+            "title": "Id"
+          },
+          "name": {
+            "type": "string",
+            "minLength": 1,
+            "title": "Name"
+          }
+        },
+        "additionalProperties": true,
+        "type": "object",
+        "required": [
+          "id",
+          "name"
+        ],
+        "title": "OfficialClub",
+        "description": "Public official club identity; ids are mapped by the API layer."
+      },
+      "OfficialStanding": {
+        "properties": {
+          "team": {
+            "$ref": "#/components/schemas/OfficialClub"
+          },
+          "position": {
+            "type": "integer",
+            "maximum": 20.0,
+            "minimum": 1.0,
+            "title": "Position"
+          },
+          "points": {
+            "type": "integer",
+            "title": "Points"
+          },
+          "played": {
+            "type": "integer",
+            "minimum": 0.0,
+            "title": "Played"
+          },
+          "won": {
+            "type": "integer",
+            "minimum": 0.0,
+            "title": "Won"
+          },
+          "drawn": {
+            "type": "integer",
+            "minimum": 0.0,
+            "title": "Drawn"
+          },
+          "lost": {
+            "type": "integer",
+            "minimum": 0.0,
+            "title": "Lost"
+          },
+          "goals_for": {
+            "type": "integer",
+            "minimum": 0.0,
+            "title": "Goals For"
+          },
+          "goals_against": {
+            "type": "integer",
+            "minimum": 0.0,
+            "title": "Goals Against"
+          },
+          "goal_difference": {
+            "type": "integer",
+            "title": "Goal Difference"
+          }
+        },
+        "additionalProperties": true,
+        "type": "object",
+        "required": [
+          "team",
+          "position",
+          "points",
+          "played",
+          "won",
+          "drawn",
+          "lost",
+          "goals_for",
+          "goals_against",
+          "goal_difference"
+        ],
+        "title": "OfficialStanding",
+        "description": "One overall classification row, never a home/away-only row."
+      },
+      "OfficialStandingsSnapshot": {
+        "properties": {
+          "season": {
+            "type": "integer",
+            "maximum": 2100.0,
+            "minimum": 2000.0,
+            "title": "Season"
+          },
+          "rows": {
+            "items": {
+              "$ref": "#/components/schemas/OfficialStanding"
+            },
+            "type": "array",
+            "maxItems": 20,
+            "minItems": 20,
+            "title": "Rows"
+          },
+          "fetched_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Fetched At"
+          }
+        },
+        "additionalProperties": true,
+        "type": "object",
+        "required": [
+          "season",
+          "rows",
+          "fetched_at"
+        ],
+        "title": "OfficialStandingsSnapshot",
+        "description": "Validated metadata and twenty public rows; no HTML or unrelated page state."
       },
       "PageKind": {
         "type": "string",

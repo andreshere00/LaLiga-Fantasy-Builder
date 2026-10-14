@@ -5611,7 +5611,10 @@
           },
           "source": {
             "type": "string",
-            "const": "api-football",
+            "enum": [
+              "api-football",
+              "laliga-fixtures"
+            ],
             "title": "Source"
           },
           "fetchedAt": {

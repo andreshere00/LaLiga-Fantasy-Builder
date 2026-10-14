@@ -38,7 +38,7 @@ Set `AUTH_JWKS_URL` and `AUTH_INTERNAL_BASE_URL` when not using Compose.
 | `GET`/`PUT` | `/teams...` | [teams](../../docs/api/teams/README.md) |
 | `GET` | `/players...` | [players](../../docs/api/players/README.md). Catalog and market value are public; league and stats routes use JWT |
 | `GET` | `/calendar/...` | Matchday, fixtures, stats. JWT required; Fantasy read is public |
-| `GET` | `/competitions/{id}/standings` | [Real LALIGA clubs](../../docs/api/standings/README.md); JWT, API-Sports key, `mode=completed` |
+| `GET` | `/competitions/{id}/standings` | [Real LALIGA clubs](../../docs/api/standings/README.md); JWT, public fixtures + official scraper, `mode=completed` |
 | `GET`/`POST`/… | `/market/...` | [market](../../docs/api/market/README.md) |
 | `GET`/`POST`/`PUT` | `/buyout/...` | [buyout](../../docs/api/buyout/README.md) |
 
@@ -72,11 +72,14 @@ uv run fantasy-buyout --league-id 123 --player-team-id pt-9 --json
 Signed-in analysis from auth: `uv run fantasy-browser-session leagues-analysis`.
 `fantasy-market` and `fantasy-buyout` are read-only.
 
-Set `API_FOOTBALL_KEY` on this API service for real-club standings. Provider
-tables update hourly; live mode is unavailable and returns 503. Both
-`fantasy-standings` and auth's `standings-analysis` default to completed mode,
-need only app login, and remain read-only. See the feature guide for optional
-verified club-id overrides, source freshness, and snapshot consistency errors.
+Real-club standings default to `STANDINGS_SOURCE=laliga-fixtures`: public Fantasy
+calendar scores provide completed totals and last-five form; the private official
+LaLiga scraper verifies completeness and supplies ranking and adjusted points.
+Configure `SCRAPING_BASE_URL` and `SCRAPING_SERVICE_TOKEN`. For native development,
+use `http://127.0.0.1:8002`; Compose uses `http://scraping:8002`.
+Snapshots are cached for an hour. Live mode is unavailable (503). Both standings
+CLIs require only app login and remain read-only. The optional `api-football`
+source still requires a key with current-season access. See the feature guide.
 
 ## Tests
 

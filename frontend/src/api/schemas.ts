@@ -115,7 +115,7 @@ const clubStandingSchema = readObject({
 export const competitionStandingsSchema = responseSchema(readObject({
   competition: readObject({ id: z.number().int().positive(), name: z.string().min(1) }),
   season: z.number().int().min(2000).max(2100), mode: z.enum(["live", "completed"]),
-  rows: z.array(clubStandingSchema).length(20), source: z.literal("api-football"),
+  rows: z.array(clubStandingSchema).length(20), source: z.enum(["api-football", "laliga-fixtures"]),
   fetchedAt: z.string().datetime({ offset: true }), sourceUpdatedAt: z.string().datetime({ offset: true }).nullable(),
   generatedAt: z.string().datetime({ offset: true }), cached: z.boolean(), isProvisional: z.boolean(),
   liveAvailable: z.literal(false).default(false),

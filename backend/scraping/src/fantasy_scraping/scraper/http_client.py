@@ -2,6 +2,7 @@
 
 import asyncio
 import random
+from collections.abc import Callable
 from dataclasses import dataclass
 from urllib.parse import urljoin
 
@@ -62,7 +63,7 @@ class HttpResponse:
 
 
 class ScrapingHttpClient:
-    """Shared cookieless async client for FutbolFantasy."""
+    """Cookieless async client with a fixed site allowlist and robots policy."""
 
     def __init__(
         self,
@@ -71,6 +72,8 @@ class ScrapingHttpClient:
         transport: httpx.AsyncBaseTransport | None = None,
         clock: Clock | None = None,
         rng: random.Random | None = None,
+        url_guard: Callable[[str], str] = assert_allowed_url,
+        robots_url: str = ROBOTS_URL,
     ) -> None:
         """Build the client and its guards.
 
@@ -79,10 +82,15 @@ class ScrapingHttpClient:
             transport: Optional transport, used by tests.
             clock: Optional time source.
             rng: Optional random source for jitter and backoff.
+            url_guard: Site-specific URL allowlist, also checked on redirects.
+            robots_url: Fixed robots policy URL for the allowed site.
         """
         self._settings: ScraperSettings = settings
         self._clock: Clock = clock or SystemClock()
         self._rng: random.Random = rng or random.Random()
+        self._url_guard = url_guard
+        self._robots_url = robots_url
+        self._last_request_at: float | None = None
         timeout = httpx.Timeout(
             settings.timeout_ms / 1000, connect=min(5.0, settings.timeout_ms / 1000), pool=5.0
         )
@@ -100,7 +108,7 @@ class ScrapingHttpClient:
         self._global: asyncio.Semaphore = asyncio.Semaphore(settings.global_concurrency)
         self._host: asyncio.Semaphore = asyncio.Semaphore(settings.host_concurrency)
         self._robots: RobotsPolicy = RobotsPolicy(
-            self._fetch_robots, settings.effective_user_agent, self._clock
+            self._fetch_robots, settings.effective_user_agent, self._clock, robots_url=robots_url
         )
 
     @property
@@ -132,7 +140,7 @@ class ScrapingHttpClient:
             UnexpectedContentError: Wrong content type, empty or oversize body.
             CircuitOpenError: The host circuit is open.
         """
-        assert_allowed_url(url)
+        self._url_guard(url)
         await self._robots.ensure_allowed(url)
         return await self._guarded(url, accept, max_bytes or self._settings.max_body_bytes, False)
 
@@ -142,7 +150,9 @@ class ScrapingHttpClient:
 
     async def _fetch_robots(self) -> tuple[int, str]:
         """Fetch robots.txt, tolerating 4xx answers."""
-        response = await self._guarded(ROBOTS_URL, frozenset({"text/plain"}), 512 * 1024, True)
+        response = await self._guarded(
+            self._robots_url, frozenset({"text/plain"}), 512 * 1024, True
+        )
         return response.status, response.text
 
     async def _guarded(
@@ -156,7 +166,7 @@ class ScrapingHttpClient:
             except COUNTED_FAILURES as exc:
                 self._breaker.record_failure(immediate=isinstance(exc, UpstreamBlockedError))
                 raise
-            except (PlayerNotFoundError, UnexpectedContentError):
+            except PlayerNotFoundError, UnexpectedContentError:
                 self._breaker.record_success()
                 raise
         self._breaker.record_success()
@@ -205,7 +215,13 @@ class ScrapingHttpClient:
         """Follow redirects manually, re-validating every hop, and read a capped body."""
         current = url
         for _ in range(self._settings.max_redirects + 1):
-            assert_allowed_url(current)
+            self._url_guard(current)
+            if self._last_request_at is not None:
+                delay = self._last_request_at + self._robots.crawl_delay_seconds
+                remaining = delay - self._clock.monotonic()
+                if remaining > 0:
+                    await self._clock.sleep(remaining)
+            self._last_request_at = self._clock.monotonic()
             async with self._http.stream("GET", current) as streamed:
                 self._http.cookies.clear()
                 location = streamed.headers.get("location")

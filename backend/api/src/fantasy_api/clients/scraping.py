@@ -13,7 +13,7 @@ from fantasy_api.domain.errors import UpstreamError
 
 logger = logging.getLogger(__name__)
 
-_ALLOWED_PATHS = frozenset({"/internal/players/futbolfantasy"})
+_ALLOWED_PATHS = frozenset({"/internal/players/futbolfantasy", "/internal/scrape/standings"})
 
 
 class ScrapingClient:
@@ -43,7 +43,9 @@ class ScrapingClient:
         """Close the shared HTTP client."""
         await self._http.aclose()
 
-    async def get_json(self, path: str, params: Mapping[str, str]) -> Any:
+    async def get_json(
+        self, path: str, params: Mapping[str, str], *, timeout_seconds: float | None = None
+    ) -> Any:
         """GET a fixed internal path and return JSON."""
         if not self.enabled:
             raise UpstreamError(
@@ -59,7 +61,14 @@ class ScrapingClient:
             "X-Service-Token": self._token.get_secret_value(),
         }
         try:
-            response = await self._http.get(url, params=params, headers=headers)
+            response = await self._http.get(
+                url,
+                params=params,
+                headers=headers,
+                timeout=(
+                    timeout_seconds if timeout_seconds is not None else httpx.USE_CLIENT_DEFAULT
+                ),
+            )
         except httpx.TimeoutException as exc:
             logger.warning("scraping timeout on %s: %s", path, type(exc).__name__)
             raise UpstreamError(

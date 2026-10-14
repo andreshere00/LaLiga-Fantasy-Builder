@@ -20,6 +20,7 @@ from fantasy_api.domain.users import AppUser, extract_app_user_from_claims
 from fantasy_api.domain.venues import VenueDirectory
 from fantasy_api.repositories.buyout import BuyoutRepository
 from fantasy_api.repositories.calendar import CalendarRepository
+from fantasy_api.repositories.fixture_standings import FixtureStandingsRepository
 from fantasy_api.repositories.leagues import LeaguesRepository
 from fantasy_api.repositories.market import MarketRepository
 from fantasy_api.repositories.player_stats import PlayerStatsRepository
@@ -29,6 +30,7 @@ from fantasy_api.repositories.teams import TeamsRepository
 from fantasy_api.security.internal_jwt import InternalJwtValidator
 from fantasy_api.services.buyout import BuyoutService
 from fantasy_api.services.calendar import CalendarService
+from fantasy_api.services.fixture_standings import FixtureStandingsService
 from fantasy_api.services.leagues import LeaguesService
 from fantasy_api.services.market import MarketService
 from fantasy_api.services.player_resolver import PlayerResolver
@@ -82,7 +84,7 @@ class AppContainer:
     weather_client: OpenWeatherClient
     player_stats_service: PlayerStatsService
     football_client: FootballClient
-    standings_service: StandingsService
+    standings_service: StandingsService | FixtureStandingsService
 
     async def aclose(self) -> None:
         """Close process-lifetime HTTP clients."""
@@ -236,12 +238,20 @@ def build_container(
         timeout_seconds=cfg.standings_timeout_seconds,
         transport=football_transport,
     )
-    standings = StandingsService(
-        StandingsRepository(football, fantasy, league_id=cfg.standings_provider_league_id),
-        competition_id=cfg.laliga_competition_id,
-        ttl_seconds=cfg.standings_ttl_seconds,
-        club_ids=cfg.standings_club_ids,
-    )
+    standings: StandingsService | FixtureStandingsService
+    if cfg.standings_source == "laliga-fixtures":
+        standings = FixtureStandingsService(
+            FixtureStandingsRepository(fantasy, scraper, competition_id=cfg.laliga_competition_id),
+            competition_id=cfg.laliga_competition_id,
+            ttl_seconds=cfg.standings_ttl_seconds,
+        )
+    else:
+        standings = StandingsService(
+            StandingsRepository(football, fantasy, league_id=cfg.standings_provider_league_id),
+            competition_id=cfg.laliga_competition_id,
+            ttl_seconds=cfg.standings_ttl_seconds,
+            club_ids=cfg.standings_club_ids,
+        )
     return AppContainer(
         settings=cfg,
         jwt_validator=validator,

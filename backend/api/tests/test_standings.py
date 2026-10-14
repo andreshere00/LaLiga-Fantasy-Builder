@@ -160,6 +160,7 @@ def make_client(
         _env_file=None,
         debug=False,
         api_football_key=key,
+        standings_source="api-football",
         standings_club_ids=overrides or {},
     )
     container = build_container(

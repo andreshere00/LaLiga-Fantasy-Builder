@@ -14,6 +14,7 @@ from pydantic import BaseModel
 
 from fantasy_scraping.api.players import router as players_router
 from fantasy_scraping.api.schemas import ErrorResponse
+from fantasy_scraping.api.standings import router as standings_router
 from fantasy_scraping.config import Settings, get_settings
 from fantasy_scraping.parser.errors import ParserError
 from fantasy_scraping.scraper.cache import MemoryCache
@@ -24,6 +25,10 @@ from fantasy_scraping.scraper.routes import health_router
 from fantasy_scraping.scraper.routes import router as scrape_router
 from fantasy_scraping.scraper.service import ScraperService
 from fantasy_scraping.scraper.settings import get_scraper_settings
+from fantasy_scraping.services.standings import (
+    OfficialStandingsScraper,
+    build_official_standings_scraper,
+)
 
 
 def build_service() -> tuple[ScraperService, ScrapingHttpClient]:
@@ -47,12 +52,17 @@ class HealthResponse(BaseModel):
     status: str
 
 
-def create_app(settings: Settings | None = None, service: ScraperService | None = None) -> FastAPI:
+def create_app(
+    settings: Settings | None = None,
+    service: ScraperService | None = None,
+    standings_service: OfficialStandingsScraper | None = None,
+) -> FastAPI:
     """Build the scraping process.
 
     Args:
         settings: Optional settings. When omitted, values come from the environment.
         service: Optional scraper service, used by tests. Built lazily when omitted.
+        standings_service: Optional official standings scraper for tests.
 
     Returns:
         The FastAPI application.
@@ -67,6 +77,17 @@ def create_app(settings: Settings | None = None, service: ScraperService | None 
     holder: dict[str, ScrapingHttpClient | ScraperService] = {}
     if service is not None:
         holder["service"] = service
+    official_service = standings_service
+    official_client: ScrapingHttpClient | None = None
+
+    def get_standings_service() -> OfficialStandingsScraper:
+        """Lazily create the separate official-page scraper."""
+        nonlocal official_service, official_client
+        if official_service is None:
+            official_service, official_client = build_official_standings_scraper(
+                get_scraper_settings()
+            )
+        return official_service
 
     def get_service() -> ScraperService:
         """Create the scraper on first use so health probes need no scraper settings."""
@@ -80,6 +101,8 @@ def create_app(settings: Settings | None = None, service: ScraperService | None 
         yield
         if client := holder.get("client"):
             await client.aclose()  # type: ignore[union-attr]
+        if official_client is not None:
+            await official_client.aclose()
 
     serve_docs = cfg.debug or cfg.expose_docs
     app = FastAPI(
@@ -92,8 +115,10 @@ def create_app(settings: Settings | None = None, service: ScraperService | None 
     )
     app.state.settings = cfg
     app.state.get_service = get_service
+    app.state.get_standings_service = get_standings_service
     app.include_router(scrape_router)
     app.include_router(players_router)
+    app.include_router(standings_router)
     app.include_router(health_router)
 
     @app.exception_handler(ParserError)

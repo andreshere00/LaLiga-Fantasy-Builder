@@ -208,7 +208,9 @@ Code: `frontend/src/features/lineup/`.
   are labeled separately. Provider failures offer retry inside the widget,
   preserve any previous table, and do not block the lineup. See the
   [standings implementation record](frontend-standings-implementation-plan.md).
-  A `standings_plan_unavailable` response explains that the data provider does
+  The default `laliga-fixtures` source computes scores and form from completed
+  public fixtures and verifies the table against the private official scraper.
+  The optional API-Football source's `standings_plan_unavailable` response explains that the provider does
   not cover this season; the server's configured provider key needs season
   access before retry can succeed.
 - Loads leagues, remembers selection, and supports `/?team={teamId}` to open

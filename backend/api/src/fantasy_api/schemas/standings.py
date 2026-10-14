@@ -95,7 +95,7 @@ class CompetitionStandings(FantasyWireModel):
     season: StrictInt = Field(ge=2000, le=2100)
     mode: Literal["live", "completed"]
     rows: list[ClubStanding] = Field(min_length=20, max_length=20)
-    source: Literal["api-football"]
+    source: Literal["api-football", "laliga-fixtures"]
     fetched_at: AwareDatetime
     source_updated_at: AwareDatetime | None
     generated_at: AwareDatetime

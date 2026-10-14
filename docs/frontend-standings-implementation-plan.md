@@ -2,6 +2,9 @@
 
 Status: implemented. Updated: 2026-10-14.
 This document records the implemented design and verification requirements.
+The default source is now `laliga-fixtures`: computed completed-match totals and
+form, reconciled with official positions and adjusted points. The frontend
+accepts this source and the optional original `api-football` source.
 
 ## Placement and behavior
 
