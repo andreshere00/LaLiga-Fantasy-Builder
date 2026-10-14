@@ -91,6 +91,7 @@ class ScrapingHttpClient:
         self._url_guard = url_guard
         self._robots_url = robots_url
         self._last_request_at: float | None = None
+        self._request_start_lock = asyncio.Lock()
         timeout = httpx.Timeout(
             settings.timeout_ms / 1000, connect=min(5.0, settings.timeout_ms / 1000), pool=5.0
         )
@@ -216,12 +217,13 @@ class ScrapingHttpClient:
         current = url
         for _ in range(self._settings.max_redirects + 1):
             self._url_guard(current)
-            if self._last_request_at is not None:
-                delay = self._last_request_at + self._robots.crawl_delay_seconds
-                remaining = delay - self._clock.monotonic()
-                if remaining > 0:
-                    await self._clock.sleep(remaining)
-            self._last_request_at = self._clock.monotonic()
+            async with self._request_start_lock:
+                if self._last_request_at is not None:
+                    delay = self._last_request_at + self._robots.crawl_delay_seconds
+                    remaining = delay - self._clock.monotonic()
+                    if remaining > 0:
+                        await self._clock.sleep(remaining)
+                self._last_request_at = self._clock.monotonic()
             async with self._http.stream("GET", current) as streamed:
                 self._http.cookies.clear()
                 location = streamed.headers.get("location")
