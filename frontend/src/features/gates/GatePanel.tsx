@@ -53,7 +53,7 @@ export function GatePanel({ status }: { status: Exclude<AuthStatus, "ready"> }) 
       <h1>{copy.title}</h1>
       <p>{copy.body}</p>
       {copy.action === "login" ? (
-        <Button type="button" onClick={login}>
+        <Button type="button" shape="square" onClick={login}>
           Log in
         </Button>
       ) : null}
