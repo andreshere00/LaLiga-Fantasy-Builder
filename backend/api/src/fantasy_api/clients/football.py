@@ -93,6 +93,17 @@ class FootballClient:
                 )
             try:
                 body = response.json()
+                errors = body.get("errors") if isinstance(body, dict) else None
+                if (
+                    isinstance(errors, dict)
+                    and isinstance(errors.get("plan"), str)
+                    and errors["plan"].strip()
+                ):
+                    raise UpstreamError(
+                        "standings provider plan does not cover the requested data",
+                        status_code=503,
+                        category="standings_plan_unavailable",
+                    )
                 batch, count = _parse_page(body, page)
                 if total_pages is not None and count != total_pages:
                     raise ValueError("page count changed during fetch")

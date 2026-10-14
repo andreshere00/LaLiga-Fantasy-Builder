@@ -17,6 +17,8 @@ control switches the whole document, including portaled overlays and charts.
 Light is the default; an explicit preference is saved under `lfb-theme`.
 The app uses Base UI for dialogs, selection, menus, tooltips, collapsibles and
 toasts, with local CSS and native buttons/fields where appropriate.
+The lineup sidebar uses local shadcn Base UI Card, ScrollArea, Table, and Badge
+components, adapted to these same tokens and plain CSS.
 
 Automated browser checks use fictional deterministic data and fallback
 portraits. The product captures below show the local account as it appeared at
@@ -35,6 +37,15 @@ the [project README](../README.md#screenshots).
 #### Lineup
 
 ![Lineup overview](images/screenshots/lineup-overview.png)
+
+The following standings captures use deterministic fictional managers and the
+shared synthetic twenty-club contract fixture:
+
+![Scrollable ranking and LALIGA standings, light theme](images/screenshots/lineup-standings-light.png)
+
+![Scrollable ranking and LALIGA standings, dark theme](images/screenshots/lineup-standings-dark.png)
+
+[Mobile standings layout](images/screenshots/lineup-standings-mobile.png)
 
 ![Lineup builder preferences](images/screenshots/lineup-builder-top.png)
 
@@ -76,7 +87,7 @@ and the API.
 
 | Path | Screen | Primary API domains |
 |------|--------|---------------------|
-| `/` | Lineup — formation, pitch, squad, standings | [Leagues](api/leagues/README.md), [Teams](api/teams/README.md), [Calendar](api/calendar/README.md) |
+| `/` | Lineup — formation, pitch, squad, manager ranking, club standings | [Leagues](api/leagues/README.md), [Teams](api/teams/README.md), [Calendar](api/calendar/README.md), [Standings](api/standings/README.md) |
 | `/market` | Market — listings, bids, release clauses | [Market](api/market/README.md), [Buyout](api/buyout/README.md), [Players](api/players/README.md), [Calendar](api/calendar/README.md) |
 | `/players` | Players — catalog, filters, top-10 leaderboard | [Players](api/players/README.md), [Calendar](api/calendar/README.md) |
 | `/players/:playerId` | Player detail — stats aggregate | [Players](api/players/README.md) (`GET /players/{id}/stats/detail`) |
@@ -180,6 +191,26 @@ Save, which must be used explicitly to replace the saved lineup.
 
 Code: `frontend/src/features/lineup/`.
 
+- **Players Ranking** lists the user and opponents; **LALIGA standings** sits
+  immediately below it. Each card has an independently scrollable body and a
+  fixed heading. On desktop they share the existing sidebar height; on stacked
+  screens they follow the pitch and squad with bounded scrollable bodies.
+- The LALIGA table includes rank, team, points, wins, draws, losses, goals for,
+  goals against, signed goal difference, and last-five results. Horizontal
+  scrolling reveals every statistic while rank/team and the table header stay
+  visible. W/D/L badges run oldest to newest; click, tap, or activate a badge by
+  keyboard for opponent, venue, score, and date. Club rows do not select managers.
+- The widget uses `GET /api/competitions/1/standings?mode=completed` through
+  `useCompetitionStandingsQuery`, resolving the current season on the server.
+  Its in-memory query is fresh for one hour and retained for one hour after
+  unmounting; logout/session expiration clears the user-scoped cache. The
+  refresh button can request data earlier. Source-update and retrieval times
+  are labeled separately. Provider failures offer retry inside the widget,
+  preserve any previous table, and do not block the lineup. See the
+  [standings implementation record](frontend-standings-implementation-plan.md).
+  A `standings_plan_unavailable` response explains that the data provider does
+  not cover this season; the server's configured provider key needs season
+  access before retry can succeed.
 - Loads leagues, remembers selection, and supports `/?team={teamId}` to open
   another manager’s squad when that team appears in standings.
 - Matchweek navigation, formation picker, lineup save (`PUT /teams/{team_id}/lineup`,

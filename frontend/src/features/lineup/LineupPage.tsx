@@ -3,11 +3,12 @@ import { Select } from "@base-ui/react/select";
 import { Fragment, useEffect, useState, type CSSProperties } from "react";
 import { useSearchParams } from "react-router-dom";
 
-import { pointsLabel, possessiveName, scoreWeekLabel } from "../../api/mappers";
-import { PersonIcon, SearchIcon, WarningIcon } from "../shell/icons";
-import { ProfilePhoto } from "../shell/ProfilePhoto";
+import { possessiveName, scoreWeekLabel } from "../../api/mappers";
+import { SearchIcon, WarningIcon } from "../shell/icons";
 import builderIconUrl from "../../assets/icon_builder_white.svg";
 import saveCartridgeIconUrl from "../../assets/save_cartridge.svg";
+import { PlayersRankingPanel } from "./PlayersRankingPanel";
+import { LaligaStandingsPanel } from "./LaligaStandingsPanel";
 import { PitchMarkings } from "./PitchMarkings";
 import { PulseRing } from "../../components/ui/PulseRing";
 import originalFixtureBlackUrl from "../../assets/button_original_fixture_black.svg";
@@ -237,36 +238,9 @@ function LineupPageContent() {
         </div>
 
         <div className="column column-players">
-          <div className="side-panel side-panel-modal players-panel">
-            <h2 className="column-title">Players</h2>
-            <div className="side-panel-body">
-              <div className="side-panel-scroll">
-                <ul className="rank-list">
-                {board.ranking.map((row) => {
-                  const active = row.teamId === board.selectedTeamId;
-                  return (
-                    <li key={row.teamId}>
-                      <button
-                        type="button"
-                        className={active ? "rank-row active" : "rank-row"}
-                        aria-current={active ? "true" : undefined}
-                        disabled={!row.selectable}
-                        onClick={() => board.selectTeam(row.teamId)}
-                      >
-                        <span className="rank-position">{row.position ?? "—"}</span>
-                        <span className="avatar" aria-hidden="true">
-                          <ProfilePhoto url={row.avatarUrl} fallback={<PersonIcon />} />
-                        </span>
-                        <span className="rank-name">{row.name}</span>
-                        <span className="rank-points">{pointsLabel(row.points)}</span>
-                      </button>
-                    </li>
-                  );
-                })}
-                </ul>
-              </div>
-            </div>
-          </div>
+          <PlayersRankingPanel ranking={board.ranking} selectedTeamId={board.selectedTeamId}
+            onSelectTeam={board.selectTeam} />
+          <LaligaStandingsPanel />
         </div>
 
         <div className="column column-pitch">

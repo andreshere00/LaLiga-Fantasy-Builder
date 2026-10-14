@@ -67,6 +67,13 @@ data reflect the session shown and can change over time.
 
 ![Lineup screen in dark mode](docs/images/screenshots/lineup-dark-mode.png)
 
+Updated ranking and LALIGA standings widgets (synthetic demonstration data):
+
+![Scrollable ranking and LALIGA standings](docs/images/screenshots/lineup-standings-light.png)
+
+[Dark theme](docs/images/screenshots/lineup-standings-dark.png) ·
+[Mobile layout](docs/images/screenshots/lineup-standings-mobile.png)
+
 ![Lineup builder preferences](docs/images/screenshots/lineup-builder-top.png)
 
 ![Lineup builder formation and effort options](docs/images/screenshots/lineup-builder-options.png)
