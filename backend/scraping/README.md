@@ -1,7 +1,7 @@
 # Scraping
 
 Private Compose service (port **8002**): FutbolFantasy **scraper** + offline
-**parser** in one image. The API uses `SCRAPING_BASE_URL` and
+**parser** and official LaLiga classification reader in one image. The API uses `SCRAPING_BASE_URL` and
 `SCRAPING_SERVICE_TOKEN`; the browser never talks to this process.
 
 ## Run locally
@@ -97,3 +97,17 @@ Committed: `openapi.json`. Interactive docs when `SCRAPING_EXPOSE_DOCS=true`.
 
 Docs: [docs/scraping/README.md](../../docs/scraping/README.md),
 [parser.md](../../docs/scraping/parser.md).
+
+## Official classification
+
+`GET /internal/scrape/standings` requires `X-Service-Token` and returns only
+validated overall rows, season and fetch time. It parses the server-rendered
+`__NEXT_DATA__` script from `https://www.laliga.com/laliga-easports/clasificacion`.
+The localized English route is disallowed by the published robots policy; the
+canonical route is allowed. The dedicated client allows only this path and
+`/robots.txt`, checks redirects, honors robots and its crawl delay, and limits
+requests to one every 30 seconds. It keeps the normal content caps, challenge
+checks and retry limits. Successful tables have a one-hour single-flight cache.
+Malformed or incomplete tables fail explicitly. The API computes fixture totals
+and form and verifies them against this classification; the scraper provides
+positions and adjusted points. No player scraper allowlist is widened.

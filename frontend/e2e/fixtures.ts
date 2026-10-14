@@ -1,4 +1,10 @@
+import { readFileSync } from "node:fs";
+import { resolve } from "node:path";
 import type { Page } from "@playwright/test";
+
+export const standingsFixture = JSON.parse(
+  readFileSync(resolve(process.cwd(), "../contracts/standings-response.json"), "utf8"),
+).payload;
 
 /** Fictional, deterministic account data; browser checks never reach a real backend. */
 export const catalog = Array.from({ length: 65 }, (_, index) => ({
@@ -45,7 +51,7 @@ const detail = {
 
 export const marketFixture = { userBids: [], marketPlayers: catalog.slice(13, 20).map((player) => ({ id: "m" + player.id, leagueId: "l1", playerMaster: player, expirationDate: "2026-10-13T15:00:00Z" })) };
 
-export async function mockApplication(page: Page) {
+export async function mockApplication(page: Page, { rankingSize = 2 } = {}) {
   await page.clock.setFixedTime(new Date("2026-10-12T12:00:00Z"));
   await page.route("**/*", async (route) => {
     const request = route.request();
@@ -59,7 +65,13 @@ export async function mockApplication(page: Page) {
     else if (!p.startsWith("/api/")) return route.continue();
     else if (request.method() !== "GET") body = p.includes("lineup") ? lineup : { ok: true, id: "fixture-bid" };
     else if (p === "/api/leagues") body = [league];
-    else if (p.includes("/standing")) body = [{ position: 1, points: 85, team }, { position: 2, points: 80, team: { id: "t2", manager: { managerName: "Another Manager" } } }];
+    else if (/^\/api\/competitions\/\d+\/standings$/.test(p)) body = standingsFixture;
+    else if (p.includes("/standing")) body = Array.from({ length: rankingSize }, (_, index) => ({
+      position: index + 1, points: 85 - index * 5,
+      team: index === 0 ? team : { id: "t" + (index + 1), manager: {
+        managerName: index === 1 ? "Another Manager" : "Manager " + (index + 1),
+      } },
+    }));
     else if (p === "/api/calendar/current") body = { weekNumber: 8, previousWeek: 7, nextWeek: 9, isLive: true, openingWeekDate: "2026-10-10T00:00:00Z" };
     else if (p.startsWith("/api/calendar/")) body = [];
     else if (p === "/api/players") body = catalog;

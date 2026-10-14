@@ -1,5 +1,6 @@
 """ScrapingHttpClient status paths, retries and content checks."""
 
+import asyncio
 import gzip
 
 import httpx
@@ -17,6 +18,7 @@ from fantasy_scraping.scraper.errors import (
     UpstreamTimeoutError,
     UpstreamUnavailableError,
 )
+from fantasy_scraping.scraper.http_client import ScrapingHttpClient
 from fantasy_scraping.scraper.settings import ScraperSettings
 from fantasy_scraping.scraper.urls import PLAYERS_SITEMAP_URL
 
@@ -252,6 +254,42 @@ async def test_get_disallowed_host_raises_before_any_request(make_client) -> Non
 
 
 # ---- Edge cases ---- #
+
+
+async def test_get_concurrent_calls_with_crawl_delay_spaces_request_starts(settings) -> None:
+    class YieldingClock(FakeClock):
+        """Let concurrent sleepers share a deadline without adding their waits together."""
+
+        async def sleep(self, seconds: float) -> None:
+            """Advance to the deadline after yielding to other scheduled requests."""
+            deadline = self.now + seconds
+            self.slept.append(seconds)
+            await asyncio.sleep(0)
+            self.now = max(self.now, deadline)
+
+    clock = YieldingClock()
+    site = FakeSite()
+    site.overrides["https://www.futbolfantasy.com/robots.txt"] = httpx.Response(
+        200,
+        text="User-agent: *\nAllow: /\nCrawl-delay: 30\n",
+        headers={"content-type": "text/plain"},
+    )
+    starts: list[float] = []
+
+    def handler(request: httpx.Request) -> httpx.Response:
+        if request.url.path != "/robots.txt":
+            starts.append(clock.monotonic())
+        return site(request)
+
+    client = ScrapingHttpClient(settings, transport=httpx.MockTransport(handler), clock=clock)
+    try:
+        await client._robots.ensure_allowed(URL)
+
+        await asyncio.gather(*(client.get(URL) for _ in range(3)))
+
+        assert starts == [30.0, 60.0, 90.0]
+    finally:
+        await client.aclose()
 
 
 async def test_get_concurrent_calls_never_exceed_host_concurrency(make_client, settings) -> None:

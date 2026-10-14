@@ -160,6 +160,7 @@ def make_client(
         _env_file=None,
         debug=False,
         api_football_key=key,
+        standings_source="api-football",
         standings_club_ids=overrides or {},
     )
     container = build_container(
@@ -304,6 +305,38 @@ def test_get_standings_bad_provider_success_or_timeout_returns_sanitized_error(
     # Assert
     assert response.status_code in {502, 503}
     assert KEY not in response.text and "<html>" not in response.text
+
+
+def test_get_standings_provider_plan_denial_returns_sanitized_503() -> None:
+    # Arrange
+    body = envelope([])
+    body["errors"] = {"plan": f"Free plan cannot access this season: {KEY}"}
+    client, calls = make_client(failure=httpx.Response(200, json=body))
+    # Act
+    with client:
+        response = client.get(URL, headers=AUTH)
+    # Assert
+    assert response.status_code == 503
+    assert response.json() == {
+        "error": "standings_plan_unavailable",
+        "detail": "standings provider plan does not cover the requested data",
+    }
+    assert calls == ["/leagues"]
+    assert KEY not in response.text and "Free plan" not in response.text
+
+
+@pytest.mark.parametrize("plan", [None, "", [], {}, 123])
+def test_get_standings_malformed_plan_error_returns_sanitized_502(plan: object) -> None:
+    # Arrange
+    body = envelope([])
+    body["errors"] = {"plan": plan}
+    client, _ = make_client(failure=httpx.Response(200, json=body))
+    # Act
+    with client:
+        response = client.get(URL, headers=AUTH)
+    # Assert
+    assert response.status_code == 502
+    assert response.json()["error"] == "standings_error"
 
 
 @pytest.mark.parametrize(

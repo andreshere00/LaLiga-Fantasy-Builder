@@ -9,6 +9,16 @@ const payload = JSON.parse(readFileSync(resolve(process.cwd(), "../contracts/sta
 
 // ---- Happy path ---- //
 describe("real-club standings transport", () => {
+  it("schema_fixture_source_accepts_computed_standings", () => {
+    const computed = structuredClone(payload);
+    computed.source = "laliga-fixtures";
+    for (const row of computed.rows) {
+      for (const match of row.last5Matches) {
+        match.matchId = match.matchId.replace("api-football:", "laliga-fantasy:");
+      }
+    }
+    expect(competitionStandingsSchema.parse(computed)).toEqual(computed);
+  });
   it("getJson_completed_standings_returns_shared_python_contract", async () => {
     const fetchFn = vi.fn().mockResolvedValue(new Response(JSON.stringify(payload), { status: 200 }));
     const response = await getJson(paths.competitionStandings(1, 2026), "app-jwt", { fetchFn });

@@ -1,0 +1,46 @@
+.lineup-page .column-players {
+  display: grid;
+  grid-template-rows: repeat(2, minmax(0, 1fr));
+  gap: var(--lineup-side-panel-section-gap);
+  height: var(--lineup-side-panel-height);
+}
+
+.ranking-panel .rank-list { margin: 0; padding: 0 10px 0 0; list-style: none; }
+.ranking-panel .rank-row { width: 100%; box-sizing: border-box; grid-template-columns: 24px 24px minmax(0, 1fr) auto; }
+.ranking-panel .rank-name { overflow-wrap: anywhere; }
+.ranking-panel .rank-row:focus-visible { outline-offset: -3px; }
+.standings-heading { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+.standings-heading .fb-card-title { font-size: 18px; }
+.standings-heading .fb-button { flex-shrink: 0; font-size: 24px; padding: 0 8px; }
+.standings-meta, .standings-legend { margin: 4px 0 0; color: var(--fb-muted); font-size: 11px; line-height: 1.5; }
+.standings-legend { font-size: 12px; }
+.standings-error { margin: 8px 0 0; padding-left: 8px; border-left: 3px solid var(--fb-failure); font-size: 12px; line-height: 1.5; }
+.standings-placeholder { display: grid; place-items: center; min-height: 100%; padding: 16px; box-sizing: border-box; font-size: 14px; }
+
+.standings-table.fb-table { min-width: 680px; table-layout: fixed; border-collapse: separate; border-spacing: 0; font-variant-numeric: tabular-nums; }
+.standings-table.fb-table :is(th, td) { box-sizing: border-box; padding: 4px 6px; height: 44px; border-bottom: 1px solid var(--fb-line); text-align: right; white-space: nowrap; }
+.standings-table.fb-table thead th { position: sticky; top: 0; z-index: 2; height: 34px; background: var(--fb-subtle); }
+.standings-table :is(th, td):first-child { position: sticky; left: 0; z-index: 1; width: 32px; text-align: center; background: var(--fb-surface); }
+.standings-table :is(th, td):nth-child(2) { position: sticky; left: 32px; z-index: 1; width: 140px; text-align: left; background: var(--fb-surface); border-right: 1px solid var(--fb-line); }
+.standings-table thead th:nth-child(-n+2) { z-index: 3; background: var(--fb-subtle); }
+.standings-table :is(th, td):last-child { width: 180px; text-align: left; padding-right: 16px; }
+.standings-table .standing-club { font-size: 12px; font-weight: 500; text-transform: none; letter-spacing: normal; }
+.standing-club-content { display: flex; align-items: center; gap: 6px; }
+.standing-club-badge { width: 24px; height: 24px; flex: 0 0 24px; }
+.standing-club-badge .fb-avatar-image { object-fit: contain; }
+.standing-club-name { white-space: normal; overflow-wrap: anywhere; }
+.standing-points { font-weight: 700; }
+.standing-form { display: flex; align-items: center; gap: 2px; }
+.standing-form-trigger { display: inline-flex; justify-content: center; align-items: center; width: 30px; height: 32px; padding: 0; border: 0; background: transparent; cursor: pointer; }
+.standing-form-trigger:hover .fb-badge { outline: 1px solid var(--fb-secondary); }
+.standing-match-positioner { z-index: 60; }
+.standing-match-popup { max-width: min(300px, calc(100vw - 32px)); padding: 16px; background: var(--fb-surface); color: var(--fb-secondary); border: 1px solid var(--fb-control-line); font-size: 14px; line-height: 1.5; }
+.standing-match-popup h2 { margin: 0 0 8px; font-size: 18px; }
+.standing-match-popup p { margin: 0 0 8px; }
+.standing-match-popup time { display: block; color: var(--fb-muted); font-size: 12px; }
+.standings-sr-only { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; border: 0; }
+
+@media (max-width: 1099px), (max-aspect-ratio: 4/3) {
+  .lineup-page .column-players { height: auto; grid-template-rows: none; }
+  .column-players > .fb-card .fb-card-content { flex: none; height: clamp(240px, 45vh, 420px); }
+}

@@ -233,6 +233,7 @@ def _club_results(
     clubs: dict[int, StandingClub],
     league_id: int,
     season: int,
+    match_namespace: str = "api-football",
 ) -> dict[int, list[StandingMatch]]:
     """Build finalized league histories, rejecting duplicate and foreign fixtures."""
     results: dict[int, list[StandingMatch]] = {club_id: [] for club_id in clubs}
@@ -264,7 +265,7 @@ def _club_results(
             )
             results[club_id].append(
                 StandingMatch(
-                    match_id=f"api-football:{match.fixture.id}",
+                    match_id=f"{match_namespace}:{match.fixture.id}",
                     kickoff_at=match.fixture.date.astimezone(UTC),
                     opponent=clubs[opponent_id],
                     venue=venue,
@@ -307,12 +308,12 @@ def _normalize_row(
         team=clubs[row.team.id],
         position=row.rank,
         points=row.points,
-        played=record.played,
-        won=record.win,
-        drawn=record.draw,
-        lost=record.lose,
-        goals_for=record.goals.scored,
-        goals_against=record.goals.against,
-        goal_difference=row.goals_diff,
+        played=actual[0],
+        won=actual[1],
+        drawn=actual[2],
+        lost=actual[3],
+        goals_for=actual[4],
+        goals_against=actual[5],
+        goal_difference=actual[4] - actual[5],
         last5_matches=history[-5:],
     )

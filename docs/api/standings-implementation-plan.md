@@ -1,5 +1,11 @@
 # Real LALIGA club standings: investigation and implementation plan
 
+Current implementation: `laliga-fixtures` is the default source. All 38 public
+Fantasy calendar weeks supply completed scores. A private, robots-compliant
+canonical LaLiga table scraper verifies totals and supplies official positions
+and points. The original API-Football adapter below remains optional. See the
+[feature contract](standings/README.md) for current configuration and limitations.
+
 Status: completed-match API, CLI, and consumer contracts implemented on 2026-10-14.
 Real provider verification requires a configured key; live support remains pending.
 See the [feature contract](standings/README.md) and
