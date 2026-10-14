@@ -7,6 +7,7 @@ import type { BuilderCandidate } from "../../api/schemas";
 import { getJson, paths } from "../../api/client";
 import {
   leagueId,
+  mediaFromPlayerMaster,
   playersOf,
   squadCards,
   text,
@@ -14,14 +15,18 @@ import {
   type SquadCard,
 } from "../../api/mappers";
 import { useAuth } from "../../auth/AuthProvider";
+import { usePlayersCatalogQuery } from "../../api/queries";
+import { Button } from "../../components/ui/Button";
 import { Dialog } from "../../components/ui/Dialog";
 import { Input } from "../../components/ui/Fields";
 import { DEFAULT_LINEUPS_AVAILABLE } from "./formations";
 import { useLeague } from "./LeagueProvider";
-import { marketItems, masterIdOf, masterOf } from "../market/model/listing";
+import { catalogById, marketItems, masterIdOf, masterOf } from "../market/model/listing";
+import { ProfilePhoto } from "../shell/ProfilePhoto";
+import { PersonIcon } from "../shell/icons";
 import "./LineupBuilderDialog.css";
 
-type PlayerOption = { id: string; name: string; source: string };
+type PlayerOption = { id: string; name: string; source: string; photoUrl: string | null };
 
 type Props = {
   open: boolean;
@@ -40,7 +45,7 @@ const EMPTY_SQUAD: SquadCard[] = [];
 
 function squadOptions(players: readonly SquadCard[], source: string): PlayerOption[] {
   return players.flatMap((player) => player.masterPlayerId ? [{
-    id: player.masterPlayerId, name: player.name, source,
+    id: player.masterPlayerId, name: player.name, source, photoUrl: player.photoUrl,
   }] : []);
 }
 
@@ -64,7 +69,7 @@ function BuilderDialogSession({
   const [allowBuying, setAllowBuying] = useState(false);
   const [allowSelling, setAllowSelling] = useState(false);
   const [includeTradingPurchases, setIncludeTradingPurchases] = useState(false);
-  const builder = useLineupBuilder(id, token);
+  const catalogQuery = usePlayersCatalogQuery(open);
   const [scope, setScope] = useState<string[]>(["owned"]);
   const [lineupPreferences, setLineupPreferences] = useState<string[]>([]);
   const ownTeamId = selected?.team?.id == null ? "" : String(selected.team.id);
@@ -106,13 +111,30 @@ function BuilderDialogSession({
     const master = masterOf(item);
     const playerId = masterIdOf(item);
     const name = text(master?.nickname) ?? text(master?.name);
-    return playerId && name ? [{ id: playerId, name, source: "Market" }] : [];
+    return playerId && name ? [{ id: playerId, name, source: "Market", photoUrl: mediaFromPlayerMaster(master).photoUrl }] : [];
   }), [marketQuery?.data]);
   const allOptions = useMemo(() => [
     ...squadOptions(ownSquad, "My squad"),
     ...opponentOptions,
     ...marketOptions,
   ], [marketOptions, opponentOptions, ownSquad]);
+  const playersById = useMemo(() => {
+    const players = new Map<string, { name: string; photoUrl: string | null }>();
+    for (const [playerId, player] of catalogById(catalogQuery.data)) {
+      players.set(playerId, {
+        name: text(player.nickname) ?? text(player.name) ?? "Unknown player",
+        photoUrl: mediaFromPlayerMaster(player).photoUrl,
+      });
+    }
+    for (const option of allOptions) {
+      players.set(option.id, {
+        name: option.name,
+        photoUrl: option.photoUrl ?? players.get(option.id)?.photoUrl ?? null,
+      });
+    }
+    return players;
+  }, [allOptions, catalogQuery.data]);
+  const builder = useLineupBuilder(id, token, playersById);
   const scopeOptions = [...new Map(allOptions.filter((option) =>
     scope.includes(option.source === "My squad" ? "owned" : option.source === "Market" ? "market" : "opponents"))
     .map((option) => [option.id, option])).values()];
@@ -148,16 +170,23 @@ function BuilderDialogSession({
   }
 
   return (
-    <Dialog open={open} onClose={onClose} title="Build lineup"
+    <Dialog open={open} onClose={onClose} title="Build lineup" className="lineup-builder-dialog"
       footer={<>
-        {builder.pending ? <button type="button" onClick={builder.cancel}>Cancel build</button> : <button type="button"
+        {builder.pending && <div className="lineup-builder-loading" role="status">
+          <span className="lineup-builder-bounce" aria-hidden="true">
+            <span className="lineup-builder-bounce-ball" />
+            <span className="lineup-builder-bounce-ground" />
+          </span>
+          <span>Building recommendations…</span>
+        </div>}
+        {builder.pending ? <Button shape="square" variant="destructive" onClick={builder.cancel}>Cancel build</Button> : <Button shape="square"
           disabled={scope.length === 0 || !token} onClick={() => void builder.build({
             sources: scope as ("owned" | "market" | "opponents")[], mandatoryPlayerIds: chosen,
             formations: lineupPreferences, allowBuying, allowSelling,
             includeTradingPurchases: allowBuying && includeTradingPurchases,
             maxCandidates: 5, explanation: { enabled: explain },
-          })}>Build</button>}
-        <button type="button" onClick={onClose}>Close</button>
+          })}>Build</Button>}
+        <Button shape="square" variant="secondary" className="lineup-builder-close" onClick={onClose}>Close</Button>
       </>}>
       <div className="lineup-builder">
         <section className="lineup-builder-section" aria-labelledby="builder-scope-title">
@@ -194,6 +223,9 @@ function BuilderDialogSession({
             {filteredOptions.map((option) => (
               <button type="button" key={option.id}
                 disabled={chosen.length >= 11} onClick={() => setChosen((current) => [...current, option.id])}>
+                <ProfilePhoto key={playersById.get(option.id)?.photoUrl ?? "no-photo"}
+                  className="lineup-builder-option-photo" url={playersById.get(option.id)?.photoUrl ?? null}
+                  fallback={<PersonIcon />} />
                 <span>{option.name}</span><small>{option.source}</small>
               </button>
             ))}
@@ -209,8 +241,11 @@ function BuilderDialogSession({
           <div className="lineup-builder-chosen">
             <h4>Mandatory players</h4>
             {chosenOptions.length ? chosenOptions.map((option) => (
-              <button type="button" key={option.id} onClick={() => setChosen((current) =>
+              <button type="button" key={option.id} aria-label={`Remove ${option.name}`} onClick={() => setChosen((current) =>
                 current.filter((id) => id !== option.id))}>
+                <ProfilePhoto key={playersById.get(option.id)?.photoUrl ?? "no-photo"}
+                  className="lineup-builder-option-photo" url={playersById.get(option.id)?.photoUrl ?? null}
+                  fallback={<PersonIcon />} />
                 {option.name} <span aria-hidden="true">×</span>
               </button>
             )) : <p className="fb-helper">No players chosen.</p>}
@@ -230,9 +265,8 @@ function BuilderDialogSession({
           </div>
         </section>
 
-        {builder.pending && <p role="status">Building recommendations…</p>}
         {builder.error && <p role="alert">{builder.error}{builder.result ? " Previous results are stale." : ""}</p>}
-        {builder.result && <LineupBuilderResults result={builder.result}
+        {builder.result && <LineupBuilderResults result={builder.result} playersById={playersById}
           canApply={(candidate) => !builder.pending && !builder.error && canApply(candidate, builder.result!.target.week)}
           onApply={(candidate) => {
             if (dirty) setReplacement(candidate);
@@ -240,11 +274,11 @@ function BuilderDialogSession({
           }} />}
         {replacement && builder.result && <section aria-label="Replace draft confirmation">
           <p>Replace your unsaved lineup draft?</p>
-          <button type="button" onClick={() => {
+          <Button shape="square" onClick={() => {
             if (canApply(replacement, builder.result!.target.week)) onApply(replacement, builder.result!.target.week);
             setReplacement(null);
-          }}>Replace draft</button>
-          <button type="button" onClick={() => setReplacement(null)}>Keep my draft</button>
+          }}>Replace draft</Button>
+          <Button shape="square" variant="secondary" onClick={() => setReplacement(null)}>Keep my draft</Button>
         </section>}
       </div>
     </Dialog>

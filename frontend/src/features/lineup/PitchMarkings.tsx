@@ -1,7 +1,8 @@
 /** Theme-native field markings retain the original pitch coordinate system. */
-export function PitchMarkings() {
+export function PitchMarkings({ stretch = false }: { stretch?: boolean }) {
   return (
-    <svg className="pitch-markings" viewBox="0 0 611 761" aria-hidden="true">
+    <svg className="pitch-markings" viewBox="0 0 611 761" aria-hidden="true"
+      preserveAspectRatio={stretch ? "none" : undefined}>
       <g fill="none" stroke="var(--fb-line)" strokeWidth="1.5">
         <rect x="0.75" y="0.75" width="609.5" height="759.5" />
         <path d="M0.75 380.5h609.5" />

@@ -26,11 +26,27 @@ const SOURCE_MESSAGES: Record<string, string> = {
 };
 
 /** One mounted league/session scope; cancellation discards every late response. */
-export function useLineupBuilder(leagueId: string, token: string) {
+export function useLineupBuilder(
+  leagueId: string, token: string, playersById?: ReadonlyMap<string, { name: string }>,
+) {
   const current = useRef<AbortController | null>(null);
   const [pending, setPending] = useState(false);
   const [result, setResult] = useState<LineupBuildDto | null>(null);
-  const [error, setError] = useState<string | null>(null);
+  const [failure, setFailure] = useState<ApiError | "unknown" | null>(null);
+  let error: string | null = null;
+  if (failure instanceof ApiError) {
+    const details = failure.diagnostics.slice(0, 5).map((diagnostic) => {
+      const name = diagnostic.playerId
+        ? playersById?.get(diagnostic.playerId)?.name ?? "Unknown player"
+        : "Source";
+      return SOURCE_MESSAGES[diagnostic.code] ??
+        `${name}: ${diagnostic.code.replaceAll("_", " ")}`;
+    }).join("; ");
+    error = (MESSAGES[failure.code] ?? `Lineup build failed (${failure.code}).`) +
+      (details ? ` ${details}` : "");
+  } else if (failure) {
+    error = "Lineup build failed. Check your session and source availability, then retry.";
+  }
   useEffect(() => () => { current.current?.abort(); }, []);
 
   function cancel() {
@@ -44,15 +60,12 @@ export function useLineupBuilder(leagueId: string, token: string) {
     const controller = new AbortController();
     current.current = controller;
     setPending(true);
-    setError(null);
+    setFailure(null);
     try {
       const response = await postJson(paths.lineupBuild(leagueId), token, preferences, { signal: controller.signal });
       if (!controller.signal.aborted) setResult(lineupBuildResponseSchema.parse(response));
-    } catch (failure) {
-      if (!controller.signal.aborted) setError(failure instanceof ApiError
-        ? (MESSAGES[failure.code] ?? `Lineup build failed (${failure.code}).`) +
-          (failure.diagnostics.length ? " " + failure.diagnostics.slice(0, 5).map((d) => SOURCE_MESSAGES[d.code] ?? `${d.playerId ?? "Source"}: ${d.code.replaceAll("_", " ")}`).join("; ") : "")
-        : "Lineup build failed. Check your session and source availability, then retry.");
+    } catch (caught) {
+      if (!controller.signal.aborted) setFailure(caught instanceof ApiError ? caught : "unknown");
     } finally {
       if (current.current === controller) {
         current.current = null;

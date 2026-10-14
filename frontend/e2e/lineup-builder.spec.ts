@@ -16,20 +16,50 @@ function response() {
 
 test("builder generates read-only previews and supports keyboard dismissal", async ({ page }, info) => {
   await mockApplication(page);
+  await page.route("**/api/players", (route) => route.fulfill({ json: catalog.map((player) => ({
+    ...player, photoUrl: "http://127.0.0.1:3100/fixture-player-photo.svg",
+  })) }));
+  await page.route("**/fixture-player-photo.svg", (route) => route.fulfill({
+    contentType: "image/svg+xml",
+    body: '<svg xmlns="http://www.w3.org/2000/svg" width="96" height="96"><circle cx="48" cy="30" r="18" fill="#35353d"/><path d="M12 96V78a36 36 0 0 1 72 0v18" fill="#ff4b44"/></svg>',
+  }));
   const requests: string[] = [];
   await page.route("**/api/lineup-builder/leagues/l1/build", async (route) => {
     requests.push(route.request().method());
     expect(route.request().postDataJSON().mandatory_player_ids).toEqual([]);
-    await route.fulfill({ json: response() });
+    const value = response();
+    value.candidates[0].trading_plan.retained_player_ids = catalog.slice(0, 13).map((player) => player.id);
+    value.diagnostics = [{ player_id: catalog[12].id, code: "player_unavailable" }];
+    value.candidates[0].trading_plan.steps = [{
+      action: "sell", player_id: catalog[13].id, method: "accepted_offer", estimate: 3300000,
+      settlement_at: value.target.sales_deadline, cash_after: 50000000, squad_value_after: 80000000,
+      squad_count_after: 13, debt_limit: 16000000, conditions: ["Offer must settle before kickoff"],
+    }];
+    await route.fulfill({ json: value });
   });
   await page.goto("/");
   const trigger = page.getByRole("button", { name: /build|recommend/i }).first();
   await trigger.click();
   const dialog = page.getByRole("dialog", { name: "Build lineup" });
   await expect(dialog).toBeVisible();
+  await expect(dialog.getByRole("button", { name: "Build", exact: true })).toHaveCSS("background-color", "rgb(255, 75, 68)");
   await dialog.getByRole("button", { name: "Build", exact: true }).click();
   await expect(dialog.getByRole("region", { name: "Lineup recommendations" })).toBeVisible();
   await expect(dialog.getByText("Owned starting XI", { exact: false })).toBeVisible();
+  const preview = dialog.getByLabel("Starting XI preview");
+  await preview.scrollIntoViewIfNeeded();
+  await expect(preview.locator("img")).toHaveCount(11);
+  await expect(preview.locator("img").first()).toBeVisible();
+  await expect(preview.locator("img").first()).toHaveJSProperty("naturalWidth", 96);
+  await preview.screenshot({ path: info.outputPath("lineup-builder-player-photos.png") });
+  await dialog.getByText("1 source exclusions", { exact: true }).click();
+  await expect(dialog.getByText("Player 13: player unavailable", { exact: true })).toBeVisible();
+  await dialog.getByText("Required trades and whole-squad projection", { exact: true }).click();
+  await expect(dialog.getByText(/^Retained:/)).toContainText("Player 13");
+  await expect(dialog.getByText(/^sell Player 14/)).toBeVisible();
+  const buttons = await dialog.getByRole("button").evaluateAll((elements) => elements.map((element) => getComputedStyle(element).borderRadius));
+  expect(buttons.every((radius) => radius === "0px")).toBe(true);
+  await expect(dialog.getByRole("button", { name: "Close", exact: true })).toHaveCSS("background-color", "rgb(237, 237, 239)");
   await dialog.getByRole("button", { name: "Use as draft" }).scrollIntoViewIfNeeded();
   await page.screenshot({ path: info.outputPath("lineup-builder-results.png"), fullPage: true });
   await page.keyboard.press("Escape");

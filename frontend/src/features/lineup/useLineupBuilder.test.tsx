@@ -51,3 +51,18 @@ it("should explain missing bid coverage without asking the user to resolve nonex
   expect(result.current.error).toContain("did not return a complete pending-bid list");
   expect(result.current.error).not.toContain("Resolve active bids");
 });
+
+it("should resolve diagnostic names when the player catalog arrives after a failure", async () => {
+  vi.mocked(postJson).mockRejectedValueOnce(new ApiError(503, "mandatory_player_conflict", [
+    { code: "player_unavailable", playerId: "master-42" },
+  ]));
+  const { result, rerender } = renderHook(({ players }) => useLineupBuilder("l1", "token", players), {
+    initialProps: { players: new Map<string, { name: string }>() },
+  });
+  await act(() => result.current.build(preferences));
+  expect(result.current.error).toContain("Unknown player: player unavailable");
+  expect(result.current.error).not.toContain("master-42");
+
+  rerender({ players: new Map([["master-42", { name: "Unai Simón" }]]) });
+  expect(result.current.error).toContain("Unai Simón: player unavailable");
+});
