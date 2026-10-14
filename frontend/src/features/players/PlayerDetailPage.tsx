@@ -68,6 +68,7 @@ import { PlayerAveragesPanel } from "./PlayerAveragesPanel";
 import { playerAverages } from "./playerAverages";
 import { PlayerDetailScreenLoading } from "./PlayerScreenLoading";
 import daznIcon from "../../assets/dazn.png";
+import injuryIcon from "../../assets/button_injury_red.svg";
 import "./PlayerDetailPage.css";
 
 const DateRangeDialog = lazy(() => import("./DateRangeDialog").then((module) => ({ default: module.DateRangeDialog })));
@@ -285,6 +286,8 @@ function PlayerDetailBody({ masterId }: PlayerDetailBodyProps) {
   const averages = playerAverages(profileBlock?.averages, fantasyAveragesPlayer);
 
   const injury = asRecord(profileBlock?.injury);
+  const hasActiveInjury = injury?.active === true ||
+    (injury?.active == null && text(injury?.diagnosis) != null);
   const actionContext = {
     money: marketListing.money,
     now,
@@ -366,13 +369,17 @@ function PlayerDetailBody({ masterId }: PlayerDetailBodyProps) {
             </div>
             {injury?.availabilityText || injury?.diagnosis ? (
               <p className="player-detail-availability-reason">
+                {hasActiveInjury ? (
+                  <img className="player-detail-injury-icon" src={injuryIcon}
+                    alt="Active injury" />
+                ) : null}
                 {[text(injury.availabilityText), text(injury.diagnosis)].filter(Boolean).join(" — ")}
               </p>
             ) : null}
           </div>
         </div>
         <section className="player-detail-fantasy-overview" aria-labelledby="player-summary-fantasy-title">
-          <h2 id="player-summary-fantasy-title">FANTASY DATA</h2>
+          <h2 id="player-summary-fantasy-title">NEWS & INJURIES DATA</h2>
           <PlayerFantasySummary profile={profileBlock} />
         </section>
         {detailReady || catalogMaster || leagueMaster ? (

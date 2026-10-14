@@ -1200,8 +1200,8 @@
 .board-controls-title span { font:inherit; }
 .board-controls .field-label { text-align:left; margin-bottom:8px; font-size:12px; font-weight:500; text-transform:uppercase; color:var(--fb-muted); }
 .board-controls .controls-zone { justify-content:flex-start; }
-.board-controls .controls-zone-center { flex-wrap:wrap; }
-.board-controls .controls-zone-center .recommend { flex:1 1 180px; width:auto; }
+.board-controls .controls-zone-center { flex-wrap:wrap; justify-content:center; }
+.board-controls .controls-zone-center .recommend { flex:0 1 200px; width:min(200px,100%); }
 .board-controls .control-block { align-items:stretch; }
 .score-points { background:var(--fb-subtle); color:var(--fb-secondary); }
 .pager,.formation-select select,.formation-value,.squad-picker-search { border:1px solid var(--fb-control-line); }
@@ -1269,7 +1269,7 @@
 .accent-control-shell:has(.save-lineup-button:not(:disabled):not([aria-disabled="true"])) .save-lineup-button-icon { filter:none; }
 .accent-control-shell:has(.save-lineup-button:disabled) .save-lineup-button-icon,
 .accent-control-shell:has(.save-lineup-button[aria-disabled="true"]) .save-lineup-button-icon { filter:none; opacity:1; }
-.recommend-button { align-items:center; font-size:14px; font-weight:500; }
+.recommend-button { align-items:center; font-size:16px; font-weight:500; }
 .recommend-button-icon { filter:none; }
 .accent-control-shell:has(.recommend-button) { background:var(--fb-primary); color:#fff; }
 .accent-control-shell:has(.recommend-button):hover { background:var(--fb-coral); color:#000; }

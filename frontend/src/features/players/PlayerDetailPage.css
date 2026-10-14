@@ -69,9 +69,19 @@
 }
 
 .player-detail-availability-reason {
+  display: flex;
+  align-items: center;
+  gap: 8px;
   color: var(--fb-secondary);
   max-width: 36rem;
   margin: 0;
+}
+
+.player-detail-injury-icon {
+  width: 18px;
+  height: 18px;
+  flex: 0 0 18px;
+  object-fit: contain;
 }
 
 .player-detail-header-actions {

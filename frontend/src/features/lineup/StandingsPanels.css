@@ -12,6 +12,9 @@
 .standings-heading { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
 .standings-heading .fb-card-title { font-size: 18px; }
 .standings-heading .fb-button { flex-shrink: 0; font-size: 24px; padding: 0 8px; }
+.standings-panel [data-slot="scroll-area-viewport"] { box-sizing:border-box; padding-bottom:10px; }
+.standings-panel .fb-scroll-bar { z-index:4; }
+.standings-panel .fb-scroll-corner { z-index:5; }
 .standings-meta, .standings-legend { margin: 4px 0 0; color: var(--fb-muted); font-size: 12px; line-height: 1.5; }
 .standings-legend { font-size: 12px; }
 .standings-error { margin: 8px 0 0; padding-left: 8px; border-left: 3px solid var(--fb-failure); font-size: 12px; line-height: 1.5; }

@@ -1,5 +1,4 @@
 import { NumberPagination } from "../../components/ui/NumberPagination";
-import { Separator } from "../../components/ui/Separator";
 import { Help } from "../../components/ui/Help";
 import fantasyNewsIcon from "../../assets/button_info.svg";
 import hierarchyGod from "../../assets/button_hierarchy_god.svg";
@@ -212,7 +211,6 @@ export function PlayerFantasySummary({ profile }: FantasySectionProps) {
             <img src={hierarchyIcon} alt="" aria-hidden="true" />
             <span>{hierarchyLabel}</span>
           </span>
-          <Separator />
         </dd>
       </Help>
       <Help content="Probability that the player starts the game from the first minute."
@@ -226,7 +224,6 @@ export function PlayerFantasySummary({ profile }: FantasySectionProps) {
           {startMatchweek != null ? (
             <span className="player-fantasy-matchday">Matchday {startMatchweek}</span>
           ) : null}
-          <Separator />
         </dd>
       </Help>
       <Help content="The player's form and performance in recent matches: poor, average, good, or very good."
@@ -242,7 +239,6 @@ export function PlayerFantasySummary({ profile }: FantasySectionProps) {
             </> : null}
             <span>{formRating?.label ?? (formValue != null ? String(formValue) : "Unavailable")}</span>
           </span>
-          <Separator />
         </dd>
       </Help>
       <Help content="Indicates the player's injury risk based on recent injuries. For players new to the league, the risk may be Unknown."
@@ -254,7 +250,6 @@ export function PlayerFantasySummary({ profile }: FantasySectionProps) {
               src={riskIcon} alt="" aria-hidden="true" />
             <span>{injuryLabel}</span>
           </span>
-          <Separator />
         </dd>
       </Help>
     </dl>
@@ -399,14 +394,14 @@ function PlayerInjuryHistory({ profile }: FantasySectionProps) {
 export function PlayerFantasySection({ profile }: FantasySectionProps) {
   return (
     <section className="player-detail-panel player-fantasy-section" aria-labelledby="player-fantasy-title">
-      <h2 id="player-fantasy-title">Fantasy data</h2>
+      <h2 id="player-fantasy-title">News & injuries data</h2>
       {profile ? (
         <div className="player-fantasy-grid">
           <PlayerNewsList profile={profile} />
           <PlayerInjuryHistory profile={profile} />
         </div>
       ) : (
-        <p className="player-fantasy-empty">Fantasy data is temporarily unavailable.</p>
+        <p className="player-fantasy-empty">News & injuries data is temporarily unavailable.</p>
       )}
     </section>
   );
