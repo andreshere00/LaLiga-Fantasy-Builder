@@ -207,7 +207,7 @@
   overflow: hidden;
   background: var(--fb-surface);
   color: var(--fb-tertiary);
-  font-size: var(--lineup-font-small, 0.75rem);
+  font-size: var(--lineup-font-small, 12px);
   position: relative;
   z-index: 4;
   isolation: isolate;
@@ -253,7 +253,7 @@
 .player-tile { border:1px solid var(--fb-line); background:var(--fb-subtle); }
 .player-tile.is-interactive { border:1px solid var(--fb-control-line); }
 .player-tile:is(:hover,:active) { background:var(--fb-subtle); }
-.player-name { justify-content:flex-start; text-align:left; border-top:1px solid var(--fb-line); }
-.player-name-label { text-align:left; }
+.player-name { justify-content:center; text-align:center; border-top:1px solid var(--fb-line); }
+.player-name-label { text-align:center; }
 .player-tile.is-captain .player-name { border-top:2px solid var(--fb-primary); }
 .player-score-badge:is(.is-red,.is-green,.is-yellow,.is-blue) { color:var(--fb-ink-on-status); }

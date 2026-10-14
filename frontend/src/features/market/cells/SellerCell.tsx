@@ -31,7 +31,7 @@ function SellerName({ seller, sellerTeamId }: { seller: string; sellerTeamId: st
 }
 
 function ClauseUnlockTimer({ row, now }: { row: MarketRow; now: number }) {
-  if (row.sellerKind !== "opponent") return null;
+  if (row.sellerKind === "laliga") return null;
   const full = clauseUnlockCountdown(row.clauseUnlockAt, now);
   if (full == null) return null;
   const tooltip = clauseUnlockTooltip(full);

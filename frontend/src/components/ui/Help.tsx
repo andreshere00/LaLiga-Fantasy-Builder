@@ -13,7 +13,7 @@ export function Help({ children, content, className = "", trigger }: {
           {children}
         </Tooltip.Trigger>
         <Tooltip.Portal><Tooltip.Positioner sideOffset={8} className="fb-help-positioner">
-          <Tooltip.Popup className="fb-tooltip">{content}</Tooltip.Popup>
+          <Tooltip.Popup className="fb-tooltip" role="tooltip">{content}</Tooltip.Popup>
         </Tooltip.Positioner></Tooltip.Portal>
       </Tooltip.Root>
     </Tooltip.Provider>

@@ -1,5 +1,5 @@
 import { test, expect, type Page } from "@playwright/test";
-import { mockApplication } from "./fixtures";
+import { catalog, marketFixture, mockApplication } from "./fixtures";
 
 /** These synthetic offers exercise the contract; no real account or writes are used. */
 async function mockOffers(page: Page) {
@@ -59,11 +59,23 @@ for (const theme of ["light", "dark"]) {
     const offersGate = new Promise<void>((resolve) => { releaseOffers = resolve; });
     const otherGate = new Promise<void>((resolve) => { releaseOtherReads = resolve; });
     let hasOffer = true;
+    let hasUnconfirmedOffer = false;
+    await page.route("**/api/market/leagues/l1", (route) => route.fulfill({ json: {
+      ...marketFixture,
+      marketPlayers: [...marketFixture.marketPlayers, {
+        id: "own-listing", playerMaster: catalog[12],
+        playerTeam: { playerTeamId: "s13", teamId: "t1" },
+        sellerTeam: { id: "t1", manager: { managerName: "Demo Manager" } },
+      }],
+    } }));
     await page.route("**/api/market/leagues/l1/player-teams/s13/offers", async (route) => {
       await offersGate;
-      await route.fulfill({ json: { offers: hasOffer ? [
-        { id: "league-offer", isFromMarket: true, money: 3200000, status: "pending" },
-      ] : [] } });
+      await route.fulfill({ json: { offers: [
+        ...(hasOffer ? [{ id: "league-offer", isFromMarket: true, money: 3200000,
+          status: "pending" }] : []),
+        ...(hasUnconfirmedOffer ? [{ id: "unconfirmed-offer", isFromMarket: true,
+          money: 3300000 }] : []),
+      ] } });
     });
     await page.route("**/api/market/leagues/l1/player-teams/s1/offers", async (route) => {
       await otherGate;
@@ -71,20 +83,35 @@ for (const theme of ["light", "dark"]) {
     });
     await page.goto("/market");
     await expect(page.getByRole("heading", { name: "Market", exact: true })).toBeVisible();
-    await expect(page.locator(".market-data-row")).toHaveCount(7);
+    await expect(page.locator(".market-data-row")).toHaveCount(8);
+    const playerNotification = page.getByRole("button", { name: "View offers for Player 13" });
+    await expect(playerNotification).toHaveCount(0);
     const trigger = page.locator(".market-offers-trigger");
     await expect(trigger).not.toHaveClass(/has-offers/);
     releaseOffers();
     await expect(trigger).toHaveAttribute("aria-label", "Market offers, 1 pending");
     await expect(trigger).toHaveCSS("background-color", "rgb(255, 75, 68)");
     await expect(trigger).toHaveCSS("color", "rgb(0, 0, 0)");
+    await expect(playerNotification).toBeVisible();
+    await expect(playerNotification.locator("img")).toHaveAttribute("src", /%23FF4B44/);
+    await playerNotification.hover();
+    await expect(page.getByRole("tooltip")).toHaveText("This player has offers.");
     await expect(page.getByRole("dialog")).toHaveCount(0);
     releaseOtherReads();
     await trigger.click();
     hasOffer = false;
     await page.getByRole("button", { name: "Refresh offers", exact: true }).click();
     await expect(trigger).not.toHaveClass(/has-offers/);
+    await expect(playerNotification).toHaveCount(0);
     await expect(page.getByText("No pending offers.", { exact: true })).toBeVisible();
+    hasUnconfirmedOffer = true;
+    await page.getByRole("button", { name: "Refresh offers", exact: true }).click();
+    await expect(page.locator(".market-player-offers-flag")).toHaveCount(1);
+    await expect(page.getByText("The offer's pending status could not be confirmed.")).toBeVisible();
+    await expect(page.getByRole("button", { name: /Accept offer for Player 13/ })).toBeDisabled();
+    hasUnconfirmedOffer = false;
+    await page.getByRole("button", { name: "Refresh offers", exact: true }).click();
+    await expect(page.locator(".market-player-offers-flag")).toHaveCount(0);
   });
 }
 

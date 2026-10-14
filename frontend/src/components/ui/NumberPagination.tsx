@@ -6,11 +6,12 @@ type NumberPaginationProps = {
   onPageChange: (page: number) => void;
   label?: string;
   caption?: ReactNode;
+  showArrows?: boolean;
 };
 
-/** Sliding numeric window; every page remains reachable without arrow controls. */
+/** Sliding numeric window with optional previous and next controls. */
 export function NumberPagination({
-  page, totalPages, onPageChange, label = "Player result pages", caption,
+  page, totalPages, onPageChange, label = "Player result pages", caption, showArrows = false,
 }: NumberPaginationProps) {
   const buttons = useRef<Array<HTMLButtonElement | null>>([]);
   if (!Number.isInteger(totalPages) || totalPages <= 1) return null;
@@ -20,6 +21,9 @@ export function NumberPagination({
   const pages = Array.from({ length: count }, (_, index) => start + index);
   return (
     <nav aria-label={label} className="fb-pagination">
+      {showArrows ? <button type="button" className="fb-page-button fb-page-arrow"
+        aria-label="Previous page" disabled={current === 1}
+        onClick={() => onPageChange(current - 1)}>←</button> : null}
       {pages.map((number, index) => (
         <button key={index} ref={(node) => { buttons.current[index] = node; }}
           type="button" className="fb-page-button"
@@ -31,6 +35,9 @@ export function NumberPagination({
             buttons.current[index]?.focus();
           }}>{number}</button>
       ))}
+      {showArrows ? <button type="button" className="fb-page-button fb-page-arrow"
+        aria-label="Next page" disabled={current === totalPages}
+        onClick={() => onPageChange(current + 1)}>→</button> : null}
       <span className="fb-helper" aria-live="polite">
         {caption ?? ("Page " + current + " of " + totalPages)}
       </span>

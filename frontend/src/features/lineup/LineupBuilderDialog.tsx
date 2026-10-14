@@ -1,5 +1,3 @@
-import { RadioGroup } from "@base-ui/react/radio-group";
-import { Radio } from "@base-ui/react/radio";
 import { useQueries, useQuery } from "@tanstack/react-query";
 import { useMemo, useState } from "react";
 
@@ -49,12 +47,10 @@ export function LineupBuilderDialog({
   const { selected } = useLeague();
   const id = selected ? leagueId(selected) : "";
   const token = accessToken ?? "";
-  const [instructions, setInstructions] = useState("");
   const [search, setSearch] = useState("");
   const [chosen, setChosen] = useState<string[]>([]);
   const [scope, setScope] = useState<string[]>(["owned"]);
   const [lineupPreferences, setLineupPreferences] = useState<string[]>([]);
-  const [effort, setEffort] = useState("mid");
   const ownTeamId = selected?.team?.id == null ? "" : String(selected.team.id);
   const ownTeamQuery = useQuery({
     queryKey: ["builder-own-roster", id, ownTeamId],
@@ -107,9 +103,12 @@ export function LineupBuilderDialog({
     return scope.includes("market");
   });
   const formationOptions = useMemo(() => {
-    const defaults = [...DEFAULT_LINEUPS_AVAILABLE.free, ...DEFAULT_LINEUPS_AVAILABLE.premium]
+    const premiumFormations = new Set<string>(DEFAULT_LINEUPS_AVAILABLE.premium);
+    const defaults = DEFAULT_LINEUPS_AVAILABLE.free
       .map((value) => ({ value, label: value.replaceAll(",", "-") }));
-    return [...new Map([...defaults, ...formations].map((item) => [item.value, item])).values()];
+    const freeFormations = formations.filter((item) => !premiumFormations.has(item.value));
+    return [...new Map([...defaults, ...freeFormations]
+      .map((item) => [item.value, item])).values()];
   }, [formations]);
 
   const filteredOptions = scopeOptions.filter((option) =>
@@ -137,12 +136,6 @@ export function LineupBuilderDialog({
     <Dialog open={open} onClose={onClose} title="Build lineup"
       footer={<button type="button" onClick={onClose}>Close</button>}>
       <div className="lineup-builder">
-        <label className="lineup-builder-field">
-          <span>User preferences <small>{instructions.length}/1024</small></span>
-          <textarea className="fb-input" maxLength={1024} rows={4} value={instructions}
-            onChange={(event) => setInstructions(event.target.value)} />
-        </label>
-
         <section className="lineup-builder-section" aria-labelledby="builder-scope-title">
           <h3 id="builder-scope-title">Player scope options</h3>
           <fieldset className="lineup-builder-checks">
@@ -150,7 +143,7 @@ export function LineupBuilderDialog({
               ["market", "Consider players on the market"],
               ["owned", "Consider owned players"],
               ["opponents", "Consider opponent players"],
-              ["trading", "Consider buying and selling players"],
+              ["trading", "Allow to sell players"],
             ].map(([value, label]) => (
               <label key={value}>
                 <input type="checkbox" checked={scope.includes(value)}
@@ -208,20 +201,6 @@ export function LineupBuilderDialog({
           </div>
         </section>
 
-        <section className="lineup-builder-section">
-          <h3>Thinking effort</h3>
-          <RadioGroup className="lineup-builder-radio" value={effort} onValueChange={setEffort}
-            aria-label="Thinking effort">
-            {[["none", "None"], ["low", "Low"], ["mid", "Mid"], ["high", "High"],
-              ["extra", "Extra"]].map(([value, label]) => (
-              <label key={value}>
-                <Radio.Root value={value} className="lineup-builder-radio-item">
-                  <Radio.Indicator className="lineup-builder-radio-indicator" />
-                </Radio.Root>{label}
-              </label>
-            ))}
-          </RadioGroup>
-        </section>
       </div>
     </Dialog>
   );

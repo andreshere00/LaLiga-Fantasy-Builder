@@ -3,6 +3,37 @@ import { mockApplication, standingsFixture } from "./fixtures";
 
 test.use({ screenshot: "only-on-failure" });
 
+test("standings crests fit their squares for tall and wide images", async ({ page }) => {
+  await page.setViewportSize({ width: 1440, height: 1000 });
+  await mockApplication(page);
+  await page.route("https://badges.test/*", (route) => {
+    const tall = route.request().url().endsWith("tall.svg");
+    return route.fulfill({ contentType: "image/svg+xml", body:
+      `<svg xmlns="http://www.w3.org/2000/svg" width="${tall ? 20 : 60}" height="${tall ? 60 : 20}"><rect width="100%" height="100%" fill="red"/></svg>` });
+  });
+  await page.route("**/api/competitions/1/standings?*", (route) => route.fulfill({ json: {
+    ...standingsFixture,
+    rows: standingsFixture.rows.map((row: { team: Record<string, unknown> }, index: number) => ({
+      ...row, team: { ...row.team, badgeUrl: index < 2
+        ? `https://badges.test/${index === 0 ? "tall" : "wide"}.svg` : null },
+    })),
+  } }));
+  await page.goto("/");
+  for (const index of [0, 1]) {
+    const badge = page.locator(".standing-club-badge").nth(index);
+    await badge.scrollIntoViewIfNeeded();
+    const image = badge.locator("img");
+    await expect(image).toBeVisible();
+    await expect(image).toHaveCSS("object-fit", "contain");
+    const imageBox = await image.boundingBox();
+    const badgeBox = await badge.boundingBox();
+    expect(imageBox!.x).toBeGreaterThanOrEqual(badgeBox!.x);
+    expect(imageBox!.y).toBeGreaterThanOrEqual(badgeBox!.y);
+    expect(imageBox!.x + imageBox!.width).toBeLessThanOrEqual(badgeBox!.x + badgeBox!.width);
+    expect(imageBox!.y + imageBox!.height).toBeLessThanOrEqual(badgeBox!.y + badgeBox!.height);
+  }
+});
+
 function panels(page: Page) {
   return {
     managers: page.getByRole("region", { name: "Fantasy manager rankings", exact: true }),

@@ -581,10 +581,18 @@ export function lastPlayedWeek(current: CurrentWeek): number {
   return 0;
 }
 
-/** Whether per-player fixture scores (including live scores) may be shown for the selected matchweek. */
-export function fixtureScoresVisibleForWeek(week: number, current: CurrentWeek): boolean {
-  if (week < 1) return false;
-  return week <= maxWeek(current);
+/** Show historical scores and current scores only between the first kickoff and last finish. */
+export function fixtureScoresVisibleForWeek(
+  week: number,
+  current: CurrentWeek,
+  fixtures: readonly unknown[] = [],
+): boolean {
+  const currentWeek = maxWeek(current);
+  if (week < 1 || week > currentWeek) return false;
+  if (week < currentWeek) return true;
+  if (fixtures.length === 0) return false;
+  return fixtures.some(fixtureHasStarted) &&
+    !fixtures.every((fixture) => asFiniteNumber(asRecord(fixture)?.matchState) === 7);
 }
 
 export function maxWeek(current: CurrentWeek): number {

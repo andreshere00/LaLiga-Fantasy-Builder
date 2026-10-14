@@ -75,7 +75,7 @@
 }
 
 .market-filter-row .market-search-label {
-  font-size: 0.75rem;
+  font-size: 12px;
 }
 
 .market-filter-row .market-search-field {
@@ -117,7 +117,7 @@
   display: flex;
   flex-direction: column;
   gap: 6px;
-  font-size: 0.78rem;
+  font-size: 12px;
   font-weight: 700;
 }
 
@@ -130,7 +130,7 @@
   border: 1px solid color-mix(in srgb, var(--fb-secondary) 12%, transparent);
   background: var(--fb-surface);
   font: inherit;
-  font-size: 0.82rem;
+  font-size: 12px;
   font-weight: 500;
 }
 
@@ -143,7 +143,7 @@
 
 .market-filter-range-hint {
   margin: 0 0 6px;
-  font-size: 0.72rem;
+  font-size: 12px;
   font-weight: 500;
   color: color-mix(in srgb, var(--fb-secondary) 65%, transparent);
 }
@@ -179,7 +179,7 @@
   justify-content: center;
   min-height: 44px;
   padding: 6px;
-  font-size: 0.76rem;
+  font-size: 12px;
   font-weight: 500;
   line-height: 1.2;
   text-align: center;
@@ -190,7 +190,7 @@
   border: 1px solid color-mix(in srgb, var(--fb-secondary) 12%, transparent);
   background: var(--fb-surface);
   font: inherit;
-  font-size: 0.82rem;
+  font-size: 12px;
   font-weight: 500;
   cursor: pointer;
   transition:
@@ -347,7 +347,7 @@
 .market-head-label {
   display: block;
   min-width: 0;
-  font-size: 0.84rem;
+  font-size: 12px;
   line-height: 1.35rem;
   white-space: nowrap;
   overflow: hidden;
@@ -443,7 +443,7 @@
   display: flex;
   flex-direction: column;
   gap: 6px;
-  font-size: 0.78rem;
+  font-size: 12px;
   font-weight: 700;
 }
 
@@ -455,7 +455,7 @@
 
 .market-column-filter-empty {
   margin: 0;
-  font-size: 0.78rem;
+  font-size: 12px;
   font-weight: 500;
   color: color-mix(in srgb, var(--fb-secondary) 65%, transparent);
 }
@@ -467,7 +467,7 @@
   border: 1px solid color-mix(in srgb, var(--fb-secondary) 12%, transparent);
   background: var(--fb-surface);
   font: inherit;
-  font-size: 0.78rem;
+  font-size: 12px;
   font-weight: 600;
   line-height: 1.2;
   white-space: nowrap;
@@ -580,7 +580,7 @@
   min-width: 2.35rem;
   padding: 0.18rem 0.4rem;
   border-radius: 0;
-  font-size: 0.72rem;
+  font-size: 12px;
   font-weight: 700;
   line-height: 1.1;
   color: #fff;
@@ -681,7 +681,7 @@
 }
 
 .market-form-week {
-  font-size: 0.62rem;
+  font-size: 12px;
   font-weight: 700;
   line-height: 1;
   color: color-mix(in srgb, var(--fb-secondary) 55%, transparent);
@@ -698,7 +698,7 @@
 }
 
 .market-form-badges .player-score-badge-value {
-  font-size: 0.72rem;
+  font-size: 12px;
 }
 
 .market-value-line {
@@ -732,7 +732,7 @@
 
 .market-value-change {
   display: block;
-  font-size: 0.82rem;
+  font-size: 12px;
   font-weight: 600;
   transition: color var(--fb-color-duration) var(--fb-color-ease);
 }
@@ -777,11 +777,15 @@
   object-fit: contain;
 }
 
+.market-player-offers-flag { display:inline-flex; align-items:center; justify-content:center; flex-shrink:0; width:28px; height:32px; padding:0; border:0; background:transparent; cursor:pointer; }
+.market-player-offers-flag img { width:20px; height:20px; object-fit:contain; }
+.market-player-offers-flag:focus-visible { outline:2px solid var(--fb-focus); outline-offset:2px; }
+
 .market-clause-timer {
   display: inline-flex;
   align-items: center;
   gap: 0.35rem;
-  font-size: 0.8rem;
+  font-size: 12px;
   font-weight: 700;
   font-variant-numeric: tabular-nums;
   color: color-mix(in srgb, var(--fb-secondary) 78%, transparent);
@@ -838,7 +842,7 @@
 }
 
 .market-fsyp-average {
-  font-size: 0.72rem;
+  font-size: 12px;
   font-weight: 600;
   color: color-mix(in srgb, var(--fb-secondary) 52%, transparent);
 }
@@ -880,7 +884,7 @@
   color: var(--fb-surface);
   padding: 0.2rem 0.45rem;
   font: inherit;
-  font-size: 0.72rem;
+  font-size: 12px;
   font-weight: 700;
   cursor: pointer;
   flex: 0 0 auto;
@@ -925,7 +929,7 @@
   background: transparent;
   padding: 0.45rem 0.55rem;
   font: inherit;
-  font-size: 0.82rem;
+  font-size: 12px;
   font-weight: 600;
   text-align: left;
   cursor: pointer;
@@ -967,7 +971,7 @@ a.market-actions-item {
 .market-dialog-label {
   display: block;
   margin-bottom: 6px;
-  font-size: 0.82rem;
+  font-size: 12px;
   font-weight: 700;
 }
 
@@ -981,7 +985,7 @@ a.market-actions-item {
 
 .market-dialog-error {
   margin: 8px 0 0;
-  font-size: 0.82rem;
+  font-size: 12px;
   color: #c0392b;
 }
 
@@ -1118,7 +1122,7 @@ a.market-actions-item {
 .market-value-change,.market-seal-end.is-urgent { color:var(--fb-secondary); }
 .market-seal-end.is-urgent { border-left:3px solid var(--fb-primary); padding-left:6px; }
 .market-availability { gap:6px; font-size:12px; }
-.market-form-nav-btn { width:22px; height:22px; min-width:22px; min-height:22px; color:var(--fb-secondary); font-size:11px; }
+.market-form-nav-btn { width:22px; height:22px; min-width:22px; min-height:22px; color:var(--fb-secondary); font-size:12px; }
 .market-form-badges .player-score-badge { width:44px; height:44px; }
 .market-form-badges .player-score-badge-value { font-size:14px; }
 .market-fsyp,.market-value-primary { font-variant-numeric:tabular-nums; }

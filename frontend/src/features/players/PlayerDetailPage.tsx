@@ -1,4 +1,5 @@
 import { PulseRing } from "../../components/ui/PulseRing";
+import { Separator } from "../../components/ui/Separator";
 import { lazy, Suspense, useMemo, useState } from "react";
 import { useQueries, useQuery } from "@tanstack/react-query";
 import { Link, useLocation, useParams } from "react-router-dom";
@@ -62,11 +63,12 @@ import { usePlayerMarketListing } from "./usePlayerMarketListing";
 import { readFavoritePlayerIds, toggleFavoritePlayerId } from "./favorites";
 import { rosterPhotoByMasterId, teamIdsFromLeagueTeams } from "./model/playerRow";
 import { PlayerMatchesSection } from "./PlayerMatchesSection";
-import { PlayerFantasySection } from "./PlayerFantasySection";
+import { PlayerFantasySection, PlayerFantasySummary } from "./PlayerFantasySection";
 import { PlayerAveragesPanel } from "./PlayerAveragesPanel";
 import { playerAverages } from "./playerAverages";
 import { PlayerDetailScreenLoading } from "./PlayerScreenLoading";
 import daznIcon from "../../assets/dazn.png";
+import injuryIcon from "../../assets/button_injury_red.svg";
 import "./PlayerDetailPage.css";
 
 const DateRangeDialog = lazy(() => import("./DateRangeDialog").then((module) => ({ default: module.DateRangeDialog })));
@@ -284,6 +286,8 @@ function PlayerDetailBody({ masterId }: PlayerDetailBodyProps) {
   const averages = playerAverages(profileBlock?.averages, fantasyAveragesPlayer);
 
   const injury = asRecord(profileBlock?.injury);
+  const hasActiveInjury = injury?.active === true ||
+    (injury?.active == null && text(injury?.diagnosis) != null);
   const actionContext = {
     money: marketListing.money,
     now,
@@ -359,17 +363,25 @@ function PlayerDetailBody({ masterId }: PlayerDetailBodyProps) {
             <div className="player-detail-title-row"><h1>{name}</h1>
               <AvailabilityCell availability={availability} /></div>
             <div className="player-detail-header-facts">
-              <p>{teamName ?? MISSING_STAT}</p>
-              <p>FSYP {points ?? MISSING_STAT}</p>
+              <p>{teamName ?? MISSING_STAT}<Separator orientation="vertical" /></p>
+              <p>FSYP {points ?? MISSING_STAT}<Separator orientation="vertical" /></p>
               <p>{positionLabel(positionId) ?? MISSING_STAT}</p>
             </div>
             {injury?.availabilityText || injury?.diagnosis ? (
               <p className="player-detail-availability-reason">
+                {hasActiveInjury ? (
+                  <img className="player-detail-injury-icon" src={injuryIcon}
+                    alt="Active injury" />
+                ) : null}
                 {[text(injury.availabilityText), text(injury.diagnosis)].filter(Boolean).join(" — ")}
               </p>
             ) : null}
           </div>
         </div>
+        <section className="player-detail-fantasy-overview" aria-labelledby="player-summary-fantasy-title">
+          <h2 id="player-summary-fantasy-title">NEWS & INJURIES DATA</h2>
+          <PlayerFantasySummary profile={profileBlock} />
+        </section>
         {detailReady || catalogMaster || leagueMaster ? (
           <PlayerAveragesPanel rows={averages} positionId={positionId} />
         ) : null}
@@ -556,7 +568,7 @@ function PlayerDetailBody({ masterId }: PlayerDetailBodyProps) {
                     tickFormatter={formatChartAxisDate}
                     minTickGap={28}
                     stroke="var(--fb-muted)"
-                    tick={{ fill: "var(--fb-secondary)", fontSize: 11 }}
+                    tick={{ fill: "var(--fb-secondary)", fontSize: 12 }}
                   />
                   <YAxis
                     width={64}
@@ -565,7 +577,7 @@ function PlayerDetailBody({ masterId }: PlayerDetailBodyProps) {
                     allowDecimals={false}
                     tickFormatter={formatMarketChartTick}
                     stroke="var(--fb-muted)"
-                    tick={{ fill: "var(--fb-secondary)", fontSize: 11 }}
+                    tick={{ fill: "var(--fb-secondary)", fontSize: 12 }}
                     label={{
                       value: "Value (€)",
                       angle: -90,

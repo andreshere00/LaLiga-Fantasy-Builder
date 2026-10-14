@@ -3,7 +3,7 @@ import { cleanup, render, screen } from "@testing-library/react";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { getJson, paths } from "../../api/client";
 import { playerDetailSchema } from "../../api/schemas";
-import { PlayerFantasySection } from "./PlayerFantasySection";
+import { PlayerFantasySection, PlayerFantasySummary } from "./PlayerFantasySection";
 import { PlayerMatchesSection } from "./PlayerMatchesSection";
 import { mapDetailSegmentBlocks, scoreLabel, statDisplay } from "./playerDetailFormat";
 import { weatherConditionFromSnapshot } from "./playerDetailWidgets";
@@ -44,7 +44,8 @@ describe("validated player detail consumers", () => {
     expect(scoreLabel(row.fixture)).toBe("2-1");
     expect(statDisplay(row.stats.minutesPlayed, "minutesPlayed")).toBe("90 (2 p)");
     expect(statDisplay(row.stats.daznPoints, "daznPoints")).toBe("3");
-    render(<><PlayerFantasySection profile={detail.profile!} />
+    render(<><PlayerFantasySummary profile={detail.profile!} />
+      <PlayerFantasySection profile={detail.profile!} />
       <PlayerMatchesSection
         recent={detail.recent!}
         upcoming={detail.upcoming!}

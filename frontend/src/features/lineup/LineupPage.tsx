@@ -33,7 +33,7 @@ import { MarketOffersProvider } from "../market/offers/MarketOffersContext";
 import { useOwnSquadOffers } from "../market/offers/useOwnSquadOffers";
 import "./LineupPage.css";
 
-const RECOMMEND_COPY = "Write your lineup preferences...";
+const RECOMMEND_COPY = "Lineup builder";
 
 /** Swap layout tokens via data-layout-profile; see lineup-layout.css. */
 const LINEUP_LAYOUT_PROFILE = "desktop-16-9";

@@ -58,7 +58,7 @@
   --lineup-pager-cell: var(--lineup-control-height);
   --lineup-pager-width: calc(var(--lineup-pager-cell) * 3);
   --lineup-score-cell: var(--lineup-pager-cell);
-  --lineup-recommend-width: min(100%, clamp(280px, 22vw, 360px));
+  --lineup-recommend-width: min(100%, clamp(190px, 16vw, 260px));
   --lineup-value-min: clamp(120px, 12vw, 168px);
   --lineup-control-icon: calc(var(--lineup-control-height) * 0.7);
   --lineup-pitch-ratio: 611 / 761;
@@ -68,7 +68,7 @@
   --lineup-font-title: clamp(17px, 1.85vw, 21px);
   --lineup-font-large: clamp(18px, 1.55vw, 22px);
   --lineup-font-medium: clamp(13px, 1vw, 16px);
-  --lineup-font-small: clamp(11px, 0.82vw, 13px);
+  --lineup-font-small: clamp(12px, 0.82vw, 14px);
 }
 
 @media (max-width: 1099px), (max-aspect-ratio: 4/3) {

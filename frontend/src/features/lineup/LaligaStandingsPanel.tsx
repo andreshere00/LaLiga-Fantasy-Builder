@@ -84,8 +84,9 @@ export function LaligaStandingsPanel() {
             aria-disabled={query.isFetching} aria-busy={query.isFetching || undefined}
             onClick={() => { if (!query.isFetching) void query.refetch(); }}>
             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-              strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-              <path d="M20 7v5h-5M20 12a8 8 0 1 0-2.3 5.7M20 12l-4-4" />
+              strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+              <path d="M21 12a9 9 0 1 1-2.64-6.36" />
+              <path d="M21 3v6h-6" />
             </svg>
           </Button>
         </div>
@@ -146,7 +147,21 @@ export function LaligaStandingsPanel() {
               <Button variant="outline" size="sm" loading={query.isFetching} loadingLabel="Retrying…"
                 onClick={() => { void query.refetch(); }}>Retry standings</Button>
             </div>
-          ) : <div className="standings-placeholder" role="status">Loading standings…</div>}
+          ) : <div className="standings-loading" role="status" aria-label="Loading LALIGA standings">
+            <span className="standings-loading-label">Loading standings…</span>
+            <div className="standings-skeleton" aria-hidden="true">
+              {Array.from({ length: 8 }, (_, index) => (
+                <div className="standings-skeleton-row" key={index}>
+                  <span className="standings-skeleton-cell" />
+                  <span className="standings-skeleton-cell standings-skeleton-team" />
+                  {Array.from({ length: 7 }, (_, cellIndex) => (
+                    <span className="standings-skeleton-cell standings-skeleton-stat" key={cellIndex} />
+                  ))}
+                  <span className="standings-skeleton-cell standings-skeleton-form" />
+                </div>
+              ))}
+            </div>
+          </div>}
         </ScrollArea>
       </CardContent>
     </Card>

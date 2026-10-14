@@ -1,5 +1,5 @@
 import { test, expect } from "@playwright/test";
-import { mockApplication } from "./fixtures";
+import { detail, mockApplication } from "./fixtures";
 
 const routes = [
   { path: "/", heading: /Demo Manager.*lineup/i, name: "lineup" },
@@ -14,6 +14,11 @@ for (const theme of ["light", "dark"]) {
       test(route.name + " " + theme + " " + width, async ({ page }, info) => {
         await page.setViewportSize({ width, height: 1000 });
         await mockApplication(page);
+        if (route.name === "detail") {
+          await page.route("**/api/players/1/stats/detail?*", (request) => request.fulfill({ json: {
+            ...detail, profile: { ...detail.profile, injuryRisk: { level: "unknown" } },
+          } }));
+        }
         await page.addInitScript((value) => localStorage.setItem("lfb-theme", value), theme);
         const errors: string[] = [];
         page.on("pageerror", (error) => errors.push(error.message));
@@ -21,6 +26,37 @@ for (const theme of ["light", "dark"]) {
         await expect(page.getByRole("heading", { level: 1, name: route.heading })).toBeVisible();
         await expect(page.locator("html")).toHaveAttribute("data-theme", theme);
         await page.evaluate(() => document.fonts.ready);
+        if (route.name === "detail") {
+          const summary = page.locator(".player-detail-fantasy-summary");
+          await expect(summary.locator(".player-fantasy-summary-block")).toHaveCount(4);
+          const hierarchy = summary.locator(".player-fantasy-summary-block").first();
+          await hierarchy.hover();
+          await expect(page.getByRole("tooltip")).toContainText("player's role on the team");
+          await expect(hierarchy.locator("dd")).toHaveCSS("text-align", "center");
+          await expect(hierarchy.locator("dd")).toHaveCSS("font-size", "20px");
+          await expect(hierarchy.locator("dd")).toHaveCSS("justify-content", "center");
+          await expect(summary.locator("dt img, dt svg")).toHaveCount(0);
+          await expect(hierarchy.locator("dd img")).toBeVisible();
+          await expect(summary.locator(`.player-form-rating-icon.is-${theme}`)).toBeVisible();
+          await expect(summary.locator(`.player-form-rating-icon.is-${theme === "light" ? "dark" : "light"}`)).toBeHidden();
+          const riskIcon = summary.locator(".player-fantasy-risk-icon.is-unknown");
+          await expect(riskIcon).toBeVisible();
+          await expect(summary.getByText("Unknown", { exact: true })).toBeVisible();
+          if (theme === "dark") await expect(riskIcon).toHaveCSS("filter", "brightness(0) invert(1)");
+          if (width > 1100) {
+            const centers = await page.locator(
+              ".player-detail-header-identity, .player-detail-header-averages, .player-detail-header-actions",
+            ).evaluateAll((elements) => elements.map((element) => {
+              const rect = element.getBoundingClientRect();
+              return rect.top + rect.height / 2;
+            }));
+            expect(Math.max(...centers) - Math.min(...centers)).toBeLessThan(2);
+          }
+          await hierarchy.focus();
+          await expect(page.getByRole("tooltip")).toBeVisible();
+          await hierarchy.blur();
+          await page.locator(".player-detail-back").hover();
+        }
         expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
         expect(errors).toEqual([]);
         await page.screenshot({ path: info.outputPath(route.name + "-" + theme + "-" + width + ".png"), fullPage: true });

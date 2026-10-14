@@ -43,7 +43,7 @@
 
 .player-form-card-heading time {
   color: color-mix(in srgb, var(--fb-secondary) 72%, transparent);
-  font-size: 0.82rem;
+  font-size: 12px;
 }
 
 .player-form-summary,
@@ -69,14 +69,14 @@
 .player-form-details dt {
   min-width: 0;
   overflow-wrap: anywhere;
-  font-size: 0.78rem;
+  font-size: 12px;
 }
 
 .player-form-summary dd,
 .player-form-details dd {
   flex: 0 0 auto;
   margin: 0;
-  font-size: 0.84rem;
+  font-size: 12px;
   font-weight: 700;
   font-variant-numeric: tabular-nums;
   text-align: right;
@@ -164,7 +164,7 @@
   min-height: 1.2em;
   margin: 0 0 0.5rem;
   overflow: hidden;
-  font-size: 0.82rem;
+  font-size: 12px;
   font-weight: 700;
   text-overflow: ellipsis;
   white-space: nowrap;
@@ -211,7 +211,7 @@
 .player-match-team-name {
   max-width: 100%;
   overflow: hidden;
-  font-size: 0.82rem;
+  font-size: 12px;
   font-weight: 700;
   text-overflow: ellipsis;
   white-space: nowrap;
@@ -220,7 +220,7 @@
 .player-match-date {
   display: block;
   margin-top: 0.45rem;
-  font-size: 0.85rem;
+  font-size: 12px;
 }
 
 .player-match-timer {
@@ -230,7 +230,7 @@
 
 .player-match-timer summary {
   color: var(--fb-primary);
-  font-size: 0.78rem;
+  font-size: 12px;
   font-weight: 700;
   cursor: pointer;
   list-style-position: inside;
@@ -241,7 +241,7 @@
   justify-content: center;
   gap: 0.4rem;
   margin: 0.35rem 0 0;
-  font-size: 0.76rem;
+  font-size: 12px;
 }
 
 .player-match-timer strong {
@@ -250,7 +250,7 @@
 
 .player-match-player-stats {
   margin: 0.45rem 0 0;
-  font-size: 0.75rem;
+  font-size: 12px;
   color: color-mix(in srgb, var(--fb-secondary) 78%, transparent);
 }
 
@@ -263,7 +263,7 @@
 
 .player-match-weather h4 {
   margin: 0 0 0.3rem;
-  font-size: 0.83rem;
+  font-size: 12px;
 }
 
 .player-match-weather-icon {
@@ -290,14 +290,14 @@
 .player-match-weather-condition {
   min-height: 1.1em;
   margin: 0 0 0.2rem;
-  font-size: 0.8rem;
+  font-size: 12px;
 }
 
 .player-match-weather-metrics {
   margin: 0;
   padding: 0;
   list-style: none;
-  font-size: 0.65rem;
+  font-size: 12px;
   line-height: 1.25;
 }
 
@@ -305,13 +305,13 @@
 .player-match-empty {
   margin: 0.5rem 0;
   color: color-mix(in srgb, var(--fb-secondary) 75%, transparent);
-  font-size: 0.85rem;
+  font-size: 12px;
   text-align: center;
 }
 
 .player-fantasy-grid {
   display: grid;
-  grid-template-columns: minmax(0, 3.5fr) minmax(0, 4.5fr) minmax(0, 3.5fr);
+  grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 1.25rem;
 }
 
@@ -361,7 +361,7 @@
 .player-detail-averages-source-note {
   margin: 0.45rem 0 0;
   color: color-mix(in srgb, var(--fb-secondary) 70%, transparent);
-  font-size: 0.75rem;
+  font-size: 12px;
 }
 
 .player-detail-averages-details {
@@ -371,7 +371,7 @@
 .player-detail-averages-details summary {
   width: fit-content;
   color: var(--fb-primary);
-  font-size: 0.85rem;
+  font-size: 12px;
   font-weight: 700;
   cursor: pointer;
 }
@@ -385,7 +385,7 @@
   border-collapse: separate;
   border-spacing: 0;
   overflow: hidden;
-  font-size: 0.82rem;
+  font-size: 12px;
 }
 
 .player-detail-averages-details .player-detail-table thead th {
@@ -537,7 +537,7 @@
 .player-fantasy-matchday {
   display: block;
   color:var(--fb-muted);
-  font-size: 0.8em;
+  font-size: 12px;
 }
 
 .player-fantasy-news-list,
@@ -605,12 +605,12 @@
 
 .player-fantasy-news-source {
   color: color-mix(in srgb, var(--fb-secondary) 65%, transparent);
-  font-size: 0.76rem;
+  font-size: 12px;
 }
 
 .player-fantasy-injury-list li {
   text-align: center;
-  font-size: 0.84rem;
+  font-size: 12px;
 }
 
 .player-fantasy-injury-list p {
@@ -647,14 +647,6 @@
 
   .player-form-grid {
     grid-template-columns: repeat(2, minmax(0, 1fr));
-  }
-
-  .player-fantasy-grid {
-    grid-template-columns: minmax(0, 1.1fr) minmax(0, 1fr);
-  }
-
-  .player-fantasy-column:last-child {
-    grid-column: 1 / -1;
   }
 }
 
@@ -702,8 +694,8 @@
 
 /* Fantasy profile and history presentation. */
 .player-detail-page .player-fantasy-section > h2 { margin:0 0 20px; padding:0 0 12px; width:fit-content; background:transparent; color:var(--fb-tertiary); text-align:left; font:400 20px/1.3 Anton,sans-serif; letter-spacing:.03em; text-transform:uppercase; border-bottom:2px solid var(--fb-primary); }
-.player-fantasy-grid { grid-template-columns:repeat(3,minmax(0,1fr)); gap:16px; }
-.player-fantasy-column { padding:20px; border:1px solid var(--fb-line); }
+.player-fantasy-grid { grid-template-columns:repeat(2,minmax(0,1fr)); gap:16px; }
+.player-fantasy-column { display:flex; flex-direction:column; padding:20px; border:1px solid var(--fb-line); }
 .player-fantasy-column > h3 { min-height:44px; justify-content:flex-start; font:400 20px/1.3 Anton,sans-serif; letter-spacing:.03em; text-transform:uppercase; }
 .player-fantasy-logo,.player-fantasy-heading-icon { width:20px; height:20px; }
 .player-fantasy-news-heading-icon { width:18px; height:18px; border-width:1px; }
@@ -711,17 +703,46 @@
 .player-fantasy-profile-list > div { padding:8px 0; border-bottom:1px solid var(--fb-line); font-size:14px; }
 .player-fantasy-profile-list dt { font-weight:500; }
 .player-fantasy-profile-list dt img,.player-fantasy-form-icon { width:18px; height:18px; }
+.player-detail-fantasy-overview { grid-column:1 / -1; grid-row:2; align-self:start; min-width:0; }
+.player-detail-fantasy-overview > h2 { margin:0 0 12px; font:400 20px/1.3 Anton,sans-serif; letter-spacing:.03em; color:var(--fb-tertiary); }
+.player-detail-fantasy-summary { align-self:start; grid-template-columns:minmax(0,1.1fr) minmax(0,1.3fr) minmax(0,.9fr) minmax(0,1fr); gap:0; border:1px solid var(--fb-line); background:var(--fb-subtle); }
+.player-detail-fantasy-summary > div { position:relative; grid-template-columns:minmax(0,1fr); grid-template-rows:auto auto; align-items:center; gap:8px; padding:10px 16px; border:0; border-inline-end:1px solid var(--fb-line); text-align:center; cursor:help; transition:background-color .16s ease,color .16s ease; }
+.player-detail-fantasy-summary > div:last-child { border-inline-end:0; }
+.player-detail-fantasy-summary dt { justify-content:center; color:var(--fb-muted); font-size:18px; line-height:1.35; }
+.player-fantasy-summary-value { display:flex; align-items:center; justify-content:center; gap:10px; max-width:100%; font-weight:500; line-height:1.3; }
+.player-fantasy-summary-value > span { min-width:0; overflow-wrap:anywhere; }
+.player-fantasy-summary-value img { display:block; flex-shrink:0; width:24px; height:24px; object-fit:contain; }
+.player-fantasy-summary-value .player-form-rating-icon.is-dark { display:none; }
+:root[data-theme="dark"] .player-form-rating-icon.is-light { display:none; }
+:root[data-theme="dark"] .player-fantasy-summary-value .player-form-rating-icon.is-dark { display:block; }
+.player-detail-fantasy-summary dd { display:flex; flex-direction:column; align-items:center; justify-content:center; align-self:stretch; min-height:56px; gap:6px; text-align:center; font-size:18px; }
+.player-detail-fantasy-summary .player-fantasy-matchday { font-size:14px; }
+.player-fantasy-summary-block:is(:hover,:focus-visible) { background:var(--fb-coral); color:var(--fb-on-coral); }
+.player-fantasy-summary-block:is(:hover,:focus-visible) :is(dt,.player-fantasy-matchday) { color:inherit; }
+.player-fantasy-summary-block:focus-visible { outline:2px solid var(--fb-focus); outline-offset:2px; }
+:root[data-theme="dark"] .player-fantasy-risk-icon.is-unknown { filter:brightness(0) invert(1); opacity:.75; }
+:root[data-theme="dark"] .player-fantasy-summary-block:is(:hover,:focus-visible) .player-fantasy-risk-icon.is-unknown { filter:brightness(0); opacity:1; }
 .player-fantasy-form-rating { border-radius: 0; font-size:12px; }
 .player-fantasy-form-rating.is-bad { color:var(--fb-ink-on-status); }
-.player-fantasy-news-list { gap:0; }
+.player-fantasy-news-list { flex:1; gap:0; }
 .player-fantasy-news-list li { padding:12px 0; border-bottom:1px solid var(--fb-line); }
 .player-fantasy-news-list li > img { width:18px; height:18px; }
 .player-fantasy-news-list time { font-weight:400; color:var(--fb-muted); font-size:12px; }
 .player-fantasy-news-list .player-fantasy-news-link { display:block; font-size:14px; line-height:1.5; }
 .player-fantasy-news-title-line { display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; line-clamp:2; white-space:normal; }
-.player-fantasy-injury-list { gap:0; }
+.player-fantasy-injury-list { flex:1; gap:0; }
 .player-fantasy-injury-list li { text-align:left; border-left:2px solid var(--fb-line); padding:12px 0 12px 16px; font-size:14px; }
 .player-fantasy-injury-list li.is-current { border-left-color:var(--fb-warning); }
-.player-fantasy-column .fb-pagination { margin-top:16px; }
+.player-fantasy-column .fb-pagination { margin-top:auto; padding-top:16px; justify-content:center; }
+.player-fantasy-column .fb-page-arrow:disabled { color:var(--fb-muted); cursor:default; opacity:.55; }
+.player-fantasy-column .fb-page-arrow:disabled:hover { background:var(--fb-surface); }
 .player-fantasy-empty { color:var(--fb-muted); text-align:left; }
 @media(max-width:1000px) { .player-fantasy-grid { grid-template-columns:1fr; } .player-fantasy-column:last-child { grid-column:auto; } }
+@media(max-width:600px) { .player-detail-header-identity { flex-direction:column; align-items:flex-start; } .player-detail-header-text { width:100%; } }
+@media(max-width:1100px) { .player-detail-header-averages { grid-row:3; } }
+@media(max-width:700px) {
+  .player-detail-fantasy-summary { grid-template-columns:repeat(2,minmax(0,1fr)); }
+  .player-detail-fantasy-summary > div { padding:10px 12px; }
+  .player-detail-fantasy-summary > div:nth-child(2n) { border-inline-end:0; }
+  .player-detail-fantasy-summary > div:nth-child(2n+1) { border-inline-end:1px solid var(--fb-line); }
+}
