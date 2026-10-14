@@ -1,14 +1,21 @@
 .market-balance-actions { display:flex; align-items:flex-end; gap:16px; margin-left:auto; }
 .market-balance-actions .value-box-block { margin-left:0; }
+[data-theme="dark"] .market-balance-actions .value-box-block-shell:not(.is-negative) .value-box-block-icon {
+  filter:brightness(0) invert(1);
+}
 .market-offers-trigger { position:relative; min-height:44px; }
 .fb-button.market-offers-trigger.has-offers {
-  background:var(--fb-primary); border-color:var(--fb-primary); color:var(--fb-ink-on-status);
+  background:var(--fb-primary); border-color:var(--fb-primary); color:var(--fb-on-brand);
 }
 .fb-button.market-offers-trigger.has-offers:hover {
-  background:var(--fb-primary); border-color:var(--fb-primary); color:var(--fb-ink-on-status);
+  background:var(--fb-primary); border-color:var(--fb-primary); color:var(--fb-on-brand);
+}
+[data-theme="dark"] .fb-button.market-offers-trigger.has-offers,
+[data-theme="dark"] .fb-button.market-offers-trigger.has-offers:hover {
+  color:#FFFFFF;
 }
 .market-offers-trigger.has-offers .market-offers-count {
-  background:#FFFFFF; color:var(--fb-ink-on-status);
+  background:transparent; border:1px solid currentColor; color:inherit;
 }
 .market-offers-trigger > span { display:flex; align-items:center; gap:8px; }
 .market-offers-trigger img { width:22px; height:22px; }

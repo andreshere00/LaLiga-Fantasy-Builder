@@ -189,7 +189,7 @@ function OffersPanel({ cards, squadAvailable, showTrigger, leagueKey, teamId }: 
           void queryClient.invalidateQueries({ queryKey: ["market-offers", leagueKey] });
         }}>
         <img className="market-offers-icon-light"
-          src={hasOffers ? whiteIcon : !enabled || loading ? grayIcon : blackIcon} alt="" />
+          src={hasOffers ? blackIcon : !enabled || loading ? grayIcon : blackIcon} alt="" />
         <img className="market-offers-icon-dark"
           src={hasOffers ? whiteIcon : !enabled || loading ? grayIcon : whiteIcon} alt="" />
         <span className="market-offers-label">Offers</span>
