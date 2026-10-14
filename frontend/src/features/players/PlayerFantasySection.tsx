@@ -1,5 +1,5 @@
 import { NumberPagination } from "../../components/ui/NumberPagination";
-import fantasyLogo from "../../assets/fantasy_logo.png";
+import { Separator } from "../../components/ui/Separator";
 import fantasyNewsIcon from "../../assets/button_info.svg";
 import hierarchyGod from "../../assets/button_hierarchy_god.svg";
 import hierarchyKey from "../../assets/button_hierarchy_key.svg";
@@ -138,7 +138,7 @@ function durationLabel(row: Record<string, unknown>, fallback: string | null): s
   return localized ? `${localized[1]} ${localized[1] === "1" ? "day" : "days"}` : null;
 }
 
-function FantasyProfile({ profile }: FantasySectionProps) {
+export function PlayerFantasySummary({ profile }: FantasySectionProps) {
   const hierarchy = asRecord(profile?.hierarchy);
   const startProbability = asRecord(profile?.startProbability);
   const form = asRecord(profile?.form);
@@ -181,45 +181,42 @@ function FantasyProfile({ profile }: FantasySectionProps) {
         : injuryGray;
 
   return (
-    <section className="player-fantasy-column" aria-labelledby="player-fantasy-profile-title">
-      <h3 id="player-fantasy-profile-title">
-        <img className="player-fantasy-logo" src={fantasyLogo} alt="" aria-hidden="true" />
-        Fantasy profile
-      </h3>
-      <dl className="player-fantasy-profile-list">
-        <div>
-          <dt><img src={hierarchyIcon} alt="" aria-hidden="true" />Hierarchy:</dt>
-          <dd>{hierarchyLabel}</dd>
-        </div>
-        <div>
-          <dt><img src={starterIcon} alt="" aria-hidden="true" />Starter likelihood:</dt>
-          <dd>
-            {startPercent != null ? `${startPercent}%` : "Unavailable"}
-            {startMatchweek != null ? (
-              <span className="player-fantasy-matchday">Matchday {startMatchweek}</span>
-            ) : null}
-          </dd>
-        </div>
-        <div>
-          <dt>
-            <svg className="player-fantasy-form-icon" viewBox="0 0 24 24" aria-hidden="true">
-              <path d="M3 17.5 8.2 12l3.5 3.2L20.5 6" />
-              <path d="M15.5 6h5v5" />
-            </svg>
-            Form:
-          </dt>
-          <dd>
-            {formRating ? (
-              <span className={`player-fantasy-form-rating is-${formRating.code}`}>{formRating.label}</span>
-            ) : formValue != null ? String(formValue) : "Unavailable"}
-          </dd>
-        </div>
-        <div>
-          <dt><img src={riskIcon} alt="" aria-hidden="true" />Injury risk:</dt>
-          <dd>{injuryLabel}</dd>
-        </div>
-      </dl>
-    </section>
+    <dl className="player-fantasy-profile-list player-detail-fantasy-summary"
+      aria-label="Fantasy profile">
+      <div>
+        <dt><img src={hierarchyIcon} alt="" aria-hidden="true" />Hierarchy:</dt>
+        <dd>{hierarchyLabel}<Separator /></dd>
+      </div>
+      <div>
+        <dt><img src={starterIcon} alt="" aria-hidden="true" />Starter likelihood:</dt>
+        <dd>
+          {startPercent != null ? `${startPercent}%` : "Unavailable"}
+          {startMatchweek != null ? (
+            <span className="player-fantasy-matchday">Matchday {startMatchweek}</span>
+          ) : null}
+          <Separator />
+        </dd>
+      </div>
+      <div>
+        <dt>
+          <svg className="player-fantasy-form-icon" viewBox="0 0 24 24" aria-hidden="true">
+            <path d="M3 17.5 8.2 12l3.5 3.2L20.5 6" />
+            <path d="M15.5 6h5v5" />
+          </svg>
+          Form:
+        </dt>
+        <dd>
+          {formRating ? (
+            <span className={`player-fantasy-form-rating is-${formRating.code}`}>{formRating.label}</span>
+          ) : formValue != null ? String(formValue) : "Unavailable"}
+          <Separator />
+        </dd>
+      </div>
+      <div>
+        <dt><img src={riskIcon} alt="" aria-hidden="true" />Injury risk:</dt>
+        <dd>{injuryLabel}<Separator /></dd>
+      </div>
+    </dl>
   );
 }
 
@@ -364,7 +361,6 @@ export function PlayerFantasySection({ profile }: FantasySectionProps) {
       <h2 id="player-fantasy-title">Fantasy data</h2>
       {profile ? (
         <div className="player-fantasy-grid">
-          <FantasyProfile profile={profile} />
           <PlayerNewsList profile={profile} />
           <PlayerInjuryHistory profile={profile} />
         </div>

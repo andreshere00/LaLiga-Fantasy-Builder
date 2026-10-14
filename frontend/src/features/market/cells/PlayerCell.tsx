@@ -18,7 +18,7 @@ type PlayerCellProps = {
 
 export function PlayerCell({ row, now, columnLabel = "Player" }: PlayerCellProps) {
   const clauseCountdown =
-    row.sellerKind === "opponent" ? clauseUnlockCountdown(row.clauseUnlockAt, now) : null;
+    row.sellerKind !== "laliga" ? clauseUnlockCountdown(row.clauseUnlockAt, now) : null;
   const clauseTooltip =
     clauseCountdown != null ? clauseUnlockTooltip(clauseCountdown) : null;
   const bidded = row.myBid != null;

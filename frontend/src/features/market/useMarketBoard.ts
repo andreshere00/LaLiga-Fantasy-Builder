@@ -166,8 +166,8 @@ export function useMarketBoard(): MarketBoard {
   });
 
   const buyoutUnlockByPlayerTeamIdMap = useMemo(
-    () => buyoutUnlockByPlayerTeamId(sellerTeams.data),
-    [sellerTeams.data],
+    () => buyoutUnlockByPlayerTeamId([teamQuery.data, ...sellerTeams.data]),
+    [teamQuery.data, sellerTeams.data],
   );
 
   useReauthOnError([
