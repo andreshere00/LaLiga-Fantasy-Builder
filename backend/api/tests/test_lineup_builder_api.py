@@ -257,6 +257,14 @@ def _client(
             if market_route_state and source_players:
                 listing = market_payload["marketPlayers"][0]
                 changes = {
+                    "league_auction": {
+                        "discr": "marketPlayerLeague",
+                        "directOffer": None,
+                        "salePrice": 100,
+                        "status": "on_sale",
+                    },
+                    "team_type_without_owner": {"discr": "marketPlayerTeam"},
+                    "type_missing": {"discr": None},
                     "free_offer_enabled": {"directOffer": True},
                     "offer_unknown": {"directOffer": None},
                     "seller_offer": {
@@ -818,6 +826,8 @@ def test_build_lineup_missing_status_or_active_injury_does_not_default_to_availa
         ("seller_offer", "market_seller_acceptance_required"),
         ("owner_auction_flag", "market_seller_acceptance_required"),
         ("type_unknown", "market_listing_type_unknown"),
+        ("type_missing", "market_listing_type_unknown"),
+        ("team_type_without_owner", "market_listing_type_unknown"),
         ("expiry_unknown", "market_expiry_unknown"),
         ("expiry_naive", "market_expiry_unknown"),
         ("expired", "market_listing_expired"),
@@ -875,7 +885,7 @@ def test_build_lineup_missing_opponent_shield_uses_read_only_verified_status(
     assert TEST_LALIGA_BEARER not in result.text
 
 
-@pytest.mark.parametrize("state", ["free_offer_enabled", "offer_unknown"])
+@pytest.mark.parametrize("state", ["free_offer_enabled", "offer_unknown", "league_auction"])
 def test_build_lineup_free_auction_does_not_depend_on_seller_offer_flag(rsa_pems, state) -> None:
     client, jwt, requests = _client(rsa_pems, source_players=True, market_route_state=state)
     with client:

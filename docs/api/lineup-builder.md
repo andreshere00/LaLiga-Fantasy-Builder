@@ -116,7 +116,11 @@ This implementation deliberately limits recommendations to established facts:
   values. Loaned-player
   rosters are unavailable until their counting/ownership semantics are verified.
 - Market acquisition requires a verified free-player listing with an actual
-  future expiry before kickoff and no seller-owned squad entry. `directOffer`
+  future expiry before kickoff and no seller-owned squad entry. The authenticated
+  response supplied on 2026-10-15 identifies league auctions as `marketPlayerLeague`
+  and seller listings as `marketPlayerTeam`; the older captured `market_player`
+  auction discriminator remains supported. Unknown or missing types are excluded.
+  `directOffer`
   alone does not classify a free listing as a seller offer; the market UI uses
   that flag only together with opponent ownership. Listings with seller/owner
   metadata still require acceptance and are excluded from verified auction plans.

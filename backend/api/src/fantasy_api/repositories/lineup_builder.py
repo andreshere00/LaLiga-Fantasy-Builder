@@ -123,7 +123,9 @@ def _market_route_error(listing: MarketListing, now: datetime, target: TargetWee
         return "market_seller_acceptance_required"
     # directOffer controls seller offers only when an owned squad entry is present.
     # It is not an independent veto for a verified free-player market auction.
-    if listing.discr != "market_player":
+    # Current Fantasy league auctions use marketPlayerLeague; market_player is
+    # retained for the older captured response. marketPlayerTeam is seller-owned.
+    if listing.discr not in {"marketPlayerLeague", "market_player"}:
         return "market_listing_type_unknown"
     expiry = instant(listing.expiration_date)
     if expiry is None:
