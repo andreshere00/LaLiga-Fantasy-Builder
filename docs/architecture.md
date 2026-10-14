@@ -178,6 +178,7 @@ do not share a generic proxy class.
 | Teams | `/teams/...` | `{CMP}/teams/...` | GET + PUT (lineup write) |
 | Players | `/players/...` | `{CMP}/players`, `{CMP}/player/...` | GET (catalog + market value public; league card and stats authenticated) |
 | Calendar | `/calendar/...` | `{CMP}/week/...`, `{CMP}/calendar`, stats host | GET (internal JWT; public upstream via `get_public_json`) |
+| Standings | `/competitions/{id}/standings` | API-Football `/leagues`, `/teams`, `/standings`, `/fixtures`; Fantasy teams-master | GET (internal JWT, server-side provider key; completed only) |
 | Market | `/market/...` | `{CMP}/league/{leagueId}/market/...` | GET + POST/PUT/DELETE (reads High; mutations Medium) |
 | Buyout | `/buyout/...` | `{CMP}/league/{leagueId}/buyout/...`, `.../player-team/.../check-shield`, `.../shield/player` | GET + POST/PUT (Medium) |
 
@@ -215,6 +216,14 @@ JWT (or accept `--jwt`; players public reads need no JWT) and call local API
 routes. Shared flags and token exchange live in `cli/common.py`.
 
 Automated login: `fantasy-browser-session` in `backend/auth`.
+
+`fantasy-standings` and `fantasy-browser-session standings-analysis` fetch real
+club classification through the API without LaLiga pairing. `FootballClient`
+uses a server-side API-Sports key and a fixed HTTPS origin, separate from the
+Fantasy bearer client. The API's existing `public` network supplies outbound
+HTTPS; private credential routes stay on `internal`. Provider ranks/points are
+preserved and fixture totals validated. The hourly source does not support live
+mode; requesting it returns 503. See [Standings API](api/standings/README.md).
 
 ## Trust boundaries
 

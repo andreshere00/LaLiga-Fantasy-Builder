@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from functools import lru_cache
 
-from pydantic import Field, SecretStr, model_validator
+from pydantic import Field, PositiveInt, SecretStr, model_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
@@ -29,6 +29,12 @@ class Settings(BaseSettings):
 
     laliga_fantasy_origin: str = "https://fantasy-api.llt-services.com"
     laliga_competition_id: int = 1
+
+    api_football_key: SecretStr | None = None
+    standings_provider_league_id: int = Field(default=140, gt=0)
+    standings_timeout_seconds: float = Field(default=10.0, gt=0, le=60)
+    standings_ttl_seconds: int = Field(default=3600, ge=3600, le=86400)
+    standings_club_ids: dict[PositiveInt, PositiveInt] = Field(default_factory=dict)
 
     scraping_base_url: str = ""
     scraping_service_token: SecretStr = SecretStr("")

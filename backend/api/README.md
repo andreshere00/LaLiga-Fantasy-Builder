@@ -38,6 +38,7 @@ Set `AUTH_JWKS_URL` and `AUTH_INTERNAL_BASE_URL` when not using Compose.
 | `GET`/`PUT` | `/teams...` | [teams](../../docs/api/teams/README.md) |
 | `GET` | `/players...` | [players](../../docs/api/players/README.md). Catalog and market value are public; league and stats routes use JWT |
 | `GET` | `/calendar/...` | Matchday, fixtures, stats. JWT required; Fantasy read is public |
+| `GET` | `/competitions/{id}/standings` | [Real LALIGA clubs](../../docs/api/standings/README.md); JWT, API-Sports key, `mode=completed` |
 | `GET`/`POST`/… | `/market/...` | [market](../../docs/api/market/README.md) |
 | `GET`/`POST`/`PUT` | `/buyout/...` | [buyout](../../docs/api/buyout/README.md) |
 
@@ -63,12 +64,19 @@ uv run fantasy-leagues --league-id 123 --week 5 --json
 uv run fantasy-teams --team-id 99 --week 5
 uv run fantasy-players --player-id 7 --league-id 42
 uv run fantasy-calendar --week 8 --json
+uv run fantasy-standings --season 2026 --json
 uv run fantasy-market --league-id 123 --json
 uv run fantasy-buyout --league-id 123 --player-team-id pt-9 --json
 ```
 
 Signed-in analysis from auth: `uv run fantasy-browser-session leagues-analysis`.
 `fantasy-market` and `fantasy-buyout` are read-only.
+
+Set `API_FOOTBALL_KEY` on this API service for real-club standings. Provider
+tables update hourly; live mode is unavailable and returns 503. Both
+`fantasy-standings` and auth's `standings-analysis` default to completed mode,
+need only app login, and remain read-only. See the feature guide for optional
+verified club-id overrides, source freshness, and snapshot consistency errors.
 
 ## Tests
 

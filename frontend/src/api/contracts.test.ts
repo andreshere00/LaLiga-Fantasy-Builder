@@ -18,7 +18,7 @@ type OpenApiDocument = {
 
 function clientPath(openApiPath: string): string {
   const path = openApiPath.replace(/\{([^}]+)\}/g, (_match, name: string) =>
-    /week|page/i.test(name) ? "1" : "test-id",
+    /week|page|competition_id/i.test(name) ? "1" : "test-id",
   );
   return `/api${path}`;
 }
@@ -50,6 +50,6 @@ describe("endpoint contract coverage", () => {
       }
     }
 
-    expect(covered).toBe(46);
+    expect(covered).toBe(47);
   });
 });

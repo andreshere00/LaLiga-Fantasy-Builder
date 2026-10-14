@@ -1,0 +1,180 @@
+[
+  {
+    "name": "leagues-known-fields",
+    "kind": "response",
+    "path": "/api/leagues",
+    "method": "GET",
+    "payload": [
+      {
+        "id": "lg1",
+        "name": "Example league"
+      }
+    ],
+    "valid": true
+  },
+  {
+    "name": "leagues-unrelated-row",
+    "kind": "response",
+    "path": "/api/leagues",
+    "method": "GET",
+    "payload": [
+      {
+        "unrelated": "not a league"
+      }
+    ],
+    "valid": false
+  },
+  {
+    "name": "standing-known-fields",
+    "kind": "response",
+    "path": "/api/leagues/lg1/standing",
+    "method": "GET",
+    "payload": [
+      {
+        "position": 1,
+        "points": 10,
+        "team": {
+          "id": "team-1"
+        }
+      }
+    ],
+    "valid": true
+  },
+  {
+    "name": "standing-invalid-points",
+    "kind": "response",
+    "path": "/api/leagues/lg1/standing",
+    "method": "GET",
+    "payload": [
+      {
+        "position": 1,
+        "points": {}
+      }
+    ],
+    "valid": false
+  },
+  {
+    "name": "sparse-team-money",
+    "kind": "response",
+    "path": "/api/teams/team-1/money",
+    "method": "GET",
+    "payload": {},
+    "valid": true
+  },
+  {
+    "name": "team-money-malformed",
+    "kind": "response",
+    "path": "/api/teams/team-1/money",
+    "method": "GET",
+    "payload": {
+      "teamMoney": {}
+    },
+    "valid": false
+  },
+  {
+    "name": "bid-positive-amount",
+    "kind": "request",
+    "path": "/api/market/leagues/lg1/market1/bids",
+    "method": "POST",
+    "payload": {
+      "money": 1
+    },
+    "valid": true
+  },
+  {
+    "name": "bid-extra-key",
+    "kind": "request",
+    "path": "/api/market/leagues/lg1/market1/bids",
+    "method": "POST",
+    "payload": {
+      "money": 1,
+      "extra": "blocked"
+    },
+    "valid": false
+  },
+  {
+    "name": "bid-zero",
+    "kind": "request",
+    "path": "/api/market/leagues/lg1/market1/bids",
+    "method": "POST",
+    "payload": {
+      "money": 0
+    },
+    "valid": false
+  },
+  {
+    "name": "listing-required-body",
+    "kind": "request",
+    "path": "/api/market/leagues/lg1/listings",
+    "method": "POST",
+    "payload": {
+      "playerId": "pt1",
+      "salePrice": 1
+    },
+    "valid": true
+  },
+  {
+    "name": "listing-incomplete",
+    "kind": "request",
+    "path": "/api/market/leagues/lg1/listings",
+    "method": "POST",
+    "payload": {
+      "playerId": "pt1"
+    },
+    "valid": false
+  },
+  {
+    "name": "buyout-positive",
+    "kind": "request",
+    "path": "/api/buyout/leagues/lg1/player-teams/pt1/pay",
+    "method": "POST",
+    "payload": {
+      "buyoutClauseToPay": 1
+    },
+    "valid": true
+  },
+  {
+    "name": "buyout-extra-key",
+    "kind": "request",
+    "path": "/api/buyout/leagues/lg1/player-teams/pt1/pay",
+    "method": "POST",
+    "payload": {
+      "buyoutClauseToPay": 1,
+      "extra": 1
+    },
+    "valid": false
+  },
+  {
+    "name": "detail-query-known",
+    "kind": "query",
+    "path": "/api/players/p1/stats/detail",
+    "method": "GET",
+    "payload": {
+      "limit": 3,
+      "include": [
+        "market"
+      ]
+    },
+    "valid": true
+  },
+  {
+    "name": "detail-query-invalid-limit",
+    "kind": "query",
+    "path": "/api/players/p1/stats/detail",
+    "method": "GET",
+    "payload": {
+      "limit": 6
+    },
+    "valid": false
+  },
+  {
+    "name": "detail-query-unknown-key",
+    "kind": "query",
+    "path": "/api/players/p1/stats/detail",
+    "method": "GET",
+    "payload": {
+      "unknown": "blocked"
+    },
+    "valid": false
+  }
+]

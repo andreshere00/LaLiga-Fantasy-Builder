@@ -122,6 +122,14 @@ def parse_args(argv: list[str] | None = None) -> argparse.Namespace:
         help="Squad-entry id (playerTeamId)",
     )
     buyout.add_argument("--json", action="store_true")
+    standings = subparsers.add_parser(
+        "standings-analysis",
+        help="GET real LALIGA club standings (no LaLiga pairing)",
+    )
+    standings.add_argument("--competition-id", type=_positive_competition, default=1)
+    standings.add_argument("--season", type=_standings_season, default=None)
+    standings.add_argument("--mode", choices=["live", "completed"], default="completed")
+    standings.add_argument("--json", action="store_true")
     return parser.parse_args(argv)
 
 
@@ -199,7 +207,23 @@ def load_put_lineup(path: str | None) -> dict[str, Any] | None:
 
 def needs_laliga(args: argparse.Namespace) -> bool:
     """Return whether this invocation requires a linked LaLiga vault."""
-    return bool(args.player_id or args.flow)
+    return bool(args.player_id or (args.flow and args.flow != "standings-analysis"))
+
+
+def _positive_competition(value: str) -> int:
+    """Parse a positive competition id for a read-only standings request."""
+    number = int(value)
+    if number < 1:
+        raise argparse.ArgumentTypeError("competition id must be positive")
+    return number
+
+
+def _standings_season(value: str) -> int:
+    """Validate the season starting year against the API bounds."""
+    year = int(value)
+    if not 2000 <= year <= 2100:
+        raise argparse.ArgumentTypeError("season must be between 2000 and 2100")
+    return year
 
 
 def _positive_week(value: str) -> int:

@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from typing import Any
-from urllib.parse import quote
+from urllib.parse import quote, urlencode
 
 import httpx
 
@@ -192,3 +192,32 @@ def first_league_id(payload: Any) -> str | None:
         if value is not None:
             return str(value)
     return None
+
+
+def run_standings_analysis(
+    *,
+    api_base: str,
+    jwt: str,
+    competition_id: int,
+    season: int | None,
+    mode: str,
+    transport: httpx.BaseTransport | None = None,
+) -> dict[str, Any]:
+    """Fetch real-club classification using the local API and app identity only.
+
+    Args:
+        api_base: Local API origin.
+        jwt: Internal application JWT.
+        competition_id: Application competition id.
+        season: Season starting year or None to select the active season.
+        mode: Completed or live classification.
+        transport: Optional offline test transport.
+
+    Returns:
+        Validated complete standings response.
+    """
+    params = {"mode": mode}
+    if season is not None:
+        params["season"] = str(season)
+    path = f"/competitions/{quote(str(competition_id), safe='')}/standings?{urlencode(params)}"
+    return FantasyClient(base_url=api_base, jwt=jwt, transport=transport).get_json(path)

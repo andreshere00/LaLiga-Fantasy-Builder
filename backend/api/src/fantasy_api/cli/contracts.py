@@ -41,6 +41,7 @@ from fantasy_api.schemas.player_stats import (
     UpcomingMatchesResponse,
 )
 from fantasy_api.schemas.players import CatalogPlayer, LeaguePlayer, PlayerMarketValue
+from fantasy_api.schemas.standings import CompetitionStandings, StandingsQuery
 from fantasy_api.schemas.teams import TeamLineup, TeamMoney
 
 
@@ -73,6 +74,7 @@ def _list_response(pattern: str, model: type[BaseModel]):
 
 
 _RESPONSE_ADAPTERS = (
+    _model_response(r"/competitions/\d+/standings", CompetitionStandings),
     _list_response(r"/leagues", FantasyLeague),
     _list_response(r"/leagues/[^/]+/standing(?:/\d+)?", StandingRow),
     _list_response(r"/leagues/[^/]+/activity/\d+", ActivityItem),
@@ -101,6 +103,7 @@ _RESPONSE_ADAPTERS = (
 )
 
 _QUERY_ADAPTERS: tuple[tuple[re.Pattern[str], TypeAdapter], ...] = (
+    (re.compile(r"/competitions/\d+/standings"), TypeAdapter(StandingsQuery)),
     (re.compile(r"/players/[^/]+/stats/detail"), TypeAdapter(PlayerDetailQuery)),
     (re.compile(r"/players/[^/]+/stats/fixtures"), TypeAdapter(FixturesQuery)),
     (re.compile(r"/players/[^/]+/stats/market"), TypeAdapter(MarketQuery)),

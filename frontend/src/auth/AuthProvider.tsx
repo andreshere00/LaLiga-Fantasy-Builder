@@ -218,6 +218,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setStatus((current) => (current === "needs-reauth" ? current : "needs-reauth"));
   }, []);
 
+  useEffect(() => {
+    if (status === "signed-out") {
+      queryClient.removeQueries({ queryKey: ["competition-standings"] });
+    }
+  }, [status, queryClient]);
+
   const value = useMemo<AuthContextValue>(
     () => ({
       status,

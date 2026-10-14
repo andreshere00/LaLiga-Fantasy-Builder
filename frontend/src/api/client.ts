@@ -7,8 +7,10 @@ import {
   pathSegmentSchema,
   playerStatsDetailQuerySchema,
   positivePathNumberSchema,
+  standingsQuerySchema,
   serializeEndpointRequest,
   type ApiResponseDto,
+  type CompetitionStandingsDto,
   type PlayerStatsDetailQuery,
 } from "./schemas";
 
@@ -30,6 +32,16 @@ function weekNumber(value: number): number {
 }
 
 export const paths = {
+  competitionStandings: (
+    competitionId = 1,
+    season?: number,
+    mode: "live" | "completed" = "completed",
+  ): `/api/competitions/${number}/standings?${string}` => {
+    const query = standingsQuerySchema.parse({ season, mode });
+    const params = new URLSearchParams({ mode: query.mode ?? "completed" });
+    if (query.season !== undefined) params.set("season", String(query.season));
+    return `/api/competitions/${positivePathNumberSchema.parse(competitionId)}/standings?${params}`;
+  },
   leagues: () => "/api/leagues",
   standing: (leagueId: string) => `/api/leagues/${segment(leagueId)}/standing`,
   weekStanding: (leagueId: string, week: number) =>
@@ -128,6 +140,16 @@ async function sendJson(
   return parseResponse(response, responseSchema);
 }
 
+export function getJson(
+  path: ReturnType<typeof paths.competitionStandings>,
+  token: string,
+  options?: GetJsonOptions,
+): Promise<CompetitionStandingsDto>;
+export function getJson(
+  path: string,
+  token: string,
+  options?: GetJsonOptions,
+): Promise<ApiResponseDto>;
 export async function getJson(
   path: string,
   token: string,

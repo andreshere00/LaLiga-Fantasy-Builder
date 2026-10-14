@@ -9,6 +9,7 @@ This folder is the detailed map.
 |-----|----------|
 | [Architecture](architecture.md) | Services, login path, CRS, trust boundaries, errors |
 | [Frontend](frontend.md) | Lineup, market, and players UI, data loading, actions, details, and product screenshot gallery |
+| [Frontend standings plan](frontend-standings-implementation-plan.md) | LALIGA table below Players Ranking, separate scrolling, data states, and verification |
 | [Frontend design-system migration plan](frontend-design-system-migration-plan.md) | Screen-by-screen commits, visual reference, staging boundaries, and acceptance checks |
 | [Authentication](authentication/authentication.md) | Sessions, internal JWT, LaLiga vault, CSRF |
 | [Scraping service](scraping/README.md) | Private scraper HTTP, player profile parsing, TTLs, Compose `egress`, CLIs |
@@ -39,6 +40,9 @@ This folder is the detailed map.
 [Leagues](api/leagues/README.md) · [Teams](api/teams/README.md) ·
 [Players](api/players/README.md) · [Calendar](api/calendar/README.md) ·
 [Market](api/market/README.md) · [Buyout](api/buyout/README.md)
+
+[Real LALIGA club standings](api/standings/README.md) uses a separate provider API;
+completed-match mode is implemented and live mode remains unavailable.
 
 Contributors: [`AGENTS.md`](../AGENTS.md).
 

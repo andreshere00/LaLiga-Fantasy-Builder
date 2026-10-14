@@ -32,6 +32,13 @@ and omit the LaLiga bearer while still requiring the internal JWT.
 """.strip()
 
 OPENAPI_TAGS: list[dict[str, str]] = [
+    {
+        "name": "standings",
+        "description": (
+            "Real LALIGA club classification. Internal JWT; no LaLiga pairing. "
+            "Provider-key integration with hourly completed tables; live mode is unavailable."
+        ),
+    },
     {"name": "health", "description": "Liveness and readiness probes."},
     {"name": "me", "description": "Application identity and credential probes."},
     {
