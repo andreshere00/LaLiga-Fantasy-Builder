@@ -122,7 +122,7 @@ function HistoryNavigator({
 
   return <NumberPagination page={page + 1} totalPages={pageCount}
     onPageChange={(next) => onPageChange(next - 1)} label={label + " history pages"}
-    caption={first + "–" + last + " of " + total} />;
+    caption={first + "–" + last + " of " + total} showArrows />;
 }
 
 function displayDate(value: unknown): string | null {

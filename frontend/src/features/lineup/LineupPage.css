@@ -771,6 +771,10 @@
   object-fit: contain;
 }
 
+:root[data-theme="dark"] .pitch .pitch-original-lineup-icon:is(.is-default, .is-hover) {
+  filter: brightness(0) invert(1);
+}
+
 .pitch-original-lineup-icon:is(.is-hover, .is-disabled) {
   display: none;
 }
@@ -1085,7 +1089,7 @@
 
 @media (max-width: 1099px), (max-aspect-ratio: 4/3) {
   .lineup-page[data-layout-profile="desktop-16-9"] {
-    --lineup-recommend-width: min(100%, clamp(160px, 40vw, 260px));
+    --lineup-recommend-width: min(100%, clamp(160px, 34vw, 220px));
   }
 
   .board-controls-bar,

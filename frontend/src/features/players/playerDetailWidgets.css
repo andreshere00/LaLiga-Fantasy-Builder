@@ -722,6 +722,8 @@
 .player-fantasy-injury-list { gap:0; }
 .player-fantasy-injury-list li { text-align:left; border-left:2px solid var(--fb-line); padding:12px 0 12px 16px; font-size:14px; }
 .player-fantasy-injury-list li.is-current { border-left-color:var(--fb-warning); }
-.player-fantasy-column .fb-pagination { margin-top:16px; }
+.player-fantasy-column .fb-pagination { margin-top:16px; justify-content:center; }
+.player-fantasy-column .fb-page-arrow:disabled { color:var(--fb-muted); cursor:default; opacity:.55; }
+.player-fantasy-column .fb-page-arrow:disabled:hover { background:var(--fb-surface); }
 .player-fantasy-empty { color:var(--fb-muted); text-align:left; }
 @media(max-width:1000px) { .player-fantasy-grid { grid-template-columns:1fr; } .player-fantasy-column:last-child { grid-column:auto; } }
