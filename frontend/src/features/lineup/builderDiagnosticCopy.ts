@@ -11,6 +11,7 @@ const MESSAGES: Record<string, string> = {
   opponent_buyout_rules_unknown: "The league did not confirm whether release-clause purchases are enabled.",
   opponent_protection_expiry_unknown: "The opponent player's protection expiry is missing or has no verified timezone.",
   opponent_protection_expires_too_late: "Protection does not expire at least 48 hours before the target round starts.",
+  opponent_protection_active_at_kickoff: "The player's release clause is still locked when the target matchday starts.",
   opponent_clause_price_missing: "The opponent player has no verified positive release-clause price.",
   opponent_shield_active: "The opponent player has an active shield without a verified acquisition window.",
   opponent_shield_status_unknown: "The opponent player's shield status could not be verified.",

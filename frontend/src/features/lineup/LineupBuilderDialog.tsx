@@ -3,7 +3,8 @@ import { useMemo, useState } from "react";
 
 import { useLineupBuilder } from "./useLineupBuilder";
 import { LineupBuilderResults } from "./LineupBuilderResults";
-import type { BuilderCandidate } from "../../api/schemas";
+import type { BuilderCandidate, LineupBuildDto } from "../../api/schemas";
+import { LineupBuilderPlayerActions } from "./LineupBuilderPlayerActions";
 import { getJson, paths } from "../../api/client";
 import {
   leagueId,
@@ -63,6 +64,8 @@ function BuilderDialogSession({
   const id = selected ? leagueId(selected) : "";
   const token = accessToken ?? "";
   const [replacement, setReplacement] = useState<BuilderCandidate | null>(null);
+  const [acquiring, setAcquiring] = useState<BuilderCandidate["starters"][number] | null>(null);
+  const [changedResult, setChangedResult] = useState<LineupBuildDto | null>(null);
   const [search, setSearch] = useState("");
   const [chosen, setChosen] = useState<string[]>([]);
   const [explain, setExplain] = useState(false);
@@ -177,7 +180,7 @@ function BuilderDialogSession({
             <span className="lineup-builder-bounce-ball" />
             <span className="lineup-builder-bounce-ground" />
           </span>
-          <span>Building recommendations…</span>
+          <span className="lineup-builder-loading-text">Building recommendations…</span>
         </div>}
         {builder.pending ? <Button shape="square" variant="destructive" onClick={builder.cancel}>Cancel build</Button> : <Button shape="square"
           disabled={scope.length === 0 || !token} onClick={() => void builder.build({
@@ -270,16 +273,23 @@ function BuilderDialogSession({
         </section>
 
         {builder.error && <p role="alert">{builder.error}{builder.result ? " Previous results are stale." : ""}</p>}
+        {builder.result && changedResult === builder.result && <p role="status">Your acquisition activity changed. Rebuild the recommendations before using a draft.</p>}
         {builder.result && <LineupBuilderResults result={builder.result} playersById={playersById}
-          canApply={(candidate) => !builder.pending && !builder.error && canApply(candidate, builder.result!.target.week)}
+          ownedPlayerIds={new Set(ownSquad.flatMap((player) => player.masterPlayerId ? [player.masterPlayerId] : []))}
+          onAcquire={setAcquiring}
+          canApply={(candidate) => !builder.pending && !builder.error && changedResult !== builder.result && canApply(candidate, builder.result!.target.week)}
           onApply={(candidate) => {
             if (dirty) setReplacement(candidate);
             else onApply(candidate, builder.result!.target.week);
           }} />}
+        {acquiring && builder.result && <LineupBuilderPlayerActions key={acquiring.playerId}
+          player={acquiring} opponentTeamIds={opponents.map((team) => team.teamId)}
+          clausesDeadline={builder.result.target.clausesDeadline} onClose={() => setAcquiring(null)}
+          onSuccess={() => { builder.cancel(); setChangedResult(builder.result); }} />}
         {replacement && builder.result && <section aria-label="Replace draft confirmation">
           <p>Replace your unsaved lineup draft?</p>
           <Button shape="square" onClick={() => {
-            if (canApply(replacement, builder.result!.target.week)) onApply(replacement, builder.result!.target.week);
+            if (changedResult !== builder.result && !builder.pending && !builder.error && canApply(replacement, builder.result!.target.week)) onApply(replacement, builder.result!.target.week);
             setReplacement(null);
           }}>Replace draft</Button>
           <Button shape="square" variant="secondary" onClick={() => setReplacement(null)}>Keep my draft</Button>

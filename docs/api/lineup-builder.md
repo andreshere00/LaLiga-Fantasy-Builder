@@ -6,6 +6,19 @@ membership through the caller's `GET /leagues`; a caller cannot choose another
 manager's team. All Fantasy, scraper and football reads reuse existing services.
 No bid, offer acceptance, sale, clause, shield or lineup save is executed.
 
+In the frontend preview, players outside the current caller's squad have red
+photo backgrounds and hover/focus help explaining that acquisition is required. Their Acquire
+button opens current market or opponent-roster reads and the existing manual
+confirmation dialogs: free-market bids, direct offers to opponent squad entries,
+or release-clause payment when funds, protection, league settings, squad space
+and the acquisition deadline allow it. No transaction runs during generation or
+when opening options. A submitted acquisition or uncertain mutation response
+marks the recommendation stale and requires a rebuild before draft use.
+The expandable trade projection groups final balances, settlement deadlines,
+retained squad members and trading-only purchases. Ordered transaction cards
+show player names/photos, readable acquisition methods, estimates, balances
+after settlement and the conditions attached to each step.
+
 The [implementation plan](../lineup-builder-implementation-plan.md) and
 [research record](../lineup-builder-research.md) explain the workflow and policies.
 Generated request/response models are in [endpoint schemas](endpoint-schemas.md).
@@ -33,6 +46,14 @@ league's explicit formations entitlement. The result contains first-kickoff
 context, exact Decimal scores, attainable bounds, redistributed weights,
 omissions, whole-squad balances, conditional transaction steps and source exclusions.
 Decimal scores are JSON strings; frontend contracts convert them to display numbers.
+
+The bounded search alternates owned, market-containing and opponent-containing
+queues. Source-specific bounds require a starter from that acquisition source,
+without requiring the user to mark a market player mandatory. Default five-result
+builds reserve two external comparison slots when feasible; those slots cover
+both acquisition sources when available, retaining score order among the selected
+comparisons. Overlapping lineups are deduplicated. Eligibility, finances and
+deadlines still apply, and incomplete search remains explicitly labeled.
 
 The six scoring sections follow the versioned workflow. Probability, squad role
 and impact-substitute bonus share enumerated achievable bounds. Minutes and rest
@@ -156,6 +177,11 @@ missing/naive expiry, an expired listing and settlement at/after kickoff. Oppone
 diagnostics distinguish league settings, protection expiry, active/unknown shield
 state, and missing clause prices. The conservative pending-bid reserve is an
 informational cash bound and is not counted as a player/source exclusion.
+The frontend exclusions table shows only unavailable players and verified clause
+locks that expire after the target matchday's first kickoff. A lock expiring
+exactly at kickoff is free at that instant and is not included in this table.
+The separate 48-hour eligibility buffer and other source diagnostics remain in
+the build response; they are not displayed as matchday availability exclusions.
 
 Further authenticated read-only
 captures are needed for exact gross/net reservation accounting and timed shield expiries;

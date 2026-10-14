@@ -6,15 +6,19 @@ import { PitchMarkings } from "./PitchMarkings";
 import { LineupBuilderScoreDetails } from "./LineupBuilderScoreDetails";
 import { builderScoreTone } from "./builderScoreTone";
 import { builderDiagnosticMessage } from "./builderDiagnosticCopy";
+import { Help } from "../../components/ui/Help";
+import { LineupBuilderTradeDetails } from "./LineupBuilderTradeDetails";
 
 const money = (value: number) => new Intl.NumberFormat("en-IE", { style: "currency", currency: "EUR", maximumFractionDigits: 0 }).format(value);
 
 /** Read-only candidate comparisons and complete rule/transaction evidence. */
-export function LineupBuilderResults({ result, playersById, canApply, onApply }: {
+export function LineupBuilderResults({ result, playersById, canApply, onApply, ownedPlayerIds, onAcquire }: {
   result: LineupBuildDto;
   playersById: ReadonlyMap<string, { name: string; photoUrl: string | null }>;
   canApply: (candidate: BuilderCandidate) => boolean;
   onApply: (candidate: BuilderCandidate) => void;
+  ownedPlayerIds?: ReadonlySet<string>;
+  onAcquire?: (player: BuilderCandidate["starters"][number]) => void;
 }) {
   const names = new Map([...playersById].map(([id, player]) => [id, player.name]));
   for (const candidate of result.candidates) {
@@ -26,7 +30,10 @@ export function LineupBuilderResults({ result, playersById, canApply, onApply }:
     }
   }
   const playerName = (id: string) => names.get(id) ?? "Unknown player";
-  const exclusions = result.diagnostics.filter((item) => item.code !== "cash_conservative_bid_reserve");
+  const exclusions = result.diagnostics.filter((item) => item.playerId != null &&
+    (item.code === "player_unavailable" || item.code === "opponent_protection_active_at_kickoff"));
+  const needsAcquisition = (player: BuilderCandidate["starters"][number]) =>
+    player.source !== "owned" && !ownedPlayerIds?.has(player.playerId);
   return <section aria-label="Lineup recommendations" className="lineup-builder-results">
     <h3>Round {result.target.week} · {new Date(result.target.firstKickoff).toLocaleString()}</h3>
     {!result.searchComplete && <p role="status">Search is incomplete. These candidates are feasible estimates; better choices may remain.</p>}
@@ -53,28 +60,26 @@ export function LineupBuilderResults({ result, playersById, canApply, onApply }:
       <p>Lineup score {candidate.totalLineupScore.toFixed(3)} · Cash estimate {money(candidate.tradingPlan.projectedCash)} · Squad {candidate.tradingPlan.squadCount}/24 · Pending bid slots {candidate.tradingPlan.reservedSquadSlots} · Value {money(candidate.tradingPlan.squadValue)}</p>
       <div className="lineup-builder-preview" aria-label="Starting XI preview">
         <PitchMarkings stretch />
-        {[4, 3, 2, 1].map((position) => <div key={position}>{candidate.starters.filter((p) => p.position === position).map((player) => <div className="lineup-builder-preview-player" key={player.playerId}>
+        {[4, 3, 2, 1].map((position) => <div key={position}>{candidate.starters.filter((p) => p.position === position).map((player) => <Help key={player.playerId}
+          className={"lineup-builder-preview-player" + (needsAcquisition(player) ? " is-not-owned" : "")}
+          content={needsAcquisition(player) ? "This player is not in your squad. Acquire them before using this lineup as a draft." : null}>
           <ProfilePhoto key={playersById.get(player.playerId)?.photoUrl ?? "no-photo"}
             className="lineup-builder-player-photo" url={playersById.get(player.playerId)?.photoUrl ?? null}
             fallback={<PersonIcon />} />
           <span>{player.name}</span><small>
             <b className="lineup-builder-score" data-tone={builderScoreTone(player.lineupScore, "lineup")}>{player.lineupScore.toFixed(3)}</b> · {player.source}
           </small>
-        </div>)}</div>)}
+          {needsAcquisition(player) && <span className="lineup-builder-ownership-label">Not owned</span>}
+          {needsAcquisition(player) && onAcquire && <Button size="sm" shape="square" variant="secondary"
+            aria-label={`Acquire ${player.name}`} onClick={() => onAcquire(player)}>Acquire</Button>}
+        </Help>)}</div>)}
       </div>
       <details><summary>Player scores and selection reasons</summary>
         <p className="fb-helper">These are suitability scores, not predicted Fantasy points. Higher scores rank better. Combined adds lineup and trading scores. Rule points are normalized within each category; lineup contributions also apply the category weight.</p>
         {candidate.starters.map((player) => <LineupBuilderScoreDetails key={player.playerId} player={player} />)}
       </details>
-      <details><summary>Required trades and whole-squad projection</summary>
-        <p>Sales deadline: {new Date(result.target.salesDeadline).toLocaleString()}. Clauses close: {new Date(result.target.clausesDeadline).toLocaleString()}.</p>
-        <p>Retained: {candidate.tradingPlan.retainedPlayerIds.map(playerName).join(", ") || "None"}</p>
-        <p>Trading-only purchases: {candidate.tradingPlan.tradingPurchases.map((p) => p.name).join(", ") || "None"}</p>
-        <ol>{candidate.tradingPlan.steps.map((step, i) => <li key={i}>
-          {step.action} {playerName(step.playerId)} · {money(step.estimate)} · {step.method} · {new Date(step.settlementAt).toLocaleString()} · Cash {money(step.cashAfter)} · Squad {step.squadCountAfter}/24
-          <p>{step.conditions.join(". ")}</p>
-        </li>)}</ol>
-      </details>
+      <LineupBuilderTradeDetails plan={candidate.tradingPlan} target={result.target}
+        playerName={playerName} playersById={playersById} />
       {result.explanations[candidate.candidateId] && <p>{result.explanations[candidate.candidateId]}</p>}
       <Button shape="square" disabled={!canApply(candidate)} onClick={() => onApply(candidate)}>Use as draft</Button>
       {!canApply(candidate) && <p className="fb-helper">{candidate.resourceGroup === "external"

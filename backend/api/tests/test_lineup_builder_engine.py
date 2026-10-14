@@ -387,6 +387,93 @@ def test_search_candidates_limited_budget_serves_both_resource_groups() -> None:
     assert {candidate.resource_group for candidate in result} == {"owned", "external"}
 
 
+@pytest.mark.parametrize("position", [1, 4])
+@pytest.mark.parametrize("include_opponent", [False, True])
+def test_search_candidates_lower_ranked_market_player_is_compared_without_mandatory_ids(
+    position: int, include_opponent: bool
+) -> None:
+    owned = [p.model_copy(update={"lineup_score": Decimal("1")}) for p in pool()]
+    market = player(99, position, source="market", score=".1")
+    opponent = player(199, 4, source="opponents", score="2")
+    result, complete, states = search_candidates(
+        owned + [market] + ([opponent] if include_opponent else []),
+        owned,
+        1000,
+        BuildPreferences(allow_buying=True, max_candidates=5),
+        ["4,4,2"],
+        TARGET,
+        NOW,
+        1,
+        max_states=500,
+        max_seconds=30,
+    )
+    assert not complete
+    assert states <= 500
+    assert any(any(p.player_id == "99" for p in c.starters) for c in result)
+    if include_opponent:
+        assert any(any(p.player_id == "199" for p in c.starters) for c in result)
+
+
+def test_search_candidates_each_acquisition_source_matches_exhaustive_oracle() -> None:
+    owned = pool()
+    players = owned + [
+        player(99, 4, source="market", score=".15"),
+        player(199, 4, source="opponents", score="1"),
+    ]
+    result, complete, _ = search_candidates(
+        players,
+        owned,
+        1000,
+        BuildPreferences(allow_buying=True),
+        ["4,4,2"],
+        TARGET,
+        NOW,
+        1,
+        max_seconds=30,
+    )
+    choices = [
+        combinations([p for p in players if p.position == position], amount)
+        for position, amount in ((1, 1), (2, 4), (3, 4), (4, 2))
+    ]
+    all_lineups = [tuple(p for row in rows for p in row) for rows in product(*choices)]
+    assert complete
+    assert len(result) == 5
+    for source in ("market", "opponents"):
+        expected = max(
+            sum((p.lineup_score for p in lineup), Decimal(0))
+            for lineup in all_lineups
+            if any(p.source == source for p in lineup)
+        )
+        assert (
+            max(c.total_lineup_score for c in result if any(p.source == source for p in c.starters))
+            == expected
+        )
+
+
+def test_search_candidates_lineup_covering_both_sources_is_not_duplicated() -> None:
+    owned = pool()
+    required = [
+        p
+        for position, amount in ((1, 1), (2, 4), (3, 4))
+        for p in [p for p in owned if p.position == position][:amount]
+    ]
+    required += [player(99, 4, source="market"), player(199, 4, source="opponents")]
+    result, complete, _ = search_candidates(
+        owned + required[-2:],
+        owned,
+        1000,
+        BuildPreferences(allow_buying=True, mandatory_player_ids=[p.player_id for p in required]),
+        ["4,4,2"],
+        TARGET,
+        NOW,
+        1,
+        max_seconds=30,
+    )
+    assert complete
+    assert len(result) == 1
+    assert {p.player_id for p in result[0].starters} == {p.player_id for p in required}
+
+
 @pytest.mark.parametrize("limit", [1, 2, 3, 5])
 def test_search_candidates_mixed_groups_respect_total_output_limit(limit: int) -> None:
     owned = pool()

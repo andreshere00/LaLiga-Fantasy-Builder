@@ -33,7 +33,9 @@ describe("market mutation reconciliation", () => {
       if (kind === "clause") result.current.confirmClause();
       else result.current.confirmWithdraw();
     });
-    await waitFor(() => expect(refetch).toHaveBeenCalledTimes(3));
+    await waitFor(() => expect(refetch).toHaveBeenCalledWith({ queryKey: ["market", "lg"] }));
+    expect(refetch).toHaveBeenCalledWith({ queryKey: ["team-money", "lg", "t"] });
+    expect(refetch).toHaveBeenCalledWith({ queryKey: ["team", "lg", "t"] });
     expect(fetchFn).toHaveBeenCalledTimes(1);
     unmount();
   });

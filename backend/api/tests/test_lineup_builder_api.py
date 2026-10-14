@@ -116,7 +116,7 @@ def _client(
     market_route_state: str | None = None,
     opponent_shield_missing: bool = False,
     shield_lookup_state: str = "clear",
-    opponent_lock_too_late: bool = False,
+    opponent_lock_offset_hours: int | None = None,
 ) -> tuple[TestClient, str, list[httpx.Request]]:
     """Wire real auth/Fantasy clients with typed football segment stubs."""
     private, public = rsa_pems
@@ -310,8 +310,10 @@ def _client(
                 other["playerMaster"].update(teamId=None, positionId=None, marketValue=None)
             if opponent_shield_missing:
                 other.pop("isShielded")
-            if opponent_lock_too_late:
-                other["buyoutClauseLockedEndTime"] = (first - timedelta(hours=24)).isoformat()
+            if opponent_lock_offset_hours is not None:
+                other["buyoutClauseLockedEndTime"] = (
+                    first + timedelta(hours=opponent_lock_offset_hours)
+                ).isoformat()
             return httpx.Response(200, json={"id": "opponent", "players": [other]})
         if path.endswith("/offer"):
             return httpx.Response(
@@ -634,6 +636,26 @@ def test_build_lineup_external_proposals_survive_owned_result_priority(rsa_pems,
     assert all(request.method == "GET" for request in requests)
 
 
+def test_build_lineup_market_and_opponents_are_compared_without_mandatory_players(rsa_pems) -> None:
+    client, jwt, requests = _client(rsa_pems, source_players=True, extra_owned=True)
+    with client:
+        result = client.post(
+            "/lineup-builder/leagues/league/build",
+            headers={"Authorization": f"Bearer {jwt}"},
+            json={
+                "formations": ["4,4,2"],
+                "sources": ["owned", "market", "opponents"],
+                "allow_buying": True,
+            },
+        )
+    assert result.status_code == 200, result.text
+    candidates = result.json()["candidates"]
+    assert len(candidates) == 5
+    for source in ("market", "opponents"):
+        assert any(any(p["source"] == source for p in c["starters"]) for c in candidates)
+    assert all(request.method == "GET" for request in requests)
+
+
 @pytest.mark.parametrize("source", ["market", "opponents"])
 @pytest.mark.parametrize("missing_catalog", [False, True])
 def test_build_lineup_sparse_external_sources_require_verified_catalog_identity(
@@ -901,12 +923,22 @@ def test_build_lineup_free_auction_does_not_depend_on_seller_offer_flag(rsa_pems
     assert all(request.method == "GET" for request in requests)
 
 
-def test_build_lineup_late_opponent_lock_reports_deadline_without_shield_lookup(rsa_pems) -> None:
+@pytest.mark.parametrize(
+    "offset,code",
+    [
+        (-24, "opponent_protection_expires_too_late"),
+        (0, "opponent_protection_expires_too_late"),
+        (24, "opponent_protection_active_at_kickoff"),
+    ],
+)
+def test_build_lineup_late_opponent_lock_reports_deadline_without_shield_lookup(
+    rsa_pems, offset, code
+) -> None:
     client, jwt, requests = _client(
         rsa_pems,
         source_players=True,
         opponent_shield_missing=True,
-        opponent_lock_too_late=True,
+        opponent_lock_offset_hours=offset,
     )
     with client:
         result = client.post(
@@ -915,8 +947,6 @@ def test_build_lineup_late_opponent_lock_reports_deadline_without_shield_lookup(
             json={"formations": ["4,4,2"], "sources": ["owned", "opponents"], "allow_buying": True},
         )
     assert result.status_code == 200, result.text
-    assert {"code": "opponent_protection_expires_too_late", "player_id": "199"} in result.json()[
-        "diagnostics"
-    ]
+    assert {"code": code, "player_id": "199"} in result.json()["diagnostics"]
     assert not any(r.url.path.endswith("/check-shield") for r in requests)
     assert all(c["resource_group"] == "owned" for c in result.json()["candidates"])

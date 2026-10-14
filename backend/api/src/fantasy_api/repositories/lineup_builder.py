@@ -381,7 +381,11 @@ class LineupBuilderRepository:
                     elif lock is None:
                         route_error = "opponent_protection_expiry_unknown"
                     elif lock > target.protection_deadline:
-                        route_error = "opponent_protection_expires_too_late"
+                        route_error = (
+                            "opponent_protection_active_at_kickoff"
+                            if lock > target.first_kickoff
+                            else "opponent_protection_expires_too_late"
+                        )
                     elif slot.buyout_clause is None or slot.buyout_clause <= 0:
                         route_error = "opponent_clause_price_missing"
                     shielded = slot.is_shielded

@@ -74,8 +74,17 @@ test("builder generates read-only previews and supports keyboard dismissal", asy
   await page.keyboard.press("Enter");
   await expect(exclusions).not.toBeVisible();
   await dialog.getByText("Required trades and whole-squad projection", { exact: true }).click();
-  await expect(dialog.getByText(/^Retained:/)).toContainText("Player 13");
-  await expect(dialog.getByText(/^sell Player 14/)).toBeVisible();
+  await expect(dialog.getByRole("list", { name: "Players retained" })).toContainText("Player 13");
+  await expect(dialog.getByRole("heading", { name: "Sell Player 14" })).toBeVisible();
+  await dialog.locator(".lineup-builder-trades").screenshot({ path: info.outputPath("lineup-builder-trades.png") });
+  await dialog.locator(".lineup-builder-transactions").scrollIntoViewIfNeeded();
+  await dialog.locator(".lineup-builder-transactions").screenshot({ path: info.outputPath("lineup-builder-transactions.png") });
+  await page.setViewportSize({ width: 390, height: 844 });
+  await dialog.locator(".lineup-builder-trades").scrollIntoViewIfNeeded();
+  await dialog.locator(".lineup-builder-trades").screenshot({ path: info.outputPath("lineup-builder-trades-mobile.png") });
+  await dialog.locator(".lineup-builder-transactions").scrollIntoViewIfNeeded();
+  await dialog.locator(".lineup-builder-transactions").screenshot({ path: info.outputPath("lineup-builder-transactions-mobile.png") });
+  await page.setViewportSize({ width: 1280, height: 720 });
   await dialog.getByText("Player scores and selection reasons", { exact: true }).click();
   const reasoning = dialog.locator(".lineup-builder-player-reasoning").first();
   await reasoning.locator("summary").focus();
@@ -188,7 +197,117 @@ for (const source of ["market", "opponents"] as const) {
     await expect(candidates.first().getByRole("button", { name: "Use as draft" })).toBeEnabled();
     await expect(candidates.last().getByText(/Acquisitions required/)).toBeVisible();
     await expect(candidates.last().getByRole("button", { name: "Use as draft" })).toBeDisabled();
+    const externalCard = candidates.last().locator(".lineup-builder-preview-player.is-not-owned");
+    await expect(externalCard).toHaveCount(1);
+    await expect(externalCard).toHaveCSS("background-color", "rgba(0, 0, 0, 0)");
+    await expect(externalCard.locator(".fb-avatar")).toHaveCSS("background-color", "rgb(255, 75, 68)");
+    await externalCard.hover();
+    await expect(page.getByRole("tooltip")).toContainText("This player is not in your squad.");
+    await page.mouse.move(0, 0);
+    await expect(page.getByRole("tooltip")).not.toBeVisible();
+    await page.keyboard.press("Tab");
+    await externalCard.focus();
+    await expect(page.getByRole("tooltip")).toContainText("This player is not in your squad.");
     await expect(candidates.last().getByText(/Proposal only: acquire these players first/)).toBeVisible();
     expect(writes).toBe(0);
   });
 }
+
+for (const action of ["bid", "offer", "clause"] as const) {
+  test(`preview ${action} uses current identifiers and waits for explicit confirmation`, async ({ page }, info) => {
+    await mockApplication(page);
+    const source = action === "bid" ? "market" : "opponents";
+    const proposed = response();
+    const external = structuredClone(proposed.candidates[0]);
+    external.candidate_id = "external-proposal";
+    external.resource_group = "external";
+    Object.assign(external.starters[1], { player_id: "14", name: "Player 14", source,
+      player_team_id: source === "opponents" ? "opponent-entry-14" : null });
+    proposed.candidates.push(external);
+    await page.route("**/api/leagues", (route) => route.fulfill({ json: [{
+      id: "l1", name: "Demo League", team: { id: "t1", money: 50000000, teamValue: 80000000 },
+      config: { features: { buyoutClause: true } },
+    }] }));
+    await page.route("**/api/leagues/l1/teams/t2", (route) => route.fulfill({ json: {
+      id: "t2", players: [{ playerTeamId: "opponent-entry-14", playerMaster: catalog[13],
+        buyoutClause: 7000000, buyoutClauseLockedEndTime: "2026-10-01T12:00:00Z", isShielded: false }],
+    } }));
+    await page.route("**/api/lineup-builder/leagues/l1/build", (route) => route.fulfill({ json: proposed }));
+    const writes: { path: string; body: unknown }[] = [];
+    await page.route("**/api/market/leagues/l1/**", async (route) => {
+      if (route.request().method() === "GET") return route.fallback();
+      writes.push({ path: new URL(route.request().url()).pathname, body: route.request().postDataJSON() });
+      await route.fulfill({ json: { ok: true, id: "confirmed" } });
+    });
+    await page.route("**/api/buyout/leagues/l1/**", async (route) => {
+      writes.push({ path: new URL(route.request().url()).pathname, body: route.request().postDataJSON() });
+      await route.fulfill({ json: { ok: true } });
+    });
+    await page.goto("/");
+    await page.getByRole("button", { name: "Lineup builder", exact: true }).click();
+    const builder = page.getByRole("dialog", { name: "Build lineup" });
+    await builder.getByRole("checkbox", { name: source === "market" ? "Consider players on the market" : "Consider opponent players" }).check();
+    await builder.getByRole("checkbox", { name: "Allow purchase recommendations" }).check();
+    await builder.getByRole("button", { name: "Build", exact: true }).click();
+    const card = builder.locator(".lineup-builder-preview-player.is-not-owned");
+    await card.getByRole("button", { name: "Acquire Player 14" }).click();
+    const options = page.getByRole("dialog", { name: "Player 14 — Acquisition options" });
+    const label = action === "bid" ? "Place bid" : action === "offer" ? "Make offer" : "Pay release clause";
+    await expect(options.getByRole("button", { name: label, exact: true })).toBeEnabled();
+    await options.getByRole("button", { name: label, exact: true }).click();
+    const confirmation = page.getByRole("dialog", { name: action === "bid" ? "Hire player" : label, exact: true });
+    await expect(confirmation).toBeVisible();
+    expect(writes).toEqual([]);
+    await confirmation.getByRole("button", { name: "Cancel", exact: true }).click();
+    await expect(options).toBeVisible();
+    expect(writes).toEqual([]);
+    await options.getByRole("button", { name: label, exact: true }).click();
+    await confirmation.getByRole("button", { name: "Confirm", exact: true }).click();
+    await expect(options).toBeVisible();
+    expect(writes).toEqual([{ path: action === "bid" ? "/api/market/leagues/l1/m14/bids"
+      : action === "offer" ? "/api/market/leagues/l1/direct-offers"
+        : "/api/buyout/leagues/l1/player-teams/opponent-entry-14/pay",
+      body: action === "clause" ? { buyoutClauseToPay: 7000000 }
+        : action === "offer" ? { playerId: "opponent-entry-14", money: 3300000 } : { money: 3300000 },
+    }]);
+    await options.getByRole("button", { name: "Close", exact: true }).click();
+    await expect(builder.getByText("Your acquisition activity changed. Rebuild the recommendations before using a draft.")).toBeVisible();
+    await expect(builder.locator(".lineup-builder-candidate").first().getByRole("button", { name: "Use as draft" })).toBeDisabled();
+    if (action === "bid") {
+      await card.scrollIntoViewIfNeeded();
+      await page.screenshot({ path: info.outputPath("lineup-builder-acquisition-card.png") });
+      await page.setViewportSize({ width: 390, height: 844 });
+      await card.scrollIntoViewIfNeeded();
+      await expect(card.getByRole("button", { name: "Acquire Player 14" })).toBeVisible();
+      await page.screenshot({ path: info.outputPath("lineup-builder-acquisition-card-mobile.png") });
+    }
+  });
+}
+
+test("preview keeps release-clause payment disabled when shield status is unknown", async ({ page }) => {
+  await mockApplication(page);
+  await page.route("**/api/leagues", (route) => route.fulfill({ json: [{
+    id: "l1", name: "Demo League", team: { id: "t1", money: 50000000, teamValue: 80000000 },
+    config: { features: { buyoutClause: true } },
+  }] }));
+  await page.route("**/api/leagues/l1/teams/t2", (route) => route.fulfill({ json: {
+    id: "t2", players: [{ playerTeamId: "opponent-entry-14", playerMaster: catalog[13],
+      buyoutClause: 7000000, buyoutClauseLockedEndTime: "2026-10-01T12:00:00Z" }],
+  } }));
+  const proposed = response();
+  proposed.candidates[0].resource_group = "external";
+  Object.assign(proposed.candidates[0].starters[1], { player_id: "14", name: "Player 14",
+    source: "opponents", player_team_id: "opponent-entry-14" });
+  await page.route("**/api/lineup-builder/leagues/l1/build", (route) => route.fulfill({ json: proposed }));
+  await page.goto("/");
+  await page.getByRole("button", { name: "Lineup builder", exact: true }).click();
+  const builder = page.getByRole("dialog", { name: "Build lineup" });
+  await builder.getByRole("checkbox", { name: "Consider opponent players" }).check();
+  await builder.getByRole("checkbox", { name: "Allow purchase recommendations" }).check();
+  await builder.getByRole("button", { name: "Build", exact: true }).click();
+  await builder.getByRole("button", { name: "Acquire Player 14" }).click();
+  const options = page.getByRole("dialog", { name: "Player 14 — Acquisition options" });
+  await expect(options.getByRole("button", { name: "Make offer" })).toBeEnabled();
+  await expect(options.getByRole("button", { name: "Pay release clause" })).toBeDisabled();
+  await expect(options.getByText("The player's shield status could not be verified.")).toBeVisible();
+});
