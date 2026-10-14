@@ -110,6 +110,13 @@ def _client(
     roster_state: str = "complete",
     provide_catalog: bool = False,
     catalog_missing_entry: bool = False,
+    extra_owned: bool = False,
+    external_sparse: bool = False,
+    external_catalog_missing: bool = False,
+    market_route_state: str | None = None,
+    opponent_shield_missing: bool = False,
+    shield_lookup_state: str = "clear",
+    opponent_lock_too_late: bool = False,
 ) -> tuple[TestClient, str, list[httpx.Request]]:
     """Wire real auth/Fantasy clients with typed football segment stubs."""
     private, public = rsa_pems
@@ -131,6 +138,20 @@ def _client(
         }
         for i, position in enumerate([1, 2, 2, 2, 2, 3, 3, 3, 3, 4, 4], start=1)
     ]
+    if extra_owned:
+        for player_id, position in ((12, 3), (13, 4)):
+            roster.append(
+                {
+                    **roster[-1],
+                    "playerTeamId": f"slot-{player_id}",
+                    "playerMaster": {
+                        **roster[-1]["playerMaster"],
+                        "id": str(player_id),
+                        "positionId": position,
+                        "name": f"Player {player_id}",
+                    },
+                }
+            )
 
     catalog_rows = [
         {
@@ -141,6 +162,11 @@ def _client(
         }
         for slot in roster
     ]
+    if source_players and not external_catalog_missing:
+        catalog_rows += [
+            {"id": player_id, "teamId": "1", "positionId": "4", "marketValue": "100"}
+            for player_id in ("99", "199")
+        ]
 
     def handler(request: httpx.Request) -> httpx.Response:
         """Assert authentication separation and fail if any provider write occurs."""
@@ -179,6 +205,19 @@ def _client(
             )
         if path.endswith("/money"):
             return httpx.Response(200, json={"teamMoney": cash, "teamInvestment": investment})
+        if path.endswith("/check-shield"):
+            if shield_lookup_state == "error":
+                return httpx.Response(503, json={"secret": TEST_LALIGA_BEARER})
+            return httpx.Response(
+                200,
+                json={
+                    "isShielded": {
+                        "clear": False,
+                        "active": True,
+                        "unknown": None,
+                    }[shield_lookup_state]
+                },
+            )
         if path.endswith("/market"):
             market_payload = {
                 "marketPlayers": (
@@ -211,6 +250,33 @@ def _client(
                 market_payload["marketPlayers"].append(
                     {"id": "bid-listing", "bid": {"id": "bid", "money": listing_bid_money}}
                 )
+            if external_sparse and source_players:
+                market_payload["marketPlayers"][0]["playerMaster"].update(
+                    teamId=None, positionId=None, marketValue=None
+                )
+            if market_route_state and source_players:
+                listing = market_payload["marketPlayers"][0]
+                changes = {
+                    "free_offer_enabled": {"directOffer": True},
+                    "offer_unknown": {"directOffer": None},
+                    "seller_offer": {
+                        "directOffer": True,
+                        "playerTeam": {"playerTeamId": "seller-slot"},
+                    },
+                    "owner_auction_flag": {
+                        "directOffer": False,
+                        "playerTeam": {"playerTeamId": "seller-slot"},
+                    },
+                    "type_unknown": {"discr": "unknown"},
+                    "expiry_unknown": {"expirationDate": None},
+                    "expiry_naive": {
+                        "expirationDate": (now + timedelta(days=1)).replace(tzinfo=None).isoformat()
+                    },
+                    "expired": {"expirationDate": (now - timedelta(seconds=1)).isoformat()},
+                    "settles_late": {"expirationDate": (first + timedelta(seconds=1)).isoformat()},
+                    "settles_at_kickoff": {"expirationDate": first.isoformat()},
+                }
+                listing.update(changes[market_route_state])
             return httpx.Response(200, json=market_payload)
         if path.endswith("/week/current"):
             return httpx.Response(
@@ -232,6 +298,12 @@ def _client(
                 "buyoutClause": 150,
                 "playerMaster": {**roster[-1]["playerMaster"], "id": "199"},
             }
+            if external_sparse:
+                other["playerMaster"].update(teamId=None, positionId=None, marketValue=None)
+            if opponent_shield_missing:
+                other.pop("isShielded")
+            if opponent_lock_too_late:
+                other["buyoutClauseLockedEndTime"] = (first - timedelta(hours=24)).isoformat()
             return httpx.Response(200, json={"id": "opponent", "players": [other]})
         if path.endswith("/offer"):
             return httpx.Response(
@@ -309,6 +381,7 @@ def _client(
         standings,
         1,
         players=container.players_service if provide_catalog else None,
+        buyout=container.buyout_service,
     )
     container.lineup_builder_service = LineupBuilderService(repo)
     return (
@@ -530,6 +603,59 @@ def test_build_lineup_external_mandatory_player_has_conditional_acquisition(
     assert all(request.method == "GET" for request in requests)
 
 
+@pytest.mark.parametrize("source", ["market", "opponents"])
+def test_build_lineup_external_proposals_survive_owned_result_priority(rsa_pems, source) -> None:
+    client, jwt, requests = _client(rsa_pems, source_players=True, extra_owned=True)
+    with client:
+        result = client.post(
+            "/lineup-builder/leagues/league/build",
+            headers={"Authorization": f"Bearer {jwt}"},
+            json={"formations": ["4,4,2"], "sources": ["owned", source], "allow_buying": True},
+        )
+    assert result.status_code == 200, result.text
+    candidates = result.json()["candidates"]
+    assert len(candidates) == 5
+    assert [c["resource_group"] for c in candidates] == [
+        "owned",
+        "owned",
+        "owned",
+        "external",
+        "external",
+    ]
+    assert all(c["trading_plan"]["acquisitions"] for c in candidates[3:])
+    assert all(request.method == "GET" for request in requests)
+
+
+@pytest.mark.parametrize("source", ["market", "opponents"])
+@pytest.mark.parametrize("missing_catalog", [False, True])
+def test_build_lineup_sparse_external_sources_require_verified_catalog_identity(
+    rsa_pems, source, missing_catalog
+) -> None:
+    client, jwt, requests = _client(
+        rsa_pems,
+        source_players=True,
+        external_sparse=True,
+        provide_catalog=True,
+        external_catalog_missing=missing_catalog,
+    )
+    with client:
+        result = client.post(
+            "/lineup-builder/leagues/league/build",
+            headers={"Authorization": f"Bearer {jwt}"},
+            json={"formations": ["4,4,2"], "sources": ["owned", source], "allow_buying": True},
+        )
+    assert result.status_code == 200, result.text
+    body = result.json()
+    assert any(c["resource_group"] == "external" for c in body["candidates"]) == (
+        not missing_catalog
+    )
+    assert sum(request.url.path.endswith("/players") for request in requests) == 1
+    assert (
+        any(d["code"] == "player_identity_unavailable" for d in body["diagnostics"])
+        == missing_catalog
+    )
+
+
 def test_build_lineup_sales_permission_does_not_execute_offer_acceptance(rsa_pems) -> None:
     client, jwt, requests = _client(rsa_pems, offers=True, source_players=True, cash=0)
     with client:
@@ -684,3 +810,103 @@ def test_build_lineup_missing_status_or_active_injury_does_not_default_to_availa
             json={"formations": ["4,4,2"]},
         )
     assert response.status_code == 409
+
+
+@pytest.mark.parametrize(
+    "state,code",
+    [
+        ("seller_offer", "market_seller_acceptance_required"),
+        ("owner_auction_flag", "market_seller_acceptance_required"),
+        ("type_unknown", "market_listing_type_unknown"),
+        ("expiry_unknown", "market_expiry_unknown"),
+        ("expiry_naive", "market_expiry_unknown"),
+        ("expired", "market_listing_expired"),
+        ("settles_late", "market_settlement_after_kickoff"),
+        ("settles_at_kickoff", "market_settlement_after_kickoff"),
+    ],
+)
+def test_build_lineup_market_route_reports_exact_exclusion_reason(rsa_pems, state, code) -> None:
+    client, jwt, requests = _client(rsa_pems, source_players=True, market_route_state=state)
+    with client:
+        result = client.post(
+            "/lineup-builder/leagues/league/build",
+            headers={"Authorization": f"Bearer {jwt}"},
+            json={"formations": ["4,4,2"], "sources": ["owned", "market"], "allow_buying": True},
+        )
+    assert result.status_code == 200, result.text
+    assert {"code": code, "player_id": "99"} in result.json()["diagnostics"]
+    assert all(c["resource_group"] == "owned" for c in result.json()["candidates"])
+    assert all(request.method == "GET" for request in requests)
+
+
+@pytest.mark.parametrize(
+    "state,code",
+    [
+        ("clear", None),
+        ("active", "opponent_shield_active"),
+        ("unknown", "opponent_shield_status_unknown"),
+        ("error", "opponent_shield_status_unknown"),
+    ],
+)
+def test_build_lineup_missing_opponent_shield_uses_read_only_verified_status(
+    rsa_pems, state, code
+) -> None:
+    client, jwt, requests = _client(
+        rsa_pems,
+        source_players=True,
+        opponent_shield_missing=True,
+        shield_lookup_state=state,
+    )
+    with client:
+        result = client.post(
+            "/lineup-builder/leagues/league/build",
+            headers={"Authorization": f"Bearer {jwt}"},
+            json={"formations": ["4,4,2"], "sources": ["owned", "opponents"], "allow_buying": True},
+        )
+    assert result.status_code == 200, result.text
+    body = result.json()
+    assert any(c["resource_group"] == "external" for c in body["candidates"]) == (state == "clear")
+    if code:
+        assert {"code": code, "player_id": "199"} in body["diagnostics"]
+    shield_requests = [r for r in requests if r.url.path.endswith("/check-shield")]
+    assert len(shield_requests) == 1
+    assert "opponent-slot" in shield_requests[0].url.path
+    assert all(request.method == "GET" for request in requests)
+    assert TEST_LALIGA_BEARER not in result.text
+
+
+@pytest.mark.parametrize("state", ["free_offer_enabled", "offer_unknown"])
+def test_build_lineup_free_auction_does_not_depend_on_seller_offer_flag(rsa_pems, state) -> None:
+    client, jwt, requests = _client(rsa_pems, source_players=True, market_route_state=state)
+    with client:
+        result = client.post(
+            "/lineup-builder/leagues/league/build",
+            headers={"Authorization": f"Bearer {jwt}"},
+            json={"formations": ["4,4,2"], "sources": ["owned", "market"], "allow_buying": True},
+        )
+    assert result.status_code == 200, result.text
+    body = result.json()
+    assert any(c["resource_group"] == "external" for c in body["candidates"])
+    assert not any(d["player_id"] == "99" for d in body["diagnostics"])
+    assert all(request.method == "GET" for request in requests)
+
+
+def test_build_lineup_late_opponent_lock_reports_deadline_without_shield_lookup(rsa_pems) -> None:
+    client, jwt, requests = _client(
+        rsa_pems,
+        source_players=True,
+        opponent_shield_missing=True,
+        opponent_lock_too_late=True,
+    )
+    with client:
+        result = client.post(
+            "/lineup-builder/leagues/league/build",
+            headers={"Authorization": f"Bearer {jwt}"},
+            json={"formations": ["4,4,2"], "sources": ["owned", "opponents"], "allow_buying": True},
+        )
+    assert result.status_code == 200, result.text
+    assert {"code": "opponent_protection_expires_too_late", "player_id": "199"} in result.json()[
+        "diagnostics"
+    ]
+    assert not any(r.url.path.endswith("/check-shield") for r in requests)
+    assert all(c["resource_group"] == "owned" for c in result.json()["candidates"])

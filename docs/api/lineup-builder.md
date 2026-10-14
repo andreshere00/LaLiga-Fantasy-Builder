@@ -79,8 +79,14 @@ weights, trading rules, eligibility and financial checks remain unchanged.
 The browser reads revised scores and rule evidence directly from the response.
 
 Best-first search considers the whole positional pool, mandatory players first,
-with an admissible score bound. It returns owned XIs before external XIs, then
-lineup-score sum, projected cash, forwards, and seeded final ties. Trading scores
+with an admissible score bound. Owned and external queues take turns using the
+shared search budget; equal-bound nodes prefer more complete lineups. Results
+reserve up to half of `max_candidates` for feasible external XIs and the remaining
+slots for owned XIs. Unused slots go to the other group, and the total limit is
+preserved. For the default five results this normally means three owned and two
+external proposals. A limit of one preserves owned-first priority. It returns
+owned XIs before external XIs, with each group ordered by lineup-score sum,
+projected cash, forwards, and seeded final ties. Trading scores
 order purchases and sales. Extras are evaluated as descending trading-score
 prefix variants, including a base plan without extras. Every retained bench
 player remains valued and counted. Search stops after 100,000 states or three
@@ -104,15 +110,20 @@ This implementation deliberately limits recommendations to established facts:
   planner cannot exceed 24 including those slots. Existing bids are never
   cancelled/released or proposed again as new acquisitions.
 - Every current roster identity and valuation must be present. Sparse master
-  cards fill missing club, position and market-value fields from the verified
-  public player catalog by master ID; existing roster values, ownership and
+  cards from any selected source fill missing club, position and market-value
+  fields from the verified public player catalog by master ID; existing values, ownership and
   squad-entry IDs are preserved. Unknown catalog IDs never receive invented
   values. Loaned-player
   rosters are unavailable until their counting/ownership semantics are verified.
 - Market acquisition requires a verified free-player listing with an actual
-  future expiry before kickoff and no direct-offer acceptance dependency.
+  future expiry before kickoff and no seller-owned squad entry. `directOffer`
+  alone does not classify a free listing as a seller offer; the market UI uses
+  that flag only together with opponent ownership. Listings with seller/owner
+  metadata still require acceptance and are excluded from verified auction plans.
 - Opponent clauses require enabled league buyouts, an explicit unshielded state,
   a verified lock expiry no later than kickoff minus 48 hours, and clause metadata.
+  If the roster omits shield state, reuse the existing authenticated read-only
+  `check-shield` endpoint. Active, missing or failed shield evidence remains excluded.
   An active shield without an authoritative expiry excludes that route.
 - A sale requires an existing pending, unexpired offer at least equal to current
   market value. Its acceptance is a manual condition; projected proceeds remain
@@ -135,7 +146,14 @@ This implementation deliberately limits recommendations to established facts:
   closed. Original Fantasy round IDs survive postponements. Advanced/split-round
   conflicts require verified source handling rather than a guessed deadline.
 
-These restrictions are visible in diagnostics. Further authenticated read-only
+These restrictions are visible in diagnostics. Market diagnostics distinguish
+unsupported listing type, seller acceptance,
+missing/naive expiry, an expired listing and settlement at/after kickoff. Opponent
+diagnostics distinguish league settings, protection expiry, active/unknown shield
+state, and missing clause prices. The conservative pending-bid reserve is an
+informational cash bound and is not counted as a player/source exclusion.
+
+Further authenticated read-only
 captures are needed for exact gross/net reservation accounting and timed shield expiries;
 no production transactions are needed to collect that evidence.
 
@@ -166,6 +184,13 @@ unmount, retains a prior result as stale on refresh failure, and shows rule/trad
 traces. Use as draft checks current roster identities, supported formation and
 editable target week. Replacing an unsaved draft requires explicit confirmation.
 Saving remains the existing separate action.
+
+Market/opponent source selection also requires **Allow purchase recommendations**.
+This permission enables conditional proposals only; it executes no purchases.
+External proposals remain visible even when current ownership prevents draft use.
+Draft use is enabled only after every starter is present in the refreshed owned
+squad and the target round is editable. Unknown acquisition routes, protected
+opponents, insufficient source data or infeasible finances still exclude proposals.
 
 ## Optional explanation
 

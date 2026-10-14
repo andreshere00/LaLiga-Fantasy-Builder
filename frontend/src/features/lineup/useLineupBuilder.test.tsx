@@ -60,9 +60,9 @@ it("should resolve diagnostic names when the player catalog arrives after a fail
     initialProps: { players: new Map<string, { name: string }>() },
   });
   await act(() => result.current.build(preferences));
-  expect(result.current.error).toContain("Unknown player: player unavailable");
+  expect(result.current.error).toContain("Unknown player: The player is unavailable for the target round.");
   expect(result.current.error).not.toContain("master-42");
 
   rerender({ players: new Map([["master-42", { name: "Unai Simón" }]]) });
-  expect(result.current.error).toContain("Unai Simón: player unavailable");
+  expect(result.current.error).toContain("Unai Simón: The player is unavailable for the target round.");
 });

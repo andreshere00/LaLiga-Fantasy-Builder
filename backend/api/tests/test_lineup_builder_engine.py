@@ -328,6 +328,84 @@ def test_search_candidates_small_pool_matches_exhaustive_oracle() -> None:
     )
 
 
+@pytest.mark.parametrize("source", ["market", "opponents"])
+def test_search_candidates_owned_alternatives_do_not_hide_external_group(source: str) -> None:
+    owned = pool()
+    external = player(99, 4, source=source, score="1")
+    players = owned + [external]
+    preferences = BuildPreferences(allow_buying=True, max_candidates=5)
+    result, complete, _ = search_candidates(
+        players, owned, 1000, preferences, ["4,4,2"], TARGET, NOW, 1, max_seconds=30
+    )
+    assert complete
+    assert [candidate.resource_group for candidate in result] == [
+        "owned",
+        "owned",
+        "owned",
+        "external",
+        "external",
+    ]
+    assert all(
+        any(p.source == source for p in candidate.starters)
+        for candidate in result
+        if candidate.resource_group == "external"
+    )
+    choices = [
+        combinations([p for p in players if p.position == position], amount)
+        for position, amount in ((1, 1), (2, 4), (3, 4), (4, 2))
+    ]
+    external_scores = sorted(
+        (
+            sum((p.lineup_score for row in rows for p in row), Decimal(0))
+            for rows in product(*choices)
+            if any(p.source != "owned" for row in rows for p in row)
+        ),
+        reverse=True,
+    )
+    assert [
+        c.total_lineup_score for c in result if c.resource_group == "external"
+    ] == external_scores[:2]
+
+
+def test_search_candidates_limited_budget_serves_both_resource_groups() -> None:
+    owned = [p.model_copy(update={"lineup_score": Decimal(".5")}) for p in pool()]
+    external = player(99, 1, source="market", score="1")
+    result, complete, states = search_candidates(
+        owned + [external],
+        owned,
+        1000,
+        BuildPreferences(allow_buying=True),
+        ["4,4,2"],
+        TARGET,
+        NOW,
+        1,
+        max_states=500,
+        max_seconds=30,
+    )
+    assert not complete
+    assert states <= 500
+    assert {candidate.resource_group for candidate in result} == {"owned", "external"}
+
+
+@pytest.mark.parametrize("limit", [1, 2, 3, 5])
+def test_search_candidates_mixed_groups_respect_total_output_limit(limit: int) -> None:
+    owned = pool()
+    result, _, _ = search_candidates(
+        owned + [player(99, 4, source="market", score="1")],
+        owned,
+        1000,
+        BuildPreferences(allow_buying=True, max_candidates=limit),
+        ["4,4,2"],
+        TARGET,
+        NOW,
+        1,
+        max_seconds=30,
+    )
+    assert len(result) == limit
+    assert result[0].resource_group == "owned"
+    assert any(c.resource_group == "external" for c in result) == (limit > 1)
+
+
 def test_plan_trades_retained_bench_and_sales_accounted_at_every_stage() -> None:
     owned = pool()
     facts = PlayerEvidence(status="available", market_growth=Decimal(0))

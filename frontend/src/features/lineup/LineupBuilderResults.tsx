@@ -5,6 +5,7 @@ import { PersonIcon } from "../shell/icons";
 import { PitchMarkings } from "./PitchMarkings";
 import { LineupBuilderScoreDetails } from "./LineupBuilderScoreDetails";
 import { builderScoreTone } from "./builderScoreTone";
+import { builderDiagnosticMessage } from "./builderDiagnosticCopy";
 
 const money = (value: number) => new Intl.NumberFormat("en-IE", { style: "currency", currency: "EUR", maximumFractionDigits: 0 }).format(value);
 
@@ -25,13 +26,27 @@ export function LineupBuilderResults({ result, playersById, canApply, onApply }:
     }
   }
   const playerName = (id: string) => names.get(id) ?? "Unknown player";
+  const exclusions = result.diagnostics.filter((item) => item.code !== "cash_conservative_bid_reserve");
   return <section aria-label="Lineup recommendations" className="lineup-builder-results">
     <h3>Round {result.target.week} · {new Date(result.target.firstKickoff).toLocaleString()}</h3>
     {!result.searchComplete && <p role="status">Search is incomplete. These candidates are feasible estimates; better choices may remain.</p>}
     <p>Trades are conditional estimates at current market value. Nothing has been bought, sold or saved.</p>
     {result.diagnostics.some((d) => d.code === "cash_conservative_bid_reserve") && <p role="status">Cash projections use a conservative lower bound: pending bid amounts are deducted from the reported balance, even if Fantasy may already reserve them. Pending bids remain unchanged.</p>}
-    {result.diagnostics.length > 0 && <details><summary>{result.diagnostics.length} source exclusions</summary>
-      <ul>{result.diagnostics.map((item, i) => <li key={`${item.playerId}-${item.code}-${i}`}>{item.playerId ? playerName(item.playerId) : "Source"}: {item.code.replaceAll("_", " ")}</li>)}</ul>
+    {exclusions.length > 0 && <details className="lineup-builder-exclusions">
+      <summary><span>{exclusions.length} source exclusions</span><span className="lineup-builder-exclusions-hint">View reasons</span></summary>
+      <div className="lineup-builder-exclusions-scroll">
+        <table aria-label="Source exclusions" className="lineup-builder-exclusions-table">
+          <thead><tr><th scope="col">Player</th><th scope="col">Reason for exclusion</th></tr></thead>
+          <tbody>{exclusions.map((item, i) => <tr key={`${item.playerId}-${item.code}-${i}`}>
+            <th scope="row"><div className="lineup-builder-excluded-player">
+              {item.playerId && <ProfilePhoto className="lineup-builder-option-photo"
+                url={playersById.get(item.playerId)?.photoUrl ?? null} fallback={<PersonIcon />} />}
+              <span>{item.playerId ? playerName(item.playerId) : "Source check"}</span>
+            </div></th>
+            <td>{builderDiagnosticMessage(item.code)}</td>
+          </tr>)}</tbody>
+        </table>
+      </div>
     </details>}
     {result.candidates.map((candidate, index) => <article key={candidate.candidateId} className="lineup-builder-candidate">
       <h4>{index + 1}. {candidate.formation.replaceAll(",", "-")} · {candidate.resourceGroup === "owned" ? "Owned starting XI" : "Acquisitions required"}</h4>
@@ -62,7 +77,9 @@ export function LineupBuilderResults({ result, playersById, canApply, onApply }:
       </details>
       {result.explanations[candidate.candidateId] && <p>{result.explanations[candidate.candidateId]}</p>}
       <Button shape="square" disabled={!canApply(candidate)} onClick={() => onApply(candidate)}>Use as draft</Button>
-      {!canApply(candidate) && <p className="fb-helper">Draft use requires all players in your refreshed squad and the matching editable round.</p>}
+      {!canApply(candidate) && <p className="fb-helper">{candidate.resourceGroup === "external"
+        ? "Proposal only: acquire these players first. Draft use requires every starter in your refreshed squad and the matching editable round."
+        : "Draft use requires all players in your refreshed squad and the matching editable round."}</p>}
     </article>)}
     {result.explanationStatus === "unavailable" && <p>Optional explanation is unavailable; deterministic scores are unchanged.</p>}
   </section>;

@@ -63,8 +63,16 @@ test("builder generates read-only previews and supports keyboard dismissal", asy
   await expect(preview.locator("img").first()).toBeVisible();
   await expect(preview.locator("img").first()).toHaveJSProperty("naturalWidth", 96);
   await preview.screenshot({ path: info.outputPath("lineup-builder-player-photos.png") });
-  await dialog.getByText("1 source exclusions", { exact: true }).click();
-  await expect(dialog.getByText("Player 13: player unavailable", { exact: true })).toBeVisible();
+  const exclusions = dialog.getByRole("table", { name: "Source exclusions" });
+  await expect(exclusions).not.toBeVisible();
+  await dialog.getByText("1 source exclusions", { exact: true }).locator("..").focus();
+  await page.keyboard.press("Enter");
+  await expect(exclusions).toBeVisible();
+  await expect(exclusions.getByRole("rowheader", { name: "Player 13" })).toBeVisible();
+  await expect(exclusions.getByRole("cell", { name: "The player is unavailable for the target round." })).toBeVisible();
+  await exclusions.screenshot({ path: info.outputPath("lineup-builder-exclusions.png") });
+  await page.keyboard.press("Enter");
+  await expect(exclusions).not.toBeVisible();
   await dialog.getByText("Required trades and whole-squad projection", { exact: true }).click();
   await expect(dialog.getByText(/^Retained:/)).toContainText("Player 13");
   await expect(dialog.getByText(/^sell Player 14/)).toBeVisible();
@@ -139,3 +147,48 @@ test("owned candidate applies only to the matching editable draft without saving
   await expect(dialog).not.toBeVisible();
   expect(saves).toBe(0);
 });
+
+for (const source of ["market", "opponents"] as const) {
+  test(`${source} proposals remain visible while draft use is disabled`, async ({ page }) => {
+    await mockApplication(page);
+    await page.route("**/api/calendar/current", (route) => route.fulfill({ json: {
+      weekNumber: 8, nextWeek: 8, previousWeek: 7, isLive: false,
+      openingWeekDate: base.target.first_kickoff,
+    } }));
+    const proposed = response();
+    proposed.target.week = 8;
+    const external = structuredClone(proposed.candidates[0]);
+    external.candidate_id = "external-proposal";
+    external.resource_group = "external";
+    Object.assign(external.starters[1], { player_id: catalog[13].id,
+      name: catalog[13].nickname, source, player_team_id: source === "opponents" ? "opponent-slot" : null,
+    });
+    proposed.candidates.push(external);
+    let writes = 0;
+    await page.route("**/api/teams/*/lineup", async (route) => {
+      if (route.request().method() === "PUT") writes++;
+      await route.fallback();
+    });
+    await page.route("**/api/lineup-builder/leagues/l1/build", (route) => {
+      expect(route.request().postDataJSON()).toMatchObject({
+        sources: ["owned", source], allow_buying: true,
+      });
+      return route.fulfill({ json: proposed });
+    });
+    await page.goto("/");
+    await page.getByRole("button", { name: "Lineup builder", exact: true }).click();
+    const dialog = page.getByRole("dialog", { name: "Build lineup" });
+    await dialog.getByRole("checkbox", { name: source === "market"
+      ? "Consider players on the market" : "Consider opponent players" }).check();
+    await expect(dialog.getByText("Enable purchase recommendations to include market or opponent players in proposed lineups.")).toBeVisible();
+    await dialog.getByRole("checkbox", { name: "Allow purchase recommendations" }).check();
+    await dialog.getByRole("button", { name: "Build", exact: true }).click();
+    const candidates = dialog.locator(".lineup-builder-candidate");
+    await expect(candidates).toHaveCount(2);
+    await expect(candidates.first().getByRole("button", { name: "Use as draft" })).toBeEnabled();
+    await expect(candidates.last().getByText(/Acquisitions required/)).toBeVisible();
+    await expect(candidates.last().getByRole("button", { name: "Use as draft" })).toBeDisabled();
+    await expect(candidates.last().getByText(/Proposal only: acquire these players first/)).toBeVisible();
+    expect(writes).toBe(0);
+  });
+}

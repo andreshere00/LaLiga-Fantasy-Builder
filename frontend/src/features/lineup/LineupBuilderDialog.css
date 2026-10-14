@@ -58,6 +58,28 @@
   .lineup-builder-radio { gap:8px 16px; }
 }
 .lineup-builder-results { display:grid; gap:16px; }
+.lineup-builder-exclusions { min-width:0; border:1px solid var(--fb-line); background:var(--fb-surface); }
+.lineup-builder-exclusions > summary { display:flex; align-items:center; gap:12px; min-height:48px; padding:12px 16px; list-style:none; color:var(--fb-secondary); background:var(--fb-subtle); font-size:14px; font-weight:600; cursor:pointer; }
+.lineup-builder-exclusions > summary::-webkit-details-marker { display:none; }
+.lineup-builder-exclusions > summary::before { content:"▸"; color:var(--fb-primary); }
+.lineup-builder-exclusions[open] > summary::before { content:"▾"; }
+.lineup-builder-exclusions > summary:hover { background:var(--fb-coral); color:var(--fb-on-coral); }
+.lineup-builder-exclusions-hint { margin-left:auto; font-size:12px; font-weight:400; }
+.lineup-builder-exclusions-scroll { max-height:360px; overflow:auto; scrollbar-color:var(--fb-cyan) var(--fb-coral); scrollbar-width:thin; }
+.lineup-builder-exclusions-table { width:100%; border-collapse:collapse; table-layout:fixed; font-size:13px; line-height:1.5; color:var(--fb-secondary); }
+.lineup-builder-exclusions-table th,.lineup-builder-exclusions-table td { padding:12px 16px; text-align:left; vertical-align:middle; overflow-wrap:anywhere; border-top:1px solid var(--fb-line); }
+.lineup-builder-exclusions-table thead th { position:sticky; top:0; background:var(--fb-subtle); color:var(--fb-muted); font-size:12px; font-weight:600; z-index:1; }
+.lineup-builder-exclusions-table th:first-child { width:32%; }
+.lineup-builder-exclusions-table tbody th { font-weight:600; }
+.lineup-builder-exclusions-table tbody tr:nth-child(even) { background:var(--fb-subtle); }
+.lineup-builder-exclusions-table tbody tr:hover { background:var(--fb-subtle); }
+.lineup-builder-excluded-player { display:flex; align-items:center; gap:10px; }
+@media(max-width:600px) {
+  .lineup-builder-exclusions > summary { padding:12px; gap:8px; }
+  .lineup-builder-exclusions-table th,.lineup-builder-exclusions-table td { padding:10px; }
+  .lineup-builder-exclusions-table th:first-child { width:36%; }
+  .lineup-builder-excluded-player { flex-direction:column; align-items:flex-start; gap:6px; }
+}
 .lineup-builder-candidate { padding:16px; border:1px solid var(--fb-line); border-radius:12px; }
 .lineup-builder-preview { position:relative; isolation:isolate; padding:24px 16px; margin:12px 0; background:var(--fb-surface); border:1px solid var(--fb-line); border-radius:8px; display:grid; gap:12px; }
 .lineup-builder-preview > .pitch-markings { position:absolute; inset:12px; width:calc(100% - 24px); height:calc(100% - 24px); z-index:-1; pointer-events:none; }

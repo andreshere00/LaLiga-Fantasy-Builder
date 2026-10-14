@@ -5,7 +5,7 @@ import random
 import time
 from datetime import datetime
 from decimal import Decimal
-from itertools import count
+from itertools import count, cycle
 from threading import Event
 
 from fantasy_api.domain.lineup_builder.planning import plan_trades
@@ -50,9 +50,11 @@ def search_candidates(
     states = 0
     deadline = time.monotonic() + max_seconds
     serial = count()
-    heap = []
+    heaps = {"owned": [], "external": []}
+    turns = cycle(heaps)
     truncated = False
     for group in ("owned", "external"):
+        heap = heaps[group]
         pool = [p for p in players if group == "external" or p.source == "owned"]
         if group == "external" and (
             not preferences.allow_buying or not any(p.source != "owned" for p in pool)
@@ -90,8 +92,8 @@ def search_candidates(
             heapq.heappush(
                 heap,
                 (
-                    group == "external",
                     -upper,
+                    sum(remaining),
                     next(serial),
                     group,
                     formation,
@@ -103,12 +105,16 @@ def search_candidates(
                 ),
             )
     while (
-        heap
+        any(heaps.values())
         and states < max_states
         and time.monotonic() < deadline
         and (cancelled is None or not cancelled.is_set())
     ):
-        _, neg_upper, _, group, formation, buckets, remaining, offsets, selected, score = (
+        group = next(turns)
+        if not heaps[group]:
+            group = "external" if group == "owned" else "owned"
+        heap = heaps[group]
+        neg_upper, _, _, group, formation, buckets, remaining, offsets, selected, score = (
             heapq.heappop(heap)
         )
         states += 1
@@ -152,7 +158,7 @@ def search_candidates(
                         )
                     )
             continue
-        if len(heap) + states >= max_states:
+        if sum(len(queue) for queue in heaps.values()) + states >= max_states:
             truncated = True
             break
         pos = next(i for i, n in enumerate(remaining) if n)
@@ -170,8 +176,8 @@ def search_candidates(
             heapq.heappush(
                 heap,
                 (
-                    group == "external",
                     -upper,
+                    sum(new_remaining),
                     next(serial),
                     group,
                     formation,
@@ -191,4 +197,12 @@ def search_candidates(
             r.tie_break,
         )
     )
-    return results[: preferences.max_candidates], not heap and not truncated, states
+    owned_results = [r for r in results if r.resource_group == "owned"]
+    external_results = [r for r in results if r.resource_group == "external"]
+    # Reserve external comparisons without exceeding the caller's total result limit.
+    external_slots = min(len(external_results), preferences.max_candidates // 2)
+    owned_slots = min(len(owned_results), preferences.max_candidates - external_slots)
+    selected_results = (
+        owned_results[:owned_slots] + external_results[: preferences.max_candidates - owned_slots]
+    )
+    return selected_results, not any(heaps.values()) and not truncated, states

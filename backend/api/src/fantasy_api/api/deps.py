@@ -288,6 +288,7 @@ def build_container(
                 standings,
                 cfg.laliga_competition_id,
                 players=players,
+                buyout=buyout,
             ),
             (
                 OpenAIExplanationProvider(cfg)

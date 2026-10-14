@@ -412,6 +412,12 @@ For each supported selected formation, include mandatory players first and
 fill exactly one goalkeeper plus the positional counts with unique eligible
 footballers. Rank each position by lineup score. Search all-owned starting pools
 and permitted external pools separately so the priority group cannot disappear.
+Alternate owned/external search queues within the bounded budget and prefer deeper
+states on equal score bounds. When both groups are feasible, reserve up to half of
+the total output limit for external proposals; unused slots are filled from the
+other group. Default five-result builds normally return three owned and two
+external XIs. Display owned proposals first and keep the existing ranking within
+each group. A one-result limit retains owned-first priority.
 
 Use best-first/branch-and-bound exploration with admissible lineup-score upper
 bounds. Branch into lower-score/cheaper alternatives when the strongest XI fails

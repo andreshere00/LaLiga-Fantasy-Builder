@@ -205,8 +205,12 @@ function BuilderDialogSession({
             ))}
           </fieldset>
           <label><input type="checkbox" checked={explain} onChange={(e) => setExplain(e.target.checked)} /> Optional explanation</label>
-          <label><input type="checkbox" checked={allowBuying} onChange={(e) => setAllowBuying(e.target.checked)} /> Allow buying</label>
-          <label><input type="checkbox" checked={allowSelling} onChange={(e) => setAllowSelling(e.target.checked)} /> Allow selling</label>
+          <label><input type="checkbox" checked={allowBuying} onChange={(e) => setAllowBuying(e.target.checked)} /> Allow purchase recommendations</label>
+          <label><input type="checkbox" checked={allowSelling} onChange={(e) => setAllowSelling(e.target.checked)} /> Allow sale recommendations</label>
+          <p className="fb-helper">Recommendations are previews. Building never buys or sells players.</p>
+          {!allowBuying && scope.some((source) => source !== "owned") && <p role="status" className="fb-helper">
+            Enable purchase recommendations to include market or opponent players in proposed lineups.
+          </p>}
           <label><input type="checkbox" disabled={!allowBuying} checked={allowBuying && includeTradingPurchases} onChange={(e) => setIncludeTradingPurchases(e.target.checked)} /> Include trading-only purchases</label>
         </section>
 

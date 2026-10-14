@@ -10,6 +10,7 @@ from pydantic import BaseModel, ValidationError
 from fantasy_api.domain.errors import BuilderError, NotFoundError, UpstreamError
 from fantasy_api.domain.lineup_builder.scoring import PlayerEvidence, score_player
 from fantasy_api.domain.lineup_builder.target import instant, resolve_target
+from fantasy_api.schemas.buyout import ShieldStatus
 from fantasy_api.schemas.calendar import CurrentWeek, Fixture
 from fantasy_api.schemas.leagues import FantasyLeague, PlayerMaster, SquadPlayer, TeamDetail
 from fantasy_api.schemas.lineup_builder import (
@@ -20,7 +21,7 @@ from fantasy_api.schemas.lineup_builder import (
     ScoredPlayer,
     TargetWeek,
 )
-from fantasy_api.schemas.market import MarketBid, MarketSnapshot, PlayerTeamOffers
+from fantasy_api.schemas.market import MarketBid, MarketListing, MarketSnapshot, PlayerTeamOffers
 from fantasy_api.schemas.payload import (
     as_market_snapshot,
     as_object,
@@ -31,6 +32,7 @@ from fantasy_api.schemas.player_stats import Competition, MarketPreset, PlayerDe
 from fantasy_api.schemas.players import CatalogPlayer
 from fantasy_api.schemas.standings import ClubStanding
 from fantasy_api.schemas.teams import TeamMoney
+from fantasy_api.services.buyout import BuyoutService
 from fantasy_api.services.calendar import CalendarService
 from fantasy_api.services.fixture_standings import FixtureStandingsService
 from fantasy_api.services.leagues import LeaguesService
@@ -105,6 +107,34 @@ def _identity(master: PlayerMaster, source: str, slot: str | None = None) -> Sco
     )
 
 
+def _market_route_error(listing: MarketListing, now: datetime, target: TargetWeek) -> str | None:
+    """Distinguish missing auction evidence from a known missed settlement deadline."""
+    metadata = listing.model_extra or {}
+    if any(
+        metadata.get(field) is not None
+        for field in (
+            "playerTeam",
+            "sellerTeam",
+            "seller",
+            "manager",
+            "playerTeamId",
+        )
+    ):
+        return "market_seller_acceptance_required"
+    # directOffer controls seller offers only when an owned squad entry is present.
+    # It is not an independent veto for a verified free-player market auction.
+    if listing.discr != "market_player":
+        return "market_listing_type_unknown"
+    expiry = instant(listing.expiration_date)
+    if expiry is None:
+        return "market_expiry_unknown"
+    if expiry <= now:
+        return "market_listing_expired"
+    if expiry >= target.first_kickoff:
+        return "market_settlement_after_kickoff"
+    return None
+
+
 class LineupBuilderRepository:
     """Assemble verified facts without introducing any new Fantasy route.
 
@@ -116,6 +146,8 @@ class LineupBuilderRepository:
         stats: Existing segmented stats orchestrator.
         standings: Completed real-club table.
         competition_id: Configured supported competition.
+        players: Optional public catalog for missing master-card fields.
+        buyout: Optional read-only shield status lookup for sparse opponent rosters.
     """
 
     def __init__(
@@ -128,6 +160,7 @@ class LineupBuilderRepository:
         standings: StandingsService | FixtureStandingsService,
         competition_id: int,
         players: PlayersService | None = None,
+        buyout: BuyoutService | None = None,
     ) -> None:
         self._leagues = leagues
         self._teams = teams
@@ -137,6 +170,7 @@ class LineupBuilderRepository:
         self._standings = standings
         self._competition_id = competition_id
         self._players = players
+        self._buyout = buyout
 
     async def snapshot(
         self, jwt: str, league_id: str, preferences: BuildPreferences, now: datetime
@@ -239,37 +273,42 @@ class LineupBuilderRepository:
         diagnostics: list[BuilderDiagnostic] = []
         if bids:
             diagnostics.append(BuilderDiagnostic(code="cash_conservative_bid_reserve"))
-        catalog: dict[str, CatalogPlayer] = {}
-        if self._players is not None and any(
-            slot.player_master is not None
-            and slot.player_master.id
-            and (
-                slot.player_master.team_id is None
-                or slot.player_master.position_id is None
-                or slot.player_master.market_value is None
-            )
-            for slot in roster.players
-        ):
-            catalog = {
-                str(p.id): p
-                for p in _models(await self._players.list_players(), CatalogPlayer)
-                if p.id is not None
-            }
+        catalog: dict[str, CatalogPlayer] | None = None
+
+        async def complete_master(master: PlayerMaster) -> PlayerMaster:
+            """Fill missing public fields for any source by master ID, fetching once."""
+            nonlocal catalog
+            fields = ("team_id", "position_id", "market_value")
+            if (
+                self._players is None
+                or not master.id
+                or all(getattr(master, field) is not None for field in fields)
+            ):
+                return master
+            if catalog is None:
+                catalog = {}
+                catalog = {
+                    str(p.id): p
+                    for p in _models(await self._players.list_players(), CatalogPlayer)
+                    if p.id is not None
+                }
+            fallback = catalog.get(master.id)
+            if fallback is None:
+                return master
+            updates = {}
+            for field in fields:
+                value = getattr(fallback, field)
+                if getattr(master, field) is None and value is not None:
+                    updates[field] = int(value)
+            return master.model_copy(update=updates)
+
         slots: dict[str, SquadPlayer] = {}
         owned = []
         for slot in roster.players:
             try:
                 if slot.player_master is None or not slot.player_team_id:
                     raise ValueError("missing roster identity")
-                master = slot.player_master
-                fallback = catalog.get(master.id)
-                if fallback is not None:
-                    updates = {}
-                    for field in ("team_id", "position_id", "market_value"):
-                        value = getattr(fallback, field)
-                        if getattr(master, field) is None and value is not None:
-                            updates[field] = int(value)
-                    master = master.model_copy(update=updates)
+                master = await complete_master(slot.player_master)
                 player = _identity(master, "owned", slot.player_team_id)
             except (ValueError, ValidationError):
                 raise _financial_error("roster_valuation_unavailable") from None
@@ -285,24 +324,23 @@ class LineupBuilderRepository:
                 expiry = instant(listing.expiration_date)
                 if master is None or master.id in owned_ids or master.id in pending_master_ids:
                     continue
-                if (
-                    listing.direct_offer is not False
-                    or listing.discr != "market_player"
-                    or expiry is None
-                    or not now < expiry < target.first_kickoff
-                ):
+                if master.position_id is not None and master.position_id not in {1, 2, 3, 4}:
                     diagnostics.append(
-                        BuilderDiagnostic(code="market_route_unverified", player_id=master.id)
+                        BuilderDiagnostic(code="unsupported_player_position", player_id=master.id)
                     )
                     continue
+                route_error = _market_route_error(listing, now, target)
+                if route_error:
+                    diagnostics.append(BuilderDiagnostic(code=route_error, player_id=master.id))
+                    continue
                 try:
-                    player = _identity(master, "market")
+                    player = _identity(await complete_master(master), "market")
                     pool.append(
                         player.model_copy(
                             update={"acquisition_method": "bid", "settlement_at": expiry}
                         )
                     )
-                except ValueError:
+                except (ValueError, ValidationError, UpstreamError):
                     diagnostics.append(
                         BuilderDiagnostic(code="player_identity_unavailable", player_id=master.id)
                     )
@@ -318,30 +356,69 @@ class LineupBuilderRepository:
                     master = slot.player_master
                     if master is None or master.id in owned_ids or master.id in pending_master_ids:
                         continue
+                    if master.position_id is not None and master.position_id not in {1, 2, 3, 4}:
+                        diagnostics.append(
+                            BuilderDiagnostic(
+                                code="unsupported_player_position", player_id=master.id
+                            )
+                        )
+                        continue
                     lock = instant(slot.buyout_clause_locked_end_time)
                     buyouts = (
                         league.config
                         and league.config.features
                         and league.config.features.buyout_clause is True
                     )
-                    if (
-                        not buyouts
-                        or slot.is_shielded is not False
-                        or lock is None
-                        or lock > target.protection_deadline
-                        or slot.buyout_clause is None
-                    ):
-                        diagnostics.append(
-                            BuilderDiagnostic(
-                                code="opponent_protection_unverified", player_id=master.id
-                            )
+                    route_error = None
+                    if buyouts is not True:
+                        route_error = (
+                            "opponent_buyouts_disabled"
+                            if buyouts is False
+                            else "opponent_buyout_rules_unknown"
                         )
+                    elif lock is None:
+                        route_error = "opponent_protection_expiry_unknown"
+                    elif lock > target.protection_deadline:
+                        route_error = "opponent_protection_expires_too_late"
+                    elif slot.buyout_clause is None or slot.buyout_clause <= 0:
+                        route_error = "opponent_clause_price_missing"
+                    shielded = slot.is_shielded
+                    if (
+                        route_error is None
+                        and shielded is None
+                        and self._buyout is not None
+                        and slot.player_team_id
+                    ):
+                        try:
+                            shield = _model(
+                                await self._buyout.check_shield(
+                                    jwt, league_id, slot.player_team_id
+                                ),
+                                ShieldStatus,
+                            )
+                            shielded = shield.is_shielded
+                        except (UpstreamError, NotFoundError):
+                            pass
+                    if route_error is None:
+                        if shielded is True:
+                            route_error = "opponent_shield_active"
+                        elif shielded is not False:
+                            route_error = "opponent_shield_status_unknown"
+                    if route_error:
+                        diagnostics.append(BuilderDiagnostic(code=route_error, player_id=master.id))
                         continue
                     settlement = max(now, lock)
                     if settlement >= target.clauses_deadline:
+                        diagnostics.append(
+                            BuilderDiagnostic(
+                                code="opponent_acquisition_deadline_closed", player_id=master.id
+                            )
+                        )
                         continue
                     try:
-                        player = _identity(master, "opponents", slot.player_team_id)
+                        player = _identity(
+                            await complete_master(master), "opponents", slot.player_team_id
+                        )
                         pool.append(
                             player.model_copy(
                                 update={
@@ -351,7 +428,7 @@ class LineupBuilderRepository:
                                 }
                             )
                         )
-                    except ValueError:
+                    except (ValueError, ValidationError, UpstreamError):
                         diagnostics.append(
                             BuilderDiagnostic(
                                 code="player_identity_unavailable", player_id=master.id

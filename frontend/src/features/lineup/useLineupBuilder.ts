@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import { paths, postJson } from "../../api/client";
 import { ApiError } from "../../api/errors";
+import { builderDiagnosticMessage } from "./builderDiagnosticCopy";
 import { lineupBuildResponseSchema, type LineupBuildDto, type LineupBuildRequest } from "../../api/schemas";
 
 const MESSAGES: Record<string, string> = {
@@ -40,7 +41,7 @@ export function useLineupBuilder(
         ? playersById?.get(diagnostic.playerId)?.name ?? "Unknown player"
         : "Source";
       return SOURCE_MESSAGES[diagnostic.code] ??
-        `${name}: ${diagnostic.code.replaceAll("_", " ")}`;
+        `${name}: ${builderDiagnosticMessage(diagnostic.code)}`;
     }).join("; ");
     error = (MESSAGES[failure.code] ?? `Lineup build failed (${failure.code}).`) +
       (details ? ` ${details}` : "");
