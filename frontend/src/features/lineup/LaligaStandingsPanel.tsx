@@ -146,7 +146,21 @@ export function LaligaStandingsPanel() {
               <Button variant="outline" size="sm" loading={query.isFetching} loadingLabel="Retrying…"
                 onClick={() => { void query.refetch(); }}>Retry standings</Button>
             </div>
-          ) : <div className="standings-placeholder" role="status">Loading standings…</div>}
+          ) : <div className="standings-loading" role="status" aria-label="Loading LALIGA standings">
+            <span className="standings-loading-label">Loading standings…</span>
+            <div className="standings-skeleton" aria-hidden="true">
+              {Array.from({ length: 8 }, (_, index) => (
+                <div className="standings-skeleton-row" key={index}>
+                  <span className="standings-skeleton-cell" />
+                  <span className="standings-skeleton-cell standings-skeleton-team" />
+                  {Array.from({ length: 7 }, (_, cellIndex) => (
+                    <span className="standings-skeleton-cell standings-skeleton-stat" key={cellIndex} />
+                  ))}
+                  <span className="standings-skeleton-cell standings-skeleton-form" />
+                </div>
+              ))}
+            </div>
+          </div>}
         </ScrollArea>
       </CardContent>
     </Card>

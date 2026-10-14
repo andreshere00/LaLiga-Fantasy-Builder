@@ -16,6 +16,18 @@
 .standings-legend { font-size: 12px; }
 .standings-error { margin: 8px 0 0; padding-left: 8px; border-left: 3px solid var(--fb-failure); font-size: 12px; line-height: 1.5; }
 .standings-placeholder { display: grid; place-items: center; min-height: 100%; padding: 16px; box-sizing: border-box; font-size: 14px; }
+.standings-loading { min-width: 680px; padding: 8px 0; }
+.standings-loading-label { display: block; margin: 0 0 8px; color: var(--fb-muted); font-size: 12px; }
+.standings-skeleton { overflow: hidden; border-top: 1px solid var(--fb-line); }
+.standings-skeleton-row { display: grid; grid-template-columns: 32px minmax(100px, 1.6fr) repeat(7, minmax(32px, .55fr)) minmax(110px, 1.8fr); align-items: center; gap: 8px; min-height: 44px; padding: 0 6px; border-bottom: 1px solid var(--fb-line); box-sizing: border-box; }
+.standings-skeleton-cell { display: block; width: 55%; height: 10px; border-radius: 2px; background: linear-gradient(100deg, var(--fb-subtle) 25%, var(--fb-line) 45%, var(--fb-subtle) 65%); background-size: 250% 100%; animation: standings-skeleton-shimmer 1.5s ease-in-out infinite; }
+.standings-skeleton-team { width: 78%; height: 14px; }
+.standings-skeleton-stat { justify-self: end; width: 38%; }
+.standings-skeleton-form { width: 76%; }
+@keyframes standings-skeleton-shimmer { to { background-position: -150% 0; } }
+@media (prefers-reduced-motion: reduce) {
+  .standings-skeleton-cell { animation: none; }
+}
 
 .standings-table.fb-table { min-width: 680px; table-layout: fixed; border-collapse: separate; border-spacing: 0; font-variant-numeric: tabular-nums; }
 .standings-table.fb-table :is(th, td) { box-sizing: border-box; padding: 4px 6px; height: 44px; border-bottom: 1px solid var(--fb-line); text-align: right; white-space: nowrap; }
