@@ -28,6 +28,17 @@ test("builder generates read-only previews and supports keyboard dismissal", asy
     requests.push(route.request().method());
     expect(route.request().postDataJSON().mandatory_player_ids).toEqual([]);
     const value = response();
+    Object.assign(value.candidates[0].starters[0], {
+      lineup_score: "0", trading_score: "0.3", combined_score: "0.3",
+      omissions: ["fantasy_average", "weather"],
+      sections: [{ section: "market", lineup_raw: "0", trading_raw: "3",
+        lineup_lower: "0", lineup_upper: "0", trading_lower: "-10", trading_upper: "10",
+        lineup_normalized: "0", trading_normalized: "0.3", effective_weight: "0",
+        criteria: [{ rule_id: "market_growth_and_value", observed: "0.03579099345999330549621278496",
+          source: "fantasy_market_history", lineup: null, trading: "3",
+          lineup_lower: "0", lineup_upper: "0", trading_lower: "-10", trading_upper: "10" }],
+      }],
+    });
     value.candidates[0].trading_plan.retained_player_ids = catalog.slice(0, 13).map((player) => player.id);
     value.diagnostics = [{ player_id: catalog[12].id, code: "player_unavailable" }];
     value.candidates[0].trading_plan.steps = [{
@@ -57,6 +68,19 @@ test("builder generates read-only previews and supports keyboard dismissal", asy
   await dialog.getByText("Required trades and whole-squad projection", { exact: true }).click();
   await expect(dialog.getByText(/^Retained:/)).toContainText("Player 13");
   await expect(dialog.getByText(/^sell Player 14/)).toBeVisible();
+  await dialog.getByText("Player scores and selection reasons", { exact: true }).click();
+  const reasoning = dialog.locator(".lineup-builder-player-reasoning").first();
+  await reasoning.locator("summary").focus();
+  await page.keyboard.press("Enter");
+  await expect(reasoning).toHaveAttribute("open", "");
+  await expect(reasoning.getByText(/\+3.58% over five days/)).toBeVisible();
+  await expect(reasoning.getByText("Match-day weather is unavailable")).toBeVisible();
+  await reasoning.scrollIntoViewIfNeeded();
+  await page.screenshot({ path: info.outputPath("lineup-builder-readable-scores.png") });
+  await page.setViewportSize({ width: 390, height: 844 });
+  await reasoning.scrollIntoViewIfNeeded();
+  await page.screenshot({ path: info.outputPath("lineup-builder-readable-scores-mobile.png") });
+  await page.setViewportSize({ width: 1280, height: 720 });
   const buttons = await dialog.getByRole("button").evaluateAll((elements) => elements.map((element) => getComputedStyle(element).borderRadius));
   expect(buttons.every((radius) => radius === "0px")).toBe(true);
   await expect(dialog.getByRole("button", { name: "Close", exact: true })).toHaveCSS("background-color", "rgb(237, 237, 239)");

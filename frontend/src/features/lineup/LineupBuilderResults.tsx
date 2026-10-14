@@ -3,6 +3,8 @@ import { Button } from "../../components/ui/Button";
 import { ProfilePhoto } from "../shell/ProfilePhoto";
 import { PersonIcon } from "../shell/icons";
 import { PitchMarkings } from "./PitchMarkings";
+import { LineupBuilderScoreDetails } from "./LineupBuilderScoreDetails";
+import { builderScoreTone } from "./builderScoreTone";
 
 const money = (value: number) => new Intl.NumberFormat("en-IE", { style: "currency", currency: "EUR", maximumFractionDigits: 0 }).format(value);
 
@@ -40,19 +42,14 @@ export function LineupBuilderResults({ result, playersById, canApply, onApply }:
           <ProfilePhoto key={playersById.get(player.playerId)?.photoUrl ?? "no-photo"}
             className="lineup-builder-player-photo" url={playersById.get(player.playerId)?.photoUrl ?? null}
             fallback={<PersonIcon />} />
-          <span>{player.name}</span><small>{player.lineupScore.toFixed(3)} · {player.source}</small>
+          <span>{player.name}</span><small>
+            <b className="lineup-builder-score" data-tone={builderScoreTone(player.lineupScore, "lineup")}>{player.lineupScore.toFixed(3)}</b> · {player.source}
+          </small>
         </div>)}</div>)}
       </div>
-      <details><summary>Scores, omissions and protection advice</summary>
-        {candidate.starters.map((player) => <section key={player.playerId}>
-          <h5>{player.name} · Trading {player.tradingScore.toFixed(3)} · Combined {player.combinedScore.toFixed(3)}</h5>
-          {player.protectionAdvice && <p>Consider protecting this player before kickoff.</p>}
-          {player.sections.map((section) => <div key={section.section}>
-            <strong>{section.section}: {section.lineupNormalized.toFixed(3)} · weight {section.effectiveWeight.toFixed(3)}</strong>
-            <ul>{section.criteria.map((rule) => <li key={rule.ruleId}>{rule.ruleId.replaceAll("_", " ")}: {rule.lineup ?? rule.trading} · {rule.observed} ({rule.source})</li>)}</ul>
-          </div>)}
-          <p>Omitted: {player.omissions.join(", ") || "None"}</p>
-        </section>)}
+      <details><summary>Player scores and selection reasons</summary>
+        <p className="fb-helper">These are suitability scores, not predicted Fantasy points. Higher scores rank better. Combined adds lineup and trading scores. Rule points are normalized within each category; lineup contributions also apply the category weight.</p>
+        {candidate.starters.map((player) => <LineupBuilderScoreDetails key={player.playerId} player={player} />)}
       </details>
       <details><summary>Required trades and whole-squad projection</summary>
         <p>Sales deadline: {new Date(result.target.salesDeadline).toLocaleString()}. Clauses close: {new Date(result.target.clausesDeadline).toLocaleString()}.</p>
