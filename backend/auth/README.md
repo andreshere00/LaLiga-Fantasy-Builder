@@ -35,6 +35,7 @@ cd backend/auth
 uv sync --extra browser
 uv run playwright install chromium
 uv run fantasy-browser-session leagues-analysis --json
+uv run fantasy-browser-session standings-analysis --season 2026 --json
 ```
 
 Allow LaligaAuthredirect if macOS asks. `--no-pair` skips LaLiga when you
@@ -45,6 +46,12 @@ only need an internal JWT. `--exports` prints session cookies and
 `buyout-analysis` call the matching API reads. `fantasy-market` and
 `fantasy-buyout` stay read-only. `--put-lineup` needs a real JSON file and
 `--team-id`.
+
+`standings-analysis` fetches real LALIGA club classification with the internal
+app JWT only: it does not probe or pair a LaLiga account. Configure the provider
+key on the API service. The command defaults to completed-match mode; live mode
+returns 503 until a suitable live data source is verified. See
+[Standings API](../../docs/api/standings/README.md).
 
 Cookie-prompt alternative, from the repo root: `./scripts/authenticate-laliga.sh`.
 Against an auth process that is already up:

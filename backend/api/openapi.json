@@ -1590,6 +1590,147 @@
         ]
       }
     },
+    "/competitions/{competition_id}/standings": {
+      "get": {
+        "tags": [
+          "standings"
+        ],
+        "summary": "Get real LALIGA club standings",
+        "description": "The provider's table refreshes hourly. Request ``mode=completed`` for available\ndata; ``mode=live`` returns 503 until a live standings source is verified.\nNo LaLiga pairing is required. Provider and Fantasy club ids are mapped explicitly.",
+        "operationId": "get_competition_standings_competitions__competition_id__standings_get",
+        "parameters": [
+          {
+            "name": "competition_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "description": "Application competition id; LALIGA is 1.",
+              "title": "Competition Id"
+            },
+            "description": "Application competition id; LALIGA is 1."
+          },
+          {
+            "name": "season",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "integer",
+                  "maximum": 2100,
+                  "minimum": 2000
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Season"
+            }
+          },
+          {
+            "name": "mode",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "enum": [
+                "live",
+                "completed"
+              ],
+              "type": "string",
+              "default": "live",
+              "title": "Mode"
+            }
+          },
+          {
+            "name": "authorization",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Bearer auth-issued internal JWT.",
+              "title": "Authorization"
+            },
+            "description": "Bearer auth-issued internal JWT."
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CompetitionStandings"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized or LaLiga re-auth required.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "502": {
+            "description": "Auth or Fantasy upstream failure.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Fantasy upstream unavailable.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Unsupported season or competition.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ]
+      }
+    },
     "/players": {
       "get": {
         "tags": [
@@ -5278,6 +5419,81 @@
         "title": "CatalogPlayer",
         "description": "Master player entry from ``GET /players``."
       },
+      "ClubStanding": {
+        "properties": {
+          "team": {
+            "$ref": "#/components/schemas/StandingClub"
+          },
+          "position": {
+            "type": "integer",
+            "minimum": 1.0,
+            "title": "Position"
+          },
+          "points": {
+            "type": "integer",
+            "title": "Points"
+          },
+          "played": {
+            "type": "integer",
+            "minimum": 0.0,
+            "title": "Played"
+          },
+          "won": {
+            "type": "integer",
+            "minimum": 0.0,
+            "title": "Won"
+          },
+          "drawn": {
+            "type": "integer",
+            "minimum": 0.0,
+            "title": "Drawn"
+          },
+          "lost": {
+            "type": "integer",
+            "minimum": 0.0,
+            "title": "Lost"
+          },
+          "goalsFor": {
+            "type": "integer",
+            "minimum": 0.0,
+            "title": "Goalsfor"
+          },
+          "goalsAgainst": {
+            "type": "integer",
+            "minimum": 0.0,
+            "title": "Goalsagainst"
+          },
+          "goalDifference": {
+            "type": "integer",
+            "title": "Goaldifference"
+          },
+          "last5Matches": {
+            "items": {
+              "$ref": "#/components/schemas/StandingMatch"
+            },
+            "type": "array",
+            "maxItems": 5,
+            "title": "Last5Matches"
+          }
+        },
+        "additionalProperties": true,
+        "type": "object",
+        "required": [
+          "team",
+          "position",
+          "points",
+          "played",
+          "won",
+          "drawn",
+          "lost",
+          "goalsFor",
+          "goalsAgainst",
+          "goalDifference",
+          "last5Matches"
+        ],
+        "title": "ClubStanding",
+        "description": "All eleven required classification fields for a real club."
+      },
       "ClubTeam": {
         "properties": {
           "id": {
@@ -5364,6 +5580,93 @@
           "other"
         ],
         "title": "Competition"
+      },
+      "CompetitionStandings": {
+        "properties": {
+          "competition": {
+            "$ref": "#/components/schemas/StandingCompetition"
+          },
+          "season": {
+            "type": "integer",
+            "maximum": 2100.0,
+            "minimum": 2000.0,
+            "title": "Season"
+          },
+          "mode": {
+            "type": "string",
+            "enum": [
+              "live",
+              "completed"
+            ],
+            "title": "Mode"
+          },
+          "rows": {
+            "items": {
+              "$ref": "#/components/schemas/ClubStanding"
+            },
+            "type": "array",
+            "maxItems": 20,
+            "minItems": 20,
+            "title": "Rows"
+          },
+          "source": {
+            "type": "string",
+            "const": "api-football",
+            "title": "Source"
+          },
+          "fetchedAt": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Fetchedat"
+          },
+          "sourceUpdatedAt": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Sourceupdatedat"
+          },
+          "generatedAt": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Generatedat"
+          },
+          "cached": {
+            "type": "boolean",
+            "title": "Cached"
+          },
+          "isProvisional": {
+            "type": "boolean",
+            "title": "Isprovisional"
+          },
+          "liveAvailable": {
+            "type": "boolean",
+            "const": false,
+            "title": "Liveavailable",
+            "default": false
+          }
+        },
+        "additionalProperties": true,
+        "type": "object",
+        "required": [
+          "competition",
+          "season",
+          "mode",
+          "rows",
+          "source",
+          "fetchedAt",
+          "sourceUpdatedAt",
+          "generatedAt",
+          "cached",
+          "isProvisional"
+        ],
+        "title": "CompetitionStandings",
+        "description": "Complete standings snapshot with explicit source freshness."
       },
       "CurrentWeek": {
         "properties": {
@@ -9791,6 +10094,119 @@
         "title": "SquadPlayer",
         "description": "Player slot inside a Fantasy team roster."
       },
+      "StandingClub": {
+        "properties": {
+          "id": {
+            "type": "integer",
+            "exclusiveMinimum": 0.0,
+            "title": "Id"
+          },
+          "name": {
+            "type": "string",
+            "minLength": 1,
+            "title": "Name"
+          },
+          "badgeUrl": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Badgeurl"
+          }
+        },
+        "additionalProperties": true,
+        "type": "object",
+        "required": [
+          "id",
+          "name",
+          "badgeUrl"
+        ],
+        "title": "StandingClub",
+        "description": "Real Fantasy club identity, never a manager's team id."
+      },
+      "StandingCompetition": {
+        "properties": {
+          "id": {
+            "type": "integer",
+            "exclusiveMinimum": 0.0,
+            "title": "Id"
+          },
+          "name": {
+            "type": "string",
+            "minLength": 1,
+            "title": "Name"
+          }
+        },
+        "additionalProperties": true,
+        "type": "object",
+        "required": [
+          "id",
+          "name"
+        ],
+        "title": "StandingCompetition",
+        "description": "Application competition identity."
+      },
+      "StandingMatch": {
+        "properties": {
+          "matchId": {
+            "type": "string",
+            "minLength": 1,
+            "title": "Matchid"
+          },
+          "kickoffAt": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Kickoffat"
+          },
+          "opponent": {
+            "$ref": "#/components/schemas/StandingClub"
+          },
+          "venue": {
+            "type": "string",
+            "enum": [
+              "home",
+              "away"
+            ],
+            "title": "Venue"
+          },
+          "goalsFor": {
+            "type": "integer",
+            "minimum": 0.0,
+            "title": "Goalsfor"
+          },
+          "goalsAgainst": {
+            "type": "integer",
+            "minimum": 0.0,
+            "title": "Goalsagainst"
+          },
+          "result": {
+            "type": "string",
+            "enum": [
+              "W",
+              "D",
+              "L"
+            ],
+            "title": "Result"
+          }
+        },
+        "additionalProperties": true,
+        "type": "object",
+        "required": [
+          "matchId",
+          "kickoffAt",
+          "opponent",
+          "venue",
+          "goalsFor",
+          "goalsAgainst",
+          "result"
+        ],
+        "title": "StandingMatch",
+        "description": "One finalized league result, viewed from the classified club."
+      },
       "StandingRow": {
         "properties": {
           "position": {
@@ -10714,6 +11130,10 @@
     }
   },
   "tags": [
+    {
+      "name": "standings",
+      "description": "Real LALIGA club classification. Internal JWT; no LaLiga pairing. Provider-key integration with hourly completed tables; live mode is unavailable."
+    },
     {
       "name": "health",
       "description": "Liveness and readiness probes."

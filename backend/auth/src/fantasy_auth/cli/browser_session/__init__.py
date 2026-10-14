@@ -19,6 +19,7 @@ from fantasy_auth.cli.browser_session.flows import (
     run_buyout_analysis,
     run_leagues_analysis,
     run_market_analysis,
+    run_standings_analysis,
     run_teams_analysis,
 )
 from fantasy_auth.cli.browser_session.http import connection_linked, exchange_token
@@ -32,6 +33,7 @@ _run_leagues_analysis = run_leagues_analysis
 _run_teams_analysis = run_teams_analysis
 _run_market_analysis = run_market_analysis
 _run_buyout_analysis = run_buyout_analysis
+_run_standings_analysis = run_standings_analysis
 
 
 def main(argv: list[str] | None = None) -> int:
@@ -75,10 +77,14 @@ def _bootstrap(args: Any) -> tuple[str, str, str, bool]:
         session=session,
         csrf=csrf,
     )
-    linked = _connection_linked(
-        auth_base=args.auth_base,
-        session=session,
-        csrf=csrf,
+    linked = (
+        False
+        if args.flow == "standings-analysis"
+        else _connection_linked(
+            auth_base=args.auth_base,
+            session=session,
+            csrf=csrf,
+        )
     )
     if needs_laliga(args) and not linked:
         jwt, linked = _pair_if_needed(args, session=session, csrf=csrf)
@@ -152,7 +158,15 @@ def _run_requested(args: Any, *, jwt: str, linked: bool) -> dict[str, Any]:
             api_base=args.api_base,
             jwt=jwt,
             league_id=args.league_id,
-            player_team_id=getattr(args, "player_team_id", None),
+            player_team_id=args.player_team_id,
+        )
+    elif args.flow == "standings-analysis":
+        report["standings_analysis"] = _run_standings_analysis(
+            api_base=args.api_base,
+            jwt=jwt,
+            competition_id=args.competition_id,
+            season=args.season,
+            mode=args.mode,
         )
     if args.player_id:
         report["league_player"] = _fetch_league_player(
@@ -187,6 +201,6 @@ def _render(
         "Session ready. JWT minted. "
         f"LaLiga linked={report['linked']}. "
         "Pass --player-id, leagues-analysis, teams-analysis, market-analysis, "
-        "or buyout-analysis.",
+        "buyout-analysis, or standings-analysis.",
         file=sys.stderr,
     )

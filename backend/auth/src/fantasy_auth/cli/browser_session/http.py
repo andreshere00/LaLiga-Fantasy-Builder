@@ -14,6 +14,7 @@ from fantasy_auth.api.schemas import (
     InternalTokenResponse,
 )
 from fantasy_auth.cli.browser_session.contracts import (
+    BrowserCompetitionStandings,
     require_recognized_response,
     response_adapter,
     validate_lineup_write,
@@ -266,7 +267,7 @@ def _validated_api_json(response: httpx.Response, adapter: Any, method: str, pat
             validated,
             mode="json",
             by_alias=True,
-            exclude_none=True,
+            exclude_none=not isinstance(validated, BrowserCompetitionStandings),
         )
     except (ValueError, ValidationError):
         raise BrowserSessionError(f"API {method} {path} returned an invalid response") from None

@@ -1420,6 +1420,45 @@ Each item:
 | `marketValue` | integer | no |  |  |
 
 
+## Tag: `standings`
+
+Real LALIGA club classification. Internal JWT; no LaLiga pairing. Provider-key integration with hourly completed tables; live mode is unavailable.
+
+### `GET` `/competitions/{competition_id}/standings`
+
+Get real LALIGA club standings
+
+**Security:** HTTP Bearer (internal JWT)
+
+#### Inputs
+
+| Source | Name | Type | Required | Constraints | Description |
+|--------|------|------|----------|-------------|-------------|
+| path | `competition_id` | integer | yes | min=1 | Application competition id; LALIGA is 1. |
+| query | `season` | integer | no |  |  |
+| query | `mode` | string | no |  |  |
+
+#### Outputs
+
+**HTTP 200:** `CompetitionStandings`
+
+| Field | Type | Required | Constraints | Description |
+|-------|------|----------|-------------|-------------|
+| `competition` | StandingCompetition | yes |  | Application competition identity. |
+| `season` | integer | yes | min=2000, max=2100 |  |
+| `mode` | string | yes |  |  |
+| `rows` | array[ClubStanding] | yes |  |  |
+| `source` | string | yes |  |  |
+| `fetchedAt` | string | yes |  |  |
+| `sourceUpdatedAt` | string | yes |  |  |
+| `generatedAt` | string | yes |  |  |
+| `cached` | boolean | yes |  |  |
+| `isProvisional` | boolean | yes |  |  |
+| `liveAvailable` | boolean | no |  |  |
+
+Full nested fields: [`CompetitionStandings`](#competitionstandings).
+
+
 ## Component schemas
 
 Nested models referenced by the operations above. All Fantasy proxy models use `extra: allow` in Pydantic — additional upstream fields may appear at runtime without being listed here.
@@ -1487,6 +1526,22 @@ Nested models referenced by the operations above. All Fantasy proxy models use `
 | `images` | JsonObject-Output | no |  |  |
 | `lastStats` | array[JsonValue-Output] | no |  |  |
 
+### `ClubStanding`
+
+| Field | Type | Required | Constraints | Description |
+|-------|------|----------|-------------|-------------|
+| `team` | StandingClub | yes |  | Real Fantasy club identity, never a manager's team id. |
+| `position` | integer | yes | min=1 |  |
+| `points` | integer | yes |  |  |
+| `played` | integer | yes | min=0 |  |
+| `won` | integer | yes | min=0 |  |
+| `drawn` | integer | yes | min=0 |  |
+| `lost` | integer | yes | min=0 |  |
+| `goalsFor` | integer | yes | min=0 |  |
+| `goalsAgainst` | integer | yes | min=0 |  |
+| `goalDifference` | integer | yes |  |  |
+| `last5Matches` | array[StandingMatch] | yes |  |  |
+
 ### `ClubTeam`
 
 | Field | Type | Required | Constraints | Description |
@@ -1501,6 +1556,22 @@ Nested models referenced by the operations above. All Fantasy proxy models use `
 ### `Competition`
 
 Type: `string`
+
+### `CompetitionStandings`
+
+| Field | Type | Required | Constraints | Description |
+|-------|------|----------|-------------|-------------|
+| `competition` | StandingCompetition | yes |  | Application competition identity. |
+| `season` | integer | yes | min=2000, max=2100 |  |
+| `mode` | string | yes |  |  |
+| `rows` | array[ClubStanding] | yes |  |  |
+| `source` | string | yes |  |  |
+| `fetchedAt` | string | yes |  |  |
+| `sourceUpdatedAt` | string | yes |  |  |
+| `generatedAt` | string | yes |  |  |
+| `cached` | boolean | yes |  |  |
+| `isProvisional` | boolean | yes |  |  |
+| `liveAvailable` | boolean | no |  |  |
 
 ### `CurrentWeek`
 
@@ -2277,6 +2348,33 @@ Type: `string`
 | `manager` | Manager | no |  | Manager identity. |
 | `playerMarket` | PlayerMarket | no |  | Market listing for a player on a team. |
 | `playerMaster` | PlayerMaster | no |  | Master player card. |
+
+### `StandingClub`
+
+| Field | Type | Required | Constraints | Description |
+|-------|------|----------|-------------|-------------|
+| `id` | integer | yes | >0 |  |
+| `name` | string | yes | minLength=1 |  |
+| `badgeUrl` | string | yes |  |  |
+
+### `StandingCompetition`
+
+| Field | Type | Required | Constraints | Description |
+|-------|------|----------|-------------|-------------|
+| `id` | integer | yes | >0 |  |
+| `name` | string | yes | minLength=1 |  |
+
+### `StandingMatch`
+
+| Field | Type | Required | Constraints | Description |
+|-------|------|----------|-------------|-------------|
+| `matchId` | string | yes | minLength=1 |  |
+| `kickoffAt` | string | yes |  |  |
+| `opponent` | StandingClub | yes |  | Real Fantasy club identity, never a manager's team id. |
+| `venue` | string | yes |  |  |
+| `goalsFor` | integer | yes | min=0 |  |
+| `goalsAgainst` | integer | yes | min=0 |  |
+| `result` | string | yes |  |  |
 
 ### `StandingRow`
 

@@ -10,6 +10,7 @@ import httpx
 from fastapi import Header
 
 from fantasy_api.clients.auth_credentials import AuthCredentialsClient
+from fantasy_api.clients.football import FootballClient
 from fantasy_api.clients.laliga_fantasy import LaligaFantasyClient
 from fantasy_api.clients.openweather import OpenWeatherClient
 from fantasy_api.clients.scraping import ScrapingClient
@@ -23,6 +24,7 @@ from fantasy_api.repositories.leagues import LeaguesRepository
 from fantasy_api.repositories.market import MarketRepository
 from fantasy_api.repositories.player_stats import PlayerStatsRepository
 from fantasy_api.repositories.players import PlayersRepository
+from fantasy_api.repositories.standings import StandingsRepository
 from fantasy_api.repositories.teams import TeamsRepository
 from fantasy_api.security.internal_jwt import InternalJwtValidator
 from fantasy_api.services.buyout import BuyoutService
@@ -33,6 +35,7 @@ from fantasy_api.services.player_resolver import PlayerResolver
 from fantasy_api.services.player_stats import PlayerStatsService
 from fantasy_api.services.players import PlayersService
 from fantasy_api.services.scraped_player import ScrapedPlayerProvider
+from fantasy_api.services.standings import StandingsService
 from fantasy_api.services.teams import TeamsService
 
 
@@ -61,6 +64,8 @@ class AppContainer:
         scraping_client: Private scraping HTTP client.
         weather_client: OpenWeather HTTP client.
         player_stats_service: Player stats orchestrator.
+        football_client: Read-only football data provider client.
+        standings_service: Real LALIGA classification orchestrator.
     """
 
     settings: Settings
@@ -76,6 +81,8 @@ class AppContainer:
     scraping_client: ScrapingClient
     weather_client: OpenWeatherClient
     player_stats_service: PlayerStatsService
+    football_client: FootballClient
+    standings_service: StandingsService
 
     async def aclose(self) -> None:
         """Close process-lifetime HTTP clients."""
@@ -83,6 +90,7 @@ class AppContainer:
         await self.laliga_client.aclose()
         await self.scraping_client.aclose()
         await self.weather_client.aclose()
+        await self.football_client.aclose()
 
 
 _container: AppContainer | None = None
@@ -105,6 +113,7 @@ def build_container(
     player_stats_service: PlayerStatsService | None = None,
     scraping_transport: httpx.AsyncBaseTransport | None = None,
     weather_transport: httpx.AsyncBaseTransport | None = None,
+    football_transport: httpx.AsyncBaseTransport | None = None,
 ) -> AppContainer:
     """Build the API container.
 
@@ -124,6 +133,7 @@ def build_container(
         player_stats_service: Optional player stats service override (tests).
         scraping_transport: Optional scraping httpx transport (tests).
         weather_transport: Optional weather httpx transport (tests).
+        football_transport: Optional football provider transport (tests).
 
     Returns:
         Wired container.
@@ -221,6 +231,17 @@ def build_container(
         clock=lambda: datetime.now(tz=UTC),
         settings=cfg,
     )
+    football = FootballClient(
+        api_key=cfg.api_football_key,
+        timeout_seconds=cfg.standings_timeout_seconds,
+        transport=football_transport,
+    )
+    standings = StandingsService(
+        StandingsRepository(football, fantasy, league_id=cfg.standings_provider_league_id),
+        competition_id=cfg.laliga_competition_id,
+        ttl_seconds=cfg.standings_ttl_seconds,
+        club_ids=cfg.standings_club_ids,
+    )
     return AppContainer(
         settings=cfg,
         jwt_validator=validator,
@@ -235,6 +256,8 @@ def build_container(
         scraping_client=scraper,
         weather_client=weather,
         player_stats_service=stats,
+        football_client=football,
+        standings_service=standings,
     )
 
 

@@ -7,6 +7,7 @@ import {
   pathSegmentSchema,
   playerStatsDetailQuerySchema,
   positivePathNumberSchema,
+  standingsQuerySchema,
   serializeEndpointRequest,
   type ApiResponseDto,
   type PlayerStatsDetailQuery,
@@ -30,6 +31,12 @@ function weekNumber(value: number): number {
 }
 
 export const paths = {
+  competitionStandings: (competitionId = 1, season?: number, mode: "live" | "completed" = "completed") => {
+    const query = standingsQuerySchema.parse({ season, mode });
+    const params = new URLSearchParams({ mode: query.mode ?? "completed" });
+    if (query.season !== undefined) params.set("season", String(query.season));
+    return `/api/competitions/${positivePathNumberSchema.parse(competitionId)}/standings?${params}`;
+  },
   leagues: () => "/api/leagues",
   standing: (leagueId: string) => `/api/leagues/${segment(leagueId)}/standing`,
   weekStanding: (leagueId: string, week: number) =>

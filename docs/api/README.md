@@ -6,6 +6,10 @@ Application API docs for `backend/api` (`fantasy_api`).
 - [OpenAPI / Swagger](openapi.md)
 - [Endpoint schemas](endpoint-schemas.md) — generated input/output reference
   for every API route
+- [Real LALIGA standings plan](standings-implementation-plan.md) — investigation,
+  proposed API method, response contract, and live-data requirements
+- [Real LALIGA standings API](standings/README.md) — club table, configuration,
+  CLI access, and completed/live availability
 - [Leagues](leagues/README.md) · [Teams](teams/README.md) ·
   [Players](players/README.md) · [Calendar](calendar/README.md) ·
   [Market](market/README.md) · [Buyout](buyout/README.md)

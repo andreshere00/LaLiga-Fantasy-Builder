@@ -81,6 +81,56 @@ const nullableNumber = z.number().nullable();
 const nullableId = idValueSchema.nullable();
 const stringList = z.array(z.string());
 
+const standingClubSchema = readObject({
+  id: z.number().int().positive(), name: z.string().min(1), badgeUrl: z.string().nullable(),
+});
+const standingMatchSchema = readObject({
+  matchId: z.string().min(1), kickoffAt: z.string().datetime({ offset: true }),
+  opponent: standingClubSchema, venue: z.enum(["home", "away"]),
+  goalsFor: z.number().int().nonnegative(), goalsAgainst: z.number().int().nonnegative(),
+  result: z.enum(["W", "D", "L"]),
+}).superRefine((match, context) => {
+  const expected = match.goalsFor > match.goalsAgainst ? "W" : match.goalsFor < match.goalsAgainst ? "L" : "D";
+  if (match.result !== expected) context.addIssue({ code: "custom", message: "Result disagrees with score" });
+});
+const clubStandingSchema = readObject({
+  team: standingClubSchema, position: z.number().int().positive(), points: z.number().int(),
+  played: z.number().int().nonnegative(), won: z.number().int().nonnegative(),
+  drawn: z.number().int().nonnegative(), lost: z.number().int().nonnegative(),
+  goalsFor: z.number().int().nonnegative(), goalsAgainst: z.number().int().nonnegative(),
+  goalDifference: z.number().int(), last5Matches: z.array(standingMatchSchema).max(5),
+}).superRefine((row, context) => {
+  const matches = row.last5Matches;
+  if (row.played !== row.won + row.drawn + row.lost || row.goalDifference !== row.goalsFor - row.goalsAgainst) {
+    context.addIssue({ code: "custom", message: "Inconsistent standings totals" });
+  }
+  if (matches.length !== Math.min(5, row.played) || new Set(matches.map((match) => match.matchId)).size !== matches.length) {
+    context.addIssue({ code: "custom", message: "Incomplete or duplicate form history" });
+  }
+  if (matches.some((match, index) => match.opponent.id === row.team.id
+    || (index > 0 && Date.parse(match.kickoffAt) < Date.parse(matches[index - 1].kickoffAt)))) {
+    context.addIssue({ code: "custom", message: "Invalid form history" });
+  }
+});
+export const competitionStandingsSchema = responseSchema(readObject({
+  competition: readObject({ id: z.number().int().positive(), name: z.string().min(1) }),
+  season: z.number().int().min(2000).max(2100), mode: z.enum(["live", "completed"]),
+  rows: z.array(clubStandingSchema).length(20), source: z.literal("api-football"),
+  fetchedAt: z.string().datetime({ offset: true }), sourceUpdatedAt: z.string().datetime({ offset: true }).nullable(),
+  generatedAt: z.string().datetime({ offset: true }), cached: z.boolean(), isProvisional: z.boolean(),
+  liveAvailable: z.literal(false).default(false),
+}).superRefine((table, context) => {
+  if (new Set(table.rows.map((row) => row.team.id)).size !== table.rows.length
+    || table.rows.some((row, index) => row.position !== index + 1)) {
+    context.addIssue({ code: "custom", message: "Incomplete or duplicate standings positions/clubs" });
+  }
+}));
+export const standingsQuerySchema = z.object({
+  season: z.number().int().min(2000).max(2100).optional(),
+  mode: z.enum(["live", "completed"]).optional(),
+}).strict();
+export type CompetitionStandingsDto = z.infer<typeof competitionStandingsSchema>;
+
 export const errorResponseSchema = responseSchema(
   readObject({ error: z.string(), detail: z.string() }),
 );
@@ -816,6 +866,7 @@ export type IncreaseBuyoutWriteDto = z.infer<typeof increaseBuyoutWriteSchema>;
 export type ShieldWriteDto = z.infer<typeof shieldWriteSchema>;
 
 export type ApiResponseDto =
+  | CompetitionStandingsDto
   | MeResponseDto
   | CredentialProbeResponseDto
   | LeaguesProbeResponseDto
@@ -855,6 +906,7 @@ const endpointContracts: Array<{
   request?: z.ZodType;
   query?: z.ZodType;
 }> = [
+  { method: "GET", path: /^\/api\/competitions\/\d+\/standings$/, response: competitionStandingsSchema, query: standingsQuerySchema },
   { method: "GET", path: /^\/api\/leagues$/, response: leaguesResponseSchema },
   { method: "GET", path: /^\/api\/leagues\/[^/]+\/standing$/, response: standingResponseSchema },
   { method: "GET", path: /^\/api\/leagues\/[^/]+\/standing\/\d+$/, response: standingResponseSchema },
@@ -953,6 +1005,8 @@ export function validateEndpointInput(method: string, path: string): void {
   if (!contract) throw new Error("Unregistered API endpoint");
   const week = url.pathname.match(/\/(?:standing|weeks|week)\/(\d+)(?:\/stats)?$/);
   if (week) positivePathNumberSchema.parse(Number(week[1]));
+  const competition = url.pathname.match(/^\/api\/competitions\/(\d+)\/standings$/);
+  if (competition) positivePathNumberSchema.parse(Number(competition[1]));
   const page = url.pathname.match(/\/activity\/(\d+)$/);
   if (page) z.number().int().nonnegative().parse(Number(page[1]));
   const query: Record<string, unknown> = {};
@@ -964,7 +1018,7 @@ export function validateEndpointInput(method: string, path: string): void {
       query[key] = [...(query[key] as string[] | undefined ?? []), value];
     } else {
       if (key in query) throw new Error("Duplicate query parameter");
-      query[key] = ["last", "limit"].includes(key) ? Number(value)
+      query[key] = ["last", "limit", "season"].includes(key) ? Number(value)
         : ["includeStats", "includeWeather"].includes(key)
           ? wireBooleanSchema.parse(value)
           : value;

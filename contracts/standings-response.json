@@ -1,0 +1,510 @@
+{
+  "description": "Synthetic 20-club contract fixture. Not captured live provider data.",
+  "payload": {
+    "competition": {
+      "id": 1,
+      "name": "LALIGA EA SPORTS"
+    },
+    "season": 2026,
+    "mode": "completed",
+    "rows": [
+      {
+        "team": {
+          "id": 101,
+          "name": "Club 1",
+          "badgeUrl": null
+        },
+        "position": 1,
+        "points": 16,
+        "played": 6,
+        "won": 6,
+        "drawn": 0,
+        "lost": 0,
+        "goalsFor": 6,
+        "goalsAgainst": 0,
+        "goalDifference": 6,
+        "last5Matches": [
+          {
+            "matchId": "api-football:2",
+            "kickoffAt": "2026-10-06T12:00:00Z",
+            "opponent": {
+              "id": 103,
+              "name": "Club 3",
+              "badgeUrl": null
+            },
+            "venue": "home",
+            "goalsFor": 1,
+            "goalsAgainst": 0,
+            "result": "W"
+          },
+          {
+            "matchId": "api-football:3",
+            "kickoffAt": "2026-10-07T12:00:00Z",
+            "opponent": {
+              "id": 104,
+              "name": "Club 4",
+              "badgeUrl": null
+            },
+            "venue": "home",
+            "goalsFor": 1,
+            "goalsAgainst": 0,
+            "result": "W"
+          },
+          {
+            "matchId": "api-football:4",
+            "kickoffAt": "2026-10-08T12:00:00Z",
+            "opponent": {
+              "id": 105,
+              "name": "Club 5",
+              "badgeUrl": null
+            },
+            "venue": "home",
+            "goalsFor": 1,
+            "goalsAgainst": 0,
+            "result": "W"
+          },
+          {
+            "matchId": "api-football:5",
+            "kickoffAt": "2026-10-09T12:00:00Z",
+            "opponent": {
+              "id": 106,
+              "name": "Club 6",
+              "badgeUrl": null
+            },
+            "venue": "home",
+            "goalsFor": 1,
+            "goalsAgainst": 0,
+            "result": "W"
+          },
+          {
+            "matchId": "api-football:6",
+            "kickoffAt": "2026-10-10T12:00:00Z",
+            "opponent": {
+              "id": 107,
+              "name": "Club 7",
+              "badgeUrl": null
+            },
+            "venue": "home",
+            "goalsFor": 1,
+            "goalsAgainst": 0,
+            "result": "W"
+          }
+        ]
+      },
+      {
+        "team": {
+          "id": 102,
+          "name": "Club 2",
+          "badgeUrl": null
+        },
+        "position": 2,
+        "points": 0,
+        "played": 1,
+        "won": 0,
+        "drawn": 0,
+        "lost": 1,
+        "goalsFor": 0,
+        "goalsAgainst": 1,
+        "goalDifference": -1,
+        "last5Matches": [
+          {
+            "matchId": "api-football:1",
+            "kickoffAt": "2026-10-05T12:00:00Z",
+            "opponent": {
+              "id": 101,
+              "name": "Club 1",
+              "badgeUrl": null
+            },
+            "venue": "away",
+            "goalsFor": 0,
+            "goalsAgainst": 1,
+            "result": "L"
+          }
+        ]
+      },
+      {
+        "team": {
+          "id": 103,
+          "name": "Club 3",
+          "badgeUrl": null
+        },
+        "position": 3,
+        "points": 0,
+        "played": 1,
+        "won": 0,
+        "drawn": 0,
+        "lost": 1,
+        "goalsFor": 0,
+        "goalsAgainst": 1,
+        "goalDifference": -1,
+        "last5Matches": [
+          {
+            "matchId": "api-football:2",
+            "kickoffAt": "2026-10-06T12:00:00Z",
+            "opponent": {
+              "id": 101,
+              "name": "Club 1",
+              "badgeUrl": null
+            },
+            "venue": "away",
+            "goalsFor": 0,
+            "goalsAgainst": 1,
+            "result": "L"
+          }
+        ]
+      },
+      {
+        "team": {
+          "id": 104,
+          "name": "Club 4",
+          "badgeUrl": null
+        },
+        "position": 4,
+        "points": 0,
+        "played": 1,
+        "won": 0,
+        "drawn": 0,
+        "lost": 1,
+        "goalsFor": 0,
+        "goalsAgainst": 1,
+        "goalDifference": -1,
+        "last5Matches": [
+          {
+            "matchId": "api-football:3",
+            "kickoffAt": "2026-10-07T12:00:00Z",
+            "opponent": {
+              "id": 101,
+              "name": "Club 1",
+              "badgeUrl": null
+            },
+            "venue": "away",
+            "goalsFor": 0,
+            "goalsAgainst": 1,
+            "result": "L"
+          }
+        ]
+      },
+      {
+        "team": {
+          "id": 105,
+          "name": "Club 5",
+          "badgeUrl": null
+        },
+        "position": 5,
+        "points": 0,
+        "played": 1,
+        "won": 0,
+        "drawn": 0,
+        "lost": 1,
+        "goalsFor": 0,
+        "goalsAgainst": 1,
+        "goalDifference": -1,
+        "last5Matches": [
+          {
+            "matchId": "api-football:4",
+            "kickoffAt": "2026-10-08T12:00:00Z",
+            "opponent": {
+              "id": 101,
+              "name": "Club 1",
+              "badgeUrl": null
+            },
+            "venue": "away",
+            "goalsFor": 0,
+            "goalsAgainst": 1,
+            "result": "L"
+          }
+        ]
+      },
+      {
+        "team": {
+          "id": 106,
+          "name": "Club 6",
+          "badgeUrl": null
+        },
+        "position": 6,
+        "points": 0,
+        "played": 1,
+        "won": 0,
+        "drawn": 0,
+        "lost": 1,
+        "goalsFor": 0,
+        "goalsAgainst": 1,
+        "goalDifference": -1,
+        "last5Matches": [
+          {
+            "matchId": "api-football:5",
+            "kickoffAt": "2026-10-09T12:00:00Z",
+            "opponent": {
+              "id": 101,
+              "name": "Club 1",
+              "badgeUrl": null
+            },
+            "venue": "away",
+            "goalsFor": 0,
+            "goalsAgainst": 1,
+            "result": "L"
+          }
+        ]
+      },
+      {
+        "team": {
+          "id": 107,
+          "name": "Club 7",
+          "badgeUrl": null
+        },
+        "position": 7,
+        "points": 0,
+        "played": 1,
+        "won": 0,
+        "drawn": 0,
+        "lost": 1,
+        "goalsFor": 0,
+        "goalsAgainst": 1,
+        "goalDifference": -1,
+        "last5Matches": [
+          {
+            "matchId": "api-football:6",
+            "kickoffAt": "2026-10-10T12:00:00Z",
+            "opponent": {
+              "id": 101,
+              "name": "Club 1",
+              "badgeUrl": null
+            },
+            "venue": "away",
+            "goalsFor": 0,
+            "goalsAgainst": 1,
+            "result": "L"
+          }
+        ]
+      },
+      {
+        "team": {
+          "id": 108,
+          "name": "Club 8",
+          "badgeUrl": null
+        },
+        "position": 8,
+        "points": 0,
+        "played": 0,
+        "won": 0,
+        "drawn": 0,
+        "lost": 0,
+        "goalsFor": 0,
+        "goalsAgainst": 0,
+        "goalDifference": 0,
+        "last5Matches": []
+      },
+      {
+        "team": {
+          "id": 109,
+          "name": "Club 9",
+          "badgeUrl": null
+        },
+        "position": 9,
+        "points": 0,
+        "played": 0,
+        "won": 0,
+        "drawn": 0,
+        "lost": 0,
+        "goalsFor": 0,
+        "goalsAgainst": 0,
+        "goalDifference": 0,
+        "last5Matches": []
+      },
+      {
+        "team": {
+          "id": 110,
+          "name": "Club 10",
+          "badgeUrl": null
+        },
+        "position": 10,
+        "points": 0,
+        "played": 0,
+        "won": 0,
+        "drawn": 0,
+        "lost": 0,
+        "goalsFor": 0,
+        "goalsAgainst": 0,
+        "goalDifference": 0,
+        "last5Matches": []
+      },
+      {
+        "team": {
+          "id": 111,
+          "name": "Club 11",
+          "badgeUrl": null
+        },
+        "position": 11,
+        "points": 0,
+        "played": 0,
+        "won": 0,
+        "drawn": 0,
+        "lost": 0,
+        "goalsFor": 0,
+        "goalsAgainst": 0,
+        "goalDifference": 0,
+        "last5Matches": []
+      },
+      {
+        "team": {
+          "id": 112,
+          "name": "Club 12",
+          "badgeUrl": null
+        },
+        "position": 12,
+        "points": 0,
+        "played": 0,
+        "won": 0,
+        "drawn": 0,
+        "lost": 0,
+        "goalsFor": 0,
+        "goalsAgainst": 0,
+        "goalDifference": 0,
+        "last5Matches": []
+      },
+      {
+        "team": {
+          "id": 113,
+          "name": "Club 13",
+          "badgeUrl": null
+        },
+        "position": 13,
+        "points": 0,
+        "played": 0,
+        "won": 0,
+        "drawn": 0,
+        "lost": 0,
+        "goalsFor": 0,
+        "goalsAgainst": 0,
+        "goalDifference": 0,
+        "last5Matches": []
+      },
+      {
+        "team": {
+          "id": 114,
+          "name": "Club 14",
+          "badgeUrl": null
+        },
+        "position": 14,
+        "points": 0,
+        "played": 0,
+        "won": 0,
+        "drawn": 0,
+        "lost": 0,
+        "goalsFor": 0,
+        "goalsAgainst": 0,
+        "goalDifference": 0,
+        "last5Matches": []
+      },
+      {
+        "team": {
+          "id": 115,
+          "name": "Club 15",
+          "badgeUrl": null
+        },
+        "position": 15,
+        "points": 0,
+        "played": 0,
+        "won": 0,
+        "drawn": 0,
+        "lost": 0,
+        "goalsFor": 0,
+        "goalsAgainst": 0,
+        "goalDifference": 0,
+        "last5Matches": []
+      },
+      {
+        "team": {
+          "id": 116,
+          "name": "Club 16",
+          "badgeUrl": null
+        },
+        "position": 16,
+        "points": 0,
+        "played": 0,
+        "won": 0,
+        "drawn": 0,
+        "lost": 0,
+        "goalsFor": 0,
+        "goalsAgainst": 0,
+        "goalDifference": 0,
+        "last5Matches": []
+      },
+      {
+        "team": {
+          "id": 117,
+          "name": "Club 17",
+          "badgeUrl": null
+        },
+        "position": 17,
+        "points": 0,
+        "played": 0,
+        "won": 0,
+        "drawn": 0,
+        "lost": 0,
+        "goalsFor": 0,
+        "goalsAgainst": 0,
+        "goalDifference": 0,
+        "last5Matches": []
+      },
+      {
+        "team": {
+          "id": 118,
+          "name": "Club 18",
+          "badgeUrl": null
+        },
+        "position": 18,
+        "points": 0,
+        "played": 0,
+        "won": 0,
+        "drawn": 0,
+        "lost": 0,
+        "goalsFor": 0,
+        "goalsAgainst": 0,
+        "goalDifference": 0,
+        "last5Matches": []
+      },
+      {
+        "team": {
+          "id": 119,
+          "name": "Club 19",
+          "badgeUrl": null
+        },
+        "position": 19,
+        "points": 0,
+        "played": 0,
+        "won": 0,
+        "drawn": 0,
+        "lost": 0,
+        "goalsFor": 0,
+        "goalsAgainst": 0,
+        "goalDifference": 0,
+        "last5Matches": []
+      },
+      {
+        "team": {
+          "id": 120,
+          "name": "Club 20",
+          "badgeUrl": null
+        },
+        "position": 20,
+        "points": 0,
+        "played": 0,
+        "won": 0,
+        "drawn": 0,
+        "lost": 0,
+        "goalsFor": 0,
+        "goalsAgainst": 0,
+        "goalDifference": 0,
+        "last5Matches": []
+      }
+    ],
+    "source": "api-football",
+    "fetchedAt": "2026-10-14T12:00:00Z",
+    "sourceUpdatedAt": "2026-10-14T12:00:00Z",
+    "generatedAt": "2026-10-14T12:00:00Z",
+    "cached": false,
+    "isProvisional": false,
+    "liveAvailable": false
+  }
+}

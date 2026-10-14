@@ -12,7 +12,7 @@ OPENAPI_FILES = {
     "auth": ROOT / "backend/auth/openapi.json",
     "scraping": ROOT / "backend/scraping/openapi.json",
 }
-EXPECTED_JSON_OPERATIONS = {"api": 46, "auth": 14, "scraping": 10}
+EXPECTED_JSON_OPERATIONS = {"api": 47, "auth": 14, "scraping": 10}
 
 
 def _is_schema_declared(schema: object) -> bool:
