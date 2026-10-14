@@ -575,6 +575,15 @@ def response_adapter(method: str, path: str) -> TypeAdapter[Any]:
     """Return the local response contract for one supported browser-session route."""
     segments = [segment for segment in path.split("?")[0].split("/") if segment]
     method = method.upper()
+    if (
+        method == "POST"
+        and len(segments) == 4
+        and segments[:2] == ["lineup-builder", "leagues"]
+        and segments[3] == "build"
+    ):
+        from fantasy_auth.cli.browser_session.lineup_builder_contracts import BuildResponse
+
+        return TypeAdapter(BuildResponse)
 
     if method == "GET" and len(segments) == 3 and segments[0] == "competitions":
         if segments[2] == "standings":

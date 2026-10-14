@@ -694,6 +694,55 @@ Activate shielding for a squad entry
 Full nested fields: [`BuyoutMutationResult`](#buyoutmutationresult).
 
 
+## Tag: `lineup-builder`
+
+Read-only lineup recommendations and conditional market-value projections.
+
+### `POST` `/lineup-builder/leagues/{league_id}/build`
+
+Build read-only lineup recommendations
+
+**Security:** HTTP Bearer (internal JWT)
+
+#### Inputs
+
+| Source | Name | Type | Required | Constraints | Description |
+|--------|------|------|----------|-------------|-------------|
+| path | `league_id` | string | yes |  |  |
+| body | `sources` | array[string] | no |  |  |
+| body | `mandatory_player_ids` | array[string] | no |  |  |
+| body | `formations` | array[string] | no |  |  |
+| body | `allow_buying` | boolean | no |  |  |
+| body | `allow_selling` | boolean | no |  |  |
+| body | `include_trading_purchases` | boolean | no |  |  |
+| body | `max_candidates` | integer | no | min=1, max=20 |  |
+| body | `explanation` | ExplanationPreferences | no |  |  |
+
+#### Outputs
+
+**HTTP 200:** `BuildResponse`
+
+| Field | Type | Required | Constraints | Description |
+|-------|------|----------|-------------|-------------|
+| `build_id` | string | yes |  |  |
+| `rules_version` | string | no |  |  |
+| `generated_at` | string | yes |  |  |
+| `league_id` | string | yes |  |  |
+| `team_id` | string | yes |  |  |
+| `target` | TargetWeek | yes |  | Verified first kickoff; every transaction deadline derives from it. |
+| `random_seed` | integer | yes |  |  |
+| `search_complete` | boolean | yes |  |  |
+| `search_limit_reason` | string | no |  |  |
+| `evaluated_states` | integer | yes |  |  |
+| `evaluated_players` | integer | yes |  |  |
+| `candidates` | array[Candidate] | yes |  |  |
+| `diagnostics` | array[BuilderDiagnostic] | yes |  |  |
+| `explanation_status` | string | no |  |  |
+| `explanations` | object | no |  |  |
+
+Full nested fields: [`BuildResponse`](#buildresponse).
+
+
 ## Tag: `market`
 
 LaLiga Fantasy league market, bids, listings, and offers. Thin authenticated proxies of competition league market resources.
@@ -1313,6 +1362,10 @@ Global player profile from FutbolFantasy
 | `generated_at` | string | yes |  |  |
 | `sources` | array[SourceStatus] | no |  |  |
 | `warnings` | array[SegmentWarning] | no |  |  |
+| `availability` | object | no |  |  |
+| `injury_history_coverage` | string | no |  |  |
+| `fantasy_season_total` | number | no |  |  |
+| `fantasy_season_matches` | integer | no |  |  |
 | `injury` | Injury | yes |  |  |
 | `form` | FormStat | no |  | Published numeric form value or categorical arrow rating. |
 | `start_probability` | StartProbability | yes |  |  |
@@ -1499,12 +1552,72 @@ Nested models referenced by the operations above. All Fantasy proxy models use `
 |-------|------|----------|-------------|-------------|
 | `money` | integer | yes | >0 |  |
 
+### `BuildFailure`
+
+| Field | Type | Required | Constraints | Description |
+|-------|------|----------|-------------|-------------|
+| `error` | string | yes |  |  |
+| `detail` | string | yes |  |  |
+| `diagnostics` | array[BuilderDiagnostic] | no |  |  |
+
+### `BuildPreferences`
+
+| Field | Type | Required | Constraints | Description |
+|-------|------|----------|-------------|-------------|
+| `sources` | array[string] | no |  |  |
+| `mandatory_player_ids` | array[string] | no |  |  |
+| `formations` | array[string] | no |  |  |
+| `allow_buying` | boolean | no |  |  |
+| `allow_selling` | boolean | no |  |  |
+| `include_trading_purchases` | boolean | no |  |  |
+| `max_candidates` | integer | no | min=1, max=20 |  |
+| `explanation` | ExplanationPreferences | no |  | Optional prose settings; credentials and model remain server-owned. |
+
+### `BuildResponse`
+
+| Field | Type | Required | Constraints | Description |
+|-------|------|----------|-------------|-------------|
+| `build_id` | string | yes |  |  |
+| `rules_version` | string | no |  |  |
+| `generated_at` | string | yes |  |  |
+| `league_id` | string | yes |  |  |
+| `team_id` | string | yes |  |  |
+| `target` | TargetWeek | yes |  | Verified first kickoff; every transaction deadline derives from it. |
+| `random_seed` | integer | yes |  |  |
+| `search_complete` | boolean | yes |  |  |
+| `search_limit_reason` | string | no |  |  |
+| `evaluated_states` | integer | yes |  |  |
+| `evaluated_players` | integer | yes |  |  |
+| `candidates` | array[Candidate] | yes |  |  |
+| `diagnostics` | array[BuilderDiagnostic] | yes |  |  |
+| `explanation_status` | string | no |  |  |
+| `explanations` | object | no |  |  |
+
+### `BuilderDiagnostic`
+
+| Field | Type | Required | Constraints | Description |
+|-------|------|----------|-------------|-------------|
+| `code` | string | yes |  |  |
+| `player_id` | string | no |  |  |
+
 ### `BuyoutMutationResult`
 
 | Field | Type | Required | Constraints | Description |
 |-------|------|----------|-------------|-------------|
 | `ok` | boolean | no |  |  |
 | `message` | string | no |  |  |
+
+### `Candidate`
+
+| Field | Type | Required | Constraints | Description |
+|-------|------|----------|-------------|-------------|
+| `candidate_id` | string | yes |  |  |
+| `formation` | string | yes |  |  |
+| `resource_group` | string | yes |  |  |
+| `starters` | array[ScoredPlayer] | yes |  |  |
+| `total_lineup_score` | string | yes |  |  |
+| `tie_break` | number | yes |  |  |
+| `trading_plan` | TradePlan | yes |  | Whole execution-time squad projection, including retained bench. |
 
 ### `CatalogPlayer`
 
@@ -1573,6 +1686,20 @@ Type: `string`
 | `isProvisional` | boolean | yes |  |  |
 | `liveAvailable` | boolean | no |  |  |
 
+### `Criterion`
+
+| Field | Type | Required | Constraints | Description |
+|-------|------|----------|-------------|-------------|
+| `rule_id` | string | yes |  |  |
+| `source` | string | yes |  |  |
+| `observed` | string | yes |  |  |
+| `lineup` | string | no |  |  |
+| `trading` | string | no |  |  |
+| `lineup_lower` | string | no |  |  |
+| `lineup_upper` | string | no |  |  |
+| `trading_lower` | string | no |  |  |
+| `trading_upper` | string | no |  |  |
+
 ### `CurrentWeek`
 
 | Field | Type | Required | Constraints | Description |
@@ -1597,6 +1724,13 @@ Type: `string`
 |-------|------|----------|-------------|-------------|
 | `error` | string | yes |  |  |
 | `detail` | string | yes |  |  |
+
+### `ExplanationPreferences`
+
+| Field | Type | Required | Constraints | Description |
+|-------|------|----------|-------------|-------------|
+| `enabled` | boolean | no |  |  |
+| `reasoning_effort` | string | no |  |  |
 
 ### `FantasyLeague`
 
@@ -2191,6 +2325,10 @@ Type: `string`
 | `generated_at` | string | yes |  |  |
 | `sources` | array[SourceStatus] | no |  |  |
 | `warnings` | array[SegmentWarning] | no |  |  |
+| `availability` | object | no |  |  |
+| `injury_history_coverage` | string | no |  |  |
+| `fantasy_season_total` | number | no |  |  |
+| `fantasy_season_matches` | integer | no |  |  |
 | `injury` | Injury | yes |  |  |
 | `form` | FormStat | no |  | Published numeric form value or categorical arrow rating. |
 | `start_probability` | StartProbability | yes |  |  |
@@ -2284,6 +2422,45 @@ Type: `string`
 | `sources` | array[SourceStatus] | no |  |  |
 | `warnings` | array[SegmentWarning] | no |  |  |
 | `matches` | array[RecentMatch] | no |  |  |
+
+### `ScoredPlayer`
+
+| Field | Type | Required | Constraints | Description |
+|-------|------|----------|-------------|-------------|
+| `player_id` | string | yes |  |  |
+| `name` | string | yes |  |  |
+| `position` | integer | yes | min=1, max=4 |  |
+| `club_id` | integer | yes |  |  |
+| `source` | string | yes |  |  |
+| `player_team_id` | string | no |  |  |
+| `market_value` | integer | yes | min=0 |  |
+| `lineup_score` | string | yes |  |  |
+| `trading_score` | string | yes |  |  |
+| `combined_score` | string | yes |  |  |
+| `sections` | array[SectionScore] | no |  |  |
+| `omissions` | array[string] | no |  |  |
+| `news` | array[NewsItem] | no |  |  |
+| `protection_advice` | boolean | no |  |  |
+| `acquisition_method` | string | no |  |  |
+| `settlement_at` | string | no |  |  |
+| `clause_price` | integer | no |  |  |
+| `sale_settlement_at` | string | no |  |  |
+
+### `SectionScore`
+
+| Field | Type | Required | Constraints | Description |
+|-------|------|----------|-------------|-------------|
+| `section` | string | yes |  |  |
+| `criteria` | array[Criterion] | yes |  |  |
+| `lineup_raw` | string | yes |  |  |
+| `trading_raw` | string | yes |  |  |
+| `lineup_lower` | string | yes |  |  |
+| `lineup_upper` | string | yes |  |  |
+| `trading_lower` | string | yes |  |  |
+| `trading_upper` | string | yes |  |  |
+| `lineup_normalized` | string | yes |  |  |
+| `trading_normalized` | string | yes |  |  |
+| `effective_weight` | string | yes |  |  |
 
 ### `SegmentDescriptor`
 
@@ -2424,6 +2601,16 @@ Type: `string`
 | `dazn_points` | integer | no |  |  |
 | `source` | StatSource | no |  |  |
 
+### `TargetWeek`
+
+| Field | Type | Required | Constraints | Description |
+|-------|------|----------|-------------|-------------|
+| `week` | integer | yes |  |  |
+| `first_kickoff` | string | yes |  |  |
+| `sales_deadline` | string | yes |  |  |
+| `clauses_deadline` | string | yes |  |  |
+| `protection_deadline` | string | yes |  |  |
+
 ### `TeamDetail`
 
 | Field | Type | Required | Constraints | Description |
@@ -2455,6 +2642,36 @@ Type: `string`
 |-------|------|----------|-------------|-------------|
 | `teamMoney` | integer | no |  |  |
 | `teamInvestment` | integer | no |  |  |
+
+### `TradePlan`
+
+| Field | Type | Required | Constraints | Description |
+|-------|------|----------|-------------|-------------|
+| `acquisitions` | array[ScoredPlayer] | yes |  |  |
+| `trading_purchases` | array[ScoredPlayer] | yes |  |  |
+| `sales` | array[ScoredPlayer] | yes |  |  |
+| `steps` | array[TradeStep] | yes |  |  |
+| `retained_player_ids` | array[string] | yes |  |  |
+| `resulting_player_ids` | array[string] | yes |  |  |
+| `projected_cash` | integer | yes |  |  |
+| `squad_value` | integer | yes |  |  |
+| `squad_count` | integer | yes |  |  |
+| `reserved_squad_slots` | integer | no | min=0 |  |
+
+### `TradeStep`
+
+| Field | Type | Required | Constraints | Description |
+|-------|------|----------|-------------|-------------|
+| `action` | string | yes |  |  |
+| `player_id` | string | yes |  |  |
+| `method` | string | yes |  |  |
+| `estimate` | integer | yes |  |  |
+| `settlement_at` | string | yes |  |  |
+| `cash_after` | integer | yes |  |  |
+| `squad_value_after` | integer | yes |  |  |
+| `squad_count_after` | integer | yes |  |  |
+| `debt_limit` | integer | yes |  |  |
+| `conditions` | array[string] | yes |  |  |
 
 ### `Travel`
 

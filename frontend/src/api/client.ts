@@ -32,6 +32,7 @@ function weekNumber(value: number): number {
 }
 
 export const paths = {
+  lineupBuild: (leagueId: string) => `/api/lineup-builder/leagues/${segment(leagueId)}/build`,
   competitionStandings: (
     competitionId = 1,
     season?: number,
@@ -211,14 +212,18 @@ export async function deleteJson(
 
 async function throwForStatus(response: Response): Promise<never> {
   let code = "request_failed";
+  let diagnostics: { code: string; playerId: string | null }[] = [];
   try {
     const parsed = errorResponseSchema.safeParse(await response.json());
-    if (parsed.success && typeof parsed.data.error === "string") code = parsed.data.error;
+    if (parsed.success && typeof parsed.data.error === "string") {
+      code = parsed.data.error;
+      diagnostics = parsed.data.diagnostics ?? [];
+    }
   } catch {
     code = "request_failed";
   }
   if (response.status === 401 && code === "needs_reauth") throw new NeedsReauthError();
-  throw new ApiError(response.status, code);
+  throw new ApiError(response.status, code, diagnostics);
 }
 
 async function parseResponse(

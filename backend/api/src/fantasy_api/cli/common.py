@@ -241,3 +241,36 @@ def my_team_id(item: dict[str, Any]) -> Any:
     if isinstance(team, dict):
         return team.get("id") or team.get("teamId")
     return item.get("teamId") or item.get("team_id")
+
+
+def api_build(api_base: str, path: str, jwt: str, body: object) -> Any:
+    """POST validated preferences to the read-only builder; never a Fantasy mutation.
+
+    Args:
+        api_base: Application API base URL.
+        path: Encoded builder path.
+        jwt: Verified/exchanged internal JWT.
+        body: Preferences validated before login by the caller.
+
+    Returns:
+        Validated build JSON.
+    """
+    from fantasy_api.schemas.lineup_builder import BuildPreferences
+
+    if not path.startswith("/lineup-builder/leagues/") or not path.endswith("/build"):
+        raise RuntimeError("only the read-only builder POST is supported")
+    checked = BuildPreferences.model_validate(body)
+    response_adapter(path)
+    with httpx.Client(timeout=130) as client:
+        response = client.post(
+            f"{api_base.rstrip('/')}{path}",
+            headers={"Accept": "application/json", "Authorization": f"Bearer {jwt}"},
+            json=checked.model_dump(mode="json"),
+        )
+    if not response.is_success:
+        error = safe_json(response)
+        raise RuntimeError(f"Builder failed: {error.get('error', 'request_failed')}")
+    try:
+        return dump_validated_response(validate_response(path, response.json()))
+    except (ValueError, ValidationError):
+        raise RuntimeError("Builder returned an invalid response") from None

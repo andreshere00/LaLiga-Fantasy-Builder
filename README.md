@@ -161,3 +161,8 @@ uv run poe test
 
 Frontend only: `cd frontend && bun run test`. Hooks lint (also a pre-commit and CI step):
 `cd frontend && bun run lint`.
+
+## Read-only lineup builder
+
+See the [lineup builder guide](docs/api/lineup-builder.md) for the authenticated planning POST, CLI,
+browser-session flow, source restrictions and optional explanation configuration.

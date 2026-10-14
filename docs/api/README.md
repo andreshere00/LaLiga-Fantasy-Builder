@@ -40,3 +40,8 @@ The browser app does this after sign-in. Market bid and buyout pay mutations
 are implemented in the UI only; see [Frontend — Market](../frontend.md#market-screen).
 Terminal sessions: `uv run fantasy-browser-session` from `backend/auth`.
 System map: [Architecture](../architecture.md).
+
+## Read-only lineup builder
+
+See the [lineup builder guide](lineup-builder.md) for the authenticated planning POST, CLI,
+browser-session flow, source restrictions and optional explanation configuration.

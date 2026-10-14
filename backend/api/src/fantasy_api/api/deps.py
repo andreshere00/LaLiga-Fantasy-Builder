@@ -22,6 +22,7 @@ from fantasy_api.repositories.buyout import BuyoutRepository
 from fantasy_api.repositories.calendar import CalendarRepository
 from fantasy_api.repositories.fixture_standings import FixtureStandingsRepository
 from fantasy_api.repositories.leagues import LeaguesRepository
+from fantasy_api.repositories.lineup_builder import LineupBuilderRepository
 from fantasy_api.repositories.market import MarketRepository
 from fantasy_api.repositories.player_stats import PlayerStatsRepository
 from fantasy_api.repositories.players import PlayersRepository
@@ -32,6 +33,11 @@ from fantasy_api.services.buyout import BuyoutService
 from fantasy_api.services.calendar import CalendarService
 from fantasy_api.services.fixture_standings import FixtureStandingsService
 from fantasy_api.services.leagues import LeaguesService
+from fantasy_api.services.lineup_builder import LineupBuilderService
+from fantasy_api.services.lineup_builder_explanations import (
+    DisabledExplanationProvider,
+    OpenAIExplanationProvider,
+)
 from fantasy_api.services.market import MarketService
 from fantasy_api.services.player_resolver import PlayerResolver
 from fantasy_api.services.player_stats import PlayerStatsService
@@ -86,8 +92,12 @@ class AppContainer:
     football_client: FootballClient
     standings_service: StandingsService | FixtureStandingsService
 
+    lineup_builder_service: LineupBuilderService | None = None
+
     async def aclose(self) -> None:
         """Close process-lifetime HTTP clients."""
+        if self.lineup_builder_service is not None:
+            await self.lineup_builder_service.aclose()
         await self.credentials.aclose()
         await self.laliga_client.aclose()
         await self.scraping_client.aclose()
@@ -268,6 +278,23 @@ def build_container(
         player_stats_service=stats,
         football_client=football,
         standings_service=standings,
+        lineup_builder_service=LineupBuilderService(
+            LineupBuilderRepository(
+                leagues,
+                teams,
+                calendar,
+                market,
+                stats,
+                standings,
+                cfg.laliga_competition_id,
+                players=players,
+            ),
+            (
+                OpenAIExplanationProvider(cfg)
+                if cfg.lineup_explanations_enabled
+                else DisabledExplanationProvider()
+            ),
+        ),
     )
 
 

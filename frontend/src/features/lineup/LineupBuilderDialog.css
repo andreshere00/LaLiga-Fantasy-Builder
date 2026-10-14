@@ -30,3 +30,14 @@
   .lineup-builder-checks { grid-template-columns:1fr; }
   .lineup-builder-radio { gap:8px 16px; }
 }
+.lineup-builder-results { display:grid; gap:16px; }
+.lineup-builder-candidate { padding:16px; border:1px solid var(--fb-line); border-radius:12px; }
+.lineup-builder-preview { padding:16px; margin:12px 0; background:var(--fb-surface); border:1px solid var(--fb-line); border-radius:8px; display:grid; gap:12px; }
+.lineup-builder-preview > div { display:flex; flex-wrap:wrap; gap:12px; justify-content:center; }
+.lineup-builder-preview span { display:grid; text-align:center; min-width:90px; }
+.lineup-builder-preview small { color:var(--fb-muted); }
+.lineup-builder-candidate details { margin:12px 0; }
+.lineup-builder-candidate summary { cursor:pointer; }
+
+.lineup-builder-section > label:has(input[type="checkbox"]) { display:flex; align-items:center; gap:9px; min-height:36px; }
+.lineup-builder-candidate { min-width:0; overflow-wrap:anywhere; }

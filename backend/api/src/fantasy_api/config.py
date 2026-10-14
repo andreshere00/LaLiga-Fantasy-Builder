@@ -54,6 +54,22 @@ class Settings(BaseSettings):
     teams_master_ttl_seconds: int = 86400
     player_stats_rate_limit_per_minute: int = 60
 
+    lineup_explanations_enabled: bool = False
+    lineup_explanation_model: str | None = None
+    lineup_explanation_efforts: dict[str, list[Literal["low", "medium", "high"]]] = Field(
+        default_factory=dict
+    )
+    openai_api_key: SecretStr | None = None
+
+    @model_validator(mode="after")
+    def _explanation_configuration(self) -> Settings:
+        """Require explicit server model and credentials before enabling paid prose."""
+        if self.lineup_explanations_enabled and (
+            not self.lineup_explanation_model or not self.openai_api_key
+        ):
+            raise ValueError("Explanations require LINEUP_EXPLANATION_MODEL and OPENAI_API_KEY")
+        return self
+
     log_level: str = "INFO"
     log_json: bool = True
 

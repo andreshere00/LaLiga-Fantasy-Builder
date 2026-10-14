@@ -86,3 +86,8 @@ source still requires a key with current-season access. See the feature guide.
 ```bash
 cd backend/api && uv run pytest --cov=src --cov-report=term-missing --cov-fail-under=80
 ```
+
+## Read-only lineup builder
+
+See the [lineup builder guide](../../docs/api/lineup-builder.md) for the authenticated planning POST, CLI,
+browser-session flow, source restrictions and optional explanation configuration.

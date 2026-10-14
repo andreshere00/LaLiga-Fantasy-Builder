@@ -1,3 +1,5 @@
+import { builderDraft } from "./builderDraft";
+import type { BuilderCandidate } from "../../api/schemas";
 import { notify } from "../../components/ui/Notifications";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
@@ -58,6 +60,7 @@ import {
 import { useAuth } from "../../auth/AuthProvider";
 import {
   DEFAULT_FREE_FORMATION_CODES,
+  DEFAULT_LINEUPS_AVAILABLE,
   codeFromTactical,
   formationSelectOptions,
 } from "./formations";
@@ -123,6 +126,9 @@ export type LineupBoard = {
   lineupMessage: string | null;
   emptyLeague: boolean;
   editable: boolean;
+  draftDirty: boolean;
+  canApplyBuilder: (candidate: BuilderCandidate, targetWeek: number) => boolean;
+  applyBuilder: (candidate: BuilderCandidate, targetWeek: number) => boolean;
   ownSquad: boolean;
   formationCode: string | null;
   formationOptions: { value: string; label: string }[];
@@ -565,8 +571,9 @@ export function useLineupBoard(options: UseLineupBoardOptions = {}): LineupBoard
   }, [lineupPayload]);
 
   const formationOptions = useMemo(
-    () => formationSelectOptions(freeFormationCodes, formationCode),
-    [formationCode, freeFormationCodes],
+    () => formationSelectOptions(selected?.config?.premiumFeatures?.formations === true
+      ? [...freeFormationCodes, ...DEFAULT_LINEUPS_AVAILABLE.premium] : freeFormationCodes, formationCode),
+    [formationCode, freeFormationCodes, selected],
   );
 
   const saveMutation = useMutation({
@@ -789,6 +796,22 @@ export function useLineupBoard(options: UseLineupBoardOptions = {}): LineupBoard
         : null,
     emptyLeague: !leaguesLoading && !leaguesError && selected == null,
     editable,
+    draftDirty,
+    canApplyBuilder: (candidate, targetWeek) => editable && lineupUsesCurrent && targetWeek === week &&
+      !saveMutation.isPending && builderDraft(candidate, squad, formationOptions.map((f) => f.value)) !== null,
+    applyBuilder: (candidate, targetWeek) => {
+      if (!editable || !lineupUsesCurrent || targetWeek !== week || !activeTeamId || saveMutation.isPending) return false;
+      const sourceKey = lineupSourceKey(leagueKey, activeTeamId, week);
+      if (activeKeyRef.current !== sourceKey) return false;
+      const next = builderDraft(candidate, squad, formationOptions.map((f) => f.value));
+      if (!next) return false;
+      const selectedIds = new Set([...next.goalkeeper, ...next.defender, ...next.midfield, ...next.striker]);
+      const stored: StoredDraft = { draft: next, dirty: true, captainId: captainId && selectedIds.has(captainId) ? captainId : null };
+      draftsRef.current.set(sourceKey, stored);
+      setActiveDraft(stored);
+      setPitchSelection(null);
+      return true;
+    },
     ownSquad: isCaller,
     formationCode,
     formationOptions,

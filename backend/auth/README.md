@@ -91,3 +91,8 @@ Fantasy fields and recognized-field guards. Sparse money/offer responses and emp
 lineup write acknowledgements remain supported. Lineup writes preserve omitted
 premium fields using `exclude_unset=True`. Shared contract fixtures guard agreement
 with the API without importing `fantasy_api` into auth.
+
+## Read-only lineup builder
+
+See the [lineup builder guide](../../docs/api/lineup-builder.md) for the authenticated planning POST, CLI,
+browser-session flow, source restrictions and optional explanation configuration.

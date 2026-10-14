@@ -49,6 +49,10 @@ OPENAPI_TAGS: list[dict[str, str]] = [
         ),
     },
     {
+        "name": "lineup-builder",
+        "description": "Read-only lineup recommendations and conditional market-value projections.",
+    },
+    {
         "name": "teams",
         "description": (
             "LaLiga Fantasy team money and lineup reads/writes. "

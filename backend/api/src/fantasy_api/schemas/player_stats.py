@@ -341,7 +341,7 @@ class FormStat(StatsModel):
     """Published numeric form value or categorical arrow rating."""
 
     value: float | None = None
-    rating: Literal["bad", "mid", "good", "very_good"] | None = None
+    rating: Literal["very_bad", "bad", "mid", "good", "very_good"] | None = None
     visual_only: bool = False
 
 
@@ -390,6 +390,10 @@ class NewsItem(StatsModel):
 
 
 class PlayerProfileResponse(SegmentEnvelope):
+    availability: dict[str, str | int | None] | None = None
+    injury_history_coverage: Literal["complete", "partial", "unknown"] = "unknown"
+    fantasy_season_total: float | None = None
+    fantasy_season_matches: int | None = None
     injury: Injury
     form: FormStat | None = None
     start_probability: StartProbability
