@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from functools import lru_cache
 
-from pydantic import Field, SecretStr, model_validator
+from pydantic import Field, PositiveInt, SecretStr, model_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
@@ -34,7 +34,7 @@ class Settings(BaseSettings):
     standings_provider_league_id: int = Field(default=140, gt=0)
     standings_timeout_seconds: float = Field(default=10.0, gt=0, le=60)
     standings_ttl_seconds: int = Field(default=3600, ge=3600, le=86400)
-    standings_club_ids: dict[int, int] = Field(default_factory=dict)
+    standings_club_ids: dict[PositiveInt, PositiveInt] = Field(default_factory=dict)
 
     scraping_base_url: str = ""
     scraping_service_token: SecretStr = SecretStr("")
@@ -59,13 +59,6 @@ class Settings(BaseSettings):
     def _scraping_token_required(self) -> Settings:
         if self.scraping_base_url and not self.scraping_service_token.get_secret_value():
             raise ValueError("SCRAPING_SERVICE_TOKEN is required when SCRAPING_BASE_URL is set")
-        return self
-
-    @model_validator(mode="after")
-    def _standings_ids_positive(self) -> Settings:
-        """Reject invalid verified club-id overrides."""
-        if any(provider <= 0 or club <= 0 for provider, club in self.standings_club_ids.items()):
-            raise ValueError("STANDINGS_CLUB_IDS requires positive provider and Fantasy club ids")
         return self
 
 

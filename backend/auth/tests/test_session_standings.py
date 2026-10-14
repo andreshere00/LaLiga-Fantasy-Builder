@@ -61,6 +61,27 @@ def test_main_standings_flow_mints_jwt_without_laliga_probe_or_pairing(
     assert not needs_laliga(parse_args(["standings-analysis"]))
 
 
+def test_main_standings_with_player_read_linked_account_skips_pairing(
+    monkeypatch: pytest.MonkeyPatch,
+    capsys: pytest.CaptureFixture[str],
+) -> None:
+    # Arrange
+    monkeypatch.setattr(cli, "login_with_playwright", lambda *_args, **_kwargs: ("session", "csrf"))
+    monkeypatch.setattr(cli, "exchange_token", lambda **_kwargs: "app-jwt")
+    monkeypatch.setattr(cli, "_connection_linked", lambda **_kwargs: True)
+    monkeypatch.setattr(cli, "_run_standings_analysis", lambda **_kwargs: PAYLOAD)
+    monkeypatch.setattr(cli, "_fetch_league_player", lambda **_kwargs: {"id": "1"})
+    # Act
+    result = cli.main(
+        ["--no-pair", "--player-id", "1", "--league-id", "1", "standings-analysis", "--json"]
+    )
+    # Assert
+    assert result == 0
+    report = json.loads(capsys.readouterr().out)
+    assert report["linked"] is True
+    assert report["league_player"] == {"id": "1"}
+
+
 # ---- Error paths ---- #
 
 

@@ -430,6 +430,23 @@ def test_get_standings_distinct_madrid_clubs_preserves_exact_identity() -> None:
     assert [row["team"]["id"] for row in response.json()["rows"][:2]] == [101, 102]
 
 
+def test_get_standings_madrid_name_variants_preserves_distinct_identity() -> None:
+    # Arrange
+    data, masters = source_data()
+    for index, (provider_name, fantasy_name) in enumerate(
+        (("Real Madrid", "Real Madrid CF"), ("Atletico Madrid", "Atlético de Madrid"))
+    ):
+        data["/teams"][index]["team"]["name"] = provider_name
+        masters[index]["name"] = fantasy_name
+    client, _ = make_client(data, masters)
+    # Act
+    with client:
+        response = client.get(URL, headers=AUTH)
+    # Assert
+    assert response.status_code == 200
+    assert [row["team"]["id"] for row in response.json()["rows"][:2]] == [101, 102]
+
+
 @pytest.mark.asyncio
 async def test_get_standings_concurrent_cache_misses_share_one_complete_fetch() -> None:
     # Arrange

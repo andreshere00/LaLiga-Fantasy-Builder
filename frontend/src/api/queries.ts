@@ -4,7 +4,6 @@ import { useQuery } from "@tanstack/react-query";
 import { getJson, paths, type PlayerStatsDetailQuery } from "./client";
 import { NeedsReauthError } from "./errors";
 import { asCurrentWeek, asFiniteNumber, asRecord } from "./mappers";
-import { competitionStandingsSchema } from "./schemas";
 import { useAuth } from "../auth/AuthProvider";
 
 export const CATALOG_STALE_MS = 60 * 60 * 1000;
@@ -29,7 +28,6 @@ export function useCompetitionStandingsQuery(
     queryFn: ({ signal }) => getJson(
       paths.competitionStandings(competitionId, season), accessToken ?? "", { signal },
     ),
-    select: competitionStandingsSchema.parse,
   });
 }
 

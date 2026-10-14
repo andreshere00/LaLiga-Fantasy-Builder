@@ -79,7 +79,7 @@ def _bootstrap(args: Any) -> tuple[str, str, str, bool]:
     )
     linked = (
         False
-        if args.flow == "standings-analysis"
+        if args.flow == "standings-analysis" and not needs_laliga(args)
         else _connection_linked(
             auth_base=args.auth_base,
             session=session,
