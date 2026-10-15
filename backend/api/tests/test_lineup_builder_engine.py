@@ -518,6 +518,57 @@ def test_plan_trades_retained_bench_and_sales_accounted_at_every_stage() -> None
     assert not {p.player_id for p in plan.sales} & {p.player_id for p in starters}
 
 
+@pytest.mark.parametrize("early_source", ["market", "opponents"])
+def test_plan_trades_reversed_score_and_settlement_order_returns_chronological_steps(
+    early_source: str,
+) -> None:
+    owned = [player(i, pos) for i, pos in enumerate([1, 2, 2, 2, 2, 3, 3, 3, 3])]
+    early = player(90, 4, source=early_source, score=".2")
+    late = player(91, 4, source="market", score=".8").model_copy(
+        update={"settlement_at": START - timedelta(hours=12)}
+    )
+
+    plan = plan_trades(
+        owned + [early, late], owned, 1000, BuildPreferences(allow_buying=True), TARGET, NOW
+    )
+
+    assert plan is not None
+    assert [step.player_id for step in plan.steps] == [early.player_id, late.player_id]
+    assert [step.settlement_at for step in plan.steps] == [early.settlement_at, late.settlement_at]
+    assert [step.cash_after for step in plan.steps] == [900, 800]
+    assert plan.squad_count == 11
+    assert plan.projected_cash == 800
+    assert [p.player_id for p in plan.acquisitions] == [late.player_id, early.player_id]
+
+
+@pytest.mark.parametrize("early_source", ["market", "opponents"])
+def test_search_candidates_reversed_settlement_scores_returns_feasible_lineup(
+    early_source: str,
+) -> None:
+    owned = [player(i, pos) for i, pos in enumerate([1, 2, 2, 2, 2, 3, 3, 3, 3])]
+    early = player(90, 4, source=early_source, score=".2")
+    late = player(91, 4, source="market", score=".8").model_copy(
+        update={"settlement_at": START - timedelta(hours=12)}
+    )
+
+    results, complete, _ = search_candidates(
+        owned + [early, late],
+        owned,
+        1000,
+        BuildPreferences(allow_buying=True),
+        ["4,4,2"],
+        TARGET,
+        NOW,
+        1,
+    )
+
+    assert complete
+    assert len(results) == 1
+    assert {p.player_id for p in results[0].starters} == {
+        p.player_id for p in owned + [early, late]
+    }
+
+
 # ---- Error paths ---- #
 
 

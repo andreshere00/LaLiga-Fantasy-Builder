@@ -107,8 +107,10 @@ slots for owned XIs. Unused slots go to the other group, and the total limit is
 preserved. For the default five results this normally means three owned and two
 external proposals. A limit of one preserves owned-first priority. It returns
 owned XIs before external XIs, with each group ordered by lineup-score sum,
-projected cash, forwards, and seeded final ties. Trading scores
-order purchases and sales. Extras are evaluated as descending trading-score
+projected cash, forwards, and seeded final ties. Trading scores rank purchase
+recommendations and sales. Purchase steps follow settlement times, with trading
+scores breaking ties; clause purchases can wait for required sales to settle.
+Extras are evaluated as descending trading-score
 prefix variants, including a base plan without extras. Every retained bench
 player remains valued and counted. Search stops after 100,000 states or three
 seconds; `search_complete=false` identifies unproven ranking/infeasibility.

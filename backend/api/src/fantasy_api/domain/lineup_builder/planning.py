@@ -105,7 +105,19 @@ def plan_trades(
             )
         )
     last_settlement = latest_sale
-    for player in purchases:
+    # Keep recommendation ranking separate from the actual settlement sequence.
+    for player in sorted(
+        purchases,
+        key=lambda p: (
+            (
+                max(p.settlement_at or now, latest_sale)
+                if p.acquisition_method == "clause"
+                else p.settlement_at or now
+            ),
+            -p.trading_score,
+            p.player_id,
+        ),
+    ):
         settlement = player.settlement_at
         if player.acquisition_method is None or settlement is None or settlement < now:
             return None
