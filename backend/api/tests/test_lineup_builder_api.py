@@ -23,6 +23,7 @@ from fantasy_api.schemas.player_stats import (
     MarketPreset,
     MarketSeriesPoint,
     MarketWindow,
+    MatchWeather,
     MaxProfitableBid,
     PlayerDetailResponse,
     PlayerFixtureStatsResponse,
@@ -30,6 +31,10 @@ from fantasy_api.schemas.player_stats import (
     PlayerProfileResponse,
     PlayerRef,
     StartProbability,
+    Travel,
+    UpcomingMatch,
+    UpcomingMatchesResponse,
+    WeatherSnapshot,
 )
 from fantasy_api.services.lineup_builder import LineupBuilderService
 from fastapi.testclient import TestClient
@@ -117,6 +122,12 @@ def _client(
     opponent_shield_missing: bool = False,
     shield_lookup_state: str = "clear",
     opponent_lock_offset_hours: int | None = None,
+    official_average: float | None = None,
+    catalog_average: float | None = None,
+    season_total: float | None = None,
+    season_matches: int | None = None,
+    weather_code: int | None = None,
+    weather_description: str | None = None,
 ) -> tuple[TestClient, str, list[httpx.Request]]:
     """Wire real auth/Fantasy clients with typed football segment stubs."""
     private, public = rsa_pems
@@ -134,6 +145,7 @@ def _client(
                 "teamId": 1,
                 "positionId": position,
                 "marketValue": 100,
+                "averagePoints": official_average,
             },
         }
         for i, position in enumerate([1, 2, 2, 2, 2, 3, 3, 3, 3, 4, 4], start=1)
@@ -159,6 +171,7 @@ def _client(
             "teamId": "1",
             "positionId": str(slot["playerMaster"]["positionId"]),
             "marketValue": "100",
+            "averagePoints": catalog_average,
         }
         for slot in roster
     ]
@@ -352,6 +365,29 @@ def _client(
     def source_detail(pid, query):
         """Simulate source failure while retaining other detail segments."""
         detail = _detail(pid, first, now)
+        detail.profile.fantasy_season_total = season_total
+        detail.profile.fantasy_season_matches = season_matches
+        if weather_description is not None:
+            detail.upcoming = UpcomingMatchesResponse(
+                player_id=pid,
+                season="2026-27",
+                generated_at=now,
+                matches=[
+                    UpcomingMatch(
+                        fixture=FixtureRef(competition=Competition.LALIGA, matchweek=10),
+                        kickoff=first,
+                        weather=MatchWeather(
+                            snapshot=WeatherSnapshot(
+                                temperature_c=20,
+                                condition=weather_description,
+                                condition_code=weather_code,
+                                forecast_for=first,
+                            )
+                        ),
+                        travel=Travel(),
+                    )
+                ],
+            )
         if stats_failure == "market":
             return detail.model_copy(update={"market": None})
         if stats_failure == "profile":

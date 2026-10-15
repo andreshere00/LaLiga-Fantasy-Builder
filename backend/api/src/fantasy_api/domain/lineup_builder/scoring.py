@@ -22,6 +22,7 @@ class PlayerEvidence(BaseModel):
     status: Literal["available", "questionable", "recovering"]
     club_position: int | None = Field(default=None, ge=1, le=20)
     fantasy_average: Decimal | None = None
+    fantasy_average_source: str = "futbolfantasy"
     risk: str | None = None
     probability: int | None = Field(default=None, ge=0, le=100)
     role: str | None = None
@@ -106,6 +107,7 @@ def score_player(
         -5,
         4,
         facts.fantasy_average,
+        source=facts.fantasy_average_source,
     )
     add(
         0,

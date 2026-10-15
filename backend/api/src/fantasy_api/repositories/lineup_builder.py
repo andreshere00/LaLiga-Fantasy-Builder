@@ -28,7 +28,12 @@ from fantasy_api.schemas.payload import (
     as_object_list,
     as_player_team_offers,
 )
-from fantasy_api.schemas.player_stats import Competition, MarketPreset, PlayerDetailQuery
+from fantasy_api.schemas.player_stats import (
+    Competition,
+    MarketPreset,
+    PlayerDetailQuery,
+    WeatherSnapshot,
+)
 from fantasy_api.schemas.players import CatalogPlayer
 from fantasy_api.schemas.standings import ClubStanding
 from fantasy_api.schemas.teams import TeamMoney
@@ -104,6 +109,51 @@ def _identity(master: PlayerMaster, source: str, slot: str | None = None) -> Sco
         lineup_score=Decimal(0),
         trading_score=Decimal(0),
         combined_score=Decimal(0),
+    )
+
+
+def _weather_category(snapshot: WeatherSnapshot | None) -> str | None:
+    """Map OpenWeather codes to workflow categories without guessing unknown conditions."""
+    if snapshot is None:
+        return None
+    code = snapshot.condition_code
+    if code is not None:
+        if 200 <= code < 300:
+            return "thunderstorm"
+        if 300 <= code < 400:
+            return "drizzle"
+        if 500 <= code < 600:
+            return "rain"
+        if 600 <= code < 700:
+            return "snow"
+        return {
+            701: "mist",
+            741: "mist",
+            800: "clear",
+            801: "few_clouds",
+            802: "scattered_clouds",
+            803: "broken_clouds",
+            804: "overcast",
+        }.get(code)
+    category = snapshot.condition.strip().lower().replace(" ", "_")
+    category = {"clear_sky": "clear", "overcast_clouds": "overcast"}.get(category, category)
+    return (
+        category
+        if category
+        in {
+            "clear",
+            "few_clouds",
+            "scattered_clouds",
+            "broken_clouds",
+            "overcast",
+            "drizzle",
+            "rain",
+            "shower_rain",
+            "thunderstorm",
+            "snow",
+            "mist",
+        }
+        else None
     )
 
 
@@ -276,10 +326,15 @@ class LineupBuilderRepository:
         if bids:
             diagnostics.append(BuilderDiagnostic(code="cash_conservative_bid_reserve"))
         catalog: dict[str, CatalogPlayer] | None = None
+        fantasy_averages: dict[str, Decimal] = {}
 
         async def complete_master(master: PlayerMaster) -> PlayerMaster:
             """Fill missing public fields for any source by master ID, fetching once."""
             nonlocal catalog
+            if master.id and master.average_points is not None:
+                average = Decimal(str(master.average_points))
+                if average.is_finite():
+                    fantasy_averages[master.id] = average
             fields = ("team_id", "position_id", "market_value")
             if (
                 self._players is None
@@ -442,6 +497,24 @@ class LineupBuilderRepository:
                         )
         # Prefer owned and direct market identities over duplicate opponent listing paths.
         pool = list({p.player_id: p for p in reversed(pool)}.values())
+        if self._players is not None and any(p.player_id not in fantasy_averages for p in pool):
+            if catalog is None:
+                try:
+                    catalog = {
+                        str(p.id): p
+                        for p in _models(await self._players.list_players(), CatalogPlayer)
+                        if p.id is not None
+                    }
+                except UpstreamError:
+                    # Optional scoring evidence must not invalidate verified roster finances.
+                    catalog = {}
+            for player in pool:
+                fallback = catalog.get(player.player_id)
+                if player.player_id not in fantasy_averages and fallback is not None:
+                    if fallback.average_points is not None:
+                        average = Decimal(str(fallback.average_points))
+                        if average.is_finite():
+                            fantasy_averages[player.player_id] = average
         try:
             table = await self._standings.get_standings(self._competition_id, None, "completed")
             standings = {row.team.id: row for row in table.rows}
@@ -461,6 +534,7 @@ class LineupBuilderRepository:
                         rounds[target.week],
                         target,
                         now,
+                        fantasy_averages.get(player.player_id),
                     )
                 except (UpstreamError, NotFoundError) as exc:
                     code = (
@@ -530,6 +604,7 @@ class LineupBuilderRepository:
         fixtures: list[Fixture],
         target: TargetWeek,
         now: datetime,
+        official_average: Decimal | None = None,
     ) -> ScoredPlayer:
         """Join league fixture slots to actual player appearances and current profile."""
         detail = await self._stats.detail(
@@ -626,9 +701,7 @@ class LineupBuilderRepository:
             if detail.upcoming
             else None
         )
-        weather = (
-            upcoming.weather.snapshot.condition if upcoming and upcoming.weather.snapshot else None
-        )
+        weather = _weather_category(upcoming.weather.snapshot if upcoming else None)
         last_league = max(dates) if dates else None
         midweek_rows = [
             row
@@ -669,13 +742,17 @@ class LineupBuilderRepository:
             else None
         )
         total, matches = profile.fantasy_season_total, profile.fantasy_season_matches
+        season_average = (
+            Decimal(str(total)) / matches
+            if total is not None and matches is not None and matches > 0
+            else None
+        )
         facts = PlayerEvidence(
             status=status,
             availability_source=availability_source,
             club_position=club.position,
-            fantasy_average=(
-                Decimal(str(total)) / matches if total is not None and matches else None
-            ),
+            fantasy_average=season_average if season_average is not None else official_average,
+            fantasy_average_source="futbolfantasy" if season_average is not None else "fantasy",
             risk=profile.injury_risk.level.value if profile.injury_risk.raw else None,
             probability=probability,
             role=profile.hierarchy.label,

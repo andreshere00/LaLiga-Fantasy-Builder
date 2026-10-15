@@ -25,6 +25,7 @@ const RULE_LABELS: Record<string, string> = {
   injury_history: "Time since last injury", injury_recovery: "Injury recovery",
 };
 const SOURCES: Record<string, string> = {
+  fantasy: "LaLiga Fantasy",
   standings: "LaLiga standings", futbolfantasy: "FutbolFantasy",
   fantasy_catalog: "Fantasy player catalog", fantasy_market_history: "Fantasy market history",
   fantasy_roster: "Your Fantasy squad", openweather: "OpenWeather",
