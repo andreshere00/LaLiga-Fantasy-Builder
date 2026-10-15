@@ -108,7 +108,10 @@ export function useMarketActions(onAcquisitionSuccess?: () => void) {
   const onBidError = useCallback(
     async (error: unknown) => {
       reportError(error, "bid");
-      if (error instanceof ApiContractError) onAcquisitionSuccess?.();
+      if (error instanceof ApiContractError || error instanceof TypeError ||
+        error instanceof DOMException || (error instanceof ApiError && error.status >= 500)) {
+        onAcquisitionSuccess?.();
+      }
       await refreshAfterMutation();
     },
     [reportError, refreshAfterMutation, onAcquisitionSuccess],
@@ -211,7 +214,8 @@ export function useMarketActions(onAcquisitionSuccess?: () => void) {
     },
     onError: async (error) => {
       reportError(error, "clause");
-      if (error instanceof ApiContractError) {
+      if (error instanceof ApiContractError || error instanceof TypeError ||
+        error instanceof DOMException || (error instanceof ApiError && error.status >= 500)) {
         onAcquisitionSuccess?.();
         await refreshAfterMutation();
       }
