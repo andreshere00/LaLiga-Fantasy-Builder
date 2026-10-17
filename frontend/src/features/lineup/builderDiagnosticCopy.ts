@@ -1,4 +1,5 @@
 const MESSAGES: Record<string, string> = {
+  recent_matches_previous_round: "The current round has started; recent matches come from previous rounds.",
   market_route_unverified: "The listing's purchase route could not be verified.",
   market_seller_acceptance_required: "Buying this listing requires the seller to accept an offer; settlement before kickoff is not verified.",
   market_offer_type_unknown: "The listing does not say whether it is an auction or a seller offer.",
@@ -20,6 +21,7 @@ const MESSAGES: Record<string, string> = {
   player_identity_unavailable: "The player's identity, club, position or market value could not be verified.",
   player_unavailable: "The player is unavailable for the target round.",
   no_recent_appearance: "No played match was found among the recent LaLiga match slots.",
+  recent_matches_unavailable: "Recent LaLiga match history could not be verified for this player.",
 };
 
 /** Explain source gates while retaining readable fallback text for future codes. */

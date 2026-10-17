@@ -66,3 +66,27 @@ it("should resolve diagnostic names when the player catalog arrives after a fail
   rerender({ players: new Map([["master-42", { name: "Unai Simón" }]]) });
   expect(result.current.error).toContain("Unai Simón: The player is unavailable for the target round.");
 });
+
+it("should explain a standings outage without reporting an infeasible lineup", async () => {
+  vi.mocked(postJson).mockRejectedValueOnce(new ApiError(503, "standings_unavailable", [
+    { code: "standings_unavailable", playerId: null },
+  ]));
+  const { result } = renderHook(() => useLineupBuilder("l1", "token"));
+  await act(() => result.current.build(preferences));
+  expect(result.current.error).toContain("club standings and recent match history could not be verified");
+  expect(result.current.error).toContain("Retry when the standings source is available");
+  expect(result.current.error).not.toContain("No lineup satisfies");
+});
+
+it("should keep a source outage visible after more than five player exclusions", async () => {
+  vi.mocked(postJson).mockRejectedValueOnce(new ApiError(409, "no_feasible_lineup", [
+    ...Array.from({ length: 6 }, (_, index) => ({
+      code: "unsupported_player_position", playerId: String(index),
+    })),
+    { code: "standings_unavailable", playerId: null },
+    { code: "recent_matches_unavailable", playerId: "7" },
+  ]));
+  const { result } = renderHook(() => useLineupBuilder("l1", "token"));
+  await act(() => result.current.build(preferences));
+  expect(result.current.error).toContain("club standings source is unavailable or inconsistent");
+});

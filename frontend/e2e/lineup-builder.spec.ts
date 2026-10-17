@@ -127,6 +127,33 @@ test("builder reports a source failure and never saves a lineup", async ({ page 
 });
 
 
+test("live-round owned candidate opens its target draft and protects unsaved changes", async ({ page }) => {
+  await mockApplication(page);
+  let saves = 0;
+  await page.route("**/api/teams/*/lineup", async (route) => {
+    if (route.request().method() === "PUT") saves++;
+    await route.fallback();
+  });
+  await page.route("**/api/lineup-builder/leagues/l1/build", (route) => route.fulfill({ json: response() }));
+  await page.goto("/");
+  await page.getByRole("button", { name: "Lineup builder", exact: true }).click();
+  const dialog = page.getByRole("dialog", { name: "Build lineup" });
+  await dialog.getByRole("button", { name: "Build", exact: true }).click();
+  await expect(dialog.getByRole("button", { name: "Use as draft" })).toBeEnabled();
+  await dialog.getByRole("button", { name: "Use as draft" }).click();
+  await expect(dialog).not.toBeVisible();
+  await expect(page.locator(".current-fixture-pager > span")).toHaveText("9");
+  await page.getByRole("button", { name: "Previous fixture", exact: true }).click();
+  await expect(page.locator(".current-fixture-pager > span")).toHaveText("8");
+  await page.getByRole("button", { name: "Lineup builder", exact: true }).click();
+  await dialog.getByRole("button", { name: "Build", exact: true }).click();
+  await dialog.getByRole("button", { name: "Use as draft" }).click();
+  await expect(dialog.getByRole("region", { name: "Replace draft confirmation" })).toBeVisible();
+  await dialog.getByRole("button", { name: "Keep my draft", exact: true }).click();
+  await expect(dialog.getByRole("region", { name: "Replace draft confirmation" })).not.toBeVisible();
+  expect(saves).toBe(0);
+});
+
 test("owned candidate applies only to the matching editable draft without saving", async ({ page }) => {
   await mockApplication(page);
   let saves = 0;

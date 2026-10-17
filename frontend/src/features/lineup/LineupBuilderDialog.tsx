@@ -20,6 +20,7 @@ import { usePlayersCatalogQuery } from "../../api/queries";
 import { Button } from "../../components/ui/Button";
 import { Dialog } from "../../components/ui/Dialog";
 import { Input } from "../../components/ui/Fields";
+import { Progress, ProgressLabel } from "../../components/ui/Progress";
 import { DEFAULT_LINEUPS_AVAILABLE } from "./formations";
 import { useLeague } from "./LeagueProvider";
 import { catalogById, marketItems, masterIdOf, masterOf } from "../market/model/listing";
@@ -38,7 +39,7 @@ type Props = {
   formations: { value: string; label: string }[];
   canApply: (candidate: BuilderCandidate, targetWeek: number) => boolean;
   onApply: (candidate: BuilderCandidate, targetWeek: number) => void;
-  dirty: boolean;
+  isDraftDirty: (targetWeek: number) => boolean;
 };
 
 const EMPTY: PlayerOption[] = [];
@@ -57,7 +58,7 @@ export function LineupBuilderDialog(props: Props) {
 }
 
 function BuilderDialogSession({
-  open, onClose, ranking, squad, selectedTeamId, formations, canApply, onApply, dirty,
+  open, onClose, ranking, squad, selectedTeamId, formations, canApply, onApply, isDraftDirty,
 }: Props) {
   const { accessToken, user } = useAuth();
   const { selected } = useLeague();
@@ -180,7 +181,11 @@ function BuilderDialogSession({
             <span className="lineup-builder-bounce-ball" />
             <span className="lineup-builder-bounce-ground" />
           </span>
-          <span className="lineup-builder-loading-text">Building recommendations…</span>
+          <Progress value={null} className="lineup-builder-loading-details">
+            <ProgressLabel className="lineup-builder-loading-text">
+              Building recommendations…
+            </ProgressLabel>
+          </Progress>
         </div>}
         {builder.pending ? <Button shape="square" variant="destructive" onClick={builder.cancel}>Cancel build</Button> : <Button shape="square"
           disabled={scope.length === 0 || !token} onClick={() => void builder.build({
@@ -279,7 +284,7 @@ function BuilderDialogSession({
           onAcquire={setAcquiring}
           canApply={(candidate) => !builder.pending && !builder.error && changedResult !== builder.result && canApply(candidate, builder.result!.target.week)}
           onApply={(candidate) => {
-            if (dirty) setReplacement(candidate);
+            if (isDraftDirty(builder.result!.target.week)) setReplacement(candidate);
             else onApply(candidate, builder.result!.target.week);
           }} />}
         {acquiring && builder.result && <LineupBuilderPlayerActions key={acquiring.playerId}

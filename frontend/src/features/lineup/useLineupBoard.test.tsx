@@ -6,6 +6,8 @@ import type { ReactNode } from "react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 import { paths } from "../../api/client";
+import response from "../../../../contracts/lineup-builder-response.json";
+import { lineupBuildResponseSchema } from "../../api/schemas";
 import { ApiContractError, ApiError } from "../../api/errors";
 import type { FantasyLeague, LineupRole } from "../../api/mappers";
 import { useLineupBoard, type LineupBoard } from "./useLineupBoard";
@@ -14,6 +16,8 @@ const api = vi.hoisted(() => ({
   failedLineups: new Set<string>(),
   scoringLineups: {} as Record<string, unknown>,
   fixtureStarted: false,
+  roundLive: false,
+  openingDate: "",
   league: null as FantasyLeague | null,
   getJson: vi.fn(),
   putJson: vi.fn(),
@@ -62,7 +66,7 @@ const leagueA = league("league-a", "team-a");
 const leagueB = league("league-b", "team-c");
 
 function slot(id: string, positionId: number) {
-  return { playerTeamId: id, playerMaster: { nickname: id, positionId } };
+  return { playerTeamId: id, playerMaster: { id: `master-${id}`, nickname: id, positionId } };
 }
 
 function lineupFor(ids: { gk: string[]; def: string[]; mid: string[]; st: string[] }) {
@@ -151,15 +155,25 @@ const teams: Record<string, { players: ReturnType<typeof slot>[] }> = {
   ]),
 };
 
+const template = lineupBuildResponseSchema.parse(response.payload).candidates[0];
+const ownedCandidate = {
+  ...template,
+  formation: "4,4,2",
+  starters: teams["league-a:team-a"].players.slice(0, 11).map((p, i) => ({
+    ...template.starters[i], playerId: p.playerMaster.id, position: p.playerMaster.positionId,
+  })),
+};
+
 function respond(path: string): unknown {
   if (path === paths.currentWeek()) {
     return {
       weekNumber: 8,
-      openingWeekDate: "2026-10-11T16:15:00+02:00",
+      isLive: api.roundLive,
+      openingWeekDate: api.openingDate,
     };
   }
   if (path === paths.weekFixtures(8)) {
-    return [{ matchDate: "2026-10-11T16:15:00+02:00", matchState: api.fixtureStarted ? 2 : 1 }];
+    return [{ matchDate: api.openingDate, matchState: api.fixtureStarted ? 2 : 1 }];
   }
   if (path === paths.playersCatalog()) return [];
   const standingMatch = /^\/api\/leagues\/([^/]+)\/standing(?:\/\d+)?$/.exec(path);
@@ -236,11 +250,64 @@ describe("useLineupBoard", () => {
     api.failedLineups.clear();
     api.scoringLineups = {};
     api.fixtureStarted = false;
+    api.roundLive = false;
+    api.openingDate = new Date(Date.now() + 7 * 86400_000).toISOString();
     api.league = leagueA;
     api.getJson.mockReset();
     api.putJson.mockReset();
     api.getJson.mockImplementation((path: string) => respond(path));
     api.putJson.mockResolvedValue({});
+  });
+
+  it.each(["live", "fixture", "kickoff"])("should open the owned draft's next round after %s starts", async (signal) => {
+    api.roundLive = signal === "live";
+    api.fixtureStarted = signal === "fixture";
+    if (signal === "kickoff") api.openingDate = new Date(Date.now() - 3600_000).toISOString();
+    const { result } = renderHook(() => useLineupBoard(), { wrapper: Wrapper });
+    await waitFor(() => expect(result.current.canApplyBuilder(ownedCandidate, 9)).toBe(true));
+    expect(result.current.week).toBe(8);
+    expect(result.current.canApplyBuilder(ownedCandidate, 8)).toBe(false);
+    expect(result.current.canApplyBuilder(ownedCandidate, 10)).toBe(false);
+    act(() => { expect(result.current.applyBuilder(ownedCandidate, 9)).toBe(true); });
+    await waitFor(() => {
+      expect(result.current.week).toBe(9);
+      expect(result.current.editable).toBe(true);
+      expect(result.current.draftDirty).toBe(true);
+      expect(result.current.lineupLoading).toBe(false);
+    });
+    expect(playerIds(result.current)).toEqual(Object.values(CALLER_XI).flat());
+    expect(result.current.builderDraftDirty(9)).toBe(true);
+    expect(result.current.builderDraftDirty(8)).toBe(false);
+    expect(api.putJson).not.toHaveBeenCalled();
+    act(() => result.current.goToWeek(7));
+    expect(result.current.builderDraftDirty(9)).toBe(true);
+    act(() => result.current.goToWeek(9));
+    expect(result.current.draftDirty).toBe(true);
+  });
+
+  it("should apply an owned candidate to the unstarted current round", async () => {
+    const { result } = renderHook(() => useLineupBoard(), { wrapper: Wrapper });
+    await loadCallerBoard(result);
+    expect(result.current.canApplyBuilder(ownedCandidate, 8)).toBe(true);
+    expect(result.current.canApplyBuilder(ownedCandidate, 9)).toBe(false);
+    act(() => { expect(result.current.applyBuilder(ownedCandidate, 8)).toBe(true); });
+    expect(result.current.builderDraftDirty(8)).toBe(true);
+    expect(api.putJson).not.toHaveBeenCalled();
+  });
+
+  it("should keep missing players, unsupported formations and opponents blocked", async () => {
+    api.roundLive = true;
+    const { result } = renderHook(() => useLineupBoard(), { wrapper: Wrapper });
+    await waitFor(() => expect(result.current.canApplyBuilder(ownedCandidate, 9)).toBe(true));
+    const missing = { ...ownedCandidate, starters: ownedCandidate.starters.map((p, i) => i === 0 ? { ...p, playerId: "not-owned" } : p) };
+    expect(result.current.canApplyBuilder(missing, 9)).toBe(false);
+    expect(result.current.applyBuilder(missing, 9)).toBe(false);
+    expect(result.current.canApplyBuilder({ ...ownedCandidate, formation: "3,3,4" }, 9)).toBe(false);
+    act(() => result.current.selectTeam("team-b"));
+    await waitFor(() => expect(result.current.selectedTeamId).toBe("team-b"));
+    expect(result.current.canApplyBuilder(ownedCandidate, 9)).toBe(false);
+    expect(result.current.applyBuilder(ownedCandidate, 9)).toBe(false);
+    expect(api.putJson).not.toHaveBeenCalled();
   });
 
   it("useLineupBoard_rival_selected_on_past_week_keeps_week", async () => {

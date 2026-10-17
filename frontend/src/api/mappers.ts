@@ -292,6 +292,7 @@ export function asCurrentWeek(value: unknown): CurrentWeek {
   const record = asRecord(value);
   if (!record) return {};
   return {
+    isLive: typeof record.isLive === "boolean" ? record.isLive : null,
     previousWeek: typeof record.previousWeek === "number" ? record.previousWeek : null,
     weekNumber: typeof record.weekNumber === "number" ? record.weekNumber : null,
     openingWeekDate:

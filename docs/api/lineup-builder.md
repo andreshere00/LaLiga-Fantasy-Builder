@@ -198,6 +198,27 @@ sanitized provider statuses are retained. Build conflicts include bounded source
 and player diagnostic codes. Partial optional source failures do not erase usable
 criteria. Interrupted search without a candidate never claims infeasibility.
 
+Club standings and their recent match histories are required to verify player
+appearances before the current round starts. A standings outage or inconsistent
+classification returns 503
+`standings_unavailable` before per-player evaluation, rather than discarding the
+whole pool and reporting 409 `no_feasible_lineup` or `mandatory_player_conflict`.
+The browser prioritizes source-wide diagnostics ahead of player exclusions in
+its bounded error summary.
+
+Once the current Fantasy round has started (live metadata or a reached kickoff),
+recent-match analysis uses the last five finished club matches from earlier
+original round numbers. For example, while round 9 is running, it reads round 8
+and earlier; even finished games from round 9 stay outside this history. The
+build target remains the next unstarted round. Earlier postponed games count
+only after finishing, ordered by actual kickoff. Calendar results require verified
+dates, club identities and scores; missing player appearances are never invented.
+If the official classification is temporarily inconsistent during play, these
+verified histories still permit a build. Club/opponent position criteria are
+omitted, with `standings_unavailable` recorded. `recent_matches_previous_round`
+labels this history policy in the response and preview. Club form evidence
+identifies `fantasy_calendar` as its source.
+
 ## CLI and browser
 
 ```bash
@@ -216,6 +237,13 @@ unmount, retains a prior result as stale on refresh failure, and shows rule/trad
 traces. Use as draft checks current roster identities, supported formation and
 editable target week. Replacing an unsaved draft requires explicit confirmation.
 Saving remains the existing separate action.
+
+During a live round, applying an owned recommendation opens the next unstarted
+round and stores the draft under that round's identity. The currently displayed
+round need not match beforehand. Live metadata, the opening time and current
+fixture states determine the planning round. Ownership, supported formation and
+caller-team checks still apply. Replacement confirmation checks the target
+round's unsaved draft, including when another round is currently displayed.
 
 Market/opponent source selection also requires **Allow purchase recommendations**.
 This permission enables conditional proposals only; it executes no purchases.

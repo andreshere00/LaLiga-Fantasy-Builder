@@ -6,6 +6,18 @@ import { LineupBuilderResults } from "./LineupBuilderResults";
 
 afterEach(cleanup);
 
+it("should explain the previous-round history and omitted standings during a live round", () => {
+  const result = lineupBuildResponseSchema.parse(response.payload);
+  result.diagnostics = [
+    { code: "recent_matches_previous_round", playerId: null },
+    { code: "standings_unavailable", playerId: null },
+  ];
+  render(<LineupBuilderResults result={result} canApply={() => false} onApply={() => {}}
+    playersById={new Map()} />);
+  expect(screen.getByText(/Recent match analysis uses completed matches from previous rounds/)).toBeTruthy();
+  expect(screen.getByText(/Position criteria are omitted/)).toBeTruthy();
+});
+
 it("should show only unavailable players and clauses locked through matchday start", () => {
   const result = lineupBuildResponseSchema.parse(response.payload);
   result.diagnostics = [

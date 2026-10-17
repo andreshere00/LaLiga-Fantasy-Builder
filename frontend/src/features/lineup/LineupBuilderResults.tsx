@@ -36,6 +36,8 @@ export function LineupBuilderResults({ result, playersById, canApply, onApply, o
     player.source !== "owned" && !ownedPlayerIds?.has(player.playerId);
   return <section aria-label="Lineup recommendations" className="lineup-builder-results">
     <h3>Round {result.target.week} · {new Date(result.target.firstKickoff).toLocaleString()}</h3>
+    {result.diagnostics.some((d) => d.code === "recent_matches_previous_round") && <p role="status">The current round has started. Recent match analysis uses completed matches from previous rounds.</p>}
+    {result.diagnostics.some((d) => d.code === "standings_unavailable") && <p role="status">Club standings could not be verified. Position criteria are omitted; recent matches use verified previous-round results.</p>}
     {!result.searchComplete && <p role="status">Search is incomplete. These candidates are feasible estimates; better choices may remain.</p>}
     <p>Trades are conditional estimates at current market value. Nothing has been bought, sold or saved.</p>
     {result.diagnostics.some((d) => d.code === "cash_conservative_bid_reserve") && <p role="status">Cash projections use a conservative lower bound: pending bid amounts are deducted from the reported balance, even if Fantasy may already reserve them. Pending bids remain unchanged.</p>}

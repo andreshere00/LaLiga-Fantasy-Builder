@@ -322,6 +322,10 @@ class LineupBuilderRepository:
             ):
                 break
         target = resolve_target(current, rounds, now)
+        current_started = current.is_live is True or any(
+            (kickoff := instant(f.match_date or f.date)) is not None and kickoff <= now
+            for f in rounds[start]
+        )
         diagnostics: list[BuilderDiagnostic] = []
         if bids:
             diagnostics.append(BuilderDiagnostic(code="cash_conservative_bid_reserve"))
@@ -515,10 +519,26 @@ class LineupBuilderRepository:
                         average = Decimal(str(fallback.average_points))
                         if average.is_finite():
                             fantasy_averages[player.player_id] = average
+        recent_fixtures = (
+            await self._previous_club_fixtures(start, {p.club_id for p in pool}, now)
+            if current_started
+            else None
+        )
+        if recent_fixtures is not None:
+            diagnostics.append(BuilderDiagnostic(code="recent_matches_previous_round"))
         try:
             table = await self._standings.get_standings(self._competition_id, None, "completed")
             standings = {row.team.id: row for row in table.rows}
         except UpstreamError:
+            # Club histories are required to verify recent appearances. An outage
+            # cannot prove that the caller's formation or finances are infeasible.
+            if recent_fixtures is None:
+                raise BuilderError(
+                    "required standings and recent club matches are unavailable",
+                    status_code=503,
+                    category="standings_unavailable",
+                    diagnostics=[{"code": "standings_unavailable", "player_id": None}],
+                ) from None
             standings = {}
             diagnostics.append(BuilderDiagnostic(code="standings_unavailable"))
         semaphore = asyncio.Semaphore(4)
@@ -535,6 +555,8 @@ class LineupBuilderRepository:
                         target,
                         now,
                         fantasy_averages.get(player.player_id),
+                        recent_fixtures,
+                        start if current_started else None,
                     )
                 except (UpstreamError, NotFoundError) as exc:
                     code = (
@@ -596,6 +618,52 @@ class LineupBuilderRepository:
             diagnostics=diagnostics,
         )
 
+    async def _previous_club_fixtures(
+        self, current_week: int, club_ids: set[int], now: datetime
+    ) -> dict[int, list[Fixture]]:
+        """Read finished club matches from rounds preceding the started current round."""
+        histories: dict[int, list[Fixture]] = {club_id: [] for club_id in club_ids}
+        seen: dict[str, Fixture] = {}
+        for week in range(current_week - 1, 0, -1):
+            fixtures = _models(await self._calendar.get_fixtures(week), Fixture)
+            for fixture in fixtures:
+                if fixture.match_state != 7:
+                    continue
+                kickoff = instant(fixture.match_date or fixture.date)
+                if (
+                    kickoff is None
+                    or kickoff >= now
+                    or fixture.local_score is None
+                    or fixture.visitor_score is None
+                    or fixture.local_score < 0
+                    or fixture.visitor_score < 0
+                    or fixture.local_id is None
+                    or fixture.visitor_id is None
+                    or fixture.local_id == fixture.visitor_id
+                ):
+                    raise UpstreamError(
+                        "previous round results could not be verified",
+                        status_code=503,
+                        category="recent_matches_unavailable",
+                    )
+                key = fixture.id or f"{kickoff}:{fixture.local_id}:{fixture.visitor_id}"
+                if key in seen:
+                    if fixture != seen[key]:
+                        raise UpstreamError(
+                            "previous round results disagree",
+                            status_code=503,
+                            category="recent_matches_unavailable",
+                        )
+                    continue
+                seen[key] = fixture
+                for club_id in (fixture.local_id, fixture.visitor_id):
+                    if club_id in histories:
+                        histories[club_id].append(fixture)
+        return {
+            club_id: sorted(history, key=lambda f: instant(f.match_date or f.date))[-5:]
+            for club_id, history in histories.items()
+        }
+
     async def _evaluate(
         self,
         player: ScoredPlayer,
@@ -605,6 +673,8 @@ class LineupBuilderRepository:
         target: TargetWeek,
         now: datetime,
         official_average: Decimal | None = None,
+        recent_fixtures: dict[int, list[Fixture]] | None = None,
+        recent_before_week: int | None = None,
     ) -> ScoredPlayer:
         """Join league fixture slots to actual player appearances and current profile."""
         detail = await self._stats.detail(
@@ -650,16 +720,38 @@ class LineupBuilderRepository:
             # The existing derived expected-return date is not a medical timestamp.
             raise UpstreamError("timely recovery is not established", category="player_unavailable")
         club = standings.get(player.club_id)
-        if club is None or detail.fixtures is None:
+        if (club is None and recent_fixtures is None) or detail.fixtures is None:
             raise UpstreamError(
                 "recent league match slots are unavailable", category="recent_matches_unavailable"
             )
-        dates = {match.kickoff_at.date() for match in club.last5_matches}
+        if recent_fixtures is None:
+            dates = {match.kickoff_at.date() for match in club.last5_matches}
+            club_results = tuple(m.result for m in club.last5_matches)
+        else:
+            history = recent_fixtures.get(player.club_id, [])
+            dates = {instant(f.match_date or f.date).date() for f in history}
+            club_results = tuple(
+                (
+                    "D"
+                    if f.local_score == f.visitor_score
+                    else (
+                        "W"
+                        if (f.local_score > f.visitor_score) == (f.local_id == player.club_id)
+                        else "L"
+                    )
+                )
+                for f in history
+            )
         played = [
             row
             for row in detail.fixtures.fixtures
             if row.fixture.competition == Competition.LALIGA
             and row.fixture.date in dates
+            and (
+                recent_before_week is None
+                or row.fixture.matchweek is None
+                or row.fixture.matchweek < recent_before_week
+            )
             and row.minutes_played is not None
             and row.minutes_played > 0
         ]
@@ -750,7 +842,7 @@ class LineupBuilderRepository:
         facts = PlayerEvidence(
             status=status,
             availability_source=availability_source,
-            club_position=club.position,
+            club_position=club.position if club else None,
             fantasy_average=season_average if season_average is not None else official_average,
             fantasy_average_source="futbolfantasy" if season_average is not None else "fantasy",
             risk=profile.injury_risk.level.value if profile.injury_risk.raw else None,
@@ -761,7 +853,8 @@ class LineupBuilderRepository:
             market_growth=Decimal(market.window.end_value - market.window.start_value)
             / Decimal(market.window.start_value),
             protection_expiry=expiry,
-            club_results=tuple(m.result for m in club.last5_matches),
+            club_results=club_results,
+            club_results_source="fantasy_calendar" if recent_fixtures is not None else "standings",
             midweek=future_midweek or midweek is not None,
             midweek_minutes=midweek.minutes_played if midweek and not future_midweek else None,
             midweek_win=(

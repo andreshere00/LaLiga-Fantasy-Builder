@@ -559,7 +559,7 @@ function LineupPageContent() {
       />
       <LineupBuilderDialog open={builderOpen} onClose={() => setBuilderOpen(false)}
         ranking={board.ranking} squad={board.squad} selectedTeamId={board.selectedTeamId}
-        formations={board.formationOptions} dirty={board.draftDirty} canApply={board.canApplyBuilder}
+        formations={board.formationOptions} isDraftDirty={board.builderDraftDirty} canApply={board.canApplyBuilder}
         onApply={(candidate, week) => { if (board.applyBuilder(candidate, week)) setBuilderOpen(false); }} />
     </section>
   );

@@ -28,6 +28,7 @@ const SOURCES: Record<string, string> = {
   fantasy: "LaLiga Fantasy",
   standings: "LaLiga standings", futbolfantasy: "FutbolFantasy",
   fantasy_catalog: "Fantasy player catalog", fantasy_market_history: "Fantasy market history",
+  fantasy_calendar: "Fantasy calendar",
   fantasy_roster: "Your Fantasy squad", openweather: "OpenWeather",
 };
 const ROLES: Record<string, string> = {

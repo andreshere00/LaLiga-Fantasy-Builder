@@ -31,6 +31,7 @@ class PlayerEvidence(BaseModel):
     market_growth: Decimal
     protection_expiry: datetime | None = None
     club_results: tuple[str, ...] = ()
+    club_results_source: str = "standings"
     midweek: bool = False
     midweek_minutes: int | None = None
     midweek_win: bool | None = None
@@ -215,7 +216,7 @@ def score_player(
             0,
             len(facts.club_results) * 3,
             facts.club_results,
-            source="standings",
+            source=facts.club_results_source,
         )
     else:
         omissions.append("club_results")

@@ -6,6 +6,8 @@ import { lineupBuildResponseSchema, type LineupBuildDto, type LineupBuildRequest
 
 const MESSAGES: Record<string, string> = {
   financial_data_unavailable: "Cash or pending commitments could not be verified.",
+  standings_unavailable: "The club standings and recent match history could not be verified. Retry when the standings source is available.",
+  recent_matches_unavailable: "Previous-round match results could not be verified. Retry when the calendar source is available.",
   mandatory_player_conflict: "A mandatory player cannot qualify with these sources and restrictions.",
   no_feasible_lineup: "No lineup satisfies the selected formation, player and financial constraints.",
   target_deadline_conflict: "The round opening and fixture deadlines disagree. A safe target could not be verified.",
@@ -15,6 +17,7 @@ const MESSAGES: Record<string, string> = {
 };
 
 const SOURCE_MESSAGES: Record<string, string> = {
+  standings_unavailable: "The club standings source is unavailable or inconsistent.",
   owned_roster_missing: "Fantasy did not return your complete squad.",
   loaned_roster_unverified: "Financial projections for loaned players are not yet supported.",
   roster_valuation_unavailable: "A squad player's identity or market value is unavailable.",
@@ -36,7 +39,9 @@ export function useLineupBuilder(
   const [failure, setFailure] = useState<ApiError | "unknown" | null>(null);
   let error: string | null = null;
   if (failure instanceof ApiError) {
-    const details = failure.diagnostics.slice(0, 5).map((diagnostic) => {
+    const diagnostics = [...failure.diagnostics].sort((a, b) =>
+      Number(b.playerId === null) - Number(a.playerId === null));
+    const details = diagnostics.slice(0, 5).map((diagnostic) => {
       const name = diagnostic.playerId
         ? playersById?.get(diagnostic.playerId)?.name ?? "Unknown player"
         : "Source";

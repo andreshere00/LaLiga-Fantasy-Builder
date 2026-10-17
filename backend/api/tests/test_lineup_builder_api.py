@@ -9,6 +9,7 @@ from unittest.mock import AsyncMock
 
 import httpx
 import pytest
+from fantasy_api.domain.errors import UpstreamError
 from fantasy_api.main import create_app
 from fantasy_api.repositories.lineup_builder import LineupBuilderRepository
 from fantasy_api.schemas.player_stats import (
@@ -112,6 +113,9 @@ def _client(
     source_players: bool = False,
     offers: bool = False,
     stats_failure: str | None = None,
+    standings_failure: bool = False,
+    started_round: str | None = None,
+    previous_round_state: str | None = None,
     roster_state: str = "complete",
     provide_catalog: bool = False,
     catalog_missing_entry: bool = False,
@@ -301,9 +305,50 @@ def _client(
             return httpx.Response(200, json=market_payload)
         if path.endswith("/week/current"):
             return httpx.Response(
-                200, json={"weekNumber": 10, "isLive": False, "openingWeekDate": first.isoformat()}
+                200,
+                json={
+                    "weekNumber": 10,
+                    "isLive": started_round == "live",
+                    "openingWeekDate": (
+                        now - timedelta(hours=12) if started_round else first
+                    ).isoformat(),
+                },
             )
         if path.endswith("/calendar"):
+            week = int(request.url.params["weekNumber"])
+            if started_round and week <= 10:
+                return httpx.Response(
+                    200,
+                    json=[
+                        {
+                            "id": str(week),
+                            "matchDate": (
+                                now - timedelta(hours=12)
+                                if week == 10
+                                else first - timedelta(days=8 + (9 - week) * 7)
+                            ).isoformat(),
+                            "matchState": (
+                                7
+                                if started_round == "finished_match" and week == 10
+                                else (
+                                    3
+                                    if week == 10
+                                    else (
+                                        1
+                                        if week == 9 and previous_round_state == "unfinished"
+                                        else 7
+                                    )
+                                )
+                            ),
+                            "localId": 1,
+                            "visitorId": 2,
+                            "localScore": (
+                                None if week == 9 and previous_round_state == "missing_score" else 0
+                            ),
+                            "visitorScore": 1,
+                        }
+                    ],
+                )
             return httpx.Response(
                 200,
                 json=[
@@ -365,6 +410,19 @@ def _client(
     def source_detail(pid, query):
         """Simulate source failure while retaining other detail segments."""
         detail = _detail(pid, first, now)
+        if started_round:
+            detail.fixtures.fixtures[0].stats.dazn_points.dazn_points = 1
+            current_match = FixtureStatsRow(
+                fixture=FixtureRef(
+                    date=(first - timedelta(days=8)).date(),
+                    competition=Competition.LALIGA,
+                    matchweek=10,
+                ),
+                minutes_played=90,
+                stats=FixtureStats(),
+            )
+            current_match.stats.dazn_points.dazn_points = 99
+            detail.fixtures.fixtures.insert(0, current_match)
         detail.profile.fantasy_season_total = season_total
         detail.profile.fantasy_season_matches = season_matches
         if weather_description is not None:
@@ -408,16 +466,24 @@ def _client(
             )
             detail.profile.injury.active = stats_failure == "widget_missing_injury"
         if stats_failure == "appearance":
-            detail.fixtures.fixtures[0].minutes_played = 0
+            for row in detail.fixtures.fixtures:
+                if row.fixture.matchweek != 10:
+                    row.minutes_played = 0
         return detail
 
     stats = SimpleNamespace(detail=AsyncMock(side_effect=source_detail))
+    if standings_failure and not started_round:
+        stats.detail.side_effect = AssertionError("Do not evaluate players without club histories")
     club = SimpleNamespace(
         position=1,
         last5_matches=[SimpleNamespace(kickoff_at=first - timedelta(days=8), result="W")],
     )
     club.team = SimpleNamespace(id=1)
     standings = SimpleNamespace(get_standings=AsyncMock(return_value=SimpleNamespace(rows=[club])))
+    if standings_failure:
+        standings.get_standings.side_effect = UpstreamError(
+            TEST_LALIGA_BEARER, status_code=502, category="standings_error"
+        )
     repo = LineupBuilderRepository(
         container.leagues_service,
         container.teams_service,
@@ -572,7 +638,97 @@ def test_build_lineup_mandatory_or_entitlement_conflict_is_explicit(
     assert result.json()["error"] == code
 
 
+@pytest.mark.parametrize("mandatory", [[], ["1"]])
+def test_build_lineup_standings_failure_returns_source_outage_before_player_evaluation(
+    rsa_pems, mandatory
+) -> None:
+    client, jwt, _ = _client(rsa_pems, standings_failure=True, source_players=True)
+    with client:
+        result = client.post(
+            "/lineup-builder/leagues/league/build",
+            headers={"Authorization": f"Bearer {jwt}"},
+            json={
+                "sources": ["owned", "market", "opponents"],
+                "allow_buying": True,
+                "mandatory_player_ids": mandatory,
+            },
+        )
+    assert result.status_code == 503
+    assert result.json()["error"] == "standings_unavailable"
+    assert result.json()["diagnostics"] == [{"code": "standings_unavailable", "player_id": None}]
+    assert TEST_LALIGA_BEARER not in result.text
+
+
 # ---- Edge cases ---- #
+
+
+@pytest.mark.parametrize("started_round", ["live", "kickoff", "finished_match"])
+@pytest.mark.parametrize("standings_failure", [False, True])
+def test_build_lineup_started_round_uses_previous_round_matches(
+    rsa_pems, started_round, standings_failure
+) -> None:
+    client, jwt, requests = _client(
+        rsa_pems, started_round=started_round, standings_failure=standings_failure
+    )
+    with client:
+        result = client.post(
+            "/lineup-builder/leagues/league/build",
+            headers={"Authorization": f"Bearer {jwt}"},
+            json={"formations": ["4,4,2"]},
+        )
+    assert result.status_code == 200, result.text
+    body = result.json()
+    assert body["target"]["week"] == 11
+    assert {"code": "recent_matches_previous_round", "player_id": None} in body["diagnostics"]
+    for player in body["candidates"][0]["starters"]:
+        criteria = {c["rule_id"]: c for s in player["sections"] for c in s["criteria"]}
+        assert criteria["club_results"]["observed"] == str(("L",) * 5)
+        assert criteria["club_results"]["source"] == "fantasy_calendar"
+        assert criteria["dazn_average"]["observed"] == "1"
+        assert ("club_position" in player["omissions"]) == standings_failure
+    weeks = {
+        int(request.url.params["weekNumber"])
+        for request in requests
+        if request.url.path.endswith("/calendar")
+    }
+    assert set(range(1, 12)) == weeks
+    assert all(request.method == "GET" for request in requests)
+
+
+def test_build_lineup_started_round_without_previous_appearance_does_not_use_live_match(
+    rsa_pems,
+) -> None:
+    client, jwt, _ = _client(rsa_pems, started_round="live", stats_failure="appearance")
+    with client:
+        result = client.post(
+            "/lineup-builder/leagues/league/build",
+            headers={"Authorization": f"Bearer {jwt}"},
+            json={},
+        )
+    assert result.status_code == 409
+    assert result.json()["error"] == "no_feasible_lineup"
+    assert any(d["code"] == "no_recent_appearance" for d in result.json()["diagnostics"])
+
+
+@pytest.mark.parametrize(
+    "previous_state,status,code",
+    [
+        ("unfinished", 409, "no_feasible_lineup"),
+        ("missing_score", 503, "recent_matches_unavailable"),
+    ],
+)
+def test_build_lineup_previous_round_unverified_result_is_not_used(
+    rsa_pems, previous_state, status, code
+) -> None:
+    client, jwt, _ = _client(rsa_pems, started_round="live", previous_round_state=previous_state)
+    with client:
+        result = client.post(
+            "/lineup-builder/leagues/league/build",
+            headers={"Authorization": f"Bearer {jwt}"},
+            json={},
+        )
+    assert result.status_code == status
+    assert result.json()["error"] == code
 
 
 @pytest.mark.parametrize("shield", [False, True])
