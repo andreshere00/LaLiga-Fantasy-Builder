@@ -35,7 +35,7 @@ type PendingClause = {
 export type MarketActionsApi = ReturnType<typeof useMarketActions>;
 
 /** Mutations, confirmation dialogs and follow-up refetches for market listings. */
-export function useMarketActions() {
+export function useMarketActions(onAcquisitionSuccess?: () => void) {
   const queryClient = useQueryClient();
   const { accessToken, markNeedsReauth } = useAuth();
   const { selected } = useLeague();
@@ -85,6 +85,10 @@ export function useMarketActions() {
       teamId
         ? queryClient.refetchQueries({ queryKey: ["team", leagueKey, teamId] })
         : Promise.resolve(),
+      queryClient.invalidateQueries({ predicate: (query) =>
+        typeof query.queryKey[0] === "string" && query.queryKey[0].startsWith("builder-") &&
+        query.queryKey[2] === leagueKey,
+      }),
     ]);
   }, [queryClient, leagueKey, teamId]);
 
@@ -104,9 +108,13 @@ export function useMarketActions() {
   const onBidError = useCallback(
     async (error: unknown) => {
       reportError(error, "bid");
+      if (error instanceof ApiContractError || error instanceof TypeError ||
+        error instanceof DOMException || (error instanceof ApiError && error.status >= 500)) {
+        onAcquisitionSuccess?.();
+      }
       await refreshAfterMutation();
     },
-    [reportError, refreshAfterMutation],
+    [reportError, refreshAfterMutation, onAcquisitionSuccess],
   );
 
   const createBid = useMutation({
@@ -133,8 +141,10 @@ export function useMarketActions() {
     onSuccess: async (_data, variables) => {
       setPendingBid(null);
       setMessage(null);
-      notify("Bid submitted");
-      patchCachedBid(variables.row.marketId, {
+      const directOffer = usesDirectOfferBid(variables.row, variables.kind);
+      notify(directOffer ? "Offer submitted" : "Bid submitted");
+      onAcquisitionSuccess?.();
+      if (!directOffer) patchCachedBid(variables.row.marketId, {
         id: variables.row.myBid?.id ?? localBidId(variables.row.marketId),
         money: variables.money,
       });
@@ -154,6 +164,7 @@ export function useMarketActions() {
       setPendingBid(null);
       setMessage(null);
       notify("Bid updated");
+      onAcquisitionSuccess?.();
       const bidId = variables.row.myBid?.id ?? localBidId(variables.row.marketId);
       patchCachedBid(variables.row.marketId, { id: bidId, money: variables.money });
       await refreshAfterMutation();
@@ -198,11 +209,16 @@ export function useMarketActions() {
       setPendingClause(null);
       setMessage(null);
       notify("Release clause paid");
+      onAcquisitionSuccess?.();
       await refreshAfterMutation();
     },
     onError: async (error) => {
       reportError(error, "clause");
-      if (error instanceof ApiContractError) await refreshAfterMutation();
+      if (error instanceof ApiContractError || error instanceof TypeError ||
+        error instanceof DOMException || (error instanceof ApiError && error.status >= 500)) {
+        onAcquisitionSuccess?.();
+        await refreshAfterMutation();
+      }
     },
   });
 

@@ -100,6 +100,8 @@ class RawScrapedProfile(RawScrapedModel):
 
 
 class RawScrapedDocument(RawScrapedModel):
+    missing: list[str] | None = None
+    fantasy_points: JsonObject | None = None
     """Validated upstream scrape document before normalisation."""
 
     meta: JsonObject | None = None
@@ -162,6 +164,7 @@ class ScrapedProfile(FlexibleModel):
     form: JsonObject | None = None
     injury: JsonObject | None = None
     injury_history: list[JsonObject] | None = None
+    injury_history_coverage: str = "unknown"
     start_probability: JsonObject | None = None
     injury_risk: JsonObject | None = None
     max_profitable_bid: JsonObject | None = None
@@ -170,6 +173,8 @@ class ScrapedProfile(FlexibleModel):
 
 
 class FutbolFantasyWire(FlexibleModel):
+    missing: list[str] | None = None
+    fantasy_points: JsonObject | None = None
     meta: JsonObject | None = None
     fixtures: list[ScrapedFixture] | None = None
     matches: ScrapedMatches | None = None

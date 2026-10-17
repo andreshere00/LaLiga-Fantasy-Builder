@@ -175,6 +175,7 @@ do not share a generic proxy class.
 | Domain | Public prefix | Upstream prefix | Methods |
 |--------|---------------|-----------------|---------|
 | Leagues | `/leagues/...` | `{CMP}/leagues/...` | GET (reads) |
+| Lineup builder | `/lineup-builder/leagues/{league_id}/build` and `/build/stream` | Existing read-only services | POST planning only; JSON or request-scoped progress stream; JWT membership verified |
 | Teams | `/teams/...` | `{CMP}/teams/...` | GET + PUT (lineup write) |
 | Players | `/players/...` | `{CMP}/players`, `{CMP}/player/...` | GET (catalog + market value public; league card and stats authenticated) |
 | Calendar | `/calendar/...` | `{CMP}/week/...`, `{CMP}/calendar`, stats host | GET (internal JWT; public upstream via `get_public_json`) |
@@ -405,3 +406,11 @@ Run commands live in the [root README](../README.md).
 - Auth and API must use the same internal JWT issuer and audience.
 - `AUTH_JWKS_URL` must reach the auth JWKS endpoint.
 - Key rotation must keep old public keys until issued tokens expire.
+
+## Lineup builder
+
+The `/lineup-builder` domain requires JWT membership resolution and authenticated
+roster/money/market reads. Its public calendar/stat reads remain bearer-free.
+Controller → service → typed snapshot repository → existing services feeds a pure
+scoring and bounded search engine. Recommendations never execute Fantasy writes.
+See [lineup builder](api/lineup-builder.md).

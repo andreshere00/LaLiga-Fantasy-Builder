@@ -85,6 +85,12 @@ def parse_args(argv: list[str] | None = None) -> argparse.Namespace:
         put_lineup=None,
     )
     subparsers = parser.add_subparsers(dest="flow")
+    builder = subparsers.add_parser(
+        "lineup-builder-analysis", help="Read-only lineup planning POST"
+    )
+    builder.add_argument("--league-id", required=True)
+    builder.add_argument("--preferences-file")
+    builder.add_argument("--json", action="store_true")
     leagues = subparsers.add_parser(
         "leagues-analysis",
         help="GET leagues, standing, activity, and squads",
@@ -142,6 +148,10 @@ def validate_analysis_args(args: argparse.Namespace) -> None:
     Raises:
         BrowserSessionError: When PUT flags are incomplete or invalid.
     """
+    if getattr(args, "flow", None) == "lineup-builder-analysis":
+        load_builder_preferences(getattr(args, "preferences_file", None))
+        if args.league_id in {"YOUR_LEAGUE", "<league-id>", "ID"} or not args.league_id.strip():
+            raise BrowserSessionError("A real --league-id is required")
     team_id = args.team_id
     if team_id in _PLACEHOLDER_TEAM_IDS:
         raise BrowserSessionError(
@@ -260,3 +270,14 @@ def _add_analysis_args(
             default=0,
             help="Activity page index (default: 0)",
         )
+
+
+def load_builder_preferences(path: str | None) -> dict[str, Any]:
+    """Validate builder preferences before any browser login or pairing."""
+    from fantasy_auth.cli.browser_session.lineup_builder_contracts import BuildPreferences
+
+    try:
+        raw = json.loads(Path(path).read_text()) if path else {}
+        return BuildPreferences.model_validate(raw).model_dump(mode="json")
+    except (OSError, ValueError):
+        raise BrowserSessionError("Invalid builder preferences file") from None

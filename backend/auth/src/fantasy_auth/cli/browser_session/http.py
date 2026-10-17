@@ -132,6 +132,18 @@ class FantasyClient:
         response = self._request("GET", path)
         return _validated_api_json(response, adapter, "GET", path)
 
+    def build_json(self, path: str, body: dict[str, Any]) -> Any:
+        """Send only the read-only builder POST, with independent request/response validation."""
+        from fantasy_auth.cli.browser_session.lineup_builder_contracts import BuildPreferences
+
+        try:
+            checked = BuildPreferences.model_validate(body)
+            adapter = response_adapter("POST", path)
+        except (ValueError, ValidationError):
+            raise BrowserSessionError("Invalid read-only builder request") from None
+        response = self._request("POST", path, json_body=checked.model_dump(mode="json"))
+        return _validated_api_json(response, adapter, "POST", path)
+
     def put_json(self, path: str, body: dict[str, Any]) -> Any:
         """PUT a JSON body with the internal JWT.
 

@@ -9,6 +9,7 @@ export class ApiError extends Error {
   constructor(
     readonly status: number,
     readonly code: string,
+    readonly diagnostics: { code: string; playerId: string | null }[] = [],
   ) {
     super(code);
     this.name = "ApiError";

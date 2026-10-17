@@ -25,6 +25,7 @@ from fantasy_api.schemas.leagues import (
     StandingRow,
     TeamDetail,
 )
+from fantasy_api.schemas.lineup_builder import BuildResponse
 from fantasy_api.schemas.market import MarketHistoryEntry, MarketSnapshot, PlayerTeamOffers
 from fantasy_api.schemas.player_stats import (
     FixturesQuery,
@@ -74,6 +75,7 @@ def _list_response(pattern: str, model: type[BaseModel]):
 
 
 _RESPONSE_ADAPTERS = (
+    _model_response(r"/lineup-builder/leagues/[^/]+/build", BuildResponse),
     _model_response(r"/competitions/\d+/standings", CompetitionStandings),
     _list_response(r"/leagues", FantasyLeague),
     _list_response(r"/leagues/[^/]+/standing(?:/\d+)?", StandingRow),

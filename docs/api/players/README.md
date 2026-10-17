@@ -56,7 +56,7 @@ rows is disabled.
   detail screen fills supported missing values from the catalog's recent
   `lastStats` matchweeks and labels those shorter Fantasy samples separately.
 - **`profile.form`** carries a published numeric value when available, or an
-  arrow rating (`bad`, `mid`, `good`, `very_good`) from FutbolFantasy's form
+  arrow rating (`very_bad`, `bad`, `mid`, `good`, `very_good`) from FutbolFantasy's form
   widget. Arrow ratings have `visual_only: true` and no numeric value.
   **`profile.start_probability`** carries the published
   percentage and matchweek.
@@ -115,3 +115,7 @@ Statistics validate `TeamsMasterRow` and `MarketHistoryPoint` provider DTOs befo
 club lookup and history normalization; malformed samples fail the market segment.
 The frontend validates all stats query bounds and date-window combinations before
 fetch, including repeated `include` segments on the detail endpoint.
+
+Builder profile facts preserve structured availability, official season total and
+played-match denominator, and parsed injury-history coverage. A missing official
+points block remains unavailable instead of its parser placeholder zeros.

@@ -221,3 +221,16 @@ def run_standings_analysis(
         params["season"] = str(season)
     path = f"/competitions/{quote(str(competition_id), safe='')}/standings?{urlencode(params)}"
     return FantasyClient(base_url=api_base, jwt=jwt, transport=transport).get_json(path)
+
+
+def run_lineup_builder_analysis(
+    *, api_base: str, jwt: str, league_id: str, preferences_file: str | None = None
+) -> Any:
+    """Build previews over HTTP without any Fantasy mutation or API imports."""
+    from fantasy_auth.cli.browser_session.args import load_builder_preferences
+
+    api = FantasyClient(base_url=api_base, jwt=jwt)
+    return api.build_json(
+        f"/lineup-builder/leagues/{quote(league_id, safe='')}/build",
+        load_builder_preferences(preferences_file),
+    )

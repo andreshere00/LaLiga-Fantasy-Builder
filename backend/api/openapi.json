@@ -890,6 +890,222 @@
         ]
       }
     },
+    "/lineup-builder/leagues/{league_id}/build": {
+      "post": {
+        "tags": [
+          "lineup-builder"
+        ],
+        "summary": "Build read-only lineup recommendations",
+        "operationId": "build_lineup_lineup_builder_leagues__league_id__build_post",
+        "parameters": [
+          {
+            "name": "league_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "League Id"
+            }
+          },
+          {
+            "name": "authorization",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Authorization"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/BuildPreferences"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BuildResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized or LaLiga re-auth required.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "502": {
+            "description": "Auth or Fantasy upstream failure.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Required source or search unavailable",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BuildFailure"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Build conflict",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BuildFailure"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ]
+      }
+    },
+    "/lineup-builder/leagues/{league_id}/build/stream": {
+      "post": {
+        "tags": [
+          "lineup-builder"
+        ],
+        "summary": "Stream read-only lineup build progress and result",
+        "operationId": "stream_lineup_lineup_builder_leagues__league_id__build_stream_post",
+        "parameters": [
+          {
+            "name": "league_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "League Id"
+            }
+          },
+          {
+            "name": "authorization",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Authorization"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/BuildPreferences"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/x-ndjson": {
+                "schema": {
+                  "$ref": "#/components/schemas/BuildStreamEvent"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized or LaLiga re-auth required.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "502": {
+            "description": "Auth or Fantasy upstream failure.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Fantasy upstream unavailable.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ]
+      }
+    },
     "/teams/{team_id}/money": {
       "get": {
         "tags": [
@@ -5206,6 +5422,363 @@
         "title": "BidWrite",
         "description": "Request body for bid create/update."
       },
+      "BuildErrorEvent": {
+        "properties": {
+          "type": {
+            "type": "string",
+            "const": "error",
+            "title": "Type",
+            "default": "error"
+          },
+          "status": {
+            "type": "integer",
+            "maximum": 599.0,
+            "minimum": 400.0,
+            "title": "Status"
+          },
+          "error": {
+            "type": "string",
+            "title": "Error"
+          },
+          "diagnostics": {
+            "items": {
+              "$ref": "#/components/schemas/BuilderDiagnostic"
+            },
+            "type": "array",
+            "maxItems": 200,
+            "title": "Diagnostics"
+          }
+        },
+        "additionalProperties": true,
+        "type": "object",
+        "required": [
+          "status",
+          "error"
+        ],
+        "title": "BuildErrorEvent",
+        "description": "Terminal sanitized failure after streaming headers have been sent."
+      },
+      "BuildFailure": {
+        "properties": {
+          "error": {
+            "type": "string",
+            "title": "Error"
+          },
+          "detail": {
+            "type": "string",
+            "title": "Detail"
+          },
+          "diagnostics": {
+            "items": {
+              "$ref": "#/components/schemas/BuilderDiagnostic"
+            },
+            "type": "array",
+            "maxItems": 200,
+            "title": "Diagnostics"
+          }
+        },
+        "additionalProperties": true,
+        "type": "object",
+        "required": [
+          "error",
+          "detail"
+        ],
+        "title": "BuildFailure",
+        "description": "Sanitized build conflict with bounded player/source reasons."
+      },
+      "BuildPreferences": {
+        "properties": {
+          "sources": {
+            "items": {
+              "type": "string",
+              "enum": [
+                "owned",
+                "market",
+                "opponents"
+              ]
+            },
+            "type": "array",
+            "maxItems": 3,
+            "minItems": 1,
+            "title": "Sources"
+          },
+          "mandatory_player_ids": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "maxItems": 11,
+            "title": "Mandatory Player Ids"
+          },
+          "formations": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "maxItems": 12,
+            "title": "Formations"
+          },
+          "allow_buying": {
+            "type": "boolean",
+            "title": "Allow Buying",
+            "default": false
+          },
+          "allow_selling": {
+            "type": "boolean",
+            "title": "Allow Selling",
+            "default": false
+          },
+          "include_trading_purchases": {
+            "type": "boolean",
+            "title": "Include Trading Purchases",
+            "default": false
+          },
+          "max_candidates": {
+            "type": "integer",
+            "maximum": 20.0,
+            "minimum": 1.0,
+            "title": "Max Candidates",
+            "default": 5
+          },
+          "explanation": {
+            "$ref": "#/components/schemas/ExplanationPreferences"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "title": "BuildPreferences",
+        "description": "Validated builder preferences; all selected players are mandatory."
+      },
+      "BuildProgress": {
+        "properties": {
+          "stage": {
+            "type": "string",
+            "enum": [
+              "sources",
+              "players",
+              "trades",
+              "search",
+              "explanation",
+              "complete"
+            ],
+            "title": "Stage"
+          },
+          "percent": {
+            "type": "integer",
+            "maximum": 100.0,
+            "minimum": 0.0,
+            "title": "Percent"
+          },
+          "completed_players": {
+            "type": "integer",
+            "minimum": 0.0,
+            "title": "Completed Players",
+            "default": 0
+          },
+          "total_players": {
+            "type": "integer",
+            "minimum": 0.0,
+            "title": "Total Players",
+            "default": 0
+          }
+        },
+        "additionalProperties": true,
+        "type": "object",
+        "required": [
+          "stage",
+          "percent"
+        ],
+        "title": "BuildProgress",
+        "description": "Stage-weighted work estimate; player counts measure finished evaluations."
+      },
+      "BuildProgressEvent": {
+        "properties": {
+          "type": {
+            "type": "string",
+            "const": "progress",
+            "title": "Type",
+            "default": "progress"
+          },
+          "progress": {
+            "$ref": "#/components/schemas/BuildProgress"
+          }
+        },
+        "additionalProperties": true,
+        "type": "object",
+        "required": [
+          "progress"
+        ],
+        "title": "BuildProgressEvent",
+        "description": "One progress update in an authenticated JSON-lines response."
+      },
+      "BuildResponse": {
+        "properties": {
+          "build_id": {
+            "type": "string",
+            "title": "Build Id"
+          },
+          "rules_version": {
+            "type": "string",
+            "title": "Rules Version",
+            "default": "2026-10-15.1"
+          },
+          "generated_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Generated At"
+          },
+          "league_id": {
+            "type": "string",
+            "title": "League Id"
+          },
+          "team_id": {
+            "type": "string",
+            "title": "Team Id"
+          },
+          "target": {
+            "$ref": "#/components/schemas/TargetWeek"
+          },
+          "random_seed": {
+            "type": "integer",
+            "title": "Random Seed"
+          },
+          "search_complete": {
+            "type": "boolean",
+            "title": "Search Complete"
+          },
+          "search_limit_reason": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Search Limit Reason"
+          },
+          "evaluated_states": {
+            "type": "integer",
+            "title": "Evaluated States"
+          },
+          "evaluated_players": {
+            "type": "integer",
+            "title": "Evaluated Players"
+          },
+          "candidates": {
+            "items": {
+              "$ref": "#/components/schemas/Candidate"
+            },
+            "type": "array",
+            "title": "Candidates"
+          },
+          "diagnostics": {
+            "items": {
+              "$ref": "#/components/schemas/BuilderDiagnostic"
+            },
+            "type": "array",
+            "title": "Diagnostics"
+          },
+          "explanation_status": {
+            "type": "string",
+            "title": "Explanation Status",
+            "default": "disabled"
+          },
+          "explanations": {
+            "additionalProperties": {
+              "type": "string"
+            },
+            "type": "object",
+            "title": "Explanations"
+          }
+        },
+        "additionalProperties": true,
+        "type": "object",
+        "required": [
+          "build_id",
+          "generated_at",
+          "league_id",
+          "team_id",
+          "target",
+          "random_seed",
+          "search_complete",
+          "evaluated_states",
+          "evaluated_players",
+          "candidates",
+          "diagnostics"
+        ],
+        "title": "BuildResponse",
+        "description": "Replayable recommendations and truthful bounded-search status."
+      },
+      "BuildResultEvent": {
+        "properties": {
+          "type": {
+            "type": "string",
+            "const": "result",
+            "title": "Type",
+            "default": "result"
+          },
+          "result": {
+            "$ref": "#/components/schemas/BuildResponse"
+          }
+        },
+        "additionalProperties": true,
+        "type": "object",
+        "required": [
+          "result"
+        ],
+        "title": "BuildResultEvent",
+        "description": "Terminal successful result; only this event completes the build."
+      },
+      "BuildStreamEvent": {
+        "oneOf": [
+          {
+            "$ref": "#/components/schemas/BuildProgressEvent"
+          },
+          {
+            "$ref": "#/components/schemas/BuildResultEvent"
+          },
+          {
+            "$ref": "#/components/schemas/BuildErrorEvent"
+          }
+        ],
+        "title": "BuildStreamEvent",
+        "description": "One newline-delimited event, ending with exactly one result or error.",
+        "discriminator": {
+          "propertyName": "type",
+          "mapping": {
+            "error": "#/components/schemas/BuildErrorEvent",
+            "progress": "#/components/schemas/BuildProgressEvent",
+            "result": "#/components/schemas/BuildResultEvent"
+          }
+        }
+      },
+      "BuilderDiagnostic": {
+        "properties": {
+          "code": {
+            "type": "string",
+            "title": "Code"
+          },
+          "player_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Player Id"
+          }
+        },
+        "additionalProperties": true,
+        "type": "object",
+        "required": [
+          "code"
+        ],
+        "title": "BuilderDiagnostic",
+        "description": "Bounded source omission or player exclusion, without raw provider bodies."
+      },
       "BuyoutMutationResult": {
         "properties": {
           "ok": {
@@ -5235,6 +5808,58 @@
         "type": "object",
         "title": "BuyoutMutationResult",
         "description": "Response from buyout write endpoints (may be empty)."
+      },
+      "Candidate": {
+        "properties": {
+          "candidate_id": {
+            "type": "string",
+            "title": "Candidate Id"
+          },
+          "formation": {
+            "type": "string",
+            "title": "Formation"
+          },
+          "resource_group": {
+            "type": "string",
+            "enum": [
+              "owned",
+              "external"
+            ],
+            "title": "Resource Group"
+          },
+          "starters": {
+            "items": {
+              "$ref": "#/components/schemas/ScoredPlayer"
+            },
+            "type": "array",
+            "title": "Starters"
+          },
+          "total_lineup_score": {
+            "type": "string",
+            "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+            "title": "Total Lineup Score"
+          },
+          "tie_break": {
+            "type": "number",
+            "title": "Tie Break"
+          },
+          "trading_plan": {
+            "$ref": "#/components/schemas/TradePlan"
+          }
+        },
+        "additionalProperties": true,
+        "type": "object",
+        "required": [
+          "candidate_id",
+          "formation",
+          "resource_group",
+          "starters",
+          "total_lineup_score",
+          "tie_break",
+          "trading_plan"
+        ],
+        "title": "Candidate",
+        "description": "Ranked XI and conditional trades; never an upstream write."
       },
       "CatalogPlayer": {
         "properties": {
@@ -5671,6 +6296,79 @@
         "title": "CompetitionStandings",
         "description": "Complete standings snapshot with explicit source freshness."
       },
+      "Criterion": {
+        "properties": {
+          "rule_id": {
+            "type": "string",
+            "title": "Rule Id"
+          },
+          "source": {
+            "type": "string",
+            "title": "Source"
+          },
+          "observed": {
+            "type": "string",
+            "title": "Observed"
+          },
+          "lineup": {
+            "anyOf": [
+              {
+                "type": "string",
+                "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Lineup"
+          },
+          "trading": {
+            "anyOf": [
+              {
+                "type": "string",
+                "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Trading"
+          },
+          "lineup_lower": {
+            "type": "string",
+            "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+            "title": "Lineup Lower",
+            "default": "0"
+          },
+          "lineup_upper": {
+            "type": "string",
+            "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+            "title": "Lineup Upper",
+            "default": "0"
+          },
+          "trading_lower": {
+            "type": "string",
+            "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+            "title": "Trading Lower",
+            "default": "0"
+          },
+          "trading_upper": {
+            "type": "string",
+            "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+            "title": "Trading Upper",
+            "default": "0"
+          }
+        },
+        "additionalProperties": true,
+        "type": "object",
+        "required": [
+          "rule_id",
+          "source",
+          "observed"
+        ],
+        "title": "Criterion",
+        "description": "One scored rule family with achievable bounds and source evidence."
+      },
       "CurrentWeek": {
         "properties": {
           "isLive": {
@@ -5792,6 +6490,35 @@
         ],
         "title": "ErrorResponse",
         "description": "Stable API error body returned by exception handlers.\n\nAttributes:\n    error: Machine-readable error category.\n    detail: Human-readable explanation (never contains tokens)."
+      },
+      "ExplanationPreferences": {
+        "properties": {
+          "enabled": {
+            "type": "boolean",
+            "title": "Enabled",
+            "default": false
+          },
+          "reasoning_effort": {
+            "anyOf": [
+              {
+                "type": "string",
+                "enum": [
+                  "low",
+                  "medium",
+                  "high"
+                ]
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Reasoning Effort"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "title": "ExplanationPreferences",
+        "description": "Optional prose settings; credentials and model remain server-owned."
       },
       "FantasyLeague": {
         "properties": {
@@ -6294,6 +7021,7 @@
               {
                 "type": "string",
                 "enum": [
+                  "very_bad",
                   "bad",
                   "mid",
                   "good",
@@ -9303,6 +10031,62 @@
             "type": "array",
             "title": "Warnings"
           },
+          "availability": {
+            "anyOf": [
+              {
+                "additionalProperties": {
+                  "anyOf": [
+                    {
+                      "type": "string"
+                    },
+                    {
+                      "type": "integer"
+                    },
+                    {
+                      "type": "null"
+                    }
+                  ]
+                },
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Availability"
+          },
+          "injury_history_coverage": {
+            "type": "string",
+            "enum": [
+              "complete",
+              "partial",
+              "unknown"
+            ],
+            "title": "Injury History Coverage",
+            "default": "unknown"
+          },
+          "fantasy_season_total": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Fantasy Season Total"
+          },
+          "fantasy_season_matches": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Fantasy Season Matches"
+          },
           "injury": {
             "$ref": "#/components/schemas/Injury"
           },
@@ -9794,6 +10578,236 @@
           "generated_at"
         ],
         "title": "RecentMatchesResponse"
+      },
+      "ScoredPlayer": {
+        "properties": {
+          "player_id": {
+            "type": "string",
+            "title": "Player Id"
+          },
+          "name": {
+            "type": "string",
+            "title": "Name"
+          },
+          "position": {
+            "type": "integer",
+            "maximum": 4.0,
+            "minimum": 1.0,
+            "title": "Position"
+          },
+          "club_id": {
+            "type": "integer",
+            "title": "Club Id"
+          },
+          "source": {
+            "type": "string",
+            "enum": [
+              "owned",
+              "market",
+              "opponents"
+            ],
+            "title": "Source"
+          },
+          "player_team_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Player Team Id"
+          },
+          "market_value": {
+            "type": "integer",
+            "minimum": 0.0,
+            "title": "Market Value"
+          },
+          "lineup_score": {
+            "type": "string",
+            "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+            "title": "Lineup Score"
+          },
+          "trading_score": {
+            "type": "string",
+            "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+            "title": "Trading Score"
+          },
+          "combined_score": {
+            "type": "string",
+            "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+            "title": "Combined Score"
+          },
+          "sections": {
+            "items": {
+              "$ref": "#/components/schemas/SectionScore"
+            },
+            "type": "array",
+            "title": "Sections"
+          },
+          "omissions": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Omissions"
+          },
+          "news": {
+            "items": {
+              "$ref": "#/components/schemas/NewsItem"
+            },
+            "type": "array",
+            "title": "News"
+          },
+          "protection_advice": {
+            "type": "boolean",
+            "title": "Protection Advice",
+            "default": false
+          },
+          "acquisition_method": {
+            "anyOf": [
+              {
+                "type": "string",
+                "enum": [
+                  "bid",
+                  "clause"
+                ]
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Acquisition Method"
+          },
+          "settlement_at": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Settlement At"
+          },
+          "clause_price": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Clause Price"
+          },
+          "sale_settlement_at": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Sale Settlement At"
+          }
+        },
+        "additionalProperties": true,
+        "type": "object",
+        "required": [
+          "player_id",
+          "name",
+          "position",
+          "club_id",
+          "source",
+          "market_value",
+          "lineup_score",
+          "trading_score",
+          "combined_score"
+        ],
+        "title": "ScoredPlayer",
+        "description": "Master identity, eligibility and executable read-only route metadata."
+      },
+      "SectionScore": {
+        "properties": {
+          "section": {
+            "type": "string",
+            "title": "Section"
+          },
+          "criteria": {
+            "items": {
+              "$ref": "#/components/schemas/Criterion"
+            },
+            "type": "array",
+            "title": "Criteria"
+          },
+          "lineup_raw": {
+            "type": "string",
+            "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+            "title": "Lineup Raw"
+          },
+          "trading_raw": {
+            "type": "string",
+            "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+            "title": "Trading Raw"
+          },
+          "lineup_lower": {
+            "type": "string",
+            "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+            "title": "Lineup Lower"
+          },
+          "lineup_upper": {
+            "type": "string",
+            "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+            "title": "Lineup Upper"
+          },
+          "trading_lower": {
+            "type": "string",
+            "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+            "title": "Trading Lower"
+          },
+          "trading_upper": {
+            "type": "string",
+            "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+            "title": "Trading Upper"
+          },
+          "lineup_normalized": {
+            "type": "string",
+            "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+            "title": "Lineup Normalized"
+          },
+          "trading_normalized": {
+            "type": "string",
+            "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+            "title": "Trading Normalized"
+          },
+          "effective_weight": {
+            "type": "string",
+            "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+            "title": "Effective Weight"
+          }
+        },
+        "additionalProperties": true,
+        "type": "object",
+        "required": [
+          "section",
+          "criteria",
+          "lineup_raw",
+          "trading_raw",
+          "lineup_lower",
+          "lineup_upper",
+          "trading_lower",
+          "trading_upper",
+          "lineup_normalized",
+          "trading_normalized",
+          "effective_weight"
+        ],
+        "title": "SectionScore",
+        "description": "Independent normalized axes and redistributed lineup weight."
       },
       "SegmentDescriptor": {
         "properties": {
@@ -10514,6 +11528,45 @@
         "type": "object",
         "title": "StatValue"
       },
+      "TargetWeek": {
+        "properties": {
+          "week": {
+            "type": "integer",
+            "title": "Week"
+          },
+          "first_kickoff": {
+            "type": "string",
+            "format": "date-time",
+            "title": "First Kickoff"
+          },
+          "sales_deadline": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Sales Deadline"
+          },
+          "clauses_deadline": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Clauses Deadline"
+          },
+          "protection_deadline": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Protection Deadline"
+          }
+        },
+        "additionalProperties": true,
+        "type": "object",
+        "required": [
+          "week",
+          "first_kickoff",
+          "sales_deadline",
+          "clauses_deadline",
+          "protection_deadline"
+        ],
+        "title": "TargetWeek",
+        "description": "Verified first kickoff; every transaction deadline derives from it."
+      },
       "TeamDetail": {
         "properties": {
           "id": {
@@ -10734,6 +11787,153 @@
         "type": "object",
         "title": "TeamMoney",
         "description": "Cash and investment from ``GET /teams/{teamId}/money``.\n\nRival teams often return empty or sparse objects; fields may be absent."
+      },
+      "TradePlan": {
+        "properties": {
+          "acquisitions": {
+            "items": {
+              "$ref": "#/components/schemas/ScoredPlayer"
+            },
+            "type": "array",
+            "title": "Acquisitions"
+          },
+          "trading_purchases": {
+            "items": {
+              "$ref": "#/components/schemas/ScoredPlayer"
+            },
+            "type": "array",
+            "title": "Trading Purchases"
+          },
+          "sales": {
+            "items": {
+              "$ref": "#/components/schemas/ScoredPlayer"
+            },
+            "type": "array",
+            "title": "Sales"
+          },
+          "steps": {
+            "items": {
+              "$ref": "#/components/schemas/TradeStep"
+            },
+            "type": "array",
+            "title": "Steps"
+          },
+          "retained_player_ids": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Retained Player Ids"
+          },
+          "resulting_player_ids": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Resulting Player Ids"
+          },
+          "projected_cash": {
+            "type": "integer",
+            "title": "Projected Cash"
+          },
+          "squad_value": {
+            "type": "integer",
+            "title": "Squad Value"
+          },
+          "squad_count": {
+            "type": "integer",
+            "title": "Squad Count"
+          },
+          "reserved_squad_slots": {
+            "type": "integer",
+            "minimum": 0.0,
+            "title": "Reserved Squad Slots",
+            "default": 0
+          }
+        },
+        "additionalProperties": true,
+        "type": "object",
+        "required": [
+          "acquisitions",
+          "trading_purchases",
+          "sales",
+          "steps",
+          "retained_player_ids",
+          "resulting_player_ids",
+          "projected_cash",
+          "squad_value",
+          "squad_count"
+        ],
+        "title": "TradePlan",
+        "description": "Whole execution-time squad projection, including retained bench."
+      },
+      "TradeStep": {
+        "properties": {
+          "action": {
+            "type": "string",
+            "enum": [
+              "sell",
+              "buy"
+            ],
+            "title": "Action"
+          },
+          "player_id": {
+            "type": "string",
+            "title": "Player Id"
+          },
+          "method": {
+            "type": "string",
+            "title": "Method"
+          },
+          "estimate": {
+            "type": "integer",
+            "title": "Estimate"
+          },
+          "settlement_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Settlement At"
+          },
+          "cash_after": {
+            "type": "integer",
+            "title": "Cash After"
+          },
+          "squad_value_after": {
+            "type": "integer",
+            "title": "Squad Value After"
+          },
+          "squad_count_after": {
+            "type": "integer",
+            "title": "Squad Count After"
+          },
+          "debt_limit": {
+            "type": "integer",
+            "title": "Debt Limit"
+          },
+          "conditions": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Conditions"
+          }
+        },
+        "additionalProperties": true,
+        "type": "object",
+        "required": [
+          "action",
+          "player_id",
+          "method",
+          "estimate",
+          "settlement_at",
+          "cash_after",
+          "squad_value_after",
+          "squad_count_after",
+          "debt_limit",
+          "conditions"
+        ],
+        "title": "TradeStep",
+        "description": "Conditional market-value estimate with balances after settlement."
       },
       "Travel": {
         "properties": {
@@ -11148,6 +12348,10 @@
     {
       "name": "leagues",
       "description": "LaLiga Fantasy league reads (standing, activity, teams). Thin authenticated proxies of competition league resources."
+    },
+    {
+      "name": "lineup-builder",
+      "description": "Read-only lineup recommendations and conditional market-value projections."
     },
     {
       "name": "teams",

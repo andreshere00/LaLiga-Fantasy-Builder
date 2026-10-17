@@ -1,9 +1,14 @@
 import { useQueries, useQuery } from "@tanstack/react-query";
 import { useMemo, useState } from "react";
 
+import { useLineupBuilder } from "./useLineupBuilder";
+import { LineupBuilderResults } from "./LineupBuilderResults";
+import type { BuilderCandidate, LineupBuildDto } from "../../api/schemas";
+import { LineupBuilderPlayerActions } from "./LineupBuilderPlayerActions";
 import { getJson, paths } from "../../api/client";
 import {
   leagueId,
+  mediaFromPlayerMaster,
   playersOf,
   squadCards,
   text,
@@ -11,14 +16,19 @@ import {
   type SquadCard,
 } from "../../api/mappers";
 import { useAuth } from "../../auth/AuthProvider";
+import { usePlayersCatalogQuery } from "../../api/queries";
+import { Button } from "../../components/ui/Button";
 import { Dialog } from "../../components/ui/Dialog";
 import { Input } from "../../components/ui/Fields";
+import { Progress, ProgressLabel } from "../../components/ui/Progress";
 import { DEFAULT_LINEUPS_AVAILABLE } from "./formations";
 import { useLeague } from "./LeagueProvider";
-import { marketItems, masterIdOf, masterOf } from "../market/model/listing";
+import { catalogById, marketItems, masterIdOf, masterOf } from "../market/model/listing";
+import { ProfilePhoto } from "../shell/ProfilePhoto";
+import { PersonIcon } from "../shell/icons";
 import "./LineupBuilderDialog.css";
 
-type PlayerOption = { id: string; name: string; source: string };
+type PlayerOption = { id: string; name: string; source: string; photoUrl: string | null };
 
 type Props = {
   open: boolean;
@@ -27,33 +37,47 @@ type Props = {
   squad: SquadCard[];
   selectedTeamId: string | null;
   formations: { value: string; label: string }[];
+  canApply: (candidate: BuilderCandidate, targetWeek: number) => boolean;
+  onApply: (candidate: BuilderCandidate, targetWeek: number) => void;
+  isDraftDirty: (targetWeek: number) => boolean;
 };
 
 const EMPTY: PlayerOption[] = [];
 const EMPTY_SQUAD: SquadCard[] = [];
 
 function squadOptions(players: readonly SquadCard[], source: string): PlayerOption[] {
-  return players.map((player) => ({
-    id: `${source === "My squad" ? "owned" : "opponent"}:${source}:${player.id}`,
-    name: player.name,
-    source,
-  }));
+  return players.flatMap((player) => player.masterPlayerId ? [{
+    id: player.masterPlayerId, name: player.name, source, photoUrl: player.photoUrl,
+  }] : []);
 }
 
-export function LineupBuilderDialog({
-  open, onClose, ranking, squad, selectedTeamId, formations,
+export function LineupBuilderDialog(props: Props) {
+  const { user } = useAuth();
+  const { selected } = useLeague();
+  return props.open && user && selected ? <BuilderDialogSession key={`${user.userId}:${leagueId(selected)}`} {...props} /> : null;
+}
+
+function BuilderDialogSession({
+  open, onClose, ranking, squad, selectedTeamId, formations, canApply, onApply, isDraftDirty,
 }: Props) {
-  const { accessToken } = useAuth();
+  const { accessToken, user } = useAuth();
   const { selected } = useLeague();
   const id = selected ? leagueId(selected) : "";
   const token = accessToken ?? "";
+  const [replacement, setReplacement] = useState<BuilderCandidate | null>(null);
+  const [acquiring, setAcquiring] = useState<BuilderCandidate["starters"][number] | null>(null);
+  const [changedResult, setChangedResult] = useState<LineupBuildDto | null>(null);
   const [search, setSearch] = useState("");
   const [chosen, setChosen] = useState<string[]>([]);
+  const [allowBuying, setAllowBuying] = useState(false);
+  const [allowSelling, setAllowSelling] = useState(false);
+  const [includeTradingPurchases, setIncludeTradingPurchases] = useState(false);
+  const catalogQuery = usePlayersCatalogQuery(open);
   const [scope, setScope] = useState<string[]>(["owned"]);
   const [lineupPreferences, setLineupPreferences] = useState<string[]>([]);
   const ownTeamId = selected?.team?.id == null ? "" : String(selected.team.id);
   const ownTeamQuery = useQuery({
-    queryKey: ["builder-own-roster", id, ownTeamId],
+    queryKey: ["builder-own-roster", user?.userId, id, ownTeamId],
     enabled: open && id.length > 0 && ownTeamId.length > 0 && token.length > 0 &&
       selectedTeamId !== ownTeamId,
     queryFn: ({ signal }) => getJson(paths.team(id, ownTeamId), token, { signal }),
@@ -63,19 +87,19 @@ export function LineupBuilderDialog({
     : ownTeamQuery.data
       ? squadCards(playersOf(ownTeamQuery.data), null)
       : EMPTY_SQUAD;
-  const opponents = ranking.filter((team) => team.selectable && team.teamId !== selected?.team?.id);
+  const opponents = ranking.filter((team) => team.selectable && team.teamId !== ownTeamId);
   const rosterQueries = useQueries({
     queries: opponents.map((team) => ({
-      queryKey: ["builder-roster", id, team.teamId],
-      enabled: open && id.length > 0 && token.length > 0,
+      queryKey: ["builder-roster", user?.userId, id, team.teamId],
+      enabled: open && scope.includes("opponents") && id.length > 0 && token.length > 0,
       queryFn: async ({ signal }: { signal: AbortSignal }) =>
         getJson(paths.team(id, team.teamId), token, { signal }),
     })),
   });
   const marketQuery = useQueries({
     queries: [{
-      queryKey: ["builder-market", id],
-      enabled: open && id.length > 0 && token.length > 0,
+      queryKey: ["builder-market", user?.userId, id],
+      enabled: open && scope.includes("market") && id.length > 0 && token.length > 0,
       queryFn: ({ signal }: { signal: AbortSignal }) =>
         getJson(paths.market(id), token, { signal }),
     }],
@@ -90,26 +114,42 @@ export function LineupBuilderDialog({
     const master = masterOf(item);
     const playerId = masterIdOf(item);
     const name = text(master?.nickname) ?? text(master?.name);
-    return playerId && name ? [{ id: `market:${playerId}`, name, source: "Market" }] : [];
+    return playerId && name ? [{ id: playerId, name, source: "Market", photoUrl: mediaFromPlayerMaster(master).photoUrl }] : [];
   }), [marketQuery?.data]);
   const allOptions = useMemo(() => [
     ...squadOptions(ownSquad, "My squad"),
     ...opponentOptions,
     ...marketOptions,
   ], [marketOptions, opponentOptions, ownSquad]);
-  const scopeOptions = allOptions.filter((option) => {
-    if (option.id.startsWith("owned:")) return scope.includes("owned");
-    if (option.id.startsWith("opponent:")) return scope.includes("opponents");
-    return scope.includes("market");
-  });
+  const playersById = useMemo(() => {
+    const players = new Map<string, { name: string; photoUrl: string | null }>();
+    for (const [playerId, player] of catalogById(catalogQuery.data)) {
+      players.set(playerId, {
+        name: text(player.nickname) ?? text(player.name) ?? "Unknown player",
+        photoUrl: mediaFromPlayerMaster(player).photoUrl,
+      });
+    }
+    for (const option of allOptions) {
+      players.set(option.id, {
+        name: option.name,
+        photoUrl: option.photoUrl ?? players.get(option.id)?.photoUrl ?? null,
+      });
+    }
+    return players;
+  }, [allOptions, catalogQuery.data]);
+  const builder = useLineupBuilder(id, token, playersById);
+  const scopeOptions = [...new Map(allOptions.filter((option) =>
+    scope.includes(option.source === "My squad" ? "owned" : option.source === "Market" ? "market" : "opponents"))
+    .map((option) => [option.id, option])).values()];
   const formationOptions = useMemo(() => {
     const premiumFormations = new Set<string>(DEFAULT_LINEUPS_AVAILABLE.premium);
     const defaults = DEFAULT_LINEUPS_AVAILABLE.free
       .map((value) => ({ value, label: value.replaceAll(",", "-") }));
-    const freeFormations = formations.filter((item) => !premiumFormations.has(item.value));
-    return [...new Map([...defaults, ...freeFormations]
+    const entitled = selected?.config?.premiumFeatures?.formations === true;
+    const freeFormations = formations.filter((item) => entitled || !premiumFormations.has(item.value));
+    return [...new Map([...defaults, ...(entitled ? DEFAULT_LINEUPS_AVAILABLE.premium.map((value) => ({ value, label: value.replaceAll(",", "-") })) : []), ...freeFormations]
       .map((item) => [item.value, item])).values()];
-  }, [formations]);
+  }, [formations, selected]);
 
   const filteredOptions = scopeOptions.filter((option) =>
     option.name.toLocaleLowerCase().includes(search.trim().toLocaleLowerCase()) &&
@@ -133,8 +173,39 @@ export function LineupBuilderDialog({
   }
 
   return (
-    <Dialog open={open} onClose={onClose} title="Build lineup"
-      footer={<button type="button" onClick={onClose}>Close</button>}>
+    <Dialog open={open} onClose={onClose} title="Build lineup" className="lineup-builder-dialog"
+      footer={<>
+        {builder.pending && <div className="lineup-builder-loading" role="status">
+          <span className="lineup-builder-bounce" aria-hidden="true">
+            <span className="lineup-builder-bounce-ball" />
+            <span className="lineup-builder-bounce-ground" />
+          </span>
+          <Progress value={builder.progress?.percent ?? null} className="lineup-builder-loading-details"
+            aria-valuetext={builder.progress ? `Estimated progress: ${builder.progress.percent}%` : undefined}>
+            <ProgressLabel className="lineup-builder-loading-text">
+              {builder.progress?.stage === "players"
+                ? `Evaluating players: ${builder.progress.completedPlayers}/${builder.progress.totalPlayers}`
+                : builder.progress?.stage === "trades" ? "Checking trade options…"
+                  : builder.progress?.stage === "search" ? "Finding the best lineups…"
+                    : builder.progress?.stage === "explanation" ? "Writing explanations…"
+                      : builder.progress?.stage === "complete" ? "Recommendations ready"
+                        : "Building recommendations…"}
+              {builder.progress && <span className="lineup-builder-loading-percent"
+                title="Estimated overall progress">
+                {builder.progress.percent}%
+              </span>}
+            </ProgressLabel>
+          </Progress>
+        </div>}
+        {builder.pending ? <Button shape="square" variant="destructive" onClick={builder.cancel}>Cancel build</Button> : <Button shape="square"
+          disabled={scope.length === 0 || !token} onClick={() => void builder.build({
+            sources: scope as ("owned" | "market" | "opponents")[], mandatoryPlayerIds: chosen,
+            formations: lineupPreferences, allowBuying, allowSelling,
+            includeTradingPurchases: allowBuying && includeTradingPurchases,
+            maxCandidates: 5, explanation: { enabled: false },
+          })}>Build</Button>}
+        <Button shape="square" variant="secondary" className="lineup-builder-close" onClick={onClose}>Close</Button>
+      </>}>
       <div className="lineup-builder">
         <section className="lineup-builder-section" aria-labelledby="builder-scope-title">
           <h3 id="builder-scope-title">Player scope options</h3>
@@ -143,7 +214,7 @@ export function LineupBuilderDialog({
               ["market", "Consider players on the market"],
               ["owned", "Consider owned players"],
               ["opponents", "Consider opponent players"],
-              ["trading", "Allow to sell players"],
+
             ].map(([value, label]) => (
               <label key={value}>
                 <input type="checkbox" checked={scope.includes(value)}
@@ -151,21 +222,31 @@ export function LineupBuilderDialog({
               </label>
             ))}
           </fieldset>
+          <label><input type="checkbox" checked={allowBuying} onChange={(e) => setAllowBuying(e.target.checked)} /> Allow purchase recommendations</label>
+          <label><input type="checkbox" checked={allowSelling} onChange={(e) => setAllowSelling(e.target.checked)} /> Allow sale recommendations</label>
+          <p className="fb-helper">Recommendations are previews. Building never buys or sells players.</p>
+          {!allowBuying && scope.some((source) => source !== "owned") && <p role="status" className="fb-helper">
+            Enable purchase recommendations to include market or opponent players in proposed lineups.
+          </p>}
+          <label><input type="checkbox" disabled={!allowBuying} checked={allowBuying && includeTradingPurchases} onChange={(e) => setIncludeTradingPurchases(e.target.checked)} /> Include trading-only purchases</label>
         </section>
 
         <section className="lineup-builder-section" aria-labelledby="builder-player-title">
-          <h3 id="builder-player-title">Player preferences</h3>
+          <h3 id="builder-player-title">Mandatory players</h3>
           <label className="lineup-builder-field">
-            <span>Add the players you would prefer to have in your lineup.</span>
+            <span>Every selected player must be in the starting XI.</span>
             <span className="fb-input-group">
               <Input value={search} onChange={(event) => setSearch(event.target.value)}
                 placeholder="Search players" aria-label="Search available players" />
             </span>
           </label>
-          <div className="lineup-builder-options" role="listbox" aria-multiselectable="true" aria-label="Available players">
+          <div className="lineup-builder-options" aria-label="Available players">
             {filteredOptions.map((option) => (
-              <button type="button" role="option" aria-selected="false" key={option.id}
-                onClick={() => setChosen((current) => [...current, option.id])}>
+              <button type="button" key={option.id}
+                disabled={chosen.length >= 11} onClick={() => setChosen((current) => [...current, option.id])}>
+                <ProfilePhoto key={playersById.get(option.id)?.photoUrl ?? "no-photo"}
+                  className="lineup-builder-option-photo" url={playersById.get(option.id)?.photoUrl ?? null}
+                  fallback={<PersonIcon />} />
                 <span>{option.name}</span><small>{option.source}</small>
               </button>
             ))}
@@ -179,10 +260,13 @@ export function LineupBuilderDialog({
             </p> : null}
           </div>
           <div className="lineup-builder-chosen">
-            <h4>Chosen players</h4>
+            <h4>Mandatory players</h4>
             {chosenOptions.length ? chosenOptions.map((option) => (
-              <button type="button" key={option.id} onClick={() => setChosen((current) =>
+              <button type="button" key={option.id} aria-label={`Remove ${option.name}`} onClick={() => setChosen((current) =>
                 current.filter((id) => id !== option.id))}>
+                <ProfilePhoto key={playersById.get(option.id)?.photoUrl ?? "no-photo"}
+                  className="lineup-builder-option-photo" url={playersById.get(option.id)?.photoUrl ?? null}
+                  fallback={<PersonIcon />} />
                 {option.name} <span aria-hidden="true">×</span>
               </button>
             )) : <p className="fb-helper">No players chosen.</p>}
@@ -191,6 +275,7 @@ export function LineupBuilderDialog({
 
         <section className="lineup-builder-section" aria-labelledby="builder-formations-title">
           <h3 id="builder-formations-title">Lineup preferences</h3>
+          <p>No selection means all supported formations.</p>
           <div className="lineup-builder-options" aria-label="Available formations">
             {formationOptions.map((formation) => (
               <label key={formation.value}>
@@ -201,6 +286,28 @@ export function LineupBuilderDialog({
           </div>
         </section>
 
+        {builder.error && <p role="alert">{builder.error}{builder.result ? " Previous results are stale." : ""}</p>}
+        {builder.result && changedResult === builder.result && <p role="status">Your acquisition activity changed. Rebuild the recommendations before using a draft.</p>}
+        {builder.result && <LineupBuilderResults result={builder.result} playersById={playersById}
+          ownedPlayerIds={new Set(ownSquad.flatMap((player) => player.masterPlayerId ? [player.masterPlayerId] : []))}
+          onAcquire={setAcquiring}
+          canApply={(candidate) => !builder.pending && !builder.error && changedResult !== builder.result && canApply(candidate, builder.result!.target.week)}
+          onApply={(candidate) => {
+            if (isDraftDirty(builder.result!.target.week)) setReplacement(candidate);
+            else onApply(candidate, builder.result!.target.week);
+          }} />}
+        {acquiring && builder.result && <LineupBuilderPlayerActions key={acquiring.playerId}
+          player={acquiring} opponentTeamIds={opponents.map((team) => team.teamId)}
+          clausesDeadline={builder.result.target.clausesDeadline} onClose={() => setAcquiring(null)}
+          onSuccess={() => { builder.cancel(); setChangedResult(builder.result); }} />}
+        {replacement && builder.result && <section aria-label="Replace draft confirmation">
+          <p>Replace your unsaved lineup draft?</p>
+          <Button shape="square" onClick={() => {
+            if (changedResult !== builder.result && !builder.pending && !builder.error && canApply(replacement, builder.result!.target.week)) onApply(replacement, builder.result!.target.week);
+            setReplacement(null);
+          }}>Replace draft</Button>
+          <Button shape="square" variant="secondary" onClick={() => setReplacement(null)}>Keep my draft</Button>
+        </section>}
       </div>
     </Dialog>
   );

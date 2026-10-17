@@ -1,0 +1,19 @@
+{
+  "payload": {
+    "sources": [
+      "owned"
+    ],
+    "mandatory_player_ids": [],
+    "formations": [
+      "4,4,2"
+    ],
+    "allow_buying": false,
+    "allow_selling": false,
+    "include_trading_purchases": false,
+    "max_candidates": 5,
+    "explanation": {
+      "enabled": false,
+      "reasoning_effort": null
+    }
+  }
+}

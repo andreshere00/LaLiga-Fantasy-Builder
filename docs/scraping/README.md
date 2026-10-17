@@ -129,3 +129,6 @@ player's value. See the [parser guide](parser.md) and
    player stats segments.
 
 Run and test: [backend/scraping/README.md](../../backend/scraping/README.md).
+
+Injury history includes `coverage`, `parsedRows` and `droppedRows`; unparsed rows
+prevent complete coverage. The verified `arrow-5` form class maps to `very_bad`.

@@ -98,6 +98,8 @@ def _normalise_document(raw: Mapping[str, Any]) -> dict[str, Any]:
         "market": raw.get("market"),
         "season_stats": raw.get("seasonStats") or raw.get("season_stats"),
         "warnings": raw.get("warnings"),
+        "missing": raw.get("missing"),
+        "fantasy_points": raw.get("fantasyPoints"),
     }
 
 
@@ -188,7 +190,7 @@ def _normalise_profile(raw: Mapping[str, Any]) -> dict[str, Any]:
     if isinstance(history, list):
         history_list = history
     elif isinstance(history, dict):
-        nested = history.get("entries") or history.get("items")
+        nested = history.get("entries") if "entries" in history else history.get("items")
         if isinstance(nested, list):
             history_list = nested
     personal = raw.get("personal")
@@ -202,6 +204,9 @@ def _normalise_profile(raw: Mapping[str, Any]) -> dict[str, Any]:
         ),
         "injury_risk": raw.get("injuryRisk"),
         "injury_history": history_list,
+        "injury_history_coverage": (
+            history.get("coverage", "unknown") if isinstance(history, dict) else "unknown"
+        ),
         "max_profitable_bid": raw.get("maxProfitableBid"),
         "hierarchy": raw.get("hierarchy"),
         "news": raw.get("news"),

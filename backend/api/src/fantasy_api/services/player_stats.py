@@ -872,7 +872,11 @@ class PlayerStatsService:
         form = (
             FormStat(
                 value=_as_float(form_raw.get("value")),
-                rating=form_rating if form_rating in {"bad", "mid", "good", "very_good"} else None,
+                rating=(
+                    form_rating
+                    if form_rating in {"very_bad", "bad", "mid", "good", "very_good"}
+                    else None
+                ),
                 visual_only=(
                     form_raw.get("visual_only") is True or form_raw.get("visualOnly") is True
                 ),
@@ -931,11 +935,15 @@ class PlayerStatsService:
             generated_at=self._now(),
             sources=[self._ff_source(doc)],
             warnings=segment_warnings,
+            availability=availability,
+            fantasy_season_total=_season_points(wire)[0],
+            fantasy_season_matches=_season_points(wire)[1],
             injury=injury,
             form=form,
             start_probability=start_probability,
             injury_risk=injury_risk,
             injury_history=injury_history,
+            injury_history_coverage=profile.injury_history_coverage,
             max_profitable_bid=max_bid,
             hierarchy=hierarchy,
             news=news,
@@ -1333,3 +1341,22 @@ def _forecast_slots(payload: Any) -> list[ForecastSlot]:
             )
         )
     return slots
+
+
+def _season_points(wire: FutbolFantasyWire) -> tuple[float | None, int | None]:
+    """Keep official totals distinct from missing-mode placeholder zeros."""
+    points = wire.fantasy_points
+    if not isinstance(points, dict) or points.get("mode") != "LaLiga Fantasy Oficial":
+        return None, None
+    if any(
+        isinstance(w, dict) and w.get("code") == "points_mode_missing"
+        for w in (wire.warnings or [])
+    ):
+        return None, None
+    total = points.get("total")
+    season = wire.season_stats or {}
+    participation = season.get("participation")
+    matches = participation.get("matchesPlayed") if isinstance(participation, dict) else None
+    if not isinstance(total, dict) or not isinstance(matches, int) or matches <= 0:
+        return None, None
+    return (_as_float(total.get("net")), matches)
