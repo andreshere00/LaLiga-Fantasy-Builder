@@ -414,6 +414,77 @@ def test_search_candidates_lower_ranked_market_player_is_compared_without_mandat
         assert any(any(p.player_id == "199" for p in c.starters) for c in result)
 
 
+@pytest.mark.parametrize("expensive_value", [200, 10_000])
+def test_search_candidates_expensive_pool_does_not_starve_affordable_source_comparisons(
+    expensive_value: int,
+) -> None:
+    owned = pool()
+    expensive = [
+        player(
+            1000 + i,
+            1 + i % 4,
+            source="market" if i % 2 else "opponents",
+            value=expensive_value,
+            score=".9",
+        )
+        for i in range(48)
+    ]
+    affordable = [
+        player(9000, 4, source="market", value=100, score=".1"),
+        player(9001, 4, source="opponents", value=100, score=".1"),
+    ]
+    result, complete, states = search_candidates(
+        owned + expensive + affordable,
+        owned,
+        500,
+        BuildPreferences(allow_buying=True),
+        ["4,4,2", "3,4,3"],
+        TARGET,
+        NOW,
+        1,
+        reserved_squad_slots=3,
+        max_states=1000,
+        max_seconds=30,
+    )
+    assert not complete
+    assert states <= 1000
+    assert [c.resource_group for c in result] == ["owned"] * 3 + ["external"] * 2
+    for source in ("market", "opponents"):
+        assert any(any(p.source == source for p in c.starters) for c in result)
+    for candidate in result:
+        assert candidate.trading_plan.projected_cash >= 0
+        assert candidate.trading_plan.squad_count + 3 <= 24
+        assert sum(p.market_value for p in candidate.trading_plan.acquisitions) <= 500
+
+
+def test_search_candidates_sales_can_finance_external_comparisons() -> None:
+    facts = PlayerEvidence(status="available", market_growth=Decimal(0))
+    owned = [
+        score_player(p, facts, NOW, START).model_copy(update={"sale_settlement_at": NOW})
+        for p in pool()
+    ]
+    external = player(9000, 4, source="market", value=150)
+    result, complete, _ = search_candidates(
+        owned + [external],
+        owned,
+        0,
+        BuildPreferences(allow_buying=True, allow_selling=True),
+        ["4,4,2"],
+        TARGET,
+        NOW,
+        1,
+        max_seconds=30,
+    )
+    assert complete
+    purchases = [c for c in result if c.resource_group == "external"]
+    assert purchases
+    assert all(c.trading_plan.sales and c.trading_plan.projected_cash >= 0 for c in purchases)
+    for candidate in purchases:
+        assert not {p.player_id for p in candidate.starters} & {
+            p.player_id for p in candidate.trading_plan.sales
+        }
+
+
 def test_search_candidates_each_acquisition_source_matches_exhaustive_oracle() -> None:
     owned = pool()
     players = owned + [

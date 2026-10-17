@@ -86,68 +86,110 @@ def search_candidates(
         for source in ("market", "opponents")
         if preferences.allow_buying and any(p.source == source for p in players)
     ]
-    heaps = {source: [] for source in sources}
-    queue_results: dict[str, list[Candidate]] = {source: [] for source in sources}
+    lanes = {source: source for source in sources}
+    lanes.update({f"{source}_comparison": source for source in sources[1:]})
+    heaps = {lane: [] for lane in lanes}
+    queue_results: dict[str, list[Candidate]] = {lane: [] for lane in lanes}
     turns = cycle(heaps)
     truncated = False
-    for group in sources:
-        heap = heaps[group]
+    salable = [
+        p
+        for p in owned
+        if preferences.allow_selling
+        and p.sections
+        and p.sale_settlement_at is not None
+        and now <= p.sale_settlement_at <= target.sales_deadline
+    ]
+
+    def financially_possible(selected: tuple[ScoredPlayer, ...]) -> bool:
+        """Reject only partial selections that even optimistic sales cannot finance."""
+        ids = {p.player_id for p in selected}
+        available_sales = [p for p in salable if p.player_id not in ids]
+        purchases = [p for p in selected if p.source != "owned"]
+        return (
+            sum(p.market_value for p in purchases)
+            <= cash + sum(p.market_value for p in available_sales)
+            and len(owned) + reserved_squad_slots + len(purchases) - len(available_sales) <= 24
+        )
+
+    for lane, group in lanes.items():
+        heap = heaps[lane]
         pool = [p for p in players if group != "owned" or p.source == "owned"]
         if mandatory - {p.player_id for p in pool}:
             continue
-        for formation in formations:
-            counts = (1, *map(int, formation.split(",")))
-            required = tuple(p for p in pool if p.player_id in mandatory)
-            remaining = tuple(
-                counts[pos - 1] - sum(p.position == pos for p in required) for pos in range(1, 5)
-            )
-            if min(remaining) < 0:
+        mandatory_players = tuple(p for p in pool if p.player_id in mandatory)
+        required_sets = [mandatory_players]
+        if lane != group:
+            # Compare one source addition plus mandatory players against the owned squad.
+            # These lanes share the budget with the unrestricted multi-purchase search.
+            if not any(p.source == group for p in mandatory_players):
+                required_sets = [
+                    mandatory_players + (p,)
+                    for p in pool
+                    if p.source == group and p.player_id not in mandatory
+                ]
+            pool = [p for p in pool if p.source == "owned"]
+        for required in required_sets:
+            if not financially_possible(required):
                 continue
-            buckets = tuple(
-                tuple(
-                    sorted(
-                        (p for p in pool if p.position == pos and p.player_id not in mandatory),
-                        key=lambda p: (-p.lineup_score, p.player_id),
-                    )
+            required_ids = {p.player_id for p in required}
+            for formation in formations:
+                counts = (1, *map(int, formation.split(",")))
+                remaining = tuple(
+                    counts[pos - 1] - sum(p.position == pos for p in required)
+                    for pos in range(1, 5)
                 )
-                for pos in range(1, 5)
-            )
-            if any(len(bucket) < n for bucket, n in zip(buckets, remaining, strict=True)):
-                continue
-            score = sum((p.lineup_score for p in required), Decimal(0))
-            upper = _upper_bound(buckets, remaining, (0, 0, 0, 0), required, score, group)
-            if upper is None:
-                continue
-            heapq.heappush(
-                heap,
-                (
-                    -upper,
-                    sum(remaining),
-                    next(serial),
-                    group,
-                    formation,
-                    buckets,
-                    remaining,
-                    (0, 0, 0, 0),
-                    required,
-                    score,
-                ),
-            )
+                if min(remaining) < 0:
+                    continue
+                buckets = tuple(
+                    tuple(
+                        sorted(
+                            (
+                                p
+                                for p in pool
+                                if p.position == pos and p.player_id not in required_ids
+                            ),
+                            key=lambda p: (-p.lineup_score, p.player_id),
+                        )
+                    )
+                    for pos in range(1, 5)
+                )
+                if any(len(bucket) < n for bucket, n in zip(buckets, remaining, strict=True)):
+                    continue
+                score = sum((p.lineup_score for p in required), Decimal(0))
+                upper = _upper_bound(buckets, remaining, (0, 0, 0, 0), required, score, group)
+                if upper is None:
+                    continue
+                heapq.heappush(
+                    heap,
+                    (
+                        -upper,
+                        sum(remaining),
+                        next(serial),
+                        group,
+                        formation,
+                        buckets,
+                        remaining,
+                        (0, 0, 0, 0),
+                        required,
+                        score,
+                    ),
+                )
     while (
         any(heaps.values())
         and states < max_states
         and time.monotonic() < deadline
         and (cancelled is None or not cancelled.is_set())
     ):
-        group = next(turns)
-        if not heaps[group]:
+        lane = next(turns)
+        if not heaps[lane]:
             continue
-        heap = heaps[group]
+        heap = heaps[lane]
         neg_upper, _, _, group, formation, buckets, remaining, offsets, selected, score = (
             heapq.heappop(heap)
         )
         states += 1
-        group_results = queue_results[group]
+        group_results = queue_results[lane]
         if len(group_results) >= preferences.max_candidates:
             threshold = sorted((r.total_lineup_score for r in group_results), reverse=True)[
                 preferences.max_candidates - 1
@@ -192,6 +234,8 @@ def search_candidates(
         bucket = buckets[pos]
         for index in range(offsets[pos], len(bucket) - remaining[pos] + 1):
             player = bucket[index]
+            if not financially_possible(selected + (player,)):
+                continue
             new_remaining = list(remaining)
             new_remaining[pos] -= 1
             new_offsets = list(offsets)

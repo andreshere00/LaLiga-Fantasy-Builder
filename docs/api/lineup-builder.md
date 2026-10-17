@@ -97,6 +97,15 @@ both acquisition sources when available, retaining score order among the selecte
 comparisons. Overlapping lineups are deduplicated. Eligibility, finances and
 deadlines still apply, and incomplete search remains explicitly labeled.
 
+Each acquisition source also has a comparison queue that fixes one player from
+that source (plus every mandatory player) and fills remaining positions from
+the owned pool. These queues share the same state/time budget with unrestricted
+multi-purchase queues. This finds affordable additions even when higher-scoring,
+unaffordable purchase combinations dominate the unrestricted bounds. Partial
+selections are pruned when even all verified, eligible bench sales cannot cover
+their purchase costs or squad slots. Completed plans still pass every financial
+and settlement check, and interrupted ranking remains labeled incomplete.
+
 The six scoring sections follow the versioned workflow. Probability, squad role
 and impact-substitute bonus share enumerated achievable bounds. Minutes and rest
 bonuses are mutually exclusive. Known zero remains applicable; absent facts do

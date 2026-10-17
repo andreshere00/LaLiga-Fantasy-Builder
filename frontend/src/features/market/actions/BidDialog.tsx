@@ -5,7 +5,7 @@ import { Dialog } from "../../../components/ui/Dialog";
 import { NumericCounterField } from "../../../components/NumericCounterField";
 import { MARKET_VALUE_FILTER_STEP } from "../marketFilterInputs";
 import type { MarketRow } from "../model/row";
-import { isValidBidAmount, usesDirectOfferBid, type BidActionKind } from "./marketActions";
+import { isValidBidAmount, maximumBidAmount, usesDirectOfferBid, type BidActionKind } from "./marketActions";
 
 type BidDialogProps = {
   open: boolean;
@@ -64,11 +64,12 @@ export function BidDialog({
     parsed != null &&
     isValidBidAmount(parsed, row.marketValue, money, squadMarketValue, reservedBid);
   const bidFloor = row.marketValue ?? 0;
-  const spending = money != null ? money + reservedBid : null;
+  const maximum = maximumBidAmount(money, squadMarketValue, reservedBid);
   const balanceHint =
-    spending != null && spending > 0
-      ? `less than ${formatEuro(spending)}`
-      : "within your debt limit (20% of squad value)";
+    maximum != null
+      ? `at most ${formatEuro(maximum)} (${squadMarketValue != null && Number.isFinite(squadMarketValue) && squadMarketValue > 0
+        ? "available cash plus up to 20% of squad value" : "available cash"})`
+      : "within your available bidding limit";
   const directOffer = usesDirectOfferBid(row, kind);
 
   const stepBidAmount = (current: number | null, deltaSteps: number) => {

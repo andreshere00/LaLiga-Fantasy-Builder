@@ -60,13 +60,18 @@ function spendingPower(money: number, reservedBidMoney: number): number {
 }
 
 function maxAllowedDebt(squadMarketValue: number | null): number | null {
-  if (squadMarketValue == null || squadMarketValue <= 0) return null;
+  if (squadMarketValue == null || !Number.isFinite(squadMarketValue) || squadMarketValue <= 0) return null;
   return squadMarketValue * MAX_DEBT_RATIO_OF_SQUAD_VALUE;
 }
 
-function debtAfterBid(spending: number, amount: number): number {
-  const balanceAfter = spending - amount;
-  return balanceAfter < 0 ? -balanceAfter : 0;
+/** Whole-euro bidding limit; an existing bid is released when it is modified. */
+export function maximumBidAmount(
+  money: number | null,
+  squadMarketValue: number | null,
+  reservedBidMoney = 0,
+): number | null {
+  if (money == null || !Number.isFinite(money) || !Number.isFinite(reservedBidMoney)) return null;
+  return Math.floor(spendingPower(money, reservedBidMoney) + (maxAllowedDebt(squadMarketValue) ?? 0));
 }
 
 /** Whether an integer bid amount is allowed for this listing and balance. */
@@ -77,16 +82,12 @@ export function isValidBidAmount(
   squadMarketValue: number | null,
   reservedBidMoney = 0,
 ): boolean {
-  if (money == null || marketValue == null) return false;
+  if (marketValue == null || !Number.isFinite(marketValue)) return false;
   if (!Number.isInteger(amount)) return false;
   if (amount < marketValue) return false;
 
-  const spending = spendingPower(money, reservedBidMoney);
-  if (spending > 0) return amount < spending;
-
-  const maxDebt = maxAllowedDebt(squadMarketValue);
-  if (maxDebt == null) return false;
-  return debtAfterBid(spending, amount) <= maxDebt;
+  const maximum = maximumBidAmount(money, squadMarketValue, reservedBidMoney);
+  return maximum != null && amount <= maximum;
 }
 
 /** True when at least one whole-euro bid satisfies listing and balance rules. */
@@ -96,16 +97,8 @@ export function bidRangeAvailable(
   squadMarketValue: number | null,
   reservedBidMoney = 0,
 ): boolean {
-  if (money == null || marketValue == null) return false;
-  const minBid = marketValue;
-  const spending = spendingPower(money, reservedBidMoney);
-
-  if (spending > 0) return minBid < spending;
-
-  const maxDebt = maxAllowedDebt(squadMarketValue);
-  if (maxDebt == null) return false;
-  const maxBid = spending + maxDebt;
-  return minBid <= Math.floor(maxBid);
+  return marketValue != null &&
+    isValidBidAmount(Math.ceil(marketValue), marketValue, money, squadMarketValue, reservedBidMoney);
 }
 
 /** Squad and bid caps for a new market bid (not modify). */
@@ -148,11 +141,8 @@ function clausePayable(row: MarketRow, money: number | null, now: number): boole
 const SQUAD_SLOT_BLOCKED =
   "You need fewer than 24 squad players and room for another bid (players plus active bids must stay under 24).";
 
-const INSUFFICIENT_POSITIVE_BALANCE =
-  "Your balance must be greater than the market value and cover the bid.";
-
 const INSUFFICIENT_DEBT_HEADROOM =
-  "With a negative balance, the bid cannot push your debt above 20% of squad market value.";
+  "The bid cannot exceed your cash balance plus 20% of squad market value.";
 
 const BID_NOT_CONFIRMED = "Your bid is still being confirmed. Try again in a moment.";
 
@@ -176,11 +166,7 @@ function bidDisabledReason(
   }
   if (!isModify && !squadSlotAvailableForNewBid(context)) return SQUAD_SLOT_BLOCKED;
 
-  const reserved = isModify ? (row.myBid?.money ?? 0) : 0;
-  const spending =
-    context.money != null ? spendingPower(context.money, reserved) : null;
-  if (spending != null && spending <= 0) return INSUFFICIENT_DEBT_HEADROOM;
-  return INSUFFICIENT_POSITIVE_BALANCE;
+  return INSUFFICIENT_DEBT_HEADROOM;
 }
 
 export const WITHDRAW_LABEL = "Withdraw from market";

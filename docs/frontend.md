@@ -323,8 +323,10 @@ euro amounts (es-ES). CLIs and browser-session flows stay read-only.
 **Eligibility (client-side before dialogs):**
 
 - Squad cap: fewer than 24 players and `players + active bids < 24` for new bids.
-- Positive balance: bid amount ≥ market value and &lt; spending power.
-- Negative balance: debt after bid ≤ 20% of squad market value.
+- Bids: amount ≥ market value and ≤ cash + 20% of squad market value,
+  regardless of whether the starting cash is positive, zero or negative.
+  The exact limit is allowed. Modifying a bid restores that bid's reserved amount
+  before calculating the limit. Unknown squad valuation grants no debt allowance.
 - Coaches (`positionId` 5): **Hire** disabled; menu shows the premium-only explanation
   (`marketMessages.ts`).
 

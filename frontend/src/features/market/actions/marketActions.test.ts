@@ -88,7 +88,7 @@ describe("isValidBidAmount", () => {
   it("isValidBidAmount_requires_strict_bounds", () => {
     expect(isValidBidAmount(99, 100, 200, 1_000_000)).toBe(false);
     expect(isValidBidAmount(100, 100, 200, 1_000_000)).toBe(true);
-    expect(isValidBidAmount(200, 100, 200, 1_000_000)).toBe(false);
+    expect(isValidBidAmount(200, 100, 200, 1_000_000)).toBe(true);
     expect(isValidBidAmount(150, 100, 200, 1_000_000)).toBe(true);
     expect(isValidBidAmount(150.5, 100, 200, 1_000_000)).toBe(false);
   });
@@ -99,9 +99,30 @@ describe("isValidBidAmount", () => {
     expect(isValidBidAmount(739_427, 739_000, money, squadValue)).toBe(true);
     expect(isValidBidAmount(2_500_000, 739_000, money, squadValue)).toBe(false);
   });
+
+  it.each([100, 0, -100])("should allow the exact debt limit from a starting balance of %s", (money) => {
+    const maximum = money + 200;
+    expect(isValidBidAmount(maximum, 50, money, 1000)).toBe(true);
+    expect(isValidBidAmount(maximum + 1, 50, money, 1000)).toBe(false);
+  });
+
+  it("should restore an existing bid before applying the same debt limit", () => {
+    expect(isValidBidAmount(350, 100, 100, 1000, 50)).toBe(true);
+    expect(isValidBidAmount(351, 100, 100, 1000, 50)).toBe(false);
+  });
+
+  it("should allow available cash but grant no debt when squad valuation is unknown", () => {
+    expect(isValidBidAmount(100, 50, 100, null)).toBe(true);
+    expect(isValidBidAmount(101, 50, 100, null)).toBe(false);
+    expect(isValidBidAmount(100, 50, null, 1000)).toBe(false);
+  });
 });
 
 describe("bidRangeAvailable", () => {
+  it("should enable a listing priced above positive cash but within the debt limit", () => {
+    expect(bidRangeAvailable(300, 100, 1000)).toBe(true);
+    expect(bidRangeAvailable(301, 100, 1000)).toBe(false);
+  });
   it("bidRangeAvailable_true_for_negative_balance_with_debt_headroom", () => {
     expect(bidRangeAvailable(739_000, -19_000_000, 100_000_000)).toBe(true);
   });
@@ -185,9 +206,10 @@ describe("resolveMarketActions", () => {
   });
 
   it("resolveMarketActions_skips_bid_when_no_integer_in_range", () => {
-    const actions = resolveMarketActions(baseRow({ marketValue: 100 }), {
+    const actions = resolveMarketActions(baseRow({ marketValue: 101 }), {
       ...baseContext(),
       money: 100,
+      squadMarketValue: null,
     });
     expect(actions.some((action) => action.type === "bid")).toBe(false);
   });
@@ -233,6 +255,13 @@ describe("resolveMarketActions", () => {
     const bid = offers.find((offer) => offer.type === "bid");
     expect(bid?.enabled).toBe(true);
     expect(bid?.label).toBe("Hire");
+  });
+
+  it("should enable a market bid that crosses from positive cash into permitted debt", () => {
+    const offers = resolveMarketActionOffers(baseRow({ marketValue: 300 }), {
+      ...baseContext(), money: 100, squadMarketValue: 1000,
+    });
+    expect(offers.find((offer) => offer.type === "bid")?.enabled).toBe(true);
   });
 
   it("resolveMarketActionOffers_lists_disabled_bid_when_debt_exceeded", () => {
