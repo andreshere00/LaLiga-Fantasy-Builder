@@ -848,6 +848,67 @@ def test_build_lineup_market_and_opponents_are_compared_without_mandatory_player
     assert all(request.method == "GET" for request in requests)
 
 
+@pytest.mark.parametrize("weak_player,strong_player", [("99", "199"), ("199", "99")])
+def test_build_lineup_weaker_source_does_not_displace_better_external_lineups(
+    rsa_pems, monkeypatch, weak_player, strong_player
+) -> None:
+    original_detail = _detail
+
+    def detail_with_weak_player(pid, day, now):
+        """Give one acquisition a low starting probability and reserve role."""
+        detail = original_detail(pid, day, now)
+        if pid == weak_player:
+            detail.profile.start_probability.percent = 0
+            detail.profile.hierarchy.label = "Reserva"
+            detail.profile.form.rating = "bad"
+        return detail
+
+    monkeypatch.setattr(f"{__name__}._detail", detail_with_weak_player)
+    client, jwt, requests = _client(rsa_pems, source_players=True, extra_owned=True, cash=100)
+    with client:
+        result = client.post(
+            "/lineup-builder/leagues/league/build",
+            headers={"Authorization": f"Bearer {jwt}"},
+            json={
+                "formations": ["4,4,2"],
+                "sources": ["owned", "market", "opponents"],
+                "allow_buying": True,
+            },
+        )
+    assert result.status_code == 200, result.text
+    body = result.json()
+    candidates = body["candidates"]
+    assert body["search_complete"]
+    assert [c["resource_group"] for c in candidates] == ["owned"] * 3 + ["external"] * 2
+    for candidate in candidates[3:]:
+        acquisitions = candidate["trading_plan"]["acquisitions"]
+        assert [p["player_id"] for p in acquisitions] == [strong_player]
+        assert all(p["player_id"] != weak_player for p in candidate["starters"])
+        assert candidate["trading_plan"]["projected_cash"] == 0
+    assert all(request.method == "GET" for request in requests)
+
+
+def test_build_lineup_seven_total_keeps_only_improving_acquisitions(rsa_pems) -> None:
+    client, jwt, requests = _client(rsa_pems, source_players=True, extra_owned=True, cash=100)
+    with client:
+        result = client.post(
+            "/lineup-builder/leagues/league/build",
+            headers={"Authorization": f"Bearer {jwt}"},
+            json={
+                "formations": ["4,4,2"],
+                "sources": ["owned", "market", "opponents"],
+                "allow_buying": True,
+                "max_candidates": 7,
+            },
+        )
+    assert result.status_code == 200, result.text
+    candidates = result.json()["candidates"]
+    assert [c["resource_group"] for c in candidates] == ["owned"] * 4 + ["external"] * 3
+    baseline = Decimal(candidates[0]["total_lineup_score"])
+    assert all(Decimal(c["total_lineup_score"]) > baseline for c in candidates[4:])
+    assert all(request.method == "GET" for request in requests)
+
+
 @pytest.mark.parametrize("source", ["market", "opponents"])
 @pytest.mark.parametrize("missing_catalog", [False, True])
 def test_build_lineup_sparse_external_sources_require_verified_catalog_identity(

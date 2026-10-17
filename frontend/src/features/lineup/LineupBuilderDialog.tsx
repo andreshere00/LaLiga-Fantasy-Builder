@@ -2,7 +2,7 @@ import { useQueries, useQuery } from "@tanstack/react-query";
 import { useMemo, useState } from "react";
 
 import { useLineupBuilder } from "./useLineupBuilder";
-import { LineupBuilderResults } from "./LineupBuilderResults";
+import { LINEUP_RECOMMENDATION_LIMIT, LineupBuilderResults } from "./LineupBuilderResults";
 import type { BuilderCandidate, LineupBuildDto } from "../../api/schemas";
 import { LineupBuilderPlayerActions } from "./LineupBuilderPlayerActions";
 import { getJson, paths } from "../../api/client";
@@ -202,7 +202,7 @@ function BuilderDialogSession({
             sources: scope as ("owned" | "market" | "opponents")[], mandatoryPlayerIds: chosen,
             formations: lineupPreferences, allowBuying, allowSelling,
             includeTradingPurchases: allowBuying && includeTradingPurchases,
-            maxCandidates: 5, explanation: { enabled: false },
+            maxCandidates: LINEUP_RECOMMENDATION_LIMIT, explanation: { enabled: false },
           })}>Build</Button>}
         <Button shape="square" variant="secondary" className="lineup-builder-close" onClick={onClose}>Close</Button>
       </>}>
@@ -288,7 +288,7 @@ function BuilderDialogSession({
 
         {builder.error && <p role="alert">{builder.error}{builder.result ? " Previous results are stale." : ""}</p>}
         {builder.result && changedResult === builder.result && <p role="status">Your acquisition activity changed. Rebuild the recommendations before using a draft.</p>}
-        {builder.result && <LineupBuilderResults result={builder.result} playersById={playersById}
+        {builder.result && <LineupBuilderResults key={builder.result.buildId} result={builder.result} playersById={playersById}
           ownedPlayerIds={new Set(ownSquad.flatMap((player) => player.masterPlayerId ? [player.masterPlayerId] : []))}
           onAcquire={setAcquiring}
           canApply={(candidate) => !builder.pending && !builder.error && changedResult !== builder.result && canApply(candidate, builder.result!.target.week)}

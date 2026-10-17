@@ -14,7 +14,12 @@ from fantasy_api.domain.lineup_builder.scoring import PlayerEvidence, score_play
 from fantasy_api.domain.lineup_builder.search import search_candidates
 from fantasy_api.domain.lineup_builder.target import instant, resolve_target
 from fantasy_api.schemas.calendar import CurrentWeek, Fixture
-from fantasy_api.schemas.lineup_builder import BuildPreferences, ScoredPlayer, TargetWeek
+from fantasy_api.schemas.lineup_builder import (
+    FREE_FORMATIONS,
+    BuildPreferences,
+    ScoredPlayer,
+    TargetWeek,
+)
 from pydantic import ValidationError
 
 NOW = datetime(2026, 10, 14, 12, tzinfo=UTC)
@@ -389,7 +394,7 @@ def test_search_candidates_limited_budget_serves_both_resource_groups() -> None:
 
 @pytest.mark.parametrize("position", [1, 4])
 @pytest.mark.parametrize("include_opponent", [False, True])
-def test_search_candidates_lower_ranked_market_player_is_compared_without_mandatory_ids(
+def test_search_candidates_limited_budget_keeps_better_acquisitions_without_source_quotas(
     position: int, include_opponent: bool
 ) -> None:
     owned = [p.model_copy(update={"lineup_score": Decimal("1")}) for p in pool()]
@@ -409,13 +414,18 @@ def test_search_candidates_lower_ranked_market_player_is_compared_without_mandat
     )
     assert not complete
     assert states <= 500
-    assert any(any(p.player_id == "99" for p in c.starters) for c in result)
+    external = [c for c in result if c.resource_group == "external"]
     if include_opponent:
-        assert any(any(p.player_id == "199" for p in c.starters) for c in result)
+        assert len(external) == 2
+        assert all(any(p.player_id == "199" for p in c.starters) for c in external)
+        assert all(p.player_id != "99" for c in external for p in c.starters)
+    else:
+        assert not external
+        assert len(result) == 5
 
 
 @pytest.mark.parametrize("expensive_value", [200, 10_000])
-def test_search_candidates_expensive_pool_does_not_starve_affordable_source_comparisons(
+def test_search_candidates_expensive_pool_does_not_starve_affordable_acquisition_comparisons(
     expensive_value: int,
 ) -> None:
     owned = pool()
@@ -430,8 +440,8 @@ def test_search_candidates_expensive_pool_does_not_starve_affordable_source_comp
         for i in range(48)
     ]
     affordable = [
-        player(9000, 4, source="market", value=100, score=".1"),
-        player(9001, 4, source="opponents", value=100, score=".1"),
+        player(9000, 4, source="market", value=100, score=".5"),
+        player(9001, 4, source="opponents", value=100, score=".5"),
     ]
     result, complete, states = search_candidates(
         owned + expensive + affordable,
@@ -449,8 +459,11 @@ def test_search_candidates_expensive_pool_does_not_starve_affordable_source_comp
     assert not complete
     assert states <= 1000
     assert [c.resource_group for c in result] == ["owned"] * 3 + ["external"] * 2
-    for source in ("market", "opponents"):
-        assert any(any(p.source == source for p in c.starters) for c in result)
+    external = result[3:]
+    assert all(c.trading_plan.acquisitions for c in external)
+    # Both proposals beat or match the best single-addition 4-4-2, regardless of source.
+    minimum_score = Decimal("3.3" if expensive_value == 200 else "2.9")
+    assert all(c.total_lineup_score >= minimum_score for c in external)
     for candidate in result:
         assert candidate.trading_plan.projected_cash >= 0
         assert candidate.trading_plan.squad_count + 3 <= 24
@@ -485,11 +498,14 @@ def test_search_candidates_sales_can_finance_external_comparisons() -> None:
         }
 
 
-def test_search_candidates_each_acquisition_source_matches_exhaustive_oracle() -> None:
+@pytest.mark.parametrize("market_score,opponent_score", [(".15", "1"), ("1", ".15"), (".7", ".8")])
+def test_search_candidates_acquisition_group_matches_exhaustive_oracle(
+    market_score: str, opponent_score: str
+) -> None:
     owned = pool()
     players = owned + [
-        player(99, 4, source="market", score=".15"),
-        player(199, 4, source="opponents", score="1"),
+        player(99, 4, source="market", score=market_score),
+        player(199, 4, source="opponents", score=opponent_score),
     ]
     result, complete, _ = search_candidates(
         players,
@@ -509,16 +525,61 @@ def test_search_candidates_each_acquisition_source_matches_exhaustive_oracle() -
     all_lineups = [tuple(p for row in rows for p in row) for rows in product(*choices)]
     assert complete
     assert len(result) == 5
-    for source in ("market", "opponents"):
-        expected = max(
+    expected = sorted(
+        (
             sum((p.lineup_score for p in lineup), Decimal(0))
             for lineup in all_lineups
-            if any(p.source == source for p in lineup)
-        )
-        assert (
-            max(c.total_lineup_score for c in result if any(p.source == source for p in c.starters))
-            == expected
-        )
+            if any(p.source != "owned" for p in lineup)
+        ),
+        reverse=True,
+    )
+    assert [c.total_lineup_score for c in result[3:]] == expected[:2]
+
+
+@pytest.mark.parametrize("max_states", [1000, 100_000])
+def test_search_candidates_bauza_does_not_displace_second_fer_nino_lineup(max_states: int) -> None:
+    # Reproduce the reported squad using its displayed scores and two eligible acquisitions.
+    roster = [
+        (1, "Unai Simón", ".451"),
+        (1, "A. Herrero", ".1"),
+        (2, "Hancko", ".445"),
+        (2, "Kike Salas", ".420"),
+        (2, "Yoel Lago", ".399"),
+        (2, "Yuri", ".320"),
+        (2, "Vanja Drkusic", ".1"),
+        (3, "Rodri", ".637"),
+        (3, "C. Soler", ".515"),
+        (3, "Valverde", ".468"),
+        (3, "Barrios", ".242"),
+        (4, "Ez Abde", ".573"),
+        (4, "Gordon", ".474"),
+        (4, "I. Akhomach", ".253"),
+    ]
+    owned = [
+        player(i, position, score=score).model_copy(update={"name": name})
+        for i, (position, name, score) in enumerate(roster)
+    ]
+    fer_nino = player(99, 4, source="opponents", score=".593")
+    bauza = player(199, 3, source="market", score="-.608")
+    result, _, states = search_candidates(
+        owned + [fer_nino, bauza],
+        owned,
+        1000,
+        BuildPreferences(allow_buying=True),
+        list(FREE_FORMATIONS),
+        TARGET,
+        NOW,
+        1,
+        max_states=max_states,
+        max_seconds=30,
+    )
+    assert states <= max_states
+    assert [c.resource_group for c in result] == ["owned"] * 3 + ["external"] * 2
+    assert [c.total_lineup_score for c in result] == list(
+        map(Decimal, ["4.955", "4.944", "4.877", "5.295", "5.217"])
+    )
+    assert all(any(p.player_id == "99" for p in c.starters) for c in result[3:])
+    assert all(p.player_id != "199" for c in result for p in c.starters)
 
 
 def test_search_candidates_lineup_covering_both_sources_is_not_duplicated() -> None:
@@ -545,7 +606,7 @@ def test_search_candidates_lineup_covering_both_sources_is_not_duplicated() -> N
     assert {p.player_id for p in result[0].starters} == {p.player_id for p in required}
 
 
-@pytest.mark.parametrize("limit", [1, 2, 3, 5])
+@pytest.mark.parametrize("limit", [1, 2, 3, 5, 7, 14])
 def test_search_candidates_mixed_groups_respect_total_output_limit(limit: int) -> None:
     owned = pool()
     result, _, _ = search_candidates(
@@ -562,6 +623,63 @@ def test_search_candidates_mixed_groups_respect_total_output_limit(limit: int) -
     assert len(result) == limit
     assert result[0].resource_group == "owned"
     assert any(c.resource_group == "external" for c in result) == (limit > 1)
+    external_count = limit // 2
+    owned_count = limit - external_count
+    assert [c.resource_group for c in result] == ["owned"] * owned_count + [
+        "external"
+    ] * external_count
+    assert all(c.total_lineup_score > result[0].total_lineup_score for c in result[owned_count:])
+
+
+@pytest.mark.parametrize("source", ["market", "opponents"])
+@pytest.mark.parametrize("score", ["-.608", ".19", ".2", ".2000001"])
+def test_search_candidates_acquisitions_must_strictly_improve_best_owned_score(
+    source: str, score: str
+) -> None:
+    owned = pool()
+    acquisition = player(99, 4, source=source, score=score).model_copy(
+        update={"trading_score": Decimal("100")}
+    )
+    result, complete, _ = search_candidates(
+        owned + [acquisition],
+        owned,
+        1000,
+        BuildPreferences(allow_buying=True),
+        ["4,4,2"],
+        TARGET,
+        NOW,
+        1,
+        max_seconds=30,
+    )
+    assert complete
+    assert len(result) == 5
+    assert result[0].total_lineup_score == Decimal("2.6")
+    external = [c for c in result if c.resource_group == "external"]
+    if Decimal(score) > Decimal(".2"):
+        assert external
+        assert all(c.total_lineup_score > Decimal("2.6") for c in external)
+    else:
+        assert not external
+
+
+def test_search_candidates_external_can_fill_position_missing_from_owned_squad() -> None:
+    owned = [p for p in pool() if p.position != 1]
+    goalkeeper = player(99, 1, source="market", score="-.5")
+    result, complete, _ = search_candidates(
+        owned + [goalkeeper],
+        owned,
+        1000,
+        BuildPreferences(allow_buying=True),
+        ["4,4,2"],
+        TARGET,
+        NOW,
+        1,
+        max_seconds=30,
+    )
+    assert complete
+    assert result
+    assert all(c.resource_group == "external" for c in result)
+    assert all(any(p.player_id == "99" for p in c.starters) for c in result)
 
 
 def test_plan_trades_retained_bench_and_sales_accounted_at_every_stage() -> None:

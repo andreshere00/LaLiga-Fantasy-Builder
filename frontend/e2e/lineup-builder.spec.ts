@@ -71,6 +71,56 @@ test("builder shows live backend progress on desktop and mobile and cancels the 
   }
 });
 
+test("builder filters seven total lineups with keyboard and mobile controls", async ({ page }, info) => {
+  await mockApplication(page);
+  const proposed = response();
+  const template = proposed.candidates[0];
+  proposed.search_complete = false;
+  proposed.diagnostics = ["recent_matches_previous_round", "standings_unavailable", "cash_conservative_bid_reserve"]
+    .map(code => ({ code, player_id: null }));
+  proposed.candidates = ["owned", "external"].flatMap((group) => Array.from({ length: group === "owned" ? 4 : 3 }, (_, index) => ({
+    ...structuredClone(template), candidate_id: `${group}-${index}`, resource_group: group,
+    total_lineup_score: String((group === "owned" ? 5 : 6) - index / 100),
+  })));
+  let builds = 0;
+  await page.route("**/api/lineup-builder/leagues/l1/build/stream", (route) => {
+    builds++;
+    expect(route.request().postDataJSON().max_candidates).toBe(7);
+    return route.fulfill(streamResult(proposed));
+  });
+  await page.goto("/");
+  await page.getByRole("button", { name: "Lineup builder", exact: true }).click();
+  const dialog = page.getByRole("dialog", { name: "Build lineup" });
+  await dialog.getByRole("button", { name: "Build", exact: true }).click();
+  const filter = dialog.getByRole("button", { name: "Squad with external players" });
+  const candidates = dialog.locator(".lineup-builder-candidate");
+  await expect(candidates).toHaveCount(4);
+  await expect(dialog.getByText("Showing 4 of 7 lineups.")).toBeVisible();
+  await expect(candidates.first().getByRole("heading")).toHaveText("1. 4-3-3 · Owned starting XI");
+  await filter.focus();
+  await page.keyboard.press("Enter");
+  await expect(filter).toHaveAttribute("aria-pressed", "true");
+  await expect(filter).toBeFocused();
+  await expect(candidates).toHaveCount(3);
+  await expect(dialog.getByText("Showing 3 of 7 lineups.")).toBeVisible();
+  await expect(candidates.last().getByRole("heading")).toHaveText("7. 4-3-3 · Acquisitions required");
+  await dialog.locator(".lineup-builder-notices").screenshot({ path: info.outputPath("lineup-notices-desktop.png") });
+  await dialog.locator(".lineup-builder-result-filters").screenshot({ path: info.outputPath("lineup-buttons-desktop.png") });
+  await dialog.screenshot({ path: info.outputPath("lineup-filter-desktop.png") });
+  await page.setViewportSize({ width: 390, height: 844 });
+  await dialog.getByRole("button", { name: "Only current squad" }).click();
+  await expect(candidates).toHaveCount(4);
+  await expect(candidates.first().getByRole("heading")).toHaveText("1. 4-3-3 · Owned starting XI");
+  await expect(filter).toBeVisible();
+  await dialog.locator(".lineup-builder-notices").screenshot({ path: info.outputPath("lineup-notices-mobile.png") });
+  await dialog.locator(".lineup-builder-result-filters").screenshot({ path: info.outputPath("lineup-buttons-mobile.png") });
+  await dialog.screenshot({ path: info.outputPath("lineup-filter-mobile.png") });
+  await page.evaluate(() => { document.documentElement.dataset.theme = "dark"; });
+  await dialog.locator(".lineup-builder-notices").screenshot({ path: info.outputPath("lineup-notices-dark.png") });
+  await dialog.locator(".lineup-builder-result-filters").screenshot({ path: info.outputPath("lineup-buttons-dark.png") });
+  expect(builds).toBe(1);
+});
+
 test("builder generates read-only previews and supports keyboard dismissal", async ({ page }, info) => {
   await mockApplication(page);
   await page.route("**/api/players", (route) => route.fulfill({ json: catalog.map((player) => ({
@@ -277,8 +327,10 @@ for (const source of ["market", "opponents"] as const) {
     await dialog.getByRole("checkbox", { name: "Allow purchase recommendations" }).check();
     await dialog.getByRole("button", { name: "Build", exact: true }).click();
     const candidates = dialog.locator(".lineup-builder-candidate");
-    await expect(candidates).toHaveCount(2);
+    await expect(candidates).toHaveCount(1);
     await expect(candidates.first().getByRole("button", { name: "Use as draft" })).toBeEnabled();
+    await dialog.getByRole("button", { name: "Squad with external players" }).click();
+    await expect(candidates).toHaveCount(1);
     await expect(candidates.last().getByText(/Acquisitions required/)).toBeVisible();
     await expect(candidates.last().getByRole("button", { name: "Use as draft" })).toBeDisabled();
     const externalCard = candidates.last().locator(".lineup-builder-preview-player.is-not-owned");
@@ -333,6 +385,7 @@ for (const action of ["bid", "offer", "clause"] as const) {
     await builder.getByRole("checkbox", { name: source === "market" ? "Consider players on the market" : "Consider opponent players" }).check();
     await builder.getByRole("checkbox", { name: "Allow purchase recommendations" }).check();
     await builder.getByRole("button", { name: "Build", exact: true }).click();
+    await builder.getByRole("button", { name: "Squad with external players" }).click();
     const card = builder.locator(".lineup-builder-preview-player.is-not-owned");
     await card.getByRole("button", { name: "Acquire Player 14" }).click();
     const options = page.getByRole("dialog", { name: "Player 14 — Acquisition options" });

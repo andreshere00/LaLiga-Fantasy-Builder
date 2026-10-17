@@ -80,8 +80,11 @@ Generated request/response models are in [endpoint schemas](endpoint-schemas.md)
 }
 ```
 
-Defaults use owned players, all verified supported formations, no trades, five
-results and no explanation. Unknown keys, duplicate choices and invalid bounds
+API defaults use owned players, all verified supported formations, no trades, five
+results and no explanation. The browser requests up to seven results total. The
+filters **Only current squad** and **Squad with external players** narrow this
+same list, preserving the original ranks without rebuilding or adding results.
+Unknown keys, duplicate choices and invalid bounds
 are rejected with 422 before reads. Master IDs are mandatory XI constraints;
 current squad-entry IDs are returned separately. Premium formations require the
 league's explicit formations entitlement. The result contains first-kickoff
@@ -92,10 +95,21 @@ Decimal scores are JSON strings; frontend contracts convert them to display numb
 The bounded search alternates owned, market-containing and opponent-containing
 queues. Source-specific bounds require a starter from that acquisition source,
 without requiring the user to mark a market player mandatory. Default five-result
-builds reserve two external comparison slots when feasible; those slots cover
-both acquisition sources when available, retaining score order among the selected
-comparisons. Overlapping lineups are deduplicated. Eligibility, finances and
+API builds reserve two external comparison slots when feasible. All selected acquisition
+sources compete together for these slots using lineup score, projected cash,
+forwards and final seeded ties. There is no per-source output quota: two stronger
+opponent proposals outrank a weaker market proposal, and vice versa. Overlapping
+lineups are deduplicated. Eligibility, finances and
 deadlines still apply, and incomplete search remains explicitly labeled.
+
+When a feasible owned XI exists, external proposals must strictly exceed its best
+lineup-score sum. Equal or lower scores are omitted regardless of trading score,
+cash savings or acquisition source. This compares against the best owned lineup,
+not a weaker alternative. If no owned XI can fill the selected formation and
+mandatory players, feasible acquisitions can still complete a lineup. Under an
+incomplete search, this comparison uses the strongest owned XI found so far.
+Seven total results is a cap; the browser does not fill empty external slots with
+non-improving acquisition proposals.
 
 Each acquisition source also has a comparison queue that fixes one player from
 that source (plus every mandatory player) and fills remaining positions from
@@ -155,8 +169,10 @@ with an admissible score bound. Owned and external queues take turns using the
 shared search budget; equal-bound nodes prefer more complete lineups. Results
 reserve up to half of `max_candidates` for feasible external XIs and the remaining
 slots for owned XIs. Unused slots go to the other group, and the total limit is
-preserved. For the default five results this normally means three owned and two
-external proposals. A limit of one preserves owned-first priority. It returns
+preserved. The API's default five-result limit permits three owned and two
+improving external proposals. The browser's seven-result request normally permits
+four owned and three improving external proposals, with seven total before filtering.
+A limit of one preserves owned-first priority. It returns
 owned XIs before external XIs, with each group ordered by lineup-score sum,
 projected cash, forwards, and seeded final ties. Trading scores rank purchase
 recommendations and sales. Purchase steps follow settlement times, with trading

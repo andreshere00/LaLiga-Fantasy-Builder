@@ -418,12 +418,23 @@ queues require at least one starter from their source; their score bounds includ
 that requirement, so stronger owned/opponent-only combinations cannot starve the
 market comparison. When both result groups are feasible, reserve up to half of
 the total output limit for external proposals; unused slots are filled from the
-other group. Default five-result builds normally return three owned and two
-external XIs. Within the external slots, include the highest-ranked comparison
-and cover each feasible acquisition source when the limit permits, then fill
-remaining slots by rank. Deduplicate lineups found by both acquisition queues.
+other group. The browser requests seven candidates total. The filters **Only current
+squad** and **Squad with external players** narrow that same list, preserving the
+original ranks without rebuilding or adding results. API callers
+may choose a different total limit. Fill the external slots with the highest-ranked
+feasible comparisons
+across all selected acquisition sources. Source coverage must not displace a
+stronger lineup: both slots may use the same acquisition source. Deduplicate
+lineups found by both acquisition queues.
 Display owned proposals first and keep the existing ranking among selected
 candidates within each group. A one-result limit retains owned-first priority.
+
+When an owned XI is feasible, show acquisition lineups only if their lineup-score
+sum strictly exceeds the best owned XI. Do not substitute trading score or compare
+against a weaker owned alternative. If no owned XI can meet formation and mandatory
+requirements, external players can still complete it. Interrupted search compares
+against the best owned XI found so far and retains the incomplete-search notice.
+Return fewer external recommendations when fewer improve the baseline.
 
 Use best-first/branch-and-bound exploration with admissible lineup-score upper
 bounds. Branch into lower-score/cheaper alternatives when the strongest XI fails

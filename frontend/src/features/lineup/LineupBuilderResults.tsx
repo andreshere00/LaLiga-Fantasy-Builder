@@ -1,3 +1,4 @@
+import { useState } from "react";
 import type { BuilderCandidate, LineupBuildDto } from "../../api/schemas";
 import { Button } from "../../components/ui/Button";
 import { ProfilePhoto } from "../shell/ProfilePhoto";
@@ -10,6 +11,7 @@ import { Help } from "../../components/ui/Help";
 import { LineupBuilderTradeDetails } from "./LineupBuilderTradeDetails";
 
 const money = (value: number) => new Intl.NumberFormat("en-IE", { style: "currency", currency: "EUR", maximumFractionDigits: 0 }).format(value);
+export const LINEUP_RECOMMENDATION_LIMIT = 7;
 
 /** Read-only candidate comparisons and complete rule/transaction evidence. */
 export function LineupBuilderResults({ result, playersById, canApply, onApply, ownedPlayerIds, onAcquire }: {
@@ -20,6 +22,12 @@ export function LineupBuilderResults({ result, playersById, canApply, onApply, o
   ownedPlayerIds?: ReadonlySet<string>;
   onAcquire?: (player: BuilderCandidate["starters"][number]) => void;
 }) {
+  const recommendations = result.candidates.slice(0, LINEUP_RECOMMENDATION_LIMIT);
+  const [group, setGroup] = useState<BuilderCandidate["resourceGroup"]>(
+    recommendations.some((candidate) => candidate.resourceGroup === "owned") ? "owned" : "external",
+  );
+  const candidates = recommendations.map((candidate, index) => ({ candidate, rank: index + 1 }))
+    .filter(({ candidate }) => candidate.resourceGroup === group);
   const names = new Map([...playersById].map(([id, player]) => [id, player.name]));
   for (const candidate of result.candidates) {
     for (const player of [
@@ -34,13 +42,34 @@ export function LineupBuilderResults({ result, playersById, canApply, onApply, o
     (item.code === "player_unavailable" || item.code === "opponent_protection_active_at_kickoff"));
   const needsAcquisition = (player: BuilderCandidate["starters"][number]) =>
     player.source !== "owned" && !ownedPlayerIds?.has(player.playerId);
+  const diagnostics = new Set(result.diagnostics.map((item) => item.code));
+  const notices = [
+    { visible: diagnostics.has("recent_matches_previous_round"), title: "Previous-round form", tone: "info",
+      detail: "The current round has started. Recent match analysis uses completed matches from previous rounds." },
+    { visible: diagnostics.has("standings_unavailable"), title: "Standings unavailable", tone: "warning",
+      detail: "Club standings could not be verified. Position criteria are omitted; recent matches use verified previous-round results." },
+    { visible: !result.searchComplete, title: "Search incomplete", tone: "warning",
+      detail: "Search is incomplete. These candidates are feasible estimates; better choices may remain." },
+    { visible: diagnostics.has("cash_conservative_bid_reserve"), title: "Cash after pending bids", tone: "info",
+      detail: "Cash projections use a conservative lower bound: pending bid amounts are deducted from the reported balance, even if Fantasy may already reserve them. Pending bids remain unchanged." },
+  ].filter((notice) => notice.visible);
   return <section aria-label="Lineup recommendations" className="lineup-builder-results">
     <h3>Round {result.target.week} · {new Date(result.target.firstKickoff).toLocaleString()}</h3>
-    {result.diagnostics.some((d) => d.code === "recent_matches_previous_round") && <p role="status">The current round has started. Recent match analysis uses completed matches from previous rounds.</p>}
-    {result.diagnostics.some((d) => d.code === "standings_unavailable") && <p role="status">Club standings could not be verified. Position criteria are omitted; recent matches use verified previous-round results.</p>}
-    {!result.searchComplete && <p role="status">Search is incomplete. These candidates are feasible estimates; better choices may remain.</p>}
-    <p>Trades are conditional estimates at current market value. Nothing has been bought, sold or saved.</p>
-    {result.diagnostics.some((d) => d.code === "cash_conservative_bid_reserve") && <p role="status">Cash projections use a conservative lower bound: pending bid amounts are deducted from the reported balance, even if Fantasy may already reserve them. Pending bids remain unchanged.</p>}
+    <aside className="lineup-builder-notices" aria-label="Recommendation notes" role="status">
+      <header className="lineup-builder-notices-header">
+        <div className="lineup-builder-notices-heading">
+          <h4>Recommendation notes</h4>
+          <span className="lineup-builder-preview-badge">Preview only</span>
+        </div>
+        <p>Trades are conditional estimates at current market value. Nothing has been bought, sold or saved.</p>
+      </header>
+      {notices.length > 0 && <ul className="lineup-builder-notices-list">
+        {notices.map((notice) => <li key={notice.title} data-tone={notice.tone}>
+          <strong>{notice.title}</strong>
+          <p>{notice.detail}</p>
+        </li>)}
+      </ul>}
+    </aside>
     {exclusions.length > 0 && <details className="lineup-builder-exclusions">
       <summary><span>{exclusions.length} source exclusions</span><span className="lineup-builder-exclusions-hint">View reasons</span></summary>
       <div className="lineup-builder-exclusions-scroll">
@@ -57,8 +86,29 @@ export function LineupBuilderResults({ result, playersById, canApply, onApply, o
         </table>
       </div>
     </details>}
-    {result.candidates.map((candidate, index) => <article key={candidate.candidateId} className="lineup-builder-candidate">
-      <h4>{index + 1}. {candidate.formation.replaceAll(",", "-")} · {candidate.resourceGroup === "owned" ? "Owned starting XI" : "Acquisitions required"}</h4>
+    <fieldset className="lineup-builder-result-filters">
+      <legend>Lineup filter</legend>
+      <div>
+        {([
+          ["owned", "Only current squad"], ["external", "Squad with external players"],
+        ] as const).map(([value, label]) => <Button key={value} variant="outline" size="lg" shape="square"
+          className="lineup-builder-result-filter" aria-pressed={group === value} onClick={() => setGroup(value)}>
+          <span>{label}</span>
+          <span className="lineup-builder-filter-count" aria-hidden="true">
+            {recommendations.filter((candidate) => candidate.resourceGroup === value).length}
+          </span>
+        </Button>)}
+      </div>
+    </fieldset>
+    <p role="status">Showing {candidates.length} of {recommendations.length} lineups.</p>
+    {result.candidates.some((candidate) => candidate.resourceGroup === "owned") && <p className="fb-helper">
+      External lineups must score higher than the best lineup using only your current squad.
+    </p>}
+    {candidates.length === 0 && <p role="status">{group === "owned"
+      ? "No lineup using only your current squad was found for these settings."
+      : "No improving external lineups were found for these settings."}</p>}
+    {candidates.map(({ candidate, rank }) => <article key={candidate.candidateId} className="lineup-builder-candidate">
+      <h4>{rank}. {candidate.formation.replaceAll(",", "-")} · {candidate.resourceGroup === "owned" ? "Owned starting XI" : "Acquisitions required"}</h4>
       <p>Lineup score {candidate.totalLineupScore.toFixed(3)} · Cash estimate {money(candidate.tradingPlan.projectedCash)} · Squad {candidate.tradingPlan.squadCount}/24 · Pending bid slots {candidate.tradingPlan.reservedSquadSlots} · Value {money(candidate.tradingPlan.squadValue)}</p>
       <div className="lineup-builder-preview" aria-label="Starting XI preview">
         <PitchMarkings stretch />

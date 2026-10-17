@@ -289,27 +289,14 @@ def search_candidates(
         if identity not in seen:
             external_results.append(result)
             seen.add(identity)
+    if owned_results:
+        # Acquiring starters must improve on the strongest feasible owned XI.
+        baseline = owned_results[0].total_lineup_score
+        external_results = [r for r in external_results if r.total_lineup_score > baseline]
     # Reserve external comparisons without exceeding the caller's total result limit.
     external_slots = min(len(external_results), preferences.max_candidates // 2)
     owned_slots = min(len(owned_results), preferences.max_candidates - external_slots)
     budget = preferences.max_candidates - owned_slots
-    comparisons = external_results[:1] if budget else []
-    for source in sources[1:]:
-        if len(comparisons) >= budget:
-            break
-        if any(any(p.source == source for p in c.starters) for c in comparisons):
-            continue
-        candidate = next(
-            (c for c in external_results if any(p.source == source for p in c.starters)), None
-        )
-        if candidate is not None:
-            comparisons.append(candidate)
-    for candidate in external_results:
-        if len(comparisons) >= budget:
-            break
-        if candidate not in comparisons:
-            comparisons.append(candidate)
-    order = {candidate.candidate_id: index for index, candidate in enumerate(external_results)}
-    comparisons.sort(key=lambda c: order[c.candidate_id])
-    selected_results = owned_results[:owned_slots] + comparisons
+    # All enabled acquisition sources compete on workflow ranking, without source quotas.
+    selected_results = owned_results[:owned_slots] + external_results[:budget]
     return selected_results, not any(heaps.values()) and not truncated, states
