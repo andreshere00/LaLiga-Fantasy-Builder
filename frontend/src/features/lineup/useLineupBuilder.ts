@@ -1,8 +1,8 @@
 import { useEffect, useRef, useState } from "react";
-import { paths, postJson } from "../../api/client";
+import { streamLineupBuild } from "../../api/lineupBuild";
 import { ApiError } from "../../api/errors";
 import { builderDiagnosticMessage } from "./builderDiagnosticCopy";
-import { lineupBuildResponseSchema, type LineupBuildDto, type LineupBuildRequest } from "../../api/schemas";
+import type { LineupBuildDto, LineupBuildProgress, LineupBuildRequest } from "../../api/schemas";
 
 const MESSAGES: Record<string, string> = {
   financial_data_unavailable: "Cash or pending commitments could not be verified.",
@@ -35,6 +35,7 @@ export function useLineupBuilder(
 ) {
   const current = useRef<AbortController | null>(null);
   const [pending, setPending] = useState(false);
+  const [progress, setProgress] = useState<LineupBuildProgress | null>(null);
   const [result, setResult] = useState<LineupBuildDto | null>(null);
   const [failure, setFailure] = useState<ApiError | "unknown" | null>(null);
   let error: string | null = null;
@@ -59,6 +60,7 @@ export function useLineupBuilder(
     current.current?.abort();
     current.current = null;
     setPending(false);
+    setProgress(null);
   }
 
   async function build(preferences: LineupBuildRequest) {
@@ -66,18 +68,22 @@ export function useLineupBuilder(
     const controller = new AbortController();
     current.current = controller;
     setPending(true);
+    setProgress(null);
     setFailure(null);
     try {
-      const response = await postJson(paths.lineupBuild(leagueId), token, preferences, { signal: controller.signal });
-      if (!controller.signal.aborted) setResult(lineupBuildResponseSchema.parse(response));
+      const response = await streamLineupBuild(leagueId, token, preferences, (update) => {
+        if (current.current === controller && !controller.signal.aborted) setProgress(update);
+      }, { signal: controller.signal });
+      if (!controller.signal.aborted) setResult(response);
     } catch (caught) {
       if (!controller.signal.aborted) setFailure(caught instanceof ApiError ? caught : "unknown");
     } finally {
       if (current.current === controller) {
         current.current = null;
         setPending(false);
+        setProgress(null);
       }
     }
   }
-  return { pending, result, error, build, cancel };
+  return { pending, progress, result, error, build, cancel };
 }

@@ -245,7 +245,10 @@ def _render_operation(
     if not success:
         lines.append("No `200` response documented.")
     else:
-        content = success.get("content", {}).get("application/json", {})
+        formats = success.get("content", {})
+        content = formats.get("application/json", {}) or formats.get("application/x-ndjson", {})
+        if "application/x-ndjson" in formats:
+            lines.extend(["Media type: `application/x-ndjson`; one event per line.", ""])
         body_schema = content.get("schema")
         if body_schema:
             lines.extend(_render_response_schema(body_schema, components))

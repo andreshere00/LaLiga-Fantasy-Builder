@@ -1,9 +1,14 @@
 import { expect, test } from "@playwright/test";
 import { readFileSync } from "node:fs";
+import { createServer, type ServerResponse } from "node:http";
 import { resolve } from "node:path";
 import { catalog, mockApplication } from "./fixtures";
 
 const base = JSON.parse(readFileSync(resolve(process.cwd(), "../contracts/lineup-builder-response.json"), "utf8")).payload;
+function streamResult(result: unknown) {
+  return { contentType: "application/x-ndjson", body: JSON.stringify({ type: "result", result }) + "\n" };
+}
+
 function response() {
   const candidate = structuredClone(base.candidates[0]);
   candidate.formation = "4,3,3";
@@ -13,6 +18,58 @@ function response() {
   }));
   return { ...base, team_id: "t1", league_id: "l1", target: { ...base.target, week: 9 }, candidates: [candidate] };
 }
+
+test("builder shows live backend progress on desktop and mobile and cancels the stream", async ({ page }, info) => {
+  let activeResponse: ServerResponse | undefined;
+  const server = createServer((request, reply) => {
+    reply.setHeader("Access-Control-Allow-Origin", "*");
+    reply.setHeader("Access-Control-Allow-Headers", "Authorization, Content-Type");
+    if (request.method === "OPTIONS") { reply.writeHead(204); reply.end(); return; }
+    activeResponse = reply;
+    reply.writeHead(200, { "Content-Type": "application/x-ndjson" });
+    reply.write(JSON.stringify({ type: "progress", progress: {
+      stage: "players", percent: 47, completed_players: 5, total_players: 10,
+    } }) + "\n");
+  });
+  await new Promise<void>((resolve) => server.listen(0, "127.0.0.1", resolve));
+  const address = server.address();
+  if (!address || typeof address === "string") throw new Error("No streaming fixture server");
+  try {
+    await mockApplication(page);
+    await page.route("**/api/lineup-builder/leagues/l1/build/stream", route =>
+      route.continue({ url: `http://127.0.0.1:${address.port}/build/stream` }));
+    await page.goto("/");
+    await page.getByRole("button", { name: "Lineup builder", exact: true }).click();
+    const dialog = page.getByRole("dialog", { name: "Build lineup" });
+    await dialog.getByRole("button", { name: "Build", exact: true }).click();
+    const progress = dialog.getByRole("progressbar");
+    await expect(progress).toHaveAttribute("aria-valuenow", "47");
+    await expect(dialog.getByText("Evaluating players: 5/10")).toBeVisible();
+    await expect(dialog.locator(".lineup-builder-loading-text")).toHaveCSS("animation-name", "none");
+    await dialog.locator(".fb-dialog-footer").screenshot({ path: info.outputPath("build-progress-desktop.png") });
+    await page.setViewportSize({ width: 390, height: 844 });
+    await expect(progress).toBeVisible();
+    const bounds = await progress.boundingBox();
+    expect(bounds!.x + bounds!.width).toBeLessThanOrEqual(390);
+    await dialog.locator(".fb-dialog-footer").screenshot({ path: info.outputPath("build-progress-mobile.png") });
+    activeResponse!.write(JSON.stringify({ type: "progress", progress: {
+      stage: "search", percent: 85, completed_players: 0, total_players: 0,
+    } }) + "\n");
+    await expect(progress).toHaveAttribute("aria-valuenow", "85");
+    await expect(dialog.getByText("Finding the best lineups…")).toBeVisible();
+    activeResponse!.end(streamResult(response()).body);
+    await expect(dialog.getByRole("region", { name: "Lineup recommendations" })).toBeVisible();
+    await expect(progress).toHaveCount(0);
+    await dialog.getByRole("button", { name: "Build", exact: true }).click();
+    await expect(progress).toHaveAttribute("aria-valuenow", "47");
+    await dialog.getByRole("button", { name: "Cancel build" }).click();
+    await expect(progress).toHaveCount(0);
+    await expect.poll(() => activeResponse?.destroyed).toBe(true);
+  } finally {
+    server.closeAllConnections();
+    await new Promise<void>((resolve) => server.close(() => resolve()));
+  }
+});
 
 test("builder generates read-only previews and supports keyboard dismissal", async ({ page }, info) => {
   await mockApplication(page);
@@ -24,7 +81,7 @@ test("builder generates read-only previews and supports keyboard dismissal", asy
     body: '<svg xmlns="http://www.w3.org/2000/svg" width="96" height="96"><circle cx="48" cy="30" r="18" fill="#35353d"/><path d="M12 96V78a36 36 0 0 1 72 0v18" fill="#ff4b44"/></svg>',
   }));
   const requests: string[] = [];
-  await page.route("**/api/lineup-builder/leagues/l1/build", async (route) => {
+  await page.route("**/api/lineup-builder/leagues/l1/build/stream", async (route) => {
     requests.push(route.request().method());
     expect(route.request().postDataJSON().mandatory_player_ids).toEqual([]);
     const value = response();
@@ -46,7 +103,7 @@ test("builder generates read-only previews and supports keyboard dismissal", asy
       settlement_at: value.target.sales_deadline, cash_after: 50000000, squad_value_after: 80000000,
       squad_count_after: 13, debt_limit: 16000000, conditions: ["Offer must settle before kickoff"],
     }];
-    await route.fulfill({ json: value });
+    await route.fulfill(streamResult(value));
   });
   await page.goto("/");
   const trigger = page.getByRole("button", { name: /build|recommend/i }).first();
@@ -116,7 +173,7 @@ test("builder reports a source failure and never saves a lineup", async ({ page 
     if (route.request().method() === "PUT") saves++;
     await route.fallback();
   });
-  await page.route("**/api/lineup-builder/leagues/l1/build", (route) => route.fulfill({ status: 503,
+  await page.route("**/api/lineup-builder/leagues/l1/build/stream", (route) => route.fulfill({ status: 503,
     json: { error: "financial_data_unavailable", detail: "Cash unavailable" } }));
   await page.goto("/");
   await page.getByRole("button", { name: /build|recommend/i }).first().click();
@@ -134,7 +191,7 @@ test("live-round owned candidate opens its target draft and protects unsaved cha
     if (route.request().method() === "PUT") saves++;
     await route.fallback();
   });
-  await page.route("**/api/lineup-builder/leagues/l1/build", (route) => route.fulfill({ json: response() }));
+  await page.route("**/api/lineup-builder/leagues/l1/build/stream", (route) => route.fulfill(streamResult(response())));
   await page.goto("/");
   await page.getByRole("button", { name: "Lineup builder", exact: true }).click();
   const dialog = page.getByRole("dialog", { name: "Build lineup" });
@@ -166,10 +223,10 @@ test("owned candidate applies only to the matching editable draft without saving
     if (route.request().method() === "PUT") saves++;
     await route.fallback();
   });
-  await page.route("**/api/lineup-builder/leagues/l1/build", (route) => {
+  await page.route("**/api/lineup-builder/leagues/l1/build/stream", (route) => {
     const value = response();
     value.target.week = targetWeek;
-    return route.fulfill({ json: value });
+    return route.fulfill(streamResult(value));
   });
   await page.goto("/");
   await page.getByRole("button", { name: "Lineup builder", exact: true }).click();
@@ -205,11 +262,11 @@ for (const source of ["market", "opponents"] as const) {
       if (route.request().method() === "PUT") writes++;
       await route.fallback();
     });
-    await page.route("**/api/lineup-builder/leagues/l1/build", (route) => {
+    await page.route("**/api/lineup-builder/leagues/l1/build/stream", (route) => {
       expect(route.request().postDataJSON()).toMatchObject({
         sources: ["owned", source], allow_buying: true,
       });
-      return route.fulfill({ json: proposed });
+      return route.fulfill(streamResult(proposed));
     });
     await page.goto("/");
     await page.getByRole("button", { name: "Lineup builder", exact: true }).click();
@@ -259,7 +316,7 @@ for (const action of ["bid", "offer", "clause"] as const) {
       id: "t2", players: [{ playerTeamId: "opponent-entry-14", playerMaster: catalog[13],
         buyoutClause: 7000000, buyoutClauseLockedEndTime: "2026-10-01T12:00:00Z", isShielded: false }],
     } }));
-    await page.route("**/api/lineup-builder/leagues/l1/build", (route) => route.fulfill({ json: proposed }));
+    await page.route("**/api/lineup-builder/leagues/l1/build/stream", (route) => route.fulfill(streamResult(proposed)));
     const writes: { path: string; body: unknown }[] = [];
     await page.route("**/api/market/leagues/l1/**", async (route) => {
       if (route.request().method() === "GET") return route.fallback();
@@ -325,7 +382,7 @@ test("preview keeps release-clause payment disabled when shield status is unknow
   proposed.candidates[0].resource_group = "external";
   Object.assign(proposed.candidates[0].starters[1], { player_id: "14", name: "Player 14",
     source: "opponents", player_team_id: "opponent-entry-14" });
-  await page.route("**/api/lineup-builder/leagues/l1/build", (route) => route.fulfill({ json: proposed }));
+  await page.route("**/api/lineup-builder/leagues/l1/build/stream", (route) => route.fulfill(streamResult(proposed)));
   await page.goto("/");
   await page.getByRole("button", { name: "Lineup builder", exact: true }).click();
   const builder = page.getByRole("dialog", { name: "Build lineup" });

@@ -69,7 +69,6 @@ function BuilderDialogSession({
   const [changedResult, setChangedResult] = useState<LineupBuildDto | null>(null);
   const [search, setSearch] = useState("");
   const [chosen, setChosen] = useState<string[]>([]);
-  const [explain, setExplain] = useState(false);
   const [allowBuying, setAllowBuying] = useState(false);
   const [allowSelling, setAllowSelling] = useState(false);
   const [includeTradingPurchases, setIncludeTradingPurchases] = useState(false);
@@ -181,9 +180,20 @@ function BuilderDialogSession({
             <span className="lineup-builder-bounce-ball" />
             <span className="lineup-builder-bounce-ground" />
           </span>
-          <Progress value={null} className="lineup-builder-loading-details">
+          <Progress value={builder.progress?.percent ?? null} className="lineup-builder-loading-details"
+            aria-valuetext={builder.progress ? `Estimated progress: ${builder.progress.percent}%` : undefined}>
             <ProgressLabel className="lineup-builder-loading-text">
-              Building recommendations…
+              {builder.progress?.stage === "players"
+                ? `Evaluating players: ${builder.progress.completedPlayers}/${builder.progress.totalPlayers}`
+                : builder.progress?.stage === "trades" ? "Checking trade options…"
+                  : builder.progress?.stage === "search" ? "Finding the best lineups…"
+                    : builder.progress?.stage === "explanation" ? "Writing explanations…"
+                      : builder.progress?.stage === "complete" ? "Recommendations ready"
+                        : "Building recommendations…"}
+              {builder.progress && <span className="lineup-builder-loading-percent"
+                title="Estimated overall progress">
+                {builder.progress.percent}%
+              </span>}
             </ProgressLabel>
           </Progress>
         </div>}
@@ -192,7 +202,7 @@ function BuilderDialogSession({
             sources: scope as ("owned" | "market" | "opponents")[], mandatoryPlayerIds: chosen,
             formations: lineupPreferences, allowBuying, allowSelling,
             includeTradingPurchases: allowBuying && includeTradingPurchases,
-            maxCandidates: 5, explanation: { enabled: explain },
+            maxCandidates: 5, explanation: { enabled: false },
           })}>Build</Button>}
         <Button shape="square" variant="secondary" className="lineup-builder-close" onClick={onClose}>Close</Button>
       </>}>
@@ -212,7 +222,6 @@ function BuilderDialogSession({
               </label>
             ))}
           </fieldset>
-          <label><input type="checkbox" checked={explain} onChange={(e) => setExplain(e.target.checked)} /> Optional explanation</label>
           <label><input type="checkbox" checked={allowBuying} onChange={(e) => setAllowBuying(e.target.checked)} /> Allow purchase recommendations</label>
           <label><input type="checkbox" checked={allowSelling} onChange={(e) => setAllowSelling(e.target.checked)} /> Allow sale recommendations</label>
           <p className="fb-helper">Recommendations are previews. Building never buys or sells players.</p>

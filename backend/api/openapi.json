@@ -1003,6 +1003,109 @@
         ]
       }
     },
+    "/lineup-builder/leagues/{league_id}/build/stream": {
+      "post": {
+        "tags": [
+          "lineup-builder"
+        ],
+        "summary": "Stream read-only lineup build progress and result",
+        "operationId": "stream_lineup_lineup_builder_leagues__league_id__build_stream_post",
+        "parameters": [
+          {
+            "name": "league_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "League Id"
+            }
+          },
+          {
+            "name": "authorization",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Authorization"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/BuildPreferences"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/x-ndjson": {
+                "schema": {
+                  "$ref": "#/components/schemas/BuildStreamEvent"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized or LaLiga re-auth required.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "502": {
+            "description": "Auth or Fantasy upstream failure.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Fantasy upstream unavailable.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ]
+      }
+    },
     "/teams/{team_id}/money": {
       "get": {
         "tags": [
@@ -5319,6 +5422,42 @@
         "title": "BidWrite",
         "description": "Request body for bid create/update."
       },
+      "BuildErrorEvent": {
+        "properties": {
+          "type": {
+            "type": "string",
+            "const": "error",
+            "title": "Type",
+            "default": "error"
+          },
+          "status": {
+            "type": "integer",
+            "maximum": 599.0,
+            "minimum": 400.0,
+            "title": "Status"
+          },
+          "error": {
+            "type": "string",
+            "title": "Error"
+          },
+          "diagnostics": {
+            "items": {
+              "$ref": "#/components/schemas/BuilderDiagnostic"
+            },
+            "type": "array",
+            "maxItems": 200,
+            "title": "Diagnostics"
+          }
+        },
+        "additionalProperties": true,
+        "type": "object",
+        "required": [
+          "status",
+          "error"
+        ],
+        "title": "BuildErrorEvent",
+        "description": "Terminal sanitized failure after streaming headers have been sent."
+      },
       "BuildFailure": {
         "properties": {
           "error": {
@@ -5409,6 +5548,68 @@
         "type": "object",
         "title": "BuildPreferences",
         "description": "Validated builder preferences; all selected players are mandatory."
+      },
+      "BuildProgress": {
+        "properties": {
+          "stage": {
+            "type": "string",
+            "enum": [
+              "sources",
+              "players",
+              "trades",
+              "search",
+              "explanation",
+              "complete"
+            ],
+            "title": "Stage"
+          },
+          "percent": {
+            "type": "integer",
+            "maximum": 100.0,
+            "minimum": 0.0,
+            "title": "Percent"
+          },
+          "completed_players": {
+            "type": "integer",
+            "minimum": 0.0,
+            "title": "Completed Players",
+            "default": 0
+          },
+          "total_players": {
+            "type": "integer",
+            "minimum": 0.0,
+            "title": "Total Players",
+            "default": 0
+          }
+        },
+        "additionalProperties": true,
+        "type": "object",
+        "required": [
+          "stage",
+          "percent"
+        ],
+        "title": "BuildProgress",
+        "description": "Stage-weighted work estimate; player counts measure finished evaluations."
+      },
+      "BuildProgressEvent": {
+        "properties": {
+          "type": {
+            "type": "string",
+            "const": "progress",
+            "title": "Type",
+            "default": "progress"
+          },
+          "progress": {
+            "$ref": "#/components/schemas/BuildProgress"
+          }
+        },
+        "additionalProperties": true,
+        "type": "object",
+        "required": [
+          "progress"
+        ],
+        "title": "BuildProgressEvent",
+        "description": "One progress update in an authenticated JSON-lines response."
       },
       "BuildResponse": {
         "properties": {
@@ -5508,6 +5709,49 @@
         ],
         "title": "BuildResponse",
         "description": "Replayable recommendations and truthful bounded-search status."
+      },
+      "BuildResultEvent": {
+        "properties": {
+          "type": {
+            "type": "string",
+            "const": "result",
+            "title": "Type",
+            "default": "result"
+          },
+          "result": {
+            "$ref": "#/components/schemas/BuildResponse"
+          }
+        },
+        "additionalProperties": true,
+        "type": "object",
+        "required": [
+          "result"
+        ],
+        "title": "BuildResultEvent",
+        "description": "Terminal successful result; only this event completes the build."
+      },
+      "BuildStreamEvent": {
+        "oneOf": [
+          {
+            "$ref": "#/components/schemas/BuildProgressEvent"
+          },
+          {
+            "$ref": "#/components/schemas/BuildResultEvent"
+          },
+          {
+            "$ref": "#/components/schemas/BuildErrorEvent"
+          }
+        ],
+        "title": "BuildStreamEvent",
+        "description": "One newline-delimited event, ending with exactly one result or error.",
+        "discriminator": {
+          "propertyName": "type",
+          "mapping": {
+            "error": "#/components/schemas/BuildErrorEvent",
+            "progress": "#/components/schemas/BuildProgressEvent",
+            "result": "#/components/schemas/BuildResultEvent"
+          }
+        }
       },
       "BuilderDiagnostic": {
         "properties": {

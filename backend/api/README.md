@@ -35,6 +35,7 @@ Set `AUTH_JWKS_URL` and `AUTH_INTERNAL_BASE_URL` when not using Compose.
 | `GET` | `/laliga/credential-probe` | Bearer available, token redacted |
 | `GET` | `/laliga/leagues-probe` | Fantasy leagues connectivity, redacted |
 | `GET` | `/leagues...` | [leagues](../../docs/api/leagues/README.md) |
+| `POST` | `/lineup-builder/leagues/{league_id}/build` and `/build/stream` | Read-only recommendations; JWT membership verified; JSON result or progress as JSON lines |
 | `GET`/`PUT` | `/teams...` | [teams](../../docs/api/teams/README.md) |
 | `GET` | `/players...` | [players](../../docs/api/players/README.md). Catalog and market value are public; league and stats routes use JWT |
 | `GET` | `/calendar/...` | Matchday, fixtures, stats. JWT required; Fantasy read is public |

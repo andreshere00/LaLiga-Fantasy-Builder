@@ -8,6 +8,7 @@ from decimal import Decimal
 from pydantic import BaseModel, ValidationError
 
 from fantasy_api.domain.errors import BuilderError, NotFoundError, UpstreamError
+from fantasy_api.domain.lineup_builder.progress import ProgressCallback
 from fantasy_api.domain.lineup_builder.scoring import PlayerEvidence, score_player
 from fantasy_api.domain.lineup_builder.target import instant, resolve_target
 from fantasy_api.schemas.buyout import ShieldStatus
@@ -18,6 +19,7 @@ from fantasy_api.schemas.lineup_builder import (
     PREMIUM_FORMATIONS,
     BuilderDiagnostic,
     BuildPreferences,
+    BuildProgress,
     ScoredPlayer,
     TargetWeek,
 )
@@ -225,7 +227,13 @@ class LineupBuilderRepository:
         self._buyout = buyout
 
     async def snapshot(
-        self, jwt: str, league_id: str, preferences: BuildPreferences, now: datetime
+        self,
+        jwt: str,
+        league_id: str,
+        preferences: BuildPreferences,
+        now: datetime,
+        *,
+        on_progress: ProgressCallback | None = None,
     ) -> BuilderSnapshot:
         """Resolve caller ownership first, then gather bounded server-side facts.
 
@@ -234,6 +242,7 @@ class LineupBuilderRepository:
             league_id: League to resolve in the caller-scoped membership list.
             preferences: Validated preferences.
             now: Snapshot instant.
+            on_progress: Optional event-loop observer for evaluation counts.
 
         Returns:
             Typed snapshot with eligible players and explicit exclusions.
@@ -542,9 +551,25 @@ class LineupBuilderRepository:
             standings = {}
             diagnostics.append(BuilderDiagnostic(code="standings_unavailable"))
         semaphore = asyncio.Semaphore(4)
+        completed_players = 0
+
+        def report_players() -> None:
+            """Count every finished evaluation, including ineligible players."""
+            if on_progress is not None:
+                on_progress(
+                    BuildProgress(
+                        stage="players",
+                        percent=15 + (65 * completed_players // max(1, len(pool))),
+                        completed_players=completed_players,
+                        total_players=len(pool),
+                    )
+                )
+
+        report_players()
 
         async def evaluate(player: ScoredPlayer) -> ScoredPlayer | None:
             """Apply strict per-player source gates with bounded fan-out."""
+            nonlocal completed_players
             async with semaphore:
                 try:
                     return await self._evaluate(
@@ -564,8 +589,20 @@ class LineupBuilderRepository:
                     )
                     diagnostics.append(BuilderDiagnostic(code=code, player_id=player.player_id))
                     return None
+                finally:
+                    completed_players += 1
+                    report_players()
 
         evaluated = await asyncio.gather(*(evaluate(p) for p in pool))
+        if on_progress is not None:
+            on_progress(
+                BuildProgress(
+                    stage="trades",
+                    percent=80,
+                    completed_players=len(pool),
+                    total_players=len(pool),
+                )
+            )
         eligible = [p for p in evaluated if p is not None]
         score_map = {p.player_id: p for p in eligible if p.source == "owned"}
         # Unscoreable bench still remains in every squad projection, but cannot finance a sale.

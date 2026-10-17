@@ -175,7 +175,7 @@ do not share a generic proxy class.
 | Domain | Public prefix | Upstream prefix | Methods |
 |--------|---------------|-----------------|---------|
 | Leagues | `/leagues/...` | `{CMP}/leagues/...` | GET (reads) |
-| Lineup builder | `/lineup-builder/leagues/{league_id}/build` | Existing read-only services | POST planning only; JWT membership verified |
+| Lineup builder | `/lineup-builder/leagues/{league_id}/build` and `/build/stream` | Existing read-only services | POST planning only; JSON or request-scoped progress stream; JWT membership verified |
 | Teams | `/teams/...` | `{CMP}/teams/...` | GET + PUT (lineup write) |
 | Players | `/players/...` | `{CMP}/players`, `{CMP}/player/...` | GET (catalog + market value public; league card and stats authenticated) |
 | Calendar | `/calendar/...` | `{CMP}/week/...`, `{CMP}/calendar`, stats host | GET (internal JWT; public upstream via `get_public_json`) |

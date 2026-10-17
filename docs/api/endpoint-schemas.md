@@ -743,6 +743,34 @@ Build read-only lineup recommendations
 Full nested fields: [`BuildResponse`](#buildresponse).
 
 
+### `POST` `/lineup-builder/leagues/{league_id}/build/stream`
+
+Stream read-only lineup build progress and result
+
+**Security:** HTTP Bearer (internal JWT)
+
+#### Inputs
+
+| Source | Name | Type | Required | Constraints | Description |
+|--------|------|------|----------|-------------|-------------|
+| path | `league_id` | string | yes |  |  |
+| body | `sources` | array[string] | no |  |  |
+| body | `mandatory_player_ids` | array[string] | no |  |  |
+| body | `formations` | array[string] | no |  |  |
+| body | `allow_buying` | boolean | no |  |  |
+| body | `allow_selling` | boolean | no |  |  |
+| body | `include_trading_purchases` | boolean | no |  |  |
+| body | `max_candidates` | integer | no | min=1, max=20 |  |
+| body | `explanation` | ExplanationPreferences | no |  |  |
+
+#### Outputs
+
+Media type: `application/x-ndjson`; one event per line.
+
+**HTTP 200:** `BuildStreamEvent`
+
+
+
 ## Tag: `market`
 
 LaLiga Fantasy league market, bids, listings, and offers. Thin authenticated proxies of competition league market resources.
@@ -1552,6 +1580,15 @@ Nested models referenced by the operations above. All Fantasy proxy models use `
 |-------|------|----------|-------------|-------------|
 | `money` | integer | yes | >0 |  |
 
+### `BuildErrorEvent`
+
+| Field | Type | Required | Constraints | Description |
+|-------|------|----------|-------------|-------------|
+| `type` | string | no |  |  |
+| `status` | integer | yes | min=400, max=599 |  |
+| `error` | string | yes |  |  |
+| `diagnostics` | array[BuilderDiagnostic] | no |  |  |
+
 ### `BuildFailure`
 
 | Field | Type | Required | Constraints | Description |
@@ -1573,6 +1610,22 @@ Nested models referenced by the operations above. All Fantasy proxy models use `
 | `max_candidates` | integer | no | min=1, max=20 |  |
 | `explanation` | ExplanationPreferences | no |  | Optional prose settings; credentials and model remain server-owned. |
 
+### `BuildProgress`
+
+| Field | Type | Required | Constraints | Description |
+|-------|------|----------|-------------|-------------|
+| `stage` | string | yes |  |  |
+| `percent` | integer | yes | min=0, max=100 |  |
+| `completed_players` | integer | no | min=0 |  |
+| `total_players` | integer | no | min=0 |  |
+
+### `BuildProgressEvent`
+
+| Field | Type | Required | Constraints | Description |
+|-------|------|----------|-------------|-------------|
+| `type` | string | no |  |  |
+| `progress` | BuildProgress | yes |  | Stage-weighted work estimate; player counts measure finished evaluations. |
+
 ### `BuildResponse`
 
 | Field | Type | Required | Constraints | Description |
@@ -1592,6 +1645,17 @@ Nested models referenced by the operations above. All Fantasy proxy models use `
 | `diagnostics` | array[BuilderDiagnostic] | yes |  |  |
 | `explanation_status` | string | no |  |  |
 | `explanations` | object | no |  |  |
+
+### `BuildResultEvent`
+
+| Field | Type | Required | Constraints | Description |
+|-------|------|----------|-------------|-------------|
+| `type` | string | no |  |  |
+| `result` | BuildResponse | yes |  | Replayable recommendations and truthful bounded-search status. |
+
+### `BuildStreamEvent`
+
+Type: `any`
 
 ### `BuilderDiagnostic`
 

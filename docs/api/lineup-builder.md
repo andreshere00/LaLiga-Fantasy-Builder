@@ -6,6 +6,48 @@ membership through the caller's `GET /leagues`; a caller cannot choose another
 manager's team. All Fantasy, scraper and football reads reuse existing services.
 No bid, offer acceptance, sale, clause, shield or lineup save is executed.
 
+## Live build progress
+
+The browser uses `POST /lineup-builder/leagues/{league_id}/build/stream` with
+the same preferences and Bearer JWT. The original `/build` JSON endpoint remains
+available to the existing CLI and authenticated browser-session analysis.
+Both routes verify league membership through the caller's existing services.
+
+The stream returns `application/x-ndjson`: one JSON event per line. A `progress`
+event contains `progress.stage`, `percent`, `completed_players`, and `total_players`.
+The terminal event is either `{"type":"result","result":<BuildResponse>}` or
+`{"type":"error","status":503,"error":"standings_unavailable","diagnostics":[]}`.
+Errors after the HTTP 200 headers use the event's logical status; clients must
+read the terminal event and reject truncated streams. JWT/body validation errors
+before streaming retain normal HTTP errors. Exception messages and raw upstream
+bodies are never included in stream errors.
+
+Progress is a stage-weighted work estimate, not a time estimate:
+
+| Stage | Overall progress | Measurement |
+|---|---|---|
+| Source loading | 0–15% | Membership, roster, cash, calendar and source snapshots |
+| Player evaluation | 15–80% | `15 + floor(65 × completed_players / total_players)` |
+| Trade checks | 80–85% | Verify available sale routes, when enabled |
+| Lineup search | 85–95% | Bounded combinatorial search; total work is unknown |
+| Optional explanations | 95–100% | Completed results sent for optional prose |
+| Complete | 100% | Valid recommendations are ready |
+
+Excluded players count as completed evaluations. Player counts are exact; the
+stage weights are fixed estimates. Search and explanations advance on stage
+completion rather than an artificial timer. Without explanations the build
+advances directly from search to completion. Updates can be coalesced for slow
+clients, so intermediate percentages are not guaranteed to be delivered.
+
+`useLineupBuilder` exposes `progress` state and passes its percentage to the Base
+UI progress component. It clears progress on a new build, failure or cancellation
+and ignores updates from cancelled requests. The loading text stays static.
+Closing the dialog or cancelling aborts the request, cancels upstream source work,
+and signals the search thread to stop. Progress exists only for the request;
+there is no retained job, polling endpoint, token storage or cross-worker lookup.
+The response disables proxy buffering with `X-Accel-Buffering: no`; the frontend
+proxy allows 130 seconds between reads to cover the 120-second build deadline.
+
 In the frontend preview, players outside the current caller's squad have red
 photo backgrounds and hover/focus help explaining that acquisition is required. Their Acquire
 button opens current market or opponent-roster reads and the existing manual

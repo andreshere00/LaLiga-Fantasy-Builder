@@ -2,9 +2,9 @@
 
 from datetime import datetime
 from decimal import Decimal
-from typing import Literal
+from typing import Annotated, Literal
 
-from pydantic import AwareDatetime, BaseModel, ConfigDict, Field, model_validator
+from pydantic import AwareDatetime, BaseModel, ConfigDict, Field, RootModel, model_validator
 
 from fantasy_api.schemas.common import FlexibleModel
 from fantasy_api.schemas.player_stats import NewsItem
@@ -190,3 +190,45 @@ class BuildFailure(FlexibleModel):
     error: str
     detail: str
     diagnostics: list[BuilderDiagnostic] = Field(default_factory=list, max_length=200)
+
+
+class BuildProgress(FlexibleModel):
+    """Stage-weighted work estimate; player counts measure finished evaluations."""
+
+    stage: Literal["sources", "players", "trades", "search", "explanation", "complete"]
+    percent: int = Field(ge=0, le=100)
+    completed_players: int = Field(default=0, ge=0)
+    total_players: int = Field(default=0, ge=0)
+
+
+class BuildProgressEvent(FlexibleModel):
+    """One progress update in an authenticated JSON-lines response."""
+
+    type: Literal["progress"] = "progress"
+    progress: BuildProgress
+
+
+class BuildResultEvent(FlexibleModel):
+    """Terminal successful result; only this event completes the build."""
+
+    type: Literal["result"] = "result"
+    result: BuildResponse
+
+
+class BuildErrorEvent(FlexibleModel):
+    """Terminal sanitized failure after streaming headers have been sent."""
+
+    type: Literal["error"] = "error"
+    status: int = Field(ge=400, le=599)
+    error: str
+    diagnostics: list[BuilderDiagnostic] = Field(default_factory=list, max_length=200)
+
+
+class BuildStreamEvent(
+    RootModel[
+        Annotated[
+            BuildProgressEvent | BuildResultEvent | BuildErrorEvent, Field(discriminator="type")
+        ]
+    ]
+):
+    """One newline-delimited event, ending with exactly one result or error."""

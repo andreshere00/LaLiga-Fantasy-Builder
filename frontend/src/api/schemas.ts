@@ -930,7 +930,24 @@ export type LineupBuildDto = z.infer<typeof lineupBuildResponseSchema>;
 export type BuilderCandidate = z.infer<typeof builderCandidateSchema>;
 export type LineupBuildRequest = z.infer<typeof lineupBuildRequestSchema>;
 
+export const lineupBuildProgressSchema = responseSchema(readObject({
+  stage: z.enum(["sources", "players", "trades", "search", "explanation", "complete"]),
+  percent: z.number().int().min(0).max(100),
+  completedPlayers: z.number().int().nonnegative(), totalPlayers: z.number().int().nonnegative(),
+}));
+export type LineupBuildProgress = z.infer<typeof lineupBuildProgressSchema>;
+export const lineupBuildStreamEventSchema = z.discriminatedUnion("type", [
+  readObject({ type: z.literal("progress"), progress: lineupBuildProgressSchema }),
+  readObject({ type: z.literal("result"), result: lineupBuildResponseSchema }),
+  readObject({ type: z.literal("error"), status: z.number().int().min(400).max(599),
+    error: z.string().max(100), diagnostics: responseSchema(z.array(readObject({
+      code: z.string().max(100), playerId: z.string().nullable(),
+    })).max(200)),
+  }),
+]);
+
 export type ApiResponseDto =
+  | z.infer<typeof lineupBuildStreamEventSchema>
   | LineupBuildDto
   | CompetitionStandingsDto
   | MeResponseDto
@@ -973,6 +990,7 @@ const endpointContracts: Array<{
   query?: z.ZodType;
 }> = [
   { method: "POST", path: /^\/api\/lineup-builder\/leagues\/[^/]+\/build$/, response: lineupBuildResponseSchema, request: lineupBuildRequestSchema },
+  { method: "POST", path: /^\/api\/lineup-builder\/leagues\/[^/]+\/build\/stream$/, response: lineupBuildStreamEventSchema, request: lineupBuildRequestSchema },
   { method: "GET", path: /^\/api\/competitions\/\d+\/standings$/, response: competitionStandingsSchema, query: standingsQuerySchema },
   { method: "GET", path: /^\/api\/leagues$/, response: leaguesResponseSchema },
   { method: "GET", path: /^\/api\/leagues\/[^/]+\/standing$/, response: standingResponseSchema },
@@ -1053,7 +1071,7 @@ export function serializeEndpointRequest(method: string, path: string, body: unk
     const { tacticalFormation, ...wireFields } = lineup;
     return { ...wireFields, tactical_formation: tacticalFormation };
   }
-  if (method === "POST" && /^\/api\/lineup-builder\/leagues\/[^/]+\/build$/.test(pathname)) {
+  if (method === "POST" && /^\/api\/lineup-builder\/leagues\/[^/]+\/build(?:\/stream)?$/.test(pathname)) {
     const value = lineupBuildRequestSchema.parse(checkedBody);
     return { sources: value.sources, mandatory_player_ids: value.mandatoryPlayerIds,
       formations: value.formations, allow_buying: value.allowBuying, allow_selling: value.allowSelling,

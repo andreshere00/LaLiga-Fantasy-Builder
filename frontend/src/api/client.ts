@@ -33,6 +33,7 @@ function weekNumber(value: number): number {
 
 export const paths = {
   lineupBuild: (leagueId: string) => `/api/lineup-builder/leagues/${segment(leagueId)}/build`,
+  lineupBuildStream: (leagueId: string) => `/api/lineup-builder/leagues/${segment(leagueId)}/build/stream`,
   competitionStandings: (
     competitionId = 1,
     season?: number,
@@ -210,7 +211,7 @@ export async function deleteJson(
   return parseResponse(response, responseSchema);
 }
 
-async function throwForStatus(response: Response): Promise<never> {
+export async function throwForStatus(response: Response): Promise<never> {
   let code = "request_failed";
   let diagnostics: { code: string; playerId: string | null }[] = [];
   try {
