@@ -1,2 +1,26 @@
 /* Market-specific layout; shared rows and controls live in components/ui/RichList.css. */
 @import "../../components/ui/RichList.css";
+
+.market-page:not(.players-page) .market-name { font-weight:700; }
+.market-page:not(.players-page) .market-name .players-name-link { font-weight:inherit; color:inherit; }
+.market-page:not(.players-page) .market-name.is-protected,
+.market-page:not(.players-page) .market-name.is-protected .players-name-link:is(:link,:visited,:hover,:focus-visible) {
+  color:var(--fb-primary);
+}
+.market-page:not(.players-page) .market-fsyp-primary { font-size:16px; font-weight:700; }
+.market-page:not(.players-page) .market-cell-seller { padding-block:12px; }
+.market-clause-detail { display:flex; align-items:center; gap:6px; overflow-wrap:anywhere; }
+.market-bid-count,.market-clause-detail { font-size:12px; line-height:1.4; }
+.market-seller-shield { width:18px; height:18px; vertical-align:middle; }
+[data-theme="dark"] .market-page:not(.players-page) .market-seller-shield { filter:brightness(0) invert(1); }
+.fb-dialog.market-bid-dialog button,
+.fb-dialog.market-bid-dialog button:not(.fb-button) { border-radius:0; }
+.market-page:not(.players-page) .market-balance-actions { flex-wrap:wrap; gap:12px; }
+.market-money-summary { display:flex; flex-wrap:wrap; gap:12px; }
+.market-projection-note { flex-basis:100%; margin:0; font-size:12px; line-height:1.5; color:var(--fb-muted); }
+.market-projection-note.is-negative { color:var(--fb-primary); }
+@media(max-width:800px) {
+  .market-page:not(.players-page) .market-filter-row { flex-wrap:wrap; }
+  .market-page:not(.players-page) .market-balance-actions { width:100%; margin-left:0; }
+  .market-money-summary { flex-basis:100%; }
+}

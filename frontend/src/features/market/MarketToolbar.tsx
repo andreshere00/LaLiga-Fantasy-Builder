@@ -5,6 +5,7 @@ import moneyIconUrl from "../../assets/button_money.svg";
 import { MarketPlayerSearch } from "./MarketPlayerSearch";
 import type { MarketFilters } from "./marketFilters";
 import type { ReactNode } from "react";
+import type { BidProjection } from "./model/activeBids";
 
 type MarketBalanceProps = {
   money: number | null;
@@ -29,6 +30,9 @@ export function MarketBalance({ money }: MarketBalanceProps) {
 
 type MarketToolbarProps = {
   money: number | null;
+  projection?: BidProjection;
+  projectionRefreshing?: boolean;
+  projectionStale?: boolean;
   showSearch: boolean;
   filters: MarketFilters;
   onFiltersChange: (filters: MarketFilters) => void;
@@ -40,6 +44,9 @@ type MarketToolbarProps = {
 
 export function MarketToolbar({
   money,
+  projection,
+  projectionRefreshing,
+  projectionStale,
   showSearch,
   filters,
   onFiltersChange,
@@ -65,7 +72,26 @@ export function MarketToolbar({
         ) : null}
         <div className="market-balance-actions">
           {notifications}
-          <MarketBalance money={money} />
+          <div className="market-money-summary" aria-label="Market money summary" aria-busy={projectionRefreshing}>
+            <MarketBalance money={money} />
+            {projection ? <>
+              <ValueBox label="Projected spending" value={projection.spending == null ? "Unavailable" : formatEuro(projection.spending)} />
+              <ValueBox label={projection.estimated ? "Estimated available" : "Projected available"}
+                value={projection.available == null ? "Unavailable" : formatEuro(projection.available)}
+                tone={projection.available != null && projection.available < 0 ? "negative" : "default"} />
+            </> : null}
+          </div>
+          {projection ? <p className="market-projection-note">
+            Assuming all active bids succeed. {projection.estimated
+              ? "Available is a conservative estimate: reported balance minus bids; Fantasy may already reserve this money."
+              : "Based on verified balance reservation accounting."}
+            {!projection.complete ? " Projection incomplete: balance or bid details are unavailable." : ""}
+            {projectionRefreshing ? " Refreshing balance and bids…" : ""}
+            {projectionStale ? " Refresh failed; cached values may be stale." : ""}
+          </p> : null}
+          {projection?.available != null && projection.available < 0 ? <p className="market-projection-note is-negative">
+            Active bids could exceed your cash. This projection is separate from your reported balance.
+          </p> : null}
         </div>
       </div>
     </>

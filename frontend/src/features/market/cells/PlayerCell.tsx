@@ -9,9 +9,8 @@ import { useLeague } from "../../lineup/LeagueProvider";
 import { useMarketOffersMenu } from "../offers/MarketOffersContext";
 import { PlayerTile } from "../../lineup/PlayerTile";
 import { bidAmountTooltipLabel } from "../bidTooltip";
-import { clauseUnlockTooltip } from "../marketMessages";
+import { protectionDescription } from "../model/protection";
 import type { MarketRow } from "../model/row";
-import { clauseUnlockCountdown } from "../model/valueSeries";
 import { PlayerDetailsLink } from "../../players/PlayerDetailsLink";
 
 type PlayerCellProps = {
@@ -26,10 +25,7 @@ export function PlayerCell({ row, now, columnLabel = "Player" }: PlayerCellProps
   const hasOffers = row.sellerKind === "self" && row.playerTeamId != null && selected != null
     && offersMenu?.pendingOffers?.leagueKey === leagueId(selected)
     && offersMenu.pendingOffers.playerTeamIds.includes(row.playerTeamId);
-  const clauseCountdown =
-    row.sellerKind !== "laliga" ? clauseUnlockCountdown(row.clauseUnlockAt, now) : null;
-  const clauseTooltip =
-    clauseCountdown != null ? clauseUnlockTooltip(clauseCountdown) : null;
+  const clauseTooltip = protectionDescription(row, now);
   const bidded = row.myBid != null;
   const bidMoney = row.myBid?.money;
   return (
@@ -68,7 +64,7 @@ export function PlayerCell({ row, now, columnLabel = "Player" }: PlayerCellProps
           ) : null}
           <span
             className={
-              ["market-name", bidded && "is-bidded", clauseCountdown && "is-clause-locked"]
+              ["market-name", bidded && "is-bidded", clauseTooltip && "is-protected"]
                 .filter(Boolean)
                 .join(" ")
             }

@@ -15,6 +15,7 @@ import {
   catalogMediaByMasterId,
   lastPlayedWeek,
   leagueId,
+  idText,
   playersOf,
   squadCards,
   squadPlayerCountFromTeam,
@@ -24,15 +25,14 @@ import { teamMoneyFromPayload, useTeamMoneyQuery } from "../../api/queries";
 import type { CurrentWeek } from "../../api/mappers";
 import type { SquadCard } from "../../api/mappers";
 import { useAuth } from "../../auth/AuthProvider";
+import { useNow } from "../../hooks/useNow";
 import { useLeague } from "../lineup/LeagueProvider";
 import {
-  activeUserBidCount,
   catalogById,
   marketItems,
   marketRow,
   masterIdOf,
   recentFormWeekNumbers,
-  userBidsByMarketId,
   valueSeries,
   type MarketRow,
   type ValuePoint,
@@ -42,6 +42,7 @@ import {
   sellerTeamIdsForBuyoutLookup,
 } from "./model/buyout";
 import { applyPendingBids, prunePendingBids, usePendingBids } from "./model/pendingBids";
+import { normalizeActiveBids, projectBids, type ActiveBids, type BidProjection } from "./model/activeBids";
 
 const HISTORY_STALE_MS = CALENDAR_STALE_MS;
 
@@ -53,6 +54,13 @@ export type MarketBoard = {
   callerTeamId: string | null;
   squadPlayerCount: number | null;
   activeBidCount: number | null;
+  activeBids: ActiveBids;
+  projection: BidProjection;
+  bidsLoading: boolean;
+  bidsError: boolean;
+  projectionRefreshing: boolean;
+  projectionStale: boolean;
+  refreshBids: () => void;
   squadMarketValue: number | null;
   isLoading: boolean;
   hasError: boolean;
@@ -85,6 +93,7 @@ export function useMarketBoard(): MarketBoard {
   const token = accessToken ?? "";
   const id = selected ? leagueId(selected) : "";
   const teamId = selected ? callerTeamId(selected) : null;
+  const now = useNow();
   const moneyQuery = useTeamMoneyQuery(id, teamId, enabled);
 
   const teamQuery = useQuery({
@@ -206,30 +215,39 @@ export function useMarketBoard(): MarketBoard {
     [formWeekNumbers, playedThrough, currentWeek, weekStats.data],
   );
 
-  const userBidsByMarketIdMap = useMemo(
-    () => userBidsByMarketId(market),
-    [market],
+  const activeBids = useMemo(
+    () => {
+      const active = normalizeActiveBids(market, catalogQuery.data, now);
+      return { ...active, bids: active.bids.map((bid) => bid.marketId && pendingBids.has(bid.marketId)
+        ? { ...bid, confirmed: false, actionRow: null } : bid) };
+    },
+    [market, catalogQuery.data, now, pendingBids],
   );
 
   const rows = useMemo(() => {
     const catalog = catalogById(catalogQuery.data);
-    return items.map((item, index) =>
-      marketRow(item, index, {
+    return items.map((item, index) => {
+      const row = marketRow(item, index, {
         catalog,
         history: historyByPlayerId,
         calendarForm,
         callerTeamId: teamId,
-        userBidsByMarketId: userBidsByMarketIdMap,
         buyoutUnlockByPlayerTeamId: buyoutUnlockByPlayerTeamIdMap,
-      }),
-    );
+      });
+      const bid = activeBids.bids.find((entry) => entry.marketId === row.marketId);
+      return { ...row, myBid: bid?.id && bid.money != null
+        ? { id: bid.id, money: bid.money } : null,
+        bidActionsAvailable: idText(item.id) != null && !pendingBids.has(row.marketId)
+          && (!bid || bid.actionRow != null) };
+    });
   }, [
     items,
     catalogQuery.data,
     historyByPlayerId,
     calendarForm,
     teamId,
-    userBidsByMarketIdMap,
+    activeBids,
+    pendingBids,
     buyoutUnlockByPlayerTeamIdMap,
   ]);
 
@@ -261,12 +279,12 @@ export function useMarketBoard(): MarketBoard {
     return typeof fallback === "number" && Number.isFinite(fallback) ? fallback : null;
   }, [teamQuery.data, selected?.team?.teamValue]);
 
-  const activeBidCount = useMemo(
-    () => activeUserBidCount(rows, market),
-    [rows, market],
-  );
+  const activeBidCount = marketQuery.data != null && activeBids.complete
+    ? activeBids.bids.length : null;
+  const projection = projectBids(money, activeBids);
 
-  const hasError = marketQuery.isError || catalogQuery.isError;
+  const hasError = (marketQuery.isError && marketQuery.data == null)
+    || (catalogQuery.isError && catalogQuery.data == null);
   const isDegraded =
     enabled &&
     !isLoading &&
@@ -286,6 +304,13 @@ export function useMarketBoard(): MarketBoard {
     callerTeamId: teamId,
     squadPlayerCount,
     activeBidCount,
+    activeBids,
+    projection,
+    bidsLoading: marketQuery.isLoading,
+    bidsError: marketQuery.isError,
+    projectionRefreshing: marketQuery.isFetching || moneyQuery.isFetching || pendingBids.size > 0,
+    projectionStale: marketQuery.isError || moneyQuery.isError,
+    refreshBids: () => { void marketQuery.refetch(); void moneyQuery.refetch(); },
     squadMarketValue,
     isLoading,
     hasError,

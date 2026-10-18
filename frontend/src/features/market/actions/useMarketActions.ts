@@ -74,6 +74,7 @@ export function useMarketActions(onAcquisitionSuccess?: () => void) {
       const timer = window.setTimeout(() => {
         followUpTimers.current.delete(timer);
         void queryClient.refetchQueries({ queryKey: ["market", leagueKey] });
+        if (teamId) void queryClient.refetchQueries({ queryKey: ["team-money", leagueKey, teamId] });
       }, delay);
       followUpTimers.current.add(timer);
     }
@@ -157,7 +158,8 @@ export function useMarketActions(onAcquisitionSuccess?: () => void) {
     retry: false,
     mutationFn: async ({ row, money }: { row: MarketRow; money: number }) => {
       const bidId = row.myBid?.id;
-      if (!bidId || isLocalBidId(bidId)) throw new ApiError(400, "missing_bid");
+      if (!bidId || isLocalBidId(bidId) || row.bidActionsAvailable === false ||
+        (row.expiresAt != null && row.expiresAt <= Date.now())) throw new ApiError(400, "missing_bid");
       return putJson(paths.marketBidUpdate(leagueKey, row.marketId, bidId), token, { money });
     },
     onSuccess: async (_data, variables) => {
@@ -177,10 +179,13 @@ export function useMarketActions(onAcquisitionSuccess?: () => void) {
     mutationFn: async (row: MarketRow) => {
       const bidId = row.myBid?.id;
       if (!bidId) throw new ApiError(400, "missing_bid");
-      if (isLocalBidId(bidId)) throw new ApiError(400, "missing_bid");
+      if (isLocalBidId(bidId) || row.bidActionsAvailable === false ||
+        (row.expiresAt != null && row.expiresAt <= Date.now())) throw new ApiError(400, "missing_bid");
       return deleteJson(paths.marketBidUpdate(leagueKey, row.marketId, bidId), token);
     },
     onMutate: async (row) => {
+      if (!row.myBid || isLocalBidId(row.myBid.id) || row.bidActionsAvailable === false ||
+        (row.expiresAt != null && row.expiresAt <= Date.now())) return;
       await queryClient.cancelQueries({ queryKey: ["market", leagueKey] });
       patchCachedBid(row.marketId, null, row.myBid?.id ?? null);
     },

@@ -52,6 +52,8 @@ export type MarketRow = {
   buyoutClause: number | null;
   clauseUnlockAt: number | null;
   isShielded: boolean;
+  numberOfBids?: number | null;
+  bidActionsAvailable?: boolean;
   myBid: { id: string; money: number } | null;
   directOffer: boolean;
   valueHistory: readonly ValuePoint[];
@@ -191,6 +193,8 @@ export function marketRow(
       buyoutClauseUnlockAt(item) ??
       (playerTeamId ? (buyoutUnlockByPlayerTeamId?.get(playerTeamId) ?? null) : null),
     isShielded: playerTeam?.isShielded === true,
+    numberOfBids: Number.isSafeInteger(item.numberOfBids) &&
+      typeof item.numberOfBids === "number" && item.numberOfBids >= 0 ? item.numberOfBids : null,
     myBid: resolveMyBid(item, marketId, userBidsByMarketId),
     directOffer: item.directOffer === true,
     valueHistory,

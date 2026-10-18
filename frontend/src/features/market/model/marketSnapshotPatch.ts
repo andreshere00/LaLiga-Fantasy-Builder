@@ -1,6 +1,6 @@
 import { asRecord, idText } from "../../../api/mappers";
 import type { UserBidRef } from "./listing";
-import { userBidRecords } from "./listing";
+import { marketItems, userBidRecords, userBidsByMarketId } from "./listing";
 
 export type PatchMarketBidOptions = {
   /** Bid id removed on cancel (drops orphan ``userBids`` rows). */
@@ -11,14 +11,19 @@ function patchListingBid(
   item: Record<string, unknown>,
   marketId: string,
   myBid: UserBidRef | null,
+  delta: number,
 ): Record<string, unknown> {
   if (idText(item.id) !== marketId) return item;
+  const count = item.numberOfBids;
+  const numberOfBids = typeof count === "number" && Number.isSafeInteger(count) && count >= 0
+    ? Math.max(0, count + delta) : count;
   if (myBid == null) {
     const { bid: _removed, ...rest } = item;
-    return rest;
+    return { ...rest, numberOfBids };
   }
   return {
     ...item,
+    numberOfBids,
     bid: {
       ...(asRecord(item.bid) ?? {}),
       id: myBid.id,
@@ -59,6 +64,8 @@ function patchUserBidsList(
   myBid: UserBidRef | null,
   removedBidId: string | null,
 ): unknown[] {
+  const existing = bids.map(asRecord).find((record) => record &&
+    marketIdFromUserBidRecord(record) === marketId);
   const filtered = bids.filter((entry) => {
     const record = asRecord(entry);
     if (!record) return true;
@@ -69,10 +76,11 @@ function patchUserBidsList(
   return [
     ...filtered,
     {
+      ...existing,
       marketId,
       id: myBid.id,
       money: myBid.money,
-      bid: { id: myBid.id, money: myBid.money, status: "pending" },
+      bid: { ...asRecord(existing?.bid), id: myBid.id, money: myBid.money, status: "pending" },
     },
   ];
 }
@@ -90,16 +98,23 @@ export function patchMarketSnapshotBid(
   myBid: UserBidRef | null,
   options: PatchMarketBidOptions = {},
 ): unknown {
+  if (Array.isArray(snapshot)) {
+    const patched = patchMarketSnapshotBid({ marketPlayers: snapshot }, marketId, myBid, options);
+    return patched;
+  }
   const record = asRecord(snapshot);
   if (!record) return snapshot;
 
   const removedBidId = options.removedBidId ?? null;
   const next: Record<string, unknown> = { ...record };
+  const listing = marketItems(snapshot).find((item) => idText(item.id) === marketId);
+  const hadBid = asRecord(listing?.bid) != null || userBidsByMarketId(snapshot).has(marketId);
+  const delta = Number(myBid != null) - Number(hadBid);
 
   if (Array.isArray(record.marketPlayers)) {
     next.marketPlayers = record.marketPlayers.map((entry) => {
       const item = asRecord(entry);
-      return item ? patchListingBid(item, marketId, myBid) : entry;
+      return item ? patchListingBid(item, marketId, myBid, delta) : entry;
     });
   }
 
@@ -109,7 +124,7 @@ export function patchMarketSnapshotBid(
       ...nestedMarket,
       marketPlayers: nestedMarket.marketPlayers.map((entry) => {
         const item = asRecord(entry);
-        return item ? patchListingBid(item, marketId, myBid) : entry;
+        return item ? patchListingBid(item, marketId, myBid, delta) : entry;
       }),
     };
   }

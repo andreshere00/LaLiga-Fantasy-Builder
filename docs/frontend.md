@@ -57,6 +57,10 @@ shared synthetic twenty-club contract fixture:
 
 ![Market board](images/screenshots/market-board.png)
 
+![My bids and projected spending](images/screenshots/market-bids.png)
+
+[Market in dark mode on mobile](images/screenshots/market-mobile-dark.png)
+
 ![Market offers notification button with pending offer count](images/screenshots/market-offers.png)
 
 ![Players catalog](images/screenshots/players-catalog.png)
@@ -244,6 +248,26 @@ Code: `frontend/src/features/market/` (`model/`, `cells/`, `actions/`,
 ### Toolbar
 
 - **Balance** from `GET /api/teams/{team_id}/money` (league object fallback).
+- **Projected spending** sums distinct active bids across the selected league,
+  including supplemental `userBids` whose players are absent from the table. Filters
+  never change commitments. The assumption is that **all active bids succeed**.
+- **Estimated available** is the conservative `reported balance - projected spending`.
+  Gross versus net reservation accounting remains unverified; this can understate
+  available cash if Fantasy already reserves bids. Sales, offers and the 20% squad
+  borrowing allowance are excluded. Missing balance, missing/conflicting amounts or
+  unclassifiable bids show unavailable/incomplete projections. Negative projected
+  cash has its own explanation, separate from the reported-balance warning.
+- **My bids** beside Offers shows the active count and opens a side/bottom sheet.
+  It lists player, amount, seller, time remaining/status and eligible Modify/Cancel
+  actions, sorted by nearest known expiry with unknown expiries last. Missing display
+  metadata uses explicit fallback labels without discarding a known commitment.
+  Only confirmed pending bids with authoritative bid/listing identifiers can be
+  modified/cancelled; synthetic local bids and invalid expirations cannot send writes.
+  The sheet closes fully before opening Modify, and dismissal restores focus to its
+  trigger. Cancel moves focus off the removed row. League changes reset sheets,
+  dialogs and filters. Refresh uses the existing market and money queries; cached
+  rows remain visible and marked stale on failed background reads. First-load,
+  incomplete-data and empty states are distinct.
 - Negative balance shows a warning icon with a tooltip: balance must be positive
   before the next matchday to score.
 - **Offers** beside the market balance opens a modal side panel (bottom panel on mobile),
@@ -300,19 +324,49 @@ Code: `frontend/src/features/market/` (`model/`, `cells/`, `actions/`,
 After bid mutations, the client refetches market, money, and squad data. A
 short-lived **pending-bid overlay** reapplies local bid/cancel state on top of
 stale snapshots until Fantasy confirms the change (`model/pendingBids.ts`).
+The same normalized collection (`model/activeBids.ts`) drives table bid state,
+My bids, spending and squad-cap checks. Distinct real ids deduplicate listing and
+envelope copies; local ids reconcile by listing identity. Terminal/expired bids
+are excluded; unknown statuses remain visible and prevent a complete projection.
+Known `numberOfBids` changes once on create/cancel and stays unchanged on modify;
+unknown counts remain unknown. Failed cancellations discard the overlay and
+reconcile with server data. Direct offers do not create synthetic market bids.
+Projections stay marked refreshing while either read or a pending confirmation is
+outstanding; follow-up reads refresh both market and money without adjusting cash
+locally.
+
+Reservation evidence reviewed on 2026-10-18: the captured market fixture
+(`backend/api/tests/fixtures/market_captured_snapshot.json`) contains one pending
+listing bid for €12,500,000, but has no corresponding money read or league-summary
+cash. `assets/fantasy_market-json-tree.json` records pending-bid fields;
+`assets/fantasy_leagues-json-tree.json` and `assets/leagues_info_structure.json`
+describe money fields without paired amounts/timestamps. They cannot establish
+whether reported cash already includes reservations. No transaction was created
+to obtain evidence, and `teamInvestment` is not treated as pending spending.
+Future verified gross accounting uses `B - P`; verified net accounting uses `B`.
 
 ### Table columns
 
 | Column | Notes |
 |--------|--------|
-| Player | Photo and explicit name link; bid icon and amount tooltip when you have a bid |
+| Player | Photo and bold name/link; bid icon and amount tooltip when you have a bid. Shielded or future clause-locked names are red and bold, with textual protection help; expired locks revert unless shielding remains |
 | Position | Abbrev badge (`GKP`, `DEF`, `MDF`, `ATK`, `COA`); hover shows full role name |
-| FSYP | Points plus season average; hover panel: total, season average, form (last 3) |
+| FSYP | Bold 16px primary points plus secondary season average; hover panel: total, season average, form (last 3) |
 | Form | Three matchweeks at a time, oldest→newest; current pending fixtures show 0 with a warning and are excluded from averages; ‹ earlier, › later (full season) |
 | Market value | Price on the first line, 5-day change on the next; hover: last, highest, lowest, 5d/14d ago with % vs current |
 | Availability | SVG icons + hover text for next matchday readiness |
 | Seal end | Countdown with a coral status rail when under one hour remains |
 | Sell options | Seller link (`/?team=…`) or `LALIGA`; **Options** / **Bidded** action menu. On your own listings the menu offers **Withdraw from market** (confirmation modal, `DELETE /api/market/leagues/{id}/{marketId}`) and a disabled **Immediate sell** entry until a documented Fantasy route exists |
+
+The seller/options cell also displays **Bids: 0** for a known zero count and
+**Bids: Unavailable** for missing/invalid counts; `numberOfOffers` is never added.
+**Release clause** shows the known positive euro value even while protected,
+Not applicable for a LaLiga listing without a clause, and Unavailable for other
+unknown values. The shield beside it follows the theme foreground (white in dark
+mode); the separate red protection icon stays red. Seller navigation and the lock
+countdown remain available in the existing responsive grid. Bid/direct-offer
+dialog actions, close and counter buttons have square corners, including disabled
+controls. Market typography/protection overrides are scoped away from Players.
 
 ### Actions (user-confirmed only)
 
@@ -353,8 +407,11 @@ User-facing copy constants: `marketMessages.ts`, `marketActionErrors.ts`,
 
 ### Tests
 
-`frontend/src/features/market/**/*.test.ts`, plus `api/format.test.ts` and
-`client.test.ts` for shared helpers.
+`frontend/src/features/market/**/*.test.ts` and `*.test.tsx`, plus
+`api/format.test.ts` and `client.test.ts` for shared helpers.
+`e2e/market-bids.spec.ts` covers fixture-only commitments/mutations, stale reads,
+league isolation, focus, both themes at 375/800/1024/1440px and a 720px layout
+equivalent to a 1440px display at 200% zoom, plus a Players regression check.
 
 Current-matchweek scores are loaded for both your lineup and opponents' lineups,
 including pitch and squad badges. The current calendar score takes precedence over

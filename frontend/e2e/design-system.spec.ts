@@ -24,6 +24,7 @@ for (const theme of ["light", "dark"]) {
         page.on("pageerror", (error) => errors.push(error.message));
         await page.goto(route.path);
         await expect(page.getByRole("heading", { level: 1, name: route.heading })).toBeVisible();
+        if (route.name === "market") await expect(page.locator(".market-data-row")).toHaveCount(7);
         await expect(page.locator("html")).toHaveAttribute("data-theme", theme);
         await page.evaluate(() => document.fonts.ready);
         if (route.name === "detail") {
