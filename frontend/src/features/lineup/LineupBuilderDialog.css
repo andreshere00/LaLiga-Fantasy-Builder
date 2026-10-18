@@ -6,15 +6,17 @@
 :root[data-theme="dark"] .fb-dialog.lineup-builder-dialog .fb-dialog-footer .lineup-builder-close { border-color:#fff; }
 .lineup-builder-dialog .fb-button--destructive { background:var(--fb-failure); color:var(--fb-on-brand); }
 .lineup-builder-dialog .fb-dialog-heading .fb-button { color:var(--fb-secondary); }
-.lineup-builder-dialog :is(.fb-dialog-body,.lineup-builder-options,.lineup-builder-exclusions-scroll) { scrollbar-color:var(--fb-cyan) var(--fb-coral); scrollbar-width:thin; }
+.lineup-builder-dialog .fb-dialog-body { margin-block:8px; padding-inline-end:12px; }
+.lineup-builder-dialog :is(.fb-dialog-body,.lineup-builder-options,.lineup-builder-exclusions-scroll) { scrollbar-color:var(--fb-control-line) var(--fb-surface); scrollbar-width:thin; scrollbar-gutter:stable; }
 @supports selector(::-webkit-scrollbar) {
   /* Standard scrollbar styling overrides the custom square track and thumb. */
   .lineup-builder-dialog :is(.fb-dialog-body,.lineup-builder-options,.lineup-builder-exclusions-scroll) { scrollbar-color:auto; scrollbar-width:auto; }
 }
 .lineup-builder-dialog :is(.fb-dialog-body,.lineup-builder-options,.lineup-builder-exclusions-scroll)::-webkit-scrollbar { width:8px; height:8px; }
-.lineup-builder-dialog :is(.fb-dialog-body,.lineup-builder-options,.lineup-builder-exclusions-scroll)::-webkit-scrollbar-track { background:var(--fb-coral); border-radius:0; }
-.lineup-builder-dialog :is(.fb-dialog-body,.lineup-builder-options,.lineup-builder-exclusions-scroll)::-webkit-scrollbar-thumb { background:var(--fb-cyan); border-radius:0; }
-.lineup-builder-dialog :is(.fb-dialog-body,.lineup-builder-options,.lineup-builder-exclusions-scroll)::-webkit-scrollbar-corner { background:var(--fb-coral); border-radius:0; }
+.lineup-builder-dialog :is(.fb-dialog-body,.lineup-builder-options,.lineup-builder-exclusions-scroll)::-webkit-scrollbar-track { background:var(--fb-surface); border-radius:0; }
+.lineup-builder-dialog :is(.fb-dialog-body,.lineup-builder-options,.lineup-builder-exclusions-scroll)::-webkit-scrollbar-thumb { min-height:32px; background:var(--fb-control-line); background-clip:padding-box; border:2px solid var(--fb-surface); border-radius:0; }
+.lineup-builder-dialog :is(.fb-dialog-body,.lineup-builder-options,.lineup-builder-exclusions-scroll)::-webkit-scrollbar-thumb:hover { background-color:var(--fb-muted); }
+.lineup-builder-dialog :is(.fb-dialog-body,.lineup-builder-options,.lineup-builder-exclusions-scroll)::-webkit-scrollbar-corner { background:var(--fb-surface); border-radius:0; }
 .lineup-builder-loading { display:flex; align-items:center; gap:12px; margin-right:auto; font-size:14px; }
 .lineup-builder-loading-details.fb-progress { display:grid; gap:8px; min-width:0; }
 .lineup-builder-loading-text { font-weight:600; }
