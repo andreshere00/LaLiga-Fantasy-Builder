@@ -191,6 +191,12 @@ Save, which must be used explicitly to replace the saved lineup.
 
 Code: `frontend/src/features/lineup/`.
 
+- **Lineup builder** requests up to seven recommendations total. The filters
+  **Only current squad** and **Squad with external players** narrow that same list.
+  Switching filters preserves original ranks and does not rebuild or execute trades.
+  Acquisition lineups must score strictly higher than the strongest feasible
+  current-squad lineup; fewer than seven total may qualify. If the current squad cannot
+  form a valid XI, acquisitions can still complete one.
 - **Players Ranking** lists the user and opponents; **LALIGA standings** sits
   immediately below it. Each card has an independently scrollable body and a
   fixed heading. On desktop they share the existing sidebar height; on stacked
@@ -323,8 +329,10 @@ euro amounts (es-ES). CLIs and browser-session flows stay read-only.
 **Eligibility (client-side before dialogs):**
 
 - Squad cap: fewer than 24 players and `players + active bids < 24` for new bids.
-- Positive balance: bid amount ≥ market value and &lt; spending power.
-- Negative balance: debt after bid ≤ 20% of squad market value.
+- Bids: amount ≥ market value and ≤ cash + 20% of squad market value,
+  regardless of whether the starting cash is positive, zero or negative.
+  The exact limit is allowed. Modifying a bid restores that bid's reserved amount
+  before calculating the limit. Unknown squad valuation grants no debt allowance.
 - Coaches (`positionId` 5): **Hire** disabled; menu shows the premium-only explanation
   (`marketMessages.ts`).
 

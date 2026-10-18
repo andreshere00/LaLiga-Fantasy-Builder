@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import logging
 from collections.abc import AsyncIterator
 from contextlib import asynccontextmanager
 
@@ -13,6 +14,7 @@ from fantasy_api.api import (
     buyout,
     calendar,
     leagues,
+    lineup_builder,
     market,
     me,
     player_stats,
@@ -23,6 +25,7 @@ from fantasy_api.api import (
 from fantasy_api.api.deps import AppContainer, build_container, set_container
 from fantasy_api.config import Settings, get_settings
 from fantasy_api.domain.errors import (
+    BuilderError,
     NeedsReauthError,
     NotFoundError,
     UnauthorizedError,
@@ -30,6 +33,9 @@ from fantasy_api.domain.errors import (
 )
 from fantasy_api.openapi import API_DESCRIPTION, OPENAPI_TAGS, attach_openapi
 from fantasy_api.schemas.common import ErrorResponse, HealthResponse
+from fantasy_api.schemas.lineup_builder import BuildFailure
+
+logger = logging.getLogger(__name__)
 
 
 @asynccontextmanager
@@ -80,6 +86,7 @@ def create_app(
     )
     app.include_router(me.router)
     app.include_router(leagues.router)
+    app.include_router(lineup_builder.router)
     app.include_router(teams.router)
     app.include_router(calendar.router)
     app.include_router(standings.router)
@@ -145,7 +152,21 @@ def create_app(
         exc: UpstreamError,
     ) -> JSONResponse:
         status = exc.status_code or 502
-        body = ErrorResponse(error=exc.category, detail=str(exc))
+        if _request.url.path.startswith("/lineup-builder/"):
+            reasons = (
+                [d.get("code") for d in exc.diagnostics] if isinstance(exc, BuilderError) else []
+            )
+            logger.warning(
+                "lineup_builder_failed status=%s category=%s reasons=%s",
+                status,
+                exc.category,
+                reasons,
+            )
+        body = (
+            BuildFailure(error=exc.category, detail=str(exc), diagnostics=exc.diagnostics)
+            if isinstance(exc, BuilderError)
+            else ErrorResponse(error=exc.category, detail=str(exc))
+        )
         return JSONResponse(
             status_code=status if 400 <= status < 600 else 502,
             content=body.model_dump(mode="json"),

@@ -58,7 +58,7 @@ class Form(ParserModel):
     """Form widget with a numeric value or a published arrow rating."""
 
     value: float | None = None
-    rating: Literal["bad", "mid", "good", "very_good"] | None = None
+    rating: Literal["very_bad", "bad", "mid", "good", "very_good"] | None = None
     visual_only: bool = False
 
 
@@ -140,6 +140,9 @@ class InjuryEntry(ParserModel):
 class InjuryHistory(ParserModel):
     """Body map plus history. An empty ``entries`` list means the table was empty."""
 
+    coverage: Literal["complete", "partial", "unknown"] = "unknown"
+    parsed_rows: int = 0
+    dropped_rows: int = 0
     body_map: list[BodyZoneCount] = Field(default_factory=list)
     body_map_note: str | None = None
     entries: list[InjuryEntry] = Field(default_factory=list)

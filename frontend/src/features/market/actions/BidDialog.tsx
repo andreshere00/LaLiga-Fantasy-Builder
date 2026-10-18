@@ -5,7 +5,7 @@ import { Dialog } from "../../../components/ui/Dialog";
 import { NumericCounterField } from "../../../components/NumericCounterField";
 import { MARKET_VALUE_FILTER_STEP } from "../marketFilterInputs";
 import type { MarketRow } from "../model/row";
-import { isValidBidAmount, type BidActionKind } from "./marketActions";
+import { isValidBidAmount, maximumBidAmount, usesDirectOfferBid, type BidActionKind } from "./marketActions";
 
 type BidDialogProps = {
   open: boolean;
@@ -64,11 +64,13 @@ export function BidDialog({
     parsed != null &&
     isValidBidAmount(parsed, row.marketValue, money, squadMarketValue, reservedBid);
   const bidFloor = row.marketValue ?? 0;
-  const spending = money != null ? money + reservedBid : null;
+  const maximum = maximumBidAmount(money, squadMarketValue, reservedBid);
   const balanceHint =
-    spending != null && spending > 0
-      ? `less than ${formatEuro(spending)}`
-      : "within your debt limit (20% of squad value)";
+    maximum != null
+      ? `at most ${formatEuro(maximum)} (${squadMarketValue != null && Number.isFinite(squadMarketValue) && squadMarketValue > 0
+        ? "available cash plus up to 20% of squad value" : "available cash"})`
+      : "within your available bidding limit";
+  const directOffer = usesDirectOfferBid(row, kind);
 
   const stepBidAmount = (current: number | null, deltaSteps: number) => {
     if (deltaSteps === 0) return current ?? bidFloor;
@@ -79,7 +81,7 @@ export function BidDialog({
   return (
     <Dialog
       open={open}
-      title={TITLES[kind]}
+      title={directOffer ? "Make offer" : TITLES[kind]}
       onClose={onClose}
       closeOnBackdrop={!pending}
       footer={
@@ -102,16 +104,17 @@ export function BidDialog({
       }
     >
       <p className="market-dialog-copy">
-        Bid for <strong>{row.name}</strong>. Amount must be at least{" "}
+        {directOffer ? "Offer for" : "Bid for"} <strong>{row.name}</strong>. Amount must be at least{" "}
         {formatEuro(row.marketValue)} and {balanceHint}.
+        {directOffer && " The owner must accept your offer before the player joins your squad."}
       </p>
       <label className="market-dialog-label" htmlFor={inputId}>
-        Bid amount (€)
+        {directOffer ? "Offer amount (€)" : "Bid amount (€)"}
       </label>
       <NumericCounterField
         id={inputId}
         inputClassName="market-dialog-input"
-        ariaLabel="Bid amount"
+        ariaLabel={directOffer ? "Offer amount" : "Bid amount"}
         value={raw}
         disabled={pending}
         formatInput={(value) => value}

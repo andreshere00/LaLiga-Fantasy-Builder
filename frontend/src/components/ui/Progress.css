@@ -1,0 +1,7 @@
+.fb-progress { display:flex; flex-wrap:wrap; gap:12px; }
+.fb-progress-track { position:relative; display:flex; align-items:center; width:100%; height:8px; overflow:hidden; border-radius:0; background:var(--fb-subtle); }
+.fb-progress-indicator { height:100%; border-radius:inherit; background:var(--fb-primary); transition:width .3s ease; }
+.fb-progress-indicator[data-indeterminate] { width:40%; animation:fb-progress-indeterminate 1.4s ease-in-out infinite; }
+.fb-progress-label { font-size:14px; font-weight:600; }
+@keyframes fb-progress-indeterminate { from { transform:translateX(-100%); } to { transform:translateX(250%); } }
+@media(prefers-reduced-motion:reduce) { .fb-progress-indicator { transition:none; } .fb-progress-indicator[data-indeterminate] { animation:none; } }

@@ -48,3 +48,18 @@ class UpstreamError(ApiError):
         self.status_code = status_code
         self.category = category
         self.provider_status = provider_status
+
+
+class BuilderError(UpstreamError):
+    """A build conflict with sanitized source exclusions for user correction."""
+
+    def __init__(
+        self,
+        message: str,
+        *,
+        status_code: int,
+        category: str,
+        diagnostics: list[dict[str, str | None]],
+    ) -> None:
+        super().__init__(message, status_code=status_code, category=category)
+        self.diagnostics = diagnostics[:200]

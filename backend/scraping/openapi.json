@@ -1654,6 +1654,7 @@
               {
                 "type": "string",
                 "enum": [
+                  "very_bad",
                   "bad",
                   "mid",
                   "good",
@@ -2077,6 +2078,26 @@
       },
       "InjuryHistory": {
         "properties": {
+          "coverage": {
+            "type": "string",
+            "enum": [
+              "complete",
+              "partial",
+              "unknown"
+            ],
+            "title": "Coverage",
+            "default": "unknown"
+          },
+          "parsedRows": {
+            "type": "integer",
+            "title": "Parsedrows",
+            "default": 0
+          },
+          "droppedRows": {
+            "type": "integer",
+            "title": "Droppedrows",
+            "default": 0
+          },
           "bodyMap": {
             "items": {
               "$ref": "#/components/schemas/BodyZoneCount"

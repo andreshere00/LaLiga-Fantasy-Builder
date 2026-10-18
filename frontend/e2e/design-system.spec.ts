@@ -143,6 +143,25 @@ for (const path of ["/contact", "/unknown-route"]) {
   });
 }
 
+test("market bids can cross zero cash up to the inclusive squad debt limit", async ({ page }) => {
+  await page.clock.install({ time: new Date("2026-10-12T12:00:00Z") });
+  await mockApplication(page);
+  await page.route("**/api/teams/t1/money", (route) => route.fulfill({ json: { teamMoney: 1000000 } }));
+  await page.goto("/market");
+  await page.getByRole("button", { name: "Options", exact: true }).first().click();
+  await expect(page.getByRole("menuitem", { name: "Hire", exact: true })).toBeEnabled();
+  await page.getByRole("menuitem", { name: "Hire", exact: true }).click();
+  const dialog = page.getByRole("dialog", { name: "Hire player", exact: true });
+  const amount = dialog.getByRole("textbox", { name: "Bid amount", exact: true });
+  const confirm = dialog.getByRole("button", { name: "Confirm", exact: true });
+  await expect(confirm).toBeEnabled();
+  await expect(dialog).toContainText("available cash plus up to 20% of squad value");
+  await amount.fill("17000001");
+  await expect(confirm).toBeDisabled();
+  await amount.fill("17000000");
+  await expect(confirm).toBeEnabled();
+});
+
 test("bid feedback waits for a confirmed mocked response", async ({ page }) => {
   await mockApplication(page);
   let release: () => void = () => {};

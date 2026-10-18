@@ -38,7 +38,14 @@ def extract_injuries(ctx: ExtractionContext) -> InjuryHistory | None:
     table = ctx.document.first("table.historial")
     if list_items and table is None:
         entries = _lesion_jugador_entries(list_items)
-        return InjuryHistory(body_map=zones, body_map_note=note or None, entries=entries)
+        return InjuryHistory(
+            body_map=zones,
+            body_map_note=note or None,
+            entries=entries,
+            coverage="partial" if len(entries) < len(list_items) else "complete",
+            parsed_rows=len(entries),
+            dropped_rows=len(list_items) - len(entries),
+        )
     if table is None:
         raise ParserSectionError(
             "required_anchor_missing",
@@ -46,7 +53,15 @@ def extract_injuries(ctx: ExtractionContext) -> InjuryHistory | None:
             section="injuries",
         )
     entries = _entries(ctx)
-    return InjuryHistory(body_map=zones, body_map_note=note or None, entries=entries)
+    row_count = len(rows_of(ctx, ctx.table("injuries")))
+    return InjuryHistory(
+        body_map=zones,
+        body_map_note=note or None,
+        entries=entries,
+        coverage="partial" if len(entries) < row_count else "complete",
+        parsed_rows=len(entries),
+        dropped_rows=row_count - len(entries),
+    )
 
 
 def _zones(ctx: ExtractionContext) -> list[BodyZoneCount]:

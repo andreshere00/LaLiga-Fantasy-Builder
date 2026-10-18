@@ -132,7 +132,7 @@ export const standingsQuerySchema = z.object({
 export type CompetitionStandingsDto = z.infer<typeof competitionStandingsSchema>;
 
 export const errorResponseSchema = responseSchema(
-  readObject({ error: z.string(), detail: z.string() }),
+  readObject({ error: z.string(), detail: z.string(), diagnostics: z.array(readObject({ code: z.string().max(100), playerId: z.string().nullable() })).max(200).optional() }),
 );
 
 export const meResponseSchema = responseSchema(
@@ -648,7 +648,7 @@ export const playerProfileSchema = responseSchema(
     }),
     form: readObject({
       value: z.number().nullable().optional(),
-      rating: z.enum(["bad", "mid", "good", "very_good"]).nullable().optional(),
+      rating: z.enum(["very_bad", "bad", "mid", "good", "very_good"]).nullable().optional(),
       visualOnly: z.boolean().optional(),
     }).nullable().optional(),
     startProbability: readObject({
@@ -865,7 +865,90 @@ export type PayBuyoutWriteDto = z.infer<typeof payBuyoutWriteSchema>;
 export type IncreaseBuyoutWriteDto = z.infer<typeof increaseBuyoutWriteSchema>;
 export type ShieldWriteDto = z.infer<typeof shieldWriteSchema>;
 
+const scoreNumber = z.union([z.number(), z.string().regex(/^-?\d+(\.\d+)?$/)]).transform(Number);
+const builderCriterionSchema = readObject({
+  ruleId: z.string(), source: z.string(), observed: z.string(),
+  lineup: scoreNumber.nullable(), trading: scoreNumber.nullable(),
+  lineupLower: scoreNumber, lineupUpper: scoreNumber,
+  tradingLower: scoreNumber, tradingUpper: scoreNumber,
+});
+const builderSectionSchema = readObject({
+  section: z.string(), criteria: z.array(builderCriterionSchema),
+  lineupRaw: scoreNumber, tradingRaw: scoreNumber, lineupLower: scoreNumber,
+  lineupUpper: scoreNumber, tradingLower: scoreNumber, tradingUpper: scoreNumber,
+  lineupNormalized: scoreNumber, tradingNormalized: scoreNumber, effectiveWeight: scoreNumber,
+});
+const builderPlayerSchema = readObject({
+  playerId: z.string().min(1), name: z.string(), position: z.number().int().min(1).max(4),
+  clubId: z.number().int(), source: z.enum(["owned", "market", "opponents"]),
+  playerTeamId: z.string().nullable(), marketValue: z.number().int().nonnegative(),
+  lineupScore: scoreNumber, tradingScore: scoreNumber, combinedScore: scoreNumber,
+  sections: z.array(builderSectionSchema), omissions: z.array(z.string()),
+  protectionAdvice: z.boolean(), acquisitionMethod: z.enum(["bid", "clause"]).nullable(),
+  settlementAt: z.string().nullable(), clausePrice: z.number().nullable(),
+  saleSettlementAt: z.string().nullable(),
+});
+export const builderCandidateSchema = readObject({
+  candidateId: z.string(), formation: z.string(), resourceGroup: z.enum(["owned", "external"]),
+  starters: z.array(builderPlayerSchema).length(11), totalLineupScore: scoreNumber,
+  tieBreak: z.number(), tradingPlan: readObject({
+    acquisitions: z.array(builderPlayerSchema), tradingPurchases: z.array(builderPlayerSchema),
+    sales: z.array(builderPlayerSchema), steps: z.array(readObject({
+      action: z.enum(["sell", "buy"]), playerId: z.string(), method: z.string(),
+      estimate: z.number().int(), settlementAt: z.string(), cashAfter: z.number().int(),
+      squadValueAfter: z.number().int(), squadCountAfter: z.number().int(),
+      debtLimit: z.number().int(), conditions: z.array(z.string()),
+    })), retainedPlayerIds: z.array(z.string()), resultingPlayerIds: z.array(z.string()),
+    projectedCash: z.number().int().nonnegative(), squadValue: z.number().int().nonnegative(),
+    squadCount: z.number().int().max(24), reservedSquadSlots: z.number().int().nonnegative().default(0),
+  }),
+});
+export const lineupBuildResponseSchema = responseSchema(readObject({
+  buildId: z.string(), rulesVersion: z.string(), generatedAt: z.string(),
+  leagueId: z.string(), teamId: z.string(), target: readObject({
+    week: z.number().int().positive(), firstKickoff: z.string(), salesDeadline: z.string(),
+    clausesDeadline: z.string(), protectionDeadline: z.string(),
+  }), randomSeed: z.number().int(), searchComplete: z.boolean(),
+  searchLimitReason: z.string().nullable(), evaluatedStates: z.number().int(),
+  evaluatedPlayers: z.number().int(), candidates: z.array(builderCandidateSchema),
+  diagnostics: z.array(readObject({ code: z.string(), playerId: z.string().nullable() })),
+  explanationStatus: z.string(), explanations: z.record(z.string(), z.string()),
+}));
+export const lineupBuildRequestSchema = z.object({
+  sources: z.array(z.enum(["owned", "market", "opponents"])).min(1).max(3),
+  mandatoryPlayerIds: z.array(z.string().trim().min(1)).max(11), formations: z.array(z.string()),
+  allowBuying: z.boolean(), allowSelling: z.boolean(), includeTradingPurchases: z.boolean(),
+  maxCandidates: z.number().int().min(1).max(20),
+  explanation: z.object({ enabled: z.boolean(), reasoningEffort: z.enum(["low", "medium", "high"]).optional() }).strict(),
+}).strict().superRefine((value, ctx) => {
+  for (const choices of [value.sources, value.mandatoryPlayerIds, value.formations]) {
+    if (new Set(choices).size !== choices.length) ctx.addIssue({ code: "custom", message: "Duplicate choices" });
+  }
+  if (value.includeTradingPurchases && !value.allowBuying) ctx.addIssue({ code: "custom", message: "Buying permission required" });
+});
+export type LineupBuildDto = z.infer<typeof lineupBuildResponseSchema>;
+export type BuilderCandidate = z.infer<typeof builderCandidateSchema>;
+export type LineupBuildRequest = z.infer<typeof lineupBuildRequestSchema>;
+
+export const lineupBuildProgressSchema = responseSchema(readObject({
+  stage: z.enum(["sources", "players", "trades", "search", "explanation", "complete"]),
+  percent: z.number().int().min(0).max(100),
+  completedPlayers: z.number().int().nonnegative(), totalPlayers: z.number().int().nonnegative(),
+}));
+export type LineupBuildProgress = z.infer<typeof lineupBuildProgressSchema>;
+export const lineupBuildStreamEventSchema = z.discriminatedUnion("type", [
+  readObject({ type: z.literal("progress"), progress: lineupBuildProgressSchema }),
+  readObject({ type: z.literal("result"), result: lineupBuildResponseSchema }),
+  readObject({ type: z.literal("error"), status: z.number().int().min(400).max(599),
+    error: z.string().max(100), diagnostics: responseSchema(z.array(readObject({
+      code: z.string().max(100), playerId: z.string().nullable(),
+    })).max(200)),
+  }),
+]);
+
 export type ApiResponseDto =
+  | z.infer<typeof lineupBuildStreamEventSchema>
+  | LineupBuildDto
   | CompetitionStandingsDto
   | MeResponseDto
   | CredentialProbeResponseDto
@@ -906,6 +989,8 @@ const endpointContracts: Array<{
   request?: z.ZodType;
   query?: z.ZodType;
 }> = [
+  { method: "POST", path: /^\/api\/lineup-builder\/leagues\/[^/]+\/build$/, response: lineupBuildResponseSchema, request: lineupBuildRequestSchema },
+  { method: "POST", path: /^\/api\/lineup-builder\/leagues\/[^/]+\/build\/stream$/, response: lineupBuildStreamEventSchema, request: lineupBuildRequestSchema },
   { method: "GET", path: /^\/api\/competitions\/\d+\/standings$/, response: competitionStandingsSchema, query: standingsQuerySchema },
   { method: "GET", path: /^\/api\/leagues$/, response: leaguesResponseSchema },
   { method: "GET", path: /^\/api\/leagues\/[^/]+\/standing$/, response: standingResponseSchema },
@@ -985,6 +1070,13 @@ export function serializeEndpointRequest(method: string, path: string, body: unk
     const lineup = lineupWriteDtoSchema.parse(checkedBody);
     const { tacticalFormation, ...wireFields } = lineup;
     return { ...wireFields, tactical_formation: tacticalFormation };
+  }
+  if (method === "POST" && /^\/api\/lineup-builder\/leagues\/[^/]+\/build(?:\/stream)?$/.test(pathname)) {
+    const value = lineupBuildRequestSchema.parse(checkedBody);
+    return { sources: value.sources, mandatory_player_ids: value.mandatoryPlayerIds,
+      formations: value.formations, allow_buying: value.allowBuying, allow_selling: value.allowSelling,
+      include_trading_purchases: value.includeTradingPurchases, max_candidates: value.maxCandidates,
+      explanation: { enabled: value.explanation.enabled, reasoning_effort: value.explanation.reasoningEffort } };
   }
   return checkedBody;
 }

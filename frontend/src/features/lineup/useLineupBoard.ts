@@ -1,3 +1,5 @@
+import { builderDraft } from "./builderDraft";
+import type { BuilderCandidate } from "../../api/schemas";
 import { notify } from "../../components/ui/Notifications";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
@@ -58,6 +60,7 @@ import {
 import { useAuth } from "../../auth/AuthProvider";
 import {
   DEFAULT_FREE_FORMATION_CODES,
+  DEFAULT_LINEUPS_AVAILABLE,
   codeFromTactical,
   formationSelectOptions,
 } from "./formations";
@@ -123,6 +126,10 @@ export type LineupBoard = {
   lineupMessage: string | null;
   emptyLeague: boolean;
   editable: boolean;
+  draftDirty: boolean;
+  canApplyBuilder: (candidate: BuilderCandidate, targetWeek: number) => boolean;
+  builderDraftDirty: (targetWeek: number) => boolean;
+  applyBuilder: (candidate: BuilderCandidate, targetWeek: number) => boolean;
   ownSquad: boolean;
   formationCode: string | null;
   formationOptions: { value: string; label: string }[];
@@ -245,14 +252,30 @@ export function useLineupBoard(options: UseLineupBoardOptions = {}): LineupBoard
   });
 
   const current = asCurrentWeek(currentQuery.data);
-  const upper = maxWeek(current);
+  const currentWeek = maxWeek(current);
+  const weekReady = currentQuery.isSuccess || currentQuery.isError;
+  const [nowMs, setNowMs] = useState(() => Date.now());
+  const currentFixturesQuery = useQuery({
+    queryKey: ["calendar", "fixtures", currentWeek],
+    enabled: enabled && weekReady,
+    staleTime: 5 * 60 * 1000,
+    refetchInterval: 30_000,
+    queryFn: ({ signal }) => getJson(paths.weekFixtures(currentWeek), token, { signal }),
+  });
+  const openingMs = parseIsoTimestampMs(current.openingWeekDate);
+  const currentRoundStarted = current.isLive === true ||
+    (openingMs != null && openingMs <= nowMs) ||
+    (Array.isArray(currentFixturesQuery.data) && currentFixturesQuery.data.some(fixtureHasStarted));
+  const builderWeek = currentRoundStarted && currentWeek === 38
+    ? null : currentWeek + (currentRoundStarted ? 1 : 0);
+  const upper = builderWeek ?? 38;
   const nextWeek = upper;
   const week = clampWeek(
     leagueChanged ? defaultWeek(current) : (requestedWeek ?? defaultWeek(current)),
     upper,
   );
-  const weekReady = currentQuery.isSuccess || currentQuery.isError;
-  const lineupUsesCurrent = week === nextWeek;
+  // The saved-lineup endpoint remains editable while the current scoring round is live.
+  const lineupUsesCurrent = week === currentWeek || week === nextWeek;
 
   const weekQuery = useQuery({
     queryKey: ["standing", leagueKey, week],
@@ -263,18 +286,16 @@ export function useLineupBoard(options: UseLineupBoardOptions = {}): LineupBoard
 
   const fixturesQuery = useQuery({
     queryKey: ["calendar", "fixtures", week],
-    enabled: enabled && weekReady && lineupUsesCurrent,
+    enabled: enabled && weekReady && lineupUsesCurrent && week !== currentWeek,
     staleTime: 5 * 60 * 1000,
-    refetchInterval: lineupUsesCurrent ? 30_000 : false,
+    refetchInterval: lineupUsesCurrent && week !== currentWeek ? 30_000 : false,
     queryFn: ({ signal }) => getJson(paths.weekFixtures(week), token, { signal }),
   });
 
-  const [nowMs, setNowMs] = useState(() => Date.now());
   useEffect(() => {
-    if (!lineupUsesCurrent) return;
     const id = window.setInterval(() => setNowMs(Date.now()), 60_000);
     return () => window.clearInterval(id);
-  }, [lineupUsesCurrent]);
+  }, []);
 
   const standingTeamIds = useMemo(
     () => [
@@ -472,6 +493,7 @@ export function useLineupBoard(options: UseLineupBoardOptions = {}): LineupBoard
   useReauthOnError([
     leaguesError,
     currentQuery.error,
+    currentFixturesQuery.error,
     standingQuery.error,
     teamsQuery.error,
     weekQuery.error,
@@ -565,8 +587,9 @@ export function useLineupBoard(options: UseLineupBoardOptions = {}): LineupBoard
   }, [lineupPayload]);
 
   const formationOptions = useMemo(
-    () => formationSelectOptions(freeFormationCodes, formationCode),
-    [formationCode, freeFormationCodes],
+    () => formationSelectOptions(selected?.config?.premiumFeatures?.formations === true
+      ? [...freeFormationCodes, ...DEFAULT_LINEUPS_AVAILABLE.premium] : freeFormationCodes, formationCode),
+    [formationCode, freeFormationCodes, selected],
   );
 
   const saveMutation = useMutation({
@@ -789,6 +812,26 @@ export function useLineupBoard(options: UseLineupBoardOptions = {}): LineupBoard
         : null,
     emptyLeague: !leaguesLoading && !leaguesError && selected == null,
     editable,
+    draftDirty,
+    builderDraftDirty: (targetWeek) => callerId != null &&
+      draftsRef.current.get(lineupSourceKey(leagueKey, callerId, targetWeek))?.dirty === true,
+    canApplyBuilder: (candidate, targetWeek) => isCaller && targetWeek === builderWeek &&
+      !teamQuery.isPending && !saveMutation.isPending &&
+      builderDraft(candidate, squad, formationOptions.map((f) => f.value)) !== null,
+    applyBuilder: (candidate, targetWeek) => {
+      if (!isCaller || targetWeek !== builderWeek || !activeTeamId || teamQuery.isPending || saveMutation.isPending) return false;
+      if (activeKeyRef.current !== lineupSourceKey(leagueKey, activeTeamId, week)) return false;
+      const sourceKey = lineupSourceKey(leagueKey, activeTeamId, targetWeek);
+      const next = builderDraft(candidate, squad, formationOptions.map((f) => f.value));
+      if (!next) return false;
+      const selectedIds = new Set([...next.goalkeeper, ...next.defender, ...next.midfield, ...next.striker]);
+      const stored: StoredDraft = { draft: next, dirty: true, captainId: captainId && selectedIds.has(captainId) ? captainId : null };
+      draftsRef.current.set(sourceKey, stored);
+      setRequestedWeek(targetWeek);
+      setActiveDraft(stored);
+      setPitchSelection(null);
+      return true;
+    },
     ownSquad: isCaller,
     formationCode,
     formationOptions,

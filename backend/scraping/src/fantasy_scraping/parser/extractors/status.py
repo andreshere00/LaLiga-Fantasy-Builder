@@ -31,6 +31,7 @@ _FORM_RATINGS = {
     "arrow-2": "good",
     "arrow-3": "mid",
     "arrow-4": "bad",
+    "arrow-5": "very_bad",
 }
 
 

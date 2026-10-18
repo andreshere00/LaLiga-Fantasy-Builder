@@ -18,6 +18,7 @@ from fantasy_auth.cli.browser_session.flows import (
     fetch_league_player,
     run_buyout_analysis,
     run_leagues_analysis,
+    run_lineup_builder_analysis,
     run_market_analysis,
     run_standings_analysis,
     run_teams_analysis,
@@ -128,7 +129,14 @@ def _pair_if_needed(args: Any, *, session: str, csrf: str) -> tuple[str, bool]:
 def _run_requested(args: Any, *, jwt: str, linked: bool) -> dict[str, Any]:
     """Run the selected API flow and return the JSON report."""
     report: dict[str, Any] = {"session_ok": True, "linked": linked}
-    if args.flow == "leagues-analysis":
+    if args.flow == "lineup-builder-analysis":
+        report["lineup_builder_analysis"] = run_lineup_builder_analysis(
+            api_base=args.api_base,
+            jwt=jwt,
+            league_id=args.league_id,
+            preferences_file=getattr(args, "preferences_file", None),
+        )
+    elif args.flow == "leagues-analysis":
         report["leagues_analysis"] = _run_leagues_analysis(
             api_base=args.api_base,
             jwt=jwt,
