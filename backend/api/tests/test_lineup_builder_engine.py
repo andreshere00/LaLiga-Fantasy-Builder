@@ -5,13 +5,14 @@
 from datetime import UTC, datetime, timedelta
 from decimal import Decimal
 from itertools import combinations, product
+from random import Random
 
 import pytest
 from fantasy_api.domain.errors import UpstreamError
 from fantasy_api.domain.lineup_builder import policy
 from fantasy_api.domain.lineup_builder.planning import plan_trades
 from fantasy_api.domain.lineup_builder.scoring import PlayerEvidence, score_player
-from fantasy_api.domain.lineup_builder.search import search_candidates
+from fantasy_api.domain.lineup_builder.search import _upper_bound, search_candidates
 from fantasy_api.domain.lineup_builder.target import instant, resolve_target
 from fantasy_api.schemas.calendar import CurrentWeek, Fixture
 from fantasy_api.schemas.lineup_builder import (
@@ -65,6 +66,52 @@ def pool() -> list[ScoredPlayer]:
 
 
 # ---- Happy path ---- #
+
+
+@pytest.mark.parametrize("source", ["market", "opponents"])
+@pytest.mark.parametrize("capacity", range(6))
+def test_upper_bound_purchase_capacity_never_undercuts_exhaustive_completion(
+    source: str, capacity: int
+) -> None:
+    for seed in range(12):
+        rng = Random(seed)
+        buckets = tuple(
+            tuple(
+                sorted(
+                    (
+                        player(
+                            position * 10 + i,
+                            position,
+                            source=("owned", "owned", "market", "opponents")[i],
+                            score=str(Decimal(rng.randrange(-10, 11)) / 10),
+                        )
+                        for i in range(4)
+                        if seed % 3 != 0 or position != 1 or i >= 2
+                    ),
+                    key=lambda p: -p.lineup_score,
+                )
+            )
+            for position in range(1, 5)
+        )
+        remaining = (1, 2, 1, 1)
+        offsets = tuple(rng.randrange(2) for _ in buckets)
+        selected = (player(99, 4, source=source if seed % 2 else "owned"),)
+        score = selected[0].lineup_score
+        oracle = [
+            score + sum((p.lineup_score for row in rows for p in row), Decimal(0))
+            for rows in product(
+                *(
+                    combinations(bucket[start:], amount)
+                    for bucket, amount, start in zip(buckets, remaining, offsets, strict=True)
+                )
+            )
+            if sum(p.source != "owned" for row in rows for p in row) <= capacity
+            and any(p.source == source for p in selected + tuple(p for row in rows for p in row))
+        ]
+        bound = _upper_bound(buckets, remaining, offsets, selected, score, source, capacity)
+        if oracle:
+            assert bound is not None
+            assert bound >= max(oracle)
 
 
 @pytest.mark.parametrize(
@@ -498,6 +545,155 @@ def test_search_candidates_sales_can_finance_external_comparisons() -> None:
         }
 
 
+@pytest.mark.parametrize("source", ["market", "opponents"])
+@pytest.mark.parametrize("allow_selling", [False, True])
+def test_search_candidates_budgeted_multi_player_upgrades_keep_cash_nonnegative(
+    source: str, allow_selling: bool
+) -> None:
+    facts = PlayerEvidence(status="available", market_growth=Decimal(0))
+    owned = [
+        score_player(p, facts, NOW, START).model_copy(
+            update={"sale_settlement_at": NOW, "lineup_score": p.lineup_score}
+        )
+        for p in pool()
+    ]
+    unaffordable = [
+        player(1000 + i, 1 + i % 4, source=source, value=1000, score=".95") for i in range(48)
+    ]
+    upgrades = [
+        player(9000 + i, position, source=source, value=250, score=".8")
+        for i, position in enumerate((1, 3, 4))
+    ]
+
+    result, complete, states = search_candidates(
+        owned + unaffordable + upgrades,
+        owned,
+        60,
+        BuildPreferences(allow_buying=True, allow_selling=allow_selling, max_candidates=7),
+        ["4,4,2"],
+        TARGET,
+        NOW,
+        1,
+        max_states=1000,
+        max_seconds=30,
+    )
+
+    assert complete
+    assert states <= 1000
+    assert len(result) == 7
+    external = [c for c in result if c.resource_group == "external"]
+    if not allow_selling:
+        assert not external
+        return
+    assert len(external) == 3
+    assert external[0].total_lineup_score == Decimal("4.6")
+    for candidate in external:
+        plan = candidate.trading_plan
+        assert {p.player_id for p in plan.acquisitions} == {p.player_id for p in upgrades}
+        assert len(plan.sales) == 7
+        assert plan.projected_cash == 10
+        assert plan.squad_count == 12
+        assert plan.squad_value == 1650
+        assert not {p.player_id for p in plan.sales} & {p.player_id for p in candidate.starters}
+        balance = 60
+        for step in plan.steps:
+            balance += step.estimate if step.action == "sell" else -step.estimate
+            assert step.cash_after == balance
+            assert balance >= 0
+        assert balance == plan.projected_cash
+
+
+@pytest.mark.parametrize("reserved_slots", [0, 3, 8])
+def test_search_candidates_multi_player_upgrades_respect_available_squad_slots(
+    reserved_slots: int,
+) -> None:
+    owned = pool()
+    purchases = [
+        player(1000 + i, 1 + i % 4, source="market" if i % 2 else "opponents", value=10, score=".9")
+        for i in range(100)
+    ]
+    result, _, states = search_candidates(
+        owned + purchases,
+        owned,
+        1000,
+        BuildPreferences(allow_buying=True, max_candidates=7),
+        ["4,4,2", "3,4,3"],
+        TARGET,
+        NOW,
+        1,
+        reserved_squad_slots=reserved_slots,
+        max_states=1000,
+        max_seconds=30,
+    )
+    assert states <= 1000
+    assert len(result) == 7
+    available_slots = 24 - len(owned) - reserved_slots
+    external = [c for c in result if c.resource_group == "external"]
+    assert bool(external) == (available_slots > 0)
+    for candidate in external:
+        plan = candidate.trading_plan
+        assert len(plan.acquisitions) == available_slots
+        assert not plan.sales
+        assert plan.projected_cash == 1000 - 10 * available_slots
+        assert plan.squad_count + reserved_slots == 24
+        assert all(step.cash_after >= 0 for step in plan.steps)
+
+
+@pytest.mark.parametrize("cash,allow_selling", [(1000, False), (50, True), (0, True)])
+def test_search_candidates_financial_bounds_match_exhaustive_trade_plans(
+    cash: int, allow_selling: bool
+) -> None:
+    facts = PlayerEvidence(status="available", market_growth=Decimal(0))
+    owned = [
+        score_player(p, facts, NOW, START).model_copy(
+            update={"sale_settlement_at": NOW, "lineup_score": p.lineup_score}
+        )
+        for position, amount in ((1, 1), (2, 4), (3, 5), (4, 3))
+        for p in [p for p in pool() if p.position == position][:amount]
+    ]
+    players = owned + [
+        player(99, 4, source="market", value=250, score=".8"),
+        player(199, 3, source="opponents", value=150, score=".9"),
+    ]
+    preferences = BuildPreferences(allow_buying=True, allow_selling=allow_selling, max_candidates=7)
+    oracle = {"owned": [], "external": []}
+    choices = [
+        combinations([p for p in players if p.position == position], amount)
+        for position, amount in ((1, 1), (2, 4), (3, 4), (4, 2))
+    ]
+    for rows in product(*choices):
+        starters = [p for row in rows for p in row]
+        plan = plan_trades(starters, owned, cash, preferences, TARGET, NOW, reserved_squad_slots=10)
+        if plan is not None:
+            group = "external" if plan.acquisitions else "owned"
+            oracle[group].append(
+                (sum((p.lineup_score for p in starters), Decimal(0)), plan.projected_cash)
+            )
+    for values in oracle.values():
+        values.sort(reverse=True)
+    if oracle["owned"]:
+        oracle["external"] = [v for v in oracle["external"] if v[0] > oracle["owned"][0][0]]
+    external_slots = min(len(oracle["external"]), 3)
+    owned_slots = min(len(oracle["owned"]), 7 - external_slots)
+    expected = oracle["owned"][:owned_slots] + oracle["external"][: 7 - owned_slots]
+
+    result, complete, _ = search_candidates(
+        players,
+        owned,
+        cash,
+        preferences,
+        ["4,4,2"],
+        TARGET,
+        NOW,
+        1,
+        reserved_squad_slots=10,
+        max_seconds=30,
+    )
+
+    assert complete
+    assert [(c.total_lineup_score, c.trading_plan.projected_cash) for c in result] == expected
+
+
 @pytest.mark.parametrize("market_score,opponent_score", [(".15", "1"), ("1", ".15"), (".7", ".8")])
 def test_search_candidates_acquisition_group_matches_exhaustive_oracle(
     market_score: str, opponent_score: str
@@ -728,6 +924,32 @@ def test_plan_trades_reversed_score_and_settlement_order_returns_chronological_s
     assert plan.squad_count == 11
     assert plan.projected_cash == 800
     assert [p.player_id for p in plan.acquisitions] == [late.player_id, early.player_id]
+
+
+def test_plan_trades_multiple_sales_follow_settlement_times_before_spending_proceeds() -> None:
+    facts = PlayerEvidence(status="available", market_growth=Decimal(0))
+    owned = [
+        score_player(p, facts, NOW, START).model_copy(update={"sale_settlement_at": NOW})
+        for p in pool()
+    ]
+    owned[1] = owned[1].model_copy(update={"sale_settlement_at": NOW + timedelta(days=2)})
+    purchase = player(99, 4, source="market", value=150).model_copy(
+        update={"settlement_at": NOW + timedelta(days=3)}
+    )
+    starters = owned[:1] + owned[2:6] + owned[7:11] + [purchase, owned[-1]]
+
+    plan = plan_trades(
+        starters, owned, 10, BuildPreferences(allow_buying=True, allow_selling=True), TARGET, NOW
+    )
+
+    assert plan is not None
+    assert [p.player_id for p in plan.sales] == ["11", "24"]
+    assert [step.player_id for step in plan.steps] == ["24", "11", "99"]
+    assert [step.settlement_at for step in plan.steps] == sorted(
+        step.settlement_at for step in plan.steps
+    )
+    assert [step.cash_after for step in plan.steps] == [110, 210, 60]
+    assert plan.projected_cash == 60
 
 
 @pytest.mark.parametrize("early_source", ["market", "opponents"])

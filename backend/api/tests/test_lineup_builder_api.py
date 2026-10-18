@@ -958,6 +958,39 @@ def test_build_lineup_sales_permission_does_not_execute_offer_acceptance(rsa_pem
     assert all(request.method == "GET" for request in requests)
 
 
+def test_build_lineup_multiple_purchases_and_sales_share_one_positive_budget(rsa_pems) -> None:
+    client, jwt, requests = _client(
+        rsa_pems, offers=True, source_players=True, extra_owned=True, cash=10
+    )
+    with client:
+        result = client.post(
+            "/lineup-builder/leagues/league/build",
+            headers={"Authorization": f"Bearer {jwt}"},
+            json={
+                "formations": ["4,4,2"],
+                "sources": ["owned", "market", "opponents"],
+                "allow_buying": True,
+                "allow_selling": True,
+                "max_candidates": 7,
+            },
+        )
+    assert result.status_code == 200, result.text
+    candidates = [c for c in result.json()["candidates"] if c["resource_group"] == "external"]
+    assert candidates
+    plan = candidates[0]["trading_plan"]
+    assert {p["player_id"] for p in plan["acquisitions"]} == {"99", "199"}
+    assert len(plan["sales"]) == 2
+    assert plan["projected_cash"] == 10
+    assert plan["squad_count"] == 13
+    balance = 10
+    for step in plan["steps"]:
+        balance += step["estimate"] if step["action"] == "sell" else -step["estimate"]
+        assert step["cash_after"] == balance
+        assert balance >= 0
+    assert balance == 10
+    assert all(request.method == "GET" for request in requests)
+
+
 @pytest.mark.parametrize(
     "state,reason",
     [

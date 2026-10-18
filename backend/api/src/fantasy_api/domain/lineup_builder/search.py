@@ -19,8 +19,9 @@ def _upper_bound(
     selected: tuple[ScoredPlayer, ...],
     score: Decimal,
     source: str,
+    max_external: int | None = None,
 ) -> Decimal | None:
-    """Bound the best completion containing the queue's required acquisition source."""
+    """Bound a completion by its required acquisition source and remaining purchase slots."""
     upper = score
     penalties: list[Decimal] = []
     needs_source = source != "owned" and not any(p.source == source for p in selected)
@@ -39,8 +40,39 @@ def _upper_bound(
                 if alternative is not None:
                     penalties.append(alternative.lineup_score - choices[-1].lineup_score)
     if needs_source:
-        return upper + max(penalties) if penalties else None
-    return upper
+        if not penalties:
+            return None
+        upper += max(penalties)
+    if max_external is None or source == "owned" or max_external >= sum(remaining):
+        return upper
+    if max_external < int(needs_source):
+        return None
+    # Bound score gains by the remaining acquisition slots, rather than assuming
+    # every position can be filled with a higher-scoring external player.
+    capped_upper = score
+    required_external = 0
+    gains: list[Decimal] = []
+    for bucket, amount, start in zip(buckets, remaining, offsets, strict=True):
+        if not amount:
+            continue
+        owned = [p for p in bucket[start:] if p.source == "owned"][:amount]
+        external = [p for p in bucket[start:] if p.source != "owned"][:amount]
+        required = amount - len(owned)
+        if len(external) < required:
+            return None
+        required_external += required
+        capped_upper += sum((p.lineup_score for p in owned + external[:required]), Decimal(0))
+        gains.extend(
+            purchase.lineup_score - retained.lineup_score
+            for purchase, retained in zip(external[required:], reversed(owned), strict=False)
+        )
+    if required_external > max_external:
+        return None
+    capped_upper += sum(
+        heapq.nlargest(max_external - required_external, (gain for gain in gains if gain > 0)),
+        Decimal(0),
+    )
+    return min(upper, capped_upper)
 
 
 def search_candidates(
@@ -100,14 +132,46 @@ def search_candidates(
         and p.sale_settlement_at is not None
         and now <= p.sale_settlement_at <= target.sales_deadline
     ]
+    salable_ids = {p.player_id for p in salable}
 
-    def financially_possible(selected: tuple[ScoredPlayer, ...]) -> bool:
+    def purchase_capacity(selected: tuple[ScoredPlayer, ...]) -> int:
+        """Count acquisition slots after every still-possible eligible bench sale."""
+        ids = {p.player_id for p in selected}
+        return (
+            24
+            - len(owned)
+            - reserved_squad_slots
+            + len(salable_ids - ids)
+            - sum(p.source != "owned" for p in selected)
+        )
+
+    def financially_possible(
+        selected: tuple[ScoredPlayer, ...],
+        buckets: tuple[tuple[ScoredPlayer, ...], ...] = (),
+        remaining: tuple[int, ...] = (),
+        offsets: tuple[int, ...] = (),
+    ) -> bool:
         """Reject only partial selections that even optimistic sales cannot finance."""
         ids = {p.player_id for p in selected}
         available_sales = [p for p in salable if p.player_id not in ids]
         purchases = [p for p in selected if p.source != "owned"]
+        # Keeping a salable owned player consumes their potential sale proceeds.
+        # Each position must still be filled after the purchases already selected.
+        completion_cost = sum(
+            sum(
+                heapq.nsmallest(
+                    amount,
+                    (
+                        p.market_value if p.source != "owned" or p.player_id in salable_ids else 0
+                        for p in bucket[start:]
+                    ),
+                )
+            )
+            for bucket, amount, start in zip(buckets, remaining, offsets, strict=True)
+            if amount
+        )
         return (
-            sum(p.market_value for p in purchases)
+            sum(p.market_value for p in purchases) + completion_cost
             <= cash + sum(p.market_value for p in available_sales)
             and len(owned) + reserved_squad_slots + len(purchases) - len(available_sales) <= 24
         )
@@ -157,8 +221,18 @@ def search_candidates(
                 if any(len(bucket) < n for bucket, n in zip(buckets, remaining, strict=True)):
                     continue
                 score = sum((p.lineup_score for p in required), Decimal(0))
-                upper = _upper_bound(buckets, remaining, (0, 0, 0, 0), required, score, group)
-                if upper is None:
+                upper = _upper_bound(
+                    buckets,
+                    remaining,
+                    (0, 0, 0, 0),
+                    required,
+                    score,
+                    group,
+                    purchase_capacity(required) if lane == group else None,
+                )
+                if upper is None or not financially_possible(
+                    required, buckets, remaining, (0, 0, 0, 0)
+                ):
                     continue
                 heapq.heappush(
                     heap,
@@ -248,8 +322,11 @@ def search_candidates(
                 selected + (player,),
                 new_score,
                 group,
+                purchase_capacity(selected + (player,)) if lane == group else None,
             )
-            if upper is None:
+            if upper is None or not financially_possible(
+                selected + (player,), buckets, tuple(new_remaining), tuple(new_offsets)
+            ):
                 continue
             heapq.heappush(
                 heap,

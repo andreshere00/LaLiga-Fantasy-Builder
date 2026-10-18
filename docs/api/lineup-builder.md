@@ -117,8 +117,20 @@ the owned pool. These queues share the same state/time budget with unrestricted
 multi-purchase queues. This finds affordable additions even when higher-scoring,
 unaffordable purchase combinations dominate the unrestricted bounds. Partial
 selections are pruned when even all verified, eligible bench sales cannot cover
-their purchase costs or squad slots. Completed plans still pass every financial
-and settlement check, and interrupted ranking remains labeled incomplete.
+their purchase costs or squad slots. The cash bound also reserves the cheapest
+possible completion of every remaining position: retaining a salable owned starter
+removes their potential proceeds from the available budget. Score bounds account
+for remaining acquisition slots, including pending bid reservations, so they do
+not assume an unaffordable or oversized all-external XI.
+
+Multiple purchases and sales share one whole-squad budget. Their combined costs
+must be covered by current available cash plus verified eligible sales, with a
+nonnegative final projected balance. A sale cannot fund more than one purchase
+independently or include a retained starter. Sale recommendations remain ranked
+by trading score; transaction steps follow actual settlement times before proceeds
+are spent. Existing buying/selling permissions and required offers still apply.
+Completed plans pass every financial and settlement check, and interrupted
+ranking remains labeled incomplete.
 
 The six scoring sections follow the versioned workflow. Probability, squad role
 and impact-substitute bonus share enumerated achievable bounds. Minutes and rest

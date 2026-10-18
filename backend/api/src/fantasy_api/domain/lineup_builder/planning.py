@@ -81,7 +81,7 @@ def plan_trades(
         return None
     steps: list[TradeStep] = []
     latest_sale = max((p.sale_settlement_at for p in sales), default=now)
-    for player in sales:
+    for player in sorted(sales, key=lambda p: (p.sale_settlement_at, p.trading_score, p.player_id)):
         cash += player.market_value
         value -= player.market_value
         count -= 1
