@@ -32,6 +32,7 @@ def test_build_json_mock_post_has_validated_read_only_path() -> None:
         assert request.method == "POST"
         assert request.url.path == "/lineup-builder/leagues/l1/build"
         assert request.headers["Authorization"] == "Bearer jwt"
+        assert request.extensions["timeout"]["read"] >= 130
         return httpx.Response(200, json=payload)
 
     api = FantasyClient("http://api.test", "jwt", transport=httpx.MockTransport(handler))

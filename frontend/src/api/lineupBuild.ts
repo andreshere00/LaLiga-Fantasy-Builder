@@ -1,5 +1,5 @@
 import { paths, throwForStatus, type GetJsonOptions } from "./client";
-import { ApiContractError, ApiError } from "./errors";
+import { ApiContractError, errorForStatus } from "./errors";
 import {
   lineupBuildStreamEventSchema, serializeEndpointRequest, validateEndpointInput,
   type LineupBuildDto, type LineupBuildProgress, type LineupBuildRequest,
@@ -33,7 +33,7 @@ export async function streamLineupBuild(
     } catch {
       throw new ApiContractError();
     }
-    if (event.type === "error") throw new ApiError(event.status, event.error, event.diagnostics);
+    if (event.type === "error") throw errorForStatus(event.status, event.error, event.diagnostics);
     if (event.type === "result") return event.result;
     onProgress(event.progress);
   }

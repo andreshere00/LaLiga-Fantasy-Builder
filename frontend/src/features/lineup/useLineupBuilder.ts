@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import { streamLineupBuild } from "../../api/lineupBuild";
-import { ApiError } from "../../api/errors";
+import { ApiError, NeedsReauthError } from "../../api/errors";
+import { useReauthOnError } from "../../api/queries";
 import { builderDiagnosticMessage } from "./builderDiagnosticCopy";
 import type { LineupBuildDto, LineupBuildProgress, LineupBuildRequest } from "../../api/schemas";
 
@@ -37,7 +38,8 @@ export function useLineupBuilder(
   const [pending, setPending] = useState(false);
   const [progress, setProgress] = useState<LineupBuildProgress | null>(null);
   const [result, setResult] = useState<LineupBuildDto | null>(null);
-  const [failure, setFailure] = useState<ApiError | "unknown" | null>(null);
+  const [failure, setFailure] = useState<ApiError | NeedsReauthError | "unknown" | null>(null);
+  useReauthOnError([failure]);
   let error: string | null = null;
   if (failure instanceof ApiError) {
     const diagnostics = [...failure.diagnostics].sort((a, b) =>
@@ -51,6 +53,8 @@ export function useLineupBuilder(
     }).join("; ");
     error = (MESSAGES[failure.code] ?? `Lineup build failed (${failure.code}).`) +
       (details ? ` ${details}` : "");
+  } else if (failure instanceof NeedsReauthError) {
+    error = "Reconnect your LaLiga account to build recommendations.";
   } else if (failure) {
     error = "Lineup build failed. Check your session and source availability, then retry.";
   }
@@ -76,7 +80,9 @@ export function useLineupBuilder(
       }, { signal: controller.signal });
       if (!controller.signal.aborted) setResult(response);
     } catch (caught) {
-      if (!controller.signal.aborted) setFailure(caught instanceof ApiError ? caught : "unknown");
+      if (!controller.signal.aborted) {
+        setFailure(caught instanceof ApiError || caught instanceof NeedsReauthError ? caught : "unknown");
+      }
     } finally {
       if (current.current === controller) {
         current.current = null;

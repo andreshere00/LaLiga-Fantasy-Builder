@@ -310,10 +310,14 @@ uv run fantasy-browser-session lineup-builder-analysis --league-id 123 --prefere
 
 Preference files are validated before login. Auth maintains an independent contract
 and calls only the application planning POST; it never imports API or scraping code.
+Both helper CLIs allow 130 seconds per build request to cover the server's 120-second deadline.
 
 The dialog gates chooser reads by selected source, cancels work on close or scope
 unmount, retains a prior result as stale on refresh failure, and shows rule/trade
-traces. Use as draft checks current roster identities, supported formation and
+traces. Expired pairing discovered through HTTP or stream errors opens the existing
+LaLiga reconnect flow. Draft replacement confirmation belongs to the selected build
+and target round; starting another build discards it, including when that build is cancelled.
+Use as draft checks current roster identities, supported formation and
 editable target week. Replacing an unsaved draft requires explicit confirmation.
 Saving remains the existing separate action.
 

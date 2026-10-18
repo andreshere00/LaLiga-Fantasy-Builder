@@ -64,7 +64,9 @@ function BuilderDialogSession({
   const { selected } = useLeague();
   const id = selected ? leagueId(selected) : "";
   const token = accessToken ?? "";
-  const [replacement, setReplacement] = useState<BuilderCandidate | null>(null);
+  const [replacement, setReplacement] = useState<{
+    candidate: BuilderCandidate; build: LineupBuildDto;
+  } | null>(null);
   const [acquiring, setAcquiring] = useState<BuilderCandidate["starters"][number] | null>(null);
   const [changedResult, setChangedResult] = useState<LineupBuildDto | null>(null);
   const [search, setSearch] = useState("");
@@ -198,12 +200,15 @@ function BuilderDialogSession({
           </Progress>
         </div>}
         {builder.pending ? <Button shape="square" variant="destructive" onClick={builder.cancel}>Cancel build</Button> : <Button shape="square"
-          disabled={scope.length === 0 || !token} onClick={() => void builder.build({
-            sources: scope as ("owned" | "market" | "opponents")[], mandatoryPlayerIds: chosen,
-            formations: lineupPreferences, allowBuying, allowSelling,
-            includeTradingPurchases: allowBuying && includeTradingPurchases,
-            maxCandidates: LINEUP_RECOMMENDATION_LIMIT, explanation: { enabled: false },
-          })}>Build</Button>}
+          disabled={scope.length === 0 || !token} onClick={() => {
+            setReplacement(null);
+            void builder.build({
+              sources: scope as ("owned" | "market" | "opponents")[], mandatoryPlayerIds: chosen,
+              formations: lineupPreferences, allowBuying, allowSelling,
+              includeTradingPurchases: allowBuying && includeTradingPurchases,
+              maxCandidates: LINEUP_RECOMMENDATION_LIMIT, explanation: { enabled: false },
+            });
+          }}>Build</Button>}
         <Button shape="square" variant="secondary" className="lineup-builder-close" onClick={onClose}>Close</Button>
       </>}>
       <div className="lineup-builder">
@@ -293,17 +298,18 @@ function BuilderDialogSession({
           onAcquire={setAcquiring}
           canApply={(candidate) => !builder.pending && !builder.error && changedResult !== builder.result && canApply(candidate, builder.result!.target.week)}
           onApply={(candidate) => {
-            if (isDraftDirty(builder.result!.target.week)) setReplacement(candidate);
+            if (isDraftDirty(builder.result!.target.week)) setReplacement({ candidate, build: builder.result! });
             else onApply(candidate, builder.result!.target.week);
           }} />}
         {acquiring && builder.result && <LineupBuilderPlayerActions key={acquiring.playerId}
           player={acquiring} opponentTeamIds={opponents.map((team) => team.teamId)}
           clausesDeadline={builder.result.target.clausesDeadline} onClose={() => setAcquiring(null)}
           onSuccess={() => { builder.cancel(); setChangedResult(builder.result); }} />}
-        {replacement && builder.result && <section aria-label="Replace draft confirmation">
+        {replacement && replacement.build === builder.result && <section aria-label="Replace draft confirmation">
           <p>Replace your unsaved lineup draft?</p>
           <Button shape="square" onClick={() => {
-            if (changedResult !== builder.result && !builder.pending && !builder.error && canApply(replacement, builder.result!.target.week)) onApply(replacement, builder.result!.target.week);
+            const { candidate, build } = replacement;
+            if (changedResult !== build && !builder.pending && !builder.error && canApply(candidate, build.target.week)) onApply(candidate, build.target.week);
             setReplacement(null);
           }}>Replace draft</Button>
           <Button shape="square" variant="secondary" onClick={() => setReplacement(null)}>Keep my draft</Button>

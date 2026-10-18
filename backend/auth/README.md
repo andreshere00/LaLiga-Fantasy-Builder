@@ -96,3 +96,4 @@ with the API without importing `fantasy_api` into auth.
 
 See the [lineup builder guide](../../docs/api/lineup-builder.md) for the authenticated planning POST, CLI,
 browser-session flow, source restrictions and optional explanation configuration.
+The builder flow allows 130 seconds per request to cover the API's 120-second build deadline.

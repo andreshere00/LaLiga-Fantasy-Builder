@@ -5,6 +5,7 @@
 from datetime import UTC, datetime, timedelta
 from decimal import Decimal
 from types import SimpleNamespace
+from typing import Literal
 from unittest.mock import AsyncMock
 
 import httpx
@@ -20,6 +21,7 @@ from fantasy_api.schemas.player_stats import (
     FormStat,
     Hierarchy,
     Injury,
+    InjuryHistoryEntry,
     InjuryRiskInfo,
     MarketPreset,
     MarketSeriesPoint,
@@ -132,6 +134,8 @@ def _client(
     season_matches: int | None = None,
     weather_code: int | None = None,
     weather_description: str | None = None,
+    injury_history_coverage: Literal["complete", "partial", "unknown"] = "unknown",
+    injury_history_days: tuple[int, ...] = (),
 ) -> tuple[TestClient, str, list[httpx.Request]]:
     """Wire real auth/Fantasy clients with typed football segment stubs."""
     private, public = rsa_pems
@@ -425,6 +429,11 @@ def _client(
             detail.fixtures.fixtures.insert(0, current_match)
         detail.profile.fantasy_season_total = season_total
         detail.profile.fantasy_season_matches = season_matches
+        detail.profile.injury_history_coverage = injury_history_coverage
+        detail.profile.injury_history = [
+            InjuryHistoryEntry(start=(first - timedelta(days=days)).date())
+            for days in injury_history_days
+        ]
         if weather_description is not None:
             detail.upcoming = UpcomingMatchesResponse(
                 player_id=pid,
@@ -533,6 +542,43 @@ def test_build_lineup_authenticated_reads_only_returns_owned_xi(rsa_pems) -> Non
     assert body["candidates"][0]["trading_plan"]["projected_cash"] == 1000
     assert all(request.method == "GET" for request in requests)
     assert TEST_LALIGA_BEARER not in result.text
+
+
+@pytest.mark.parametrize(
+    "coverage,days,points,observed",
+    [
+        ("complete", (40, 8), -1, "8"),
+        ("complete", (), 3, "complete_empty"),
+        ("partial", (8,), None, None),
+        ("partial", (), None, None),
+        ("unknown", (8,), None, None),
+        ("unknown", (), None, None),
+    ],
+)
+def test_build_lineup_injury_history_coverage_scores_only_verified_history(
+    rsa_pems, coverage, days, points, observed
+) -> None:
+    client, jwt, _ = _client(rsa_pems, injury_history_coverage=coverage, injury_history_days=days)
+    with client:
+        result = client.post(
+            "/lineup-builder/leagues/league/build",
+            headers={"Authorization": f"Bearer {jwt}"},
+            json={"formations": ["4,4,2"]},
+        )
+    assert result.status_code == 200, result.text
+    for player in result.json()["candidates"][0]["starters"]:
+        section = next(section for section in player["sections"] if section["section"] == "injury")
+        if points is None:
+            assert section["criteria"] == []
+            assert "injury_history_unknown" in player["omissions"]
+            assert Decimal(section["effective_weight"]) == 0
+        else:
+            assert len(section["criteria"]) == 1
+            criterion = section["criteria"][0]
+            assert criterion["rule_id"] == "injury_history"
+            assert Decimal(criterion["lineup"]) == points
+            assert criterion["observed"] == observed
+            assert "injury_history_unknown" not in player["omissions"]
 
 
 # ---- Error paths ---- #

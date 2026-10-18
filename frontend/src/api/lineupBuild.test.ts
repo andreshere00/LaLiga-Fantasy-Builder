@@ -1,6 +1,6 @@
 import { describe, expect, it, vi } from "vitest";
 import response from "../../../contracts/lineup-builder-response.json";
-import { ApiContractError, ApiError } from "./errors";
+import { ApiContractError, ApiError, NeedsReauthError } from "./errors";
 import { streamLineupBuild } from "./lineupBuild";
 import type { LineupBuildRequest } from "./schemas";
 
@@ -77,6 +77,18 @@ describe("streamLineupBuild", () => {
     }));
     await expect(streamLineupBuild("l1", "jwt", preferences, vi.fn(), { fetchFn }))
       .rejects.toBeInstanceOf(ApiError);
+  });
+
+  it.each(["http", "stream"])("preserves reconnect errors from %s responses", async (transport) => {
+    const fetchFn = vi.fn(async () => transport === "http"
+      ? new Response(JSON.stringify({ error: "needs_reauth", detail: "" }), {
+        status: 401, headers: { "Content-Type": "application/json" },
+      })
+      : streamed([JSON.stringify({ type: "error", status: 401,
+        error: "needs_reauth", diagnostics: [],
+      }) + "\n"]));
+    await expect(streamLineupBuild("l1", "jwt", preferences, vi.fn(), { fetchFn }))
+      .rejects.toBeInstanceOf(NeedsReauthError);
   });
 
   it("cancels the reader after a terminal event without waiting for EOF", async () => {

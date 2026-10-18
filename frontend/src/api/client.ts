@@ -1,4 +1,4 @@
-import { ApiContractError, ApiError, NeedsReauthError } from "./errors";
+import { ApiContractError, errorForStatus } from "./errors";
 import {
   endpointRequestSchema,
   validateEndpointInput,
@@ -223,8 +223,7 @@ export async function throwForStatus(response: Response): Promise<never> {
   } catch {
     code = "request_failed";
   }
-  if (response.status === 401 && code === "needs_reauth") throw new NeedsReauthError();
-  throw new ApiError(response.status, code, diagnostics);
+  throw errorForStatus(response.status, code, diagnostics);
 }
 
 async function parseResponse(

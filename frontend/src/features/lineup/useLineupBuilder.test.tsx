@@ -3,15 +3,40 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 import response from "../../../../contracts/lineup-builder-response.json";
 import { lineupBuildResponseSchema, type LineupBuildRequest } from "../../api/schemas";
 import { streamLineupBuild } from "../../api/lineupBuild";
-import { ApiError } from "../../api/errors";
+import { ApiError, NeedsReauthError } from "../../api/errors";
 import { useLineupBuilder } from "./useLineupBuilder";
 
 vi.mock("../../api/lineupBuild", () => ({ streamLineupBuild: vi.fn() }));
+const { markNeedsReauth } = vi.hoisted(() => ({ markNeedsReauth: vi.fn() }));
+vi.mock("../../auth/AuthProvider", () => ({ useAuth: () => ({ markNeedsReauth }) }));
 const preferences: LineupBuildRequest = { sources: ["owned"], mandatoryPlayerIds: [], formations: [], allowBuying: false,
   allowSelling: false, includeTradingPurchases: false, maxCandidates: 5, explanation: { enabled: false } };
 
 beforeEach(() => vi.clearAllMocks());
 describe("useLineupBuilder", () => {
+  it("should request reconnection when a build discovers expired pairing", async () => {
+    vi.mocked(streamLineupBuild).mockRejectedValueOnce(new NeedsReauthError());
+    const { result } = renderHook(() => useLineupBuilder("l1", "token"));
+    await act(() => result.current.build(preferences));
+    expect(markNeedsReauth).toHaveBeenCalledOnce();
+    expect(result.current.error).toContain("Reconnect");
+    expect(result.current.pending).toBe(false);
+  });
+
+  it("should ignore a reconnect error from a cancelled build", async () => {
+    let reject!: (error: Error) => void;
+    vi.mocked(streamLineupBuild).mockImplementationOnce(() => new Promise((_resolve, fail) => {
+      reject = fail;
+    }));
+    const { result } = renderHook(() => useLineupBuilder("l1", "token"));
+    let pending!: Promise<void>;
+    act(() => { pending = result.current.build(preferences); });
+    act(() => result.current.cancel());
+    await act(async () => { reject(new NeedsReauthError()); await pending; });
+    expect(markNeedsReauth).not.toHaveBeenCalled();
+    expect(result.current.error).toBeNull();
+  });
+
   it("should expose live progress and ignore updates from a cancelled build", async () => {
     const callbacks: Parameters<typeof streamLineupBuild>[3][] = [];
     const resolves: ((value: Awaited<ReturnType<typeof streamLineupBuild>>) => void)[] = [];
