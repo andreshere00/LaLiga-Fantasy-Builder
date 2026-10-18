@@ -7,9 +7,23 @@ from datetime import datetime
 from decimal import Decimal
 from itertools import count, cycle
 from threading import Event
+from typing import NamedTuple
 
+from fantasy_api.domain.lineup_builder.formations import FormationSpec
 from fantasy_api.domain.lineup_builder.planning import plan_trades
 from fantasy_api.schemas.lineup_builder import BuildPreferences, Candidate, ScoredPlayer, TargetWeek
+
+
+class _SearchState(NamedTuple):
+    """Named partial lineup carried by the best-first search heap."""
+
+    source_group: str
+    formation: str
+    buckets: tuple[tuple[ScoredPlayer, ...], ...]
+    remaining: tuple[int, ...]
+    offsets: tuple[int, ...]
+    selected: tuple[ScoredPlayer, ...]
+    score: Decimal
 
 
 def _upper_bound(
@@ -122,6 +136,7 @@ def search_candidates(
     lanes.update({f"{source}_comparison": source for source in sources[1:]})
     heaps = {lane: [] for lane in lanes}
     queue_results: dict[str, list[Candidate]] = {lane: [] for lane in lanes}
+    formation_specs = {code: FormationSpec.parse(code) for code in formations}
     turns = cycle(heaps)
     truncated = False
     salable = [
@@ -197,10 +212,10 @@ def search_candidates(
             if not financially_possible(required):
                 continue
             required_ids = {p.player_id for p in required}
-            for formation in formations:
-                counts = (1, *map(int, formation.split(",")))
+            for formation_code in formations:
+                formation = formation_specs[formation_code]
                 remaining = tuple(
-                    counts[pos - 1] - sum(p.position == pos for p in required)
+                    formation.capacities[pos - 1] - sum(p.position == pos for p in required)
                     for pos in range(1, 5)
                 )
                 if min(remaining) < 0:
@@ -240,13 +255,15 @@ def search_candidates(
                         -upper,
                         sum(remaining),
                         next(serial),
-                        group,
-                        formation,
-                        buckets,
-                        remaining,
-                        (0, 0, 0, 0),
-                        required,
-                        score,
+                        _SearchState(
+                            group,
+                            formation.code,
+                            buckets,
+                            remaining,
+                            (0, 0, 0, 0),
+                            required,
+                            score,
+                        ),
                     ),
                 )
     while (
@@ -259,9 +276,7 @@ def search_candidates(
         if not heaps[lane]:
             continue
         heap = heaps[lane]
-        neg_upper, _, _, group, formation, buckets, remaining, offsets, selected, score = (
-            heapq.heappop(heap)
-        )
+        neg_upper, _, _, state = heapq.heappop(heap)
         states += 1
         group_results = queue_results[lane]
         if len(group_results) >= preferences.max_candidates:
@@ -270,8 +285,8 @@ def search_candidates(
             ]
             if -neg_upper < threshold:
                 continue
-        if not any(remaining):
-            starters = list(selected)
+        if not any(state.remaining):
+            starters = list(state.selected)
             variants = [[]]
             if preferences.include_trading_purchases:
                 extra_pool = sorted(
@@ -279,22 +294,29 @@ def search_candidates(
                         p
                         for p in players
                         if p.source != "owned"
-                        and p.player_id not in {s.player_id for s in selected}
+                        and p.player_id not in {s.player_id for s in state.selected}
                     ),
                     key=lambda p: (-p.trading_score, p.player_id),
                 )
                 variants += [extra_pool[:n] for n in range(1, min(24, len(extra_pool)) + 1)]
             for extras in variants:
                 plan = plan_trades(
-                    starters, owned, cash, preferences, target, now, extras, reserved_squad_slots
+                    starters,
+                    owned,
+                    cash,
+                    preferences,
+                    target,
+                    now,
+                    extras,
+                    reserved_squad_slots,
                 )
                 if plan is not None:
                     candidate = Candidate(
                         candidate_id=str(next(serial)),
-                        formation=formation,
-                        resource_group="owned" if group == "owned" else "external",
+                        formation=state.formation,
+                        resource_group=("owned" if state.source_group == "owned" else "external"),
                         starters=starters,
-                        total_lineup_score=score,
+                        total_lineup_score=state.score,
                         tie_break=rng.random(),
                         trading_plan=plan,
                     )
@@ -304,28 +326,29 @@ def search_candidates(
         if sum(len(queue) for queue in heaps.values()) + states >= max_states:
             truncated = True
             break
-        pos = next(i for i, n in enumerate(remaining) if n)
-        bucket = buckets[pos]
-        for index in range(offsets[pos], len(bucket) - remaining[pos] + 1):
+        pos = next(i for i, n in enumerate(state.remaining) if n)
+        bucket = state.buckets[pos]
+        for index in range(state.offsets[pos], len(bucket) - state.remaining[pos] + 1):
             player = bucket[index]
-            if not financially_possible(selected + (player,)):
+            selected = state.selected + (player,)
+            if not financially_possible(selected):
                 continue
-            new_remaining = list(remaining)
+            new_remaining = list(state.remaining)
             new_remaining[pos] -= 1
-            new_offsets = list(offsets)
+            new_offsets = list(state.offsets)
             new_offsets[pos] = index + 1
-            new_score = score + player.lineup_score
+            new_score = state.score + player.lineup_score
             upper = _upper_bound(
-                buckets,
+                state.buckets,
                 tuple(new_remaining),
                 tuple(new_offsets),
-                selected + (player,),
+                selected,
                 new_score,
-                group,
-                purchase_capacity(selected + (player,)) if lane == group else None,
+                state.source_group,
+                purchase_capacity(selected) if lane == state.source_group else None,
             )
             if upper is None or not financially_possible(
-                selected + (player,), buckets, tuple(new_remaining), tuple(new_offsets)
+                selected, state.buckets, tuple(new_remaining), tuple(new_offsets)
             ):
                 continue
             heapq.heappush(
@@ -334,13 +357,15 @@ def search_candidates(
                     -upper,
                     sum(new_remaining),
                     next(serial),
-                    group,
-                    formation,
-                    buckets,
-                    tuple(new_remaining),
-                    tuple(new_offsets),
-                    selected + (player,),
-                    new_score,
+                    _SearchState(
+                        state.source_group,
+                        state.formation,
+                        state.buckets,
+                        tuple(new_remaining),
+                        tuple(new_offsets),
+                        selected,
+                        new_score,
+                    ),
                 ),
             )
     results.sort(
@@ -348,7 +373,7 @@ def search_candidates(
             r.resource_group != "owned",
             -r.total_lineup_score,
             -r.trading_plan.projected_cash,
-            -int(r.formation.split(",")[2]),
+            -formation_specs[r.formation].midfielders,
             r.tie_break,
         )
     )

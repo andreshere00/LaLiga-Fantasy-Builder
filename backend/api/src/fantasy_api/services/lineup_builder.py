@@ -15,6 +15,7 @@ from fantasy_api.domain.errors import (
     UnauthorizedError,
     UpstreamError,
 )
+from fantasy_api.domain.lineup_builder.formations import FormationSpec
 from fantasy_api.domain.lineup_builder.progress import ProgressCallback
 from fantasy_api.domain.lineup_builder.search import search_candidates
 from fantasy_api.repositories.lineup_builder import LineupBuilderRepository
@@ -96,11 +97,7 @@ class LineupBuilderService:
                     p for p in snapshot.players if p.player_id in preferences.mandatory_player_ids
                 ]
                 if not any(
-                    all(
-                        sum(p.position == pos for p in mandatory) <= amount
-                        for pos, amount in enumerate((1, *map(int, code.split(","))), 1)
-                    )
-                    for code in snapshot.formations
+                    FormationSpec.parse(code).fits(mandatory) for code in snapshot.formations
                 ):
                     raise BuilderError(
                         "mandatory positions cannot fit selected formations",

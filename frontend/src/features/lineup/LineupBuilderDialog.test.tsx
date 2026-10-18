@@ -4,7 +4,11 @@ import { afterEach, beforeEach, expect, it, vi } from "vitest";
 import response from "../../../../contracts/lineup-builder-response.json";
 import { getJson } from "../../api/client";
 import { streamLineupBuild } from "../../api/lineupBuild";
-import { lineupBuildResponseSchema, type LineupBuildDto } from "../../api/schemas";
+import {
+  lineupBuildResponseSchema,
+  type LineupBuildDto,
+  type LineupBuildProgress,
+} from "../../api/schemas";
 import { LineupBuilderDialog } from "./LineupBuilderDialog";
 
 vi.mock("../../api/lineupBuild", () => ({ streamLineupBuild: vi.fn() }));
@@ -23,6 +27,34 @@ beforeEach(() => {
   vi.mocked(getJson).mockResolvedValue([]);
 });
 afterEach(cleanup);
+
+it.each([
+  ["sources", "Building recommendations…"],
+  ["players", "Evaluating players: 1/2"],
+  ["trades", "Checking trade options…"],
+  ["search", "Finding the best lineups…"],
+  ["explanation", "Writing explanations…"],
+  ["complete", "Recommendations ready"],
+] as const)("shows progress copy for the %s stage", async (stage, expectedLabel) => {
+  let publish!: (progress: LineupBuildProgress) => void;
+  let finish!: (result: LineupBuildDto) => void;
+  const result = lineupBuildResponseSchema.parse(response.payload);
+  vi.mocked(streamLineupBuild).mockImplementationOnce((_league, _token, _request, onProgress) => {
+    publish = onProgress;
+    return new Promise((resolve) => { finish = resolve; });
+  });
+  const client = new QueryClient({ defaultOptions: { queries: { retry: false } } });
+  render(<QueryClientProvider client={client}>
+    <LineupBuilderDialog open onClose={vi.fn()} ranking={[]} squad={[]} selectedTeamId="t1"
+      formations={[]} canApply={() => true} onApply={vi.fn()} isDraftDirty={() => false} />
+  </QueryClientProvider>);
+
+  fireEvent.click(screen.getByRole("button", { name: "Build" }));
+  act(() => publish({ stage, percent: 25, completedPlayers: 1, totalPlayers: 2 }));
+  expect(screen.getByText(expectedLabel)).toBeTruthy();
+  await act(async () => { finish(result); });
+  client.clear();
+});
 
 it.each(["success", "cancel"])("should discard an old draft confirmation after rebuild %s", async (outcome) => {
   const first = lineupBuildResponseSchema.parse(response.payload);

@@ -11,7 +11,11 @@ from fantasy_api.domain.errors import BuilderError, NotFoundError, UpstreamError
 from fantasy_api.domain.lineup_builder.progress import ProgressCallback
 from fantasy_api.domain.lineup_builder.scoring import PlayerEvidence, score_player
 from fantasy_api.domain.lineup_builder.target import instant, resolve_target
-from fantasy_api.schemas.buyout import ShieldStatus
+from fantasy_api.repositories.lineup_builder_sources import (
+    CandidateSourceContext,
+    LineupBuilderSourceLoader,
+)
+from fantasy_api.repositories.lineup_builder_utils import _identity, _model, _models
 from fantasy_api.schemas.calendar import CurrentWeek, Fixture
 from fantasy_api.schemas.leagues import FantasyLeague, PlayerMaster, SquadPlayer, TeamDetail
 from fantasy_api.schemas.lineup_builder import (
@@ -23,11 +27,9 @@ from fantasy_api.schemas.lineup_builder import (
     ScoredPlayer,
     TargetWeek,
 )
-from fantasy_api.schemas.market import MarketBid, MarketListing, MarketSnapshot, PlayerTeamOffers
+from fantasy_api.schemas.market import MarketBid, MarketSnapshot, PlayerTeamOffers
 from fantasy_api.schemas.payload import (
     as_market_snapshot,
-    as_object,
-    as_object_list,
     as_player_team_offers,
 )
 from fantasy_api.schemas.player_stats import (
@@ -77,43 +79,6 @@ class BuilderSnapshot(BaseModel):
     diagnostics: list[BuilderDiagnostic]
 
 
-def _model[T: BaseModel](raw: object, model: type[T]) -> T:
-    """Validate provider objects without coercing an unexpected payload to success."""
-    data = parse_payload(as_object, raw)
-    known = set(model.model_fields) | {f.alias for f in model.model_fields.values() if f.alias}
-    if not known.intersection(data):
-        raise UpstreamError("provider payload had no recognized fields", category="fantasy_error")
-    return parse_payload(model.model_validate, data)
-
-
-def _models[T: BaseModel](raw: object, model: type[T]) -> list[T]:
-    """Validate each row after the shared collection envelope parser."""
-    return [_model(row, model) for row in parse_payload(as_object_list, raw)]
-
-
-def _identity(master: PlayerMaster, source: str, slot: str | None = None) -> ScoredPlayer:
-    """Reject incomplete identity/value before computing any financial projection."""
-    if (
-        not master.id
-        or master.market_value is None
-        or master.team_id is None
-        or master.position_id not in {1, 2, 3, 4}
-    ):
-        raise ValueError("player identity or valuation unavailable")
-    return ScoredPlayer(
-        player_id=master.id,
-        name=master.nickname or master.name or master.id,
-        club_id=master.team_id,
-        position=master.position_id,
-        source=source,
-        player_team_id=slot,
-        market_value=master.market_value,
-        lineup_score=Decimal(0),
-        trading_score=Decimal(0),
-        combined_score=Decimal(0),
-    )
-
-
 def _weather_category(snapshot: WeatherSnapshot | None) -> str | None:
     """Map OpenWeather codes to workflow categories without guessing unknown conditions."""
     if snapshot is None:
@@ -159,36 +124,6 @@ def _weather_category(snapshot: WeatherSnapshot | None) -> str | None:
     )
 
 
-def _market_route_error(listing: MarketListing, now: datetime, target: TargetWeek) -> str | None:
-    """Distinguish missing auction evidence from a known missed settlement deadline."""
-    metadata = listing.model_extra or {}
-    if any(
-        metadata.get(field) is not None
-        for field in (
-            "playerTeam",
-            "sellerTeam",
-            "seller",
-            "manager",
-            "playerTeamId",
-        )
-    ):
-        return "market_seller_acceptance_required"
-    # directOffer controls seller offers only when an owned squad entry is present.
-    # It is not an independent veto for a verified free-player market auction.
-    # Current Fantasy league auctions use marketPlayerLeague; market_player is
-    # retained for the older captured response. marketPlayerTeam is seller-owned.
-    if listing.discr not in {"marketPlayerLeague", "market_player"}:
-        return "market_listing_type_unknown"
-    expiry = instant(listing.expiration_date)
-    if expiry is None:
-        return "market_expiry_unknown"
-    if expiry <= now:
-        return "market_listing_expired"
-    if expiry >= target.first_kickoff:
-        return "market_settlement_after_kickoff"
-    return None
-
-
 class LineupBuilderRepository:
     """Assemble verified facts without introducing any new Fantasy route.
 
@@ -224,7 +159,7 @@ class LineupBuilderRepository:
         self._standings = standings
         self._competition_id = competition_id
         self._players = players
-        self._buyout = buyout
+        self._source_loader = LineupBuilderSourceLoader(leagues, buyout)
 
     async def snapshot(
         self,
@@ -388,126 +323,25 @@ class LineupBuilderRepository:
             raise UpstreamError("duplicate master identity in roster", category="fantasy_error")
         pool = list(owned) if "owned" in preferences.sources else []
         owned_ids = set(slots)
+        source_context = CandidateSourceContext(
+            jwt=jwt,
+            league_id=league_id,
+            league=league,
+            team_id=team_id,
+            owned_ids=frozenset(owned_ids),
+            pending_master_ids=frozenset(pending_master_ids),
+            target=target,
+            now=now,
+            complete_master=complete_master,
+        )
         if "market" in preferences.sources and preferences.allow_buying:
-            for listing in market.market_players or []:
-                master = listing.player_master
-                expiry = instant(listing.expiration_date)
-                if master is None or master.id in owned_ids or master.id in pending_master_ids:
-                    continue
-                if master.position_id is not None and master.position_id not in {1, 2, 3, 4}:
-                    diagnostics.append(
-                        BuilderDiagnostic(code="unsupported_player_position", player_id=master.id)
-                    )
-                    continue
-                route_error = _market_route_error(listing, now, target)
-                if route_error:
-                    diagnostics.append(BuilderDiagnostic(code=route_error, player_id=master.id))
-                    continue
-                try:
-                    player = _identity(await complete_master(master), "market")
-                    pool.append(
-                        player.model_copy(
-                            update={"acquisition_method": "bid", "settlement_at": expiry}
-                        )
-                    )
-                except (ValueError, ValidationError, UpstreamError):
-                    diagnostics.append(
-                        BuilderDiagnostic(code="player_identity_unavailable", player_id=master.id)
-                    )
+            source = await self._source_loader.market_candidates(market, source_context)
+            pool.extend(source.players)
+            diagnostics.extend(source.diagnostics)
         if "opponents" in preferences.sources and preferences.allow_buying:
-            teams = _models(await self._leagues.list_teams(jwt, league_id), TeamDetail)
-            for team in teams:
-                if team.id is None or str(team.id) == team_id:
-                    continue
-                opponent = _model(
-                    await self._leagues.get_team(jwt, league_id, str(team.id)), TeamDetail
-                )
-                for slot in opponent.players or []:
-                    master = slot.player_master
-                    if master is None or master.id in owned_ids or master.id in pending_master_ids:
-                        continue
-                    if master.position_id is not None and master.position_id not in {1, 2, 3, 4}:
-                        diagnostics.append(
-                            BuilderDiagnostic(
-                                code="unsupported_player_position", player_id=master.id
-                            )
-                        )
-                        continue
-                    lock = instant(slot.buyout_clause_locked_end_time)
-                    buyouts = (
-                        league.config
-                        and league.config.features
-                        and league.config.features.buyout_clause is True
-                    )
-                    route_error = None
-                    if buyouts is not True:
-                        route_error = (
-                            "opponent_buyouts_disabled"
-                            if buyouts is False
-                            else "opponent_buyout_rules_unknown"
-                        )
-                    elif lock is None:
-                        route_error = "opponent_protection_expiry_unknown"
-                    elif lock > target.protection_deadline:
-                        route_error = (
-                            "opponent_protection_active_at_kickoff"
-                            if lock > target.first_kickoff
-                            else "opponent_protection_expires_too_late"
-                        )
-                    elif slot.buyout_clause is None or slot.buyout_clause <= 0:
-                        route_error = "opponent_clause_price_missing"
-                    shielded = slot.is_shielded
-                    if (
-                        route_error is None
-                        and shielded is None
-                        and self._buyout is not None
-                        and slot.player_team_id
-                    ):
-                        try:
-                            shield = _model(
-                                await self._buyout.check_shield(
-                                    jwt, league_id, slot.player_team_id
-                                ),
-                                ShieldStatus,
-                            )
-                            shielded = shield.is_shielded
-                        except (UpstreamError, NotFoundError):
-                            pass
-                    if route_error is None:
-                        if shielded is True:
-                            route_error = "opponent_shield_active"
-                        elif shielded is not False:
-                            route_error = "opponent_shield_status_unknown"
-                    if route_error:
-                        diagnostics.append(BuilderDiagnostic(code=route_error, player_id=master.id))
-                        continue
-                    settlement = max(now, lock)
-                    if settlement >= target.clauses_deadline:
-                        diagnostics.append(
-                            BuilderDiagnostic(
-                                code="opponent_acquisition_deadline_closed", player_id=master.id
-                            )
-                        )
-                        continue
-                    try:
-                        player = _identity(
-                            await complete_master(master), "opponents", slot.player_team_id
-                        )
-                        pool.append(
-                            player.model_copy(
-                                update={
-                                    "acquisition_method": "clause",
-                                    "settlement_at": settlement,
-                                    "clause_price": slot.buyout_clause,
-                                }
-                            )
-                        )
-                    except (ValueError, ValidationError, UpstreamError):
-                        diagnostics.append(
-                            BuilderDiagnostic(
-                                code="player_identity_unavailable", player_id=master.id
-                            )
-                        )
+            source = await self._source_loader.opponent_candidates(source_context)
+            pool.extend(source.players)
+            diagnostics.extend(source.diagnostics)
         # Prefer owned and direct market identities over duplicate opponent listing paths.
         pool = list({p.player_id: p for p in reversed(pool)}.values())
         if self._players is not None and any(p.player_id not in fantasy_averages for p in pool):

@@ -3,7 +3,7 @@ import { useMemo, useState } from "react";
 
 import { useLineupBuilder } from "./useLineupBuilder";
 import { LINEUP_RECOMMENDATION_LIMIT, LineupBuilderResults } from "./LineupBuilderResults";
-import type { BuilderCandidate, LineupBuildDto } from "../../api/schemas";
+import type { BuilderCandidate, LineupBuildDto, LineupBuildProgress } from "../../api/schemas";
 import { LineupBuilderPlayerActions } from "./LineupBuilderPlayerActions";
 import { getJson, paths } from "../../api/client";
 import {
@@ -44,6 +44,30 @@ type Props = {
 
 const EMPTY: PlayerOption[] = [];
 const EMPTY_SQUAD: SquadCard[] = [];
+
+function progressLabel(progress: LineupBuildProgress | null): string {
+  if (!progress) return "Building recommendations…";
+  switch (progress.stage) {
+    case "players":
+      return `Evaluating players: ${progress.completedPlayers}/${progress.totalPlayers}`;
+    case "trades":
+      return "Checking trade options…";
+    case "search":
+      return "Finding the best lineups…";
+    case "explanation":
+      return "Writing explanations…";
+    case "complete":
+      return "Recommendations ready";
+    case "sources":
+      return "Building recommendations…";
+    default:
+      return assertNever(progress.stage);
+  }
+}
+
+function assertNever(value: never): never {
+  throw new Error(`Unsupported lineup build progress stage: ${value}`);
+}
 
 function squadOptions(players: readonly SquadCard[], source: string): PlayerOption[] {
   return players.flatMap((player) => player.masterPlayerId ? [{
@@ -185,13 +209,7 @@ function BuilderDialogSession({
           <Progress value={builder.progress?.percent ?? null} className="lineup-builder-loading-details"
             aria-valuetext={builder.progress ? `Estimated progress: ${builder.progress.percent}%` : undefined}>
             <ProgressLabel className="lineup-builder-loading-text">
-              {builder.progress?.stage === "players"
-                ? `Evaluating players: ${builder.progress.completedPlayers}/${builder.progress.totalPlayers}`
-                : builder.progress?.stage === "trades" ? "Checking trade options…"
-                  : builder.progress?.stage === "search" ? "Finding the best lineups…"
-                    : builder.progress?.stage === "explanation" ? "Writing explanations…"
-                      : builder.progress?.stage === "complete" ? "Recommendations ready"
-                        : "Building recommendations…"}
+              {progressLabel(builder.progress)}
               {builder.progress && <span className="lineup-builder-loading-percent"
                 title="Estimated overall progress">
                 {builder.progress.percent}%

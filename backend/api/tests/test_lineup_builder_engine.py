@@ -10,6 +10,7 @@ from random import Random
 import pytest
 from fantasy_api.domain.errors import UpstreamError
 from fantasy_api.domain.lineup_builder import policy
+from fantasy_api.domain.lineup_builder.formations import FormationSpec
 from fantasy_api.domain.lineup_builder.planning import plan_trades
 from fantasy_api.domain.lineup_builder.scoring import PlayerEvidence, score_player
 from fantasy_api.domain.lineup_builder.search import _upper_bound, search_candidates
@@ -66,6 +67,15 @@ def pool() -> list[ScoredPlayer]:
 
 
 # ---- Happy path ---- #
+
+
+def test_formation_spec_parses_slots_and_checks_required_players() -> None:
+    formation = FormationSpec.parse("4,4,2")
+
+    assert formation.capacities == (1, 4, 4, 2)
+    assert formation.midfielders == 4
+    assert formation.fits([player(1, 1), player(2, 2), player(3, 3), player(4, 4)])
+    assert not formation.fits([player(number, 2) for number in range(5)])
 
 
 @pytest.mark.parametrize("source", ["market", "opponents"])

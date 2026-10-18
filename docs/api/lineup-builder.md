@@ -41,7 +41,8 @@ clients, so intermediate percentages are not guaranteed to be delivered.
 
 `useLineupBuilder` exposes `progress` state and passes its percentage to the Base
 UI progress component. It clears progress on a new build, failure or cancellation
-and ignores updates from cancelled requests. The loading text stays static.
+and ignores updates from cancelled requests. Loading text names the current
+stage and shows the reported percentage.
 Closing the dialog or cancelling aborts the request, cancels upstream source work,
 and signals the search thread to stop. Progress exists only for the request;
 there is no retained job, polling endpoint, token storage or cross-worker lookup.
