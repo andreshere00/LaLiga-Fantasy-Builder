@@ -58,8 +58,10 @@ data and user-confirmed writes with your linked account.
 
 ## Screenshots
 
-Product screenshots captured from the local app. League, roster, and player
-data reflect the session shown and can change over time.
+Product screenshots supplied on 19 October 2026, captured from the local app.
+League, roster, and player data reflect the session shown and can change over
+time. The [screenshot index](docs/images/README.md) tags each capture by topic
+and theme and identifies the separate synthetic demonstrations.
 
 ### Lineup
 
@@ -67,32 +69,45 @@ data reflect the session shown and can change over time.
 
 ![Lineup screen in dark mode](docs/images/screenshots/lineup-dark-mode.png)
 
-Updated ranking and LALIGA standings widgets (synthetic demonstration data):
+Ranking, LALIGA standings, pitch, and paginated squad:
 
 ![Scrollable ranking and LALIGA standings](docs/images/screenshots/lineup-standings-light.png)
 
-[Dark theme](docs/images/screenshots/lineup-standings-dark.png) ·
-[Mobile layout](docs/images/screenshots/lineup-standings-mobile.png)
+[Synthetic dark-theme demonstration](docs/images/screenshots/lineup-standings-dark.png) ·
+[Synthetic mobile demonstration](docs/images/screenshots/lineup-standings-mobile.png)
 
-![Lineup builder preferences](docs/images/screenshots/lineup-builder-top.png)
+![Lineup builder player scope, trade permissions, and mandatory players](docs/images/screenshots/lineup-builder-top.png)
 
-![Lineup builder formation and effort options](docs/images/screenshots/lineup-builder-options.png)
+![Lineup builder mandatory players and formation preferences](docs/images/screenshots/lineup-builder-options.png)
+
+Builder results remain previews. Filter recommendations, inspect a starting XI
+and its squad projection, then choose **Use as draft** to prepare local changes.
+
+![Lineup builder recommendation notes and current-squad versus external-player filters](docs/images/screenshots/lineup-builder-results.png)
+
+![Recommended 3-4-3 starting XI with individual player scores](docs/images/screenshots/lineup-builder-pitch.png)
+
+![Projected cash, retained squad, deadlines, and transaction plan](docs/images/screenshots/lineup-builder-projection.png)
 
 ![Lineup player actions](docs/images/screenshots/lineup-player-actions.png)
 
 ### Market and player catalog
 
-![Market board](docs/images/screenshots/market-board.png)
+![Market board in dark mode with Offers, My bids, and available balance](docs/images/screenshots/market-board.png)
 
-![Market offers notification button with pending offer count](docs/images/screenshots/market-offers.png)
+![Hire player dialog with bid limits and amount controls](docs/images/screenshots/market-hire-dialog.png)
 
-![Players catalog](docs/images/screenshots/players-catalog.png)
+![Market offers panel with amounts, expiry countdowns, and accept or reject actions](docs/images/screenshots/market-offers.png)
+
+![Players catalog in dark mode with form, release clauses, owners, and bookmarks](docs/images/screenshots/players-catalog.png)
 
 ### Player profile
 
-![Player profile overview](docs/images/screenshots/player-profile-overview.png)
+![Lamine Yamal profile with availability, per-match averages, and Fantasy indicators](docs/images/screenshots/player-profile-overview.png)
 
-![Player Fantasy data, news, and injury history](docs/images/screenshots/player-fantasy-data.png)
+![Last-five fixture statistics with minutes, Fantasy points, and a total](docs/images/screenshots/player-fixture-stats.png)
+
+![Latest player news and injury history with independent pagination](docs/images/screenshots/player-fantasy-data.png)
 
 ![Previous and upcoming matches](docs/images/screenshots/player-matches.png)
 

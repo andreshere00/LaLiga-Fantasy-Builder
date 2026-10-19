@@ -24,7 +24,9 @@ Automated browser checks use fictional deterministic data and fallback
 portraits. The product captures below show the local account as it appeared at
 capture time.
 
-Screenshot assets live under [`docs/images/`](images/).
+Screenshot assets live under [`docs/images/`](images/). The
+[screenshot index](images/README.md) records topic and theme tags, capture
+dates, and which images use synthetic data.
 Keep new screenshots in the same commit as their Markdown references so the
 gallery is available on GitHub as well as in a local checkout.
 
@@ -33,47 +35,73 @@ gallery is available on GitHub as well as in a local checkout.
 The following captures document the full local interface: lineup and builder,
 market and catalog tables, and the player profile's averages, form, match,
 market-value, Fantasy-data, and injury-history sections. Their values reflect
-the account and data available at capture time. The same gallery is embedded in
+the account and data available at capture time. The supplied desktop captures
+were taken on 19 October 2026; the remaining synthetic demonstrations are
+identified below and in the index. The product gallery is also embedded in
 the [project README](../README.md#screenshots).
 
 #### Lineup
 
 ![Lineup overview](images/screenshots/lineup-overview.png)
 
-The following standings captures use deterministic fictional managers and the
-shared synthetic twenty-club contract fixture:
+![Lineup overview, dark theme](images/screenshots/lineup-dark-mode.png)
 
-![Scrollable ranking and LALIGA standings, light theme](images/screenshots/lineup-standings-light.png)
+![Ranking, LALIGA standings, pitch, and paginated squad, light theme](images/screenshots/lineup-standings-light.png)
+
+The following dark and mobile standings demonstrations use deterministic
+fictional managers and the shared synthetic twenty-club contract fixture:
 
 ![Scrollable ranking and LALIGA standings, dark theme](images/screenshots/lineup-standings-dark.png)
 
 ![Mobile standings layout](images/screenshots/lineup-standings-mobile.png)
 
-![Lineup builder preferences](images/screenshots/lineup-builder-top.png)
+![Lineup builder player scope, trade permissions, and mandatory players](images/screenshots/lineup-builder-top.png)
 
-![Lineup builder formation and effort options](images/screenshots/lineup-builder-options.png)
+Choose which player sources and trade recommendations the builder may consider.
+Mandatory selections must appear in the starting XI; leaving formation
+preferences empty permits all supported formations.
+
+![Lineup builder mandatory players and formation preferences](images/screenshots/lineup-builder-options.png)
+
+Results show recommendation notes and counts for **Only current squad** and
+**Squad with external players**. Each recommendation includes a pitch preview,
+player scores, and an expandable whole-squad projection with cash, squad size,
+value, pending bid slots, deadlines, and the transaction plan. **Use as draft**
+prepares local changes; building does not buy, sell, or save players.
+
+![Lineup builder recommendation notes and result filters](images/screenshots/lineup-builder-results.png)
+
+![Recommended 3-4-3 starting XI with individual player scores](images/screenshots/lineup-builder-pitch.png)
+
+![Projected cash, retained squad, deadlines, and transaction plan](images/screenshots/lineup-builder-projection.png)
 
 ![Lineup player actions](images/screenshots/lineup-player-actions.png)
 
 #### Market and player catalog
 
-![Market board](images/screenshots/market-board.png)
+![Market board in dark mode with Offers, My bids, and available balance](images/screenshots/market-board.png)
+
+![Hire player dialog with bid limits and amount controls](images/screenshots/market-hire-dialog.png)
+
+![Market offers panel with amounts, expiry countdowns, and accept or reject actions](images/screenshots/market-offers.png)
+
+![Players catalog in dark mode with form, release clauses, owners, and bookmarks](images/screenshots/players-catalog.png)
+
+The following bid-management and mobile captures use synthetic browser fixtures:
 
 ![My bids and projected spending](images/screenshots/market-bids.png)
 
 ![Market in dark mode on mobile](images/screenshots/market-mobile-dark.png)
 
-![Market offers notification button with pending offer count](images/screenshots/market-offers.png)
-
-![Players catalog](images/screenshots/players-catalog.png)
-
 ![Mobile Players catalog, dark theme](images/screenshots/players-mobile-dark.png)
 
 #### Player profile
 
-![Player profile overview](images/screenshots/player-profile-overview.png)
+![Lamine Yamal profile with availability, per-match averages, and Fantasy indicators](images/screenshots/player-profile-overview.png)
 
-![Player Fantasy data, news, and injury history](images/screenshots/player-fantasy-data.png)
+![Last-five fixture statistics with minutes, Fantasy points, and a total](images/screenshots/player-fixture-stats.png)
+
+![Latest player news and injury history with independent pagination](images/screenshots/player-fantasy-data.png)
 
 ![Previous and upcoming matches](images/screenshots/player-matches.png)
 
@@ -112,12 +140,14 @@ available temperature, humidity, and wind values; unavailable forecasts leave
 the fixture visible with a reason. A **View match timer** control shows the
 countdown to a confirmed kickoff.
 
-The **Form** section shows LaLiga fixture cards with expandable per-match stats,
-including DAZN points. The **Fantasy data** section groups profile indicators,
-news links, and injury history into responsive columns. News titles show
+The **Form – fixture stats** section offers Last 5, Last 10, Last 20, Last 40,
+Last 60, and Details views. Its fixture cards show minutes and Fantasy points,
+with a total for the selected window and expandable per-match stats, including
+DAZN points. **News & injuries data** presents the profile indicators and the
+latest-news and injury-history panels. News titles show
 **Read more** only when the title exceeds its two-line region. News and injury
 history show five records per page with independent sliding three-number navigation.
-Fantasy profile and injury-history columns have matching widths on desktop.
+News and injury-history columns have matching widths on desktop.
 
 The player header separates club, FSYP, position, and availability. Six equal
 metric cells highlight position-specific averages; the remaining
