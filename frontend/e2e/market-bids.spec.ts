@@ -1,5 +1,5 @@
 import { test, expect, type Page } from "@playwright/test";
-import { mockMarketBids } from "./fixtures";
+import { catalog, mockMarketBids } from "./fixtures";
 
 async function summaryValue(page: Page, label: string) {
   const trigger = page.getByRole("button", { name: /Show balance details/ });
@@ -137,6 +137,68 @@ test("first load and incomplete bids stay visible without authorizing unavailabl
   }
   await page.keyboard.press("Escape");
   await expect(await summaryValue(page, "Projected spending")).toHaveText("Unavailable");
+});
+
+test("modify waits for catalog metadata while cancellation stays available", async ({ page }) => {
+  await mockMarketBids(page);
+  let release: () => void = () => {};
+  const gate = new Promise<void>((resolve) => { release = resolve; });
+  await page.route("**/api/players", async (route) => {
+    await gate;
+    await route.fulfill({ json: catalog });
+  });
+  await page.route("**/api/market/leagues/l1", (route) => route.fulfill({ json: {
+    marketPlayers: [{ id: "m14", playerMaster: { id: "14", nickname: "Player 14" },
+      expirationDate: "2026-10-13T15:00:00Z",
+      bid: { id: "b14", status: "pending", money: 4_000_000 },
+    }], userBids: [],
+  } }));
+  await page.goto("/market");
+  await bidTrigger(page, 1).click();
+  const panel = page.getByRole("dialog", { name: "My bids", exact: true });
+  const modify = panel.getByRole("button", { name: "Modify bid for Player 14", exact: true });
+  await expect(modify).toBeDisabled();
+  await expect(panel.getByRole("button", { name: "Cancel bid for Player 14", exact: true })).toBeEnabled();
+  release();
+  await expect(modify).toBeEnabled();
+  await modify.click();
+  const dialog = page.getByRole("dialog", { name: "Modify bid", exact: true });
+  await expect(dialog.getByText(/Amount must be at least 3.300.000 €/)).toBeVisible();
+  await expect(dialog.getByRole("textbox", { name: "Bid amount" })).toHaveValue("4.000.000");
+  await expect(dialog.getByRole("button", { name: "Confirm", exact: true })).toBeEnabled();
+});
+
+test("refresh bids recovers a failed catalog request", async ({ page }) => {
+  await mockMarketBids(page);
+  let failed = true;
+  let catalogReads = 0;
+  await page.route("**/api/players", (route) => {
+    catalogReads++;
+    return failed
+      ? route.fulfill({ status: 502, json: { error: "unavailable" } })
+      : route.fulfill({ json: catalog });
+  });
+  await page.goto("/market");
+  const error = page.getByText("The market could not be loaded. Refresh bids to retry.");
+  await expect(error).toBeVisible();
+  const failedReads = catalogReads;
+  failed = false;
+  await bidTrigger(page).click();
+  await page.getByRole("dialog", { name: "My bids", exact: true })
+    .getByRole("button", { name: "Refresh bids", exact: true }).click();
+  await page.keyboard.press("Escape");
+  await expect(page.getByRole("link", { name: "Player 14", exact: true })).toBeVisible();
+  await expect(error).toHaveCount(0);
+  expect(catalogReads).toBe(failedReads + 1);
+  await bidTrigger(page).click();
+  const refresh = page.getByRole("dialog", { name: "My bids", exact: true })
+    .getByRole("button", { name: "Refresh bids", exact: true });
+  await expect(refresh).toBeEnabled();
+  const refreshed = page.waitForResponse("**/api/market/leagues/l1");
+  await refresh.click();
+  await refreshed;
+  await expect(refresh).toBeEnabled();
+  expect(catalogReads).toBe(failedReads + 1);
 });
 
 test("a successful direct offer never creates a synthetic market bid", async ({ page }) => {

@@ -61,6 +61,7 @@ export function MarketBids({ board, actions, now }: Props) {
         {bids.map((bid) => {
           const eligible = bid.actionRow != null && bid.confirmed
             && (bid.expiresAt == null || bid.expiresAt > now);
+          const modifyEligible = eligible && bid.actionRow?.marketValue != null;
           return <li key={bid.key} className="market-bid" aria-label={`Bid for ${bid.name}`}>
             <div className="market-bid-player">
               {bid.photoUrl ? <img src={bid.photoUrl} alt="" /> : null}
@@ -72,8 +73,9 @@ export function MarketBids({ board, actions, now }: Props) {
             <p>{bid.confirmed ? "Active" : "Awaiting server confirmation"}</p>
             {bid.issues.map((issue) => <p key={issue}>{issue}</p>)}
             {!bid.actionRow && bid.issues.length === 0 ? <p>Actions unavailable until bid details are confirmed.</p> : null}
+            {eligible && !modifyEligible ? <p>Modify is unavailable until the market value is loaded.</p> : null}
             <div className="market-bid-actions">
-              <Button shape="square" variant="outline" disabled={!eligible || actions.actionPending}
+              <Button shape="square" variant="outline" disabled={!modifyEligible || actions.actionPending}
                 aria-label={`Modify bid for ${bid.name}`} onClick={() => {
                   if (!bid.actionRow) return;
                   modifyAfterClose.current = bid.actionRow;

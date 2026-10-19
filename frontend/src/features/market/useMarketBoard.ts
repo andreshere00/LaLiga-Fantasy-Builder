@@ -310,7 +310,11 @@ export function useMarketBoard(): MarketBoard {
     bidsError: marketQuery.isError,
     projectionRefreshing: marketQuery.isFetching || moneyQuery.isFetching || pendingBids.size > 0,
     projectionStale: marketQuery.isError || moneyQuery.isError,
-    refreshBids: () => { void marketQuery.refetch(); void moneyQuery.refetch(); },
+    refreshBids: () => {
+      void marketQuery.refetch();
+      void moneyQuery.refetch();
+      if (catalogQuery.isError) void catalogQuery.refetch();
+    },
     squadMarketValue,
     isLoading,
     hasError,
