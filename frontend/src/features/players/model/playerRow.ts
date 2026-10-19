@@ -12,6 +12,7 @@ import {
   playerFormHistory,
 } from "../../market/model/form";
 import type { CalendarFormContext } from "../../market/model/row";
+import { buyoutClauseUnlockAt } from "../../market/model/buyout";
 
 export type PlayerRow = {
   playerId: string;
@@ -31,6 +32,7 @@ export type PlayerRow = {
   availability: Availability;
   ownedBy: string;
   ownerTeamId: string | null;
+  ownership: PlayerOwner | null;
 };
 
 function displayName(nickname: string | null, name: string | null): string {
@@ -44,6 +46,7 @@ export function playerRowFromCatalog(
   ownedBy: string,
   ownerTeamId: string | null = null,
   calendarForm?: CalendarFormContext,
+  ownership: PlayerOwner | null = null,
 ): PlayerRow {
   const media = mediaFromPlayerMaster(master);
   const teamName = teamNameFromPlayerMaster(master);
@@ -66,10 +69,18 @@ export function playerRowFromCatalog(
     availability: availabilityOf(master.playerStatus),
     ownedBy,
     ownerTeamId,
+    ownership,
   };
 }
 
-export type PlayerOwner = { name: string; teamId: string };
+export type PlayerOwner = {
+  name: string | null;
+  teamId: string;
+  playerTeamId: string | null;
+  buyoutClause: number | null;
+  isShielded: boolean | null;
+  clauseUnlockAt: number | null;
+};
 
 export function ownerByMasterIdFromRosters(
   rosterPayloads: readonly unknown[],
@@ -81,14 +92,27 @@ export function ownerByMasterIdFromRosters(
     const managerRecord = asRecord(team.manager);
     const managerName = text(managerRecord?.managerName) ?? text(team.managerName);
     const teamId = idText(team.id) ?? idText(team.teamId);
-    if (!managerName || !teamId) continue;
+    if (!teamId) continue;
     const players = team.players;
     if (!Array.isArray(players)) continue;
+    // A fetched roster replaces the older team-list snapshot, including removals.
+    for (const [masterId, owner] of map) {
+      if (owner.teamId === teamId) map.delete(masterId);
+    }
     for (const entry of players) {
       const record = asRecord(entry);
       const master = asRecord(record?.playerMaster);
       const masterId = idText(master?.id);
-      if (masterId) map.set(masterId, { name: managerName, teamId });
+      if (!record || !masterId) continue;
+      const playerTeam = asRecord(record.playerTeam) ?? record;
+      map.set(masterId, {
+        name: managerName,
+        teamId,
+        playerTeamId: idText(record.playerTeamId) ?? idText(playerTeam.playerTeamId) ?? idText(playerTeam.id),
+        buyoutClause: asFiniteNumber(playerTeam.buyoutClause),
+        isShielded: typeof playerTeam.isShielded === "boolean" ? playerTeam.isShielded : null,
+        clauseUnlockAt: buyoutClauseUnlockAt(playerTeam) ?? buyoutClauseUnlockAt(record),
+      });
     }
   }
   return map;

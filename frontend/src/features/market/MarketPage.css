@@ -1,26 +1,7 @@
 /* Market-specific layout; shared rows and controls live in components/ui/RichList.css. */
 @import "../../components/ui/RichList.css";
 
-.market-page:not(.players-page) .market-name { font-weight:700; }
-.market-page:not(.players-page) .market-name .players-name-link { font-weight:inherit; color:inherit; }
-.market-page:not(.players-page) .market-name.is-protected,
-.market-page:not(.players-page) .market-name.is-protected .players-name-link:is(:link,:visited,:hover,:focus-visible) {
-  color:var(--fb-primary);
-}
-.market-page:not(.players-page) .market-fsyp-primary { font-size:16px; font-weight:700; }
-.market-page:not(.players-page) .market-form-badges { gap:4px; }
-.market-page:not(.players-page) .market-form-badges .player-score-badge { width:26px; height:26px; }
-.market-page:not(.players-page) .market-form-badges .player-score-badge-value { font-size:12px; }
-.market-page:not(.players-page) .market-form-week { font-size:10px; }
 .market-page:not(.players-page) .market-cell-seller { padding-block:12px; }
-.market-clause-detail { display:flex; align-items:center; gap:6px; overflow-wrap:anywhere; }
-.market-release-clause { display:flex; flex-direction:column; align-items:flex-start; gap:4px; margin-top:8px; }
-.market-bid-count,.market-clause-detail { font-size:12px; line-height:1.4; }
-.market-bid-value { display:block; margin-top:6px; color:var(--fb-primary); font-size:12px; line-height:1.4; font-weight:600; font-variant-numeric:tabular-nums; }
-.market-clause-shield { width:18px; height:18px; vertical-align:middle; }
-[data-theme="dark"] .market-page:not(.players-page) .market-clause-shield { filter:brightness(0) invert(1); }
-.fb-dialog.market-bid-dialog button,
-.fb-dialog.market-bid-dialog button:not(.fb-button) { border-radius:0; }
 .market-page:not(.players-page) :is(.market-row, .market-loading-row) {
   grid-template-columns:var(--market-table-columns);
 }

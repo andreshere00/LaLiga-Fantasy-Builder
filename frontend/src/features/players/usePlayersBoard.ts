@@ -118,11 +118,10 @@ export function usePlayersBoard(): PlayersBoard {
   ]);
 
   const ownership = useMemo(() => {
-    const fromList = ownerByMasterIdFromRosters(
-      Array.isArray(leagueTeamsQuery.data) ? leagueTeamsQuery.data : [],
-    );
-    const fromRosters = ownerByMasterIdFromRosters(rosterQueries.data);
-    return new Map([...fromList, ...fromRosters]);
+    return ownerByMasterIdFromRosters([
+      ...(Array.isArray(leagueTeamsQuery.data) ? leagueTeamsQuery.data : []),
+      ...rosterQueries.data,
+    ]);
   }, [leagueTeamsQuery.data, rosterQueries.data]);
 
   const calendarForm = useMemo(
@@ -152,10 +151,11 @@ export function usePlayersBoard(): PlayersBoard {
     const list: PlayerRow[] = [];
     for (const [playerId, master] of catalog) {
       const owner = ownership.get(playerId);
-      const ownedBy = owner?.name ?? (
+      const ownedBy = owner ? owner.name ?? "Unknown manager" : (
         ownershipPending ? OWNER_PENDING : ownershipComplete ? FREE_AGENT : OWNER_UNAVAILABLE
       );
-      const row = playerRowFromCatalog(master, playerId, ownedBy, owner?.teamId ?? null, calendarForm);
+      const row = playerRowFromCatalog(master, playerId, ownedBy, owner?.teamId ?? null,
+        calendarForm, owner ?? null);
       const fromRoster = rosterPhotos.get(playerId) ?? null;
       list.push({
         ...row,

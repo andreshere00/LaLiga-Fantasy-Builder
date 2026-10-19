@@ -48,6 +48,11 @@
 }
 
 .market-toolbar {
+  position: sticky;
+  top: var(--app-header-height, 0px);
+  z-index: 80;
+  padding-block: 8px;
+  background: var(--fb-bg);
   margin-bottom: 12px;
 }
 
@@ -1140,3 +1145,26 @@ a.market-actions-item {
 .market-head-filter-icon { width:18px; height:18px; }
 .market-head-filter.is-active { color:var(--fb-primary); }
 .market-head-filter.is-active .market-head-filter-icon { filter:none; }
+
+/* Market and catalog presentation, including dialogs rendered through a portal. */
+.market-page .market-name { font-weight:700; }
+.market-page .market-name .players-name-link { font-weight:inherit; color:inherit; }
+.market-page .market-name.is-protected,
+.market-page .market-name.is-protected:is(:link,:visited,:hover,:focus-visible),
+.market-page .market-name.is-protected .players-name-link:is(:link,:visited,:hover,:focus-visible) {
+  color:var(--fb-primary);
+}
+.market-page .market-fsyp-primary { font-size:16px; font-weight:700; }
+.market-page .market-form-badges { gap:4px; }
+.market-page .market-form-badges .player-score-badge { width:26px; height:26px; }
+.market-page .market-form-badges .player-score-badge-value { font-size:12px; }
+.market-page .market-form-week { font-size:10px; }
+.market-clause-detail { display:flex; align-items:center; gap:6px; overflow-wrap:anywhere; }
+.market-clause-amount { white-space:nowrap; }
+.market-release-clause { display:flex; flex-direction:column; align-items:flex-start; gap:4px; margin-top:8px; }
+.market-bid-count,.market-clause-detail { font-size:12px; line-height:1.4; }
+.market-bid-value { display:block; margin-top:6px; color:var(--fb-primary); font-size:12px; line-height:1.4; font-weight:600; font-variant-numeric:tabular-nums; }
+.market-clause-shield { width:18px; height:18px; vertical-align:middle; }
+[data-theme="dark"] .market-page .market-clause-shield { filter:brightness(0) invert(1); }
+.fb-dialog.market-bid-dialog button,
+.fb-dialog.market-bid-dialog button:not(.fb-button) { border-radius:0; }

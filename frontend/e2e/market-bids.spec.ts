@@ -263,7 +263,7 @@ for (const theme of ["light", "dark"]) {
       await expect(bidTrigger(page)).toBeFocused();
       await page.goto("/players?q=Player");
       await expect(page.getByRole("heading", { name: "Players", exact: true })).toBeVisible();
-      await expect(page.locator(".market-name").first()).toHaveCSS("font-weight", "500");
+      await expect(page.locator(".market-name").first()).toHaveCSS("font-weight", "700");
       expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
     });
   }

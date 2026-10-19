@@ -1,6 +1,6 @@
 import { ThemeToggle } from "./ThemeToggle";
 import { Select } from "@base-ui/react/select";
-import { useState } from "react";
+import { useLayoutEffect, useRef, useState } from "react";
 import { Link, NavLink } from "react-router-dom";
 import { leagueId, leagueLabel } from "../../api/mappers";
 import { useAuth } from "../../auth/AuthProvider";
@@ -11,6 +11,22 @@ import { ProfilePhoto } from "./ProfilePhoto";
 import "./Header.css";
 
 export function Header() {
+  const headerRef = useRef<HTMLElement | null>(null);
+  useLayoutEffect(() => {
+    const header = headerRef.current;
+    if (!header) return;
+    const root = document.documentElement;
+    const previousHeight = root.style.getPropertyValue("--app-header-height");
+    const updateHeight = () => root.style.setProperty("--app-header-height", `${header.getBoundingClientRect().height}px`);
+    updateHeight();
+    const observer = new ResizeObserver(updateHeight);
+    observer.observe(header);
+    return () => {
+      observer.disconnect();
+      if (previousHeight) root.style.setProperty("--app-header-height", previousHeight);
+      else root.style.removeProperty("--app-header-height");
+    };
+  }, []);
   const { status, user, managerName, managerAvatar, notice, login, logout } = useAuth();
   const { leagues, selected, selectLeague } = useLeague();
   const [profileOpen, setProfileOpen] = useState(false);
@@ -20,7 +36,7 @@ export function Header() {
     || selected?.team?.manager?.profileImage?.trim() || null;
   const items = leagues.map((league) => ({ value: leagueId(league), label: leagueLabel(league) }));
   return (
-    <header className="app-header">
+    <header className="app-header" ref={headerRef}>
       <div className="header-content">
         <Link to="/" className="brand-bar">
           <img src="/favicon.png" className="brand-logo" alt="" />

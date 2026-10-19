@@ -25,6 +25,8 @@ portraits. The product captures below show the local account as it appeared at
 capture time.
 
 Screenshot assets live under [`docs/images/`](images/).
+Keep new screenshots in the same commit as their Markdown references so the
+gallery is available on GitHub as well as in a local checkout.
 
 ### Product captures
 
@@ -45,7 +47,7 @@ shared synthetic twenty-club contract fixture:
 
 ![Scrollable ranking and LALIGA standings, dark theme](images/screenshots/lineup-standings-dark.png)
 
-[Mobile standings layout](images/screenshots/lineup-standings-mobile.png)
+![Mobile standings layout](images/screenshots/lineup-standings-mobile.png)
 
 ![Lineup builder preferences](images/screenshots/lineup-builder-top.png)
 
@@ -59,11 +61,13 @@ shared synthetic twenty-club contract fixture:
 
 ![My bids and projected spending](images/screenshots/market-bids.png)
 
-[Market in dark mode on mobile](images/screenshots/market-mobile-dark.png)
+![Market in dark mode on mobile](images/screenshots/market-mobile-dark.png)
 
 ![Market offers notification button with pending offer count](images/screenshots/market-offers.png)
 
 ![Players catalog](images/screenshots/players-catalog.png)
+
+![Mobile Players catalog, dark theme](images/screenshots/players-mobile-dark.png)
 
 #### Player profile
 
@@ -149,7 +153,12 @@ local draft until you save the lineup; past and opponent lineups cannot be edite
 
 The Players table includes player photo, name, team, FSYP, form, market value,
 owner, availability, position, and context-sensitive actions. Search and
-column filters include a team list. Form filtering and score averages use the last three played matches, including
+column filters include a team list. Names are bold; known shields or future clause
+locks make linked and plain coach names red, with keyboard-accessible protection
+help. Lock expiry updates without a reload. Primary FSYP scores are bold at 16px;
+the season average and score tooltip remain secondary. Form shows five matchweeks
+in 26px squares, ordered oldest to newest, with earlier/later navigation.
+Form filtering and score averages use the last three played matches, including
 current-week matches once they start. Form badges also display scheduled current-week
 matches as zero with a warning; these placeholders are excluded from averages.
 The Players score tooltip appears only over the FSYP cell (or on keyboard focus). Row actions expose market options
@@ -164,6 +173,27 @@ photo, name, team, and actions, with those four column headings shown.
 The Name and Team filters remain available; other data columns and their filters
 are hidden at that breakpoint. The loading state uses a table-shaped skeleton.
 
+Market value also groups **Your bid** (red, only for a current bid) and **Release
+clause**, including its shield and lock countdown. These details move into Actions
+on small screens where Market value is hidden. Only listed players have a bid
+count in Actions: known zero stays zero; missing or invalid counts show Unavailable.
+Owned, unlisted players retain their roster clause; free agents show Not applicable,
+while unknown clause/ownership data shows Unavailable. Known roster fields take
+precedence over listings; missing fields may use a listing only when owner and
+squad-entry identities match. Roster metadata does not depend on a manager name.
+Existing league roster queries supply this data without requests per catalog row.
+
+Players reuses the market's pending-bid reconciliation and square portaled bid
+dialogs. Bid amounts and counts reconcile on create, modify, cancel and failed
+mutations. League changes reset row/dialog state. Favorites, URL filters, pagination,
+own-squad sale actions and player-specific Offers remain available; balance
+projections and My bids stay on Market.
+
+`e2e/players-market.spec.ts` covers these behaviors with synthetic league rosters,
+including both themes at 375/800/1024/1440px and a 720px layout equivalent to 200%
+zoom. Roster ownership and listing reconciliation have focused unit coverage in
+`features/players/model/playerMarketDetails.test.ts`.
+
 ## Authentication
 
 After Keycloak login, the app exchanges the session for an internal JWT
@@ -172,6 +202,11 @@ requests. `needs_reauth` prompts the user to link LaLiga again. See
 [Authentication](authentication/authentication.md).
 
 ## Shared building blocks
+
+The application navigation stays at the top of the viewport when scrolling.
+Market and Players titles stick immediately beneath it, using the measured header
+height to follow responsive wrapping and auth notices. Menus and dialogs remain
+above the sticky layers. Keyboard/anchor scrolling reserves space for both headers.
 
 | Area | Location |
 |------|----------|
@@ -376,7 +411,8 @@ with the clause value. Seller navigation remains in Sell options. Market value
 and clause details remain reachable by scrolling the table horizontally on smaller
 screens. Bid/direct-offer
 dialog actions, close and counter buttons have square corners, including disabled
-controls. Market typography/protection overrides are scoped away from Players.
+controls. Market and Players share typography, protection and score styling while
+keeping their own responsive column layouts.
 
 ### Actions (user-confirmed only)
 

@@ -1,8 +1,10 @@
 # Players screen improvement notes
 
-Status: planned; documentation only. These notes adapt the applicable items
+Status: implemented. These notes adapt the applicable items
 from the [market improvements plan](frontend-market-improvements-implementation-plan.md)
-to the `/players` catalog screen. They do not describe completed UI changes.
+to the `/players` catalog screen, including the later market refinements in
+commits `70324a0` and `d396758`: red active-bid amounts, grouped monetary details,
+compact names and five-match form in smaller score squares.
 
 ## Applicable changes
 
@@ -28,14 +30,17 @@ confirmed My bids scope remains current active bids only.
 - `frontend/src/features/players/PlayersPage.tsx` renders `PlayersListRow`, uses
   the shared `FsypCell`, `MarketActionMenu` and `MarketActionDialogs`, and joins
   current listings by master player ID through `useMarketBoard`.
-- `frontend/src/features/players/model/playerRow.ts` currently retains player
-  and owner information, but not squad-entry ID, clause value, shielding or
-  clause lock timestamps.
+- `frontend/src/features/players/model/playerRow.ts` retains player and owner
+  information, squad-entry ID, clause value, nullable shielding and parsed lock
+  timestamps, including when the manager display name is absent.
+- `model/playerMarketDetails.ts` rejects listings from another owner/squad entry
+  and gives known roster fields priority when joining monetary details.
 - `frontend/src/features/players/usePlayersBoard.ts` already fetches league
   teams and their rosters. Reuse those responses for clause/protection metadata.
 - `frontend/src/features/players/PlayersPage.css` and the shared
   `frontend/src/components/ui/RichList.css` control names, table layout and
-  responsive visibility. The shared name rule currently ends at weight `500`.
+  responsive visibility. Shared name, FSYP, form, clause and dialog styling lives
+  in `RichList.css`, with Players-specific layout rules in `PlayersPage.css`.
 - `frontend/src/features/market/actions/BidDialog.tsx` renders through a portal.
   The square-corner fix must reach the dialog itself, rather than depending on
   a `.players-page` ancestor.
@@ -75,13 +80,13 @@ confirmed My bids scope remains current active bids only.
    tooltip. Coordinate with the market implementation to avoid competing CSS
    overrides.
 
-5. **Keep the current table structure.** Add compact clause and, when listed,
-   bid-count details inside the existing Actions cell, grouped separately from
-   the action/bookmark controls. Allow the cell to grow vertically. Do not add
-   columns or move details into the owner cell, which is hidden on smaller
-   layouts. Preserve the current <=800px photo/name/team/actions layout and
-   its existing FSYP visibility rule; new information must not widen the page
-   or make controls unusable.
+5. **Keep the current table structure.** Following the later market commits,
+   clause and red active-bid amounts are grouped under Market value on desktop.
+   When that column is hidden at <=800px, monetary details appear in Actions,
+   below the action/bookmark controls. Listed-player bid counts remain in Actions
+   at every width. No columns were added; photo/name/team/actions and the existing
+   FSYP visibility rule remain intact. Five-match form uses the market's compact
+   26px squares; numeric Form filtering keeps its existing three-match average.
 
 6. **Reuse dialog and mutation fixes.** Use the shared square-button bid-dialog
    implementation and the existing pending-bid overlay. Listing counts must
