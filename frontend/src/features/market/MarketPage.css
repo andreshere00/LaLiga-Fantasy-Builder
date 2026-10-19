@@ -10,17 +10,80 @@
 .market-page:not(.players-page) .market-fsyp-primary { font-size:16px; font-weight:700; }
 .market-page:not(.players-page) .market-cell-seller { padding-block:12px; }
 .market-clause-detail { display:flex; align-items:center; gap:6px; overflow-wrap:anywhere; }
+.market-release-clause { display:flex; flex-direction:column; align-items:flex-start; gap:4px; margin-top:8px; }
 .market-bid-count,.market-clause-detail { font-size:12px; line-height:1.4; }
-.market-seller-shield { width:18px; height:18px; vertical-align:middle; }
-[data-theme="dark"] .market-page:not(.players-page) .market-seller-shield { filter:brightness(0) invert(1); }
+.market-bid-value { display:block; margin-top:6px; color:var(--fb-primary); font-size:12px; line-height:1.4; font-weight:600; font-variant-numeric:tabular-nums; }
+.market-clause-shield { width:18px; height:18px; vertical-align:middle; }
+[data-theme="dark"] .market-page:not(.players-page) .market-clause-shield { filter:brightness(0) invert(1); }
 .fb-dialog.market-bid-dialog button,
 .fb-dialog.market-bid-dialog button:not(.fb-button) { border-radius:0; }
-.market-page:not(.players-page) .market-balance-actions { flex-wrap:wrap; gap:12px; }
-.market-money-summary { display:flex; flex-wrap:wrap; gap:12px; }
-.market-projection-note { flex-basis:100%; margin:0; font-size:12px; line-height:1.5; color:var(--fb-muted); }
-.market-projection-note.is-negative { color:var(--fb-primary); }
+.market-page:not(.players-page) :is(.market-row, .market-loading-row) {
+  grid-template-columns:var(--market-table-columns);
+}
+.market-page:not(.players-page) .market-name-wrap,
+.market-page:not(.players-page) .market-loading-row > :nth-child(2) { grid-column:span 1; }
+.market-page:not(.players-page) .market-head-player { grid-column:span 2; }
+.market-page:not(.players-page) .market-name { white-space:normal; overflow-wrap:anywhere; }
+@media(min-width:1101px) {
+  .market-page:not(.players-page) {
+    --market-table-columns:72px minmax(6rem,.8fr) minmax(3.5rem,.4fr) minmax(4rem,.45fr) 148px minmax(7rem,1fr) minmax(7rem,1fr) minmax(4rem,.6fr) minmax(7rem,1fr);
+  }
+}
+/* Keep both monetary values reachable when the table scrolls on smaller screens. */
+@media(max-width:1000px) {
+  .market-page:not(.players-page) {
+    --market-table-columns:72px 7rem 3.5rem 4rem 148px minmax(8rem,1fr) 5rem 7rem;
+  }
+  .market-page:not(.players-page) :is(.market-list, .market-loading-table) { overflow-x:auto; }
+  .market-page:not(.players-page) :is(.market-row, .market-loading-row) { min-width:880px; }
+  .market-page:not(.players-page) .market-head-cell-marketValue { display:flex; }
+  .market-page:not(.players-page) .market-data-row > :nth-child(6),
+  .market-page:not(.players-page) .market-loading-row > :nth-child(6) { display:block; }
+}
+@media(max-width:860px) {
+  .market-page:not(.players-page) {
+    --market-table-columns:72px 7rem 3.5rem 4rem minmax(8rem,1fr) 5rem 7rem;
+  }
+  .market-page:not(.players-page) :is(.market-row, .market-loading-row) { min-width:720px; }
+}
+.market-page:not(.players-page) .market-filter-row { align-items:flex-start; }
+.market-page:not(.players-page) .market-balance-actions {
+  justify-content:flex-end;
+  align-items:flex-start;
+  flex-wrap:wrap;
+  gap:12px;
+  margin-left:auto;
+  min-width:0;
+}
+.market-page:not(.players-page) :is(.market-offers-trigger, .market-bids-trigger) { margin-top:24px; }
+.market-money-summary { width:208px; max-width:100%; font-variant-numeric:tabular-nums; }
+.market-money-heading { display:block; min-height:18px; margin-bottom:6px; font-size:12px; font-weight:700; }
+.market-money-help { display:grid; place-items:center; padding:0; width:18px; height:18px; border:0; background:transparent; color:var(--fb-muted); cursor:help; }
+.market-money-help svg { width:16px; height:16px; fill:none; stroke:currentColor; stroke-width:1.5; }
+.market-balance-amount { display:flex; align-items:center; gap:10px; width:100%; min-height:44px; padding:0 12px; border:0; background:var(--fb-surface); color:inherit; font:inherit; font-size:16px; cursor:pointer; }
+.market-balance-amount strong { margin-right:auto; white-space:nowrap; }
+.market-money-chevron { width:14px; height:14px; flex-shrink:0; fill:none; stroke:currentColor; stroke-width:1.5; }
+.market-balance-amount[aria-expanded="true"] .market-money-chevron { transform:rotate(180deg); }
+.market-balance-amount:focus-visible { outline:2px solid var(--fb-focus); outline-offset:2px; }
+.market-money-icon { display:block; width:22px; height:22px; }
+[data-theme="dark"] .market-balance-amount:not(.is-negative) .market-money-icon { filter:brightness(0) invert(1); }
+.market-money-positioner { z-index:400; }
+.market-money-popup { box-sizing:border-box; width:min(320px,calc(100vw - 32px)); padding:16px; border:1px solid var(--fb-line); background:var(--fb-surface); color:var(--fb-secondary); box-shadow:0 8px 24px rgb(0 0 0 / .16); font-variant-numeric:tabular-nums; }
+.market-money-popup-heading { display:flex; align-items:center; justify-content:space-between; gap:12px; margin-bottom:12px; }
+.market-money-popup-heading h2 { margin:0; font-size:14px; }
+.market-money-popup > .fb-button { display:flex; margin:12px 0 0 auto; }
+.market-money-breakdown { display:grid; gap:8px; margin:0; font-size:12px; line-height:1.4; }
+.market-money-breakdown > div { display:flex; justify-content:space-between; gap:12px; }
+.market-money-breakdown dt { color:var(--fb-muted); }
+.market-money-breakdown dd { margin:0; text-align:right; font-weight:600; }
+.market-money-summary .is-negative,.market-money-popup .is-negative { color:var(--fb-primary); }
+.market-money-status { margin:8px 0 0; font-size:12px; line-height:1.4; color:var(--fb-muted); }
 @media(max-width:800px) {
   .market-page:not(.players-page) .market-filter-row { flex-wrap:wrap; }
-  .market-page:not(.players-page) .market-balance-actions { width:100%; margin-left:0; }
-  .market-money-summary { flex-basis:100%; }
+  .market-page:not(.players-page) .market-balance-actions { width:100%; }
+}
+@media(max-width:600px) {
+  .market-page:not(.players-page) .market-balance-actions { column-gap:8px; }
+  .market-page:not(.players-page) :is(.market-offers-trigger, .market-bids-trigger) { margin-top:0; }
+  .market-money-summary { flex-basis:100%; max-width:208px; }
 }

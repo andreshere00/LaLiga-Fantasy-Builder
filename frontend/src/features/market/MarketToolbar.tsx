@@ -1,5 +1,7 @@
 import { formatEuro } from "../../api/format";
-import { ValueBox } from "../../components/ValueBox";
+import { Popover } from "@base-ui/react/popover";
+import { Button } from "../../components/ui/Button";
+import { Help } from "../../components/ui/Help";
 import moneyWarningIconUrl from "../../assets/button_warning.svg";
 import moneyIconUrl from "../../assets/button_money.svg";
 import { MarketPlayerSearch } from "./MarketPlayerSearch";
@@ -9,22 +11,69 @@ import type { BidProjection } from "./model/activeBids";
 
 type MarketBalanceProps = {
   money: number | null;
+  projection?: BidProjection;
+  projectionRefreshing?: boolean;
+  projectionStale?: boolean;
 };
 
-export function MarketBalance({ money }: MarketBalanceProps) {
+export function MarketBalance({ money, projection, projectionRefreshing, projectionStale }: MarketBalanceProps) {
   const negative = money != null && money < 0;
+  const help = projection ? [
+    "Assuming all active bids succeed.",
+    projection.estimated
+      ? "Available is a conservative estimate: reported balance minus bids; Fantasy may already reserve this money."
+      : "Based on verified balance reservation accounting.",
+    projection.available != null && projection.available < 0
+      ? "Active bids could exceed your cash. This projection is separate from your reported balance."
+      : "",
+  ].filter(Boolean).join(" ") : "Your reported balance.";
   return (
-    <ValueBox
-      label="Balance"
-      value={formatEuro(money)}
-      iconSrc={negative ? moneyWarningIconUrl : moneyIconUrl}
-      iconTitle={
-        negative
-          ? "The balance must be positive before the next matchday begins; otherwise, no points will be scored."
-          : undefined
-      }
-      tone={negative ? "negative" : "default"}
-    />
+    <div className="market-money-summary" aria-label="Market money summary" aria-busy={projectionRefreshing}>
+      <span className="market-money-heading">Amount available</span>
+      <Popover.Root>
+        <Popover.Trigger className={"market-balance-amount" + (negative ? " is-negative" : "")}
+          aria-label={`Amount available: ${formatEuro(money)}. Show balance details`}>
+          <strong>{formatEuro(money)}</strong>
+          <img className="market-money-icon" src={negative ? moneyWarningIconUrl : moneyIconUrl} alt="" aria-hidden="true" />
+          <svg className="market-money-chevron" viewBox="0 0 24 24" aria-hidden="true"><path d="m6 9 6 6 6-6" /></svg>
+        </Popover.Trigger>
+        <Popover.Portal>
+          <Popover.Positioner align="end" sideOffset={8} className="market-money-positioner">
+            <Popover.Popup className="market-money-popup" initialFocus={false}>
+              <div className="market-money-popup-heading">
+                <Popover.Title>Balance details</Popover.Title>
+                <Help content={help} trigger={<button type="button" className="market-money-help" aria-label="About available balance" />}>
+                  <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9" /><path d="M12 11v6M12 7v1" /></svg>
+                </Help>
+              </div>
+              <dl className="market-money-breakdown">
+                <div><dt>Reported balance</dt><dd className={negative ? "is-negative" : undefined}>{formatEuro(money)}</dd></div>
+                {projection ? <>
+                  <div>
+                    <dt>Projected spending</dt>
+                    <dd>{projection.spending == null ? "Unavailable" : formatEuro(projection.spending)}</dd>
+                  </div>
+                  <div className={projection.available != null && projection.available < 0 ? "is-negative" : undefined}>
+                    <dt>{projection.estimated ? "Estimated available" : "Projected available"}</dt>
+                    <dd>{projection.available == null ? "Unavailable" : formatEuro(projection.available)}</dd>
+                  </div>
+                </> : null}
+              </dl>
+              {negative ? <p className="market-money-status is-negative">
+                The balance must be positive before the next matchday begins; otherwise, no points will be scored.
+              </p> : null}
+              {projection && (!projection.complete || projectionRefreshing || projectionStale) ? (
+                <p className="market-money-status" role="status">
+                  {!projection.complete ? "Projection incomplete. " : ""}
+                  {projectionStale ? "Refresh failed; cached values may be stale." : projectionRefreshing ? "Refreshing balance and bids…" : ""}
+                </p>
+              ) : null}
+              <Popover.Close render={<Button variant="ghost" size="sm" shape="square" />}>Close</Popover.Close>
+            </Popover.Popup>
+          </Popover.Positioner>
+        </Popover.Portal>
+      </Popover.Root>
+    </div>
   );
 }
 
@@ -72,26 +121,8 @@ export function MarketToolbar({
         ) : null}
         <div className="market-balance-actions">
           {notifications}
-          <div className="market-money-summary" aria-label="Market money summary" aria-busy={projectionRefreshing}>
-            <MarketBalance money={money} />
-            {projection ? <>
-              <ValueBox label="Projected spending" value={projection.spending == null ? "Unavailable" : formatEuro(projection.spending)} />
-              <ValueBox label={projection.estimated ? "Estimated available" : "Projected available"}
-                value={projection.available == null ? "Unavailable" : formatEuro(projection.available)}
-                tone={projection.available != null && projection.available < 0 ? "negative" : "default"} />
-            </> : null}
-          </div>
-          {projection ? <p className="market-projection-note">
-            Assuming all active bids succeed. {projection.estimated
-              ? "Available is a conservative estimate: reported balance minus bids; Fantasy may already reserve this money."
-              : "Based on verified balance reservation accounting."}
-            {!projection.complete ? " Projection incomplete: balance or bid details are unavailable." : ""}
-            {projectionRefreshing ? " Refreshing balance and bids…" : ""}
-            {projectionStale ? " Refresh failed; cached values may be stale." : ""}
-          </p> : null}
-          {projection?.available != null && projection.available < 0 ? <p className="market-projection-note is-negative">
-            Active bids could exceed your cash. This projection is separate from your reported balance.
-          </p> : null}
+          <MarketBalance money={money} projection={projection}
+            projectionRefreshing={projectionRefreshing} projectionStale={projectionStale} />
         </div>
       </div>
     </>

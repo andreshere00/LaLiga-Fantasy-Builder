@@ -1,10 +1,12 @@
 import type { MarketActionsApi } from "./actions/useMarketActions";
+import { formatEuro } from "../../api/format";
 import type { MarketActionContext } from "./actions/marketActions";
 import { AvailabilityCell } from "./cells/AvailabilityCell";
 import { FormCell } from "./cells/FormCell";
 import { FsypCell } from "./cells/FsypCell";
 import { PositionCell } from "./cells/PositionCell";
 import { PlayerCell } from "./cells/PlayerCell";
+import { ReleaseClauseDetail } from "./cells/ReleaseClauseDetail";
 import { SellerCell } from "./cells/SellerCell";
 import { ValueCell } from "./cells/ValueCell";
 import type { MarketColumnHeading, MarketColumnKey } from "./marketColumnHeadings";
@@ -49,6 +51,10 @@ export function MarketRowCells({
           variationPercent={row.variationPercent}
           valueHistory={row.valueHistory}
         />
+        {row.myBid ? <span className="market-bid-value">
+          Your bid: {formatEuro(row.myBid.money)}
+        </span> : null}
+        <ReleaseClauseDetail row={row} now={now} />
       </span>
       <span
         className="market-cell market-cell-availability"

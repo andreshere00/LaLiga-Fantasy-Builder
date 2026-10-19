@@ -247,7 +247,12 @@ Code: `frontend/src/features/market/` (`model/`, `cells/`, `actions/`,
 
 ### Toolbar
 
-- **Balance** from `GET /api/teams/{team_id}/money` (league object fallback).
+- **Amount available** groups the reported balance from
+  `GET /api/teams/{team_id}/money` (league object fallback) with a chevron that opens
+  the two projection rows in a popover. The closed balance control has the same
+  height as Offers and My bids, aligned to the toolbar's right edge; search stays
+  on the left. The estimate explanation is available from the popover's information
+  button on hover or keyboard focus. Escape or clicking outside closes the details.
 - **Projected spending** sums distinct active bids across the selected league,
   including supplemental `userBids` whose players are absent from the table. Filters
   never change commitments. The assumption is that **all active bids succeed**.
@@ -268,8 +273,8 @@ Code: `frontend/src/features/market/` (`model/`, `cells/`, `actions/`,
   dialogs and filters. Refresh uses the existing market and money queries; cached
   rows remain visible and marked stale on failed background reads. First-load,
   incomplete-data and empty states are distinct.
-- Negative balance shows a warning icon with a tooltip: balance must be positive
-  before the next matchday to score.
+- Negative balance shows a warning icon and red amount. Its balance-details
+  popover explains that cash must be positive before the next matchday to score.
 - **Offers** beside the market balance opens a modal side panel (bottom panel on mobile),
   following the shadcn Sheet pattern on the existing Base UI dialog. Its translucent
   backdrop leaves the market visible. The supplied notification icons adapt to the
@@ -353,18 +358,23 @@ Future verified gross accounting uses `B - P`; verified net accounting uses `B`.
 | Position | Abbrev badge (`GKP`, `DEF`, `MDF`, `ATK`, `COA`); hover shows full role name |
 | FSYP | Bold 16px primary points plus secondary season average; hover panel: total, season average, form (last 3) |
 | Form | Three matchweeks at a time, oldest→newest; current pending fixtures show 0 with a warning and are excluded from averages; ‹ earlier, › later (full season) |
-| Market value | Price on the first line, 5-day change on the next; hover: last, highest, lowest, 5d/14d ago with % vs current |
+| Market value | Price, 5-day change, your active bid amount when present, then release clause with protection and lock countdown; hover on the price: last, highest, lowest, 5d/14d ago with % vs current |
 | Availability | SVG icons + hover text for next matchday readiness |
 | Seal end | Countdown with a coral status rail when under one hour remains |
 | Sell options | Seller link (`/?team=…`) or `LALIGA`; **Options** / **Bidded** action menu. On your own listings the menu offers **Withdraw from market** (confirmation modal, `DELETE /api/market/leagues/{id}/{marketId}`) and a disabled **Immediate sell** entry until a documented Fantasy route exists |
 
+The player name occupies a single compact grid track beside the photo, wrapping
+long names. Table headers and loading placeholders use the same column layout.
+
 The seller/options cell also displays **Bids: 0** for a known zero count and
 **Bids: Unavailable** for missing/invalid counts; `numberOfOffers` is never added.
-**Release clause** shows the known positive euro value even while protected,
+Below the market value, **Release clause** shows the known positive euro value even while protected,
 Not applicable for a LaLiga listing without a clause, and Unavailable for other
 unknown values. The shield beside it follows the theme foreground (white in dark
-mode); the separate red protection icon stays red. Seller navigation and the lock
-countdown remain available in the existing responsive grid. Bid/direct-offer
+mode); the separate red protection icon stays red. The clause lock countdown stays
+with the clause value. Seller navigation remains in Sell options. Market value
+and clause details remain reachable by scrolling the table horizontally on smaller
+screens. Bid/direct-offer
 dialog actions, close and counter buttons have square corners, including disabled
 controls. Market typography/protection overrides are scoped away from Players.
 
