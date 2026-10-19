@@ -8,6 +8,10 @@
   color:var(--fb-primary);
 }
 .market-page:not(.players-page) .market-fsyp-primary { font-size:16px; font-weight:700; }
+.market-page:not(.players-page) .market-form-badges { gap:4px; }
+.market-page:not(.players-page) .market-form-badges .player-score-badge { width:26px; height:26px; }
+.market-page:not(.players-page) .market-form-badges .player-score-badge-value { font-size:12px; }
+.market-page:not(.players-page) .market-form-week { font-size:10px; }
 .market-page:not(.players-page) .market-cell-seller { padding-block:12px; }
 .market-clause-detail { display:flex; align-items:center; gap:6px; overflow-wrap:anywhere; }
 .market-release-clause { display:flex; flex-direction:column; align-items:flex-start; gap:4px; margin-top:8px; }

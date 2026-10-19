@@ -184,6 +184,18 @@ for (const theme of ["light", "dark"]) {
       await expect(name).toHaveCSS("color", "rgb(255, 75, 68)");
       await expect(protectedRow.locator(".market-fsyp-primary")).toHaveCSS("font-weight", "700");
       await expect(protectedRow.locator(".market-fsyp-primary")).toHaveCSS("font-size", "16px");
+      const form = protectedRow.locator(".market-form");
+      await expect(form.locator(".market-form-week")).toHaveText(["F3", "F4", "F5", "F6", "F7"]);
+      if (width > 860) {
+        const badgesBox = await form.locator(".market-form-badges").boundingBox();
+        const formBox = await form.boundingBox();
+        expect(badgesBox!.width).toBeLessThanOrEqual(formBox!.width);
+        await form.getByRole("button", { name: "Earlier matchweeks" }).click();
+        await expect(form.locator(".market-form-week")).toHaveText(["F2", "F3", "F4", "F5", "F6"]);
+        await form.getByRole("button", { name: "Later matchweeks" }).click();
+        await expect(form.locator(".market-form-week")).toHaveText(["F3", "F4", "F5", "F6", "F7"]);
+        await expect(form.getByRole("button", { name: "Later matchweeks" })).toBeDisabled();
+      }
       await expect(protectedRow.getByText("Bids: 2", { exact: true })).toBeVisible();
       await expect(protectedRow.locator(".market-value .market-bid-value")).toHaveText("Your bid: 4.000.000 €");
       const unbidRow = page.locator(".market-data-row").filter({ has: page.getByRole("link", { name: "Player 16", exact: true }) });

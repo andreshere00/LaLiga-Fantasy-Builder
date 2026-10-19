@@ -42,7 +42,7 @@ export function MarketRowCells({
         />
       </span>
       <span className="market-cell market-form" data-label={columnHeadings.form.label}>
-        <FormCell row={row} />
+        <FormCell row={row} windowSize={5} />
       </span>
       <span className="market-cell market-value" data-label={columnHeadings.marketValue.label}>
         <ValueCell

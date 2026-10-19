@@ -357,7 +357,7 @@ Future verified gross accounting uses `B - P`; verified net accounting uses `B`.
 | Player | Photo and bold name/link; bid icon and amount tooltip when you have a bid. Shielded or future clause-locked names are red and bold, with textual protection help; expired locks revert unless shielding remains |
 | Position | Abbrev badge (`GKP`, `DEF`, `MDF`, `ATK`, `COA`); hover shows full role name |
 | FSYP | Bold 16px primary points plus secondary season average; hover panel: total, season average, form (last 3) |
-| Form | Three matchweeks at a time, oldest→newest; current pending fixtures show 0 with a warning and are excluded from averages; ‹ earlier, › later (full season) |
+| Form | Five matchweeks at a time, oldest→newest, in compact 26px score squares; current pending fixtures show 0 with a warning and are excluded from averages; ‹ earlier, › later (full season) |
 | Market value | Price, 5-day change, your active bid amount when present, then release clause with protection and lock countdown; hover on the price: last, highest, lowest, 5d/14d ago with % vs current |
 | Availability | SVG icons + hover text for next matchday readiness |
 | Seal end | Countdown with a coral status rail when under one hour remains |
