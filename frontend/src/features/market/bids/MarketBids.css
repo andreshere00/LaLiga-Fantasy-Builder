@@ -1,0 +1,17 @@
+.market-bids-trigger { min-height:44px; }
+.market-bids-trigger > span { display:flex; align-items:center; gap:8px; }
+.market-bids-count { display:inline-grid; place-items:center; min-width:22px; height:22px; padding:0 5px; border:1px solid currentColor; font-weight:700; }
+.fb-dialog.market-bids-panel { width:min(480px,calc(100vw - 24px)); }
+.market-bids-panel button { border-radius:0; }
+.market-bids-total { font-size:16px; }
+.market-bids-list { list-style:none; padding:0; margin:20px 0 0; }
+.market-bid { padding:20px 0; border-top:1px solid var(--fb-line); }
+.market-bid-player { display:flex; align-items:center; gap:12px; }
+.market-bid-player img { width:48px; height:64px; object-fit:contain; }
+.market-bid h3 { margin:0; font-size:16px; }
+.market-bid p { margin:8px 0; overflow-wrap:anywhere; }
+.market-bid-money { display:block; margin-block:16px; font-size:20px; }
+.market-bid-actions { display:flex; flex-wrap:wrap; gap:12px; margin-top:16px; }
+.market-bid-actions > button { flex:1; }
+.market-bids-empty { padding:40px 12px; text-align:center; }
+@media(max-width:600px) { .fb-dialog.market-bids-panel { width:100%; } }

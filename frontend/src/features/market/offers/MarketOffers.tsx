@@ -197,6 +197,7 @@ function OffersPanel({ cards, squadAvailable, showTrigger, leagueKey, teamId }: 
       </Button> : null}
       <Dialog open={open} title={target ? `${target.playerName} offers` : "Market offers"}
         onClose={close} layout="sheet"
+        finalFocus={offersMenu?.finalFocus}
         className="market-offers-panel" closeOnBackdrop={!response.isPending}
         footer={<Button variant="outline" shape="square" onClick={close}
           disabled={response.isPending}>Close</Button>}>

@@ -207,7 +207,7 @@ export function resolveMarketActionOffers(
   if (!listingOpen(row, now)) return offers;
 
   if (row.myBid) {
-    const confirmedBid = !isLocalBidId(row.myBid.id);
+    const confirmedBid = !isLocalBidId(row.myBid.id) && row.bidActionsAvailable !== false;
     const disabledReason = confirmedBid ? undefined : BID_NOT_CONFIRMED;
     offers.push({
       type: "bid",
@@ -258,6 +258,7 @@ export function resolveMarketActionOffers(
   const rangeOk = bidRangeAvailable(row.marketValue, money, context.squadMarketValue, 0);
   const coachHireBlocked = isCoachMarketHire(row.positionId, bidOffer.kind);
   const bidEnabled =
+    row.bidActionsAvailable !== false &&
     !coachHireBlocked &&
     slotOk &&
     rangeOk &&
@@ -267,7 +268,8 @@ export function resolveMarketActionOffers(
     kind: bidOffer.kind,
     label: bidOffer.label,
     enabled: bidEnabled,
-    disabledReason: bidEnabled ? undefined : bidDisabledReason(row, context, bidOffer.kind),
+    disabledReason: bidEnabled ? undefined : row.bidActionsAvailable === false
+      ? BID_NOT_CONFIRMED : bidDisabledReason(row, context, bidOffer.kind),
   });
 
   return offers;

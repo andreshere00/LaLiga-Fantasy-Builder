@@ -1,4 +1,8 @@
 import { Menu } from "@base-ui/react/menu";
+import { formatEuro } from "../../api/format";
+import { leagueId } from "../../api/mappers";
+import { Help } from "../../components/ui/Help";
+import shieldRedIcon from "../../assets/button_shield_red.svg";
 import { useQueries } from "@tanstack/react-query";
 import { NumberPagination } from "../../components/ui/NumberPagination";
 import { useCallback, useMemo, useState } from "react";
@@ -10,11 +14,14 @@ import { useNow } from "../../hooks/useNow";
 import { GatePanel } from "../gates/GatePanel";
 import { SquadPlayerActions } from "../lineup/SquadPlayerActions";
 import { useSquadSales } from "../lineup/useSquadSales";
+import { useLeague } from "../lineup/LeagueProvider";
 import { AvailabilityCell } from "../market/cells/AvailabilityCell";
 import { FormCell } from "../market/cells/FormCell";
 import { FsypCell } from "../market/cells/FsypCell";
 import { PositionCell } from "../market/cells/PositionCell";
 import { ValueCell } from "../market/cells/ValueCell";
+import { ReleaseClauseDetail } from "../market/cells/ReleaseClauseDetail";
+import { protectionDescription } from "../market/model/protection";
 import { PlayerTile } from "../lineup/PlayerTile";
 import { MarketActionDialogs } from "../market/actions/MarketActionDialogs";
 import { MarketActionMenu } from "../market/actions/MarketActionMenu";
@@ -47,6 +54,7 @@ import { MarketOffers } from "../market/offers/MarketOffers";
 import { MarketOffersProvider } from "../market/offers/MarketOffersContext";
 import { readFavoritePlayerIds, toggleFavoritePlayerId } from "./favorites";
 import type { PlayerRow } from "./model/playerRow";
+import { matchingPlayerListing, playerClauseDetails } from "./model/playerMarketDetails";
 import {
   createEmptyPlayersFilters,
   isPlayersLeaderboardView,
@@ -82,6 +90,16 @@ function PlayersListRow({
   sales: ReturnType<typeof useSquadSales>;
   onToggleFavorite: () => void;
 }) {
+  const clause = playerClauseDetails(row, marketRow);
+  const listingForActions = marketRow ? { ...marketRow, ...clause, isShielded: clause.isShielded === true } : null;
+  const protection = protectionDescription(clause, actionContext.now);
+  const nameClass = "market-name" + (protection ? " is-protected" : "");
+  const moneyDetails = <>
+    {marketRow?.myBid ? <span className="market-bid-value">
+      Your bid: {formatEuro(marketRow.myBid.money)}
+    </span> : null}
+    <ReleaseClauseDetail row={clause} now={actionContext.now} />
+  </>;
   const formRow = {
     id: row.playerId,
     formRecent: row.formRecent,
@@ -132,9 +150,12 @@ function PlayersListRow({
         />
       </div>
       <span className="market-name-wrap" data-label="Player">
-        {row.positionId === 5 ? <span className="market-name">{row.name}</span> : (
-          <Link className="market-name players-name-link" to={"/players/" + encodeURIComponent(row.playerId)} state={{ returnTo: "/players" }}>{row.name}</Link>
+        {row.positionId === 5 ? <span className={nameClass}>{row.name}</span> : (
+          <Link className={nameClass + " players-name-link"} to={"/players/" + encodeURIComponent(row.playerId)} state={{ returnTo: "/players" }}>{row.name}</Link>
         )}
+        {protection ? <Help content={protection} className="market-clause-flag">
+          <img className="market-clause-flag-icon" src={shieldRedIcon} alt={protection} />
+        </Help> : null}
       </span>
       <span className="market-cell players-team-cell" data-label="Team">{row.teamName ?? "—"}</span>
       <span className="market-cell" data-label="Position">
@@ -148,7 +169,7 @@ function PlayersListRow({
         />
       </span>
       <span className="market-cell market-form" data-label="Form">
-        <FormCell row={formRow} />
+        <FormCell row={formRow} windowSize={5} />
       </span>
       <span className="market-cell market-value players-value-cell" data-label="Market value">
         <ValueCell
@@ -157,6 +178,7 @@ function PlayersListRow({
           variationPercent={valueVariationPercent(valueHistory)}
           valueHistory={valueHistory}
         />
+        <span className="players-value-details">{moneyDetails}</span>
       </span>
       <span className="market-cell market-cell-availability" data-label="Availability">
         <AvailabilityCell availability={row.availability} />
@@ -165,37 +187,48 @@ function PlayersListRow({
         {ownerCell}
       </span>
       <span className="market-cell players-actions-cell" data-label="Actions">
-        {ownSquadCard ? (
-          <SquadPlayerActions
-            player={ownSquadCard}
-            sales={sales}
-            triggerText="Options"
-            detailsReturnTo="/players"
-          >
-            <span className="players-squad-actions-target" aria-hidden="true" />
-          </SquadPlayerActions>
-        ) : marketRow ? (
-          <MarketActionMenu
-            row={marketRow}
-            context={actionContext}
-            actions={actions}
-            detailsPlayer={row.positionId === 5 ? undefined : { id: row.playerId, name: row.name }}
-            detailsReturnTo="/players"
+        <span className="players-action-controls">
+          {ownSquadCard ? (
+            <SquadPlayerActions
+              player={ownSquadCard}
+              sales={sales}
+              triggerText="Options"
+              detailsReturnTo="/players"
+            >
+              <span className="players-squad-actions-target" aria-hidden="true" />
+            </SquadPlayerActions>
+          ) : listingForActions ? (
+            <MarketActionMenu
+              row={listingForActions}
+              context={actionContext}
+              actions={actions}
+              detailsPlayer={row.positionId === 5 ? undefined : { id: row.playerId, name: row.name }}
+              detailsReturnTo="/players"
+            />
+          ) : (
+            detailsOptions
+          )}
+          <PlayerBookmarkButton
+            pressed={favorite}
+            playerName={row.name}
+            onToggle={onToggleFavorite}
           />
-        ) : (
-          detailsOptions
-        )}
-        <PlayerBookmarkButton
-          pressed={favorite}
-          playerName={row.name}
-          onToggle={onToggleFavorite}
-        />
+        </span>
+        {marketRow ? <span className="market-bid-count">Bids: {marketRow.numberOfBids ?? "Unavailable"}</span> : null}
+        <span className="players-mobile-value-details">{moneyDetails}</span>
       </span>
     </RichRow>
   );
 }
 
 function PlayersList() {
+  const { selected } = useLeague();
+  return <MarketOffersProvider key={selected ? leagueId(selected) : ""}>
+    <PlayersListContent />
+  </MarketOffersProvider>;
+}
+
+function PlayersListContent() {
   const board = usePlayersBoard();
   const marketBoard = useMarketBoard();
   const actions = useMarketActions();
@@ -356,7 +389,7 @@ function PlayersList() {
                 key={row.playerId}
                 row={row}
                 favorite={favorites.has(row.playerId)}
-                marketRow={marketRowsByPlayer.get(row.playerId) ?? null}
+                marketRow={matchingPlayerListing(row, marketRowsByPlayer.get(row.playerId) ?? null)}
                 valueHistory={valueHistoryByPlayer.get(row.playerId) ?? []}
                 ownSquadCard={ownSquadByPlayer.get(row.playerId) ?? null}
                 actionContext={actionContext}
@@ -387,7 +420,7 @@ export function PlayersPage() {
   if (status !== "ready") return <GatePanel status={status} />;
   return (
     <section className="market-page players-page">
-      <MarketOffersProvider><PlayersList /></MarketOffersProvider>
+      <PlayersList />
     </section>
   );
 }

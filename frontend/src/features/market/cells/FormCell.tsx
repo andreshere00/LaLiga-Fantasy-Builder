@@ -2,7 +2,7 @@ import { useState } from "react";
 
 import { scoreWeekLabel } from "../../../api/mappers";
 import { PlayerScoreBadge } from "../../lineup/PlayerTile";
-import { formRecentWindow, formWindowChronological } from "../model/form";
+import { FORM_DISPLAY_MATCHES, formRecentWindow, formWindowChronological } from "../model/form";
 type FormCellRow = {
   id: string;
   formRecent: readonly number[];
@@ -10,13 +10,14 @@ type FormCellRow = {
   pendingFormWeek?: number;
 };
 
-export function FormCell({ row }: { row: FormCellRow }) {
+export function FormCell({ row, windowSize = FORM_DISPLAY_MATCHES }: { row: FormCellRow; windowSize?: number }) {
   const [startIndex, setStartIndex] = useState(0);
   const view = formWindowChronological(
     formRecentWindow(
       row.formRecent,
       row.formRecentWeeks,
       startIndex,
+      windowSize,
     ),
   );
 

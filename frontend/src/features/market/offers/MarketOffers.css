@@ -1,8 +1,4 @@
 .market-balance-actions { display:flex; align-items:flex-end; gap:16px; margin-left:auto; }
-.market-balance-actions .value-box-block { margin-left:0; }
-[data-theme="dark"] .market-balance-actions .value-box-block-shell:not(.is-negative) .value-box-block-icon {
-  filter:brightness(0) invert(1);
-}
 .market-offers-trigger { position:relative; min-height:44px; }
 .fb-button.market-offers-trigger.has-offers {
   background:var(--fb-primary); border-color:var(--fb-primary); color:var(--fb-on-brand);

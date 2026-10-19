@@ -29,6 +29,11 @@ frontend validates its camelCase DTOs with Zod and maps them to the existing wir
 
 - **Money:** `teamMoney` / `teamInvestment` for the caller's team. Rivals are
   often empty or sparse.
+  Gross/net bid reservation semantics are still unverified: stored market and
+  league field captures have no paired money amounts/timestamps. The frontend
+  labels `reported cash - distinct active bids` as **Estimated available**, a
+  conservative estimate. `teamInvestment` is not assumed to mean pending bids.
+  See [market projection evidence](../../frontend.md#data-loading-usemarketboard).
 - **Lineup PUT:** slots are `playerTeamId`. Base slots (`goalkeeper`,
   `defender`, `midfield`, `striker`, `tactical_formation`) are required
   (Fantasy full replace). Unknown JSON keys → 422. Optional unofficial

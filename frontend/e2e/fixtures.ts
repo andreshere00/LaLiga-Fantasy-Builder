@@ -88,3 +88,57 @@ export async function mockApplication(page: Page, { rankingSize = 2 } = {}) {
     await route.fulfill({ json: body });
   });
 }
+
+/** Stateful synthetic market: mutations affect subsequent reads, with optional lag/failure. */
+export async function mockMarketBids(page: Page) {
+  await mockApplication(page);
+  const bids = new Map<string, { id: string; money: number; status: string }>([
+    ["m14", { id: "b14", money: 4_000_000, status: "pending" }],
+    ["m15", { id: "b15", money: 5_000_000, status: "pending" }],
+  ]);
+  let staleReads = 0;
+  let stale: unknown = null;
+  let failReads = false;
+  let failCancel = false;
+  const writes: { method: string; path: string; body: unknown }[] = [];
+  function snapshot() {
+    return { marketPlayers: marketFixture.marketPlayers.map((item, index) => ({
+      ...item, numberOfBids: (index < 2 ? 1 : 0) + Number(bids.has(item.id)),
+      ...(bids.has(item.id) ? { bid: bids.get(item.id) } : {}),
+      ...(index < 2 ? {
+        playerTeam: { playerTeamId: `opponent-${index}`, teamId: "t2", buyoutClause: 12_000_000,
+          isShielded: index === 0, buyoutClauseLockedEndTime: "2026-10-12T12:00:30Z" },
+        sellerTeam: { id: "t2", manager: { managerName: "Other Manager" } },
+      } : {}),
+    })), userBids: [
+      ...[...bids].map(([marketId, bid]) => ({ ...bid, marketId })),
+      { id: "hidden-bid", marketId: "hidden-listing", money: 2_000_000, status: "pending",
+        expirationDate: "2026-10-14T12:00:00Z", playerMaster: catalog[21] },
+    ] };
+  }
+  await page.route("**/api/market/leagues/l1", (route) => {
+    if (failReads) return route.fulfill({ status: 502, json: { error: "fantasy_error" } });
+    if (staleReads > 0 && stale != null) { staleReads--; return route.fulfill({ json: stale }); }
+    return route.fulfill({ json: snapshot() });
+  });
+  await page.route("**/api/market/leagues/l1/*/bids{,/**}", async (route) => {
+    const request = route.request();
+    const path = new URL(request.url()).pathname;
+    const marketId = path.split("/")[5];
+    const method = request.method();
+    writes.push({ method, path, body: request.postDataJSON() });
+    if (failCancel && method === "DELETE") {
+      return route.fulfill({ status: 400, json: { error: "bid_not_cancelled" } });
+    }
+    stale = snapshot();
+    if (method === "DELETE") bids.delete(marketId);
+    else bids.set(marketId, { id: bids.get(marketId)?.id ?? `created-${marketId}`,
+      money: request.postDataJSON().money, status: "pending" });
+    await route.fulfill({ json: { ok: true } });
+  });
+  return { writes,
+    lag: (count: number) => { staleReads = count; },
+    failRead: (value: boolean) => { failReads = value; },
+    rejectCancellation: (value: boolean) => { failCancel = value; },
+  };
+}

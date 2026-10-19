@@ -3,14 +3,14 @@ import "./MarketScreenLoading.css";
 const ROWS = Array.from({ length: 6 }, (_, index) => index);
 const COLUMNS = Array.from({ length: 9 }, (_, index) => index);
 
-export function MarketScreenLoading() {
+export function MarketScreenLoading({ tableOnly = false }: { tableOnly?: boolean }) {
   return (
     <section className="market-loading" role="status" aria-label="Loading market" aria-busy="true">
       <span className="visually-hidden">Loading market…</span>
-      <div className="market-loading-toolbar" aria-hidden="true">
+      {!tableOnly ? <div className="market-loading-toolbar" aria-hidden="true">
         <span className="market-loading-block market-loading-title" />
         <span className="market-loading-block market-loading-search" />
-      </div>
+      </div> : null}
       <div className="market-loading-table" aria-hidden="true">
         <div className="market-loading-row is-heading">
           {COLUMNS.map((column) => <span className="market-loading-block" key={column} />)}

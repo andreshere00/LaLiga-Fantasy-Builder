@@ -2,6 +2,7 @@ import { useEffect, useId, useState } from "react";
 
 import { formatEuro, formatIntegerAmount, parseIntegerAmount } from "../../../api/format";
 import { Dialog } from "../../../components/ui/Dialog";
+import { Button } from "../../../components/ui/Button";
 import { NumericCounterField } from "../../../components/NumericCounterField";
 import { MARKET_VALUE_FILTER_STEP } from "../marketFilterInputs";
 import type { MarketRow } from "../model/row";
@@ -80,18 +81,18 @@ export function BidDialog({
 
   return (
     <Dialog
+      className="market-bid-dialog"
       open={open}
       title={directOffer ? "Make offer" : TITLES[kind]}
-      onClose={onClose}
+      onClose={() => { if (!pending) onClose(); }}
       closeOnBackdrop={!pending}
       footer={
         <>
-          <button type="button" className="market-dialog-secondary" onClick={onClose} disabled={pending}>
+          <Button variant="outline" shape="square" onClick={onClose} disabled={pending}>
             Cancel
-          </button>
-          <button
-            type="button"
-            className="market-dialog-primary"
+          </Button>
+          <Button
+            shape="square"
             disabled={!valid || pending}
             onClick={() => {
               if (parsed == null) return;
@@ -99,7 +100,7 @@ export function BidDialog({
             }}
           >
             {pending ? "Sending…" : "Confirm"}
-          </button>
+          </Button>
         </>
       }
     >

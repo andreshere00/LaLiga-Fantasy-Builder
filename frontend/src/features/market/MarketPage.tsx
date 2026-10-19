@@ -1,6 +1,9 @@
 import { useDeferredValue, useMemo, useState } from "react";
 
 import { useAuth } from "../../auth/AuthProvider";
+import { leagueId } from "../../api/mappers";
+import { useLeague } from "../lineup/LeagueProvider";
+import { MarketBids } from "./bids/MarketBids";
 import { favoriteMarketRowClass, readFavoritePlayerIds } from "../players/favorites";
 import { useNow } from "../../hooks/useNow";
 import { GatePanel } from "../gates/GatePanel";
@@ -25,7 +28,8 @@ import { MarketOffers } from "./offers/MarketOffers";
 import { MarketOffersProvider } from "./offers/MarketOffersContext";
 
 function MarketList() {
-  return <MarketOffersProvider><MarketListContent /></MarketOffersProvider>;
+  const { selected } = useLeague();
+  return <MarketOffersProvider><MarketListContent key={selected ? leagueId(selected) : ""} /></MarketOffersProvider>;
 }
 
 function MarketListContent() {
@@ -67,28 +71,24 @@ function MarketListContent() {
     setFilters(createEmptyMarketFilters());
   };
 
-  if (board.isLoading) return <MarketScreenLoading />;
   if (board.noLeague) return <p className="status-copy">No leagues found for this account.</p>;
-  if (board.hasError) {
-    return (
-      <p className="status-copy" role="alert">
-        The market could not be loaded.
-      </p>
-    );
-  }
 
   return (
     <>
       <MarketToolbar
         money={board.money}
+        projection={board.projection}
+        projectionRefreshing={board.projectionRefreshing}
+        projectionStale={board.projectionStale}
         showSearch={board.rows.length > 0}
         filters={filters}
         onFiltersChange={setFilters}
         activeFilterCount={filterCount}
         onClearFilters={clearFilters}
         suggestions={board.rows.map((row) => row.name)}
-        notifications={<MarketOffers cards={board.ownSquadCards}
-          squadAvailable={board.ownSquadAvailable} />}
+        notifications={<><MarketOffers cards={board.ownSquadCards}
+          squadAvailable={board.ownSquadAvailable} />
+          <MarketBids board={board} actions={marketActions} now={now} /></>}
       />
       {board.isDegraded ? (
         <p className="market-notice status-copy" role="status">
@@ -101,7 +101,9 @@ function MarketListContent() {
           {marketActions.message}
         </p>
       ) : null}
-      {board.rows.length === 0 ? (
+      {board.isLoading ? <MarketScreenLoading tableOnly /> : board.hasError ? (
+        <p className="status-copy" role="alert">The market could not be loaded. Refresh bids to retry.</p>
+      ) : board.rows.length === 0 ? (
         <p className="status-copy">No players on the market.</p>
       ) : visibleRows.length === 0 ? (
         <div className="market-empty-filters" role="status">

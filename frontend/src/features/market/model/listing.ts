@@ -83,7 +83,7 @@ function bidRefFromRecord(record: Record<string, unknown>): UserBidRef | null {
   return { id, money };
 }
 
-function marketIdFromUserBid(record: Record<string, unknown>): string | null {
+export function marketIdFromUserBid(record: Record<string, unknown>): string | null {
   const marketPlayer = asRecord(record.marketPlayer);
   return (
     idText(record.marketId) ??
@@ -118,8 +118,8 @@ export function userBidRecords(snapshot: unknown): Record<string, unknown>[] {
   if (combined.length === 0) return [];
   const byBidId = new Map<string, Record<string, unknown>>();
   for (const entry of combined) {
-    const ref = bidRefFromRecord(entry);
-    const key = ref?.id ?? JSON.stringify(entry);
+    // Keep conflicting copies so the shared bid model can flag incomplete totals.
+    const key = JSON.stringify(entry);
     byBidId.set(key, entry);
   }
   return [...byBidId.values()];

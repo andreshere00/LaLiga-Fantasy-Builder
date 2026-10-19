@@ -13,6 +13,14 @@ import {
   recentFormWeekNumbers,
 } from "./marketRows";
 
+describe("market bid counts", () => {
+  it.each([0, 4, null, undefined, -1, 1.5, "2"])("should normalize count %s without adding offers", (count) => {
+    const row = marketRow({ id: "m", numberOfBids: count, numberOfOffers: 9 }, 0,
+      { catalog: new Map(), history: new Map() });
+    expect(row.numberOfBids).toBe(count === 0 || count === 4 ? count : null);
+  });
+});
+
 describe("form helpers", () => {
   it("formPoints_sums_last_five_matchweeks", () => {
     const lastStats = [

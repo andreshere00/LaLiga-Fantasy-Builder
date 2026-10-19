@@ -1,8 +1,12 @@
 .market-page.players-page { max-width:1400px; width:100%; box-sizing:border-box; }
-.players-page { --players-table-columns:72px minmax(110px,1.5fr) minmax(80px,.8fr) 60px 72px 148px minmax(115px,1fr) minmax(110px,1fr) minmax(100px,.9fr) 108px; }
+.players-page { --players-table-columns:72px minmax(110px,1fr) minmax(80px,.8fr) 60px 72px 148px minmax(155px,1.2fr) minmax(110px,1fr) minmax(100px,.9fr) 108px; }
 .players-page .players-list :is(.players-head-row,.players-row) { grid-template-columns:var(--players-table-columns); gap:12px; }
 .players-page .players-list .market-name-wrap { grid-column:auto; }
-.players-actions-cell { display:flex; flex-wrap:wrap; align-items:center; gap:4px; }
+.players-actions-cell { display:flex; flex-direction:column; align-items:flex-start; gap:8px; padding-block:8px; }
+.players-action-controls { display:flex; flex-wrap:wrap; align-items:center; gap:4px; }
+.players-mobile-value-details { display:none; }
+.players-value-details { display:block; }
+.players-page .market-name { white-space:normal; overflow-wrap:anywhere; }
 .players-name-link { color:var(--fb-secondary); text-decoration:none; }
 .players-name-link:hover { text-decoration:underline; }
 .players-owner-link { color:var(--fb-secondary); text-underline-offset:3px; }
@@ -20,17 +24,24 @@
 .players-player-heading { grid-column:span 2; font-size:12px; text-transform:uppercase; }
 .players-row.is-favorite { background:var(--fb-surface); }
 @media(max-width:1280px) {
- .players-page { --players-table-columns:72px minmax(100px,1.5fr) minmax(80px,.8fr) 60px 72px 148px minmax(115px,1fr) 108px; }
+ .players-page { --players-table-columns:72px minmax(100px,1fr) minmax(80px,.8fr) 60px 72px 148px minmax(115px,1.2fr) 108px; }
  .players-page :is(.market-head-cell-availability,.market-head-cell-owner,[data-label="Availability"],[data-label="Owned by"]) { display:none; }
 }
 @media(max-width:1000px) {
- .players-page { --players-table-columns:72px minmax(100px,1.5fr) minmax(80px,.8fr) 72px minmax(115px,1fr) 108px; }
+ .players-page { --players-table-columns:72px minmax(100px,1fr) minmax(80px,.8fr) 72px minmax(115px,1.2fr) 108px; }
  .players-page :is(.market-head-cell-position,.market-head-cell-form,[data-label="Position"],[data-label="Form"]) { display:none; }
 }
 @media(max-width:800px) {
  .players-page { --players-table-columns:72px minmax(78px,1fr) minmax(65px,.7fr) 80px; }
  .players-page .players-list { overflow-x:auto; }
  .players-page :is(.market-head-cell-fsyp,.market-head-cell-marketValue,[data-label="FSYP"],[data-label="Market value"]) { display:none; }
+ .players-mobile-value-details { display:block; width:100%; }
+ .players-mobile-value-details .market-release-clause { margin-top:0; }
+ .players-mobile-value-details .market-clause-detail { display:block; }
+ .players-mobile-value-details .market-clause-protection { display:inline-flex; vertical-align:middle; margin-right:4px; }
+ .players-mobile-value-details :is(.market-bid-value,.market-clause-detail) { font-size:11px; }
+ .players-page .players-team-cell { font-size:12px; line-height:1.4; }
+ .players-page .market-name-wrap { flex-wrap:wrap; gap:4px; }
  .players-page .players-list .market-head-row { display:grid; }
  .players-page .market-row { padding:8px; gap:8px; }
  .players-page .market-name { white-space:normal; overflow-wrap:anywhere; }
