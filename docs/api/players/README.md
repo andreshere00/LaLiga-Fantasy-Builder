@@ -36,6 +36,11 @@ segment only; recent and upcoming match segments remain unfiltered.
 A missing OpenWeather key still returns upcoming matches; weather on those
 rows is disabled.
 
+Player matches and the [calendar weather aggregate](../calendar/README.md#optional-stadium-weather)
+share provider caching and forecast-slot selection. Existing player response
+fields and unavailable reasons remain unchanged. Missing temperatures do not
+become 0°C; out-of-window or past kickoffs skip unnecessary forecast calls.
+
 ### Detail aggregate behaviour
 
 - **`segment_errors`**: only segments that failed upstream or were skipped

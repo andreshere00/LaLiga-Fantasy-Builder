@@ -11,6 +11,9 @@ import {
   serializeEndpointRequest,
   type ApiResponseDto,
   type CompetitionStandingsDto,
+  type CurrentWeekDto,
+  type FixturesDto,
+  type WeekWeatherDto,
   type PlayerStatsDetailQuery,
 } from "./schemas";
 
@@ -48,8 +51,9 @@ export const paths = {
   standing: (leagueId: string) => `/api/leagues/${segment(leagueId)}/standing`,
   weekStanding: (leagueId: string, week: number) =>
     `/api/leagues/${segment(leagueId)}/standing/${weekNumber(week)}`,
-  currentWeek: () => "/api/calendar/current",
-  weekFixtures: (week: number) => `/api/calendar/weeks/${weekNumber(week)}`,
+  currentWeek: (): "/api/calendar/current" => "/api/calendar/current",
+  weekFixtures: (week: number): `/api/calendar/weeks/${number}` => `/api/calendar/weeks/${weekNumber(week)}`,
+  weekWeather: (week: number): `/api/calendar/weeks/${number}/weather` => `/api/calendar/weeks/${weekNumber(week)}/weather`,
   weekStats: (week: number) => `/api/calendar/weeks/${weekNumber(week)}/stats`,
   playersCatalog: () => "/api/players",
   playerLeague: (playerId: string, leagueId: string) =>
@@ -142,6 +146,15 @@ async function sendJson(
   return parseResponse(response, responseSchema);
 }
 
+export function getJson(
+  path: ReturnType<typeof paths.currentWeek>, token: string, options?: GetJsonOptions,
+): Promise<CurrentWeekDto>;
+export function getJson(
+  path: ReturnType<typeof paths.weekFixtures>, token: string, options?: GetJsonOptions,
+): Promise<FixturesDto>;
+export function getJson(
+  path: ReturnType<typeof paths.weekWeather>, token: string, options?: GetJsonOptions,
+): Promise<WeekWeatherDto>;
 export function getJson(
   path: ReturnType<typeof paths.competitionStandings>,
   token: string,

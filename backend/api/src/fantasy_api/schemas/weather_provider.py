@@ -2,15 +2,17 @@
 
 from __future__ import annotations
 
+from pydantic import Field
+
 from fantasy_api.schemas.common import FlexibleModel, JsonObject
 
 
 class OpenWeatherMain(FlexibleModel):
     """Temperatures and humidity for one forecast slot."""
 
-    temp: float | None = None
-    feels_like: float | None = None
-    humidity: int | None = None
+    temp: float | None = Field(default=None, allow_inf_nan=False)
+    feels_like: float | None = Field(default=None, allow_inf_nan=False)
+    humidity: int | None = Field(default=None, ge=0, le=100)
 
 
 class OpenWeatherCondition(FlexibleModel):
@@ -24,7 +26,7 @@ class OpenWeatherCondition(FlexibleModel):
 class OpenWeatherWind(FlexibleModel):
     """Wind speed for one forecast slot."""
 
-    speed: float | None = None
+    speed: float | None = Field(default=None, ge=0, allow_inf_nan=False)
 
 
 class OpenWeatherForecastSlot(FlexibleModel):
@@ -34,7 +36,7 @@ class OpenWeatherForecastSlot(FlexibleModel):
     main: OpenWeatherMain | None = None
     weather: list[OpenWeatherCondition] | None = None
     wind: OpenWeatherWind | None = None
-    pop: float | None = None
+    pop: float | None = Field(default=None, ge=0, le=1, allow_inf_nan=False)
     rain: JsonObject | None = None
 
 

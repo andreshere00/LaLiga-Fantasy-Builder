@@ -54,7 +54,12 @@ def main(argv: list[str] | None = None) -> int:
         action="store_true",
         help="Print raw aggregated JSON instead of a text summary",
     )
+    parser.add_argument(
+        "--weather", action="store_true", help="Include optional stadium kickoff forecasts"
+    )
     args = parser.parse_args(argv)
+    if args.weather and args.week is not None and args.week > 38:
+        parser.error("weather is available for LALIGA weeks 1–38 only")
 
     jwt = resolve_jwt(args, command="fantasy-calendar")
     if jwt is None:
@@ -65,6 +70,7 @@ def main(argv: list[str] | None = None) -> int:
             api_base=args.api_base,
             jwt=jwt,
             week=args.week,
+            include_weather=args.weather,
         )
     except httpx.HTTPError as exc:
         print(f"HTTP error: {exc}", file=sys.stderr)
@@ -85,6 +91,7 @@ def _build_report(
     api_base: str,
     jwt: str,
     week: int | None,
+    include_weather: bool = False,
 ) -> dict[str, Any]:
     """Fetch current week, fixtures, and stats for the selected matchday."""
     current = api_get(api_base, "/calendar/current", jwt)
@@ -95,14 +102,20 @@ def _build_report(
             raise RuntimeError("Could not infer week from /calendar/current")
         week_number = int(raw_week)
 
+    if include_weather and not 1 <= week_number <= 38:
+        raise RuntimeError("Weather is available for LALIGA weeks 1–38 only")
+
     fixtures = api_get(api_base, f"/calendar/weeks/{week_number}", jwt)
     stats = api_get(api_base, f"/calendar/weeks/{week_number}/stats", jwt)
-    return {
+    report = {
         "week": week_number,
         "current": current,
         "fixtures": fixtures,
         "stats": stats,
     }
+    if include_weather:
+        report["weather"] = api_get(api_base, f"/calendar/weeks/{week_number}/weather", jwt)
+    return report
 
 
 def _print_matchday_window(current: dict[str, Any]) -> None:
@@ -146,3 +159,14 @@ def _print_report(report: dict[str, Any]) -> None:
 
     stats = report.get("stats") or []
     print(f"\nStats matches: {len(stats)}")
+    if "weather" in report:
+        print("\nStadium kickoff forecasts:")
+        for row in report["weather"].get("matches", []):
+            weather = row.get("weather") or {}
+            snapshot = weather.get("snapshot")
+            detail = (
+                f"{snapshot.get('temperature_c', snapshot.get('temperatureC'))}°C"
+                if snapshot
+                else weather.get("reason", "unavailable")
+            )
+            print(f"  Match {row.get('fixtureId')}: {detail}")

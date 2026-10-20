@@ -46,3 +46,16 @@ Their capture dates are not recorded here.
 | [My bids demonstration](screenshots/market-bids.png) | `market`, `active-bids`, `spending`, `synthetic` | Light | Deterministic browser fixture. |
 | [Market mobile demonstration](screenshots/market-mobile-dark.png) | `market`, `mobile`, `synthetic` | Dark | Deterministic browser fixture. |
 | [Players mobile demonstration](screenshots/players-mobile-dark.png) | `players`, `mobile`, `synthetic` | Dark | Deterministic browser fixture. |
+
+## Proposed lineup fixture panel — updated 20 October 2026
+
+These are planning mockups, not implemented product captures. Matchups, dates,
+scores, weather forecasts, and account data are fictional. See the
+[implementation plan](../frontend-fixture-panel-implementation-plan.md) and
+[editable preview](../design/lineup-fixtures-preview.html).
+
+| Mockup | Theme | Shows |
+|--------|-------|-------|
+| [Upcoming fixture, desktop](mockups/lineup-fixtures-upcoming-desktop.png) | Light | Club crests, kickoff dates/times, blank results, stadium forecasts, and placement above lineup controls. |
+| [Active fixture, desktop](mockups/lineup-fixtures-active-desktop.png) | Dark | Finished/live scores, a saved kickoff forecast, and weather for the remaining scheduled match. |
+| [Upcoming fixture, mobile](mockups/lineup-fixtures-upcoming-mobile.png) | Light | Wrapped panel header, horizontal match list with weather, and existing lineup controls below. |

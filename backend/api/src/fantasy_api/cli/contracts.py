@@ -16,7 +16,7 @@ from pydantic import (
 )
 
 from fantasy_api.schemas.buyout import ShieldStatus
-from fantasy_api.schemas.calendar import CurrentWeek, Fixture, MatchStats
+from fantasy_api.schemas.calendar import CurrentWeek, Fixture, MatchStats, WeekWeather
 from fantasy_api.schemas.common import ErrorResponse
 from fantasy_api.schemas.leagues import (
     ActivityItem,
@@ -86,6 +86,7 @@ _RESPONSE_ADAPTERS = (
     _model_response(r"/teams/[^/]+/lineup/week/\d+", TeamLineup),
     _model_response(r"/teams/[^/]+/lineup", TeamLineup),
     _model_response(r"/calendar/current", CurrentWeek),
+    _model_response(r"/calendar/weeks/\d+/weather", WeekWeather),
     _list_response(r"/calendar/weeks/\d+/stats", MatchStats),
     _list_response(r"/calendar/weeks/\d+", Fixture),
     _list_response(r"/players", CatalogPlayer),

@@ -178,7 +178,7 @@ do not share a generic proxy class.
 | Lineup builder | `/lineup-builder/leagues/{league_id}/build` and `/build/stream` | Existing read-only services | POST planning only; JSON or request-scoped progress stream; JWT membership verified |
 | Teams | `/teams/...` | `{CMP}/teams/...` | GET + PUT (lineup write) |
 | Players | `/players/...` | `{CMP}/players`, `{CMP}/player/...` | GET (catalog + market value public; league card and stats authenticated) |
-| Calendar | `/calendar/...` | `{CMP}/week/...`, `{CMP}/calendar`, stats host | GET (internal JWT; public upstream via `get_public_json`) |
+| Calendar | `/calendar/...` | `{CMP}/week/...`, `{CMP}/calendar`, stats host; optional OpenWeather | GET (internal JWT; public Fantasy reads; per-match optional stadium forecasts) |
 | Standings | `/competitions/{id}/standings` | Public Fantasy calendar + teams-master; private official LaLiga scraper | GET (internal JWT; completed only) |
 | Market | `/market/...` | `{CMP}/league/{leagueId}/market/...` | GET + POST/PUT/DELETE (reads High; mutations Medium) |
 | Buyout | `/buyout/...` | `{CMP}/league/{leagueId}/buyout/...`, `.../player-team/.../check-shield`, `.../shield/player` | GET + POST/PUT (Medium) |

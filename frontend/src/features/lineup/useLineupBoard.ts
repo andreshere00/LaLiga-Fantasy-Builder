@@ -17,6 +17,7 @@ import {
   useCurrentWeekQuery,
   usePlayersCatalogQuery,
   useReauthOnError,
+  useWeekFixturesQuery,
 } from "../../api/queries";
 import {
   asCurrentWeek,
@@ -255,13 +256,7 @@ export function useLineupBoard(options: UseLineupBoardOptions = {}): LineupBoard
   const currentWeek = maxWeek(current);
   const weekReady = currentQuery.isSuccess || currentQuery.isError;
   const [nowMs, setNowMs] = useState(() => Date.now());
-  const currentFixturesQuery = useQuery({
-    queryKey: ["calendar", "fixtures", currentWeek],
-    enabled: enabled && weekReady,
-    staleTime: 5 * 60 * 1000,
-    refetchInterval: 30_000,
-    queryFn: ({ signal }) => getJson(paths.weekFixtures(currentWeek), token, { signal }),
-  });
+  const currentFixturesQuery = useWeekFixturesQuery(currentWeek, enabled && weekReady);
   const openingMs = parseIsoTimestampMs(current.openingWeekDate);
   const currentRoundStarted = current.isLive === true ||
     (openingMs != null && openingMs <= nowMs) ||
@@ -284,13 +279,9 @@ export function useLineupBoard(options: UseLineupBoardOptions = {}): LineupBoard
     queryFn: ({ signal }) => getJson(paths.weekStanding(leagueKey, week), token, { signal }),
   });
 
-  const fixturesQuery = useQuery({
-    queryKey: ["calendar", "fixtures", week],
-    enabled: enabled && weekReady && lineupUsesCurrent && week !== currentWeek,
-    staleTime: 5 * 60 * 1000,
-    refetchInterval: lineupUsesCurrent && week !== currentWeek ? 30_000 : false,
-    queryFn: ({ signal }) => getJson(paths.weekFixtures(week), token, { signal }),
-  });
+  const fixturesQuery = useWeekFixturesQuery(
+    week, enabled && weekReady && lineupUsesCurrent && week !== currentWeek,
+  );
 
   useEffect(() => {
     const id = window.setInterval(() => setNowMs(Date.now()), 60_000);

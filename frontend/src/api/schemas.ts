@@ -613,6 +613,22 @@ const weatherSnapshotSchema = readObject({
   granularity: z.enum(["3h", "daily"]).optional(),
   source: z.literal("openweather").optional(),
 });
+export const weekWeatherSchema = responseSchema(readObject({
+  weekNumber: z.number().int().min(1).max(38),
+  generatedAt: z.iso.datetime({ offset: true }),
+  matches: z.array(readObject({
+    fixtureId: z.string().min(1),
+    localId: nullableNumber.optional(), visitorId: nullableNumber.optional(),
+    kickoff: z.iso.datetime({ offset: true }).nullable().optional(),
+    fetchedAt: z.iso.datetime({ offset: true }).nullable().optional(),
+    weather: readObject({
+      snapshot: weatherSnapshotSchema.nullable().optional(),
+      reason: nullableString.optional(), venue: venueSchema.nullable().optional(),
+    }),
+  })).max(10),
+}));
+export type WeekWeatherDto = z.infer<typeof weekWeatherSchema>;
+export type FixtureWeatherDto = WeekWeatherDto["matches"][number];
 const upcomingMatchSchema = readObject({
   fixture: fixtureRefSchema,
   kickoff: z.string().nullable().optional(),
@@ -838,6 +854,7 @@ export type TeamDetailDto = z.infer<typeof teamDetailSchema>;
 export type TeamMoneyDto = z.infer<typeof teamMoneySchema>;
 export type TeamLineupDto = z.infer<typeof teamLineupSchema>;
 export type CurrentWeekDto = z.infer<typeof currentWeekSchema>;
+export type FixturesDto = z.infer<typeof fixturesResponseSchema>;
 export type FixtureDto = z.infer<typeof fixtureSchema>;
 export type MatchStatsDto = z.infer<typeof matchStatsSchema>;
 export type CatalogPlayerDto = z.infer<typeof catalogPlayerSchema>;
@@ -962,6 +979,7 @@ export type ApiResponseDto =
   | TeamMoneyDto
   | TeamLineupDto
   | CurrentWeekDto
+  | WeekWeatherDto
   | z.infer<typeof fixturesResponseSchema>
   | z.infer<typeof matchStatsResponseSchema>
   | z.infer<typeof catalogPlayersResponseSchema>
@@ -1005,6 +1023,7 @@ const endpointContracts: Array<{
   { method: "GET", path: /^\/api\/calendar\/current$/, response: currentWeekSchema },
   { method: "GET", path: /^\/api\/calendar\/weeks\/\d+$/, response: fixturesResponseSchema },
   { method: "GET", path: /^\/api\/calendar\/weeks\/\d+\/stats$/, response: matchStatsResponseSchema },
+  { method: "GET", path: /^\/api\/calendar\/weeks\/\d+\/weather$/, response: weekWeatherSchema },
   { method: "GET", path: /^\/api\/players$/, response: catalogPlayersResponseSchema },
   { method: "GET", path: /^\/api\/players\/[^/]+\/market-value$/, response: marketValuesResponseSchema },
   { method: "GET", path: /^\/api\/players\/[^/]+\/league\/[^/]+$/, response: leaguePlayerSchema },

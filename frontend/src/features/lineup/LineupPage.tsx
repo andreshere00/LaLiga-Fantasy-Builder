@@ -9,6 +9,7 @@ import builderIconUrl from "../../assets/icon_builder_white.svg";
 import saveCartridgeIconUrl from "../../assets/save_cartridge.svg";
 import { PlayersRankingPanel } from "./PlayersRankingPanel";
 import { LaligaStandingsPanel } from "./LaligaStandingsPanel";
+import { FixtureMatchesPanel } from "./FixtureMatchesPanel";
 import { PitchMarkings } from "./PitchMarkings";
 import { PulseRing } from "../../components/ui/PulseRing";
 import originalFixtureBlackUrl from "../../assets/button_original_fixture_black.svg";
@@ -108,6 +109,7 @@ function LineupPageContent() {
         </p>
       ) : null}
       <div className="board">
+        <FixtureMatchesPanel />
         <div className="board-controls-bar side-panel">
           <h1 className="board-controls-title">
             {owner} <span>lineup</span>

@@ -7,7 +7,7 @@ from fastapi import APIRouter, Header, Path
 from fantasy_api.api.deps import get_container, get_current_user
 from fantasy_api.api.payload import as_model, as_model_list
 from fantasy_api.openapi import ERROR_RESPONSES
-from fantasy_api.schemas.calendar import CurrentWeek, Fixture, MatchStats
+from fantasy_api.schemas.calendar import CurrentWeek, Fixture, MatchStats, WeekWeather
 
 router = APIRouter(tags=["calendar"])
 
@@ -92,3 +92,29 @@ async def get_week_stats(
     await get_current_user(authorization)
     data = await get_container().calendar_service.get_week_stats(week)
     return as_model_list(data, MatchStats)
+
+
+@router.get(
+    "/calendar/weeks/{week}/weather",
+    response_model=WeekWeather,
+    responses=ERROR_RESPONSES,
+    summary="Get optional stadium forecasts for a matchday",
+)
+async def get_week_weather(
+    week: int = Path(ge=1, le=38, description="LALIGA matchweek number (1–38)."),
+    authorization: str | None = Header(default=None, description="Bearer internal JWT."),
+) -> WeekWeather:
+    """Return kickoff forecasts with per-match unavailable reasons.
+
+    Optional weather failures return 200 with explicit reasons. Calendar or
+    authentication failures remain errors. No LaLiga pairing is required.
+
+    Args:
+        week: Matchweek number.
+        authorization: Internal application JWT.
+
+    Returns:
+        Match identities and forecasts, with original provider retrieval times.
+    """
+    await get_current_user(authorization)
+    return await get_container().calendar_weather_service.get_week(week)

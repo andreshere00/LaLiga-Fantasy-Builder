@@ -123,12 +123,55 @@ and the API.
 
 | Path | Screen | Primary API domains |
 |------|--------|---------------------|
-| `/` | Lineup — formation, pitch, squad, manager ranking, club standings | [Leagues](api/leagues/README.md), [Teams](api/teams/README.md), [Calendar](api/calendar/README.md), [Standings](api/standings/README.md) |
+| `/` | Lineup — fixture matches/weather, formation, pitch, squad, manager ranking, club standings | [Leagues](api/leagues/README.md), [Teams](api/teams/README.md), [Calendar](api/calendar/README.md), [Standings](api/standings/README.md) |
 | `/market` | Market — listings, bids, release clauses | [Market](api/market/README.md), [Buyout](api/buyout/README.md), [Players](api/players/README.md), [Calendar](api/calendar/README.md) |
 | `/players` | Players — catalog, filters, top-10 leaderboard | [Players](api/players/README.md), [Calendar](api/calendar/README.md) |
 | `/players/:playerId` | Player detail — stats aggregate | [Players](api/players/README.md) (`GET /players/{id}/stats/detail`) |
 
 The shell header switches routes. The league dropdown applies to lineup, market, and players.
+
+### Fixture matches and stadium weather
+
+The lineup page starts with a full-width shadcn Card and horizontal ScrollArea.
+It displays the current competition round from first play through the final
+result, including gaps between matches, then changes to the next fixture's
+pairings and kickoff dates/times. Ten distinct finished pairings are required
+to establish completion. Until the next response is ready, the finished round
+remains clearly labeled and refresh can retry. At season end it says **Season
+complete**. Historical lineup navigation and manager selection do not change
+this competition panel or discard an unsaved draft.
+
+Matches include club names/crests, Madrid-local dates and times, and reported
+scores; scheduled score placeholders stay blank. Unrecognized provider match
+statuses say **Status unconfirmed**, with any reported score, instead of an
+invented live/final state. Incomplete round data cannot trigger advancement.
+Refresh preserves scroll and focus; native horizontal scrolling, arrow keys,
+explicit scroll buttons, and Home/End make every match reachable. Score-change
+announcements are concise rather than repeating all matches on every poll.
+
+Current metadata and fixture/score queries are shared with the lineup board and
+refresh every 30 seconds while visible. The separate optional
+`GET /api/calendar/weeks/{week}/weather` query refreshes every 30 minutes, with
+source and original retrieval time shown. Hidden tabs do not poll; stale data
+can refresh on focus/reconnect. Weather keys include fixture identities,
+kickoffs, and venue overrides to invalidate rescheduled predictions.
+
+Weather shows condition/icon, °C, rain probability, and km/h when the server's
+existing OpenWeather key is configured. Beyond the five-day provider window it
+says **Forecast closer to kickoff**. Missing/failed weather never blocks games,
+scores, or lineup editing. A forecast already received before kickoff may
+remain during play as **Saved kickoff forecast**, with its original timestamp;
+it is not observed current weather. Finished matches omit weather.
+
+Implemented captures below use fictional browser fixtures and fixed forecast
+values, not a live sporting schedule:
+
+![Implemented fixture matches and forecasts, light theme](images/screenshots/lineup-fixtures-light.png)
+
+![Implemented active round, reported scores and saved forecasts, dark theme](images/screenshots/lineup-fixtures-dark.png)
+
+[Mobile capture](images/screenshots/lineup-fixtures-mobile.png) ·
+[Implementation record](frontend-fixture-panel-implementation-plan.md)
 
 ### Player detail widgets
 

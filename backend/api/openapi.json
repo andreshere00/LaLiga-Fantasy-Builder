@@ -1806,6 +1806,106 @@
         ]
       }
     },
+    "/calendar/weeks/{week}/weather": {
+      "get": {
+        "tags": [
+          "calendar"
+        ],
+        "summary": "Get optional stadium forecasts for a matchday",
+        "description": "Optional weather failures return 200 with explicit reasons. Calendar or\nauthentication failures remain errors. No LaLiga pairing is required.",
+        "operationId": "get_week_weather_calendar_weeks__week__weather_get",
+        "parameters": [
+          {
+            "name": "week",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "maximum": 38,
+              "minimum": 1,
+              "description": "LALIGA matchweek number (1–38).",
+              "title": "Week"
+            },
+            "description": "LALIGA matchweek number (1–38)."
+          },
+          {
+            "name": "authorization",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Bearer internal JWT.",
+              "title": "Authorization"
+            },
+            "description": "Bearer internal JWT."
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/WeekWeather"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized or LaLiga re-auth required.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "502": {
+            "description": "Auth or Fantasy upstream failure.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Fantasy upstream unavailable.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ]
+      }
+    },
     "/competitions/{competition_id}/standings": {
       "get": {
         "tags": [
@@ -5809,6 +5909,52 @@
         "title": "BuyoutMutationResult",
         "description": "Response from buyout write endpoints (may be empty)."
       },
+      "CalendarWeather": {
+        "properties": {
+          "snapshot": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/WeatherSnapshot"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "reason": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/WeatherReason"
+              },
+              {
+                "type": "string",
+                "enum": [
+                  "match_started",
+                  "status_unknown"
+                ]
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Reason"
+          },
+          "venue": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/Venue"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        },
+        "additionalProperties": true,
+        "type": "object",
+        "title": "CalendarWeather",
+        "description": "Optional kickoff forecast, never an observation of live or past weather."
+      },
       "Candidate": {
         "properties": {
           "candidate_id": {
@@ -7002,6 +7148,71 @@
           "stats"
         ],
         "title": "FixtureStatsRow"
+      },
+      "FixtureWeather": {
+        "properties": {
+          "fixtureId": {
+            "type": "string",
+            "title": "Fixtureid"
+          },
+          "localId": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Localid"
+          },
+          "visitorId": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Visitorid"
+          },
+          "kickoff": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Kickoff"
+          },
+          "weather": {
+            "$ref": "#/components/schemas/CalendarWeather"
+          },
+          "fetchedAt": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Fetchedat"
+          }
+        },
+        "additionalProperties": true,
+        "type": "object",
+        "required": [
+          "fixtureId",
+          "weather"
+        ],
+        "title": "FixtureWeather",
+        "description": "Forecast identity and original provider retrieval time for one calendar match."
       },
       "FormStat": {
         "properties": {
@@ -12321,6 +12532,35 @@
           "forecast_for"
         ],
         "title": "WeatherSnapshot"
+      },
+      "WeekWeather": {
+        "properties": {
+          "weekNumber": {
+            "type": "integer",
+            "title": "Weeknumber"
+          },
+          "generatedAt": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Generatedat"
+          },
+          "matches": {
+            "items": {
+              "$ref": "#/components/schemas/FixtureWeather"
+            },
+            "type": "array",
+            "title": "Matches"
+          }
+        },
+        "additionalProperties": true,
+        "type": "object",
+        "required": [
+          "weekNumber",
+          "generatedAt",
+          "matches"
+        ],
+        "title": "WeekWeather",
+        "description": "Matchweek weather aggregate with explicit per-match unavailable reasons."
       }
     },
     "securitySchemes": {

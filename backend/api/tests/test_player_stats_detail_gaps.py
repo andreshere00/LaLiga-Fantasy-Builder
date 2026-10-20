@@ -97,7 +97,7 @@ async def test_weather_http_401_detail_has_status_and_no_key() -> None:
         )
     )
     weather, warning = await service._weather_for_match(
-        home, datetime(2026, 10, 10, 16, 30, tzinfo=UTC)
+        home, datetime(2026, 10, 7, 16, 30, tzinfo=UTC)
     )
     assert weather.reason == "provider_unavailable"
     assert warning is not None

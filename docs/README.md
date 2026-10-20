@@ -12,6 +12,7 @@ This folder is the detailed map.
 | [Screenshot index](images/README.md) | Product captures tagged by feature, theme, capture date, and source |
 | [Automatic lineup builder plan](lineup-builder-implementation-plan.md) | Deterministic scoring, candidate search, API/UI delivery and verification; [research and resolved policies](lineup-builder-research.md) |
 | [Frontend standings plan](frontend-standings-implementation-plan.md) | LALIGA table below Players Ranking, separate scrolling, data states, and verification |
+| [Lineup fixture panel implementation](frontend-fixture-panel-implementation-plan.md) | Current/next matchweek panel, automatic rollover, stadium weather, shadcn composition, tests, and captures |
 | [Frontend design-system migration plan](frontend-design-system-migration-plan.md) | Screen-by-screen commits, visual reference, staging boundaries, and acceptance checks |
 | [Authentication](authentication/authentication.md) | Sessions, internal JWT, LaLiga vault, CSRF |
 | [Scraping service](scraping/README.md) | Private scraper HTTP, player profile parsing, TTLs, Compose `egress`, CLIs |

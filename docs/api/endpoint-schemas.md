@@ -587,6 +587,31 @@ Each item:
 | `visitorScore` | integer | no |  |  |
 
 
+### `GET` `/calendar/weeks/{week}/weather`
+
+Get optional stadium forecasts for a matchday
+
+**Security:** HTTP Bearer (internal JWT)
+
+#### Inputs
+
+| Source | Name | Type | Required | Constraints | Description |
+|--------|------|------|----------|-------------|-------------|
+| path | `week` | integer | yes | min=1, max=38 | LALIGA matchweek number (1–38). |
+
+#### Outputs
+
+**HTTP 200:** `WeekWeather`
+
+| Field | Type | Required | Constraints | Description |
+|-------|------|----------|-------------|-------------|
+| `weekNumber` | integer | yes |  |  |
+| `generatedAt` | string | yes |  |  |
+| `matches` | array[FixtureWeather] | yes |  |  |
+
+Full nested fields: [`WeekWeather`](#weekweather).
+
+
 ## Tag: `buyout`
 
 LaLiga Fantasy buyout clauses and player shielding. Thin authenticated proxies of competition league buyout resources.
@@ -1671,6 +1696,14 @@ Type: `any`
 | `ok` | boolean | no |  |  |
 | `message` | string | no |  |  |
 
+### `CalendarWeather`
+
+| Field | Type | Required | Constraints | Description |
+|-------|------|----------|-------------|-------------|
+| `snapshot` | WeatherSnapshot | no |  |  |
+| `reason` | string | no |  |  |
+| `venue` | Venue | no |  |  |
+
 ### `Candidate`
 
 | Field | Type | Required | Constraints | Description |
@@ -1877,6 +1910,17 @@ Type: `string`
 | `fantasy_points_total` | integer | no |  |  |
 | `stats` | FixtureStats | yes |  |  |
 | `warnings` | array[SegmentWarning] | no |  |  |
+
+### `FixtureWeather`
+
+| Field | Type | Required | Constraints | Description |
+|-------|------|----------|-------------|-------------|
+| `fixtureId` | string | yes |  |  |
+| `localId` | integer | no |  |  |
+| `visitorId` | integer | no |  |  |
+| `kickoff` | string | no |  |  |
+| `weather` | CalendarWeather | yes |  | Optional kickoff forecast, never an observation of live or past weather. |
+| `fetchedAt` | string | no |  |  |
 
 ### `FormStat`
 
@@ -2801,3 +2845,11 @@ Type: `string`
 | `forecast_for` | string | yes |  |  |
 | `granularity` | string | no |  |  |
 | `source` | string | no |  |  |
+
+### `WeekWeather`
+
+| Field | Type | Required | Constraints | Description |
+|-------|------|----------|-------------|-------------|
+| `weekNumber` | integer | yes |  |  |
+| `generatedAt` | string | yes |  |  |
+| `matches` | array[FixtureWeather] | yes |  |  |

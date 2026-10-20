@@ -43,3 +43,33 @@ def test_barcelona_venue_is_camp_nou() -> None:
     entry = default_venue_directory().for_club(fantasy_id=4, name=None)
     assert entry is not None
     assert entry.stadium == "Camp Nou"
+
+
+def test_for_club_current_fantasy_ids_resolve_all_twenty_participants() -> None:
+    directory = default_venue_directory()
+    expected = {
+        2: "atletico",
+        3: "athletic",
+        4: "barcelona",
+        5: "betis",
+        6: "celta",
+        7: "elche",
+        8: "espanyol",
+        9: "getafe",
+        11: "levante",
+        12: "malaga",
+        13: "osasuna",
+        14: "rayo",
+        15: "real-madrid",
+        16: "real-sociedad",
+        17: "sevilla",
+        18: "valencia",
+        20: "villarreal",
+        21: "alaves",
+        26: "deportivo",
+        49: "racing-santander",
+    }
+    for club_id, key in expected.items():
+        entry = directory.for_club(fantasy_id=club_id, name=None)
+        assert entry is not None and entry.club_key == key
+    assert directory.for_club(fantasy_id=5, name=None).stadium == "Estadio La Cartuja"

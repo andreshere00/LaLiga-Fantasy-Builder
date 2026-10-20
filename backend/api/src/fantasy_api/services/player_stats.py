@@ -24,7 +24,6 @@ from fantasy_api.domain.market_window import (
 from fantasy_api.domain.season import current_season
 from fantasy_api.domain.ttl_cache import AsyncTtlCache
 from fantasy_api.domain.venues import VenueDirectory, VenueEntry
-from fantasy_api.domain.weather import ForecastSlot, pick_slot
 from fantasy_api.repositories.player_stats import PlayerStatsRepository
 from fantasy_api.schemas.player_stats import (
     AveragePerMatch,
@@ -68,13 +67,13 @@ from fantasy_api.schemas.player_stats import (
     UpcomingMatchesResponse,
     Venue,
     WeatherReason,
-    WeatherSnapshot,
 )
 from fantasy_api.schemas.scraped import FutbolFantasyWire, ScrapedStat
 from fantasy_api.schemas.stats_provider import MarketHistoryPoint, TeamsMasterRow
 from fantasy_api.services.player_resolver import PlayerResolver, ResolvedPlayer
 from fantasy_api.services.scraped_player import ScrapedDocument, ScrapedPlayerProvider
 from fantasy_api.services.stat_merge import merge_fixture_stats
+from fantasy_api.services.weather import ForecastService
 from fantasy_api.services.wire_map import (
     competition_from_row,
     kickoff_datetime,
@@ -218,13 +217,6 @@ def _expected_return_date(
         if row.matchweek == matchweek and row.date is not None:
             return row.date
     return None
-
-
-def _weather_failure_detail(exc: UpstreamError) -> str:
-    code = exc.provider_status
-    if code is not None and (code in {401, 429} or code >= 500):
-        return str(code)
-    return "timeout"
 
 
 def _started_from_minutes_event(event: str | None) -> bool | None:
@@ -377,6 +369,7 @@ class PlayerStatsService:
         venues: VenueDirectory,
         clock: Callable[[], datetime],
         settings: Settings,
+        forecasts: ForecastService | None = None,
     ) -> None:
         self._resolver = resolver
         self._scraped = scraped
@@ -386,7 +379,11 @@ class PlayerStatsService:
         self._settings = settings
         self._market_cache: dict[str, AsyncTtlCache[list[tuple[date, int]]]] = {}
         self._teams_master_cache = AsyncTtlCache[Any](settings.teams_master_ttl_seconds)
-        self._weather_cache: dict[tuple[float, float], AsyncTtlCache[Any]] = {}
+        self._forecasts = forecasts or ForecastService(
+            lambda lat, lon: self._stats_repo.get_forecast(lat, lon),
+            ttl_seconds=settings.weather_ttl_seconds,
+            clock=self._now,
+        )
 
     async def index(self, player_id: str) -> PlayerStatsIndex:
         """Return the stats segment catalogue for a player."""
@@ -1127,55 +1124,8 @@ class PlayerStatsService:
         match_venue: VenueEntry | None,
         kickoff: datetime | None,
     ) -> tuple[MatchWeather, SegmentWarning | None]:
-        if match_venue is None:
-            return MatchWeather(snapshot=None, reason=WeatherReason.VENUE_UNKNOWN), None
-        venue = self._venue_schema(match_venue)
-        if kickoff is None:
-            return (
-                MatchWeather(snapshot=None, reason=WeatherReason.KICKOFF_UNKNOWN, venue=venue),
-                None,
-            )
-        key = (round(match_venue.lat, 2), round(match_venue.lon, 2))
-        cache = self._weather_cache.setdefault(
-            key,
-            AsyncTtlCache(self._settings.weather_ttl_seconds),
-        )
-
-        async def fetch() -> Any:
-            return await self._stats_repo.get_forecast(match_venue.lat, match_venue.lon)
-
-        try:
-            payload = await cache.get_or_fetch(fetch)
-        except UpstreamError as exc:
-            return (
-                MatchWeather(
-                    snapshot=None,
-                    reason=WeatherReason.PROVIDER_UNAVAILABLE,
-                    venue=venue,
-                ),
-                SegmentWarning(
-                    code="weather_unavailable",
-                    source="openweather",
-                    detail=_weather_failure_detail(exc),
-                ),
-            )
-        slots = _forecast_slots(payload)
-        picked = pick_slot(slots, kickoff.astimezone(UTC), self._now())
-        if isinstance(picked, WeatherReason):
-            return MatchWeather(snapshot=None, reason=picked, venue=venue), None
-        snapshot = WeatherSnapshot(
-            temperature_c=picked.temperature_c,
-            feels_like_c=picked.feels_like_c,
-            humidity_pct=picked.humidity_pct,
-            wind_speed_ms=picked.wind_speed_ms,
-            precipitation_probability=picked.precipitation_probability,
-            rain_mm=picked.rain_mm,
-            condition=picked.condition,
-            condition_code=picked.condition_code,
-            icon=picked.icon,
-            forecast_for=picked.dt,
-        )
-        return MatchWeather(snapshot=snapshot, reason=None, venue=venue), None
+        result = await self._forecasts.for_match(match_venue, kickoff)
+        return result.weather, result.warning
 
     def _travel(
         self,
@@ -1304,43 +1254,6 @@ def _mapping(value: object) -> dict[str, object]:
     if not isinstance(value, dict):
         return {}
     return {str(key): item for key, item in value.items()}
-
-
-def _forecast_slots(payload: Any) -> list[ForecastSlot]:
-    rows = payload.get("list") if isinstance(payload, dict) else None
-    if not isinstance(rows, list):
-        return []
-    slots: list[ForecastSlot] = []
-    for row in rows:
-        if not isinstance(row, dict):
-            continue
-        dt_raw = row.get("dt")
-        if not isinstance(dt_raw, int | float):
-            continue
-        main = _mapping(row.get("main"))
-        weather_rows = row.get("weather")
-        weather_item = weather_rows[0] if isinstance(weather_rows, list) and weather_rows else {}
-        weather = _mapping(weather_item)
-        rain = _mapping(row.get("rain"))
-        wind = _mapping(row.get("wind"))
-        condition_code = _as_int(weather.get("id"))
-        icon = weather.get("icon")
-        temperature = _as_float(main.get("temp"))
-        slots.append(
-            ForecastSlot(
-                dt=datetime.fromtimestamp(int(dt_raw), tz=UTC),
-                temperature_c=0.0 if temperature is None else temperature,
-                feels_like_c=_as_float(main.get("feels_like")),
-                humidity_pct=_as_int(main.get("humidity")),
-                wind_speed_ms=_as_float(wind.get("speed")),
-                precipitation_probability=_as_float(row.get("pop")),
-                rain_mm=_as_float(rain.get("3h")),
-                condition=str(weather.get("description") or ""),
-                condition_code=condition_code,
-                icon=str(icon) if isinstance(icon, str) else None,
-            )
-        )
-    return slots
 
 
 def _season_points(wire: FutbolFantasyWire) -> tuple[float | None, int | None]:

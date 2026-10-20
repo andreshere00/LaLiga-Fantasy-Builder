@@ -64,11 +64,11 @@
     "fantasy_id": 5,
     "slug": "real-betis",
     "name": "Real Betis",
-    "stadium": "Benito Villamarín",
+    "stadium": "Estadio La Cartuja",
     "city": "Sevilla",
     "country": "ES",
-    "lat": 37.3564,
-    "lon": -5.9815,
+    "lat": 37.4172398,
+    "lon": -6.003618,
     "aliases": [
       "BET",
       "Betis"
@@ -120,7 +120,7 @@
   },
   {
     "club_key": "girona",
-    "fantasy_id": 10,
+    "fantasy_id": 28,
     "slug": "girona-fc",
     "name": "Girona FC",
     "stadium": "Montilivi",
@@ -135,7 +135,7 @@
   },
   {
     "club_key": "las-palmas",
-    "fantasy_id": 11,
+    "fantasy_id": 31,
     "slug": "ud-las-palmas",
     "name": "UD Las Palmas",
     "stadium": "Gran Canaria",
@@ -151,7 +151,7 @@
   },
   {
     "club_key": "leganes",
-    "fantasy_id": 12,
+    "fantasy_id": 54,
     "slug": "cd-leganes",
     "name": "CD Leganés",
     "stadium": "Butarque",
@@ -166,7 +166,7 @@
   },
   {
     "club_key": "mallorca",
-    "fantasy_id": 13,
+    "fantasy_id": 33,
     "slug": "rcd-mallorca",
     "name": "RCD Mallorca",
     "stadium": "Son Moix",
@@ -181,7 +181,7 @@
   },
   {
     "club_key": "osasuna",
-    "fantasy_id": 14,
+    "fantasy_id": 13,
     "slug": "ca-osasuna",
     "name": "CA Osasuna",
     "stadium": "El Sadar",
@@ -196,7 +196,7 @@
   },
   {
     "club_key": "rayo",
-    "fantasy_id": 16,
+    "fantasy_id": 14,
     "slug": "rayo-vallecano",
     "name": "Rayo Vallecano",
     "stadium": "Vallecas",
@@ -211,7 +211,7 @@
   },
   {
     "club_key": "real-sociedad",
-    "fantasy_id": 17,
+    "fantasy_id": 16,
     "slug": "real-sociedad",
     "name": "Real Sociedad",
     "stadium": "Reale Arena",
@@ -226,7 +226,7 @@
   },
   {
     "club_key": "sevilla",
-    "fantasy_id": 18,
+    "fantasy_id": 17,
     "slug": "sevilla-fc",
     "name": "Sevilla FC",
     "stadium": "Sánchez-Pizjuán",
@@ -241,7 +241,7 @@
   },
   {
     "club_key": "valencia",
-    "fantasy_id": 19,
+    "fantasy_id": 18,
     "slug": "valencia-cf",
     "name": "Valencia CF",
     "stadium": "Mestalla",
@@ -286,7 +286,7 @@
   },
   {
     "club_key": "valladolid",
-    "fantasy_id": 22,
+    "fantasy_id": 19,
     "slug": "real-valladolid",
     "name": "Real Valladolid",
     "stadium": "José Zorrilla",
@@ -301,7 +301,7 @@
   },
   {
     "club_key": "levante",
-    "fantasy_id": null,
+    "fantasy_id": 11,
     "slug": "levante-ud",
     "name": "Levante",
     "stadium": "Ciutat de València",
@@ -316,7 +316,7 @@
   },
   {
     "club_key": "racing-santander",
-    "fantasy_id": null,
+    "fantasy_id": 49,
     "slug": "racing-santander",
     "name": "Racing",
     "stadium": "El Sardinero",
@@ -355,6 +355,56 @@
     "lon": 2.253,
     "aliases": [
       "PSG"
+    ]
+  },
+  {
+    "club_key": "elche",
+    "fantasy_id": 7,
+    "slug": "elche-cf",
+    "name": "Elche CF",
+    "stadium": "Estadio Manuel Martínez Valero",
+    "city": "Elche",
+    "country": "ES",
+    "lat": 38.2670445,
+    "lon": -0.6633051,
+    "aliases": [
+      "ELC",
+      "Elche"
+    ]
+  },
+  {
+    "club_key": "malaga",
+    "fantasy_id": 12,
+    "slug": "malaga-cf",
+    "name": "Málaga CF",
+    "stadium": "Estadio La Rosaleda",
+    "city": "Málaga",
+    "country": "ES",
+    "lat": 36.7349435,
+    "lon": -4.4265346,
+    "aliases": [
+      "MAL",
+      "MLG",
+      "Málaga",
+      "Malaga",
+      "Malaga FC"
+    ]
+  },
+  {
+    "club_key": "deportivo",
+    "fantasy_id": 26,
+    "slug": "rc-deportivo",
+    "name": "RC Deportivo",
+    "stadium": "Estadio ABANCA-RIAZOR",
+    "city": "A Coruña",
+    "country": "ES",
+    "lat": 43.3687157,
+    "lon": -8.4175098,
+    "aliases": [
+      "DEP",
+      "Deportivo",
+      "Deportivo La Coruña",
+      "Deportivo La Coruna"
     ]
   }
 ]
