@@ -22,6 +22,42 @@ toasts, with local CSS and native buttons/fields where appropriate.
 The lineup sidebar uses local shadcn Base UI Card, ScrollArea, Table, and Badge
 components, adapted to these same tokens and plain CSS.
 
+Button guidelines apply throughout the application, including portaled dialogs:
+
+- Command buttons have at least a 44 × 44 CSS-pixel target, visible keyboard
+  focus, and rectangular corners. Radio/checkbox/switch primitives use their
+  enclosing labels as the target. Table filters include the heading in the
+  clickable area; dense performance controls retain full-size targets.
+- Primary actions use coral with black text; secondary and cancellation actions
+  use neutral surfaces or outlines. Dialog footers preserve these variants.
+  Selected filters and pagination also use an underline, so color is not the
+  only indication of selection.
+- Disabled actions retain their appearance on hover. The shared `Button`
+  suppresses activation when `aria-disabled` while remaining focusable for
+  explanations. Pending mutations disable repeat submission, show a specific
+  progress label, and expose `aria-busy`.
+- Confirmation buttons name the effect: **Place bid**, **Send offer**,
+  **Pay release clause**, **Withdraw player**, or the relevant squad action.
+  Favorite toggles keep a stable accessible name and expose `aria-pressed`.
+
+These conventions apply the skill's Fitts's Law and action-feedback guidance,
+with [WAI button semantics](https://www.w3.org/WAI/ARIA/apg/patterns/button/).
+They are implementation guidelines, not a claim of a full accessibility audit
+or testing with representative users.
+
+Shared shadcn-style field compositions keep the persistent label, constraints,
+control, and correction together. Descriptions and errors are connected to their
+inputs with stable IDs and `aria-describedby`; invalid amounts and date ranges
+also expose `aria-invalid`. Bid limits stay visible next to the amount rather
+than requiring people to remember them from another panel.
+
+Dialogs can provide a concise accessible description and deliberate initial
+focus. Bid dialogs focus the amount; clause payment and withdrawal start on
+**Cancel**. A pending request marks the dialog busy and prevents Escape, backdrop,
+or close-button dismissal until a result is available. Closing an idle dialog
+restores focus to its originating control. Date-range editing still uses an
+explicit Apply/Cancel workflow.
+
 Automated browser checks use fictional deterministic data and fallback
 portraits. The product captures below show the local account as it appeared at
 capture time.

@@ -154,7 +154,7 @@ test("market bids can cross zero cash up to the inclusive squad debt limit", asy
   await page.getByRole("menuitem", { name: "Hire", exact: true }).click();
   const dialog = page.getByRole("dialog", { name: "Hire player", exact: true });
   const amount = dialog.getByRole("textbox", { name: "Bid amount", exact: true });
-  const confirm = dialog.getByRole("button", { name: "Confirm", exact: true });
+  const confirm = dialog.getByRole("button", { name: "Place bid", exact: true });
   await expect(confirm).toBeEnabled();
   await expect(dialog).toContainText("available cash plus up to 20% of squad value");
   await amount.fill("17000001");
@@ -176,9 +176,32 @@ test("bid feedback waits for a confirmed mocked response", async ({ page }) => {
   await page.getByRole("button", { name: "Options", exact: true }).first().click();
   await page.getByRole("menuitem", { name: "Hire", exact: true }).click();
   await expect(page.getByRole("dialog", { name: "Hire player" })).toBeVisible();
-  await page.getByRole("button", { name: "Confirm", exact: true }).click();
+  await page.getByRole("button", { name: "Place bid", exact: true }).click();
   await expect(page.getByRole("button", { name: "Sending…", exact: true })).toBeDisabled();
+  const pendingDialog = page.getByRole("dialog", { name: "Hire player" });
+  await expect(pendingDialog).toHaveAttribute("aria-busy", "true");
+  await page.keyboard.press("Escape");
+  await expect(pendingDialog).toBeVisible();
   await expect(page.locator(".fb-toast")).toHaveCount(0);
   release();
   await expect(page.locator(".fb-toast").getByText("Bid submitted", { exact: true })).toBeVisible();
+});
+
+test("date range errors explain the correction and remain associated with the inputs", async ({ page }) => {
+  await mockApplication(page);
+  await page.goto("/players/1");
+  await page.getByRole("button", { name: "Custom", exact: true }).click();
+  const from = page.getByLabel("From", { exact: true });
+  const to = page.getByLabel("To", { exact: true });
+  await from.fill("2026-10-20");
+  await to.fill("2026-10-01");
+  const error = page.getByRole("alert");
+  await expect(error).toHaveText("Choose an end date on or after the start date.");
+  await expect(to).toHaveAttribute("aria-describedby", (await error.getAttribute("id"))!);
+  await expect(to).toHaveAttribute("aria-invalid", "true");
+  await expect(page.getByRole("button", { name: "Apply range", exact: true })).toBeDisabled();
+  await to.fill("2026-10-21");
+  await expect(error).toHaveCount(0);
+  await expect(to).not.toHaveAttribute("aria-invalid");
+  await expect(page.getByRole("button", { name: "Apply range", exact: true })).toBeEnabled();
 });

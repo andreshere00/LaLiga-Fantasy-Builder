@@ -394,12 +394,15 @@ for (const action of ["bid", "offer", "clause"] as const) {
     await options.getByRole("button", { name: label, exact: true }).click();
     const confirmation = page.getByRole("dialog", { name: action === "bid" ? "Hire player" : label, exact: true });
     await expect(confirmation).toBeVisible();
+    if (action === "clause") {
+      await expect(confirmation.getByRole("button", { name: "Cancel", exact: true })).toBeFocused();
+    }
     expect(writes).toEqual([]);
     await confirmation.getByRole("button", { name: "Cancel", exact: true }).click();
     await expect(options).toBeVisible();
     expect(writes).toEqual([]);
     await options.getByRole("button", { name: label, exact: true }).click();
-    await confirmation.getByRole("button", { name: "Confirm", exact: true }).click();
+    await confirmation.getByRole("button", { name: action === "bid" ? "Place bid" : action === "offer" ? "Send offer" : "Pay release clause", exact: true }).click();
     await expect(options).toBeVisible();
     expect(writes).toEqual([{ path: action === "bid" ? "/api/market/leagues/l1/m14/bids"
       : action === "offer" ? "/api/market/leagues/l1/direct-offers"

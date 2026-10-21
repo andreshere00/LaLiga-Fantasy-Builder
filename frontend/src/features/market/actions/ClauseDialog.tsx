@@ -1,5 +1,7 @@
 import { formatEuro } from "../../../api/format";
+import { useRef } from "react";
 import { Dialog } from "../../../components/ui/Dialog";
+import { Button } from "../../../components/ui/Button";
 import type { MarketRow } from "../model/row";
 
 type ClauseDialogProps = {
@@ -21,34 +23,33 @@ export function ClauseDialog({
   onClose,
   onConfirm,
 }: ClauseDialogProps) {
+  const cancelRef = useRef<HTMLButtonElement>(null);
   if (!row) return null;
 
   return (
     <Dialog
       open={open}
       title="Pay release clause"
+      description={<>Pay {formatEuro(amount)} to trigger the release clause for <strong>{row.name}</strong>?</>}
+      initialFocus={cancelRef}
+      busy={pending}
       onClose={onClose}
       closeOnBackdrop={!pending}
       footer={
         <>
-          <button type="button" className="market-dialog-secondary" onClick={onClose} disabled={pending}>
+          <Button variant="outline" ref={cancelRef} onClick={onClose} disabled={pending}>
             Cancel
-          </button>
-          <button
-            type="button"
-            className="market-dialog-primary"
-            disabled={pending}
+          </Button>
+          <Button
+            loading={pending}
+            loadingLabel="Paying…"
             onClick={onConfirm}
           >
-            {pending ? "Sending…" : "Confirm"}
-          </button>
+            Pay release clause
+          </Button>
         </>
       }
     >
-      <p className="market-dialog-copy">
-        Pay {formatEuro(amount)} to trigger the release clause for{" "}
-        <strong>{row.name}</strong>?
-      </p>
       {error ? (
         <p className="market-dialog-error" role="alert">
           {error}

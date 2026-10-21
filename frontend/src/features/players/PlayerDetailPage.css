@@ -439,6 +439,8 @@
 
 .player-detail-chart { background:var(--fb-surface); border:1px solid var(--fb-line); padding:12px; }
 .player-detail-market-presets button { min-height:44px; font-size:14px; color:var(--fb-secondary); }
+.player-detail-fixture-actions button[aria-pressed="true"],
+.player-detail-market-presets button[aria-pressed="true"] { font-weight:700; text-decoration:underline; text-underline-offset:3px; }
 .player-detail-market-presets button.is-active { background:var(--fb-primary); color:var(--fb-ink-on-status); border-color:var(--fb-primary); outline:0; }
 .player-detail-deltas { display:flex; flex-wrap:wrap; gap:8px; align-items:center; font-size:14px; }
 .player-detail-deltas strong { font-size:24px; font-weight:500; }

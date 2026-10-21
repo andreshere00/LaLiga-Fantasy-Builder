@@ -27,11 +27,21 @@ export type ButtonProps = ComponentProps<"button"> & VariantOptions & {
 /** Native React 19 button; the ref prop passes directly through to the DOM. */
 export function Button({
   variant, size, shape, className, icon, loading = false,
-  loadingLabel = "Saving…", disabled, children, type = "button", ...props
+  loadingLabel = "Working…", disabled, children, type = "button", onClick, ...props
 }: ButtonProps) {
+  const unavailable = disabled || loading || props["aria-disabled"] === true ||
+    props["aria-disabled"] === "true";
   return (
     <button {...props} type={type} disabled={disabled || loading}
-      aria-busy={loading || undefined}
+      aria-busy={loading || props["aria-busy"]}
+      onClick={(event) => {
+        if (unavailable) {
+          event.preventDefault();
+          event.stopPropagation();
+          return;
+        }
+        onClick?.(event);
+      }}
       className={buttonVariants({ variant, size, shape, className })}>
       {loading ? <span className="fb-button-spinner" aria-hidden="true" /> :
         icon ? <span className="fb-button-icon" aria-hidden="true">{icon}</span> : null}

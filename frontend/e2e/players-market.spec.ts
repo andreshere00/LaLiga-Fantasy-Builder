@@ -99,7 +99,7 @@ test("catalog bid mutations reconcile amounts and counts, including stale reads 
   }
   await dialog.getByRole("textbox", { name: "Bid amount" }).fill("6000000");
   fixture.lag(2);
-  await dialog.getByRole("button", { name: "Confirm", exact: true }).click();
+  await dialog.getByRole("button", { name: "Update bid", exact: true }).click();
   await expect(dialog).toHaveCount(0);
   await expect(row.locator(".players-value-details .market-bid-value")).toHaveText("Your bid: 6.000.000 €");
   await expect(row.getByText("Bids: 2", { exact: true })).toBeVisible();
@@ -118,7 +118,7 @@ test("catalog bid mutations reconcile amounts and counts, including stale reads 
   const unbid = playerRow(page, "Player 16");
   await unbid.getByRole("button", { name: "Options", exact: true }).click();
   await page.getByRole("menuitem", { name: "Hire", exact: true }).click();
-  await page.getByRole("dialog").getByRole("button", { name: "Confirm", exact: true }).click();
+  await page.getByRole("dialog").getByRole("button", { name: "Place bid", exact: true }).click();
   await expect(unbid.getByText("Bids: 1", { exact: true })).toBeVisible();
   await expect(unbid.locator(".players-value-details .market-bid-value")).toHaveText("Your bid: 3.500.000 €");
   expect(fixture.writes.map(({ method }) => method)).toEqual(["PUT", "DELETE", "DELETE", "POST"]);
@@ -135,7 +135,7 @@ test("catalog preserves pagination, favorites, URL filters and player-specific o
   await page.getByRole("navigation", { name: "Players pages" }).getByRole("button", { name: "Page 2", exact: true }).click();
   await expect(playerRow(page, "Player 16").getByText("Bids: 0", { exact: true })).toBeVisible();
   await page.getByRole("navigation", { name: "Players pages" }).getByRole("button", { name: "Page 1", exact: true }).click();
-  await expect(playerRow(page, "Player 01").getByRole("button", { name: "Remove Player 01 from favorites" })).toHaveAttribute("aria-pressed", "true");
+  await expect(playerRow(page, "Player 01").getByRole("button", { name: "Favorite Player 01" })).toHaveAttribute("aria-pressed", "true");
   await page.getByRole("combobox", { name: "Search players" }).fill("Player 13");
   await expect(page).toHaveURL(/q=Player\+13/);
   const own = playerRow(page, "Player 13");

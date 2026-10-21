@@ -9,7 +9,7 @@ describe("Custom value range", () => {
     const apply = vi.fn();
     render(<DateRangeDialog from="2026-10-01" to="2026-10-12" onClose={() => {}} onApply={apply} />);
     fireEvent.change(screen.getByLabelText("From"), { target: { value: "2026-10-20" } });
-    expect(screen.getByRole("alert").textContent).toContain("From must be on or before to");
+    expect(screen.getByRole("alert").textContent).toContain("Choose an end date on or after the start date.");
     expect((screen.getByRole("button", { name: "Apply range" }) as HTMLButtonElement).disabled).toBe(true);
     expect(apply).not.toHaveBeenCalled();
     fireEvent.change(screen.getByLabelText("To"), { target: { value: "2026-10-22" } });

@@ -53,4 +53,20 @@ describe("Dialog", () => {
 
     expect(onClose).toHaveBeenCalledTimes(1);
   });
+
+  it("Dialog_busy_request_keeps_the_result_visible_until_it_finishes", () => {
+    const onClose = vi.fn();
+    const { rerender } = render(<Dialog open busy title="Place bid" onClose={onClose}>
+      Waiting for confirmation
+    </Dialog>);
+
+    fireEvent.keyDown(document.activeElement ?? document.body, { key: "Escape" });
+    expect(onClose).not.toHaveBeenCalled();
+    expect(screen.getByRole("dialog").getAttribute("aria-busy")).toBe("true");
+    expect((screen.getByRole("button", { name: "Close dialog" }) as HTMLButtonElement).disabled).toBe(true);
+
+    rerender(<Dialog open title="Place bid" onClose={onClose}>Request failed. Try again.</Dialog>);
+    fireEvent.keyDown(document.activeElement ?? document.body, { key: "Escape" });
+    expect(onClose).toHaveBeenCalledTimes(1);
+  });
 });

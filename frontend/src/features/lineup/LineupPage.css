@@ -361,7 +361,7 @@
   color: var(--fb-surface);
 }
 
-.accent-control-shell:not(:has(:is(.save-lineup-button, .recommend-button):disabled)):is(
+.accent-control-shell:not(:has(:is(.save-lineup-button, .recommend-button):is(:disabled,[aria-disabled="true"]))):is(
     :hover,
     :has(.recommend-button:active),
     :has(.save-lineup-button:active:not(:disabled))
@@ -1231,7 +1231,7 @@
 
 .accent-control-shell:has([aria-disabled="true"]) { opacity:.5; }
 
-.accent-control-shell { border-radius:8px; }
+.accent-control-shell { border-radius:0; }
 .save-lineup-button-icon { filter:brightness(0); }
 
 /* Lineup toolbar visual fixes. */
@@ -1250,30 +1250,18 @@
 .value-box { justify-content:center; font-size:var(--lineup-font-large); border:1px solid var(--fb-control-line); box-sizing:border-box; }
 .value-box .value-box-tooltip-wrap { justify-content:center; }
 .value-box-text { flex:0 1 auto; text-align:center; }
-.save-lineup-button { border-radius:0; background:transparent; color:#fff; transition:color .16s ease,background-color .16s ease; }
-.accent-control-shell:has(.save-lineup-button:not(:disabled):not([aria-disabled="true"])) { background:var(--fb-primary); color:#fff; }
-.accent-control-shell:has(.save-lineup-button:not(:disabled):not([aria-disabled="true"]):hover) { background:var(--fb-coral); color:#000; }
-.accent-control-shell:has(.save-lineup-button:not(:disabled):not([aria-disabled="true"]):hover) .save-lineup-button { color:#000; }
-.accent-control-shell:has(.save-lineup-button:not(:disabled):not([aria-disabled="true"]):hover) .save-lineup-button-icon { filter:brightness(0); }
-.save-lineup-button:disabled,
-.save-lineup-button[aria-disabled="true"] { background:transparent; color:#fff; }
-.accent-control-shell:has(.save-lineup-button:disabled),
-.accent-control-shell:has(.save-lineup-button[aria-disabled="true"]) { background:#35353D; border-color:#35353D; color:#fff; opacity:1; }
-.accent-control-shell:has(.save-lineup-button:disabled):hover,
-.accent-control-shell:has(.save-lineup-button[aria-disabled="true"]):hover { background:#E5E5E5; color:#000; }
-.accent-control-shell:has(.save-lineup-button:disabled):hover .save-lineup-button,
-.accent-control-shell:has(.save-lineup-button[aria-disabled="true"]):hover .save-lineup-button { color:#000; }
-.accent-control-shell:has(.save-lineup-button:disabled):hover .save-lineup-button-icon,
-.accent-control-shell:has(.save-lineup-button[aria-disabled="true"]):hover .save-lineup-button-icon { filter:brightness(0); }
-.save-lineup-button-icon { filter:none; }
-.accent-control-shell:has(.save-lineup-button:not(:disabled):not([aria-disabled="true"])) .save-lineup-button-icon { filter:none; }
-.accent-control-shell:has(.save-lineup-button:disabled) .save-lineup-button-icon,
-.accent-control-shell:has(.save-lineup-button[aria-disabled="true"]) .save-lineup-button-icon { filter:none; opacity:1; }
-.recommend-button { align-items:center; font-size:16px; font-weight:500; }
-.recommend-button-icon { filter:none; }
-.accent-control-shell:has(.recommend-button) { background:var(--fb-primary); color:#fff; }
-.accent-control-shell:has(.recommend-button):hover { background:var(--fb-coral); color:#000; }
-.recommend-button { color:#fff; }
+/* Shared action colors keep text legible and unavailable controls visually stable. */
+.save-lineup-button,.recommend-button { color:var(--fb-on-brand); }
+.save-lineup-button-icon,.recommend-button-icon { filter:brightness(0); }
+.accent-control-shell:has(:is(.save-lineup-button,.recommend-button)) { background:var(--fb-primary); color:var(--fb-on-brand); }
+.accent-control-shell:has(:is(.save-lineup-button,.recommend-button):not(:disabled):not([aria-disabled="true"]):hover) { background:var(--fb-coral); color:var(--fb-on-coral); }
+.accent-control-shell:has(:is(.save-lineup-button,.recommend-button):not(:disabled):not([aria-disabled="true"]):hover) :is(.save-lineup-button,.recommend-button) { color:var(--fb-on-coral); }
+.accent-control-shell:has(:is(.save-lineup-button,.recommend-button):is(:disabled,[aria-disabled="true"])) { background:var(--fb-subtle); border:1px solid var(--fb-control-line); color:var(--fb-muted); opacity:1; }
+.accent-control-shell:has(:is(.save-lineup-button,.recommend-button):is(:disabled,[aria-disabled="true"])) :is(.save-lineup-button,.recommend-button) { color:var(--fb-muted); cursor:not-allowed; }
+.accent-control-shell:has(:is(.save-lineup-button,.recommend-button):is(:disabled,[aria-disabled="true"])) img { opacity:.5; }
+:root[data-theme="dark"] .accent-control-shell:has(:is(.save-lineup-button,.recommend-button):is(:disabled,[aria-disabled="true"])) img { filter:brightness(0) invert(1); }
+.recommend-button { align-items:center; font-size:16px; font-weight:600; }
+.pager button:focus-visible { outline-offset:-3px; }
 .lineup-formation-trigger { min-width:var(--lineup-formation-control-min); min-height:var(--lineup-control-height); }
 .lineup-formation-icon { display:flex; align-items:center; justify-content:center; align-self:center; flex:0 0 18px; height:18px; line-height:0; }
 .lineup-formation-icon svg { display:block; width:18px; height:18px; }

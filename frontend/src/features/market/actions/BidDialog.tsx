@@ -3,6 +3,7 @@ import { useEffect, useId, useState } from "react";
 import { formatEuro, formatIntegerAmount, parseIntegerAmount } from "../../../api/format";
 import { Dialog } from "../../../components/ui/Dialog";
 import { Button } from "../../../components/ui/Button";
+import { Field, FieldDescription, FieldError, FieldLabel } from "../../../components/ui/Fields";
 import { NumericCounterField } from "../../../components/NumericCounterField";
 import { MARKET_VALUE_FILTER_STEP } from "../marketFilterInputs";
 import type { MarketRow } from "../model/row";
@@ -72,6 +73,15 @@ export function BidDialog({
         ? "available cash plus up to 20% of squad value" : "available cash"})`
       : "within your available bidding limit";
   const directOffer = usesDirectOfferBid(row, kind);
+  const actionLabel = directOffer ? "Send offer" : kind === "modify" ? "Update bid" : "Place bid";
+  const amountError = raw.trim().length === 0 || valid ? null
+    : parsed == null ? "Enter a whole euro amount."
+    : row.marketValue == null ? "The minimum amount is unavailable. Refresh the market before trying again."
+    : parsed < bidFloor ? `Enter at least ${formatEuro(bidFloor)}.`
+    : maximum != null ? `Enter no more than ${formatEuro(maximum)}.`
+    : "Your bidding limit is unavailable. Refresh the market before trying again.";
+  const hintId = `${inputId}-hint`;
+  const errorId = `${inputId}-error`;
 
   const stepBidAmount = (current: number | null, deltaSteps: number) => {
     if (deltaSteps === 0) return current ?? bidFloor;
@@ -84,6 +94,10 @@ export function BidDialog({
       className="market-bid-dialog"
       open={open}
       title={directOffer ? "Make offer" : TITLES[kind]}
+      description={<>{directOffer ? "Offer for" : "Bid for"} <strong>{row.name}</strong>.
+        {directOffer && " The owner must accept your offer before the player joins your squad."}</>}
+      initialFocus={() => document.getElementById(inputId)}
+      busy={pending}
       onClose={() => { if (!pending) onClose(); }}
       closeOnBackdrop={!pending}
       footer={
@@ -93,45 +107,43 @@ export function BidDialog({
           </Button>
           <Button
             shape="square"
-            disabled={!valid || pending}
+            disabled={!valid}
+            loading={pending}
+            loadingLabel="Sending…"
             onClick={() => {
               if (parsed == null) return;
               onConfirm(parsed);
             }}
           >
-            {pending ? "Sending…" : "Confirm"}
+            {actionLabel}
           </Button>
         </>
       }
     >
-      <p className="market-dialog-copy">
-        {directOffer ? "Offer for" : "Bid for"} <strong>{row.name}</strong>. Amount must be at least{" "}
-        {formatEuro(row.marketValue)} and {balanceHint}.
-        {directOffer && " The owner must accept your offer before the player joins your squad."}
-      </p>
-      <label className="market-dialog-label" htmlFor={inputId}>
-        {directOffer ? "Offer amount (€)" : "Bid amount (€)"}
-      </label>
-      <NumericCounterField
-        id={inputId}
-        inputClassName="market-dialog-input"
-        ariaLabel={directOffer ? "Offer amount" : "Bid amount"}
-        value={raw}
-        disabled={pending}
-        formatInput={(value) => value}
-        parseValue={parseIntegerAmount}
-        stepValue={stepBidAmount}
-        onValueChange={setRaw}
-        onBlur={() => {
-          if (raw.trim() === "") return;
-          setRaw(clampAndFormat(raw, bidFloor));
-        }}
-      />
-      {!valid && raw.trim().length > 0 ? (
-        <p className="market-dialog-error" role="alert">
-          Enter a valid whole amount for this listing and your balance rules.
-        </p>
-      ) : null}
+      <Field data-invalid={amountError ? "" : undefined}>
+        <FieldLabel htmlFor={inputId}>{directOffer ? "Offer amount (€)" : "Bid amount (€)"}</FieldLabel>
+        <FieldDescription id={hintId}>
+          Amount must be at least {formatEuro(row.marketValue)} and {balanceHint}.
+        </FieldDescription>
+        <NumericCounterField
+          id={inputId}
+          inputClassName="market-dialog-input"
+          ariaLabel={directOffer ? "Offer amount" : "Bid amount"}
+          ariaDescribedBy={`${hintId}${amountError ? ` ${errorId}` : ""}`}
+          ariaInvalid={!!amountError}
+          value={raw}
+          disabled={pending}
+          formatInput={(value) => value}
+          parseValue={parseIntegerAmount}
+          stepValue={stepBidAmount}
+          onValueChange={setRaw}
+          onBlur={() => {
+            if (raw.trim() === "") return;
+            setRaw(clampAndFormat(raw, bidFloor));
+          }}
+        />
+        {amountError ? <FieldError id={errorId}>{amountError}</FieldError> : null}
+      </Field>
       {error ? (
         <p className="market-dialog-error" role="alert">
           {error}

@@ -8,8 +8,9 @@
 }
 [data-theme="dark"] .fb-button.market-offers-trigger.has-offers,
 [data-theme="dark"] .fb-button.market-offers-trigger.has-offers:hover {
-  color:#FFFFFF;
+  color:var(--fb-on-brand);
 }
+[data-theme="dark"] .market-offers-trigger.has-offers .market-offers-icon-dark { filter:brightness(0); }
 .market-offers-trigger.has-offers .market-offers-count {
   background:transparent; border:1px solid currentColor; color:inherit;
 }

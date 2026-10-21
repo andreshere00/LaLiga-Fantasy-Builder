@@ -41,7 +41,7 @@
 .lineup-builder-options { display:grid; max-height:220px; overflow:auto; border:1px solid var(--fb-control-line); background:var(--fb-surface); }
 .lineup-builder-options[role="listbox"] { max-height:260px; }
 .lineup-builder-options > button { display:flex; align-items:center; justify-content:space-between; gap:12px; min-height:44px; padding:8px 12px; border:0; border-bottom:1px solid var(--fb-line); background:transparent; color:var(--fb-secondary); text-align:left; cursor:pointer; }
-.lineup-builder-options > button:hover { background:var(--fb-coral); color:var(--fb-on-coral); }
+.lineup-builder-options > button:not(:disabled):hover { background:var(--fb-coral); color:var(--fb-on-coral); }
 .lineup-builder-options > button > span:not(.fb-avatar) { flex:1; }
 .lineup-builder-options > button:focus-visible,.lineup-builder-chosen > button:focus-visible { outline:2px solid var(--fb-focus); outline-offset:-3px; }
 .lineup-builder-options > button:disabled { opacity:.5; cursor:not-allowed; }

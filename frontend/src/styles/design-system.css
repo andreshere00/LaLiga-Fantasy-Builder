@@ -36,19 +36,27 @@
 .fb-panel,.fb-popup,.fb-calendar{border:1px solid var(--fb-line);padding:20px}
 :is(.fb-button,.fb-input,.fb-native-select,.fb-page-button):focus-visible{outline:2px solid var(--fb-focus);outline-offset:3px;box-shadow:none}
 .fb-button{display:inline-flex;align-items:center;justify-content:center;gap:8px;min-height:44px;padding:0 16px;border:1px solid transparent;box-shadow:none;cursor:pointer;white-space:nowrap;font:600 14px/1 "At Aero",Arial,sans-serif;letter-spacing:.01em;text-transform:uppercase;transition:background-color .16s ease,color .16s ease,border-color .16s ease}
-.fb-button{border-radius:0}
+.fb-button{border-radius:0;min-width:44px;white-space:normal;line-height:1.35;text-align:center;text-decoration:none;padding-block:10px}
 .fb-button--default,.fb-button--destructive{background:var(--fb-primary);color:var(--fb-on-brand)}
 .fb-button--secondary{background:var(--fb-subtle);color:var(--fb-secondary)}
 .fb-button--outline{background:transparent;border-color:var(--fb-control-line);color:var(--fb-secondary)}
 .fb-button--ghost{background:transparent;color:var(--fb-secondary)}
-.fb-button:not(:disabled):hover{background:var(--fb-coral);color:var(--fb-on-coral);border-color:var(--fb-coral)}
-.fb-button:disabled{opacity:.5;cursor:not-allowed}
-.fb-button--sm{min-height:36px;font-size:14px;padding:0 12px}.fb-button--lg{min-height:48px;font-size:16px;padding:0 20px}
-.fb-button--icon{height:44px;width:44px;padding:0}
+.fb-button:where(:not(:disabled,[aria-disabled="true"],[data-disabled])):hover{background:var(--fb-coral);color:var(--fb-on-coral);border-color:var(--fb-coral)}
+.fb-button:where(:not(:disabled,[aria-disabled="true"],[data-disabled])):active{background:var(--fb-selected);color:var(--fb-selected-text);border-color:currentColor}
+.fb-button:is(:disabled,[aria-disabled="true"],[data-disabled]){opacity:.5;cursor:not-allowed}
+.fb-button[aria-busy="true"]{cursor:progress}
+.fb-button[aria-pressed="true"]{border-color:var(--fb-primary);text-decoration:underline;text-underline-offset:3px}
+.fb-button--sm{min-height:44px;font-size:14px;padding:8px 12px}.fb-button--lg{min-height:48px;font-size:16px;padding:10px 20px}
+.fb-button--icon{height:44px;width:44px;padding:0;flex-shrink:0}
 .fb-button-icon,.fb-button-icon svg{display:block;width:18px;height:18px;flex-shrink:0}
 .fb-button-spinner{width:16px;height:16px;border:2px solid currentColor;border-right-color:transparent;border-radius:50%;animation:fb-spin .8s linear infinite}
 .fb-input,.fb-native-select,.fb-select-trigger,.fb-combobox-input{display:block;min-height:44px;width:100%;border:1px solid var(--fb-control-line);border-radius:0;padding:10px 12px;background:var(--fb-surface);color:var(--fb-secondary);font-size:14px;line-height:1.5;box-shadow:none}
 .fb-input::placeholder{color:var(--fb-muted)}.fb-input[aria-invalid="true"]{border:2px solid var(--fb-failure)}
+.fb-field { display:flex; flex-direction:column; gap:8px; min-width:0; }
+.fb-field-label { font-size:14px; font-weight:600; line-height:1.4; color:var(--fb-secondary); }
+.fb-field-description { margin:0; font-size:12px; line-height:1.6; color:var(--fb-muted); }
+.fb-field-error { margin:0; padding-left:10px; border-left:3px solid var(--fb-failure); font-size:14px; line-height:1.5; color:var(--fb-secondary); }
+.fb-field input[aria-invalid="true"] { border-color:var(--fb-failure); box-shadow:inset 0 0 0 1px var(--fb-failure); }
 .fb-input-group{display:flex;align-items:center;border:1px solid var(--fb-control-line);background:var(--fb-surface);border-radius:0;gap:10px;padding-left:12px}
 .fb-input-group .fb-input{border:0;min-width:0;background:transparent}
 .fb-input-group:focus-within{outline:2px solid var(--fb-focus);outline-offset:3px}
@@ -64,7 +72,9 @@
 .fb-pagination{display:flex;align-items:center;gap:4px;flex-wrap:wrap}
 .fb-page-button{width:44px;height:44px;border:1px solid var(--fb-control-line);border-radius:0;background:var(--fb-surface);color:var(--fb-secondary);cursor:pointer;font-size:14px;font-weight:500}
 .fb-page-button[aria-current="page"]{background:var(--fb-primary);color:var(--fb-on-brand);border-color:var(--fb-primary)}
-.fb-page-button:hover{background:var(--fb-coral);color:var(--fb-on-coral)}
+.fb-page-button:not(:disabled):hover{background:var(--fb-coral);color:var(--fb-on-coral)}
+.fb-page-button:disabled{opacity:.5;cursor:not-allowed}
+.fb-page-button[aria-current="page"]{font-weight:700;text-decoration:underline;text-underline-offset:3px}
 .fb-loader{display:flex;align-items:center;justify-content:center;gap:20px;min-height:120px}
 .fb-pulse-ring{position:relative;display:inline-block;width:48px;height:48px;flex-shrink:0}
 .fb-pulse-ring--sm{width:16px;height:16px}.fb-pulse-ring--md{width:32px;height:32px}.fb-pulse-ring--xl{width:64px;height:64px}
@@ -112,6 +122,9 @@
 .fb-dialog-heading { display:flex; gap:16px; align-items:center; justify-content:space-between; flex-shrink:0; }
 .fb-dialog-heading .fb-section-title { margin:0; }
 .fb-dialog-body { min-height:0; overflow:auto; padding-block:20px; }
+.fb-dialog-description { margin:0 0 20px; color:var(--fb-muted); line-height:1.6; }
+.fb-dialog-description:last-child { margin-bottom:0; }
+.fb-dialog-description strong { color:var(--fb-secondary); }
 .fb-dialog-footer { display:flex; justify-content:flex-end; flex-wrap:wrap; gap:12px; flex-shrink:0; }
 .fb-dialog-viewport--sheet { place-items:stretch end; padding:0; }
 .fb-dialog--sheet { width:min(360px,calc(100vw - 24px)); max-height:100dvh; height:100%; }
@@ -124,7 +137,8 @@
 
 :root { --fb-color-duration:160ms; --fb-color-ease:ease; }
 .fb-dialog button:not(.fb-button) { min-height:44px; border-radius:0; font-weight:600; }
-.fb-dialog-footer button { padding:0 16px; border:1px solid var(--fb-control-line); background:var(--fb-surface); color:var(--fb-secondary); cursor:pointer; }
+.fb-dialog-footer button:where(:not(.fb-button)) { padding:0 16px; border:1px solid var(--fb-control-line); background:var(--fb-surface); color:var(--fb-secondary); cursor:pointer; }
+.fb-dialog-footer button:not(:disabled):not([aria-disabled="true"]):hover { background:var(--fb-coral); color:var(--fb-on-coral); border-color:var(--fb-control-line); }
 .fb-dialog-footer :is(.market-dialog-primary,.squad-sale-primary) { background:var(--fb-primary); color:var(--fb-ink-on-status); border-color:var(--fb-primary); }
 .fb-dialog input,.fb-dialog select { min-height:44px; color:var(--fb-secondary); background:var(--fb-surface); }
 

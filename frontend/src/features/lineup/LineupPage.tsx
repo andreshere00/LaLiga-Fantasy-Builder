@@ -206,6 +206,7 @@ function LineupPageContent() {
                 <button
                   type="button"
                   className="save-lineup-button"
+                  aria-busy={board.savePending || undefined}
                   disabled={board.saveDisabled && !saveNoChangesOnly}
                   aria-disabled={saveNoChangesOnly ? true : undefined}
                   onClick={() => {

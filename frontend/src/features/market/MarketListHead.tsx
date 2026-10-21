@@ -20,15 +20,15 @@ export function MarketListHead({ headings, filters, sellers, names = [], onFilte
     <li className="market-row market-head">
       {COLUMNS.map((column) => (
         <span key={column} className={(column === "player" ? "market-head-player " : "") + "market-head-cell market-head-cell-" + column}>
-          <span className="market-head-label">{column === "position" ? "Pos." : marketColumnBaseLabel(column)}</span>
           {isMarketColumnFilterable(column) ? (
             <button type="button" className={"market-head-filter" + (headings[column].filtered ? " is-active" : "")}
               aria-label={"Filter " + marketColumnBaseLabel(column)} aria-haspopup="dialog"
               aria-expanded={editor?.column === column}
               onClick={() => setEditor({ column, draft: filters })}>
+              <span className="market-head-label">{column === "position" ? "Pos." : marketColumnBaseLabel(column)}</span>
               <svg viewBox="0 0 24 24" aria-hidden="true" className="market-head-filter-icon"><path d="M4 5h16l-6 7v6l-4 2v-8L4 5Z" fill="none" stroke="currentColor" strokeWidth="1.5" /></svg>
             </button>
-          ) : null}
+          ) : <span className="market-head-label">{marketColumnBaseLabel(column)}</span>}
         </span>
       ))}
       <Dialog open={editor != null} layout="sheet" className="market-filter-dialog"

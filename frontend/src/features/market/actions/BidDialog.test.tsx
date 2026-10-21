@@ -17,14 +17,20 @@ it("should confirm a bid that uses the allowed debt from a positive cash balance
   const confirm = vi.fn();
   render(<BidDialog open row={row} kind="hire" money={100} squadMarketValue={1000}
     initialAmount={null} pending={false} onClose={() => {}} onConfirm={confirm} />);
-  const button = screen.getByRole("button", { name: "Confirm" }) as HTMLButtonElement;
+  const button = screen.getByRole("button", { name: "Place bid" }) as HTMLButtonElement;
   const input = screen.getByRole("textbox", { name: "Bid amount" });
   expect(button.disabled).toBe(false);
   expect(screen.getByText(/available cash plus up to 20% of squad value/)).toBeTruthy();
   fireEvent.change(input, { target: { value: "301" } });
   expect(button.disabled).toBe(true);
+  expect(input.getAttribute("aria-invalid")).toBe("true");
+  const error = screen.getByRole("alert");
+  expect(error.textContent).toBe("Enter no more than 300 €.");
+  expect(input.getAttribute("aria-describedby")?.split(" ")).toContain(error.id);
   fireEvent.change(input, { target: { value: "300" } });
   expect(button.disabled).toBe(false);
+  expect(input.getAttribute("aria-invalid")).toBeNull();
+  expect(screen.queryByRole("alert")).toBeNull();
   fireEvent.click(button);
   expect(confirm).toHaveBeenCalledExactlyOnceWith(300);
 });
@@ -34,7 +40,7 @@ it("should include the released reservation when modifying a bid across zero cas
     money={100} squadMarketValue={1000} initialAmount={150} pending={false}
     onClose={() => {}} onConfirm={() => {}} />);
   const input = screen.getByRole("textbox", { name: "Bid amount" });
-  const button = screen.getByRole("button", { name: "Confirm" }) as HTMLButtonElement;
+  const button = screen.getByRole("button", { name: "Update bid" }) as HTMLButtonElement;
   fireEvent.change(input, { target: { value: "350" } });
   expect(button.disabled).toBe(false);
   fireEvent.change(input, { target: { value: "351" } });

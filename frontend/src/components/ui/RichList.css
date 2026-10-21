@@ -1127,7 +1127,7 @@ a.market-actions-item {
 .market-value-change,.market-seal-end.is-urgent { color:var(--fb-secondary); }
 .market-seal-end.is-urgent { border-left:3px solid var(--fb-primary); padding-left:6px; }
 .market-availability { gap:6px; font-size:12px; }
-.market-form-nav-btn { width:22px; height:22px; min-width:22px; min-height:22px; color:var(--fb-secondary); font-size:12px; }
+.market-form-nav-btn { width:44px; height:44px; min-width:44px; min-height:44px; color:var(--fb-secondary); font-size:18px; }
 .market-form-badges .player-score-badge { width:44px; height:44px; }
 .market-form-badges .player-score-badge-value { font-size:14px; }
 .market-fsyp,.market-value-primary { font-variant-numeric:tabular-nums; }
@@ -1145,6 +1145,10 @@ a.market-actions-item {
 .market-head-filter-icon { width:18px; height:18px; }
 .market-head-filter.is-active { color:var(--fb-primary); }
 .market-head-filter.is-active .market-head-filter-icon { filter:none; }
+.market-head-cell { padding-right:0; }
+.market-head-filter { position:static; transform:none; display:flex; flex:1 1 auto; justify-content:space-between; gap:4px; width:100%; min-width:44px; height:auto; min-height:44px; padding:4px 0; font:inherit; text-align:left; }
+.market-head-filter-icon { flex-shrink:0; }
+.market-head-filter.is-active .market-head-label { text-decoration:underline; text-underline-offset:3px; }
 
 /* Market and catalog presentation, including dialogs rendered through a portal. */
 .market-page .market-name { font-weight:700; }

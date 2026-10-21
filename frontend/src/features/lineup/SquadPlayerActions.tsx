@@ -177,6 +177,7 @@ export function SquadPlayerActions({
               <button
                 type="button"
                 className="squad-sale-primary"
+                aria-busy={pending || undefined}
                 disabled={
                   pending ||
                   (view === "list" || view === "modify"
@@ -212,7 +213,8 @@ export function SquadPlayerActions({
                   sales.sellImmediately.mutate(player.id, { onSuccess: () => close() });
                 }}
               >
-                {pending ? "Sending…" : "Confirm"}
+                {pending ? "Sending…" : view === "list" ? "List player" : view === "modify"
+                  ? "Update listing" : view === "cancel" ? "Withdraw listing" : "Sell player now"}
               </button>
             </>
           )

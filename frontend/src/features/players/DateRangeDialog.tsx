@@ -1,8 +1,8 @@
-import { useState } from "react";
+import { useId, useState } from "react";
 import { DayPicker } from "react-day-picker";
 import { Button } from "../../components/ui/Button";
 import { Dialog } from "../../components/ui/Dialog";
-import { Input } from "../../components/ui/Fields";
+import { Field, FieldDescription, FieldError, FieldLabel, Input } from "../../components/ui/Fields";
 import "react-day-picker/style.css";
 import "./DateRangeDialog.css";
 
@@ -16,6 +16,7 @@ export function DateRangeDialog({ from, to, onClose, onApply }: {
   from: string; to: string; onClose: () => void;
   onApply: (from: string, to: string) => void;
 }) {
+  const fieldId = useId();
   const [draftFrom, setDraftFrom] = useState(from);
   const [draftTo, setDraftTo] = useState(to);
   const [days, setDays] = useState("21");
@@ -28,23 +29,43 @@ export function DateRangeDialog({ from, to, onClose, onApply }: {
     to: draftTo ? new Date(draftTo + "T12:00:00") : undefined,
   } : undefined;
   return (
-    <Dialog open title="Custom value period" onClose={onClose} footer={<>
+    <Dialog open title="Custom value period" onClose={onClose}
+      description="Choose both dates, then apply the range. Cancel keeps your current period."
+      footer={<>
       <Button variant="outline" onClick={onClose}>Cancel</Button>
       <Button disabled={!valid} onClick={() => onApply(draftFrom, draftTo)}>Apply range</Button>
     </>}>
       <div className="fb-date-fields">
-        <label>From<Input type="date" value={draftFrom} onChange={(event) => setDraftFrom(event.target.value)} /></label>
-        <label>To<Input type="date" value={draftTo} onChange={(event) => setDraftTo(event.target.value)} /></label>
+        <Field>
+          <FieldLabel htmlFor={`${fieldId}-from`}>From</FieldLabel>
+          <Input id={`${fieldId}-from`} type="date" value={draftFrom}
+            aria-invalid={invalid || undefined} aria-describedby={invalid ? `${fieldId}-error` : undefined}
+            onChange={(event) => setDraftFrom(event.target.value)} />
+        </Field>
+        <Field>
+          <FieldLabel htmlFor={`${fieldId}-to`}>To</FieldLabel>
+          <Input id={`${fieldId}-to`} type="date" value={draftTo}
+            aria-invalid={invalid || undefined} aria-describedby={invalid ? `${fieldId}-error` : undefined}
+            onChange={(event) => setDraftTo(event.target.value)} />
+        </Field>
       </div>
-      {invalid ? <p role="alert">From must be on or before to.</p> : null}
+      {invalid ? <FieldError id={`${fieldId}-error`}>
+        Choose an end date on or after the start date.
+      </FieldError> : null}
       <DayPicker className="fb-calendar" mode="range" weekStartsOn={1} selected={selected}
         defaultMonth={selected?.from} onSelect={(range) => {
           setDraftFrom(range?.from ? localDate(range.from) : "");
           setDraftTo(range?.to ? localDate(range.to) : "");
         }} />
       <div className="fb-date-shortcut">
-        <label>Last days<Input type="number" min={1} max={400} value={days}
-          onChange={(event) => setDays(event.target.value)} /></label>
+        <Field>
+          <FieldLabel htmlFor={`${fieldId}-days`}>Last days</FieldLabel>
+          <FieldDescription id={`${fieldId}-days-hint`}>Choose between 1 and 400 days.</FieldDescription>
+          <Input id={`${fieldId}-days`} type="number" min={1} max={400} value={days}
+            aria-describedby={`${fieldId}-days-hint`}
+            aria-invalid={(!validDays && days !== "") || undefined}
+            onChange={(event) => setDays(event.target.value)} />
+        </Field>
         <Button variant="outline" shape="square" disabled={!validDays} onClick={() => {
           const end = new Date();
           const start = new Date(end);

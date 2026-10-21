@@ -16,7 +16,7 @@ export function PlayerBookmarkButton({
     <button
       type="button"
       className={["player-bookmark-btn", pressed && "is-active"].filter(Boolean).join(" ")}
-      aria-label={pressed ? `Remove ${playerName} from favorites` : `Favorite ${playerName}`}
+      aria-label={`Favorite ${playerName}`}
       aria-pressed={pressed}
       onClick={onToggle}
     >
