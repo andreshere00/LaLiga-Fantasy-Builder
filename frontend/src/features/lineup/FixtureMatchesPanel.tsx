@@ -34,6 +34,8 @@ function MatchForecast({ match, row, loading, failed, now }: {
       : failed && !row ? "Forecast unavailable" : weatherReason(row?.weather.reason);
   return (
     <div className="fixture-match-weather">
+      <ScrollArea className="fixture-forecast-scroll" viewportProps={{ role: "region", "aria-label": `Forecast for ${match.home.name} vs ${match.away.name}` }}>
+      <div className="fixture-forecast-content">
       {snapshot ? <>
         <p className="fixture-weather-summary">
           {condition ? <span className="fixture-weather-icon" aria-hidden="true"
@@ -47,6 +49,8 @@ function MatchForecast({ match, row, loading, failed, now }: {
           <time dateTime={row.fetchedAt}>{updatedFormat.format(new Date(row.fetchedAt))}</time>
         </p> : null}
       </> : <p className="fixture-weather-meta">{message}</p>}
+      </div>
+      </ScrollArea>
     </div>
   );
 }
@@ -137,13 +141,21 @@ function FixtureMatchesPanelContent() {
             </p>
           </div>
           <div className="fixture-panel-actions">
-            <Button variant="outline" shape="square" size="icon" aria-label="Refresh fixture matches"
-              aria-busy={panel.fetching || undefined} aria-disabled={panel.fetching || undefined}
-              onClick={() => { if (!panel.fetching) void panel.refresh(); }}>↻</Button>
-            <Button variant="outline" shape="square" size="icon" aria-label="Scroll to earlier matches"
-              aria-disabled={edges.start || !hasMatches} onClick={() => { if (!edges.start) scroll(-1); }}>‹</Button>
-            <Button variant="outline" shape="square" size="icon" aria-label="Scroll to later matches"
-              aria-disabled={edges.end || !hasMatches} onClick={() => { if (!edges.end) scroll(1); }}>›</Button>
+            <nav className="fixture-week-pagination" aria-label="Fixture navigation">
+              <Button variant="outline" shape="square" size="icon" aria-label="Previous matchweek"
+                disabled={week == null || week <= 1} onClick={() => panel.navigate(-1)}>‹</Button>
+              <span className="fixture-week-label">Fixture {week ?? "—"}</span>
+              <Button variant="outline" shape="square" size="icon" aria-label="Next matchweek"
+                disabled={week == null || week >= 38} onClick={() => panel.navigate(1)}>›</Button>
+            </nav>
+            <Button variant="ghost" shape="square" size="sm" disabled={panel.automatic}
+              onClick={panel.followCurrent}>Current fixture</Button>
+            <div className="fixture-match-pagination" role="group" aria-label="Match scrolling">
+              <Button variant="outline" shape="square" size="icon" aria-label="Scroll to earlier matches"
+                aria-disabled={edges.start || !hasMatches} onClick={() => { if (!edges.start) scroll(-1); }}>‹</Button>
+              <Button variant="outline" shape="square" size="icon" aria-label="Scroll to later matches"
+                aria-disabled={edges.end || !hasMatches} onClick={() => { if (!edges.end) scroll(1); }}>›</Button>
+            </div>
           </div>
         </div>
         {panel.error ? <p className="fixture-panel-error" role="alert">
@@ -151,7 +163,7 @@ function FixtureMatchesPanelContent() {
           {!hasMatches ? <Button variant="ghost" size="sm" shape="square" onClick={() => void panel.refresh()}>Retry fixture matches</Button> : null}
         </p> : null}
         {panel.pendingNext ? <p className="fixture-panel-meta" role="status">
-          {panel.nextUnavailable ? "Next fixture unavailable. Use refresh to retry." : "Loading next fixture…"}
+          {panel.nextUnavailable ? <>Next fixture unavailable. Retrying automatically. <Button variant="ghost" size="sm" shape="square" onClick={() => void panel.refresh()}>Retry fixture matches</Button></> : "Loading next fixture…"}
         </p> : null}
         {hasMatches && !panel.round?.consistent ? <p className="fixture-panel-meta">Round data incomplete. Awaiting verified final results.</p> : null}
       </CardHeader>

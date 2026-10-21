@@ -467,6 +467,12 @@ now strictly enforces the documented 90 minutes rather than accepting one
 extra second. No provider key was added or exposed, no real Fantasy mutation
 was performed, and all browser checks use fictional fixtures.
 
+Follow-up controls: forecasts use a bounded vertical shadcn ScrollArea inside each
+match card. Separate previous/next fixture controls browse weeks 1–38 without
+changing the lineup, and **Current fixture** returns to automatic following.
+Controls are centered on phones. The manual refresh button was removed; automatic
+polling and failure-specific retry remain.
+
 Implemented captures (fictional match/forecast data):
 
 ![Implemented fixture panel, light theme](images/screenshots/lineup-fixtures-light.png)
@@ -474,3 +480,9 @@ Implemented captures (fictional match/forecast data):
 ![Implemented active fixture with saved weather, dark theme](images/screenshots/lineup-fixtures-dark.png)
 
 ![Implemented mobile fixture panel](images/screenshots/lineup-fixtures-mobile.png)
+
+Follow-up validation: production build and ESLint passed; all 552 frontend tests
+and 61 browser checks passed. Browser coverage includes fixture browsing, season
+bounds, keyboard forecast scrolling, centered phone pagination, automatic rollover,
+and lineup/standings/header regressions. The three implemented captures were
+regenerated and visually checked.

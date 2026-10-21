@@ -83,6 +83,18 @@ for (const theme of ["light", "dark"]) {
       const controlsBox = await page.locator(".board-controls-bar").boundingBox();
       expect(panelBox!.y + panelBox!.height).toBeLessThanOrEqual(controlsBox!.y);
       expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBe(width);
+      await expect(panel.getByRole("button", { name: "Refresh fixture matches" })).toHaveCount(0);
+      if (width <= 600) {
+        const actions = await panel.locator(".fixture-panel-actions").boundingBox();
+        expect(Math.abs(actions!.x + actions!.width / 2 - (panelBox!.x + panelBox!.width / 2))).toBeLessThan(2);
+        const pager = await panel.getByRole("navigation", { name: "Fixture navigation" }).boundingBox();
+        expect(Math.abs(pager!.x + pager!.width / 2 - (panelBox!.x + panelBox!.width / 2))).toBeLessThan(2);
+      }
+      const forecast = panel.getByRole("region", { name: /^Forecast for/ }).first();
+      await forecast.focus();
+      await page.keyboard.press("End");
+      await expect.poll(() => forecast.evaluate((node) => node.scrollTop)).toBeGreaterThan(0);
+      await page.keyboard.press("Home");
       await panel.getByRole("button", { name: "Scroll to later matches" }).click();
       await expect.poll(() => viewport.evaluate((node) => node.scrollLeft)).toBeGreaterThan(0);
       await viewport.focus(); await page.keyboard.press("End");
@@ -118,18 +130,17 @@ test("active scores, saved kickoff forecasts, failed handoff, then next schedule
   const scroll = panel.getByRole("region", { name: "Fixture matches", exact: true });
   await scroll.evaluate((node) => { node.scrollLeft = node.scrollWidth; });
   const offset = await scroll.evaluate((node) => node.scrollLeft);
-  const refresh = panel.getByRole("button", { name: "Refresh fixture matches" });
-  await refresh.focus(); await refresh.click();
-  await expect(refresh).not.toHaveAttribute("aria-busy", "true");
+  const navigation = panel.getByRole("button", { name: "Next matchweek" });
+  await navigation.focus(); await page.clock.runFor(30_100);
   expect(await scroll.evaluate((node) => node.scrollLeft)).toBe(offset);
-  await expect(refresh).toBeFocused();
-  await refresh.evaluate((node) => node.blur());
+  await expect(navigation).toBeFocused();
+  await navigation.evaluate((node) => node.blur());
   await page.mouse.move(0, 0);
   await page.screenshot({ path: resolve(process.cwd(), "../docs/images/screenshots/lineup-fixtures-dark.png") });
-  api.nextFailure(true); api.phase("finished"); await refresh.click();
-  await expect(panel.getByText("Next fixture unavailable. Use refresh to retry.")).toBeVisible();
+  api.nextFailure(true); api.phase("finished"); await page.clock.runFor(30_100);
+  await expect(panel.getByText("Next fixture unavailable. Retrying automatically.")).toBeVisible();
   await expect(panel.getByRole("heading", { name: "LALIGA · Fixture 8" })).toBeVisible();
-  api.nextFailure(false); await refresh.click();
+  api.nextFailure(false); await page.clock.runFor(30_100);
   await expect(panel.getByRole("heading", { name: "LALIGA · Fixture 9" })).toBeVisible();
   await expect(panel.getByLabel("Home goals: no result")).toHaveCount(10);
   await expect(panel.getByText("Forecast closer to kickoff", { exact: true })).toHaveCount(10);
@@ -145,7 +156,7 @@ test("weather failure and unknown match states do not block the lineup or falsel
   await expect(page.getByRole("button", { name: "Lineup builder", exact: true })).toBeVisible();
   api.phase("active"); api.postpone();
   await page.clock.setFixedTime(new Date("2026-10-13T15:00:00Z"));
-  await panel.getByRole("button", { name: "Refresh fixture matches" }).click();
+  await page.clock.runFor(30_100);
   await expect(panel.getByText("In progress", { exact: true })).toBeVisible();
   await expect(panel.getByText("Status unconfirmed")).toHaveCount(1);
   expect(api.calls.fixtures.has(9)).toBe(false);
@@ -182,15 +193,39 @@ test("an advanced current-week pointer retains completed results when the new sc
   await expect(panel.getByText("Up next", { exact: true })).toBeVisible();
   api.phase("active");
   await page.clock.setFixedTime(new Date("2026-10-13T15:00:00Z"));
-  await panel.getByRole("button", { name: "Refresh fixture matches" }).click();
+  await page.clock.runFor(30_100);
   await expect(panel.getByText("In progress", { exact: true })).toBeVisible();
   api.phase("finished"); api.advance(); api.nextFailure(true);
-  await panel.getByRole("button", { name: "Refresh fixture matches" }).click();
-  await expect(panel.getByText("Next fixture unavailable. Use refresh to retry.")).toBeVisible();
+  await page.clock.runFor(30_100);
+  await expect(panel.getByRole("heading", { name: "LALIGA · Fixture 8" })).toBeVisible();
+  // The previous round remains visible while its newly mounted observer polls the final result.
+  await page.clock.runFor(30_100);
+  await expect(panel.getByText("Next fixture unavailable. Retrying automatically.")).toBeVisible();
   await expect(panel.getByRole("heading", { name: "LALIGA · Fixture 8" })).toBeVisible();
   await expect(panel.getByLabel("Home goals: 0")).toHaveCount(10);
   api.nextFailure(false);
-  await panel.getByRole("button", { name: "Refresh fixture matches" }).click();
+  await page.clock.runFor(30_100);
   await expect(panel.getByRole("heading", { name: "LALIGA · Fixture 9" })).toBeVisible();
   expect(api.calls.fixtures.has(10)).toBe(false);
+});
+
+
+test("browse previous and next fixtures without changing the lineup week", async ({ page }) => {
+  const api = await mockFixtureMatches(page);
+  await page.goto("/");
+  const panel = page.locator(".fixture-matches-panel");
+  await expect(panel.getByText("Up next", { exact: true })).toBeVisible();
+  await panel.getByRole("button", { name: "Previous matchweek" }).click();
+  await expect(panel.getByRole("heading", { name: "LALIGA · Fixture 7" })).toBeVisible();
+  await expect(panel.getByLabel("Home goals: 0")).toHaveCount(10);
+  await expect(panel.getByRole("region", { name: /^Forecast for/ })).toHaveCount(0);
+  await panel.getByRole("button", { name: "Next matchweek" }).click();
+  await expect(panel.getByRole("heading", { name: "LALIGA · Fixture 8" })).toBeVisible();
+  await panel.getByRole("button", { name: "Next matchweek" }).click();
+  await expect(panel.getByRole("heading", { name: "LALIGA · Fixture 9" })).toBeVisible();
+  await expect(panel.getByText("Forecast closer to kickoff", { exact: true })).toHaveCount(10);
+  await panel.getByRole("button", { name: "Current fixture" }).click();
+  await expect(panel.getByRole("heading", { name: "LALIGA · Fixture 8" })).toBeVisible();
+  await expect(panel.getByRole("button", { name: "Current fixture" })).toBeDisabled();
+  expect(api.calls.writes).toEqual([]);
 });

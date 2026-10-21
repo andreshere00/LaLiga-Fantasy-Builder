@@ -1,6 +1,6 @@
 // ---- Mocks, fixtures & helpers ---- //
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { cleanup, fireEvent, render, screen, waitFor } from "@testing-library/react";
+import { act, cleanup, fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { FixtureMatchesPanel } from "./FixtureMatchesPanel";
 
@@ -56,21 +56,68 @@ describe("FixtureMatchesPanel", () => {
   it("rolls over after the final match without a reload or metadata change", async () => {
     mount(); await screen.findByText("Up next");
     complete = true;
-    fireEvent.click(screen.getByRole("button", { name: "Refresh fixture matches" }));
+    await act(() => client.invalidateQueries({ queryKey: ["calendar"] }));
     await screen.findByRole("heading", { name: "LALIGA · Fixture 11" });
     expect(requests).toContain("/api/calendar/weeks/11");
     expect(screen.getByText("Up next")).toBeTruthy();
   });
 
+  it("browses adjacent fixtures independently and returns to the automatic fixture", async () => {
+    mount(); await screen.findByText("Up next");
+    expect(screen.queryByRole("button", { name: "Refresh fixture matches" })).toBeNull();
+    fireEvent.click(screen.getByRole("button", { name: "Previous matchweek" }));
+    await screen.findByRole("heading", { name: "LALIGA · Fixture 9" });
+    expect(screen.getAllByText("Finished")).toHaveLength(11);
+    fireEvent.click(screen.getByRole("button", { name: "Next matchweek" }));
+    await screen.findByRole("heading", { name: "LALIGA · Fixture 10" });
+    fireEvent.click(screen.getByRole("button", { name: "Next matchweek" }));
+    await screen.findByRole("heading", { name: "LALIGA · Fixture 11" });
+    await waitFor(() => expect(requests).toContain("/api/calendar/weeks/11/weather"));
+    fireEvent.click(screen.getByRole("button", { name: "Current fixture" }));
+    await screen.findByRole("heading", { name: "LALIGA · Fixture 10" });
+    expect((screen.getByRole("button", { name: "Current fixture" }) as HTMLButtonElement).disabled).toBe(true);
+  });
+
+  it("bounds browsing to the season and preserves a manually selected completed fixture", async () => {
+    mount(); await screen.findByText("Up next");
+    for (let week = 9; week >= 1; week--) {
+      fireEvent.click(screen.getByRole("button", { name: "Previous matchweek" }));
+      await screen.findByRole("heading", { name: `LALIGA · Fixture ${week}` });
+    }
+    expect((screen.getByRole("button", { name: "Previous matchweek" }) as HTMLButtonElement).disabled).toBe(true);
+    complete = true;
+    await act(() => client.invalidateQueries({ queryKey: ["calendar"] }));
+    expect(screen.getByRole("heading", { name: "LALIGA · Fixture 1" })).toBeTruthy();
+    for (let week = 2; week <= 38; week++) {
+      fireEvent.click(screen.getByRole("button", { name: "Next matchweek" }));
+      await screen.findByRole("heading", { name: `LALIGA · Fixture ${week}` });
+    }
+    expect((screen.getByRole("button", { name: "Next matchweek" }) as HTMLButtonElement).disabled).toBe(true);
+    expect(requests).not.toContain("/api/calendar/weeks/0");
+    expect(requests).not.toContain("/api/calendar/weeks/39");
+  });
+
   // ---- Error paths ---- //
-  it("retains completed results and offers refresh if the next schedule fails", async () => {
+  it("retains completed results and offers retry if the next schedule fails", async () => {
     complete = true; nextFailed = true; mount();
-    await screen.findByText("Next fixture unavailable. Use refresh to retry.");
+    await screen.findByText("Next fixture unavailable. Retrying automatically.");
     expect(screen.getByRole("heading", { name: "LALIGA · Fixture 10" })).toBeTruthy();
     expect(screen.getAllByLabelText("Home goals: 0")).toHaveLength(10);
     nextFailed = false;
-    fireEvent.click(screen.getByRole("button", { name: "Refresh fixture matches" }));
+    await act(() => client.invalidateQueries({ queryKey: ["calendar"] }));
     await screen.findByRole("heading", { name: "LALIGA · Fixture 11" });
+  });
+
+  it("retries a failed browsed fixture without switching back to the automatic week", async () => {
+    mount(); await screen.findByText("Up next");
+    nextFailed = true;
+    fireEvent.click(screen.getByRole("button", { name: "Next matchweek" }));
+    await screen.findByRole("alert");
+    expect(screen.getByRole("heading", { name: "LALIGA · Fixture 11" })).toBeTruthy();
+    nextFailed = false;
+    fireEvent.click(screen.getByRole("button", { name: "Retry fixture matches" }));
+    await screen.findByText("Forecast 0°C · Clear");
+    expect(screen.getByRole("heading", { name: "LALIGA · Fixture 11" })).toBeTruthy();
   });
 
   it("shows matches when optional weather fails", async () => {
@@ -83,7 +130,7 @@ describe("FixtureMatchesPanel", () => {
   it("retains an honestly labeled forecast when one venue fails inside an HTTP 200 aggregate", async () => {
     mount(); await screen.findByText("Forecast 0°C · Clear");
     weatherOptionalFailure = true;
-    fireEvent.click(screen.getByRole("button", { name: "Refresh fixture matches" }));
+    await act(() => client.invalidateQueries({ queryKey: ["calendar"] }));
     await screen.findByText(/Update unavailable ·/);
     expect(screen.getByText("Forecast 0°C · Clear")).toBeTruthy();
     expect(screen.queryByRole("alert")).toBeNull();
@@ -95,10 +142,11 @@ describe("FixtureMatchesPanel", () => {
     failed = false;
     fireEvent.click(screen.getByRole("button", { name: "Retry fixture matches" }));
     await screen.findByText("Up next");
-    const refresh = screen.getByRole("button", { name: "Refresh fixture matches" });
-    refresh.focus(); failed = true; fireEvent.click(refresh);
+    const navigation = screen.getByRole("button", { name: "Next matchweek" });
+    navigation.focus(); failed = true;
+    await act(() => client.invalidateQueries({ queryKey: ["calendar"] }));
     await waitFor(() => expect(screen.getByRole("alert").textContent).toContain("previously retrieved"));
     expect(screen.getAllByLabelText("Home goals: no result")).toHaveLength(10);
-    expect(document.activeElement).toBe(refresh);
+    expect(document.activeElement).toBe(navigation);
   });
 });

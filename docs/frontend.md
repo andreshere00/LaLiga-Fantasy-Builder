@@ -137,15 +137,18 @@ It displays the current competition round from first play through the final
 result, including gaps between matches, then changes to the next fixture's
 pairings and kickoff dates/times. Ten distinct finished pairings are required
 to establish completion. Until the next response is ready, the finished round
-remains clearly labeled and refresh can retry. At season end it says **Season
+remains clearly labeled, retries automatically, and offers retry after a failure. At season end it says **Season
 complete**. Historical lineup navigation and manager selection do not change
-this competition panel or discard an unsaved draft.
+this competition panel or discard an unsaved draft. The panel has its own previous/next
+fixture navigation, bounded to weeks 1–38. Browsing keeps the chosen fixture visible;
+**Current fixture** restores automatic current/next following. Navigation controls
+are centered at phone widths. There is no manual refresh button.
 
 Matches include club names/crests, Madrid-local dates and times, and reported
 scores; scheduled score placeholders stay blank. Unrecognized provider match
 statuses say **Status unconfirmed**, with any reported score, instead of an
 invented live/final state. Incomplete round data cannot trigger advancement.
-Refresh preserves scroll and focus; native horizontal scrolling, arrow keys,
+Automatic updates preserve scroll and focus; native horizontal scrolling, arrow keys,
 explicit scroll buttons, and Home/End make every match reachable. Score-change
 announcements are concise rather than repeating all matches on every poll.
 
@@ -156,6 +159,7 @@ source and original retrieval time shown. Hidden tabs do not poll; stale data
 can refresh on focus/reconnect. Weather keys include fixture identities,
 kickoffs, and venue overrides to invalidate rescheduled predictions.
 
+Each match has a keyboard-accessible, vertically scrollable shadcn forecast area.
 Weather shows condition/icon, °C, rain probability, and km/h when the server's
 existing OpenWeather key is configured. Beyond the five-day provider window it
 says **Forecast closer to kickoff**. Missing/failed weather never blocks games,

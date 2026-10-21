@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { getJson, paths } from "../../api/client";
 import { ApiContractError } from "../../api/errors";
@@ -5,7 +6,7 @@ import { useCurrentWeekQuery, useWeekFixturesQuery } from "../../api/queries";
 import type { FixturesDto, WeekWeatherDto } from "../../api/schemas";
 import { useAuth } from "../../auth/AuthProvider";
 import { useNow } from "../../hooks/useNow";
-import { normalizeRound, retainWeatherForecasts, selectFixtureRound, validWeek } from "./fixturePanelModel";
+import { normalizeRound, retainWeatherForecasts, selectFixtureRound, validWeek, type RoundSelection } from "./fixturePanelModel";
 
 const WEATHER_REFRESH_MS = 30 * 60_000;
 
@@ -15,6 +16,7 @@ export function useFixturePanel() {
   const enabled = accessToken != null;
   const now = useNow(30_000);
   const client = useQueryClient();
+  const [requestedWeek, setRequestedWeek] = useState<number | null>(null);
   const currentQuery = useCurrentWeekQuery(enabled);
   const current = currentQuery.data;
   const week = validWeek(current?.weekNumber);
@@ -35,9 +37,19 @@ export function useFixturePanel() {
     [previousWeek ?? -2, normalizeRound(previous.data, now)],
     [nextWeek ?? -3, normalizeRound(next.data, now)],
   ]);
-  const selection = selectFixtureRound(current, rounds);
-  const shown = selection ? rounds.get(selection.week) : undefined;
-  const selectedQuery = selection?.week === previousWeek ? previous : selection?.week === nextWeek ? next : fixtures;
+  const automaticSelection = selectFixtureRound(current, rounds);
+  const browsing = useWeekFixturesQuery(requestedWeek, enabled && requestedWeek != null &&
+    requestedWeek !== week && !(requestedWeek === previousWeek && checkPrevious) &&
+    !(requestedWeek === nextWeek && fetchNext));
+  const browsedRound = normalizeRound(browsing.data, now);
+  const selection: RoundSelection | null = requestedWeek == null ? automaticSelection : {
+    week: requestedWeek, nextWeek: null,
+    mode: !browsedRound ? "loading" : browsedRound.complete ? "finished" : browsedRound.started ? "active"
+      : browsedRound.matches.length > 0 ? "upcoming" : "unavailable",
+  };
+  const shown = requestedWeek != null ? browsedRound : selection ? rounds.get(selection.week) : undefined;
+  const selectedQuery = requestedWeek != null ? browsing
+    : selection?.week === previousWeek ? previous : selection?.week === nextWeek ? next : fixtures;
   const weatherWeek = selection?.week ?? null;
   const signature = shown?.signature ?? "";
   const weatherKey = ["calendar", "weather", weatherWeek, signature] as const;
@@ -60,21 +72,29 @@ export function useFixturePanel() {
     },
   });
 
-  const pendingNext = selection?.mode === "finished" && selection.week !== 38;
+  const pendingNext = requestedWeek == null && selection?.mode === "finished" && selection.week !== 38;
   const handoff = selection?.nextWeek === week ? fixtures : next;
   const nextUnavailable = pendingNext && (selection?.nextWeek == null || handoff.isError ||
     (handoff.isSuccess && handoff.data.length === 0));
-  const error = currentQuery.error ?? (currentQuery.isSuccess && week == null ? new ApiContractError() : selectedQuery.error) ??
+  const automaticError = currentQuery.error ?? (currentQuery.isSuccess && week == null ? new ApiContractError() : selectedQuery.error) ??
     (selection?.week !== week && !pendingNext ? fixtures.error : null);
+  const error = requestedWeek != null ? browsing.error : automaticError;
   return {
+    automatic: requestedWeek == null,
+    navigate: (direction: number) => {
+      const target = validWeek((selection?.week ?? 0) + direction);
+      if (selection && target != null) setRequestedWeek(target);
+    },
+    followCurrent: () => setRequestedWeek(null),
     selection, round: shown, now, weather,
-    loading: !error && (currentQuery.isPending || selection?.mode === "loading"),
+    loading: !error && ((requestedWeek == null && currentQuery.isPending) || selection?.mode === "loading"),
     error, stale: error != null && shown != null && shown.matches.length > 0,
     fetching: currentQuery.isFetching || selectedQuery.isFetching || (pendingNext && handoff.isFetching),
     updatedAt: selectedQuery.dataUpdatedAt,
     pendingNext, nextUnavailable,
     refresh: async () => {
       await Promise.allSettled([
+        ...(requestedWeek != null ? [browsing.refetch()] : []),
         currentQuery.refetch(),
         ...(week != null ? [fixtures.refetch()] : []),
         ...(checkPrevious ? [previous.refetch()] : []),
