@@ -24,9 +24,8 @@ Automated browser checks use fictional deterministic data and fallback
 portraits. The product captures below show the local account as it appeared at
 capture time.
 
-Screenshot assets live under [`docs/images/`](images/). The
-[screenshot index](images/README.md) records topic and theme tags, capture
-dates, and which images use synthetic data.
+Screenshot assets live under [`docs/images/`](images/). Captures are embedded
+beside the feature they document, with their source and capture date stated there.
 Keep new screenshots in the same commit as their Markdown references so the
 gallery is available on GitHub as well as in a local checkout.
 
@@ -36,24 +35,27 @@ The following captures document the full local interface: lineup and builder,
 market and catalog tables, and the player profile's averages, form, match,
 market-value, Fantasy-data, and injury-history sections. Their values reflect
 the account and data available at capture time. The supplied desktop captures
-were taken on 19 October 2026; the remaining synthetic demonstrations are
-identified below and in the index. The product gallery is also embedded in
+were taken on 19 October 2026; the lineup overview was refreshed directly from
+the running application on 20 October 2026. Synthetic demonstrations for other
+features are identified below. The product gallery is also embedded in
 the [project README](../README.md#screenshots).
 
 #### Lineup
 
-![Lineup overview](images/screenshots/lineup-overview.png)
+Captured directly from Brave at `http://localhost:3000/` on 20 October 2026
+(Europe/Madrid), using the existing authenticated session. The light and dark
+views show fixture 10, actual pairings and kickoff times, expandable forecasts,
+and the lineup toolbar. The lower-page capture shows the actual starting XI,
+squad pagination, manager ranking, and LALIGA standings. These images are
+unmodified browser-window captures, without mocked responses or generated data.
 
-![Lineup overview, dark theme](images/screenshots/lineup-dark-mode.png)
+![Current lineup and upcoming fixtures with weather, light theme](images/screenshots/lineup-current-light.jpg)
 
-![Ranking, LALIGA standings, pitch, and paginated squad, light theme](images/screenshots/lineup-standings-light.png)
+![Current lineup and upcoming fixtures with weather, dark theme](images/screenshots/lineup-current-dark.jpg)
 
-The following dark and mobile standings demonstrations use deterministic
-fictional managers and the shared synthetic twenty-club contract fixture:
+![Actual lineup pitch, squad, manager ranking, and LALIGA standings](images/screenshots/lineup-current-squad.jpg)
 
-![Scrollable ranking and LALIGA standings, dark theme](images/screenshots/lineup-standings-dark.png)
-
-![Mobile standings layout](images/screenshots/lineup-standings-mobile.png)
+The builder captures below were supplied on 19 October 2026:
 
 ![Lineup builder player scope, trade permissions, and mandatory players](images/screenshots/lineup-builder-top.png)
 
@@ -159,7 +161,9 @@ source and original retrieval time shown. Hidden tabs do not poll; stale data
 can refresh on focus/reconnect. Weather keys include fixture identities,
 kickoffs, and venue overrides to invalidate rescheduled predictions.
 
-Each match has a keyboard-accessible, vertically scrollable shadcn forecast area.
+Each match has a forecast summary that expands and collapses by click, Enter, or
+Space. Details start collapsed and expand to their full height without internal
+scrolling. Temperature and condition stay visible in the summary.
 Weather shows condition/icon, °C, rain probability, and km/h when the server's
 existing OpenWeather key is configured. Beyond the five-day provider window it
 says **Forecast closer to kickoff**. Missing/failed weather never blocks games,
@@ -167,15 +171,14 @@ scores, or lineup editing. A forecast already received before kickoff may
 remain during play as **Saved kickoff forecast**, with its original timestamp;
 it is not observed current weather. Finished matches omit weather.
 
-Implemented captures below use fictional browser fixtures and fixed forecast
-values, not a live sporting schedule:
+The [current lineup captures above](#lineup) show this panel using the actual
+local session. The expanded forecast below shows actual provider values for
+Deportivo Alavés–Málaga CF captured on 20 October 2026:
 
-![Implemented fixture matches and forecasts, light theme](images/screenshots/lineup-fixtures-light.png)
+![Actual expanded kickoff forecast with rain, wind, and retrieval time](images/screenshots/lineup-current-forecast.jpg)
 
-![Implemented active round, reported scores and saved forecasts, dark theme](images/screenshots/lineup-fixtures-dark.png)
-
-[Mobile capture](images/screenshots/lineup-fixtures-mobile.png) ·
-[Implementation record](frontend-fixture-panel-implementation-plan.md)
+Synthetic browser-test captures stay in test output directories. See the [implementation record](frontend-fixture-panel-implementation-plan.md)
+for behavior and validation details.
 
 ### Player detail widgets
 

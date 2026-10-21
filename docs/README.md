@@ -9,7 +9,6 @@ This folder is the detailed map.
 |-----|----------|
 | [Architecture](architecture.md) | Services, login path, CRS, trust boundaries, errors |
 | [Frontend](frontend.md) | Lineup, market, and players UI, data loading, actions, details, and product screenshot gallery |
-| [Screenshot index](images/README.md) | Product captures tagged by feature, theme, capture date, and source |
 | [Automatic lineup builder plan](lineup-builder-implementation-plan.md) | Deterministic scoring, candidate search, API/UI delivery and verification; [research and resolved policies](lineup-builder-research.md) |
 | [Frontend standings plan](frontend-standings-implementation-plan.md) | LALIGA table below Players Ranking, separate scrolling, data states, and verification |
 | [Lineup fixture panel implementation](frontend-fixture-panel-implementation-plan.md) | Current/next matchweek panel, automatic rollover, stadium weather, shadcn composition, tests, and captures |

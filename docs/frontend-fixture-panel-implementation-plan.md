@@ -53,28 +53,12 @@ Finished matches need no weather row. A live match may retain a forecast
 received before kickoff, explicitly labeled **Saved kickoff forecast**, with
 its retrieval time available; it is not an observation of current weather.
 
-The following images are **design mockups**, rendered over the existing app
-with fictional account data, matchups, dates, scores, and weather. They are not
-captures of an implemented feature or a verified sporting schedule. Club crests come
-from the public image URLs already recorded in `assets/teams_master.json`.
+### Current product captures
 
-### Next fixture: desktop, light theme
-
-![Proposed upcoming fixture panel above the lineup controls, showing club crests, kickoff dates and times, blank results, temperature, rain probability, and wind.](images/mockups/lineup-fixtures-upcoming-desktop.png)
-
-### Active fixture: desktop, dark theme
-
-The initial viewport brings a live match into view alongside finished and
-scheduled matches from the same round. Updates preserve the user's scroll.
-
-![Proposed active fixture panel in dark mode, showing finished scores, a live result with a saved kickoff forecast, and weather for the remaining scheduled match.](images/mockups/lineup-fixtures-active-desktop.png)
-
-### Next fixture: mobile
-
-The header and controls wrap. One match and part of the next remain visible to
-suggest horizontal scrolling; the page itself must not overflow sideways.
-
-![Proposed mobile fixture panel with club crests, a compact forecast, a preview of the next match, and the lineup controls below.](images/mockups/lineup-fixtures-upcoming-mobile.png)
+The original mockup images have been removed. Current captures from the running
+application are embedded in the [frontend guide](frontend.md#lineup) and
+[project README](../README.md#lineup). Browser checks retain fictional screenshots
+only in their test output, separate from the product documentation.
 
 The [editable HTML preview](design/lineup-fixtures-preview.html) includes theme
 and state switches plus local scrolling. It is a planning artifact: its data is
@@ -418,8 +402,8 @@ implementation; both artifacts have now been regenerated.
 
 Suggested review sequence: calendar model/query reuse; shared weather service
 and aggregate; panel/layout/weather; browser coverage and delivery
-documentation. Planning deliverables are this proposal,
-the editable preview, and the three mockup images above.
+documentation. Planning deliverables are this proposal
+and the editable preview. Historical mockup images are no longer retained.
 
 Planning QA, updated 20 October: three synthetic browser captures passed checks
 for placement, horizontal scrolling to the final match, decoded crest images,
@@ -467,22 +451,21 @@ now strictly enforces the documented 90 minutes rather than accepting one
 extra second. No provider key was added or exposed, no real Fantasy mutation
 was performed, and all browser checks use fictional fixtures.
 
-Follow-up controls: forecasts use a bounded vertical shadcn ScrollArea inside each
-match card. Separate previous/next fixture controls browse weeks 1–38 without
+Follow-up controls: forecasts use an expandable summary inside each match card.
+Details start collapsed and reveal rain, wind, and retrieval time without internal
+scrolling; click, Enter, and Space toggle them. Separate previous/next fixture controls browse weeks 1–38 without
 changing the lineup, and **Current fixture** returns to automatic following.
 Controls are centered on phones. The manual refresh button was removed; automatic
 polling and failure-specific retry remain.
 
-Implemented captures (fictional match/forecast data):
+Product captures now live beside the relevant features in the
+[frontend guide](frontend.md#lineup) and [project README](../README.md#lineup).
+They were taken from the real authenticated local app on 20 October 2026.
+The previous synthetic documentation captures have been removed.
 
-![Implemented fixture panel, light theme](images/screenshots/lineup-fixtures-light.png)
-
-![Implemented active fixture with saved weather, dark theme](images/screenshots/lineup-fixtures-dark.png)
-
-![Implemented mobile fixture panel](images/screenshots/lineup-fixtures-mobile.png)
-
-Follow-up validation: production build and ESLint passed; all 552 frontend tests
-and 61 browser checks passed. Browser coverage includes fixture browsing, season
-bounds, keyboard forecast scrolling, centered phone pagination, automatic rollover,
-and lineup/standings/header regressions. The three implemented captures were
-regenerated and visually checked.
+Validation after the expandable forecast change: production build and ESLint
+passed, alongside all 552 frontend tests and 15 fixture-widget browser checks.
+Coverage includes keyboard and pointer expansion/collapse, full-height forecast
+details without internal scrolling, mobile centering, fixture browsing, and
+automatic rollover. Synthetic captures are kept only as test artifacts. The earlier navigation implementation also
+passed the broader 61-check lineup/standings/header browser suite.

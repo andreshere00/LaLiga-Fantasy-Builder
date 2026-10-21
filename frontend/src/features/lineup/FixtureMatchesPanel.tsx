@@ -32,26 +32,24 @@ function MatchForecast({ match, row, loading, failed, now }: {
   const message = loading && !row ? "Loading forecast…" : row?.weather.reason === "beyond_forecast_horizon"
     ? "Forecast closer to kickoff" : past && !snapshot ? "Kickoff forecast unavailable"
       : failed && !row ? "Forecast unavailable" : weatherReason(row?.weather.reason);
+  if (!snapshot) return <div className="fixture-match-weather"><p className="fixture-weather-meta">{message}</p></div>;
   return (
-    <div className="fixture-match-weather">
-      <ScrollArea className="fixture-forecast-scroll" viewportProps={{ role: "region", "aria-label": `Forecast for ${match.home.name} vs ${match.away.name}` }}>
-      <div className="fixture-forecast-content">
-      {snapshot ? <>
-        <p className="fixture-weather-summary">
-          {condition ? <span className="fixture-weather-icon" aria-hidden="true"
-            style={{ "--weather-icon": `url("${weatherIcon(condition)}")` } as CSSProperties} /> : null}
-          <span>Forecast {Math.round(snapshot.temperatureC)}°C · {condition ? WEATHER_CONDITIONS[condition] : "Condition unavailable"}</span>
-        </p>
+    <details className="fixture-match-weather">
+      <summary className="fixture-weather-summary">
+        {condition ? <span className="fixture-weather-icon" aria-hidden="true"
+          style={{ "--weather-icon": `url("${weatherIcon(condition)}")` } as CSSProperties} /> : null}
+        <span>Forecast {Math.round(snapshot.temperatureC)}°C · {condition ? WEATHER_CONDITIONS[condition] : "Condition unavailable"}</span>
+        <span className="fixture-weather-chevron" aria-hidden="true">⌄</span>
+      </summary>
+      <div className="fixture-forecast-content" role="region" aria-label={`Forecast for ${match.home.name} vs ${match.away.name}`}>
         <p className="fixture-weather-meta">Rain {rain == null ? "—" : `${rain}%`} · Wind {wind == null ? "—" : `${wind} km/h`}</p>
         {past ? <p className="fixture-weather-meta">Saved kickoff forecast</p> : null}
         {row?.fetchedAt ? <p className="fixture-weather-meta">
           {updateFailed ? "Update unavailable · " : "Retrieved "}
           <time dateTime={row.fetchedAt}>{updatedFormat.format(new Date(row.fetchedAt))}</time>
         </p> : null}
-      </> : <p className="fixture-weather-meta">{message}</p>}
       </div>
-      </ScrollArea>
-    </div>
+    </details>
   );
 }
 
@@ -140,14 +138,14 @@ function FixtureMatchesPanelContent() {
               {mode === "active" ? `${matches.filter((match) => match.status === "finished").length} of 10 matches finished` : `${matches.length} matches`} · {FIXTURE_TIME_ZONE}
             </p>
           </div>
+          <nav className="fixture-week-pagination" aria-label="Fixture navigation">
+            <Button variant="outline" shape="square" size="icon" aria-label="Previous matchweek"
+              disabled={week == null || week <= 1} onClick={() => panel.navigate(-1)}>‹</Button>
+            <span className="fixture-week-label">Fixture {week ?? "—"}</span>
+            <Button variant="outline" shape="square" size="icon" aria-label="Next matchweek"
+              disabled={week == null || week >= 38} onClick={() => panel.navigate(1)}>›</Button>
+          </nav>
           <div className="fixture-panel-actions">
-            <nav className="fixture-week-pagination" aria-label="Fixture navigation">
-              <Button variant="outline" shape="square" size="icon" aria-label="Previous matchweek"
-                disabled={week == null || week <= 1} onClick={() => panel.navigate(-1)}>‹</Button>
-              <span className="fixture-week-label">Fixture {week ?? "—"}</span>
-              <Button variant="outline" shape="square" size="icon" aria-label="Next matchweek"
-                disabled={week == null || week >= 38} onClick={() => panel.navigate(1)}>›</Button>
-            </nav>
             <Button variant="ghost" shape="square" size="sm" disabled={panel.automatic}
               onClick={panel.followCurrent}>Current fixture</Button>
             <div className="fixture-match-pagination" role="group" aria-label="Match scrolling">

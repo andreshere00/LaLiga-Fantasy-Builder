@@ -77,7 +77,7 @@ for (const theme of ["light", "dark"]) {
       const panel = page.getByRole("region", { name: "LALIGA · Fixture 8", exact: true });
       const viewport = panel.getByRole("region", { name: "Fixture matches", exact: true });
       await expect(panel.getByText("Forecast 0°C · Clear")).toBeVisible();
-      await expect(panel.getByText("Rain 0% · Wind 0 km/h")).toBeVisible();
+      await expect(panel.getByText("Rain 0% · Wind 0 km/h")).toBeHidden();
       await expect(panel.getByRole("listitem")).toHaveCount(10);
       const panelBox = await panel.boundingBox();
       const controlsBox = await page.locator(".board-controls-bar").boundingBox();
@@ -87,14 +87,24 @@ for (const theme of ["light", "dark"]) {
       if (width <= 600) {
         const actions = await panel.locator(".fixture-panel-actions").boundingBox();
         expect(Math.abs(actions!.x + actions!.width / 2 - (panelBox!.x + panelBox!.width / 2))).toBeLessThan(2);
-        const pager = await panel.getByRole("navigation", { name: "Fixture navigation" }).boundingBox();
-        expect(Math.abs(pager!.x + pager!.width / 2 - (panelBox!.x + panelBox!.width / 2))).toBeLessThan(2);
       }
+      const pager = await panel.getByRole("navigation", { name: "Fixture navigation" }).boundingBox();
+      expect(Math.abs(pager!.x + pager!.width / 2 - (panelBox!.x + panelBox!.width / 2))).toBeLessThan(2);
+      const summary = panel.locator("summary.fixture-weather-summary").first();
+      const details = panel.locator("details.fixture-match-weather").first();
+      await summary.focus();
+      await page.keyboard.press("Enter");
+      await expect(details).toHaveAttribute("open", "");
+      await expect(panel.getByText("Rain 0% · Wind 0 km/h")).toBeVisible();
       const forecast = panel.getByRole("region", { name: /^Forecast for/ }).first();
-      await forecast.focus();
-      await page.keyboard.press("End");
-      await expect.poll(() => forecast.evaluate((node) => node.scrollTop)).toBeGreaterThan(0);
-      await page.keyboard.press("Home");
+      expect(await forecast.evaluate((node) => node.scrollHeight <= node.clientHeight)).toBe(true);
+      await page.keyboard.press("Space");
+      await expect(details).not.toHaveAttribute("open");
+      await expect(panel.getByText("Rain 0% · Wind 0 km/h")).toBeHidden();
+      await expect(summary).toBeFocused();
+      await summary.click();
+      await expect(panel.getByText("Rain 0% · Wind 0 km/h")).toBeVisible();
+      await summary.click();
       await panel.getByRole("button", { name: "Scroll to later matches" }).click();
       await expect.poll(() => viewport.evaluate((node) => node.scrollLeft)).toBeGreaterThan(0);
       await viewport.focus(); await page.keyboard.press("End");
@@ -107,14 +117,11 @@ for (const theme of ["light", "dark"]) {
       await viewport.evaluate((node) => node.blur());
       await page.mouse.move(0, 0);
       await page.screenshot({ path: info.outputPath(`fixture-panel-${theme}-${width}.png`) });
-      if (theme === "light" && (width === 1440 || width === 375)) {
-        await page.screenshot({ path: resolve(process.cwd(), `../docs/images/screenshots/lineup-fixtures-${width === 1440 ? "light" : "mobile"}.png`) });
-      }
     });
   }
 }
 
-test("active scores, saved kickoff forecasts, failed handoff, then next schedule", async ({ page }) => {
+test("active scores, saved kickoff forecasts, failed handoff, then next schedule", async ({ page }, info) => {
   await page.setViewportSize({ width: 1440, height: 1000 });
   const api = await mockFixtureMatches(page);
   await page.addInitScript(() => localStorage.setItem("lfb-theme", "dark"));
@@ -126,6 +133,7 @@ test("active scores, saved kickoff forecasts, failed handoff, then next schedule
   await page.clock.runFor(30_010);
   await expect(panel.getByText("In progress", { exact: true })).toBeVisible();
   await expect(panel.getByText("8 of 10 matches finished", { exact: false })).toBeVisible();
+  await panel.locator("details.fixture-match-weather").filter({ hasText: "Saved kickoff forecast" }).locator("summary").click();
   await expect(panel.getByText("Saved kickoff forecast", { exact: true })).toBeVisible();
   const scroll = panel.getByRole("region", { name: "Fixture matches", exact: true });
   await scroll.evaluate((node) => { node.scrollLeft = node.scrollWidth; });
@@ -136,7 +144,7 @@ test("active scores, saved kickoff forecasts, failed handoff, then next schedule
   await expect(navigation).toBeFocused();
   await navigation.evaluate((node) => node.blur());
   await page.mouse.move(0, 0);
-  await page.screenshot({ path: resolve(process.cwd(), "../docs/images/screenshots/lineup-fixtures-dark.png") });
+  await page.screenshot({ path: info.outputPath("fixture-panel-active-dark.png") });
   api.nextFailure(true); api.phase("finished"); await page.clock.runFor(30_100);
   await expect(panel.getByText("Next fixture unavailable. Retrying automatically.")).toBeVisible();
   await expect(panel.getByRole("heading", { name: "LALIGA · Fixture 8" })).toBeVisible();
