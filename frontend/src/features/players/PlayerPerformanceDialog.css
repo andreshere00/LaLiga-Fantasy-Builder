@@ -1,0 +1,47 @@
+.player-performance-dialog { width: min(1000px, 100%); }
+.player-performance-dialog .fb-dialog-body { padding-inline: 2px; }
+.player-mean-guide { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; padding: 20px; background: var(--fb-subtle); border-left: 3px solid var(--fb-primary); }
+.player-performance-dialog h3 { margin: 0 0 6px; font-size: 20px; line-height: 1.3; }
+.player-mean-guide p { margin: 0; font-size: 14px; line-height: 1.6; }
+.player-mean-example { display: flex; flex-direction: column; justify-content: center; gap: 6px; }
+.player-mean-example span { font-size: 12px; color: var(--fb-muted); }
+.player-mean-example strong { font-size: 18px; font-weight: 500; font-variant-numeric: tabular-nums; }
+.player-event-shares { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px; margin-block: 24px; }
+.player-event-share { margin: 0; padding: 20px; border: 1px solid var(--fb-line); }
+.player-event-share:only-of-type { grid-column: 1 / -1; }
+.player-event-share figcaption { display: flex; align-items: center; justify-content: space-between; gap: 16px; font-size: 14px; font-weight: 600; }
+.player-event-share figcaption strong { font-size: 28px; font-weight: 500; font-variant-numeric: tabular-nums; }
+.player-event-share-bar { display: block; width: 100%; height: 10px; margin: 16px 0; }
+.player-event-share-remainder { fill: var(--fb-line); }
+.player-event-share-part { fill: var(--fb-primary); }
+.player-event-share-legend { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 8px; font-size: 12px; }
+.player-event-share-legend span { display: inline-flex; align-items: center; gap: 6px; }
+.player-event-share-legend i { width: 8px; height: 8px; background: var(--fb-primary); }
+.player-event-share-legend span + span i { background: var(--fb-line); }
+.player-event-share p { margin: 12px 0 0; font-size: 12px; color: var(--fb-muted); }
+.player-performance-note { grid-column: 1 / -1; margin: 0; font-size: 12px; color: var(--fb-muted); line-height: 1.6; }
+.player-metric-groups { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); align-items: start; gap: 20px; margin-block: 24px; }
+.player-metric-group { min-width: 0; border: 1px solid var(--fb-line); padding: 20px; }
+.player-metric-group header { padding-bottom: 16px; border-bottom: 1px solid var(--fb-line); }
+.player-metric-group header p { margin: 0; color: var(--fb-muted); font-size: 12px; }
+.player-metric-group dl { margin: 0; }
+.player-metric-reading { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 6px 20px; padding-block: 16px; }
+.player-metric-reading + .player-metric-reading { border-top: 1px solid var(--fb-line); }
+.player-metric-label { font-size: 14px; font-weight: 600; }
+.player-metric-reading dt small { display: block; margin-top: 6px; color: var(--fb-muted); font-size: 12px; line-height: 1.5; }
+.player-metric-reading dd { display: flex; flex-direction: column; align-items: flex-end; gap: 2px; margin: 0; font-variant-numeric: tabular-nums; }
+.player-metric-reading dd strong { font-size: 24px; font-weight: 500; line-height: 1.2; }
+.player-metric-reading dd span { color: var(--fb-muted); font-size: 12px; }
+.player-metric-source { display: block; width: fit-content; margin-top: 8px; padding: 3px 6px; background: var(--fb-subtle); color: var(--fb-muted); font-size: 11px; }
+.player-missing-metrics, .player-metric-methodology { border-top: 1px solid var(--fb-line); margin-top: 20px; padding-top: 12px; }
+.player-performance-dialog summary { min-height: 44px; align-content: center; font-size: 14px; font-weight: 600; cursor: pointer; }
+.player-performance-dialog details > p { color: var(--fb-muted); font-size: 12px; line-height: 1.7; }
+.player-performance-dialog details a { color: var(--fb-secondary); text-underline-offset: 3px; }
+.player-missing-metrics ul { display: grid; grid-template-columns: 1fr 1fr; gap: 12px 24px; padding: 0; list-style: none; }
+.player-missing-metrics li { display: flex; flex-direction: column; gap: 4px; font-size: 12px; }
+.player-missing-metrics li span { color: var(--fb-muted); line-height: 1.5; }
+@media (max-width: 650px) {
+  .player-mean-guide, .player-metric-groups, .player-missing-metrics ul, .player-event-shares { grid-template-columns: 1fr; }
+  .player-mean-guide { gap: 16px; padding: 16px; }
+  .player-metric-group, .player-event-share { padding: 16px; }
+}

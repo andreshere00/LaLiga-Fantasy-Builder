@@ -232,23 +232,72 @@ the fixture visible with a reason. A **View match timer** control shows the
 countdown to a confirmed kickoff.
 
 The **Form – fixture stats** section offers Last 5, Last 10, Last 20, Last 40,
-Last 60, and Details views. Its fixture cards show minutes and Fantasy points,
-with a total for the selected window and expandable per-match stats, including
-DAZN points. **News & injuries data** presents the profile indicators and the
+Last 60, and **Show match statistics** views. Its fixture cards show minutes and
+Fantasy points, with a total for the selected window and expandable per-match
+stats, including DAZN points. Missing points produce a labeled subtotal or
+**Unavailable**, preserving the distinction from a genuine zero. The header's
+**Fantasy outlook** groups FutbolFantasy ratings and starting estimates;
+**News & injuries** presents the
 latest-news and injury-history panels. News titles show
 **Read more** only when the title exceeds its two-line region. News and injury
 history show five records per page with independent sliding three-number navigation.
 News and injury-history columns have matching widths on desktop.
 
-The player header separates club, FSYP, position, and availability. Six equal
-metric cells highlight position-specific averages; the remaining
-statistics open under **Details**. FutbolFantasy season averages take priority.
+The player header separates club, Fantasy points, position, and availability. Six equal
+metric cells highlight position-specific averages; all
+statistics open in a **More averages** performance dialog, keeping the profile
+header compact. FutbolFantasy season averages take priority.
 When a supported scraped metric is missing, the UI averages that metric across
 played `lastStats` matchweeks from the LaLiga Fantasy catalog and identifies
 that source and sample size. Form arrow classes map to **Bad**, **Mid**,
 **Good**, and **Very good** labels; numeric form and starter probability are
 shown when the source publishes them. A partial API failure is reported by
-segment while successful groups remain visible.
+segment while successful groups remain visible, with **Retry player data** for
+recovery. Failed match segments are distinguished from empty match lists.
+
+The performance dialog groups event counts into Shooting, Chance creation,
+Ball use, Defending, Discipline, and Goalkeeping. Each metric pairs its exact
+mean with a definition, `/ match` unit, and source/sample label (shared in the
+heading when a group uses the same source). Missing metrics
+have their own disclosure and never become zero. The mean explanation identifies
+these as counts per appearance, without per-90 normalization or a next-match
+prediction. Shot and crossing breakdowns show approximate subset shares only
+when both inputs come from the same FutbolFantasy season; mixed-source fallback
+means, missing inputs, zero denominators, and inconsistent counts produce no share.
+Other shot attempts include blocked attempts, so the remainder is not labeled
+off-target. There are no invented player rankings or quality thresholds.
+
+Definitions were researched on 22 October 2026 against
+[Opta's event guide](https://www.statsperform.com/opta-event-definitions/) and
+[LaLiga Fantasy's own rules](https://laligafantasy.zendesk.com/hc/es/articles/115002390453--C%C3%B3mo-se-calculan-los-puntos-de-mi-equipo).
+The [mean definition](https://www.itl.nist.gov/div898/handbook/eda/section3/eda351.htm)
+is consistent with the existing `averages_from_season` service and frontend fallback
+calculation. Provider classifications are not assumed identical: the existing BR
+mapping uses season `ballSteals` and fallback `ball_recovery`, while LaLiga's
+assists without a goal remain separate from key passes. Source definitions and
+calculation details remain available inside the dialog. No API contracts changed.
+
+Section shortcuts link directly to keyboard-focusable headings for Overview,
+Form, Market value, Matches, and News & injuries. The shortcuts stay beneath the
+app header on desktop and flow normally on phones to leave room for content.
+Phone profiles place the portrait beside the player's identity. This grouping
+applies [proximity](https://lawsofux.com/law-of-proximity/) and
+[chunking](https://lawsofux.com/chunking/) to the existing data and design system.
+
+An unknown player ID (HTTP 404) or an invalid player link shows a focused
+**Player not found** heading and **Browse players** action, with no profile,
+bookmark, statistics, or section shortcuts. Temporary first-load failures have
+a separate retryable state. A failed update retains previous results unless
+the server confirms the player no longer exists.
+
+Market value labels the current price, change, and actual date range returned by
+the server. Previous results remain visible and explicitly labeled during a
+period update or after a failed update; Retry uses the selected period. A
+collapsed **View daily market values** table provides exact dates/prices alongside
+the chart. Axis precision adapts to the price range, and an empty history keeps
+the known current price visible. `e2e/player-detail-ux.spec.ts` checks keyboard
+navigation, disclosures, missing points, period updates, and recovery using
+fictional data in phone/dark and desktop/light layouts.
 
 Player photos use available API media with fallback images from market listings
 and the selected roster. Team crests resolve from fixture/catalog media and fit

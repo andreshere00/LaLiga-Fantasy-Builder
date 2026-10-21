@@ -206,11 +206,13 @@ function MatchGroup({
   matches,
   upcoming,
   playerTeamName,
+  unavailable = false,
 }: {
   title: string;
   matches: unknown[];
   upcoming: boolean;
   playerTeamName: string | null;
+  unavailable?: boolean;
 }) {
   return (
     <div className={`player-match-group${upcoming ? " is-upcoming" : ""}`}>
@@ -218,7 +220,9 @@ function MatchGroup({
         <img src={footballIcon} alt="" aria-hidden="true" />
         {title}
       </h3>
-      {matches.length === 0 ? (
+      {unavailable ? (
+        <p className="player-match-empty">{upcoming ? "Upcoming" : "Recent"} matches are temporarily unavailable.</p>
+      ) : matches.length === 0 ? (
         <p className="player-match-empty">No {upcoming ? "upcoming" : "recent"} matches available.</p>
       ) : (
         <ul className="player-match-grid">
@@ -260,18 +264,20 @@ export function PlayerMatchesSection({
 
   return (
     <section className="player-detail-panel player-match-section" aria-labelledby="player-matches-title">
-      <h2 id="player-matches-title">Previous &amp; Upcoming matches</h2>
+      <h2 id="player-matches-title" tabIndex={-1}>Previous &amp; Upcoming matches</h2>
       <MatchGroup
         title="Previous 5 matches"
         matches={recentMatches}
         upcoming={false}
         playerTeamName={playerTeamName}
+        unavailable={recent == null}
       />
       <MatchGroup
         title="Upcoming 5 matches"
         matches={upcomingMatches}
         upcoming
         playerTeamName={playerTeamName}
+        unavailable={upcoming == null}
       />
     </section>
   );

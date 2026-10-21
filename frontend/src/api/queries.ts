@@ -2,7 +2,7 @@ import { useEffect } from "react";
 import { useQuery } from "@tanstack/react-query";
 
 import { getJson, paths, type PlayerStatsDetailQuery } from "./client";
-import { NeedsReauthError } from "./errors";
+import { ApiError, NeedsReauthError } from "./errors";
 import { asCurrentWeek, asFiniteNumber, asRecord } from "./mappers";
 import { useAuth } from "../auth/AuthProvider";
 
@@ -114,6 +114,8 @@ export function usePlayerStatsDetailQuery(
   const id = playerId ?? "";
   return useQuery({
     queryKey: ["players", "detail", id, query],
+    retry: (failureCount, error) => !(error instanceof NeedsReauthError) &&
+      !(error instanceof ApiError && error.status === 404) && failureCount < 1,
     enabled: enabled && accessToken != null && id !== "",
     staleTime: CALENDAR_STALE_MS,
     placeholderData: (previousData, previousQuery) => {

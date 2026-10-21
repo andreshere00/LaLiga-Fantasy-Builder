@@ -394,7 +394,7 @@ function PlayerInjuryHistory({ profile }: FantasySectionProps) {
 export function PlayerFantasySection({ profile }: FantasySectionProps) {
   return (
     <section className="player-detail-panel player-fantasy-section" aria-labelledby="player-fantasy-title">
-      <h2 id="player-fantasy-title">News & injuries data</h2>
+      <h2 id="player-fantasy-title" tabIndex={-1}>News &amp; injuries</h2>
       {profile ? (
         <div className="player-fantasy-grid">
           <PlayerNewsList profile={profile} />

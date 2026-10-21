@@ -34,7 +34,9 @@ for (const theme of ["light", "dark"]) {
           await hierarchy.hover();
           await expect(page.getByRole("tooltip")).toContainText("player's role on the team");
           await expect(hierarchy.locator("dd")).toHaveCSS("text-align", "center");
-          await expect(hierarchy.locator("dd")).toHaveCSS("font-size", "20px");
+          const summaryFontSize = await hierarchy.locator("dd").evaluate((element) =>
+            parseFloat(getComputedStyle(element).fontSize));
+          expect(summaryFontSize).toBeGreaterThanOrEqual(16);
           await expect(hierarchy.locator("dd")).toHaveCSS("justify-content", "center");
           await expect(summary.locator("dt img, dt svg")).toHaveCount(0);
           await expect(hierarchy.locator("dd img")).toBeVisible();

@@ -15,6 +15,13 @@
   margin: 0 0 12px;
 }
 
+.player-detail-unavailable { max-width: 680px; margin: 40px auto; padding: 32px; }
+.player-detail-unavailable h1 { margin: 0 0 16px; font-size: 32px; }
+/* The heading receives reading focus; interactive recovery links keep their focus rings. */
+.player-detail-unavailable h1:focus { outline: none; }
+.player-detail-unavailable p { margin: 0; color: var(--fb-muted); line-height: 1.6; }
+.player-detail-unavailable-actions { display: flex; flex-wrap: wrap; gap: 12px; margin-top: 24px; }
+
 .player-detail-back a {
   color: var(--fb-secondary);
   font-weight: 600;
@@ -445,3 +452,80 @@
 .player-detail-deltas { display:flex; flex-wrap:wrap; gap:8px; align-items:center; font-size:14px; }
 .player-detail-deltas strong { font-size:24px; font-weight:500; }
 .player-detail-deltas :is(.is-up,.is-mid,.is-down) { color:var(--fb-secondary); }
+
+/* Section shortcuts retain context on a long profile without hiding any panels. */
+.player-detail-sections {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  position: sticky;
+  top: var(--app-header-height, 0px);
+  z-index: 80;
+  margin-bottom: 20px;
+  padding: 4px;
+  border: 1px solid var(--fb-line);
+  background: var(--fb-surface);
+}
+
+.player-detail-sections a {
+  display: inline-flex;
+  gap: 8px;
+  min-height: 44px;
+  align-items: center;
+  justify-content: center;
+  padding: 8px 16px;
+  color: var(--fb-secondary);
+  font-size: 14px;
+  font-weight: 600;
+  text-decoration: underline;
+  text-underline-offset: 4px;
+}
+
+.player-section-icon {
+  width: 20px;
+  height: 20px;
+  flex: none;
+  fill: currentColor;
+}
+
+.player-detail-sections a:hover { background: var(--fb-subtle); }
+.player-detail-header-text h1 { scroll-margin-top: 80px; }
+.player-detail-context { margin: 0 0 12px; color: var(--fb-muted); font-size: 12px; line-height: 1.6; }
+.player-detail-form-context { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 16px; }
+.player-detail-form-context .player-detail-context { margin: 0; }
+.player-form-total { gap: 16px; }
+.player-form-total small { display: block; margin-top: 4px; color: var(--fb-muted); font-size: 12px; font-weight: 400; }
+.player-detail-recovery { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 16px; border-left: 3px solid var(--fb-warning); }
+.player-detail-recovery p { margin: 0; }
+.player-detail-recovery ul { margin: 8px 0 0; padding-left: 20px; font-size: 14px; }
+.player-detail-header-averages .player-detail-averages-source-note { margin: 0 0 12px; }
+.player-detail-deltas { align-items: flex-start; gap: 16px 40px; margin: 16px 0 20px; }
+.player-detail-deltas dt { margin-bottom: 4px; font-size: 12px; font-weight: 400; color: var(--fb-muted); }
+.player-detail-deltas dd { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin: 0; font-variant-numeric: tabular-nums; }
+.player-detail-deltas strong { overflow-wrap: anywhere; }
+.player-market-history { margin-top: 16px; }
+.player-market-history summary { display: flex; align-items: center; min-height: 44px; width: fit-content; padding: 8px 12px; border: 1px solid var(--fb-control-line); font-size: 14px; font-weight: 600; cursor: pointer; list-style: none; }
+.player-market-history summary::before { content: "+"; margin-right: 12px; }
+.player-market-history[open] summary::before { content: "−"; }
+.player-market-history .player-detail-table-wrap { max-height: 320px; overflow: auto; margin-top: 12px; }
+.player-market-history td { text-align: right; font-variant-numeric: tabular-nums; }
+
+@media (max-width: 800px) {
+  /* Keep screen space for the player on phones, where the app header also wraps. */
+  .player-detail-sections { position: static; }
+  .player-detail-sections a { flex: 1 0 auto; padding-inline: 8px; }
+}
+
+@media (max-width: 600px) {
+  .player-detail-header .player-detail-header-identity { display: grid; grid-template-columns: 88px minmax(0, 1fr); align-items: start; gap: 12px; }
+  .player-detail-header-identity > .player-tile { height: auto; width: 88px; align-self: start; }
+  .player-detail-header-text h1 { font-size: 26px; overflow-wrap: anywhere; }
+  .player-detail-header-text h1 { scroll-margin-top: 0; }
+  .player-detail-header-facts { flex-direction: column; gap: 4px; }
+  .player-detail-header-facts .fb-separator { display: none; }
+  .player-detail-header-actions { grid-row: 2; }
+  .player-detail-fantasy-overview { grid-row: 3; }
+  .player-detail-header-averages { grid-row: 4; }
+  .player-detail-panel { padding: 16px; }
+  .player-detail-chart { padding: 8px 0; }
+}

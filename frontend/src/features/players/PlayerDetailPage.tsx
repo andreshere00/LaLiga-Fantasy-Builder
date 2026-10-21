@@ -1,10 +1,12 @@
 import { PulseRing } from "../../components/ui/PulseRing";
 import { Separator } from "../../components/ui/Separator";
-import { lazy, Suspense, useMemo, useState } from "react";
+import { Button, buttonVariants } from "../../components/ui/Button";
+import { lazy, Suspense, useEffect, useMemo, useRef, useState } from "react";
 import { useQueries, useQuery } from "@tanstack/react-query";
 import { Link, useLocation, useParams } from "react-router-dom";
 
 import { formatEuro } from "../../api/format";
+import { ApiError } from "../../api/errors";
 import { getJson, paths, type PlayerStatsDetailQuery } from "../../api/client";
 import {
   asFiniteNumber,
@@ -54,7 +56,6 @@ import {
   statDisplay,
   withMarketTrend,
   MISSING_STAT,
-  NO_DATA_YET,
   deltaRelPercent,
 } from "./playerDetailFormat";
 import { clubDisplayName } from "./clubNames";
@@ -69,12 +70,17 @@ import { playerAverages } from "./playerAverages";
 import { PlayerDetailScreenLoading } from "./PlayerScreenLoading";
 import daznIcon from "../../assets/dazn.png";
 import injuryIcon from "../../assets/button_injury_red.svg";
+import { materialIconPaths } from "../../assets/material-icons/paths";
 import "./PlayerDetailPage.css";
 
 const DateRangeDialog = lazy(() => import("./DateRangeDialog").then((module) => ({ default: module.DateRangeDialog })));
 
 const FIXTURE_LAST_STEPS = [5, 10, 20, 40, 60] as const;
 const MARKET_PRESETS = ["season", "30d", "14d", "10d", "5d"] as const;
+const SEGMENT_LABELS: Record<string, string> = {
+  fixtures: "Fixture statistics", market: "Market value", recent: "Recent matches",
+  upcoming: "Upcoming matches", profile: "Fantasy outlook, news and injuries",
+};
 
 const STAT_SPECS = [
   ["minutesPlayed", "Minutes"], ["goals", "Goals"], ["assists", "Assists"],
@@ -120,6 +126,52 @@ type PlayerDetailBodyProps = {
   masterId: MasterPlayerId;
 };
 
+function PlayerSectionIcon({ path }: { path: string }) {
+  return <svg className="player-section-icon" aria-hidden="true" focusable="false" viewBox="0 0 24 24">
+    <path d={path} />
+  </svg>;
+}
+
+function PlayerDetailUnavailable({ notFound = false, invalidLink = false, pending = false, onRetry }: {
+  notFound?: boolean;
+  invalidLink?: boolean;
+  pending?: boolean;
+  onRetry?: () => void;
+}) {
+  const location = useLocation();
+  const heading = useRef<HTMLHeadingElement>(null);
+  useEffect(() => heading.current?.focus(), []);
+
+  return (
+    <section className="player-detail-page">
+      <nav className="player-detail-back fb-breadcrumb" aria-label="Breadcrumb">
+        <Link to="/players">Players</Link><span aria-hidden="true">/</span>
+        <span aria-current="page">{notFound ? "Player not found" : "Details unavailable"}</span>
+      </nav>
+      <section className="player-detail-panel player-detail-unavailable" aria-labelledby="player-unavailable-title">
+        <h1 id="player-unavailable-title" tabIndex={-1} ref={heading}>
+          {notFound ? "Player not found" : "Player details unavailable"}
+        </h1>
+        <p role="alert">{notFound
+          ? invalidLink ? "This player link is invalid. Browse the catalog to find a player."
+            : "We couldn’t find a player with this ID. The link may be incorrect or the player may no longer be in the catalog."
+          : "Player details could not be loaded. Try again to load the statistics."}</p>
+        <div className="player-detail-unavailable-actions">
+          {onRetry ? <Button loading={pending} loadingLabel="Retrying…" onClick={onRetry}>
+            Retry player data
+          </Button> : null}
+          <Link to="/players" className={buttonVariants({ variant: notFound ? "default" : "outline" })}>
+            Browse players
+          </Link>
+          {location.state?.returnTo === "/market" ? (
+            <Link to="/market" className={buttonVariants({ variant: "outline" })}>Back to market</Link>
+          ) : null}
+        </div>
+      </section>
+    </section>
+  );
+}
+
 function PlayerDetailBody({ masterId }: PlayerDetailBodyProps) {
   const location = useLocation();
   const returnTo = location.state?.returnTo === "/market" ? "/market" : "/players";
@@ -133,6 +185,7 @@ function PlayerDetailBody({ masterId }: PlayerDetailBodyProps) {
   const [marketUseCustomRange, setMarketUseCustomRange] = useState(false);
   const [favorites, setFavorites] = useState(() => readFavoritePlayerIds(userId));
   const [showAdvancedStats, setShowAdvancedStats] = useState(false);
+  const [lastLoadedDetail, setLastLoadedDetail] = useState<Record<string, unknown> | null>(null);
 
   const detailQueryInput = useMemo((): PlayerStatsDetailQuery => {
     const base: PlayerStatsDetailQuery = {
@@ -228,8 +281,15 @@ function PlayerDetailBody({ masterId }: PlayerDetailBodyProps) {
     ? leagueMaster
     : catalogMaster ?? leagueMaster;
 
-  const detail = asRecord(detailQuery.data);
+  const queryDetail = asRecord(detailQuery.data);
+  // Keep an explicitly labeled previous result if a different period fails to load.
+  if (queryDetail && !detailQuery.isPlaceholderData && queryDetail !== lastLoadedDetail) {
+    setLastLoadedDetail(queryDetail);
+  }
+  const detail = queryDetail ?? lastLoadedDetail;
   const detailReady = detail != null;
+  const updatingPreviousDetail = detailQuery.isFetching &&
+    (detailQuery.isPlaceholderData || queryDetail == null && detailReady);
   const segmentErrors = Array.isArray(detail?.segmentErrors) ? detail.segmentErrors : [];
   const fixturesBlock = asRecord(detail?.fixtures);
   const marketBlock = asRecord(detail?.market);
@@ -264,12 +324,11 @@ function PlayerDetailBody({ masterId }: PlayerDetailBodyProps) {
     const window = asRecord(marketBlock?.window);
     const series = window?.series;
     if (!Array.isArray(series)) return [];
-    const points = series.map((point) => {
+    const points = series.flatMap((point) => {
       const row = asRecord(point);
-      return {
-        date: text(row?.date) ?? "",
-        value: asFiniteNumber(row?.value) ?? 0,
-      };
+      const date = text(row?.date);
+      const value = asFiniteNumber(row?.value);
+      return date && value != null ? [{ date, value }] : [];
     });
     return withMarketTrend(points);
   }, [marketBlock]);
@@ -284,6 +343,12 @@ function PlayerDetailBody({ masterId }: PlayerDetailBodyProps) {
   const currentValue = asFiniteNumber(marketBlock?.currentValue);
   const changeTone = marketChangeTone(deltaRel);
   const averages = playerAverages(profileBlock?.averages, fantasyAveragesPlayer);
+  const fixturePoints = fixtureRows.map((row) => asFiniteNumber(asRecord(row)?.fantasyPointsTotal));
+  const knownFixturePoints = fixturePoints.filter((value): value is number => value != null);
+  const missingFixturePoints = fixturePoints.length - knownFixturePoints.length;
+  const marketWindow = asRecord(marketBlock?.window);
+  const marketFrom = text(marketWindow?.from);
+  const marketTo = text(marketWindow?.to);
 
   const injury = asRecord(profileBlock?.injury);
   const hasActiveInjury = injury?.active === true ||
@@ -298,6 +363,13 @@ function PlayerDetailBody({ masterId }: PlayerDetailBodyProps) {
   };
   const showMarketMenu = marketRow != null && ownSquadCard == null;
 
+  if (detailQuery.error instanceof ApiError && detailQuery.error.status === 404) {
+    return <PlayerDetailUnavailable notFound />;
+  }
+  if (!detailReady && detailQuery.isError) {
+    return <PlayerDetailUnavailable pending={detailQuery.isFetching}
+      onRetry={() => void detailQuery.refetch()} />;
+  }
   if (!detailReady && !detailQuery.isError) return <PlayerDetailScreenLoading />;
 
   return (
@@ -306,26 +378,43 @@ function PlayerDetailBody({ masterId }: PlayerDetailBodyProps) {
         <Link to={returnTo}>{returnTo === "/market" ? "Market" : "Players"}</Link>
         <span aria-hidden="true">/</span><span aria-current="page">{name}</span>
       </nav>
+      <nav className="player-detail-sections" aria-label="Player sections">
+        <a href="#player-overview"><PlayerSectionIcon path={materialIconPaths.account_circle} />Overview</a>
+        <a href="#player-form-title"><PlayerSectionIcon path={materialIconPaths.trending_up} />Form</a>
+        <a href="#player-market-title"><PlayerSectionIcon path={materialIconPaths.euro_symbol} />Market value</a>
+        {detailReady ? <a href="#player-matches-title"><PlayerSectionIcon path={materialIconPaths.event} />Matches</a> : null}
+        {detailReady ? <a href="#player-fantasy-title"><PlayerSectionIcon path={materialIconPaths.assignment} />News &amp; injuries</a> : null}
+      </nav>
       {detailQuery.isError ? (
-        <p className="status-copy" role="alert">
-          Player details could not be loaded.
-        </p>
+        <div className="player-detail-panel player-detail-recovery">
+          <p role="alert">Player data could not be updated. Previous results are still shown.</p>
+          <Button variant="outline" loading={detailQuery.isFetching} loadingLabel="Retrying…"
+            onClick={() => void detailQuery.refetch()}>Retry player data</Button>
+        </div>
       ) : null}
-      {detailQuery.isFetching && detailQuery.isPlaceholderData ? (
+      {updatingPreviousDetail ? (
         <p className="status-copy" role="status">
-          Updating player…
+          Updating player data… Previous results remain visible until the update completes.
         </p>
       ) : null}
-      {detailReady && segmentErrors.length > 0 ? (
-        <div className="player-detail-panel player-detail-segment-errors" role="status">
-          {segmentErrors.map((entry, index) => {
-            const row = asRecord(entry);
-            return (
-              <p key={`${text(row?.segment)}-${index}`} className="status-copy">
-                {text(row?.segment)}: {text(row?.detail) ?? "unavailable"}
-              </p>
-            );
-          })}
+      {detailReady && !detailQuery.isError && segmentErrors.length > 0 ? (
+        <div className="player-detail-panel player-detail-segment-errors player-detail-recovery">
+          <div role="status">
+            <p>Some player data is unavailable. You can still use the available sections.</p>
+            <ul>
+              {segmentErrors.map((entry, index) => {
+                const row = asRecord(entry);
+                const segment = text(row?.segment) ?? "";
+                return (
+                  <li key={`${segment}-${index}`}>
+                    {SEGMENT_LABELS[segment] ?? "Player data"}: {text(row?.detail) ?? "temporarily unavailable"}
+                  </li>
+                );
+              })}
+            </ul>
+          </div>
+          <Button variant="outline" loading={detailQuery.isFetching} loadingLabel="Retrying…"
+            onClick={() => void detailQuery.refetch()}>Retry player data</Button>
         </div>
       ) : null}
 
@@ -360,11 +449,12 @@ function PlayerDetailBody({ masterId }: PlayerDetailBodyProps) {
             }
           />
           <div className="player-detail-header-text">
-            <div className="player-detail-title-row"><h1>{name}</h1>
-              <AvailabilityCell availability={availability} /></div>
+            <div className="player-detail-title-row"><h1 id="player-overview" tabIndex={-1}>{name}</h1>
+              {text(catalogMaster?.playerStatus) ? <AvailabilityCell availability={availability} />
+                : <span className="player-detail-context">Availability unknown</span>}</div>
             <div className="player-detail-header-facts">
               <p>{teamName ?? MISSING_STAT}<Separator orientation="vertical" /></p>
-              <p>FSYP {points ?? MISSING_STAT}<Separator orientation="vertical" /></p>
+              <p>{points ?? MISSING_STAT} Fantasy points<Separator orientation="vertical" /></p>
               <p>{positionLabel(positionId) ?? MISSING_STAT}</p>
             </div>
             {injury?.availabilityText || injury?.diagnosis ? (
@@ -378,12 +468,8 @@ function PlayerDetailBody({ masterId }: PlayerDetailBodyProps) {
             ) : null}
           </div>
         </div>
-        <section className="player-detail-fantasy-overview" aria-labelledby="player-summary-fantasy-title">
-          <h2 id="player-summary-fantasy-title">NEWS & INJURIES DATA</h2>
-          <PlayerFantasySummary profile={profileBlock} />
-        </section>
         {detailReady || catalogMaster || leagueMaster ? (
-          <PlayerAveragesPanel rows={averages} positionId={positionId} />
+          <PlayerAveragesPanel rows={averages} positionId={positionId} playerName={name} />
         ) : null}
         <div className="player-detail-header-actions">
           {ownSquadCard ? (
@@ -400,11 +486,17 @@ function PlayerDetailBody({ masterId }: PlayerDetailBodyProps) {
             onToggle={() => setFavorites(toggleFavoritePlayerId(userId, masterId))}
           />
         </div>
+        <section className="player-detail-fantasy-overview" aria-labelledby="player-summary-fantasy-title">
+          <h2 id="player-summary-fantasy-title">Fantasy outlook</h2>
+          <p className="player-detail-context">FutbolFantasy ratings and starting estimates.</p>
+          <PlayerFantasySummary profile={profileBlock} />
+        </section>
       </header>
 
-      <section className="player-detail-panel player-detail-section player-form-section">
-        <h2>Form — fixture stats</h2>
-        <div className="player-detail-fixture-actions">
+      <section className="player-detail-panel player-detail-section player-form-section" aria-labelledby="player-form-title"
+        aria-busy={updatingPreviousDetail || undefined}>
+        <h2 id="player-form-title" tabIndex={-1}>Form — fixture stats</h2>
+        <div className="player-detail-fixture-actions" role="group" aria-label="Fixture history length">
           {FIXTURE_LAST_STEPS.map((step) => (
             <button
               key={step}
@@ -416,17 +508,32 @@ function PlayerDetailBody({ masterId }: PlayerDetailBodyProps) {
               Last {step}
             </button>
           ))}
-          <button
+        </div>
+        <div className="player-detail-form-context">
+          {fixturesBlock ? <p className="player-detail-context">
+            {fixtureRows.length} LaLiga fixtures shown · Oldest to newest
+          </p> : null}
+          <Button variant="outline"
             type="button"
             aria-expanded={showAdvancedStats}
-            aria-controls="player-form-list"
+            aria-controls={fixtureRows.length > 0 ? "player-form-list" : undefined}
+            disabled={fixtureRows.length === 0}
             onClick={() => setShowAdvancedStats((value) => !value)}
           >
-            {showAdvancedStats ? "Hide details" : "Details"}
-          </button>
+            {showAdvancedStats ? "Hide match statistics" : "Show match statistics"}
+          </Button>
         </div>
+        {updatingPreviousDetail ? (
+          <p className="player-detail-context">Updating fixture statistics… Previous results shown below.</p>
+        ) : detailQuery.isError && detailReady ? (
+          <p className="player-detail-context">Update failed. Previous fixture results shown below.</p>
+        ) : null}
+        {detailReady && (detailQuery.isError || fixturesBlock == null) ? (
+          <Button variant="outline" loading={detailQuery.isFetching} loadingLabel="Retrying…"
+            onClick={() => void detailQuery.refetch()}>Retry fixture statistics</Button>
+        ) : null}
         {!detailReady ? null : fixturesBlock == null ? (
-          <p className="status-copy">{NO_DATA_YET}</p>
+          <p className="status-copy">Fixture statistics are unavailable.</p>
         ) : fixtureRows.length === 0 ? (
           <p className="status-copy">No LaLiga fixture stats available.</p>
         ) : (
@@ -477,21 +584,24 @@ function PlayerDetailBody({ masterId }: PlayerDetailBodyProps) {
               );
             })}
             <p className="player-form-total">
-              Total fantasy points
+              <span>{missingFixturePoints > 0 ? "Known fantasy points" : "Total fantasy points"}
+                {missingFixturePoints > 0 ? <small>
+                  Points unavailable for {missingFixturePoints} of {fixtureRows.length} fixtures.
+                </small> : null}
+              </span>
               <strong>
-                {fixtureRows.reduce((sum, row) => {
-                  const total = asFiniteNumber(asRecord(row)?.fantasyPointsTotal);
-                  return sum + (total ?? 0);
-                }, 0)}
+                {knownFixturePoints.length > 0
+                  ? knownFixturePoints.reduce((sum, total) => sum + total, 0) : "Unavailable"}
               </strong>
             </p>
           </div>
         )}
       </section>
 
-      <section className="player-detail-panel player-detail-section player-market-value-section">
-        <h2>Market value</h2>
-        <div className="player-detail-market-presets">
+      <section className="player-detail-panel player-detail-section player-market-value-section" aria-labelledby="player-market-title"
+        aria-busy={updatingPreviousDetail || undefined}>
+        <h2 id="player-market-title" tabIndex={-1}>Market value</h2>
+        <div className="player-detail-market-presets" role="group" aria-label="Market value period">
           {MARKET_PRESETS.map((value) => (
             <button
               key={value}
@@ -503,7 +613,7 @@ function PlayerDetailBody({ masterId }: PlayerDetailBodyProps) {
                 setMarketPreset(value);
               }}
             >
-              {value}
+              {value === "season" ? "Season" : value}
             </button>
           ))}
           <button
@@ -522,15 +632,29 @@ function PlayerDetailBody({ masterId }: PlayerDetailBodyProps) {
             setMarketCustomFrom(from); setMarketCustomTo(to);
             setMarketUseCustomRange(true); setDateEditorOpen(false);
           }} /></Suspense> : null}
+        {updatingPreviousDetail ? (
+          <p className="player-detail-context">Updating market history… Previous period shown below.</p>
+        ) : detailQuery.isError && detailReady ? (
+          <p className="player-detail-context">Update failed. Previous market period shown below.</p>
+        ) : null}
+        {detailReady && (detailQuery.isError || marketBlock == null) ? (
+          <Button variant="outline" loading={detailQuery.isFetching} loadingLabel="Retrying…"
+            onClick={() => void detailQuery.refetch()}>Retry market history</Button>
+        ) : null}
         {!detailReady ? null : marketBlock == null ? (
-          <p className="status-copy">{NO_DATA_YET}</p>
-        ) : marketSeries.length === 0 ? (
-          <p className="status-copy">{NO_DATA_YET}</p>
+          <p className="status-copy">Market data is unavailable.</p>
         ) : (
           <>
-            <p className="player-detail-deltas">
-              <strong>{currentValue != null ? formatEuro(currentValue) : MISSING_STAT}</strong>
-              {" · "}
+            <p className="player-detail-context player-detail-market-period">
+              Shown period: {marketFrom && marketTo ? <>
+                <time dateTime={marketFrom}>{marketFrom}</time> – <time dateTime={marketTo}>{marketTo}</time>
+              </> : "Unavailable"}
+            </p>
+            <dl className="player-detail-deltas">
+              <div><dt>Current market value</dt>
+                <dd><strong>{currentValue != null ? formatEuro(currentValue) : "Unavailable"}</strong></dd>
+              </div>
+              <div><dt>Change in shown period</dt><dd>
               <span className={`player-detail-market-delta ${changeTone}`}>
                 {deltaAbs != null && deltaAbs > 0 ? (
                   <svg viewBox="0 0 24 24" aria-hidden="true">
@@ -550,8 +674,10 @@ function PlayerDetailBody({ masterId }: PlayerDetailBodyProps) {
                 ) : null}
                 {deltaRelPercent(deltaRel) ?? MISSING_STAT}
               </span>
-            </p>
-            <div className="player-detail-chart">
+              </dd></div>
+            </dl>
+            {marketSeries.length === 0 ? <p className="status-copy">No market history in this period. Choose a different period.</p> : <>
+            <div className="player-detail-chart" role="group" aria-label="Market value history chart">
               <ResponsiveContainer width="100%" height={260}>
                 <LineChart
                   data={marketSeries}
@@ -575,15 +701,9 @@ function PlayerDetailBody({ masterId }: PlayerDetailBodyProps) {
                     domain={marketChartYDomain}
                     tickCount={5}
                     allowDecimals={false}
-                    tickFormatter={formatMarketChartTick}
+                    tickFormatter={(value) => formatMarketChartTick(value, marketChartYDomain[1] - marketChartYDomain[0])}
                     stroke="var(--fb-muted)"
                     tick={{ fill: "var(--fb-secondary)", fontSize: 12 }}
-                    label={{
-                      value: "Value (€)",
-                      angle: -90,
-                      position: "insideLeft",
-                      fill: "var(--fb-secondary)",
-                    }}
                   />
                   <Legend />
                   <Tooltip
@@ -617,6 +737,20 @@ function PlayerDetailBody({ masterId }: PlayerDetailBodyProps) {
                 </LineChart>
               </ResponsiveContainer>
             </div>
+            <details className="player-market-history">
+              <summary>View daily market values</summary>
+              <div className="player-detail-table-wrap" tabIndex={0} role="region" aria-label="Daily market values">
+                <table className="player-detail-table">
+                  <caption className="visually-hidden">Market values for the shown period</caption>
+                  <thead><tr><th scope="col">Date</th><th scope="col">Market value</th></tr></thead>
+                  <tbody>{marketSeries.map((point, index) => <tr key={`${point.date}-${index}`}>
+                    <th scope="row"><time dateTime={point.date}>{point.date}</time></th>
+                    <td>{formatEuro(point.value)}</td>
+                  </tr>)}</tbody>
+                </table>
+              </div>
+            </details>
+            </>}
           </>
         )}
       </section>
@@ -647,11 +781,7 @@ export function PlayerDetailPage() {
   const { status, user } = useAuth();
   if (status !== "ready") return <GatePanel status={status} />;
   if (!masterId) {
-    return (
-      <p className="status-copy" role="alert">
-        Invalid player id.
-      </p>
-    );
+    return <PlayerDetailUnavailable notFound invalidLink />;
   }
-  return <PlayerDetailBody key={user?.userId ?? ""} masterId={masterId} />;
+  return <PlayerDetailBody key={`${user?.userId ?? ""}:${masterId}`} masterId={masterId} />;
 }
