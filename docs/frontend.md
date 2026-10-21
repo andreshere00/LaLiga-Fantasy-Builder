@@ -12,8 +12,10 @@ directly and keeps the internal JWT in memory only.
 ## Visual system and screenshots
 
 The app uses Anton display headings, AT Aero body/actions, neutral square
-surfaces, thin borders and coral primary actions. The header's **Dark/Light**
-control switches the whole document, including portaled overlays and charts.
+surfaces, thin borders and coral primary actions. All buttons and button-styled
+links have rectangular corners, enforced globally across pages and portaled
+overlays. The header's **Dark/Light** control switches the whole document,
+including portaled overlays and charts.
 Light is the default; an explicit preference is saved under `lfb-theme`.
 The app uses Base UI for dialogs, selection, menus, tooltips, collapsibles and
 toasts, with local CSS and native buttons/fields where appropriate.

@@ -3,6 +3,8 @@ html { scroll-padding-top:calc(var(--app-header-height,0px) + 56px); }
 body { margin:0; min-height:100vh; background:var(--fb-bg); color:var(--fb-secondary); }
 button,input,select,textarea { font-family:inherit; }
 button { color:inherit; }
+/* Rectangular buttons are a global invariant, including portaled controls and action links. */
+:is(button,[role="button"],input[type="button"],input[type="submit"],input[type="reset"],.fb-button) { border-radius:0 !important; }
 :is(button,select,a,input,textarea,summary,[tabindex]):focus-visible { outline:2px solid var(--fb-focus); outline-offset:3px; }
 .app-shell { min-height:100vh; display:flex; flex-direction:column; }
 .app-main { flex:1 1 auto; min-height:0; }

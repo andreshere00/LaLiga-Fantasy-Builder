@@ -2,7 +2,7 @@ import type { ComponentProps, ReactNode } from "react";
 
 export type ButtonVariant = "default" | "secondary" | "outline" | "ghost" | "destructive";
 export type ButtonSize = "sm" | "default" | "lg" | "icon";
-export type ButtonShape = "rounded" | "square";
+export type ButtonShape = "square";
 
 type VariantOptions = {
   variant?: ButtonVariant;
@@ -13,7 +13,7 @@ type VariantOptions = {
 
 /** Class helper also usable on React Router links, keeping link semantics. */
 export function buttonVariants({
-  variant = "default", size = "default", shape = "rounded", className = "",
+  variant = "default", size = "default", shape = "square", className = "",
 }: VariantOptions = {}) {
   return `fb-button fb-button--${variant} fb-button--${size} fb-button--${shape} ${className}`;
 }

@@ -36,7 +36,7 @@
 .fb-panel,.fb-popup,.fb-calendar{border:1px solid var(--fb-line);padding:20px}
 :is(.fb-button,.fb-input,.fb-native-select,.fb-page-button):focus-visible{outline:2px solid var(--fb-focus);outline-offset:3px;box-shadow:none}
 .fb-button{display:inline-flex;align-items:center;justify-content:center;gap:8px;min-height:44px;padding:0 16px;border:1px solid transparent;box-shadow:none;cursor:pointer;white-space:nowrap;font:600 14px/1 "At Aero",Arial,sans-serif;letter-spacing:.01em;text-transform:uppercase;transition:background-color .16s ease,color .16s ease,border-color .16s ease}
-.fb-button--rounded{border-radius:8px}.fb-button--square{border-radius:0}
+.fb-button{border-radius:0}
 .fb-button--default,.fb-button--destructive{background:var(--fb-primary);color:var(--fb-on-brand)}
 .fb-button--secondary{background:var(--fb-subtle);color:var(--fb-secondary)}
 .fb-button--outline{background:transparent;border-color:var(--fb-control-line);color:var(--fb-secondary)}
@@ -123,7 +123,7 @@
 @media(max-width:600px) { .fb-dialog-viewport { padding:12px; } .fb-dialog { padding:20px; max-height:calc(100dvh - 24px); } .fb-dialog-viewport--sheet { padding:0; place-items:end stretch; } .fb-dialog--sheet { width:100%; height:auto; max-height:85dvh; } }
 
 :root { --fb-color-duration:160ms; --fb-color-ease:ease; }
-.fb-dialog button:not(.fb-button) { min-height:44px; border-radius:8px; font-weight:600; }
+.fb-dialog button:not(.fb-button) { min-height:44px; border-radius:0; font-weight:600; }
 .fb-dialog-footer button { padding:0 16px; border:1px solid var(--fb-control-line); background:var(--fb-surface); color:var(--fb-secondary); cursor:pointer; }
 .fb-dialog-footer :is(.market-dialog-primary,.squad-sale-primary) { background:var(--fb-primary); color:var(--fb-ink-on-status); border-color:var(--fb-primary); }
 .fb-dialog input,.fb-dialog select { min-height:44px; color:var(--fb-secondary); background:var(--fb-surface); }
