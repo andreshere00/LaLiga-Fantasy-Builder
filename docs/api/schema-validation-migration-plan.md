@@ -81,8 +81,7 @@ shared cross-language valid/invalid fixtures now enforce the reported regression
 and Pydantic wire serialization.
 
 Applied repository skills: [code review](../../.agents/skills/code-review/SKILL.md),
-[Python best practices](../../.agents/skills/coding-style/SKILL.md),
-[React frontend](../../.agents/skills/react-frontend/SKILL.md), and
+[frontend and backend best practices](../../.agents/skills/best-practices/SKILL.md), and
 [developing endpoints](../../.agents/skills/developing-endpoints/SKILL.md).
 Architecture, endpoint-development, proxy-pitfall, authentication, and domain guides
 inform the plan and its compatibility constraints.

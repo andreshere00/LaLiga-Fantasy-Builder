@@ -103,6 +103,30 @@ def test_main_json_mode_returns_aggregated_payload(
 # ---- Error paths ---- #
 
 
+def test_main_weather_option_includes_optional_match_forecasts(monkeypatch, capsys) -> None:
+    patch_httpx_client(
+        monkeypatch,
+        {
+            ("GET", "/calendar/current"): CURRENT,
+            ("GET", "/calendar/weeks/8"): FIXTURES,
+            ("GET", "/calendar/weeks/8/stats"): STATS,
+            ("GET", "/calendar/weeks/8/weather"): {
+                "weekNumber": 8,
+                "generatedAt": "2026-10-20T12:00:00Z",
+                "matches": [
+                    {"fixtureId": "71", "weather": {"reason": "disabled"}},
+                ],
+            },
+        },
+    )
+    assert (
+        calendar_cli.main(["--jwt", "tok", "--api-base", "http://api.test", "--weather", "--json"])
+        == 0
+    )
+    report = json.loads(capsys.readouterr().out)
+    assert report["weather"]["matches"][0]["weather"]["reason"] == "disabled"
+
+
 def test_main_missing_jwt_returns_1(
     monkeypatch: pytest.MonkeyPatch,
     capsys: pytest.CaptureFixture[str],

@@ -24,9 +24,8 @@ Automated browser checks use fictional deterministic data and fallback
 portraits. The product captures below show the local account as it appeared at
 capture time.
 
-Screenshot assets live under [`docs/images/`](images/). The
-[screenshot index](images/README.md) records topic and theme tags, capture
-dates, and which images use synthetic data.
+Screenshot assets live under [`docs/images/`](images/). Captures are embedded
+beside the feature they document, with their source and capture date stated there.
 Keep new screenshots in the same commit as their Markdown references so the
 gallery is available on GitHub as well as in a local checkout.
 
@@ -36,24 +35,30 @@ The following captures document the full local interface: lineup and builder,
 market and catalog tables, and the player profile's averages, form, match,
 market-value, Fantasy-data, and injury-history sections. Their values reflect
 the account and data available at capture time. The supplied desktop captures
-were taken on 19 October 2026; the remaining synthetic demonstrations are
-identified below and in the index. The product gallery is also embedded in
+were taken on 19 October 2026; the lineup overview was refreshed directly from
+the running application on 21 October 2026. Synthetic demonstrations for other
+features are identified below. The product gallery is also embedded in
 the [project README](../README.md#screenshots).
 
 #### Lineup
 
-![Lineup overview](images/screenshots/lineup-overview.png)
+Captured directly from Brave at `http://localhost:3000/` on 21 October 2026
+(Europe/Madrid), using the authenticated local account. The light and dark
+views show fixture 10, actual pairings and kickoff times, expandable forecasts,
+and the lineup toolbar. The full-page desktop capture includes the complete
+4-4-2 starting XI, squad pagination, manager ranking, and LALIGA standings.
+The overview and forecast images are browser-window captures; the full-page
+image uses Brave's full-size screenshot command at a 1512 CSS-pixel desktop width.
+The captures use actual application responses, without mocked or generated data,
+and are stored as JPEGs.
 
-![Lineup overview, dark theme](images/screenshots/lineup-dark-mode.png)
+![Current lineup and upcoming fixtures with weather, light theme](images/screenshots/lineup-current-light.jpg)
 
-![Ranking, LALIGA standings, pitch, and paginated squad, light theme](images/screenshots/lineup-standings-light.png)
+![Current lineup and upcoming fixtures with weather, dark theme](images/screenshots/lineup-current-dark.jpg)
 
-The following dark and mobile standings demonstrations use deterministic
-fictional managers and the shared synthetic twenty-club contract fixture:
+![Full lineup page with the 4-4-2 pitch, squad, manager ranking, and LALIGA standings](images/screenshots/lineup-current-squad.jpg)
 
-![Scrollable ranking and LALIGA standings, dark theme](images/screenshots/lineup-standings-dark.png)
-
-![Mobile standings layout](images/screenshots/lineup-standings-mobile.png)
+The builder captures below were supplied on 19 October 2026:
 
 ![Lineup builder player scope, trade permissions, and mandatory players](images/screenshots/lineup-builder-top.png)
 
@@ -123,12 +128,60 @@ and the API.
 
 | Path | Screen | Primary API domains |
 |------|--------|---------------------|
-| `/` | Lineup — formation, pitch, squad, manager ranking, club standings | [Leagues](api/leagues/README.md), [Teams](api/teams/README.md), [Calendar](api/calendar/README.md), [Standings](api/standings/README.md) |
+| `/` | Lineup — fixture matches/weather, formation, pitch, squad, manager ranking, club standings | [Leagues](api/leagues/README.md), [Teams](api/teams/README.md), [Calendar](api/calendar/README.md), [Standings](api/standings/README.md) |
 | `/market` | Market — listings, bids, release clauses | [Market](api/market/README.md), [Buyout](api/buyout/README.md), [Players](api/players/README.md), [Calendar](api/calendar/README.md) |
 | `/players` | Players — catalog, filters, top-10 leaderboard | [Players](api/players/README.md), [Calendar](api/calendar/README.md) |
 | `/players/:playerId` | Player detail — stats aggregate | [Players](api/players/README.md) (`GET /players/{id}/stats/detail`) |
 
 The shell header switches routes. The league dropdown applies to lineup, market, and players.
+
+### Fixture matches and stadium weather
+
+The lineup page starts with a full-width shadcn Card and horizontal ScrollArea.
+It displays the current competition round from first play through the final
+result, including gaps between matches, then changes to the next fixture's
+pairings and kickoff dates/times. Ten distinct finished pairings are required
+to establish completion. Until the next response is ready, the finished round
+remains clearly labeled, retries automatically, and offers retry after a failure. At season end it says **Season
+complete**. Historical lineup navigation and manager selection do not change
+this competition panel or discard an unsaved draft. The panel has its own previous/next
+fixture navigation, bounded to weeks 1–38. Browsing keeps the chosen fixture visible;
+**Current fixture** restores automatic current/next following. Navigation controls
+are centered at phone widths. There is no manual refresh button.
+
+Matches include club names/crests, Madrid-local dates and times, and reported
+scores; scheduled score placeholders stay blank. Unrecognized provider match
+statuses say **Status unconfirmed**, with any reported score, instead of an
+invented live/final state. Incomplete round data cannot trigger advancement.
+Automatic updates preserve scroll and focus; native horizontal scrolling, arrow keys,
+explicit scroll buttons, and Home/End make every match reachable. Score-change
+announcements are concise rather than repeating all matches on every poll.
+
+Current metadata and fixture/score queries are shared with the lineup board and
+refresh every 30 seconds while visible. The separate optional
+`GET /api/calendar/weeks/{week}/weather` query refreshes every 30 minutes, with
+source and original retrieval time shown. Hidden tabs do not poll; stale data
+can refresh on focus/reconnect. Weather keys include fixture identities,
+kickoffs, and venue overrides to invalidate rescheduled predictions.
+
+Each match has a forecast summary that expands and collapses by click, Enter, or
+Space. Details start collapsed and expand to their full height without internal
+scrolling. Temperature and condition stay visible in the summary.
+Weather shows condition/icon, °C, rain probability, and km/h when the server's
+existing OpenWeather key is configured. Beyond the five-day provider window it
+says **Forecast closer to kickoff**. Missing/failed weather never blocks games,
+scores, or lineup editing. A forecast already received before kickoff may
+remain during play as **Saved kickoff forecast**, with its original timestamp;
+it is not observed current weather. Finished matches omit weather.
+
+The [current lineup captures above](#lineup) show this panel using the actual
+local session. The expanded forecast below shows actual provider values for
+Deportivo Alavés–Málaga CF captured on 21 October 2026:
+
+![Actual expanded kickoff forecast with rain, wind, and retrieval time](images/screenshots/lineup-current-forecast.jpg)
+
+Synthetic browser-test captures stay in test output directories. See the [implementation record](frontend-fixture-panel-implementation-plan.md)
+for behavior and validation details.
 
 ### Player detail widgets
 

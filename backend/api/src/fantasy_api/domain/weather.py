@@ -45,7 +45,7 @@ def pick_slot(
     if kickoff_utc > last:
         return WeatherReason.BEYOND_HORIZON
     best: ForecastSlot | None = None
-    best_delta = SLOT_TOLERANCE + timedelta(seconds=1)
+    best_delta = SLOT_TOLERANCE
     for slot in slots:
         delta = abs(slot.dt - kickoff_utc)
         if delta <= best_delta:

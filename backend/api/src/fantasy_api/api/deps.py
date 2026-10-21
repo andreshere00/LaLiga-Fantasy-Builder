@@ -28,9 +28,11 @@ from fantasy_api.repositories.player_stats import PlayerStatsRepository
 from fantasy_api.repositories.players import PlayersRepository
 from fantasy_api.repositories.standings import StandingsRepository
 from fantasy_api.repositories.teams import TeamsRepository
+from fantasy_api.repositories.weather import WeatherRepository
 from fantasy_api.security.internal_jwt import InternalJwtValidator
 from fantasy_api.services.buyout import BuyoutService
 from fantasy_api.services.calendar import CalendarService
+from fantasy_api.services.calendar_weather import CalendarWeatherService
 from fantasy_api.services.fixture_standings import FixtureStandingsService
 from fantasy_api.services.leagues import LeaguesService
 from fantasy_api.services.lineup_builder import LineupBuilderService
@@ -45,6 +47,7 @@ from fantasy_api.services.players import PlayersService
 from fantasy_api.services.scraped_player import ScrapedPlayerProvider
 from fantasy_api.services.standings import StandingsService
 from fantasy_api.services.teams import TeamsService
+from fantasy_api.services.weather import ForecastService
 
 
 class TokenValidator(Protocol):
@@ -74,6 +77,7 @@ class AppContainer:
         player_stats_service: Player stats orchestrator.
         football_client: Read-only football data provider client.
         standings_service: Real LALIGA classification orchestrator.
+        calendar_weather_service: Optional matchday weather orchestrator.
     """
 
     settings: Settings
@@ -91,6 +95,7 @@ class AppContainer:
     player_stats_service: PlayerStatsService
     football_client: FootballClient
     standings_service: StandingsService | FixtureStandingsService
+    calendar_weather_service: CalendarWeatherService
 
     lineup_builder_service: LineupBuilderService | None = None
 
@@ -216,6 +221,12 @@ def build_container(
         timeout_seconds=cfg.openweather_timeout_seconds,
         transport=weather_transport,
     )
+    venues = VenueDirectory.load()
+    forecasts = ForecastService(
+        WeatherRepository(weather).get_forecast,
+        ttl_seconds=cfg.weather_ttl_seconds,
+        clock=lambda: datetime.now(tz=UTC),
+    )
     players_repo = PlayersRepository(
         fantasy,
         competition_id=cfg.laliga_competition_id,
@@ -239,9 +250,10 @@ def build_container(
         resolver=resolver,
         scraped=scraped_provider,
         stats_repo=stats_repo,
-        venues=VenueDirectory.load(),
+        venues=venues,
         clock=lambda: datetime.now(tz=UTC),
         settings=cfg,
+        forecasts=forecasts,
     )
     football = FootballClient(
         api_key=cfg.api_football_key,
@@ -278,6 +290,13 @@ def build_container(
         player_stats_service=stats,
         football_client=football,
         standings_service=standings,
+        calendar_weather_service=CalendarWeatherService(
+            CalendarRepository(fantasy, competition_id=cfg.laliga_competition_id),
+            forecasts,
+            venues,
+            enabled=weather.enabled,
+            clock=lambda: datetime.now(tz=UTC),
+        ),
         lineup_builder_service=LineupBuilderService(
             LineupBuilderRepository(
                 leagues,

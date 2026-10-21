@@ -47,7 +47,28 @@ export function useCurrentWeekQuery(enabled: boolean) {
     enabled: enabled && accessToken != null,
     staleTime: CALENDAR_STALE_MS,
     refetchInterval: 30_000,
+    refetchIntervalInBackground: false,
+    refetchOnWindowFocus: true,
+    refetchOnReconnect: true,
     queryFn: ({ signal }) => getJson(paths.currentWeek(), token, { signal }),
+  });
+}
+
+/** Share current/displayed round reads across the board and the match panel. */
+export function useWeekFixturesQuery(week: number | null, enabled: boolean, poll = true) {
+  const { accessToken } = useAuth();
+  return useQuery({
+    queryKey: ["calendar", "fixtures", week],
+    enabled: enabled && accessToken != null && week != null && week >= 1 && week <= 38,
+    staleTime: CALENDAR_STALE_MS,
+    refetchInterval: poll ? 30_000 : false,
+    refetchIntervalInBackground: false,
+    refetchOnWindowFocus: true,
+    refetchOnReconnect: true,
+    queryFn: ({ signal }) => {
+      if (week == null || week < 1 || week > 38) throw new Error("Invalid fixture week");
+      return getJson(paths.weekFixtures(week), accessToken ?? "", { signal });
+    },
   });
 }
 

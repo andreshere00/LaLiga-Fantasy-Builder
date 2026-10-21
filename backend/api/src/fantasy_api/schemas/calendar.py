@@ -2,7 +2,11 @@
 
 from __future__ import annotations
 
+from datetime import datetime
+from typing import Literal
+
 from fantasy_api.schemas.common import FantasyWireModel, JsonObject
+from fantasy_api.schemas.player_stats import Venue, WeatherReason, WeatherSnapshot
 
 
 class CurrentWeek(FantasyWireModel):
@@ -62,3 +66,30 @@ class MatchStats(FantasyWireModel):
     match_state: int | None = None
     local_score: int | None = None
     visitor_score: int | None = None
+
+
+class CalendarWeather(FantasyWireModel):
+    """Optional kickoff forecast, never an observation of live or past weather."""
+
+    snapshot: WeatherSnapshot | None = None
+    reason: WeatherReason | Literal["match_started", "status_unknown"] | None = None
+    venue: Venue | None = None
+
+
+class FixtureWeather(FantasyWireModel):
+    """Forecast identity and original provider retrieval time for one calendar match."""
+
+    fixture_id: str
+    local_id: int | None = None
+    visitor_id: int | None = None
+    kickoff: datetime | None = None
+    weather: CalendarWeather
+    fetched_at: datetime | None = None
+
+
+class WeekWeather(FantasyWireModel):
+    """Matchweek weather aggregate with explicit per-match unavailable reasons."""
+
+    week_number: int
+    generated_at: datetime
+    matches: list[FixtureWeather]

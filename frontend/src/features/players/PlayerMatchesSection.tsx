@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { WEATHER_CONDITIONS, weatherIcon, weatherReason } from "../../components/weather";
 import { asFiniteNumber, asRecord, text } from "../../api/mappers";
 import footballIcon from "../../assets/boxicons_football-filled.svg";
 import { windKmhFromMs } from "./playerDetailFormat";
@@ -9,50 +10,8 @@ import {
   sortMatchesByDate,
   teamMediaFromFixture,
   weatherConditionFromSnapshot,
-    type WeatherCondition,
 } from "./playerDetailWidgets";
 import "./playerDetailWidgets.css";
-
-const WEATHER_ICONS = import.meta.glob<string>(
-  "../../assets/weather/icon_weather_*_*.svg",
-  { eager: true, query: "?url", import: "default" },
-);
-
-const WEATHER_CONDITIONS: Record<WeatherCondition, string> = {
-  clear: "Clear",
-  few_clouds: "Few clouds",
-  scattered_clouds: "Scattered clouds",
-  broken_clouds: "Broken clouds",
-  overcast: "Overcast",
-  drizzle: "Drizzle",
-  rain: "Rain",
-  shower_rain: "Showers",
-  thunderstorm: "Thunderstorm",
-  snow: "Snow",
-  mist: "Mist",
-};
-
-function weatherIcon(condition: WeatherCondition | null): string {
-  if (!condition) return "";
-  return WEATHER_ICONS[`../../assets/weather/icon_weather_${condition}_gray.svg`] ?? "";
-}
-
-function weatherReason(value: unknown): string {
-  switch (text(value)) {
-    case "beyond_forecast_horizon":
-      return "Outside the forecast window";
-    case "venue_unknown":
-      return "Stadium weather unavailable";
-    case "kickoff_unknown":
-      return "Kickoff time not confirmed";
-    case "disabled":
-      return "Weather forecast disabled";
-    case "provider_unavailable":
-      return "Forecast unavailable";
-    default:
-      return "Weather unavailable";
-  }
-}
 
 function competitionHeading(fixture: Record<string, unknown> | null): string {
   const raw = text(fixture?.competitionLabel) ?? text(fixture?.competition) ?? "";

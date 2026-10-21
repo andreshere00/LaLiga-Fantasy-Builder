@@ -58,23 +58,28 @@ data and user-confirmed writes with your linked account.
 
 ## Screenshots
 
-Product screenshots supplied on 19 October 2026, captured from the local app.
-League, roster, and player data reflect the session shown and can change over
-time. The [screenshot index](docs/images/README.md) tags each capture by topic
-and theme and identifies the separate synthetic demonstrations.
+The lineup captures below were taken directly from the running local application
+on 21 October 2026 (Europe/Madrid), using the signed-in account and its actual data.
+They show the current fixture panel, forecasts, lineup controls, squad, and standings.
+Values reflect the captured session and can change. Other product captures were
+supplied on 19 October 2026 and remain next to their relevant features.
 
 ### Lineup
 
-![Lineup overview](docs/images/screenshots/lineup-overview.png)
+Upcoming matches, expandable weather forecasts, and the lineup toolbar:
 
-![Lineup screen in dark mode](docs/images/screenshots/lineup-dark-mode.png)
+![Current lineup with fixture 10 and weather forecasts, light theme](docs/images/screenshots/lineup-current-light.jpg)
 
-Ranking, LALIGA standings, pitch, and paginated squad:
+![Current lineup with fixture 10 and weather forecasts, dark theme](docs/images/screenshots/lineup-current-dark.jpg)
 
-![Scrollable ranking and LALIGA standings](docs/images/screenshots/lineup-standings-light.png)
+Full-page desktop view with the current 4-4-2 starting XI, paginated squad,
+manager ranking, and LALIGA standings:
 
-[Synthetic dark-theme demonstration](docs/images/screenshots/lineup-standings-dark.png) ·
-[Synthetic mobile demonstration](docs/images/screenshots/lineup-standings-mobile.png)
+![Full lineup page with the 4-4-2 pitch, squad, manager ranking, and LALIGA standings](docs/images/screenshots/lineup-current-squad.jpg)
+
+Expanded kickoff forecast with rain, wind, and retrieval time:
+
+![Expanded Deportivo Alavés–Málaga CF kickoff forecast](docs/images/screenshots/lineup-current-forecast.jpg)
 
 ![Lineup builder player scope, trade permissions, and mandatory players](docs/images/screenshots/lineup-builder-top.png)
 

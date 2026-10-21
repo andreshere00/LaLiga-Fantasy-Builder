@@ -38,7 +38,7 @@ Set `AUTH_JWKS_URL` and `AUTH_INTERNAL_BASE_URL` when not using Compose.
 | `POST` | `/lineup-builder/leagues/{league_id}/build` and `/build/stream` | Read-only recommendations; JWT membership verified; JSON result or progress as JSON lines |
 | `GET`/`PUT` | `/teams...` | [teams](../../docs/api/teams/README.md) |
 | `GET` | `/players...` | [players](../../docs/api/players/README.md). Catalog and market value are public; league and stats routes use JWT |
-| `GET` | `/calendar/...` | Matchday, fixtures, stats. JWT required; Fantasy read is public |
+| `GET` | `/calendar/...` | Matchday, fixtures, stats, optional stadium forecasts. JWT required; Fantasy read is public |
 | `GET` | `/competitions/{id}/standings` | [Real LALIGA clubs](../../docs/api/standings/README.md); JWT, public fixtures + official scraper, `mode=completed` |
 | `GET`/`POST`/… | `/market/...` | [market](../../docs/api/market/README.md) |
 | `GET`/`POST`/`PUT` | `/buyout/...` | [buyout](../../docs/api/buyout/README.md) |
@@ -65,6 +65,7 @@ uv run fantasy-leagues --league-id 123 --week 5 --json
 uv run fantasy-teams --team-id 99 --week 5
 uv run fantasy-players --player-id 7 --league-id 42
 uv run fantasy-calendar --week 8 --json
+uv run fantasy-calendar --week 10 --weather --json
 uv run fantasy-standings --season 2026 --json
 uv run fantasy-market --league-id 123 --json
 uv run fantasy-buyout --league-id 123 --player-team-id pt-9 --json
@@ -72,6 +73,13 @@ uv run fantasy-buyout --league-id 123 --player-team-id pt-9 --json
 
 Signed-in analysis from auth: `uv run fantasy-browser-session leagues-analysis`.
 `fantasy-market` and `fantasy-buyout` are read-only.
+
+`fantasy-calendar --weather` adds optional stadium kickoff forecasts using the
+existing `OPENWEATHER_API_KEY`. Calendar/weather reads need app login only,
+without LaLiga pairing or a bearer exchange. Missing credentials for the weather
+provider return explicit disabled forecasts while retaining fixtures and scores.
+See the [Calendar guide](../../docs/api/calendar/README.md#optional-stadium-weather)
+for coverage, caching, and partial failures. Weather credentials stay server-side.
 
 Real-club standings default to `STANDINGS_SOURCE=laliga-fixtures`: public Fantasy
 calendar scores provide completed totals and last-five form; the private official
