@@ -460,7 +460,9 @@ polling and failure-specific retry remain.
 
 Product captures now live beside the relevant features in the
 [frontend guide](frontend.md#lineup) and [project README](../README.md#lineup).
-They were taken from the real authenticated local app on 20 October 2026.
+They were refreshed from the real authenticated local app on 21 October 2026
+(Europe/Madrid), including light/dark overviews, expanded weather, and a full-page
+desktop view of the pitch, squad, and standings.
 The previous synthetic documentation captures have been removed.
 
 Validation after the expandable forecast change: production build and ESLint

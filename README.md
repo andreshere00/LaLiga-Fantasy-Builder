@@ -59,8 +59,8 @@ data and user-confirmed writes with your linked account.
 ## Screenshots
 
 The lineup captures below were taken directly from the running local application
-on 20 October 2026, using the signed-in account and its actual data. They show
-the current fixture panel, forecasts, lineup controls, squad, and standings.
+on 21 October 2026 (Europe/Madrid), using the signed-in account and its actual data.
+They show the current fixture panel, forecasts, lineup controls, squad, and standings.
 Values reflect the captured session and can change. Other product captures were
 supplied on 19 October 2026 and remain next to their relevant features.
 
@@ -72,9 +72,14 @@ Upcoming matches, expandable weather forecasts, and the lineup toolbar:
 
 ![Current lineup with fixture 10 and weather forecasts, dark theme](docs/images/screenshots/lineup-current-dark.jpg)
 
-The actual starting XI, paginated squad, and LALIGA standings:
+Full-page desktop view with the current 4-4-2 starting XI, paginated squad,
+manager ranking, and LALIGA standings:
 
-![Current lineup pitch, squad, and standings](docs/images/screenshots/lineup-current-squad.jpg)
+![Full lineup page with the 4-4-2 pitch, squad, manager ranking, and LALIGA standings](docs/images/screenshots/lineup-current-squad.jpg)
+
+Expanded kickoff forecast with rain, wind, and retrieval time:
+
+![Expanded Deportivo Alavés–Málaga CF kickoff forecast](docs/images/screenshots/lineup-current-forecast.jpg)
 
 ![Lineup builder player scope, trade permissions, and mandatory players](docs/images/screenshots/lineup-builder-top.png)
 

@@ -36,24 +36,27 @@ market and catalog tables, and the player profile's averages, form, match,
 market-value, Fantasy-data, and injury-history sections. Their values reflect
 the account and data available at capture time. The supplied desktop captures
 were taken on 19 October 2026; the lineup overview was refreshed directly from
-the running application on 20 October 2026. Synthetic demonstrations for other
+the running application on 21 October 2026. Synthetic demonstrations for other
 features are identified below. The product gallery is also embedded in
 the [project README](../README.md#screenshots).
 
 #### Lineup
 
-Captured directly from Brave at `http://localhost:3000/` on 20 October 2026
-(Europe/Madrid), using the existing authenticated session. The light and dark
+Captured directly from Brave at `http://localhost:3000/` on 21 October 2026
+(Europe/Madrid), using the authenticated local account. The light and dark
 views show fixture 10, actual pairings and kickoff times, expandable forecasts,
-and the lineup toolbar. The lower-page capture shows the actual starting XI,
-squad pagination, manager ranking, and LALIGA standings. These images are
-unmodified browser-window captures, without mocked responses or generated data.
+and the lineup toolbar. The full-page desktop capture includes the complete
+4-4-2 starting XI, squad pagination, manager ranking, and LALIGA standings.
+The overview and forecast images are browser-window captures; the full-page
+image uses Brave's full-size screenshot command at a 1512 CSS-pixel desktop width.
+The captures use actual application responses, without mocked or generated data,
+and are stored as JPEGs.
 
 ![Current lineup and upcoming fixtures with weather, light theme](images/screenshots/lineup-current-light.jpg)
 
 ![Current lineup and upcoming fixtures with weather, dark theme](images/screenshots/lineup-current-dark.jpg)
 
-![Actual lineup pitch, squad, manager ranking, and LALIGA standings](images/screenshots/lineup-current-squad.jpg)
+![Full lineup page with the 4-4-2 pitch, squad, manager ranking, and LALIGA standings](images/screenshots/lineup-current-squad.jpg)
 
 The builder captures below were supplied on 19 October 2026:
 
@@ -173,7 +176,7 @@ it is not observed current weather. Finished matches omit weather.
 
 The [current lineup captures above](#lineup) show this panel using the actual
 local session. The expanded forecast below shows actual provider values for
-Deportivo Alavés–Málaga CF captured on 20 October 2026:
+Deportivo Alavés–Málaga CF captured on 21 October 2026:
 
 ![Actual expanded kickoff forecast with rain, wind, and retrieval time](images/screenshots/lineup-current-forecast.jpg)
 
