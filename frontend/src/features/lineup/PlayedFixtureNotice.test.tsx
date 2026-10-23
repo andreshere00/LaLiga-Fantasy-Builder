@@ -29,7 +29,7 @@ describe("PlayedFixtureNotice", () => {
     board.focus();
     fireEvent.click(board);
 
-    const ok = await screen.findByRole("button", { name: "OK" });
+    const ok = await screen.findByRole("button", { name: "Close" });
     const close = screen.getByRole("button", { name: "Close dialog" });
     await waitFor(() => {
       expect(document.activeElement).toBe(close);

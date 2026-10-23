@@ -1,8 +1,10 @@
+import footballLogoFallbacks from "./footballLogoFallbacks.json";
 import teamsMasterFile from "../../../assets/teams_master.json";
 
 export type ClubMedia = {
   name: string;
   badge: string;
+  fallbackBadges?: readonly string[];
 };
 
 const CLUB_CODE_NAMES: Record<string, string> = {
@@ -45,6 +47,11 @@ const TEAM_ALIASES: Record<string, string> = {
   celta: "Celta",
   espanyol: "RCD Espanyol",
   getafe: "Getafe CF",
+  elche: "Elche CF",
+  rayo: "Rayo Vallecano",
+  girona: "Girona FC",
+  leganes: "CD Leganés",
+  valladolid: "Real Valladolid CF",
   sociedad: "Real Sociedad",
   sevilla: "Sevilla FC",
   alaves: "Deportivo Alavés",
@@ -164,7 +171,8 @@ export function clubDisplayName(value: string | null | undefined): string | null
 /** Resolves a club name and crest from a Fantasy team id. */
 export function clubMediaFromId(teamId: unknown): ClubMedia | null {
   const id = idText(teamId);
-  return id ? CLUB_MEDIA.byId.get(id) ?? null : null;
+  const media = id ? CLUB_MEDIA.byId.get(id) : null;
+  return media ? clubMediaFromFixture(media) : null;
 }
 
 /** Resolves fixture team names, direct crests, and known aliases to display media. */
@@ -183,6 +191,49 @@ export function clubMediaFromFixture(value: unknown): ClubMedia | null {
     text(record?.logo) ??
     text(record?.crest) ??
     text(record?.image);
-  if (directBadge && /^https?:\/\//i.test(directBadge)) return { name: raw, badge: directBadge };
-  return CLUB_MEDIA.byName.get(normalizedClubName(raw)) ?? null;
+  const name = clubDisplayName(raw) ?? raw;
+  const catalog = CLUB_MEDIA.byName.get(normalizedClubName(name));
+  const fallback = fallbackLogo("club", catalog?.name ?? name) ?? fallbackLogo("club", raw);
+  const sources = badgeSources(directBadge, catalog?.badge, ...(catalog?.fallbackBadges ?? []), fallback);
+  if (!sources.length) return null;
+  return { name: catalog?.name ?? name, badge: sources[0], fallbackBadges: sources.slice(1) };
+}
+
+function fallbackLogo(kind: "club" | "competition", name: string): string | undefined {
+  const key = normalizedClubName(name);
+  return footballLogoFallbacks.find((entry) => entry.kind === kind &&
+    [entry.name, ...entry.aliases].some((alias) => normalizedClubName(alias) === key))?.localPath;
+}
+
+/** Accept upstream HTTP images and curated local assets, never arbitrary URL schemes. */
+export function badgeSources(...values: unknown[]): string[] {
+  return [...new Set(values.filter((value): value is string => typeof value === "string" &&
+    (/^https?:\/\//i.test(value) || /^\/badges\/football-logos\/[a-z0-9-]+\.png$/.test(value))))];
+}
+
+/** Keep a fixture's published image ahead of catalog and local fallback sources. */
+export function fixtureClubMedia(fixture: Record<string, unknown> | null, side: "home" | "away"): ClubMedia | null {
+  const value = fixture?.[`${side}Team`];
+  const record = asRecord(value);
+  const name = text(record?.name) ?? text(value);
+  const media = clubMediaFromFixture(value);
+  const opponentSide = fixture?.isHome === true ? "away" : fixture?.isHome === false ? "home" : null;
+  const sources = badgeSources(fixture?.[`${side}Badge`], side === opponentSide ? fixture?.opponentBadge : null,
+    media?.badge, ...(media?.fallbackBadges ?? []));
+  return sources.length ? { name: media?.name ?? name ?? side, badge: sources[0], fallbackBadges: sources.slice(1) } : null;
+}
+
+/** Resolve a competition by exact known identity, preserving any published badge first. */
+export function competitionMedia(fixture: Record<string, unknown> | null): ClubMedia | null {
+  const label = text(fixture?.competitionLabel) ?? text(fixture?.competition) ?? "";
+  const fallback = fallbackLogo("competition", label) ?? fallbackLogo("competition", text(fixture?.competition) ?? "");
+  const sources = badgeSources(fixture?.competitionBadge, fallback);
+  return sources.length ? { name: label, badge: sources[0], fallbackBadges: sources.slice(1) } : null;
+}
+
+/** Recover catalog identity for badge-only player cards before trying local fallbacks. */
+export function clubMediaFromBadge(value: string | null | undefined): ClubMedia | null {
+  if (!value) return null;
+  const known = [...CLUB_MEDIA.byId.values()].find((media) => media.badge === value);
+  return known ? clubMediaFromFixture(known) : badgeSources(value).length ? { name: "Club", badge: value } : null;
 }

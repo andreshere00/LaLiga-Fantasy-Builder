@@ -68,6 +68,11 @@ describe("formatMarketChartTick_largeValue_usesMillions", () => {
   it("formatMarketChartTick_formatsCompactMillions", () => {
     expect(formatMarketChartTick(100_750_000)).toContain("M€");
   });
+  it("keeps nearby high-value ticks distinct in a narrow window", () => {
+    const ticks = [2_000_000, 2_030_000, 2_060_000, 2_090_000, 2_120_000];
+    expect(new Set(ticks.map((value) => formatMarketChartTick(value, 132_000))).size)
+      .toBe(ticks.length);
+  });
 });
 
 describe("marketChartDomain_flatSeries_addsPadding", () => {

@@ -27,7 +27,7 @@ test("filtering preserves all commitments; modifying and cancelling reconcile ev
   await expect(dialog).toBeVisible();
   await dialog.getByRole("textbox", { name: "Bid amount" }).fill("6000000");
   fixture.lag(2);
-  await dialog.getByRole("button", { name: "Confirm", exact: true }).click();
+  await dialog.getByRole("button", { name: "Update bid", exact: true }).click();
   await expect(dialog).toHaveCount(0);
   await expect(bidTrigger(page)).toBeFocused();
   await expect(await summaryValue(page, "Projected spending")).toHaveText("13.000.000 €");
@@ -99,7 +99,7 @@ test("new bids update known counts once through delayed server confirmation", as
   const row = page.locator(".market-data-row").filter({ has: page.getByRole("link", { name: "Player 16", exact: true }) });
   await row.getByRole("button", { name: "Options", exact: true }).click();
   await page.getByRole("menuitem", { name: "Hire", exact: true }).click();
-  await page.getByRole("dialog").getByRole("button", { name: "Confirm", exact: true }).click();
+  await page.getByRole("dialog").getByRole("button", { name: "Place bid", exact: true }).click();
   await expect(bidTrigger(page, 4)).toBeVisible();
   await expect(row.getByText("Bids: 1", { exact: true })).toBeVisible();
   await bidTrigger(page, 4).click();
@@ -165,7 +165,7 @@ test("modify waits for catalog metadata while cancellation stays available", asy
   const dialog = page.getByRole("dialog", { name: "Modify bid", exact: true });
   await expect(dialog.getByText(/Amount must be at least 3.300.000 €/)).toBeVisible();
   await expect(dialog.getByRole("textbox", { name: "Bid amount" })).toHaveValue("4.000.000");
-  await expect(dialog.getByRole("button", { name: "Confirm", exact: true })).toBeEnabled();
+  await expect(dialog.getByRole("button", { name: "Update bid", exact: true })).toBeEnabled();
 });
 
 test("refresh bids recovers a failed catalog request", async ({ page }) => {
@@ -223,7 +223,7 @@ test("a successful direct offer never creates a synthetic market bid", async ({ 
   for (const button of await dialog.getByRole("button").all()) {
     await expect(button).toHaveCSS("border-radius", "0px");
   }
-  await dialog.getByRole("button", { name: "Confirm", exact: true }).click();
+  await dialog.getByRole("button", { name: "Send offer", exact: true }).click();
   await expect(dialog).toHaveCount(0);
   await expect(bidTrigger(page, 0)).toBeVisible();
   await expect(await summaryValue(page, "Projected spending")).toHaveText("0 €");
@@ -231,7 +231,7 @@ test("a successful direct offer never creates a synthetic market bid", async ({ 
 });
 
 for (const theme of ["light", "dark"]) {
-  for (const width of [375, 800, 1024, 1440, 720]) {
+  for (const width of [320, 375, 800, 1024, 1440, 720]) {
     test(`market presentation, focus and responsive layout: ${theme} ${width}`, async ({ page }, info) => {
       await page.clock.install({ time: new Date("2026-10-12T12:00:00Z") });
       await mockMarketBids(page);
@@ -245,7 +245,13 @@ for (const theme of ["light", "dark"]) {
       await name.hover();
       await expect(name).toHaveCSS("color", "rgb(255, 75, 68)");
       await expect(protectedRow.locator(".market-fsyp-primary")).toHaveCSS("font-weight", "700");
-      await expect(protectedRow.locator(".market-fsyp-primary")).toHaveCSS("font-size", "16px");
+      await expect(protectedRow.locator(".market-fsyp-primary")).toHaveCSS("font-size", "18px");
+      if (width <= 700) {
+        await expect(protectedRow.locator(".market-value")).toBeVisible();
+        await expect(protectedRow.locator(".market-cell-availability")).toBeVisible();
+        expect(await protectedRow.evaluate((row) => row.scrollWidth <= row.clientWidth)).toBe(true);
+        expect(await page.locator(".market-list").evaluate((list) => list.scrollWidth <= list.clientWidth)).toBe(true);
+      }
       const form = protectedRow.locator(".market-form");
       await expect(form.locator(".market-form-week")).toHaveText(["F3", "F4", "F5", "F6", "F7"]);
       if (width > 860) {
@@ -319,8 +325,8 @@ for (const theme of ["light", "dark"]) {
         await expect(button).toHaveCSS("border-radius", "0px");
       }
       await dialog.getByRole("textbox", { name: "Bid amount" }).fill("1");
-      await expect(dialog.getByRole("button", { name: "Confirm", exact: true })).toBeDisabled();
-      await expect(dialog.getByRole("button", { name: "Confirm", exact: true })).toHaveCSS("border-radius", "0px");
+      await expect(dialog.getByRole("button", { name: "Update bid", exact: true })).toBeDisabled();
+      await expect(dialog.getByRole("button", { name: "Update bid", exact: true })).toHaveCSS("border-radius", "0px");
       await page.keyboard.press("Escape");
       await expect(bidTrigger(page)).toBeFocused();
       await page.goto("/players?q=Player");

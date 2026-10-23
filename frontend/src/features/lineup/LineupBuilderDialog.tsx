@@ -200,7 +200,9 @@ function BuilderDialogSession({
 
   return (
     <Dialog open={open} onClose={onClose} title="Build lineup" className="lineup-builder-dialog"
+      description="Choose your player pool, then fine-tune your starting XI."
       footer={<>
+        <Button shape="square" variant="secondary" className="lineup-builder-close" onClick={onClose}>Close</Button>
         {builder.pending && <div className="lineup-builder-loading" role="status">
           <span className="lineup-builder-bounce" aria-hidden="true">
             <span className="lineup-builder-bounce-ball" />
@@ -227,79 +229,99 @@ function BuilderDialogSession({
               maxCandidates: LINEUP_RECOMMENDATION_LIMIT, explanation: { enabled: false },
             });
           }}>Build</Button>}
-        <Button shape="square" variant="secondary" className="lineup-builder-close" onClick={onClose}>Close</Button>
       </>}>
       <div className="lineup-builder">
-        <section className="lineup-builder-section" aria-labelledby="builder-scope-title">
-          <h3 id="builder-scope-title">Player scope options</h3>
-          <fieldset className="lineup-builder-checks">
+        <section className="lineup-builder-section lineup-builder-pool" aria-labelledby="builder-scope-title">
+          <div className="lineup-builder-section-heading">
+            <h3 id="builder-scope-title">Player pool</h3>
+            <span>Choose at least one source</span>
+          </div>
+          <fieldset className="lineup-builder-checks" aria-labelledby="builder-scope-title">
             {[
-              ["market", "Consider players on the market"],
-              ["owned", "Consider owned players"],
-              ["opponents", "Consider opponent players"],
-
-            ].map(([value, label]) => (
-              <label key={value}>
-                <input type="checkbox" checked={scope.includes(value)}
-                  onChange={() => toggleChoice(value)} />{label}
+              ["owned", "My squad", "Players you already own", "Consider owned players"],
+              ["market", "Market", "Players listed for sale", "Consider players on the market"],
+              ["opponents", "Opponents", "Players from rival squads", "Consider opponent players"],
+            ].map(([value, label, hint, accessibleLabel]) => (
+              <label key={value} className="lineup-builder-source" data-selected={scope.includes(value)}>
+                <input type="checkbox" aria-label={`${label}: ${accessibleLabel}`} checked={scope.includes(value)}
+                  onChange={() => toggleChoice(value)} />
+                <span><strong>{label}</strong><small>{hint}</small></span>
               </label>
             ))}
           </fieldset>
-          <label><input type="checkbox" checked={allowBuying} onChange={(e) => setAllowBuying(e.target.checked)} /> Allow purchase recommendations</label>
-          <label><input type="checkbox" checked={allowSelling} onChange={(e) => setAllowSelling(e.target.checked)} /> Allow sale recommendations</label>
-          <p className="fb-helper">Recommendations are previews. Building never buys or sells players.</p>
-          {!allowBuying && scope.some((source) => source !== "owned") && <p role="status" className="fb-helper">
+          {scope.length === 0 && <p role="status" className="lineup-builder-scope-hint">Select a player source to enable Build.</p>}
+        </section>
+
+        <section className="lineup-builder-section" aria-labelledby="builder-trades-title">
+          <div className="lineup-builder-section-heading">
+            <h3 id="builder-trades-title">Trade recommendations</h3>
+            <span>Optional</span>
+          </div>
+          <div className="lineup-builder-trade-options">
+            <label><input type="checkbox" checked={allowBuying} onChange={(e) => setAllowBuying(e.target.checked)} /> Allow purchase recommendations</label>
+            <label><input type="checkbox" checked={allowSelling} onChange={(e) => setAllowSelling(e.target.checked)} /> Allow sale recommendations</label>
+          </div>
+          {allowBuying && <label className="lineup-builder-trading-option"><input type="checkbox" checked={includeTradingPurchases} onChange={(e) => setIncludeTradingPurchases(e.target.checked)} /> Include trading-only purchases</label>}
+          {!allowBuying && scope.some((source) => source !== "owned") && <p role="status" className="lineup-builder-scope-hint">
             Enable purchase recommendations to include market or opponent players in proposed lineups.
           </p>}
-          <label><input type="checkbox" disabled={!allowBuying} checked={allowBuying && includeTradingPurchases} onChange={(e) => setIncludeTradingPurchases(e.target.checked)} /> Include trading-only purchases</label>
+          <p className="lineup-builder-preview-note">Preview only. Building never buys, sells or saves players.</p>
         </section>
 
         <section className="lineup-builder-section" aria-labelledby="builder-player-title">
-          <h3 id="builder-player-title">Mandatory players</h3>
-          <label className="lineup-builder-field">
-            <span>Every selected player must be in the starting XI.</span>
-            <span className="fb-input-group">
-              <Input value={search} onChange={(event) => setSearch(event.target.value)}
-                placeholder="Search players" aria-label="Search available players" />
-            </span>
-          </label>
-          <div className="lineup-builder-options" aria-label="Available players">
-            {filteredOptions.map((option) => (
-              <button type="button" key={option.id}
-                disabled={chosen.length >= 11} onClick={() => setChosen((current) => [...current, option.id])}>
-                <ProfilePhoto key={playersById.get(option.id)?.photoUrl ?? "no-photo"}
-                  className="lineup-builder-option-photo" url={playersById.get(option.id)?.photoUrl ?? null}
-                  fallback={<PersonIcon />} />
-                <span>{option.name}</span><small>{option.source}</small>
-              </button>
-            ))}
-            {filteredOptions.length === 0 ? <p className="fb-helper">
-              {open && (ownTeamQuery.isLoading || marketQuery?.isLoading ||
-                rosterQueries.some((query) => query.isLoading))
-                ? "Loading available players…"
-                : ownTeamQuery.isError || marketQuery?.isError || rosterQueries.some((query) => query.isError)
-                  ? "Some player sources could not be loaded."
-                  : "No players found."}
-            </p> : null}
-          </div>
-          <div className="lineup-builder-chosen">
-            <h4>Mandatory players</h4>
-            {chosenOptions.length ? chosenOptions.map((option) => (
-              <button type="button" key={option.id} aria-label={`Remove ${option.name}`} onClick={() => setChosen((current) =>
-                current.filter((id) => id !== option.id))}>
-                <ProfilePhoto key={playersById.get(option.id)?.photoUrl ?? "no-photo"}
-                  className="lineup-builder-option-photo" url={playersById.get(option.id)?.photoUrl ?? null}
-                  fallback={<PersonIcon />} />
-                {option.name} <span aria-hidden="true">×</span>
-              </button>
-            )) : <p className="fb-helper">No players chosen.</p>}
-          </div>
+          <div className="lineup-builder-section-heading"><h3 id="builder-player-title">Mandatory players</h3><span>{chosen.length} / 11 selected</span></div>
+          <p className="lineup-builder-section-help">Lock players into the starting XI. Leave empty for the best available combination.</p>
+          <details className="lineup-builder-locks">
+            <summary>Choose mandatory players <span aria-hidden="true">＋</span></summary>
+            <div className="lineup-builder-player-picker">
+              <div className="lineup-builder-player-search">
+                <label className="lineup-builder-field">
+                  <span>Search available players</span>
+                  <span className="fb-input-group">
+                    <Input value={search} onChange={(event) => setSearch(event.target.value)}
+                      placeholder="Search players" aria-label="Search available players" />
+                  </span>
+                </label>
+                <div className="lineup-builder-options" aria-label="Available players">
+                  {filteredOptions.map((option) => (
+                    <button type="button" key={option.id}
+                      disabled={chosen.length >= 11} onClick={() => setChosen((current) => [...current, option.id])}>
+                      <ProfilePhoto key={playersById.get(option.id)?.photoUrl ?? "no-photo"}
+                        className="lineup-builder-option-photo" url={playersById.get(option.id)?.photoUrl ?? null}
+                        fallback={<PersonIcon />} />
+                      <span>{option.name}</span><small>{option.source}</small>
+                    </button>
+                  ))}
+                  {filteredOptions.length === 0 ? <p className="fb-helper">
+                    {open && (ownTeamQuery.isLoading || marketQuery?.isLoading ||
+                      rosterQueries.some((query) => query.isLoading))
+                      ? "Loading available players…"
+                      : ownTeamQuery.isError || marketQuery?.isError || rosterQueries.some((query) => query.isError)
+                        ? "Some player sources could not be loaded."
+                        : "No players found."}
+                  </p> : null}
+                </div>
+              </div>
+              <div className="lineup-builder-chosen">
+                <h4>Starting XI locks</h4>
+                {chosenOptions.length ? chosenOptions.map((option) => (
+                  <button type="button" key={option.id} aria-label={`Remove ${option.name}`} onClick={() => setChosen((current) =>
+                    current.filter((id) => id !== option.id))}>
+                    <ProfilePhoto key={playersById.get(option.id)?.photoUrl ?? "no-photo"}
+                      className="lineup-builder-option-photo" url={playersById.get(option.id)?.photoUrl ?? null}
+                      fallback={<PersonIcon />} />
+                    {option.name} <span aria-hidden="true">×</span>
+                  </button>
+                )) : <p className="fb-helper">No players locked. Add a player from the list.</p>}
+              </div>
+            </div>
+          </details>
         </section>
 
         <section className="lineup-builder-section" aria-labelledby="builder-formations-title">
-          <h3 id="builder-formations-title">Lineup preferences</h3>
-          <p>No selection means all supported formations.</p>
-          <div className="lineup-builder-options" aria-label="Available formations">
+          <div className="lineup-builder-section-heading"><h3 id="builder-formations-title">Formations</h3><span>{lineupPreferences.length ? `${lineupPreferences.length} selected` : "All supported"}</span></div>
+          <p className="lineup-builder-section-help">Choose preferred formations, or leave empty to consider all.</p>
+          <div className="lineup-builder-formations" aria-label="Available formations">
             {formationOptions.map((formation) => (
               <label key={formation.value}>
                 <input type="checkbox" checked={lineupPreferences.includes(formation.value)}
@@ -309,7 +331,13 @@ function BuilderDialogSession({
           </div>
         </section>
 
-        {builder.error && <p role="alert">{builder.error}{builder.result ? " Previous results are stale." : ""}</p>}
+        {builder.error && <div className="lineup-builder-error" role="alert">
+          <h3>Could not build a lineup</h3>
+          <p>{builder.errorSummary}</p>
+          {builder.errorDetails.length > 0 && <ul>{builder.errorDetails.map((detail, index) => <li key={index}>{detail}</li>)}</ul>}
+          {builder.errorRecovery && <p className="lineup-builder-error-recovery">{builder.errorRecovery}</p>}
+          {builder.result && <p>Previous results are stale. Rebuild before applying a draft.</p>}
+        </div>}
         {builder.result && changedResult === builder.result && <p role="status">Your acquisition activity changed. Rebuild the recommendations before using a draft.</p>}
         {builder.result && <LineupBuilderResults key={builder.result.buildId} result={builder.result} playersById={playersById}
           ownedPlayerIds={new Set(ownSquad.flatMap((player) => player.masterPlayerId ? [player.masterPlayerId] : []))}

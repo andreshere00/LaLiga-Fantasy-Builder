@@ -1,14 +1,16 @@
-import { Collapsible } from "@base-ui/react/collapsible";
+import { useState } from "react";
 import { Button } from "../../components/ui/Button";
 import {
   highlightedAverages,
-  remainingAverages,
   type PlayerAverage,
 } from "./playerAverages";
+import { PlayerPerformanceDialog } from "./PlayerPerformanceDialog";
+import "./PlayerAveragesPanel.css";
 
 type PlayerAveragesPanelProps = {
   rows: readonly PlayerAverage[];
   positionId: number | null;
+  playerName?: string;
 };
 
 function averageSource(row: PlayerAverage): string {
@@ -24,15 +26,27 @@ function averageValue(row: PlayerAverage): string {
 }
 
 /** Compact position highlights with the other averages behind Details. */
-export function PlayerAveragesPanel({ rows, positionId }: PlayerAveragesPanelProps) {
+export function PlayerAveragesPanel({ rows, positionId, playerName = "Player" }: PlayerAveragesPanelProps) {
+  const [detailsOpen, setDetailsOpen] = useState(false);
   const highlighted = highlightedAverages(rows, positionId);
-  const remaining = remainingAverages(rows, highlighted);
   const hasValues = rows.some((row) => row.value != null);
   const fantasySampleSize = highlighted.find((row) => row.source === "fantasy")?.sampleSize;
 
   return (
     <section className="player-detail-header-averages" aria-labelledby="player-averages-title">
-      <h2 id="player-averages-title">Averages per match</h2>
+      <div className="player-averages-heading">
+        <div>
+          <h2 id="player-averages-title">Averages per match</h2>
+          {hasValues && highlighted.some((row) => row.source === "futbolfantasy") ? (
+            <p className="player-detail-averages-source-note">Season averages from FutbolFantasy.</p>
+          ) : null}
+        </div>
+        {hasValues ? <Button variant="outline" shape="square" aria-haspopup="dialog"
+          className="player-averages-more"
+          onClick={() => setDetailsOpen(true)}>
+          <span>More averages</span><span className="player-averages-more-arrow" aria-hidden="true">↗</span>
+        </Button> : null}
+      </div>
       {!hasValues ? (
         <p className="status-copy">Per-match averages are unavailable.</p>
       ) : (
@@ -49,33 +63,8 @@ export function PlayerAveragesPanel({ rows, positionId }: PlayerAveragesPanelPro
               {`LaLiga Fantasy API fallback averages use ${fantasySampleSize} played matchweek${fantasySampleSize === 1 ? "" : "s"}.`}
             </p>
           ) : null}
-          {remaining.length > 0 ? (
-            <Collapsible.Root className="player-detail-averages-details">
-              <Collapsible.Trigger render={<Button variant="outline" shape="square" />}>Details</Collapsible.Trigger>
-              <Collapsible.Panel>
-              <div className="player-detail-table-wrap">
-                <table className="player-detail-table">
-                  <thead>
-                    <tr>
-                      <th>Statistic</th>
-                      <th>Average</th>
-                      <th>Source</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {remaining.map((row) => (
-                      <tr key={row.code}>
-                        <th scope="row">{row.label}</th>
-                        <td>{averageValue(row)}</td>
-                        <td>{averageSource(row)}</td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-            </Collapsible.Panel>
-            </Collapsible.Root>
-          ) : null}
+          {detailsOpen ? <PlayerPerformanceDialog rows={rows} playerName={playerName}
+            onClose={() => setDetailsOpen(false)} /> : null}
         </>
       )}
     </section>

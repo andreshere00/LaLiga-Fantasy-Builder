@@ -1,0 +1,751 @@
+[
+  {
+    "kind": "club",
+    "name": "UD Almería",
+    "aliases": [
+      "UD Almería",
+      "ud-almeria",
+      "ALM"
+    ],
+    "sourcePage": "https://football-logos.cc/spain/almeria/",
+    "assetUrl": "https://assets.football-logos.cc/logos/spain/256x256/almeria.035789c9.png",
+    "localPath": "/badges/football-logos/spain-almeria.png",
+    "sha256": "696879563fb9775babe5a61acb4398ec497e78ee92a80bd1134a64e03b4b3c0d",
+    "retrievedAt": "2026-10-23"
+  },
+  {
+    "kind": "club",
+    "name": "Atlético de Madrid",
+    "aliases": [
+      "Atlético de Madrid",
+      "atletico-de-madrid",
+      "ATM"
+    ],
+    "sourcePage": "https://football-logos.cc/spain/atletico-madrid/",
+    "assetUrl": "https://assets.football-logos.cc/logos/spain/256x256/atletico-madrid.ba72e2cf.png",
+    "localPath": "/badges/football-logos/spain-atletico-madrid.png",
+    "sha256": "3f6db46f900640f464102d7f3d8b6d47a91ad22edb1f0265be4621b9d5c03958",
+    "retrievedAt": "2026-10-23"
+  },
+  {
+    "kind": "club",
+    "name": "Athletic Club",
+    "aliases": [
+      "Athletic Club",
+      "athletic-club",
+      "ATH"
+    ],
+    "sourcePage": "https://football-logos.cc/spain/athletic-club/",
+    "assetUrl": "https://assets.football-logos.cc/logos/spain/256x256/athletic-club.e1bfba0c.png",
+    "localPath": "/badges/football-logos/spain-athletic-club.png",
+    "sha256": "ff33f07677b64b5a6c8c1ec10258a8930dedba4970ebb5ed6084482d55476a69",
+    "retrievedAt": "2026-10-23"
+  },
+  {
+    "kind": "club",
+    "name": "FC Barcelona",
+    "aliases": [
+      "FC Barcelona",
+      "fc-barcelona",
+      "BAR"
+    ],
+    "sourcePage": "https://football-logos.cc/spain/barcelona/",
+    "assetUrl": "https://assets.football-logos.cc/logos/spain/256x256/barcelona.481f5fb3.png",
+    "localPath": "/badges/football-logos/spain-barcelona.png",
+    "sha256": "f0bab4ef17e1bfc4bbe016f6a89afbfe530a33f17ffb081dd39fe97650ecfb86",
+    "retrievedAt": "2026-10-23"
+  },
+  {
+    "kind": "club",
+    "name": "Real Betis",
+    "aliases": [
+      "Real Betis",
+      "real-betis",
+      "BET"
+    ],
+    "sourcePage": "https://football-logos.cc/spain/real-betis/",
+    "assetUrl": "https://assets.football-logos.cc/logos/spain/256x256/real-betis.96fdee2c.png",
+    "localPath": "/badges/football-logos/spain-real-betis.png",
+    "sha256": "d57c7d505c12a7808cdb5bc0eda40f621f4029ce5e383947f3f5540f85b362aa",
+    "retrievedAt": "2026-10-23"
+  },
+  {
+    "kind": "club",
+    "name": "Celta",
+    "aliases": [
+      "Celta",
+      "rc-celta",
+      "CEL",
+      "Celta Vigo",
+      "RC Celta de Vigo"
+    ],
+    "sourcePage": "https://football-logos.cc/spain/celta/",
+    "assetUrl": "https://assets.football-logos.cc/logos/spain/256x256/celta.37e88c80.png",
+    "localPath": "/badges/football-logos/spain-celta.png",
+    "sha256": "1f932d56c756c8ada6184f80f863926caa22928e58086948f62128ed1dff5f21",
+    "retrievedAt": "2026-10-23"
+  },
+  {
+    "kind": "club",
+    "name": "Elche CF",
+    "aliases": [
+      "Elche CF",
+      "elche-c-f",
+      "ELC"
+    ],
+    "sourcePage": "https://football-logos.cc/spain/elche/",
+    "assetUrl": "https://assets.football-logos.cc/logos/spain/256x256/elche.027b16d8.png",
+    "localPath": "/badges/football-logos/spain-elche.png",
+    "sha256": "0ad93821b390e7e81387ca73e764359f52873eefed82916c5cdb349061743c05",
+    "retrievedAt": "2026-10-23"
+  },
+  {
+    "kind": "club",
+    "name": "RCD Espanyol",
+    "aliases": [
+      "RCD Espanyol",
+      "rcd-espanyol",
+      "ESP"
+    ],
+    "sourcePage": "https://football-logos.cc/spain/espanyol/",
+    "assetUrl": "https://assets.football-logos.cc/logos/spain/256x256/espanyol.813c5e9a.png",
+    "localPath": "/badges/football-logos/spain-espanyol.png",
+    "sha256": "8b5ddab35cbe9707fbbb00fe78b6678cd861a40f76a791bf9b9b84f2bc0387a8",
+    "retrievedAt": "2026-10-23"
+  },
+  {
+    "kind": "club",
+    "name": "Getafe CF",
+    "aliases": [
+      "Getafe CF",
+      "getafe-cf",
+      "GET"
+    ],
+    "sourcePage": "https://football-logos.cc/spain/getafe/",
+    "assetUrl": "https://assets.football-logos.cc/logos/spain/256x256/getafe.edd42c3d.png",
+    "localPath": "/badges/football-logos/spain-getafe.png",
+    "sha256": "74af8d0ccfc5c55ea76c9be544a35baf5343e13e4fb80aa74549048c2070aceb",
+    "retrievedAt": "2026-10-23"
+  },
+  {
+    "kind": "club",
+    "name": "Granada CF",
+    "aliases": [
+      "Granada CF",
+      "granada-cf",
+      "GRA"
+    ],
+    "sourcePage": "https://football-logos.cc/spain/granada/",
+    "assetUrl": "https://assets.football-logos.cc/logos/spain/256x256/granada.041e574a.png",
+    "localPath": "/badges/football-logos/spain-granada.png",
+    "sha256": "8b9c49557d35a745b486ce5a0cbccd8292d4204c0a5ff17d3af2563bc0475aba",
+    "retrievedAt": "2026-10-23"
+  },
+  {
+    "kind": "club",
+    "name": "Levante UD",
+    "aliases": [
+      "Levante UD",
+      "levante-ud",
+      "LEV"
+    ],
+    "sourcePage": "https://football-logos.cc/spain/levante/",
+    "assetUrl": "https://assets.football-logos.cc/logos/spain/256x256/levante.f0f15e76.png",
+    "localPath": "/badges/football-logos/spain-levante.png",
+    "sha256": "68026428a12139c46a946b81ab755b3b0669252b0f74c8417f7cc67f048c2672",
+    "retrievedAt": "2026-10-23"
+  },
+  {
+    "kind": "club",
+    "name": "Málaga CF",
+    "aliases": [
+      "Málaga CF",
+      "malaga-cf",
+      "MGA",
+      "MLG",
+      "Malaga FC",
+      "Málaga"
+    ],
+    "sourcePage": "https://football-logos.cc/spain/malaga/",
+    "assetUrl": "https://assets.football-logos.cc/logos/spain/256x256/malaga.87c4eb85.png",
+    "localPath": "/badges/football-logos/spain-malaga.png",
+    "sha256": "a234eac4f63fd06bd966206c5251a645f2a472d01b384119d674bbdbc38ba356",
+    "retrievedAt": "2026-10-23"
+  },
+  {
+    "kind": "club",
+    "name": "C.A. Osasuna",
+    "aliases": [
+      "C.A. Osasuna",
+      "c-a-osasuna",
+      "OSA"
+    ],
+    "sourcePage": "https://football-logos.cc/spain/osasuna/",
+    "assetUrl": "https://assets.football-logos.cc/logos/spain/256x256/osasuna.c82eefd4.png",
+    "localPath": "/badges/football-logos/spain-osasuna.png",
+    "sha256": "5d225580a7946bda5933b96373cf340b6a23169838c63ef287c94d52b780f5e6",
+    "retrievedAt": "2026-10-23"
+  },
+  {
+    "kind": "club",
+    "name": "Rayo Vallecano",
+    "aliases": [
+      "Rayo Vallecano",
+      "rayo-vallecano",
+      "RAY"
+    ],
+    "sourcePage": "https://football-logos.cc/spain/rayo-vallecano/",
+    "assetUrl": "https://assets.football-logos.cc/logos/spain/256x256/rayo-vallecano.01403ff8.png",
+    "localPath": "/badges/football-logos/spain-rayo-vallecano.png",
+    "sha256": "4759b78c4126ea83211934e8fc2b48ebb283969946443e5cb2eab4e4fe3113c6",
+    "retrievedAt": "2026-10-23"
+  },
+  {
+    "kind": "club",
+    "name": "Real Madrid",
+    "aliases": [
+      "Real Madrid",
+      "real-madrid",
+      "RMA"
+    ],
+    "sourcePage": "https://football-logos.cc/spain/real-madrid/",
+    "assetUrl": "https://assets.football-logos.cc/logos/spain/256x256/real-madrid.5ce15611.png",
+    "localPath": "/badges/football-logos/spain-real-madrid.png",
+    "sha256": "94b08b1cfdbf3e9346fc78f46f7696196983032d8d4b8ab3c5fe20fdf09ae514",
+    "retrievedAt": "2026-10-23"
+  },
+  {
+    "kind": "club",
+    "name": "Real Sociedad",
+    "aliases": [
+      "Real Sociedad",
+      "real-sociedad",
+      "RSO"
+    ],
+    "sourcePage": "https://football-logos.cc/spain/real-sociedad/",
+    "assetUrl": "https://assets.football-logos.cc/logos/spain/256x256/real-sociedad.501e3b1e.png",
+    "localPath": "/badges/football-logos/spain-real-sociedad.png",
+    "sha256": "e29b8bac3b68410c0a1ef4012f48f4cf1e046934ed138d3f23f101ebd6ad9189",
+    "retrievedAt": "2026-10-23"
+  },
+  {
+    "kind": "club",
+    "name": "Sevilla FC",
+    "aliases": [
+      "Sevilla FC",
+      "sevilla-fc",
+      "SEV"
+    ],
+    "sourcePage": "https://football-logos.cc/spain/sevilla/",
+    "assetUrl": "https://assets.football-logos.cc/logos/spain/256x256/sevilla.b741a6ce.png",
+    "localPath": "/badges/football-logos/spain-sevilla.png",
+    "sha256": "bb2661f467d0938665829ba1232b134d047d18754e0dfa8497d8168db6cba957",
+    "retrievedAt": "2026-10-23"
+  },
+  {
+    "kind": "club",
+    "name": "Valencia CF",
+    "aliases": [
+      "Valencia CF",
+      "valencia-cf",
+      "VAL"
+    ],
+    "sourcePage": "https://football-logos.cc/spain/valencia/",
+    "assetUrl": "https://assets.football-logos.cc/logos/spain/256x256/valencia.f9d9eee2.png",
+    "localPath": "/badges/football-logos/spain-valencia.png",
+    "sha256": "1e8df81a84edc8409d3cc2c3c3c85cda1873daa12c6d9698a27974a30c635094",
+    "retrievedAt": "2026-10-23"
+  },
+  {
+    "kind": "club",
+    "name": "Real Valladolid CF",
+    "aliases": [
+      "Real Valladolid CF",
+      "r-valladolid-cf",
+      "VLL"
+    ],
+    "sourcePage": "https://football-logos.cc/spain/valladolid/",
+    "assetUrl": "https://assets.football-logos.cc/logos/spain/256x256/valladolid.077e0c97.png",
+    "localPath": "/badges/football-logos/spain-valladolid.png",
+    "sha256": "ff73f8d065f2f332aafe4eb22d9b8cf27641241f171be15bb434115f71458d56",
+    "retrievedAt": "2026-10-23"
+  },
+  {
+    "kind": "club",
+    "name": "Villarreal CF",
+    "aliases": [
+      "Villarreal CF",
+      "villarreal-cf",
+      "VIL"
+    ],
+    "sourcePage": "https://football-logos.cc/spain/villarreal/",
+    "assetUrl": "https://assets.football-logos.cc/logos/spain/256x256/villarreal.b0313369.png",
+    "localPath": "/badges/football-logos/spain-villarreal.png",
+    "sha256": "92951eb8d849ac6860231cd307c82e9e57b5029115774917f7ab89f904c78666",
+    "retrievedAt": "2026-10-23"
+  },
+  {
+    "kind": "club",
+    "name": "Deportivo Alavés",
+    "aliases": [
+      "Deportivo Alavés",
+      "d-alaves",
+      "ALA"
+    ],
+    "sourcePage": "https://football-logos.cc/spain/deportivo/",
+    "assetUrl": "https://assets.football-logos.cc/logos/spain/256x256/deportivo.0a00d5ef.png",
+    "localPath": "/badges/football-logos/spain-deportivo.png",
+    "sha256": "8545698aef1600a9917a5108adf5a08a9e276053bca90f58aa4c7754236216c2",
+    "retrievedAt": "2026-10-23"
+  },
+  {
+    "kind": "club",
+    "name": "Córdoba CF",
+    "aliases": [
+      "Córdoba CF",
+      "cordoba-cf",
+      "CCF"
+    ],
+    "sourcePage": "https://football-logos.cc/spain/cordoba/",
+    "assetUrl": "https://assets.football-logos.cc/logos/spain/256x256/cordoba.669c976a.png",
+    "localPath": "/badges/football-logos/spain-cordoba.png",
+    "sha256": "bc8975d912739f5fd0da5c4a935b06c1e0d350de49c46249b42c994a84d5d929",
+    "retrievedAt": "2026-10-23"
+  },
+  {
+    "kind": "club",
+    "name": "RC Deportivo",
+    "aliases": [
+      "RC Deportivo",
+      "rc-deportivo",
+      "RCD",
+      "DEP",
+      "Deportivo La Coruña"
+    ],
+    "sourcePage": "https://football-logos.cc/spain/deportivo-la-coruna/",
+    "assetUrl": "https://assets.football-logos.cc/logos/spain/256x256/deportivo-la-coruna.dc2b61ed.png",
+    "localPath": "/badges/football-logos/spain-deportivo-la-coruna.png",
+    "sha256": "bdbe60f4daa1399b11b8ddb8e834739e190543c2a030223bc500481d70ce9ad6",
+    "retrievedAt": "2026-10-23"
+  },
+  {
+    "kind": "club",
+    "name": "SD Eibar",
+    "aliases": [
+      "SD Eibar",
+      "sd-eibar",
+      "EIB"
+    ],
+    "sourcePage": "https://football-logos.cc/spain/eibar/",
+    "assetUrl": "https://assets.football-logos.cc/logos/spain/256x256/eibar.fb420260.png",
+    "localPath": "/badges/football-logos/spain-eibar.png",
+    "sha256": "a841be1364d70f462b4f73a7f1d29940ea148b008e02425b3407190c37a9a6e5",
+    "retrievedAt": "2026-10-23"
+  },
+  {
+    "kind": "club",
+    "name": "Girona FC",
+    "aliases": [
+      "Girona FC",
+      "girona-fc",
+      "GIR"
+    ],
+    "sourcePage": "https://football-logos.cc/spain/girona/",
+    "assetUrl": "https://assets.football-logos.cc/logos/spain/256x256/girona.14b919ce.png",
+    "localPath": "/badges/football-logos/spain-girona.png",
+    "sha256": "bf1f3914035a07d3883ef56527c63e4e3c8f7255dbb5d5181a5dda7f4a19ac72",
+    "retrievedAt": "2026-10-23"
+  },
+  {
+    "kind": "club",
+    "name": "UD Las Palmas",
+    "aliases": [
+      "UD Las Palmas",
+      "ud-las-palmas",
+      "LPA"
+    ],
+    "sourcePage": "https://football-logos.cc/spain/las-palmas/",
+    "assetUrl": "https://assets.football-logos.cc/logos/spain/256x256/las-palmas.61c92246.png",
+    "localPath": "/badges/football-logos/spain-las-palmas.png",
+    "sha256": "6c6ff6ec903016218c7335ff19c8fc4d9e578be522ebdededd49a010d2e758bb",
+    "retrievedAt": "2026-10-23"
+  },
+  {
+    "kind": "club",
+    "name": "RCD Mallorca",
+    "aliases": [
+      "RCD Mallorca",
+      "rcd-mallorca",
+      "MLL"
+    ],
+    "sourcePage": "https://football-logos.cc/spain/mallorca/",
+    "assetUrl": "https://assets.football-logos.cc/logos/spain/256x256/mallorca.d244a18a.png",
+    "localPath": "/badges/football-logos/spain-mallorca.png",
+    "sha256": "662a0f5d6f0cc0b74bfea4563752f11fab8407196c2fe2345d6c4c3c74271a31",
+    "retrievedAt": "2026-10-23"
+  },
+  {
+    "kind": "club",
+    "name": "CE Sabadell",
+    "aliases": [
+      "CE Sabadell",
+      "ce-sabadell",
+      "SAB"
+    ],
+    "sourcePage": "https://football-logos.cc/spain/sabadell/",
+    "assetUrl": "https://assets.football-logos.cc/logos/spain/256x256/sabadell.3358f905.png",
+    "localPath": "/badges/football-logos/spain-sabadell.png",
+    "sha256": "47b165a5e152dc2637a7ab656a8bca0917b161df424b1c66a069be289bc213d9",
+    "retrievedAt": "2026-10-23"
+  },
+  {
+    "kind": "club",
+    "name": "Real Sporting",
+    "aliases": [
+      "Real Sporting",
+      "real-sporting",
+      "SPO"
+    ],
+    "sourcePage": "https://football-logos.cc/spain/sporting-gijon/",
+    "assetUrl": "https://assets.football-logos.cc/logos/spain/256x256/sporting-gijon.c5cea7ea.png",
+    "localPath": "/badges/football-logos/spain-sporting-gijon.png",
+    "sha256": "45bdfa6d36f4b252f9c68c94df688fb8351ff9abfa841bf76bf9ea38a725a135",
+    "retrievedAt": "2026-10-23"
+  },
+  {
+    "kind": "club",
+    "name": "CD Tenerife",
+    "aliases": [
+      "CD Tenerife",
+      "cd-tenerife",
+      "TEN"
+    ],
+    "sourcePage": "https://football-logos.cc/spain/tenerife/",
+    "assetUrl": "https://assets.football-logos.cc/logos/spain/256x256/tenerife.37049330.png",
+    "localPath": "/badges/football-logos/spain-tenerife.png",
+    "sha256": "4d0109a56fee4c74bb3c35cb6382faed0c7f593c627894486641fa51f9b8d7eb",
+    "retrievedAt": "2026-10-23"
+  },
+  {
+    "kind": "club",
+    "name": "Albacete BP",
+    "aliases": [
+      "Albacete BP",
+      "albacete-bp",
+      "ALB"
+    ],
+    "sourcePage": "https://football-logos.cc/spain/albacete/",
+    "assetUrl": "https://assets.football-logos.cc/logos/spain/256x256/albacete.9db2efa8.png",
+    "localPath": "/badges/football-logos/spain-albacete.png",
+    "sha256": "eab13bc64abe6a3e669905f98c6ecb6969c838cd2f89ee20880ae000056d53f2",
+    "retrievedAt": "2026-10-23"
+  },
+  {
+    "kind": "club",
+    "name": "R. Racing Club",
+    "aliases": [
+      "R. Racing Club",
+      "r-racing-club",
+      "RAC"
+    ],
+    "sourcePage": "https://football-logos.cc/spain/racing/",
+    "assetUrl": "https://assets.football-logos.cc/logos/spain/256x256/racing.0307d989.png",
+    "localPath": "/badges/football-logos/spain-racing.png",
+    "sha256": "184a2305d3f3c82f496ea998a02e1f5bf891170ee589926434dfff22843548e5",
+    "retrievedAt": "2026-10-23"
+  },
+  {
+    "kind": "club",
+    "name": "Burgos CF",
+    "aliases": [
+      "Burgos CF",
+      "burgos",
+      "BUR"
+    ],
+    "sourcePage": "https://football-logos.cc/spain/burgos/",
+    "assetUrl": "https://assets.football-logos.cc/logos/spain/256x256/burgos.3c76e85e.png",
+    "localPath": "/badges/football-logos/spain-burgos.png",
+    "sha256": "33613a2bee8af01eb4989a7bc2c68b0422f5cee5e3fc1639023b0c1550a13043",
+    "retrievedAt": "2026-10-23"
+  },
+  {
+    "kind": "club",
+    "name": "CD Leganés",
+    "aliases": [
+      "CD Leganés",
+      "cd-leganes",
+      "LEG"
+    ],
+    "sourcePage": "https://football-logos.cc/spain/leganes/",
+    "assetUrl": "https://assets.football-logos.cc/logos/spain/256x256/leganes.8892e6af.png",
+    "localPath": "/badges/football-logos/spain-leganes.png",
+    "sha256": "c1d5b9031e921c1deadb3059d275472cc1165ed0bbd6db768ce2ebd72a2a7108",
+    "retrievedAt": "2026-10-23"
+  },
+  {
+    "kind": "club",
+    "name": "Real Oviedo",
+    "aliases": [
+      "Real Oviedo",
+      "real-oviedo",
+      "OVI"
+    ],
+    "sourcePage": "https://football-logos.cc/spain/oviedo/",
+    "assetUrl": "https://assets.football-logos.cc/logos/spain/256x256/oviedo.d7b26c52.png",
+    "localPath": "/badges/football-logos/spain-oviedo.png",
+    "sha256": "750b0fd01d5f0c661de2b7eb0801279a0ca2dec469e7ea4b9a29bce4ca685cbb",
+    "retrievedAt": "2026-10-23"
+  },
+  {
+    "kind": "club",
+    "name": "CD Castellón",
+    "aliases": [
+      "CD Castellón",
+      "cd-castellon",
+      "CAS"
+    ],
+    "sourcePage": "https://football-logos.cc/spain/castellon/",
+    "assetUrl": "https://assets.football-logos.cc/logos/spain/256x256/castellon.1255e5c9.png",
+    "localPath": "/badges/football-logos/spain-castellon.png",
+    "sha256": "080a29949f6329a7e7ceae8ac74dc8ec6729f35b0cb17431760557f422771d02",
+    "retrievedAt": "2026-10-23"
+  },
+  {
+    "kind": "club",
+    "name": "Cádiz CF",
+    "aliases": [
+      "Cádiz CF",
+      "cadiz-cf",
+      "CAD"
+    ],
+    "sourcePage": "https://football-logos.cc/spain/cadiz/",
+    "assetUrl": "https://assets.football-logos.cc/logos/spain/256x256/cadiz.7a92622e.png",
+    "localPath": "/badges/football-logos/spain-cadiz.png",
+    "sha256": "b7ff5130983c0f436b2d22dd3bfebb5531b2e048388f7bd1c4041a91e5b898a3",
+    "retrievedAt": "2026-10-23"
+  },
+  {
+    "kind": "club",
+    "name": "FC Andorra",
+    "aliases": [
+      "FC Andorra",
+      "fc-andorra",
+      "AND"
+    ],
+    "sourcePage": "https://football-logos.cc/spain/fc-andorra/",
+    "assetUrl": "https://assets.football-logos.cc/logos/spain/256x256/fc-andorra.51701a2f.png",
+    "localPath": "/badges/football-logos/spain-fc-andorra.png",
+    "sha256": "5cb34feb97ff3582d3b7e8d0249240ba9a4c61ee05b1df8c6657cc7a8581d428",
+    "retrievedAt": "2026-10-23"
+  },
+  {
+    "kind": "club",
+    "name": "AD Ceuta FC",
+    "aliases": [
+      "AD Ceuta FC",
+      "ad-ceuta-fc",
+      "ADC"
+    ],
+    "sourcePage": "https://football-logos.cc/spain/ceuta/",
+    "assetUrl": "https://assets.football-logos.cc/logos/spain/256x256/ceuta.8d6d19eb.png",
+    "localPath": "/badges/football-logos/spain-ceuta.png",
+    "sha256": "7140e4d28732c5699e96d9463d51a6107361b087764101faabf9ad8f7887745b",
+    "retrievedAt": "2026-10-23"
+  },
+  {
+    "kind": "club",
+    "name": "CD Eldense",
+    "aliases": [
+      "CD Eldense",
+      "eldense",
+      "ELD"
+    ],
+    "sourcePage": "https://football-logos.cc/spain/eldense/",
+    "assetUrl": "https://assets.football-logos.cc/logos/spain/256x256/eldense.705cd0a6.png",
+    "localPath": "/badges/football-logos/spain-eldense.png",
+    "sha256": "71290a8818a8086ac433d7fd65bff50050d28435cd13504e769f0df0f70f09cd",
+    "retrievedAt": "2026-10-23"
+  },
+  {
+    "kind": "club",
+    "name": "Liverpool FC",
+    "aliases": [
+      "Liverpool",
+      "LFC"
+    ],
+    "sourcePage": "https://football-logos.cc/england/liverpool/",
+    "assetUrl": "https://assets.football-logos.cc/logos/england/256x256/liverpool.99c48ae3.png",
+    "localPath": "/badges/football-logos/england-liverpool.png",
+    "sha256": "7cad8b368867656da534e8a140a0ab0b3e5387772f4509a85474398efa284e7a",
+    "retrievedAt": "2026-10-23"
+  },
+  {
+    "kind": "club",
+    "name": "Celtic",
+    "aliases": [
+      "Celtic FC"
+    ],
+    "sourcePage": "https://football-logos.cc/scotland/celtic/",
+    "assetUrl": "https://assets.football-logos.cc/logos/scotland/256x256/celtic.e765443b.png",
+    "localPath": "/badges/football-logos/scotland-celtic.png",
+    "sha256": "ba1793fc19fde74539643bd959f1402308015b3a4e738593043c853733153c3a",
+    "retrievedAt": "2026-10-23"
+  },
+  {
+    "kind": "club",
+    "name": "Juventus",
+    "aliases": [
+      "Juventus FC",
+      "Juve"
+    ],
+    "sourcePage": "https://football-logos.cc/italy/juventus/",
+    "assetUrl": "https://assets.football-logos.cc/logos/italy/256x256/juventus.a8baf848.png",
+    "localPath": "/badges/football-logos/italy-juventus.png",
+    "sha256": "d63603c0816789960b53b5a88b1ddcfc9ac54c8bb0ab9018cfb2588895147b52",
+    "retrievedAt": "2026-10-23"
+  },
+  {
+    "kind": "club",
+    "name": "Santa Clara",
+    "aliases": [
+      "CD Santa Clara"
+    ],
+    "sourcePage": "https://football-logos.cc/portugal/santa-clara/",
+    "assetUrl": "https://assets.football-logos.cc/logos/portugal/256x256/santa-clara.8e386186.png",
+    "localPath": "/badges/football-logos/portugal-santa-clara.png",
+    "sha256": "33dec82d30985947500ea7c94ff58b1a99692a7b85b89cf3973029d1d994e59f",
+    "retrievedAt": "2026-10-23"
+  },
+  {
+    "kind": "club",
+    "name": "Union Saint-Gilloise",
+    "aliases": [
+      "Union Saint-Gilloise",
+      "Union Saint-Gillois",
+      "Royale Union Saint-Gilloise",
+      "Union SG"
+    ],
+    "sourcePage": "https://football-logos.cc/belgium/union-saint-gilloise/",
+    "assetUrl": "https://assets.football-logos.cc/logos/belgium/256x256/union-saint-gilloise.a8fdde43.png",
+    "localPath": "/badges/football-logos/belgium-union-saint-gilloise.png",
+    "sha256": "ee23610a0fd07659eda4968a9dd732bca085ff3af2a5f47070c47bee3404a6dc",
+    "retrievedAt": "2026-10-23"
+  },
+  {
+    "kind": "club",
+    "name": "Feyenoord",
+    "aliases": [],
+    "sourcePage": "https://football-logos.cc/netherlands/feyenoord/",
+    "assetUrl": "https://assets.football-logos.cc/logos/netherlands/256x256/feyenoord.06e393bc.png",
+    "localPath": "/badges/football-logos/netherlands-feyenoord.png",
+    "sha256": "355ace4ffce29e0cf98e4bf1b16aa2dd6189f5abdd2629724bf7df1a4faa6cf1",
+    "retrievedAt": "2026-10-23"
+  },
+  {
+    "kind": "club",
+    "name": "Galatasaray",
+    "aliases": [],
+    "sourcePage": "https://football-logos.cc/turkey/galatasaray/",
+    "assetUrl": "https://assets.football-logos.cc/logos/turkey/256x256/galatasaray.67179bf9.png",
+    "localPath": "/badges/football-logos/turkey-galatasaray.png",
+    "sha256": "53f46bef9661c22927cb08990c000996409040961db031da4da86de00da75e85",
+    "retrievedAt": "2026-10-23"
+  },
+  {
+    "kind": "club",
+    "name": "PSG",
+    "aliases": [
+      "Paris Saint-Germain",
+      "Paris SG"
+    ],
+    "sourcePage": "https://football-logos.cc/france/paris-saint-germain/",
+    "assetUrl": "https://assets.football-logos.cc/logos/france/256x256/paris-saint-germain.7d591ccb.png",
+    "localPath": "/badges/football-logos/france-paris-saint-germain.png",
+    "sha256": "a1647483a1b836149b926e055b40759229ac5859d69594575ea38091858eec90",
+    "retrievedAt": "2026-10-23"
+  },
+  {
+    "kind": "competition",
+    "name": "UEFA Champions League",
+    "aliases": [
+      "champions_league",
+      "Champions",
+      "Champions League",
+      "UCL"
+    ],
+    "sourcePage": "https://football-logos.cc/tournaments/uefa-champions-league/",
+    "assetUrl": "https://assets.football-logos.cc/logos/tournaments/512x512/uefa-champions-league.effc906c.png",
+    "localPath": "/badges/football-logos/tournaments-uefa-champions-league.png",
+    "sha256": "e33e6a0b0add536396dc7e700ed014bb5e486b5e672f1ae6b5a4a3e6a6bcce63",
+    "retrievedAt": "2026-10-23"
+  },
+  {
+    "kind": "competition",
+    "name": "UEFA Europa League",
+    "aliases": [
+      "europa_league",
+      "Europa",
+      "Europa League",
+      "UEL"
+    ],
+    "sourcePage": "https://football-logos.cc/tournaments/uefa-europa-league/",
+    "assetUrl": "https://assets.football-logos.cc/logos/tournaments/512x512/uefa-europa-league.ac37661c.png",
+    "localPath": "/badges/football-logos/tournaments-uefa-europa-league.png",
+    "sha256": "06bbf9bff00310c285fa97c445526202ff86b177b0aabeb21595b0ab1312ae4e",
+    "retrievedAt": "2026-10-23"
+  },
+  {
+    "kind": "competition",
+    "name": "UEFA Conference League",
+    "aliases": [
+      "conference_league",
+      "Conference",
+      "Conference League",
+      "UECL"
+    ],
+    "sourcePage": "https://football-logos.cc/tournaments/uefa-conference-league/",
+    "assetUrl": "https://assets.football-logos.cc/logos/tournaments/512x512/uefa-conference-league.f5da1108.png",
+    "localPath": "/badges/football-logos/tournaments-uefa-conference-league.png",
+    "sha256": "65f2efea339531b09063c600aac6a3667d29656c2e88e168d68ce1da3269aaa3",
+    "retrievedAt": "2026-10-23"
+  },
+  {
+    "kind": "competition",
+    "name": "LaLiga",
+    "aliases": [
+      "laliga",
+      "La Liga"
+    ],
+    "sourcePage": "https://football-logos.cc/spain/la-liga/",
+    "assetUrl": "https://assets.football-logos.cc/logos/spain/512x512/la-liga.0ea0b0c5.png",
+    "localPath": "/badges/football-logos/spain-la-liga.png",
+    "sha256": "64973e0287a3405f9b3c2480534a891a4898bf81d50326e349cb4da0d874c26e",
+    "retrievedAt": "2026-10-23"
+  },
+  {
+    "kind": "competition",
+    "name": "Copa del Rey",
+    "aliases": [
+      "copa_del_rey",
+      "Copa"
+    ],
+    "sourcePage": "https://football-logos.cc/spain/copa-del-rey/",
+    "assetUrl": "https://assets.football-logos.cc/logos/spain/512x512/copa-del-rey.d48736b4.png",
+    "localPath": "/badges/football-logos/spain-copa-del-rey.png",
+    "sha256": "f4532256c3dc893abe13574367fafddc5ac476af9f2f87bb245f8d830d0de29a",
+    "retrievedAt": "2026-10-23"
+  },
+  {
+    "kind": "competition",
+    "name": "Supercopa de España",
+    "aliases": [
+      "supercopa",
+      "Supercopa"
+    ],
+    "sourcePage": "https://football-logos.cc/spain/supercopa-de-espana/",
+    "assetUrl": "https://assets.football-logos.cc/logos/spain/512x512/supercopa-de-espana.1b9709b2.png",
+    "localPath": "/badges/football-logos/spain-supercopa-de-espana.png",
+    "sha256": "5f0a78452c9d094f68d8b2ff3d23cd15d64bad1b2feafc3e8f5d25ac8ba069be",
+    "retrievedAt": "2026-10-23"
+  }
+]

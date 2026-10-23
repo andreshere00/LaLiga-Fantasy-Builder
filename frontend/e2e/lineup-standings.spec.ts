@@ -56,6 +56,10 @@ for (const theme of ["light", "dark"]) {
       const rankingBox = await page.getByRole("region", { name: "Players Ranking", exact: true }).boundingBox();
       const standingsBox = await page.getByRole("region", { name: "LALIGA standings", exact: true }).boundingBox();
       expect(standingsBox!.y).toBeGreaterThanOrEqual(rankingBox!.y + rankingBox!.height);
+      const fixturesBox = await page.locator(".fixture-matches-panel").boundingBox();
+      expect(standingsBox!.y).toBeGreaterThanOrEqual(fixturesBox!.y + fixturesBox!.height);
+      expect(standingsBox!.width).toBeCloseTo(fixturesBox!.width, 0);
+      expect(standingsBox!.x).toBeCloseTo(fixturesBox!.x, 0);
       await managers.scrollIntoViewIfNeeded();
       await managers.focus();
       await page.keyboard.press("End");
@@ -73,7 +77,7 @@ for (const theme of ["light", "dark"]) {
       expect(await managers.evaluate((el) => el.scrollTop)).toBe(managerScroll);
       await expect(heading).toBeInViewport();
       await expect(page.getByRole("columnheader", { name: "Ranking", exact: true })).toBeInViewport();
-      if (width === 375 || width === 1440) {
+      if (width === 375) {
         await standings.hover();
         await page.mouse.wheel(800, 0);
         await expect.poll(() => standings.evaluate((el) => el.scrollLeft)).toBeGreaterThan(0);
@@ -82,11 +86,14 @@ for (const theme of ["light", "dark"]) {
       }
       expect(await page.evaluate(() => ({ width: document.documentElement.scrollWidth, viewport: innerWidth })))
         .toEqual({ width, viewport: width });
-      // Capture the initial two-card layout for visual QA after exercising overflow.
+      if (width === 1440) {
+        expect(await standings.evaluate((el) => el.scrollWidth <= el.clientWidth)).toBe(true);
+      }
+      // Capture the bottom standings section after exercising overflow.
       await managers.evaluate((el) => { el.scrollTop = 0; });
       await standings.evaluate((el) => { el.scrollTop = 0; el.scrollLeft = 0; el.blur(); });
       await page.evaluate(() => document.fonts.ready);
-      await page.screenshot({ path: info.outputPath(`lineup-standings-${theme}-${width}.png`), fullPage: true });
+      await page.getByRole("region", { name: "LALIGA standings", exact: true }).screenshot({ path: info.outputPath(`lineup-standings-${theme}-${width}.png`) });
     });
   }
 }

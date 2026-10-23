@@ -1864,6 +1864,10 @@ Type: `string`
 
 | Field | Type | Required | Constraints | Description |
 |-------|------|----------|-------------|-------------|
+| `home_badge` | string | no |  |  |
+| `away_badge` | string | no |  |  |
+| `opponent_badge` | string | no |  |  |
+| `competition_badge` | string | no |  |  |
 | `date` | string | no |  |  |
 | `competition` | Competition | yes |  |  |
 | `competition_label` | string | no |  |  |

@@ -12,6 +12,7 @@ from fantasy_scraping.parser.dom.locators import node_text
 from fantasy_scraping.parser.errors import NormaliseError, ParserSectionError
 from fantasy_scraping.parser.extractors.base import ExtractionContext, rows_with_dates
 from fantasy_scraping.parser.extractors.matches import competition_from_slug
+from fantasy_scraping.parser.extractors.media import match_media
 from fantasy_scraping.parser.models.common import Competition
 from fantasy_scraping.parser.models.futbolfantasy import (
     EventCount,
@@ -45,7 +46,9 @@ _SHOT_PARTS = ("tiros-puerta", "tiros-palo", "tiros-bloqueados")
 _ICON_KINDS = {"goal", "assist", "penalty", "yellow_card", "red_card"}
 
 
-def extract_fixtures(ctx: ExtractionContext, *, is_goalkeeper: bool) -> list[FixtureRow]:
+def extract_fixtures(
+    ctx: ExtractionContext, *, is_goalkeeper: bool, club_badge: str | None = None
+) -> list[FixtureRow]:
     """Read match rows and their stat layers.
 
     Args:
@@ -140,6 +143,12 @@ def extract_fixtures(ctx: ExtractionContext, *, is_goalkeeper: bool) -> list[Fix
         side = _side(columns.get("side"))
         fixtures.append(
             FixtureRow(
+                **match_media(
+                    ctx,
+                    row,
+                    is_home=True if side == "home" else False if side == "away" else None,
+                    club_badge=club_badge,
+                ),
                 date=when,
                 matchday=int(columns["matchday"]),
                 match=match,

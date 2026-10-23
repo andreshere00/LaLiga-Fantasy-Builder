@@ -361,7 +361,7 @@
   color: var(--fb-surface);
 }
 
-.accent-control-shell:not(:has(:is(.save-lineup-button, .recommend-button):disabled)):is(
+.accent-control-shell:not(:has(:is(.save-lineup-button, .recommend-button):is(:disabled,[aria-disabled="true"]))):is(
     :hover,
     :has(.recommend-button:active),
     :has(.save-lineup-button:active:not(:disabled))
@@ -371,6 +371,8 @@
 }
 
 .formation-value {
+  justify-content: center;
+  text-align: center;
   margin: 0;
   padding: 0 clamp(10px, 1vw, 14px);
   font-size: var(--lineup-font-medium);
@@ -1196,10 +1198,10 @@
 /* Matchday command and square board surfaces. */
 .lineup-page { --lineup-control-height:44px; font-size:14px; }
 .board-controls-bar.side-panel { padding:24px; border:1px solid var(--fb-line); }
-.board-controls-title { text-align:left; padding:0; margin-bottom:20px; font:400 28px/1.2 Anton,sans-serif; letter-spacing:.03em; text-transform:uppercase; }
+.board-controls-title { text-align:center; padding:0; margin-bottom:20px; font:400 28px/1.2 Anton,sans-serif; letter-spacing:.03em; text-transform:uppercase; }
 .board-controls-title span { font:inherit; }
-.board-controls .field-label { text-align:left; margin-bottom:8px; font-size:12px; font-weight:500; text-transform:uppercase; color:var(--fb-muted); }
-.board-controls .controls-zone { justify-content:flex-start; }
+.board-controls .field-label { text-align:center; margin-bottom:8px; font-size:12px; font-weight:500; text-transform:uppercase; color:var(--fb-muted); }
+.board-controls .controls-zone { justify-content:center; }
 .board-controls .controls-zone-center { flex-wrap:wrap; justify-content:center; }
 .board-controls .controls-zone-center .recommend { flex:0 1 200px; width:min(200px,100%); }
 .board-controls .control-block { align-items:stretch; }
@@ -1231,7 +1233,7 @@
 
 .accent-control-shell:has([aria-disabled="true"]) { opacity:.5; }
 
-.accent-control-shell { border-radius:8px; }
+.accent-control-shell { border-radius:0; }
 .save-lineup-button-icon { filter:brightness(0); }
 
 /* Lineup toolbar visual fixes. */
@@ -1250,30 +1252,19 @@
 .value-box { justify-content:center; font-size:var(--lineup-font-large); border:1px solid var(--fb-control-line); box-sizing:border-box; }
 .value-box .value-box-tooltip-wrap { justify-content:center; }
 .value-box-text { flex:0 1 auto; text-align:center; }
-.save-lineup-button { border-radius:0; background:transparent; color:#fff; transition:color .16s ease,background-color .16s ease; }
-.accent-control-shell:has(.save-lineup-button:not(:disabled):not([aria-disabled="true"])) { background:var(--fb-primary); color:#fff; }
-.accent-control-shell:has(.save-lineup-button:not(:disabled):not([aria-disabled="true"]):hover) { background:var(--fb-coral); color:#000; }
-.accent-control-shell:has(.save-lineup-button:not(:disabled):not([aria-disabled="true"]):hover) .save-lineup-button { color:#000; }
-.accent-control-shell:has(.save-lineup-button:not(:disabled):not([aria-disabled="true"]):hover) .save-lineup-button-icon { filter:brightness(0); }
-.save-lineup-button:disabled,
-.save-lineup-button[aria-disabled="true"] { background:transparent; color:#fff; }
-.accent-control-shell:has(.save-lineup-button:disabled),
-.accent-control-shell:has(.save-lineup-button[aria-disabled="true"]) { background:#35353D; border-color:#35353D; color:#fff; opacity:1; }
-.accent-control-shell:has(.save-lineup-button:disabled):hover,
-.accent-control-shell:has(.save-lineup-button[aria-disabled="true"]):hover { background:#E5E5E5; color:#000; }
-.accent-control-shell:has(.save-lineup-button:disabled):hover .save-lineup-button,
-.accent-control-shell:has(.save-lineup-button[aria-disabled="true"]):hover .save-lineup-button { color:#000; }
-.accent-control-shell:has(.save-lineup-button:disabled):hover .save-lineup-button-icon,
-.accent-control-shell:has(.save-lineup-button[aria-disabled="true"]):hover .save-lineup-button-icon { filter:brightness(0); }
-.save-lineup-button-icon { filter:none; }
-.accent-control-shell:has(.save-lineup-button:not(:disabled):not([aria-disabled="true"])) .save-lineup-button-icon { filter:none; }
-.accent-control-shell:has(.save-lineup-button:disabled) .save-lineup-button-icon,
-.accent-control-shell:has(.save-lineup-button[aria-disabled="true"]) .save-lineup-button-icon { filter:none; opacity:1; }
-.recommend-button { align-items:center; font-size:16px; font-weight:500; }
-.recommend-button-icon { filter:none; }
-.accent-control-shell:has(.recommend-button) { background:var(--fb-primary); color:#fff; }
-.accent-control-shell:has(.recommend-button):hover { background:var(--fb-coral); color:#000; }
-.recommend-button { color:#fff; }
-.lineup-formation-trigger { min-width:var(--lineup-formation-control-min); min-height:var(--lineup-control-height); }
+/* Shared action colors keep text legible and unavailable controls visually stable. */
+.save-lineup-button,.recommend-button { color:var(--fb-on-brand); }
+.save-lineup-button-icon,.recommend-button-icon { filter:brightness(0); }
+.accent-control-shell:has(:is(.save-lineup-button,.recommend-button)) { background:var(--fb-primary); color:var(--fb-on-brand); }
+.accent-control-shell:has(:is(.save-lineup-button,.recommend-button):not(:disabled):not([aria-disabled="true"]):hover) { background:var(--fb-coral); color:var(--fb-on-coral); }
+.accent-control-shell:has(:is(.save-lineup-button,.recommend-button):not(:disabled):not([aria-disabled="true"]):hover) :is(.save-lineup-button,.recommend-button) { color:var(--fb-on-coral); }
+.accent-control-shell:has(:is(.save-lineup-button,.recommend-button):is(:disabled,[aria-disabled="true"])) { background:var(--fb-subtle); border:1px solid var(--fb-control-line); color:var(--fb-muted); opacity:1; }
+.accent-control-shell:has(:is(.save-lineup-button,.recommend-button):is(:disabled,[aria-disabled="true"])) :is(.save-lineup-button,.recommend-button) { color:var(--fb-muted); cursor:not-allowed; }
+.accent-control-shell:has(:is(.save-lineup-button,.recommend-button):is(:disabled,[aria-disabled="true"])) img { opacity:.5; }
+:root[data-theme="dark"] .accent-control-shell:has(:is(.save-lineup-button,.recommend-button):is(:disabled,[aria-disabled="true"])) img { filter:brightness(0) invert(1); }
+.recommend-button { align-items:center; justify-content:center; text-align:center; font-size:16px; font-weight:600; }
+.recommend-button-text,.save-lineup-button-text { flex:0 1 auto; text-align:center; }
+.pager button:focus-visible { outline-offset:-3px; }
+.board-controls .lineup-formation-trigger { justify-content:center; text-align:center; min-width:var(--lineup-formation-control-min); min-height:var(--lineup-control-height); }
 .lineup-formation-icon { display:flex; align-items:center; justify-content:center; align-self:center; flex:0 0 18px; height:18px; line-height:0; }
 .lineup-formation-icon svg { display:block; width:18px; height:18px; }

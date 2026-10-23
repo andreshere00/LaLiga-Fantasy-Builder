@@ -25,6 +25,15 @@ for (const theme of ["light", "dark"]) {
         await page.evaluate(() => window.scrollTo(0, 600));
         await expect.poll(() => page.evaluate(() => window.scrollY)).toBeGreaterThan(200);
         await expectPinnedHeaders(page);
+        const sections = page.getByRole("navigation", { name: "Sections", exact: true });
+        if (width <= 1000) {
+          await expect(sections).toHaveCSS("position", "fixed");
+          const bounds = (await sections.boundingBox())!;
+          expect(bounds.y + bounds.height).toBeCloseTo(page.viewportSize()!.height, 0);
+          expect(bounds.width).toBe(width);
+        } else {
+          await expect(sections).toHaveCSS("position", "static");
+        }
         await page.screenshot({ path: info.outputPath(`sticky-${route}-${theme}-${width}.png`) });
         if (width <= 1000) {
           await page.getByRole("button", { name: "Open settings and account options" }).click();
@@ -52,5 +61,38 @@ test("sticky title follows the navigation height after resizing", async ({ page 
   await page.setViewportSize({ width: 1440, height: 800 });
   await expectPinnedHeaders(page);
   const desktopHeight = (await page.locator(".app-header").boundingBox())!.height;
-  expect(desktopHeight).toBeLessThan(mobileHeight);
+  expect(mobileHeight).toBeGreaterThan(0);
+  expect(desktopHeight).toBeGreaterThan(0);
+  await expect(page.getByRole("navigation", { name: "Sections", exact: true })).toHaveCSS("position", "static");
+  await expect(page.locator(".app-shell")).toHaveCSS("padding-bottom", "0px");
 });
+
+for (const theme of ["light", "dark"]) {
+  test(`mobile bottom navigation preserves links, keyboard access and footer clearance: ${theme}`, async ({ page }, info) => {
+    await mockApplication(page);
+    await page.setViewportSize({ width: 320, height: 700 });
+    await page.addInitScript((value) => localStorage.setItem("lfb-theme", value), theme);
+    await page.goto("/players/1");
+    const sections = page.getByRole("navigation", { name: "Sections", exact: true });
+    await expect(sections.getByRole("link", { name: "Players", exact: true })).toHaveAttribute("aria-current", "page");
+    const market = sections.getByRole("link", { name: "Market", exact: true });
+    await market.focus();
+    await page.keyboard.press("Enter");
+    await expect(page).toHaveURL(/\/market$/);
+    await expect(market).toHaveAttribute("aria-current", "page");
+    await expect(page.locator(".market-data-row")).toHaveCount(7);
+    await page.evaluate(() => document.fonts.ready);
+    await expect.poll(() => page.evaluate(() => {
+      window.scrollTo(0, document.documentElement.scrollHeight);
+      return document.querySelector(".app-footer")!.getBoundingClientRect().bottom
+        - document.querySelector(".nav-tabs")!.getBoundingClientRect().top;
+    })).toBeLessThanOrEqual(1);
+    const sizes = await sections.getByRole("link").evaluateAll((links) => links.map((link) => {
+      const rect = link.getBoundingClientRect();
+      return { width: rect.width, height: rect.height };
+    }));
+    expect(sizes.every(({ width, height }) => width >= 44 && height >= 44)).toBe(true);
+    expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
+    await page.screenshot({ path: info.outputPath(`bottom-navigation-${theme}.png`) });
+  });
+}

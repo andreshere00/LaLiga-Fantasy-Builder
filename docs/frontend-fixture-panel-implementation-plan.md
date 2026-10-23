@@ -57,8 +57,9 @@ its retrieval time available; it is not an observation of current weather.
 
 The original mockup images have been removed. Current captures from the running
 application are embedded in the [frontend guide](frontend.md#lineup) and
-[project README](../README.md#lineup). Browser checks retain fictional screenshots
-only in their test output, separate from the product documentation.
+[project README](../README.md#lineup). The gallery was refreshed on 23 October 2026 using deterministic browser fixtures;
+its captions identify all values as illustrative. The [capture workflow](frontend.md#refreshing-screenshots)
+regenerates the documentation assets.
 
 The [editable HTML preview](design/lineup-fixtures-preview.html) includes theme
 and state switches plus local scrolling. It is a planning artifact: its data is
@@ -463,11 +464,12 @@ Product captures now live beside the relevant features in the
 They were refreshed from the real authenticated local app on 21 October 2026
 (Europe/Madrid), including light/dark overviews, expanded weather, and a full-page
 desktop view of the pitch, squad, and standings.
-The previous synthetic documentation captures have been removed.
+Those 21 October captures were superseded on 23 October by the current, reproducible
+demo-data gallery described in the [frontend guide](frontend.md#product-captures).
 
 Validation after the expandable forecast change: production build and ESLint
 passed, alongside all 552 frontend tests and 15 fixture-widget browser checks.
 Coverage includes keyboard and pointer expansion/collapse, full-height forecast
 details without internal scrolling, mobile centering, fixture browsing, and
-automatic rollover. Synthetic captures are kept only as test artifacts. The earlier navigation implementation also
+automatic rollover. Additional validation captures are kept as test artifacts. The earlier navigation implementation also
 passed the broader 61-check lineup/standings/header browser suite.

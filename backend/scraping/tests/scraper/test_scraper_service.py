@@ -329,3 +329,24 @@ async def test_scrape_player_stale_page_served_when_refetch_fails(
     pages = await service.scrape_player("Raphinha", SEASON)
 
     assert pages[0].from_cache
+
+
+async def test_resolve_surname_collision_uses_live_club_to_select_literal_candidate(
+    site: FakeSite, make_client, settings, clock
+) -> None:
+    from conftest import XML, sitemap
+
+    from fantasy_scraping.scraper.cache import MemoryCache
+
+    site.overrides["https://www.futbolfantasy.com/sitemap-jugadores.xml"] = httpx.Response(
+        200, text=sitemap(("dani-olmo", "daniel-carvajal"), "jugadores"), headers=XML
+    )
+    site.teams.update({"dani-olmo": "barcelona", "daniel-carvajal": "getafe"})
+    service = ScraperService(
+        make_client(site), MemoryCache(clock), settings, aliases={"carvajal": "dani-olmo"}
+    )
+    route = await service.resolve_player_route(
+        "Carvajal", "Getafe CF", season=SEASON, player_id="3284"
+    )
+    assert route.slug == "daniel-carvajal"
+    assert route.team_verified is True

@@ -1,0 +1,535 @@
+[
+  {
+    "kind": "club",
+    "name": "UD Almería",
+    "aliases": [
+      "UD Almería",
+      "ud-almeria",
+      "ALM"
+    ],
+    "sourcePage": "https://football-logos.cc/spain/almeria/"
+  },
+  {
+    "kind": "club",
+    "name": "Atlético de Madrid",
+    "aliases": [
+      "Atlético de Madrid",
+      "atletico-de-madrid",
+      "ATM"
+    ],
+    "sourcePage": "https://football-logos.cc/spain/atletico-madrid/"
+  },
+  {
+    "kind": "club",
+    "name": "Athletic Club",
+    "aliases": [
+      "Athletic Club",
+      "athletic-club",
+      "ATH"
+    ],
+    "sourcePage": "https://football-logos.cc/spain/athletic-club/"
+  },
+  {
+    "kind": "club",
+    "name": "FC Barcelona",
+    "aliases": [
+      "FC Barcelona",
+      "fc-barcelona",
+      "BAR"
+    ],
+    "sourcePage": "https://football-logos.cc/spain/barcelona/"
+  },
+  {
+    "kind": "club",
+    "name": "Real Betis",
+    "aliases": [
+      "Real Betis",
+      "real-betis",
+      "BET"
+    ],
+    "sourcePage": "https://football-logos.cc/spain/real-betis/"
+  },
+  {
+    "kind": "club",
+    "name": "Celta",
+    "aliases": [
+      "Celta",
+      "rc-celta",
+      "CEL",
+      "Celta Vigo",
+      "RC Celta de Vigo"
+    ],
+    "sourcePage": "https://football-logos.cc/spain/celta/"
+  },
+  {
+    "kind": "club",
+    "name": "Elche CF",
+    "aliases": [
+      "Elche CF",
+      "elche-c-f",
+      "ELC"
+    ],
+    "sourcePage": "https://football-logos.cc/spain/elche/"
+  },
+  {
+    "kind": "club",
+    "name": "RCD Espanyol",
+    "aliases": [
+      "RCD Espanyol",
+      "rcd-espanyol",
+      "ESP"
+    ],
+    "sourcePage": "https://football-logos.cc/spain/espanyol/"
+  },
+  {
+    "kind": "club",
+    "name": "Getafe CF",
+    "aliases": [
+      "Getafe CF",
+      "getafe-cf",
+      "GET"
+    ],
+    "sourcePage": "https://football-logos.cc/spain/getafe/"
+  },
+  {
+    "kind": "club",
+    "name": "Granada CF",
+    "aliases": [
+      "Granada CF",
+      "granada-cf",
+      "GRA"
+    ],
+    "sourcePage": "https://football-logos.cc/spain/granada/"
+  },
+  {
+    "kind": "club",
+    "name": "Levante UD",
+    "aliases": [
+      "Levante UD",
+      "levante-ud",
+      "LEV"
+    ],
+    "sourcePage": "https://football-logos.cc/spain/levante/"
+  },
+  {
+    "kind": "club",
+    "name": "Málaga CF",
+    "aliases": [
+      "Málaga CF",
+      "malaga-cf",
+      "MGA",
+      "MLG",
+      "Malaga FC",
+      "Málaga"
+    ],
+    "sourcePage": "https://football-logos.cc/spain/malaga/"
+  },
+  {
+    "kind": "club",
+    "name": "C.A. Osasuna",
+    "aliases": [
+      "C.A. Osasuna",
+      "c-a-osasuna",
+      "OSA"
+    ],
+    "sourcePage": "https://football-logos.cc/spain/osasuna/"
+  },
+  {
+    "kind": "club",
+    "name": "Rayo Vallecano",
+    "aliases": [
+      "Rayo Vallecano",
+      "rayo-vallecano",
+      "RAY"
+    ],
+    "sourcePage": "https://football-logos.cc/spain/rayo-vallecano/"
+  },
+  {
+    "kind": "club",
+    "name": "Real Madrid",
+    "aliases": [
+      "Real Madrid",
+      "real-madrid",
+      "RMA"
+    ],
+    "sourcePage": "https://football-logos.cc/spain/real-madrid/"
+  },
+  {
+    "kind": "club",
+    "name": "Real Sociedad",
+    "aliases": [
+      "Real Sociedad",
+      "real-sociedad",
+      "RSO"
+    ],
+    "sourcePage": "https://football-logos.cc/spain/real-sociedad/"
+  },
+  {
+    "kind": "club",
+    "name": "Sevilla FC",
+    "aliases": [
+      "Sevilla FC",
+      "sevilla-fc",
+      "SEV"
+    ],
+    "sourcePage": "https://football-logos.cc/spain/sevilla/"
+  },
+  {
+    "kind": "club",
+    "name": "Valencia CF",
+    "aliases": [
+      "Valencia CF",
+      "valencia-cf",
+      "VAL"
+    ],
+    "sourcePage": "https://football-logos.cc/spain/valencia/"
+  },
+  {
+    "kind": "club",
+    "name": "Real Valladolid CF",
+    "aliases": [
+      "Real Valladolid CF",
+      "r-valladolid-cf",
+      "VLL"
+    ],
+    "sourcePage": "https://football-logos.cc/spain/valladolid/"
+  },
+  {
+    "kind": "club",
+    "name": "Villarreal CF",
+    "aliases": [
+      "Villarreal CF",
+      "villarreal-cf",
+      "VIL"
+    ],
+    "sourcePage": "https://football-logos.cc/spain/villarreal/"
+  },
+  {
+    "kind": "club",
+    "name": "Deportivo Alavés",
+    "aliases": [
+      "Deportivo Alavés",
+      "d-alaves",
+      "ALA"
+    ],
+    "sourcePage": "https://football-logos.cc/spain/deportivo/"
+  },
+  {
+    "kind": "club",
+    "name": "Córdoba CF",
+    "aliases": [
+      "Córdoba CF",
+      "cordoba-cf",
+      "CCF"
+    ],
+    "sourcePage": "https://football-logos.cc/spain/cordoba/"
+  },
+  {
+    "kind": "club",
+    "name": "RC Deportivo",
+    "aliases": [
+      "RC Deportivo",
+      "rc-deportivo",
+      "RCD",
+      "DEP",
+      "Deportivo La Coruña"
+    ],
+    "sourcePage": "https://football-logos.cc/spain/deportivo-la-coruna/"
+  },
+  {
+    "kind": "club",
+    "name": "SD Eibar",
+    "aliases": [
+      "SD Eibar",
+      "sd-eibar",
+      "EIB"
+    ],
+    "sourcePage": "https://football-logos.cc/spain/eibar/"
+  },
+  {
+    "kind": "club",
+    "name": "Girona FC",
+    "aliases": [
+      "Girona FC",
+      "girona-fc",
+      "GIR"
+    ],
+    "sourcePage": "https://football-logos.cc/spain/girona/"
+  },
+  {
+    "kind": "club",
+    "name": "UD Las Palmas",
+    "aliases": [
+      "UD Las Palmas",
+      "ud-las-palmas",
+      "LPA"
+    ],
+    "sourcePage": "https://football-logos.cc/spain/las-palmas/"
+  },
+  {
+    "kind": "club",
+    "name": "RCD Mallorca",
+    "aliases": [
+      "RCD Mallorca",
+      "rcd-mallorca",
+      "MLL"
+    ],
+    "sourcePage": "https://football-logos.cc/spain/mallorca/"
+  },
+  {
+    "kind": "club",
+    "name": "CE Sabadell",
+    "aliases": [
+      "CE Sabadell",
+      "ce-sabadell",
+      "SAB"
+    ],
+    "sourcePage": "https://football-logos.cc/spain/sabadell/"
+  },
+  {
+    "kind": "club",
+    "name": "Real Sporting",
+    "aliases": [
+      "Real Sporting",
+      "real-sporting",
+      "SPO"
+    ],
+    "sourcePage": "https://football-logos.cc/spain/sporting-gijon/"
+  },
+  {
+    "kind": "club",
+    "name": "CD Tenerife",
+    "aliases": [
+      "CD Tenerife",
+      "cd-tenerife",
+      "TEN"
+    ],
+    "sourcePage": "https://football-logos.cc/spain/tenerife/"
+  },
+  {
+    "kind": "club",
+    "name": "Albacete BP",
+    "aliases": [
+      "Albacete BP",
+      "albacete-bp",
+      "ALB"
+    ],
+    "sourcePage": "https://football-logos.cc/spain/albacete/"
+  },
+  {
+    "kind": "club",
+    "name": "R. Racing Club",
+    "aliases": [
+      "R. Racing Club",
+      "r-racing-club",
+      "RAC"
+    ],
+    "sourcePage": "https://football-logos.cc/spain/racing/"
+  },
+  {
+    "kind": "club",
+    "name": "Burgos CF",
+    "aliases": [
+      "Burgos CF",
+      "burgos",
+      "BUR"
+    ],
+    "sourcePage": "https://football-logos.cc/spain/burgos/"
+  },
+  {
+    "kind": "club",
+    "name": "CD Leganés",
+    "aliases": [
+      "CD Leganés",
+      "cd-leganes",
+      "LEG"
+    ],
+    "sourcePage": "https://football-logos.cc/spain/leganes/"
+  },
+  {
+    "kind": "club",
+    "name": "Real Oviedo",
+    "aliases": [
+      "Real Oviedo",
+      "real-oviedo",
+      "OVI"
+    ],
+    "sourcePage": "https://football-logos.cc/spain/oviedo/"
+  },
+  {
+    "kind": "club",
+    "name": "CD Castellón",
+    "aliases": [
+      "CD Castellón",
+      "cd-castellon",
+      "CAS"
+    ],
+    "sourcePage": "https://football-logos.cc/spain/castellon/"
+  },
+  {
+    "kind": "club",
+    "name": "Cádiz CF",
+    "aliases": [
+      "Cádiz CF",
+      "cadiz-cf",
+      "CAD"
+    ],
+    "sourcePage": "https://football-logos.cc/spain/cadiz/"
+  },
+  {
+    "kind": "club",
+    "name": "FC Andorra",
+    "aliases": [
+      "FC Andorra",
+      "fc-andorra",
+      "AND"
+    ],
+    "sourcePage": "https://football-logos.cc/spain/fc-andorra/"
+  },
+  {
+    "kind": "club",
+    "name": "AD Ceuta FC",
+    "aliases": [
+      "AD Ceuta FC",
+      "ad-ceuta-fc",
+      "ADC"
+    ],
+    "sourcePage": "https://football-logos.cc/spain/ceuta/"
+  },
+  {
+    "kind": "club",
+    "name": "CD Eldense",
+    "aliases": [
+      "CD Eldense",
+      "eldense",
+      "ELD"
+    ],
+    "sourcePage": "https://football-logos.cc/spain/eldense/"
+  },
+  {
+    "kind": "club",
+    "name": "Liverpool FC",
+    "aliases": [
+      "Liverpool",
+      "LFC"
+    ],
+    "sourcePage": "https://football-logos.cc/england/liverpool/"
+  },
+  {
+    "kind": "club",
+    "name": "Celtic",
+    "aliases": [
+      "Celtic FC"
+    ],
+    "sourcePage": "https://football-logos.cc/scotland/celtic/"
+  },
+  {
+    "kind": "club",
+    "name": "Juventus",
+    "aliases": [
+      "Juventus FC",
+      "Juve"
+    ],
+    "sourcePage": "https://football-logos.cc/italy/juventus/"
+  },
+  {
+    "kind": "club",
+    "name": "Santa Clara",
+    "aliases": [
+      "CD Santa Clara"
+    ],
+    "sourcePage": "https://football-logos.cc/portugal/santa-clara/"
+  },
+  {
+    "kind": "club",
+    "name": "Union Saint-Gilloise",
+    "aliases": [
+      "Union Saint-Gilloise",
+      "Union Saint-Gillois",
+      "Royale Union Saint-Gilloise",
+      "Union SG"
+    ],
+    "sourcePage": "https://football-logos.cc/belgium/union-saint-gilloise/"
+  },
+  {
+    "kind": "club",
+    "name": "Feyenoord",
+    "aliases": [],
+    "sourcePage": "https://football-logos.cc/netherlands/feyenoord/"
+  },
+  {
+    "kind": "club",
+    "name": "Galatasaray",
+    "aliases": [],
+    "sourcePage": "https://football-logos.cc/turkey/galatasaray/"
+  },
+  {
+    "kind": "club",
+    "name": "PSG",
+    "aliases": [
+      "Paris Saint-Germain",
+      "Paris SG"
+    ],
+    "sourcePage": "https://football-logos.cc/france/paris-saint-germain/"
+  },
+  {
+    "kind": "competition",
+    "name": "UEFA Champions League",
+    "aliases": [
+      "champions_league",
+      "Champions",
+      "Champions League",
+      "UCL"
+    ],
+    "sourcePage": "https://football-logos.cc/tournaments/uefa-champions-league/"
+  },
+  {
+    "kind": "competition",
+    "name": "UEFA Europa League",
+    "aliases": [
+      "europa_league",
+      "Europa",
+      "Europa League",
+      "UEL"
+    ],
+    "sourcePage": "https://football-logos.cc/tournaments/uefa-europa-league/"
+  },
+  {
+    "kind": "competition",
+    "name": "UEFA Conference League",
+    "aliases": [
+      "conference_league",
+      "Conference",
+      "Conference League",
+      "UECL"
+    ],
+    "sourcePage": "https://football-logos.cc/tournaments/uefa-conference-league/"
+  },
+  {
+    "kind": "competition",
+    "name": "LaLiga",
+    "aliases": [
+      "laliga",
+      "La Liga"
+    ],
+    "sourcePage": "https://football-logos.cc/spain/la-liga/"
+  },
+  {
+    "kind": "competition",
+    "name": "Copa del Rey",
+    "aliases": [
+      "copa_del_rey",
+      "Copa"
+    ],
+    "sourcePage": "https://football-logos.cc/spain/copa-del-rey/"
+  },
+  {
+    "kind": "competition",
+    "name": "Supercopa de España",
+    "aliases": [
+      "supercopa",
+      "Supercopa"
+    ],
+    "sourcePage": "https://football-logos.cc/spain/supercopa-de-espana/"
+  }
+]

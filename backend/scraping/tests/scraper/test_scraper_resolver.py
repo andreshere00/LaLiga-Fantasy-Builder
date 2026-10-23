@@ -94,3 +94,19 @@ def test_resolve_full_name_used_when_nickname_fails(resolver: RouteResolver) -> 
     result = resolver.resolve("Zzzz", full_name="Lamine Yamal")
 
     assert result.candidates[0].slug == "lamine-yamal"
+
+
+def test_resolve_new_player_surname_alias_keeps_literal_sitemap_candidate() -> None:
+    resolver = RouteResolver(["dani-olmo", "daniel-carvajal"], {"carvajal": "dani-olmo"})
+    result = resolver.resolve("Carvajal", player_id="3284")
+    assert result.ambiguous
+    assert {candidate.slug for candidate in result.candidates} == {"dani-olmo", "daniel-carvajal"}
+
+
+def test_resolve_verified_master_id_retains_identity_over_surname_candidates() -> None:
+    resolver = RouteResolver(
+        ["dani-olmo", "daniel-carvajal"], {"3092": "dani-olmo", "carvajal": "dani-olmo"}
+    )
+    result = resolver.resolve("Carvajal", player_id="3092")
+    assert not result.ambiguous
+    assert result.candidates[0].slug == "dani-olmo"

@@ -44,3 +44,23 @@ async def test_get_json_disabled_raises_scraping_disabled() -> None:
     with pytest.raises(UpstreamError) as exc:
         await client.get_json("/internal/players/futbolfantasy", {})
     assert exc.value.category == "scraping_disabled"
+
+
+@pytest.mark.asyncio
+async def test_get_json_identity_conflict_preserves_safe_category_without_raw_body() -> None:
+    client = ScrapingClient(
+        base_url="http://scraping.test",
+        service_token=SecretStr("scraping-token"),
+        timeout_seconds=5.0,
+        transport=httpx.MockTransport(
+            lambda request: httpx.Response(
+                409, json={"error": "player_ambiguous", "detail": "private-upstream-body"}
+            )
+        ),
+    )
+    async with client._http:
+        with pytest.raises(UpstreamError) as exc:
+            await client.get_json("/internal/players/futbolfantasy", {"player_name": "Carvajal"})
+    assert exc.value.category == "player_ambiguous"
+    assert exc.value.status_code == 409
+    assert "private-upstream-body" not in str(exc.value)

@@ -179,6 +179,11 @@ class PlayerProfile(ParserModel):
 class RecentMatch(ParserModel):
     """One row of the last-five widget."""
 
+    home_badge: str | None = None
+    away_badge: str | None = None
+    opponent_badge: str | None = None
+    competition_badge: str | None = None
+
     date: Date
     matchday: int | None = None
     competition: Competition = Competition.OTHER
@@ -196,6 +201,11 @@ class RecentMatch(ParserModel):
 
 class UpcomingMatch(ParserModel):
     """One row of the next-five widget."""
+
+    home_badge: str | None = None
+    away_badge: str | None = None
+    opponent_badge: str | None = None
+    competition_badge: str | None = None
 
     date: Date
     matchday: int | None = None
@@ -422,6 +432,11 @@ class FixtureLayers(ParserModel):
 
 class FixtureRow(ParserModel):
     """One LaLiga or competition match row."""
+
+    home_badge: str | None = None
+    away_badge: str | None = None
+    opponent_badge: str | None = None
+    competition_badge: str | None = None
 
     date: Date | None = None
     matchday: int

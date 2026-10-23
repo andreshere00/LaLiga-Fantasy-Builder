@@ -1,6 +1,7 @@
 """Header identity."""
 
 from fantasy_scraping.parser.extractors.base import ExtractionContext, apply_rules
+from fantasy_scraping.parser.extractors.media import image_url
 from fantasy_scraping.parser.models.futbolfantasy import Identity
 
 
@@ -26,9 +27,10 @@ def extract_identity(ctx: ExtractionContext) -> Identity:
             rule_id="profile.identity.position_code",
             message="position code is not mapped",
         )
+    badge = ctx.document.first(".jugador-nombre a[href*='/equipos/'] img, img.badge")
     return Identity(
         shirt_number=values.get("profile.identity.shirt_number"),
         display_name=values["profile.identity.display_name"],
         position_code=code,
-        club_badge=values.get("profile.identity.club_badge"),
+        club_badge=image_url(ctx, badge) if badge is not None else None,
     )

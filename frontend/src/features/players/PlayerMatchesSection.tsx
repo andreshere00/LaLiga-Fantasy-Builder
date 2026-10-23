@@ -1,4 +1,5 @@
-import { useState } from "react";
+import { BadgeImage } from "../../components/BadgeImage";
+import { fixtureClubMedia, competitionMedia } from "../../api/clubMedia";
 import { WEATHER_CONDITIONS, weatherIcon, weatherReason } from "../../components/weather";
 import { asFiniteNumber, asRecord, text } from "../../api/mappers";
 import footballIcon from "../../assets/boxicons_football-filled.svg";
@@ -8,7 +9,6 @@ import {
   fixtureDate,
   matchOutcomeForTeam,
   sortMatchesByDate,
-  teamMediaFromFixture,
   weatherConditionFromSnapshot,
 } from "./playerDetailWidgets";
 import "./playerDetailWidgets.css";
@@ -78,21 +78,6 @@ function MatchWeather({ match }: { match: Record<string, unknown> | null }) {
 }
 
 
-function TeamCrest({ media }: { media: { badge: string } | null }) {
-  const [failed, setFailed] = useState(false);
-  if (!media || failed) return <span aria-hidden="true">–</span>;
-  return (
-    <img
-      src={media.badge}
-      alt=""
-      aria-hidden="true"
-      loading="lazy"
-      decoding="async"
-      onError={() => setFailed(true)}
-    />
-  );
-}
-
 function MatchTimer({ kickoff }: { kickoff: string | null }) {
   const now = useNow();
   const kickoffMs = kickoff ? Date.parse(kickoff) : NaN;
@@ -138,8 +123,8 @@ function MatchCard({
 }) {
   const matchRecord = asRecord(match);
   const fixture = asRecord(matchRecord?.fixture) ?? matchRecord;
-  const home = teamMediaFromFixture(fixture?.homeTeam);
-  const away = teamMediaFromFixture(fixture?.awayTeam);
+  const home = fixtureClubMedia(fixture, "home");
+  const away = fixtureClubMedia(fixture, "away");
   const homeScore = asFiniteNumber(fixture?.homeScore);
   const awayScore = asFiniteNumber(fixture?.awayScore);
   const teamOutcome = matchOutcomeForTeam(
@@ -162,18 +147,19 @@ function MatchCard({
   return (
     <li className={`player-match-card is-${upcoming ? "upcoming" : teamOutcome}`}>
       <p className="player-match-competition">
+        <span className="player-match-competition-badge"><BadgeImage media={competitionMedia(fixture)} fallback="" /></span>
         {competition}
       </p>
       <div className="player-match-teams">
         <div className="player-match-team">
           <div className="player-match-crest-tile">
-            <TeamCrest key={home?.badge ?? "home"} media={home} />
+            <BadgeImage media={home} />
           </div>
           <span className="player-match-team-name">{home?.name ?? text(fixture?.homeTeam) ?? "Home"}</span>
         </div>
         <div className="player-match-team">
           <div className="player-match-crest-tile">
-            <TeamCrest key={away?.badge ?? "away"} media={away} />
+            <BadgeImage media={away} />
           </div>
           <span className="player-match-team-name">{away?.name ?? text(fixture?.awayTeam) ?? "Away"}</span>
         </div>
@@ -206,11 +192,13 @@ function MatchGroup({
   matches,
   upcoming,
   playerTeamName,
+  unavailable = false,
 }: {
   title: string;
   matches: unknown[];
   upcoming: boolean;
   playerTeamName: string | null;
+  unavailable?: boolean;
 }) {
   return (
     <div className={`player-match-group${upcoming ? " is-upcoming" : ""}`}>
@@ -218,7 +206,9 @@ function MatchGroup({
         <img src={footballIcon} alt="" aria-hidden="true" />
         {title}
       </h3>
-      {matches.length === 0 ? (
+      {unavailable ? (
+        <p className="player-match-empty">{upcoming ? "Upcoming" : "Recent"} matches are temporarily unavailable.</p>
+      ) : matches.length === 0 ? (
         <p className="player-match-empty">No {upcoming ? "upcoming" : "recent"} matches available.</p>
       ) : (
         <ul className="player-match-grid">
@@ -260,18 +250,20 @@ export function PlayerMatchesSection({
 
   return (
     <section className="player-detail-panel player-match-section" aria-labelledby="player-matches-title">
-      <h2 id="player-matches-title">Previous &amp; Upcoming matches</h2>
+      <h2 id="player-matches-title" tabIndex={-1}>Previous &amp; Upcoming matches</h2>
       <MatchGroup
         title="Previous 5 matches"
         matches={recentMatches}
         upcoming={false}
         playerTeamName={playerTeamName}
+        unavailable={recent == null}
       />
       <MatchGroup
         title="Upcoming 5 matches"
         matches={upcomingMatches}
         upcoming
         playerTeamName={playerTeamName}
+        unavailable={upcoming == null}
       />
     </section>
   );

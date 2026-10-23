@@ -8,6 +8,7 @@ from lxml.html import HtmlElement
 from fantasy_scraping.parser.dom.locators import node_text
 from fantasy_scraping.parser.errors import NormaliseError, ParserSectionError
 from fantasy_scraping.parser.extractors.base import ExtractionContext, rows_with_dates
+from fantasy_scraping.parser.extractors.media import match_media
 from fantasy_scraping.parser.models.common import Competition, MinutesNote, Score
 from fantasy_scraping.parser.models.futbolfantasy import (
     MatchesBlock,
@@ -37,7 +38,7 @@ class CalendarDayMeta:
     is_home: bool | None
 
 
-def extract_matches(ctx: ExtractionContext) -> MatchesBlock:
+def extract_matches(ctx: ExtractionContext, *, club_badge: str | None = None) -> MatchesBlock:
     """Read the last-five and next-five widgets.
 
     Args:
@@ -61,12 +62,14 @@ def extract_matches(ctx: ExtractionContext) -> MatchesBlock:
         recent = _recent(ctx)
         upcoming = _upcoming(ctx)
     else:
-        recent = _recent_calendar(ctx, calendar_root)
-        upcoming = _upcoming_calendar(ctx)
+        recent = _recent_calendar(ctx, calendar_root, club_badge=club_badge)
+        upcoming = _upcoming_calendar(ctx, club_badge=club_badge)
     return MatchesBlock(recent=recent, upcoming=upcoming)
 
 
-def _recent_calendar(ctx: ExtractionContext, root: HtmlElement) -> list[RecentMatch]:
+def _recent_calendar(
+    ctx: ExtractionContext, root: HtmlElement, *, club_badge: str | None = None
+) -> list[RecentMatch]:
     pending: list[tuple[HtmlElement, tuple[int, int]]] = []
     for day in _days_for_header(root, "Últimos 5", limit=5):
         raw_date = _calendar_date(day)
@@ -92,6 +95,7 @@ def _recent_calendar(ctx: ExtractionContext, root: HtmlElement) -> list[RecentMa
             side = "away"
         matches.append(
             RecentMatch(
+                **match_media(ctx, day, is_home=meta.is_home, club_badge=club_badge),
                 date=resolved[index],
                 matchday=_calendar_matchday(day),
                 competition=meta.competition,
@@ -107,7 +111,9 @@ def _recent_calendar(ctx: ExtractionContext, root: HtmlElement) -> list[RecentMa
     return matches
 
 
-def _upcoming_calendar(ctx: ExtractionContext) -> list[UpcomingMatch]:
+def _upcoming_calendar(
+    ctx: ExtractionContext, *, club_badge: str | None = None
+) -> list[UpcomingMatch]:
     days = _days_for_header(ctx.document.root, "Próximos 5", limit=5)
     if not days:
         ctx.miss("matches.upcoming")
@@ -131,6 +137,7 @@ def _upcoming_calendar(ctx: ExtractionContext) -> list[UpcomingMatch]:
         meta = _calendar_day_meta(ctx, day)
         matches.append(
             UpcomingMatch(
+                **match_media(ctx, day, is_home=meta.is_home, club_badge=club_badge),
                 date=resolved[index],
                 matchday=_calendar_matchday(day),
                 kickoff=_calendar_kickoff(day),

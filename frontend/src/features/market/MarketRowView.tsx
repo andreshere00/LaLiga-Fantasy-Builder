@@ -36,6 +36,7 @@ export function MarketRowCells({
       </span>
       <span className="market-cell market-fsyp-cell" data-label={columnHeadings.fsyp.label}>
         <FsypCell
+          labelAverage
           points={row.points}
           averagePoints={row.averagePoints}
           formRecent={row.formRecent}
@@ -54,7 +55,7 @@ export function MarketRowCells({
         {row.myBid ? <span className="market-bid-value">
           Your bid: {formatEuro(row.myBid.money)}
         </span> : null}
-        <ReleaseClauseDetail row={row} now={now} />
+        {row.sellerKind !== "laliga" ? <ReleaseClauseDetail row={row} now={now} /> : null}
       </span>
       <span
         className="market-cell market-cell-availability"

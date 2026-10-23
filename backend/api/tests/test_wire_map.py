@@ -175,3 +175,22 @@ def test_normalise_fixture_minutes_as_int() -> None:
         },
     )
     assert wire.fixtures[0].minutes == 90
+
+
+def test_parse_wire_document_badges_survive_upstream_normalisation() -> None:
+    raw = json.loads(GOLDEN.read_text(encoding="utf-8"))
+    badges = {
+        "homeBadge": "https://example.com/home.png",
+        "awayBadge": "https://example.com/away.png",
+        "opponentBadge": "https://example.com/opponent.png",
+        "competitionBadge": "https://example.com/champions.png",
+    }
+    raw["matches"]["recent"][0].update(badges)
+    raw["matches"]["upcoming"][0].update(badges)
+    raw["fixtures"][0].update(badges)
+    wire = parse_wire_document(raw)
+    assert wire.matches is not None
+    for row in (wire.matches.recent[0], wire.matches.upcoming[0], wire.fixtures[0]):
+        assert row.home_badge == badges["homeBadge"]
+        assert row.away_badge == badges["awayBadge"]
+        assert row.competition_badge == badges["competitionBadge"]

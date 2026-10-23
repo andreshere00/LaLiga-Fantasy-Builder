@@ -27,14 +27,21 @@ for (const theme of ["light", "dark"]) {
         if (route.name === "market") await expect(page.locator(".market-data-row")).toHaveCount(7);
         await expect(page.locator("html")).toHaveAttribute("data-theme", theme);
         await page.evaluate(() => document.fonts.ready);
+        expect(await page.evaluate(async () => {
+          const faces = await document.fonts.load('14px "LALIGA Text"');
+          return faces.length > 0 && faces.every((face) => face.status === "loaded");
+        })).toBe(true);
+        await expect(page.locator("body")).toHaveCSS("font-family", '"LALIGA Text", Arial, sans-serif');
         if (route.name === "detail") {
           const summary = page.locator(".player-detail-fantasy-summary");
           await expect(summary.locator(".player-fantasy-summary-block")).toHaveCount(4);
-          const hierarchy = summary.locator(".player-fantasy-summary-block").first();
+          const hierarchy = summary.locator(".player-fantasy-summary-block--hierarchy");
           await hierarchy.hover();
           await expect(page.getByRole("tooltip")).toContainText("player's role on the team");
-          await expect(hierarchy.locator("dd")).toHaveCSS("text-align", "center");
-          await expect(hierarchy.locator("dd")).toHaveCSS("font-size", "20px");
+          await expect(hierarchy.locator("dd")).toHaveCSS("text-align", "left");
+          const summaryFontSize = await hierarchy.locator("dd").evaluate((element) =>
+            parseFloat(getComputedStyle(element).fontSize));
+          expect(summaryFontSize).toBeGreaterThanOrEqual(16);
           await expect(hierarchy.locator("dd")).toHaveCSS("justify-content", "center");
           await expect(summary.locator("dt img, dt svg")).toHaveCount(0);
           await expect(hierarchy.locator("dd img")).toBeVisible();
@@ -45,13 +52,14 @@ for (const theme of ["light", "dark"]) {
           await expect(summary.getByText("Unknown", { exact: true })).toBeVisible();
           if (theme === "dark") await expect(riskIcon).toHaveCSS("filter", "brightness(0) invert(1)");
           if (width > 1100) {
-            const centers = await page.locator(
-              ".player-detail-header-identity, .player-detail-header-averages, .player-detail-header-actions",
+            const tops = await page.locator(
+              ".player-detail-header-identity, .player-detail-header-actions",
             ).evaluateAll((elements) => elements.map((element) => {
               const rect = element.getBoundingClientRect();
-              return rect.top + rect.height / 2;
+              return rect.top;
             }));
-            expect(Math.max(...centers) - Math.min(...centers)).toBeLessThan(2);
+            expect(Math.max(...tops) - Math.min(...tops)).toBeLessThan(2);
+            await expect(page.locator(".player-detail-header-averages .fb-metric-grid > div")).toHaveCount(6);
           }
           await hierarchy.focus();
           await expect(page.getByRole("tooltip")).toBeVisible();
@@ -123,7 +131,7 @@ for (const gate of ["signed-out", "unlinked", "needs-reauth", "unavailable"]) {
   });
 }
 
-for (const width of [800, 801]) {
+for (const width of [700, 701, 800, 801]) {
   test("catalog breakpoint " + width, async ({ page }) => {
     await mockApplication(page);
     await page.setViewportSize({ width, height: 1000 });
@@ -131,8 +139,12 @@ for (const width of [800, 801]) {
     await expect(page.getByRole("heading", { name: "Players", exact: true })).toBeVisible();
     await expect(page.locator(".players-player-heading")).toBeVisible();
     await expect(page.locator(".market-head-cell-team")).toBeVisible();
-    if (width === 800) await expect(page.locator(".market-head-cell-fsyp")).toBeHidden();
-    else await expect(page.locator(".market-head-cell-fsyp")).toBeVisible();
+    await expect(page.locator(".market-head-cell-fsyp")).toBeVisible();
+    await expect(page.locator(".players-row .market-fsyp-cell").first()).toBeVisible();
+    const tableOverflows = await page.locator(".players-list").evaluate(
+      (list) => list.scrollWidth > list.clientWidth,
+    );
+    expect(tableOverflows).toBe(width > 700);
   });
 }
 
@@ -154,7 +166,7 @@ test("market bids can cross zero cash up to the inclusive squad debt limit", asy
   await page.getByRole("menuitem", { name: "Hire", exact: true }).click();
   const dialog = page.getByRole("dialog", { name: "Hire player", exact: true });
   const amount = dialog.getByRole("textbox", { name: "Bid amount", exact: true });
-  const confirm = dialog.getByRole("button", { name: "Confirm", exact: true });
+  const confirm = dialog.getByRole("button", { name: "Place bid", exact: true });
   await expect(confirm).toBeEnabled();
   await expect(dialog).toContainText("available cash plus up to 20% of squad value");
   await amount.fill("17000001");
@@ -176,9 +188,32 @@ test("bid feedback waits for a confirmed mocked response", async ({ page }) => {
   await page.getByRole("button", { name: "Options", exact: true }).first().click();
   await page.getByRole("menuitem", { name: "Hire", exact: true }).click();
   await expect(page.getByRole("dialog", { name: "Hire player" })).toBeVisible();
-  await page.getByRole("button", { name: "Confirm", exact: true }).click();
+  await page.getByRole("button", { name: "Place bid", exact: true }).click();
   await expect(page.getByRole("button", { name: "Sending…", exact: true })).toBeDisabled();
+  const pendingDialog = page.getByRole("dialog", { name: "Hire player" });
+  await expect(pendingDialog).toHaveAttribute("aria-busy", "true");
+  await page.keyboard.press("Escape");
+  await expect(pendingDialog).toBeVisible();
   await expect(page.locator(".fb-toast")).toHaveCount(0);
   release();
   await expect(page.locator(".fb-toast").getByText("Bid submitted", { exact: true })).toBeVisible();
+});
+
+test("date range errors explain the correction and remain associated with the inputs", async ({ page }) => {
+  await mockApplication(page);
+  await page.goto("/players/1");
+  await page.getByRole("button", { name: "Custom", exact: true }).click();
+  const from = page.getByLabel("From", { exact: true });
+  const to = page.getByLabel("To", { exact: true });
+  await from.fill("2026-10-20");
+  await to.fill("2026-10-01");
+  const error = page.getByRole("alert");
+  await expect(error).toHaveText("Choose an end date on or after the start date.");
+  await expect(to).toHaveAttribute("aria-describedby", (await error.getAttribute("id"))!);
+  await expect(to).toHaveAttribute("aria-invalid", "true");
+  await expect(page.getByRole("button", { name: "Apply range", exact: true })).toBeDisabled();
+  await to.fill("2026-10-21");
+  await expect(error).toHaveCount(0);
+  await expect(to).not.toHaveAttribute("aria-invalid");
+  await expect(page.getByRole("button", { name: "Apply range", exact: true })).toBeEnabled();
 });

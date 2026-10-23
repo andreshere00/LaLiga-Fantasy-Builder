@@ -79,15 +79,30 @@ for (const theme of ["light", "dark"]) {
       await expect(panel.getByText("Forecast 0°C · Clear")).toBeVisible();
       await expect(panel.getByText("Rain 0% · Wind 0 km/h")).toBeHidden();
       await expect(panel.getByRole("listitem")).toHaveCount(10);
+      const badgeImages = panel.locator(".fixture-match-crest > img");
+      await expect(badgeImages).toHaveCount(20);
+      await expect.poll(() => badgeImages.evaluateAll((images) => images.every((image) =>
+        (image as HTMLImageElement).naturalWidth > 0))).toBe(true);
+      for (const image of await badgeImages.all()) {
+        await expect(image).toHaveCSS("object-fit", "contain");
+        const imageBox = await image.boundingBox();
+        const slotBox = await image.locator("..").boundingBox();
+        expect(imageBox!.width).toBeLessThanOrEqual(28);
+        expect(imageBox!.height).toBeLessThanOrEqual(28);
+        expect(imageBox!.x).toBeGreaterThanOrEqual(slotBox!.x);
+        expect(imageBox!.y).toBeGreaterThanOrEqual(slotBox!.y);
+        expect(imageBox!.x + imageBox!.width).toBeLessThanOrEqual(slotBox!.x + slotBox!.width);
+        expect(imageBox!.y + imageBox!.height).toBeLessThanOrEqual(slotBox!.y + slotBox!.height);
+      }
       const panelBox = await panel.boundingBox();
-      const controlsBox = await page.locator(".board-controls-bar").boundingBox();
-      expect(panelBox!.y + panelBox!.height).toBeLessThanOrEqual(controlsBox!.y);
+      for (const selector of [".board-controls-bar", ".column-pitch", ".column-team", ".column-players"]) {
+        const contentBox = await page.locator(selector).boundingBox();
+        expect(contentBox!.y + contentBox!.height).toBeLessThanOrEqual(panelBox!.y);
+      }
       expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBe(width);
       await expect(panel.getByRole("button", { name: "Refresh fixture matches" })).toHaveCount(0);
-      if (width <= 600) {
-        const actions = await panel.locator(".fixture-panel-actions").boundingBox();
-        expect(Math.abs(actions!.x + actions!.width / 2 - (panelBox!.x + panelBox!.width / 2))).toBeLessThan(2);
-      }
+      await expect(panel.getByRole("button", { name: "Current fixture" })).toHaveCount(0);
+      await expect(panel.getByRole("group", { name: "Match scrolling" })).toHaveCount(0);
       const pager = await panel.getByRole("navigation", { name: "Fixture navigation" }).boundingBox();
       expect(Math.abs(pager!.x + pager!.width / 2 - (panelBox!.x + panelBox!.width / 2))).toBeLessThan(2);
       const summary = panel.locator("summary.fixture-weather-summary").first();
@@ -105,17 +120,19 @@ for (const theme of ["light", "dark"]) {
       await summary.click();
       await expect(panel.getByText("Rain 0% · Wind 0 km/h")).toBeVisible();
       await summary.click();
-      await panel.getByRole("button", { name: "Scroll to later matches" }).click();
+      await viewport.focus();
+      await page.keyboard.press("ArrowRight");
       await expect.poll(() => viewport.evaluate((node) => node.scrollLeft)).toBeGreaterThan(0);
       await viewport.focus(); await page.keyboard.press("End");
       await expect(panel.getByText("Real Valladolid CF", { exact: true })).toBeInViewport();
-      await viewport.evaluate((node) => { node.scrollLeft = 0; });
-      await expect(panel.getByRole("button", { name: "Scroll to earlier matches" })).toHaveAttribute("aria-disabled", "true");
+      await page.keyboard.press("Home");
+      await expect.poll(() => viewport.evaluate((node) => node.scrollLeft)).toBe(0);
       expect(api.calls.fixtures.get(8)).toBe(1);
       expect(api.calls.writes).toEqual([]);
       await page.evaluate(() => document.fonts.ready);
       await viewport.evaluate((node) => node.blur());
       await page.mouse.move(0, 0);
+      await panel.scrollIntoViewIfNeeded();
       await page.screenshot({ path: info.outputPath(`fixture-panel-${theme}-${width}.png`) });
     });
   }
@@ -232,8 +249,8 @@ test("browse previous and next fixtures without changing the lineup week", async
   await panel.getByRole("button", { name: "Next matchweek" }).click();
   await expect(panel.getByRole("heading", { name: "LALIGA · Fixture 9" })).toBeVisible();
   await expect(panel.getByText("Forecast closer to kickoff", { exact: true })).toHaveCount(10);
-  await panel.getByRole("button", { name: "Current fixture" }).click();
+  await panel.getByRole("button", { name: "Previous matchweek" }).click();
   await expect(panel.getByRole("heading", { name: "LALIGA · Fixture 8" })).toBeVisible();
-  await expect(panel.getByRole("button", { name: "Current fixture" })).toBeDisabled();
+  await expect(panel.getByRole("button", { name: "Current fixture" })).toHaveCount(0);
   expect(api.calls.writes).toEqual([]);
 });

@@ -44,3 +44,36 @@ def test_season_stats_yellow_cards_label_fills_discipline() -> None:
     assert player.season_stats is not None
     assert player.season_stats.discipline is not None
     assert player.season_stats.discipline.yellow_cards is not None
+
+
+def test_calendar_lazy_badges_preserve_real_images_and_correct_sides() -> None:
+    player = SERVICE.parse_futbolfantasy(page("raphinha_laliga_26_27_live.html"))
+    recent = next(row for row in player.matches.recent if row.opponent == "Sevilla")
+    assert recent.player_side == "away"
+    assert (
+        recent.home_badge
+        == "https://static.futbolfantasy.com/uploads/images/equipos/escudom/17.png"
+    )
+    assert recent.away_badge == player.profile.identity.club_badge
+    assert recent.competition_badge is not None
+    assert recent.competition_badge.endswith("/laliga.png")
+    assert recent.home_badge != recent.away_badge
+    champions = next(
+        row for row in player.matches.recent if row.competition.value == "champions_league"
+    )
+    assert champions.competition_badge is not None
+    assert champions.competition_badge.endswith("/champions.png")
+
+
+def test_calendar_unsafe_lazy_badge_uses_safe_real_src() -> None:
+    from support import FIXTURES
+
+    html = (FIXTURES / "raphinha_laliga_26_27_live.html").read_text()
+    html = html.replace(
+        'data-src="//static.futbolfantasy.com/uploads/images/equipos/escudom/17.png"',
+        'data-src="javascript:alert(1)"',
+    )
+    player = SERVICE.parse_futbolfantasy(page("unused", html=html))
+    recent = next(row for row in player.matches.recent if row.opponent == "Sevilla")
+    assert recent.opponent_badge is None
+    assert recent.home_badge is None

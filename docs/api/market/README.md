@@ -72,6 +72,8 @@ behaviour (eligibility, bidded state, tooltips, pending-bid cache) is documented
 there — not duplicated here. Automated `fantasy-market` and browser-session
 flows remain **read-only**.
 
+Current market UI with deterministic demo data (refreshed 23 October 2026):
+
 ![Market UI — listings table](../../images/screenshots/market-board.png)
 
 ## Identifiers

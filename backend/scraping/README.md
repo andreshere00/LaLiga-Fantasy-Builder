@@ -111,3 +111,15 @@ checks and retry limits. Successful tables have a one-hour single-flight cache.
 Malformed or incomplete tables fail explicitly. The API computes fixture totals
 and form and verifies them against this classification; the scraper provides
 positions and adjusted points. No player scraper allowlist is widened.
+
+Calendar parsing preserves rival and competition image URLs (including lazy
+`data-src` images), plus the header club badge URL. Match rows expose optional
+`homeBadge`, `awayBadge`, `opponentBadge` and `competitionBadge`; side association
+requires an explicit known home/away side. The parser never downloads badges.
+See [badge sources](../../docs/frontend-club-crest-sources.md).
+
+For names not pinned by a reviewed master-ID alias, literal sitemap name tokens
+remain candidates alongside generated surname aliases. A surname shared with
+another player's full name therefore requires club disambiguation instead of
+silently selecting that other player. Reviewed master-ID aliases retain priority;
+ambiguous or mismatched clubs still fail closed.

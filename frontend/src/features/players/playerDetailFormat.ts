@@ -1,8 +1,6 @@
 import { formatEuro } from "../../api/format";
 import { asFiniteNumber, asRecord, text } from "../../api/mappers";
 
-const COMPACT_EURO = new Intl.NumberFormat("es-ES", { maximumFractionDigits: 1 });
-
 export const MISSING_STAT = "-";
 export const NO_DATA_YET = "No data yet";
 
@@ -87,14 +85,16 @@ export function withMarketTrend<T extends { value: number }>(
 }
 
 /** Short Y-axis labels for large market values (avoids duplicate full-euro ticks). */
-export function formatMarketChartTick(value: number): string {
+export function formatMarketChartTick(value: number, range?: number): string {
   if (!Number.isFinite(value)) return "";
   const abs = Math.abs(value);
-  if (abs >= 1_000_000) {
-    return `${COMPACT_EURO.format(value / 1_000_000)} M€`;
-  }
-  if (abs >= 10_000) {
-    return `${COMPACT_EURO.format(value / 1_000)} k€`;
+  const unit = abs >= 1_000_000 ? 1_000_000 : abs >= 10_000 ? 1_000 : null;
+  if (unit != null) {
+    // Retain enough precision to distinguish ticks for small changes in a high price.
+    const precision = range != null && Number.isFinite(range) && range > 0
+      ? Math.min(6, Math.max(1, Math.ceil(Math.log10(unit / (range / 4))))) : 1;
+    const formatted = new Intl.NumberFormat("es-ES", { maximumFractionDigits: precision });
+    return `${formatted.format(value / unit)} ${unit === 1_000_000 ? "M€" : "k€"}`;
   }
   return formatEuro(value);
 }

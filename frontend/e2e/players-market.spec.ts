@@ -35,7 +35,7 @@ const playerRow = (page: Page, name: string) => page.locator(".players-row").fil
 });
 
 for (const theme of ["light", "dark"]) {
-  for (const width of [375, 800, 1024, 1440, 720]) {
+  for (const width of [320, 375, 800, 1024, 1440, 720]) {
     test(`catalog market details and layout: ${theme} ${width}`, async ({ page }, info) => {
       await page.clock.install({ time: new Date("2026-10-12T12:00:00Z") });
       await mockPlayers(page);
@@ -48,16 +48,23 @@ for (const theme of ["light", "dark"]) {
       await expect(name).toHaveCSS("color", "rgb(255, 75, 68)");
       await name.hover();
       await expect(name).toHaveCSS("color", "rgb(255, 75, 68)");
-      const details = width <= 800 ? ".players-mobile-value-details" : ".players-value-details";
+      const details = ".players-value-details";
       await expect(shielded.locator(details).getByText("Release clause: 10.000.000 €", { exact: true })).toBeVisible();
       await expect(shielded.locator(details + " .market-clause-shield")).toHaveCSS("filter",
         theme === "dark" ? "brightness(0) invert(1)" : "none");
       await expect(shielded.locator(".market-clause-flag-icon")).toHaveCSS("filter", "none");
       await expect(shielded.locator(".market-bid-count")).toHaveCount(0);
-      await expect(shielded.locator(".market-fsyp-primary")).toHaveCSS("font-size", "16px");
+      await expect(shielded.locator(".market-fsyp-primary")).toHaveCSS("font-size", "18px");
       await expect(shielded.locator(".market-fsyp-primary")).toHaveCSS("font-weight", "700");
       await expect(shielded.locator(".market-form-week")).toHaveText(["F3", "F4", "F5", "F6", "F7"]);
-      if (width <= 800) await expect(shielded.locator(".market-fsyp-primary")).toBeHidden();
+      await expect(shielded.locator(".market-fsyp-primary")).toBeVisible();
+      await expect(shielded.locator(".market-value")).toBeVisible();
+      if (width <= 700) {
+        await expect(shielded.locator(".market-cell-availability")).toBeVisible();
+        await expect(shielded.locator(".players-owner-cell")).toBeVisible();
+        expect(await shielded.evaluate((row) => row.scrollWidth <= row.clientWidth)).toBe(true);
+        expect(await page.locator(".players-list").evaluate((list) => list.scrollWidth <= list.clientWidth)).toBe(true);
+      }
       if (width > 1000) {
         const squares = await shielded.locator(".market-form-badges").boundingBox();
         const cell = await shielded.locator(".market-form").boundingBox();
@@ -99,7 +106,7 @@ test("catalog bid mutations reconcile amounts and counts, including stale reads 
   }
   await dialog.getByRole("textbox", { name: "Bid amount" }).fill("6000000");
   fixture.lag(2);
-  await dialog.getByRole("button", { name: "Confirm", exact: true }).click();
+  await dialog.getByRole("button", { name: "Update bid", exact: true }).click();
   await expect(dialog).toHaveCount(0);
   await expect(row.locator(".players-value-details .market-bid-value")).toHaveText("Your bid: 6.000.000 €");
   await expect(row.getByText("Bids: 2", { exact: true })).toBeVisible();
@@ -118,7 +125,7 @@ test("catalog bid mutations reconcile amounts and counts, including stale reads 
   const unbid = playerRow(page, "Player 16");
   await unbid.getByRole("button", { name: "Options", exact: true }).click();
   await page.getByRole("menuitem", { name: "Hire", exact: true }).click();
-  await page.getByRole("dialog").getByRole("button", { name: "Confirm", exact: true }).click();
+  await page.getByRole("dialog").getByRole("button", { name: "Place bid", exact: true }).click();
   await expect(unbid.getByText("Bids: 1", { exact: true })).toBeVisible();
   await expect(unbid.locator(".players-value-details .market-bid-value")).toHaveText("Your bid: 3.500.000 €");
   expect(fixture.writes.map(({ method }) => method)).toEqual(["PUT", "DELETE", "DELETE", "POST"]);
@@ -135,7 +142,7 @@ test("catalog preserves pagination, favorites, URL filters and player-specific o
   await page.getByRole("navigation", { name: "Players pages" }).getByRole("button", { name: "Page 2", exact: true }).click();
   await expect(playerRow(page, "Player 16").getByText("Bids: 0", { exact: true })).toBeVisible();
   await page.getByRole("navigation", { name: "Players pages" }).getByRole("button", { name: "Page 1", exact: true }).click();
-  await expect(playerRow(page, "Player 01").getByRole("button", { name: "Remove Player 01 from favorites" })).toHaveAttribute("aria-pressed", "true");
+  await expect(playerRow(page, "Player 01").getByRole("button", { name: "Favorite Player 01" })).toHaveAttribute("aria-pressed", "true");
   await page.getByRole("combobox", { name: "Search players" }).fill("Player 13");
   await expect(page).toHaveURL(/q=Player\+13/);
   const own = playerRow(page, "Player 13");
@@ -179,3 +186,25 @@ test("catalog resets clause ownership and dialog state when switching leagues", 
   await expect(row.getByRole("link", { name: "Player 01", exact: true })).not.toHaveCSS("color", "rgb(255, 75, 68)");
   await expect(page.getByRole("dialog")).toHaveCount(0);
 });
+
+for (const width of [375, 1440]) {
+  test(`catalog and market share their comparison styling at ${width}px`, async ({ page }) => {
+    await page.setViewportSize({ width, height: 1000 });
+    await mockPlayers(page);
+    const presentation = () => page.locator(".market-data-row").first().evaluate((row) => {
+      const css = (selector: string, property: string) => getComputedStyle(row.querySelector(selector)!).getPropertyValue(property);
+      return {
+        photoWidth: css(".player-tile", "width"), photoHeight: css(".player-tile", "height"),
+        nameSize: css(".market-name", "font-size"), nameWeight: css(".market-name", "font-weight"),
+        pointsSize: css(".market-fsyp-primary", "font-size"), valueSize: css(".market-value-primary", "font-size"),
+        badgeSize: css(".player-score-badge", "width"), historyHeight: css(".market-form-nav-btn", "height"),
+      };
+    });
+    await page.goto("/market");
+    await expect(page.locator(".market-data-row").first()).toBeVisible();
+    const market = await presentation();
+    await page.getByRole("link", { name: "Players", exact: true }).first().click();
+    await expect(page.locator(".players-row").first()).toBeVisible();
+    expect(await presentation()).toEqual(market);
+  });
+}

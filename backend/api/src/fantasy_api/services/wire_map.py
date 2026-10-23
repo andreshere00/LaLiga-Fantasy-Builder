@@ -115,6 +115,10 @@ def _normalise_match(row: Mapping[str, Any]) -> dict[str, Any]:
         if home_score is not None and away_score is not None:
             score_text = f"{home_score}-{away_score}"
     return {
+        "home_badge": row.get("homeBadge") or row.get("home_badge"),
+        "away_badge": row.get("awayBadge") or row.get("away_badge"),
+        "opponent_badge": row.get("opponentBadge") or row.get("opponent_badge"),
+        "competition_badge": row.get("competitionBadge") or row.get("competition_badge"),
         "date": row.get("date"),
         "kickoff_time": row.get("kickoff"),
         "matchweek": row.get("matchday"),
@@ -169,6 +173,10 @@ def _normalise_fixture(row: Mapping[str, Any]) -> dict[str, Any]:
     side = row.get("playerSide")
     is_home = side == "home" if isinstance(side, str) else None
     return {
+        "home_badge": row.get("homeBadge") or row.get("home_badge"),
+        "away_badge": row.get("awayBadge") or row.get("away_badge"),
+        "opponent_badge": row.get("opponentBadge") or row.get("opponent_badge"),
+        "competition_badge": row.get("competitionBadge") or row.get("competition_badge"),
         "matchweek": row.get("matchday"),
         "home_team": home,
         "away_team": away,

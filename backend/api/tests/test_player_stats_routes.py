@@ -38,10 +38,19 @@ def rsa_pems() -> tuple[str, str]:
     return private_pem, public_pem
 
 
-def make_client(public_pem: str, *, market_history: object | None = None) -> TestClient:
+def make_client(
+    public_pem: str, *, market_history: object | None = None, badges: dict[str, str] | None = None
+) -> TestClient:
     scrape_calls: list[str] = []
     scrape_params: list[dict[str, str]] = []
     golden = json.loads(GOLDEN.read_text(encoding="utf-8"))
+    if badges:
+        for row in [
+            *golden["fixtures"],
+            *golden["matches"]["recent"],
+            *golden["matches"]["upcoming"],
+        ]:
+            row.update(badges)
     settings = test_settings().model_copy(
         update={
             "scraping_base_url": "http://scraping.test",
@@ -297,3 +306,30 @@ def test_stats_market_invalid_provider_sample_returns_sanitized_502(
         )
     assert response.status_code == 502
     assert "provider secret" not in response.text
+
+
+@pytest.mark.parametrize(
+    "segment,key",
+    [("fixtures", "fixtures"), ("matches/recent", "matches"), ("matches/upcoming", "matches")],
+)
+def test_stats_match_badges_survive_http_response(
+    rsa_pems: tuple[str, str],
+    segment: str,
+    key: str,
+) -> None:
+    private_pem, public_pem = rsa_pems
+    badges = {
+        "homeBadge": "https://example.com/home.png",
+        "awayBadge": "https://example.com/away.png",
+        "competitionBadge": "https://example.com/ucl.png",
+    }
+    with make_client(public_pem, badges=badges) as client:
+        response = client.get(
+            f"/players/4288/stats/{segment}",
+            headers={"Authorization": f"Bearer {mint_internal_jwt(private_pem)}"},
+        )
+    assert response.status_code == 200
+    fixture = response.json()[key][0]["fixture"]
+    assert fixture["home_badge"] == badges["homeBadge"]
+    assert fixture["away_badge"] == badges["awayBadge"]
+    assert fixture["competition_badge"] == badges["competitionBadge"]

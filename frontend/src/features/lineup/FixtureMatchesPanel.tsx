@@ -9,7 +9,8 @@ import { ScrollArea } from "../../components/ui/ScrollArea";
 import { WEATHER_CONDITIONS, weatherIcon, weatherReason } from "../../components/weather";
 import { weatherConditionFromSnapshot } from "../players/playerDetailWidgets";
 import { windKmhFromMs } from "../players/playerDetailFormat";
-import { ProfilePhoto } from "../shell/ProfilePhoto";
+import { BadgeImage } from "../../components/BadgeImage";
+import { clubMediaFromFixture } from "../../api/clubMedia";
 import { FIXTURE_TIME_ZONE, weatherMatchesFixture, type PanelMatch } from "./fixturePanelModel";
 import { useFixturePanel } from "./useFixturePanel";
 import "./FixtureMatchesPanel.css";
@@ -66,7 +67,7 @@ function FixtureMatch({ match, forecast, weatherLoading, weatherFailed, now }: {
       </div>
       {([match.home, match.away] as const).map((team, index) => (
         <div className="fixture-match-team" key={index}>
-          <span className="fixture-match-crest" aria-hidden="true"><ProfilePhoto url={team.badge} fallback="—" /></span>
+          <span className="fixture-match-crest" aria-hidden="true"><BadgeImage media={clubMediaFromFixture(team)} fallback="—" /></span>
           <span>{team.name}</span>
           <span className="fixture-match-score" aria-label={`${index === 0 ? "Home" : "Away"} goals: ${(index === 0 ? match.homeScore : match.awayScore) ?? "no result"}`}>
             {(index === 0 ? match.homeScore : match.awayScore) ?? "—"}
@@ -88,7 +89,6 @@ function FixtureMatchesPanelContent() {
   const panel = useFixturePanel();
   const heading = useId();
   const viewport = useRef<HTMLDivElement>(null);
-  const [edges, setEdges] = useState({ start: true, end: false });
   const [announcement, setAnnouncement] = useState("");
   const lastAnnounced = useRef<{ week: number | undefined; label: string; scores: Map<string, string> } | null>(null);
   const week = panel.selection?.week;
@@ -97,17 +97,10 @@ function FixtureMatchesPanelContent() {
   useEffect(() => {
     const node = viewport.current;
     if (!node || !hasMatches) return;
-    const update = () => setEdges({ start: node.scrollLeft <= 2, end: node.scrollLeft + node.clientWidth >= node.scrollWidth - 2 });
     node.scrollLeft = 0;
     const updating = node.querySelector<HTMLElement>(".is-updating");
     if (updating) node.scrollLeft = updating.getBoundingClientRect().left - node.getBoundingClientRect().left - 12;
-    update();
-    const observer = new ResizeObserver(update);
-    observer.observe(node);
-    node.addEventListener("scroll", update);
-    return () => { observer.disconnect(); node.removeEventListener("scroll", update); };
   }, [week, hasMatches]);
-  const scroll = (direction: number) => viewport.current?.scrollBy({ left: direction * viewport.current.clientWidth * .8 });
   const mode = panel.selection?.mode;
   const label = mode === "active" ? "In progress" : mode === "season-complete" ? "Season complete"
     : mode === "finished" ? "Finished" : mode === "upcoming" ? "Up next" : "Awaiting updates";
@@ -145,16 +138,6 @@ function FixtureMatchesPanelContent() {
             <Button variant="outline" shape="square" size="icon" aria-label="Next matchweek"
               disabled={week == null || week >= 38} onClick={() => panel.navigate(1)}>›</Button>
           </nav>
-          <div className="fixture-panel-actions">
-            <Button variant="ghost" shape="square" size="sm" disabled={panel.automatic}
-              onClick={panel.followCurrent}>Current fixture</Button>
-            <div className="fixture-match-pagination" role="group" aria-label="Match scrolling">
-              <Button variant="outline" shape="square" size="icon" aria-label="Scroll to earlier matches"
-                aria-disabled={edges.start || !hasMatches} onClick={() => { if (!edges.start) scroll(-1); }}>‹</Button>
-              <Button variant="outline" shape="square" size="icon" aria-label="Scroll to later matches"
-                aria-disabled={edges.end || !hasMatches} onClick={() => { if (!edges.end) scroll(1); }}>›</Button>
-            </div>
-          </div>
         </div>
         {panel.error ? <p className="fixture-panel-error" role="alert">
           {panel.stale ? "Update unavailable. Showing previously retrieved matches." : "Fixture matches unavailable."}

@@ -1502,6 +1502,50 @@
       },
       "FixtureRow": {
         "properties": {
+          "homeBadge": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Homebadge"
+          },
+          "awayBadge": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Awaybadge"
+          },
+          "opponentBadge": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Opponentbadge"
+          },
+          "competitionBadge": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Competitionbadge"
+          },
           "date": {
             "anyOf": [
               {
@@ -3604,6 +3648,50 @@
       },
       "RecentMatch": {
         "properties": {
+          "homeBadge": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Homebadge"
+          },
+          "awayBadge": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Awaybadge"
+          },
+          "opponentBadge": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Opponentbadge"
+          },
+          "competitionBadge": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Competitionbadge"
+          },
           "date": {
             "type": "string",
             "format": "date",
@@ -4256,6 +4344,50 @@
       },
       "UpcomingMatch": {
         "properties": {
+          "homeBadge": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Homebadge"
+          },
+          "awayBadge": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Awaybadge"
+          },
+          "opponentBadge": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Opponentbadge"
+          },
+          "competitionBadge": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Competitionbadge"
+          },
           "date": {
             "type": "string",
             "format": "date",

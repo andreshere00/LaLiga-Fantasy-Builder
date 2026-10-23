@@ -8,9 +8,10 @@ type FsypCellProps = {
   points: MarketRow["points"];
   averagePoints: MarketRow["averagePoints"];
   formRecent: MarketRow["formRecent"];
+  labelAverage?: boolean;
 };
 
-export function FsypCell({ points, averagePoints, formRecent }: FsypCellProps) {
+export function FsypCell({ points, averagePoints, formRecent, labelAverage = false }: FsypCellProps) {
   const seasonAverage = formatScoreAverage(averagePoints);
   const formAverage = formatScoreAverage(averageLastPerformances(formRecent, 3));
 
@@ -26,7 +27,7 @@ export function FsypCell({ points, averagePoints, formRecent }: FsypCellProps) {
 
     </>}>
       <span className="market-fsyp-primary">{pointsLabel(points)}</span>
-      <span className="market-fsyp-average">{seasonAverage}</span>
+      <span className="market-fsyp-average">{labelAverage ? "Avg. " : ""}{seasonAverage}</span>
     </Help>
   );
 }

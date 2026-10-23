@@ -80,12 +80,10 @@ export function useFixturePanel() {
     (selection?.week !== week && !pendingNext ? fixtures.error : null);
   const error = requestedWeek != null ? browsing.error : automaticError;
   return {
-    automatic: requestedWeek == null,
     navigate: (direction: number) => {
       const target = validWeek((selection?.week ?? 0) + direction);
       if (selection && target != null) setRequestedWeek(target);
     },
-    followCurrent: () => setRequestedWeek(null),
     selection, round: shown, now, weather,
     loading: !error && ((requestedWeek == null && currentQuery.isPending) || selection?.mode === "loading"),
     error, stale: error != null && shown != null && shown.matches.length > 0,

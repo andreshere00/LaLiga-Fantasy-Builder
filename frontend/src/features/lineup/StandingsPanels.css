@@ -1,6 +1,6 @@
 .lineup-page .column-players {
   display: grid;
-  grid-template-rows: repeat(2, minmax(0, 1fr));
+  grid-template-rows: minmax(0, 1fr);
   gap: var(--lineup-side-panel-section-gap);
   height: var(--lineup-side-panel-height);
 }
@@ -10,17 +10,15 @@
 .ranking-panel .rank-name { overflow-wrap: anywhere; }
 .ranking-panel .rank-row:focus-visible { outline-offset: -3px; }
 .standings-heading { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
-.standings-heading .fb-card-title { font-size: 18px; }
-.standings-heading .fb-button { flex-shrink: 0; font-size: 24px; padding: 0 8px; }
+.standings-heading .fb-button { flex-shrink: 0; padding: 0 8px; }
 .standings-panel [data-slot="scroll-area-viewport"] { box-sizing:border-box; padding-bottom:10px; }
 .standings-panel .fb-scroll-bar { z-index:4; }
 .standings-panel .fb-scroll-corner { z-index:5; }
-.standings-meta, .standings-legend { margin: 4px 0 0; color: var(--fb-muted); font-size: 12px; line-height: 1.5; }
-.standings-legend { font-size: 12px; }
-.standings-error { margin: 8px 0 0; padding-left: 8px; border-left: 3px solid var(--fb-failure); font-size: 12px; line-height: 1.5; }
-.standings-placeholder { display: grid; place-items: center; min-height: 100%; padding: 16px; box-sizing: border-box; font-size: 14px; }
+.standings-meta, .standings-legend { margin: 4px 0 0; color: var(--fb-muted); font-size: var(--fb-widget-font-meta); line-height: 1.5; }
+.standings-error { margin: 8px 0 0; padding-left: 8px; border-left: 3px solid var(--fb-failure); font-size: var(--fb-widget-font-meta); line-height: 1.5; }
+.standings-placeholder { display: grid; place-items: center; min-height: 100%; padding: 16px; box-sizing: border-box; font-size: var(--fb-widget-font-body); }
 .standings-loading { min-width: 680px; padding: 8px 0; }
-.standings-loading-label { display: block; margin: 0 0 8px; color: var(--fb-muted); font-size: 12px; }
+.standings-loading-label { display: block; margin: 0 0 8px; color: var(--fb-muted); font-size: var(--fb-widget-font-meta); }
 .standings-skeleton { overflow: hidden; border-top: 1px solid var(--fb-line); }
 .standings-skeleton-row { display: grid; grid-template-columns: 32px minmax(100px, 1.6fr) repeat(7, minmax(32px, .55fr)) minmax(110px, 1.8fr); align-items: center; gap: 8px; min-height: 44px; padding: 0 6px; border-bottom: 1px solid var(--fb-line); box-sizing: border-box; }
 .standings-skeleton-cell { display: block; width: 55%; height: 10px; border-radius: 2px; background: linear-gradient(100deg, var(--fb-subtle) 25%, var(--fb-line) 45%, var(--fb-subtle) 65%); background-size: 250% 100%; animation: standings-skeleton-shimmer 1.5s ease-in-out infinite; }
@@ -32,14 +30,14 @@
   .standings-skeleton-cell { animation: none; }
 }
 
-.standings-table.fb-table { min-width: 680px; table-layout: fixed; border-collapse: separate; border-spacing: 0; font-variant-numeric: tabular-nums; }
+.standings-table.fb-table { min-width: 740px; font-size:var(--fb-widget-font-body); table-layout: fixed; border-collapse: separate; border-spacing: 0; font-variant-numeric: tabular-nums; }
 .standings-table.fb-table :is(th, td) { box-sizing: border-box; padding: 4px 6px; height: 44px; border-bottom: 1px solid var(--fb-line); text-align: right; white-space: nowrap; }
-.standings-table.fb-table thead th { position: sticky; top: 0; z-index: 2; height: 34px; background: var(--fb-subtle); }
+.standings-table.fb-table thead th { font-size:var(--fb-widget-font-meta); position: sticky; top: 0; z-index: 2; height: 34px; background: var(--fb-subtle); }
 .standings-table :is(th, td):first-child { position: sticky; left: 0; z-index: 1; width: 32px; text-align: center; background: var(--fb-surface); }
 .standings-table :is(th, td):nth-child(2) { position: sticky; left: 32px; z-index: 1; width: 140px; text-align: left; background: var(--fb-surface); border-right: 1px solid var(--fb-line); }
 .standings-table thead th:nth-child(-n+2) { z-index: 3; background: var(--fb-subtle); }
-.standings-table :is(th, td):last-child { width: 180px; text-align: left; padding-right: 16px; }
-.standings-table .standing-club { font-size: 12px; font-weight: 500; text-transform: none; letter-spacing: normal; }
+.standings-table :is(th, td):last-child { width: 240px; text-align: left; padding-right: 16px; }
+.standings-table .standing-club { font-size: var(--fb-widget-font-body); font-weight: 500; text-transform: none; letter-spacing: normal; }
 .standing-club-content { display: flex; align-items: center; gap: 6px; }
 .standing-club-badge { width: 32px; height: 32px; flex: 0 0 32px; }
 .standing-club-badge .fb-avatar { display:block; box-sizing:border-box; padding:2px; }
@@ -50,13 +48,38 @@
 .standing-form-trigger { display: inline-flex; justify-content: center; align-items: center; width: 30px; height: 32px; padding: 0; border: 0; background: transparent; cursor: pointer; }
 .standing-form-trigger:hover .fb-badge { outline: 1px solid var(--fb-secondary); }
 .standing-match-positioner { z-index: 60; }
-.standing-match-popup { max-width: min(300px, calc(100vw - 32px)); padding: 16px; background: var(--fb-surface); color: var(--fb-secondary); border: 1px solid var(--fb-control-line); font-size: 14px; line-height: 1.5; }
-.standing-match-popup h2 { margin: 0 0 8px; font-size: 18px; }
+.standing-match-popup { max-width: min(300px, calc(100vw - 32px)); padding: 16px; background: var(--fb-surface); color: var(--fb-secondary); border: 1px solid var(--fb-control-line); font-size: var(--fb-widget-font-body); line-height: 1.5; }
+.standing-match-popup h2 { margin: 0 0 8px; font-size: var(--fb-widget-font-title); }
 .standing-match-popup p { margin: 0 0 8px; }
-.standing-match-popup time { display: block; color: var(--fb-muted); font-size: 12px; }
+.standing-match-popup time { display: block; color: var(--fb-muted); font-size: var(--fb-widget-font-meta); }
 .standings-sr-only { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; border: 0; }
 
 @media (max-width: 1099px), (max-aspect-ratio: 4/3) {
   .lineup-page .column-players { height: auto; grid-template-rows: none; }
   .column-players > .fb-card .fb-card-content { flex: none; height: clamp(240px, 45vh, 420px); }
+}
+
+/* Standings follow the lineup and fixture panels in document and visual order. */
+.lineup-page > .standings-panel {
+  width:100%;
+  box-sizing:border-box;
+  margin-top:var(--lineup-board-row-gap);
+}
+.lineup-page > .standings-panel > .fb-card-header {
+  display:grid;
+  grid-template-columns:minmax(0,1fr) auto;
+  gap:4px 16px;
+  padding:16px 20px 0;
+}
+.lineup-page > .standings-panel .standings-heading,
+.lineup-page > .standings-panel .standings-legend,
+.lineup-page > .standings-panel .standings-error { grid-column:1 / -1; }
+.lineup-page > .standings-panel .standings-meta { margin:0; }
+.lineup-page > .standings-panel > .fb-card-content {
+  flex:none;
+  height:clamp(200px,45dvh,480px);
+  padding:0 12px 12px;
+}
+@media(max-width:600px) {
+  .lineup-page > .standings-panel > .fb-card-header { grid-template-columns:1fr; padding:16px 12px 0; }
 }

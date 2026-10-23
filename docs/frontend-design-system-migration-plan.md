@@ -60,7 +60,7 @@ Dependencies identified at planning time:
 |------|-----------------|
 | Typography | Actual Anton 400 for uppercase display headings, +0.03em tracking; AT Aero 400/500/600 for body, labels and actions. Add the supplied Anton and Semibold assets; do not synthesize missing weights. |
 | Color | Semantic light/dark roles from the guide. Coral `#FF4B44` for primary actions and active rules; neutral surfaces/text; cyan and purple used sparingly. Black foreground on coral primary actions. |
-| Geometry | Square panels, tables, inputs, navigation and integrated controls; 8px radius only on standalone action buttons. Preserve explicit circular loader exceptions. |
+| Geometry | Square panels, tables, inputs, navigation and all buttons, including standalone actions. Preserve explicit circular loader exceptions. |
 | Structure | Opaque surfaces and thin neutral borders; no gradients, shadows, glow or blur. |
 | Motion | 160ms color transitions; restrained panel translation at most 200ms; remove spring entrances, scale pops and hover lifts. Pulse Ring follows its separate reference timing. Respect reduced motion. |
 | Controls | Touch targets at least 44px; visible 2px focus outline; selects with one 18px chevron inset 12px. Favorites change only the bookmark icon, keeping surface/border neutral. |

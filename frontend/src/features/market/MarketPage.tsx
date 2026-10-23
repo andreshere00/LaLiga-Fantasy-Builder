@@ -24,6 +24,7 @@ import { RichRow } from "../../components/ui/RichRow";
 import { MarketToolbar } from "./MarketToolbar";
 import { useMarketBoard } from "./useMarketBoard";
 import "./MarketPage.css";
+import "../../components/ui/ComparisonList.css";
 import { MarketOffers } from "./offers/MarketOffers";
 import { MarketOffersProvider } from "./offers/MarketOffersContext";
 
@@ -90,6 +91,10 @@ function MarketListContent() {
           squadAvailable={board.ownSquadAvailable} />
           <MarketBids board={board} actions={marketActions} now={now} /></>}
       />
+      {!board.isLoading && !board.hasError && board.rows.length > 0 ? <div className="market-results-summary">
+        <p role="status">{visibleRows.length} of {board.rows.length} players{filterCount > 0 ? " · Filters active" : " available"}</p>
+        <span>Form: oldest → latest</span>
+      </div> : null}
       {board.isDegraded ? (
         <p className="market-notice status-copy" role="status">
           Some market details could not be loaded. Balance, squad data, value changes and last
@@ -152,7 +157,7 @@ export function MarketPage() {
   const { status } = useAuth();
   if (status !== "ready") return <GatePanel status={status} />;
   return (
-    <section className="market-page">
+    <section className="market-page comparison-page">
       <MarketList />
     </section>
   );

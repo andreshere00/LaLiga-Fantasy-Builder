@@ -1,0 +1,219 @@
+/* A compact identity, followed by full-width performance and outlook sections. */
+.player-detail-header.player-profile-header {
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: start;
+  gap: 28px 24px;
+  padding: 28px;
+  border-top: 3px solid var(--fb-primary);
+}
+
+.player-profile-header .player-detail-header-identity {
+  grid-column: 1;
+  grid-row: 1;
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  align-self: start;
+  gap: 24px;
+}
+
+.player-profile-header .player-detail-header-identity > .player-tile {
+  width: 96px;
+  height: 128px;
+  flex: 0 0 96px;
+  align-self: center;
+}
+
+.player-profile-header .player-detail-header-text { gap: 10px; }
+.player-profile-header .player-detail-header-text h1 {
+  font-size: clamp(28px, 3.5vw, 40px);
+  line-height: 1.12;
+  overflow-wrap: anywhere;
+}
+
+.player-profile-header .player-detail-header-facts {
+  flex-direction: row;
+  align-items: center;
+  gap: 8px 12px;
+  color: var(--fb-muted);
+  font-size: 13px;
+}
+
+.player-profile-position {
+  padding: 3px 7px;
+  border: 1px solid var(--fb-line);
+  color: var(--fb-secondary);
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: .06em;
+  text-transform: uppercase;
+}
+
+.player-profile-points { margin: 0; }
+.player-profile-points > div { display: flex; align-items: baseline; gap: 10px; }
+.player-profile-points dt {
+  order: 1;
+  color: var(--fb-muted);
+  font-size: 11px;
+  font-weight: 500;
+  letter-spacing: .04em;
+  text-transform: uppercase;
+}
+.player-profile-points dd {
+  margin: 0;
+  color: var(--fb-tertiary);
+  font: 400 30px/1 Anton, sans-serif;
+  font-variant-numeric: tabular-nums;
+}
+.player-profile-header .player-detail-availability-reason { font-size: 12px; }
+
+.player-profile-header .player-detail-header-actions {
+  grid-column: 2;
+  grid-row: 1;
+  align-self: start;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+.player-profile-header .player-detail-header-actions :is(.squad-tile-slot,.squad-tile-controls) {
+  width: auto;
+  height: 44px;
+  flex-basis: auto;
+  aspect-ratio: auto;
+}
+.player-profile-header .squad-details-link.is-text-trigger,
+.player-profile-header .player-bookmark-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  width: auto;
+  min-height: 44px;
+  padding: 0 14px;
+  border: 1px solid var(--fb-control-line);
+  background: var(--fb-surface);
+  color: var(--fb-secondary);
+  font: 600 13px/1.35 var(--fb-font-body);
+  white-space: nowrap;
+}
+.player-profile-header .squad-details-link.is-text-trigger:is(:hover,:focus-visible) {
+  background: var(--fb-coral);
+  color: var(--fb-on-coral);
+}
+.player-profile-header .player-bookmark-btn[aria-pressed="true"] { border-width: 2px; padding-inline: 13px; }
+
+.player-profile-header .player-detail-header-averages {
+  grid-column: 1 / -1;
+  grid-row: 2;
+  padding: 24px 0 0;
+  border-left: 0;
+  border-top: 1px solid var(--fb-line);
+}
+.player-averages-heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 12px 20px;
+  margin-bottom: 16px;
+}
+.player-averages-heading h2 {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin: 0 0 6px;
+  color: var(--fb-tertiary);
+  font: 400 22px/1.3 Anton, sans-serif;
+  letter-spacing: .03em;
+}
+.player-averages-heading h2::before {
+  content: "";
+  flex: 0 0 4px;
+  width: 4px;
+  height: 22px;
+  background: var(--fb-primary);
+}
+.player-profile-header .player-detail-averages-source-note { margin: 0; color: var(--fb-muted); }
+.player-profile-header .fb-metric-grid { grid-template-columns: repeat(6, minmax(0, 1fr)); }
+.player-profile-header .fb-metric-grid > div {
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  gap: 16px;
+  min-width: 0;
+  min-height: 108px;
+  padding: 16px 18px;
+}
+.player-profile-header .fb-metric-grid dt {
+  color: var(--fb-muted);
+  font-size: 12px;
+  line-height: 1.45;
+  overflow-wrap: anywhere;
+}
+.player-profile-header .fb-metric-grid dd {
+  margin: 0;
+  color: var(--fb-tertiary);
+  font: 400 30px/1 Anton, sans-serif;
+  font-variant-numeric: tabular-nums;
+  overflow-wrap: anywhere;
+}
+.player-profile-header .player-detail-header-averages > .player-detail-averages-source-note { margin-top: 10px; }
+.player-profile-header .player-detail-fantasy-overview {
+  grid-column: 1 / -1;
+  grid-row: 3;
+  padding-top: 24px;
+  border-top: 1px solid var(--fb-line);
+}
+
+/* Centered section links, with a rectangular selection marker instead of an underline. */
+.player-detail-page .player-detail-sections { gap: 4px; padding: 6px; background: var(--fb-subtle); }
+.player-detail-sections a {
+  border: 1px solid transparent;
+  font-size: 13px;
+  transition: background-color .16s ease, color .16s ease, border-color .16s ease;
+}
+.player-detail-sections a::before {
+  content: "";
+  flex: 0 0 4px;
+  width: 4px;
+  height: 4px;
+  background: var(--fb-primary);
+  opacity: 0;
+}
+.player-detail-sections a:hover { background: var(--fb-surface); }
+.player-detail-sections a[aria-current="location"] {
+  border-color: var(--fb-control-line);
+  background: var(--fb-surface);
+  color: var(--fb-tertiary);
+}
+.player-detail-sections a[aria-current="location"]::before { opacity: 1; }
+.player-detail-sections .player-section-icon { width: 18px; height: 18px; }
+.player-detail-page :is(h1,h2)[id] { scroll-margin-top: 16px; }
+
+@media (max-width: 900px) {
+  .player-profile-header .fb-metric-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+}
+@media (max-width: 600px) {
+  .player-detail-header.player-profile-header { grid-template-columns: minmax(0, 1fr); padding: 16px; gap: 20px; }
+  .player-profile-header .player-detail-header-identity { display: flex; gap: 16px; }
+  .player-profile-header .player-detail-header-identity > .player-tile { width: 78px; height: 104px; flex-basis: 78px; }
+  .player-profile-header .player-detail-header-text { gap: 8px; }
+  .player-profile-header .player-detail-header-text h1 { font-size: 28px; }
+  .player-profile-header .player-detail-title-row { gap: 8px; }
+  .player-profile-header .player-detail-header-actions { grid-column: 1; grid-row: 2; justify-content: flex-start; }
+  .player-profile-header .player-detail-header-averages { grid-row: 3; padding-top: 20px; }
+  .player-profile-header .player-detail-fantasy-overview { grid-row: 4; padding-top: 20px; }
+  .player-profile-header .fb-metric-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .player-profile-header .fb-metric-grid > div { min-height: 96px; padding: 14px; gap: 12px; }
+  .player-averages-heading { align-items: flex-start; }
+  .player-averages-heading h2 { font-size: 20px; }
+  .player-averages-heading .fb-button { padding-inline: 12px; }
+  .player-detail-page .player-detail-sections a { padding-inline: 8px; gap: 6px; }
+  .player-detail-page .player-detail-sections {
+    flex-wrap: nowrap;
+    overflow-x: auto;
+    justify-content: safe center;
+    scrollbar-width: thin;
+    scrollbar-color: var(--fb-control-line) var(--fb-subtle);
+  }
+  .player-detail-page .player-detail-sections a { flex: 0 0 auto; }
+}

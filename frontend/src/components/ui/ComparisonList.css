@@ -1,0 +1,37 @@
+/* A compact comparison table, with a labeled card layout on phones. */
+.market-page.comparison-page { max-width:1440px; width:100%; box-sizing:border-box; padding-inline:24px; }
+.market-page.comparison-page .market-toolbar { margin-bottom:18px; }
+.market-page.comparison-page .market-toolbar h1 { font-size:28px; }
+.market-page.comparison-page .market-filter-row { align-items:flex-end; gap:24px; margin-bottom:12px; }
+.market-page.comparison-page .market-filter-row .market-search { max-width:520px; }
+.market-page.comparison-page .market-balance-actions { align-items:flex-end; flex-wrap:nowrap; gap:10px; }
+.market-page.comparison-page :is(.market-offers-trigger,.market-bids-trigger) { margin-top:0; }
+.market-results-summary { display:flex; justify-content:space-between; flex-wrap:wrap; gap:4px 16px; margin-bottom:10px; color:var(--fb-muted); font-size:12px; line-height:1.5; }
+.market-results-summary p { margin:0; }
+.market-page.comparison-page .market-list { border-color:var(--fb-line); }
+.market-page.comparison-page .market-row { column-gap:14px; padding:10px 14px; }
+.market-page.comparison-page .market-head { min-height:52px; padding-block:4px; }
+.market-page.comparison-page .market-head-label { font-size:11px; letter-spacing:.025em; }
+.market-page.comparison-page .market-head-filter-icon { width:15px; height:15px; opacity:.7; }
+.market-page.comparison-page .market-head-filter.is-active { box-shadow:inset 0 -2px var(--fb-primary); }
+.market-page.comparison-page .market-head-filter.is-active .market-head-label { text-decoration:none; }
+.market-page.comparison-page .market-data-row:hover { background:var(--fb-subtle); }
+.market-page.comparison-page .market-data-row:focus-within { box-shadow:inset 3px 0 var(--fb-primary); }
+.market-page.comparison-page .market-card .player-tile { width:48px; height:64px; }
+.market-page.comparison-page .market-card .player-team-badge { max-width:18px; max-height:22px; }
+.market-page.comparison-page .market-name { font-size:14px; line-height:1.4; }
+.market-page.comparison-page .market-fsyp-primary { font-size:18px; }
+.market-page.comparison-page .market-fsyp-average { color:var(--fb-muted); font-size:11px; font-weight:400; }
+.market-page.comparison-page .market-value-primary { font-size:15px; font-weight:700; }
+.market-page.comparison-page .market-value-change { margin-top:2px; font-size:11px; font-weight:500; color:var(--fb-muted); }
+.market-page.comparison-page .market-release-clause { margin-top:6px; }
+.market-page.comparison-page .market-clause-detail { font-size:11px; color:var(--fb-muted); }
+.market-page.comparison-page .market-form-nav-buttons { justify-content:flex-start; gap:0; }
+.market-page.comparison-page .market-form-nav-btn { border:0; background:transparent; width:44px; height:44px; font-size:18px; }
+.market-page.comparison-page .market-form-nav-btn:disabled { opacity:.25; }
+.market-page.comparison-page .market-cell-seller { padding-block:0; }
+.market-page.comparison-page .market-seller-wrap { gap:4px; }
+.market-page.comparison-page .market-seller { font-size:11px; font-weight:500; color:var(--fb-muted); }
+.market-page.comparison-page .market-bid-count { font-size:11px; color:var(--fb-muted); }
+.market-page.comparison-page .market-actions-trigger { min-height:44px; font-size:12px; padding-inline:12px; }
+.market-page.comparison-page .market-seal-end { font-size:12px; font-variant-numeric:tabular-nums; }

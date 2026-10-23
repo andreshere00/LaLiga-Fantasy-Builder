@@ -12,6 +12,8 @@ type NumericCounterFieldProps = {
   disabled?: boolean;
   placeholder?: string;
   ariaLabel: string;
+  ariaDescribedBy?: string;
+  ariaInvalid?: boolean;
   formatInput: (raw: string) => string;
   parseValue: (raw: string) => number | null;
   stepValue: (current: number | null, deltaSteps: number) => number | null;
@@ -28,6 +30,8 @@ export function NumericCounterField({
   disabled = false,
   placeholder,
   ariaLabel,
+  ariaDescribedBy,
+  ariaInvalid,
   formatInput,
   parseValue,
   stepValue,
@@ -73,6 +77,8 @@ export function NumericCounterField({
         value={value}
         placeholder={placeholder}
         aria-label={ariaLabel}
+        aria-describedby={ariaDescribedBy}
+        aria-invalid={ariaInvalid || undefined}
         disabled={disabled}
         onChange={(event) => onValueChange(formatInput(event.target.value))}
         onBlur={onBlur}

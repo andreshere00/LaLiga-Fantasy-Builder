@@ -14,6 +14,8 @@ Upstream paths:
 
 ## Guides
 
+- [Official Ideal XI investigation](ideal-xi-research.md) — verified public
+  membership flags, latest completed round, and proposed integration
 - [Adding endpoints](../adding-endpoints.md) — shared CRS checklist for new
   routes
 - [Adding calendar endpoints](adding-calendar-endpoints.md) — calendar-specific

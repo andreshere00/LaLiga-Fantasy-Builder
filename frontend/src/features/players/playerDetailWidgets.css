@@ -12,116 +12,6 @@
   overflow: hidden;
 }
 
-.player-form-grid {
-  display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: 1.1rem;
-}
-
-.player-form-card {
-  min-width: 0;
-  padding: 0.85rem;
-  border: 1px solid color-mix(in srgb, var(--fb-secondary) 22%, transparent);
-  background: var(--fb-surface);
-}
-
-.player-form-card-heading {
-  display: flex;
-  min-height: 2.5rem;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  gap: 0.25rem;
-  padding-bottom: 0.65rem;
-  border-bottom: 1px solid color-mix(in srgb, var(--fb-secondary) 18%, transparent);
-  text-align: center;
-}
-
-.player-form-card-heading strong {
-  overflow-wrap: anywhere;
-}
-
-.player-form-card-heading time {
-  color: color-mix(in srgb, var(--fb-secondary) 72%, transparent);
-  font-size: 12px;
-}
-
-.player-form-summary,
-.player-form-details {
-  display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 0;
-  margin: 0;
-}
-
-.player-form-summary > div,
-.player-form-details > div {
-  display: flex;
-  min-width: 0;
-  align-items: center;
-  justify-content: space-between;
-  gap: 0.5rem;
-  padding: 0.55rem 0.45rem;
-  border-bottom: 1px solid color-mix(in srgb, var(--fb-secondary) 13%, transparent);
-}
-
-.player-form-summary dt,
-.player-form-details dt {
-  min-width: 0;
-  overflow-wrap: anywhere;
-  font-size: 12px;
-}
-
-.player-form-summary dd,
-.player-form-details dd {
-  flex: 0 0 auto;
-  margin: 0;
-  font-size: 12px;
-  font-weight: 700;
-  font-variant-numeric: tabular-nums;
-  text-align: right;
-}
-
-.player-form-summary dd {
-  color: var(--fb-primary);
-}
-
-.player-form-details {
-  margin-top: 0.25rem;
-  padding-top: 0.25rem;
-  border-top: 1px solid color-mix(in srgb, var(--fb-secondary) 22%, transparent);
-}
-
-.player-form-details dt {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.35rem;
-}
-
-.player-form-details dt img {
-  width: 1.25rem;
-  height: 1.25rem;
-  object-fit: contain;
-}
-
-.player-form-total {
-  display: flex;
-  grid-column: 1 / -1;
-  align-items: center;
-  justify-content: space-between;
-  margin: 0;
-  padding: 0.8rem 0.9rem;
-  border: 1px solid color-mix(in srgb, var(--fb-secondary) 22%, transparent);
-  background: color-mix(in srgb, var(--fb-subtle) 42%, var(--fb-surface));
-  font-weight: 700;
-}
-
-.player-form-total strong {
-  color: var(--fb-primary);
-  font-size: 1.1rem;
-  font-variant-numeric: tabular-nums;
-}
-
 .player-match-group + .player-match-group {
   margin-top: 1.75rem;
   padding-top: 1.25rem;
@@ -309,32 +199,6 @@
   text-align: center;
 }
 
-.player-fantasy-grid {
-  display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 1.25rem;
-}
-
-.player-fantasy-column {
-  min-width: 0;
-  padding: 0.9rem;
-  border: 1px solid color-mix(in srgb, var(--fb-secondary) 20%, transparent);
-  background: var(--fb-surface);
-}
-
-.player-fantasy-column > h3 {
-  display: flex;
-  min-height: 2.4rem;
-  align-items: center;
-  justify-content: center;
-  gap: 0.65rem;
-  margin: 0 0 1rem;
-  padding-bottom: 0.65rem;
-  border-bottom: 1px solid color-mix(in srgb, var(--fb-secondary) 18%, transparent);
-  font-size: 1.1rem;
-  text-align: center;
-}
-
 .player-detail-header-averages {
   min-width: 0;
   padding-left: 1.25rem;
@@ -427,42 +291,6 @@
   object-fit: contain;
 }
 
-.player-fantasy-heading-icon {
-  width: 2rem;
-  height: 2rem;
-  object-fit: contain;
-}
-
-.player-fantasy-news-heading-icon {
-  position: relative;
-  display: block;
-  width: 2.25rem;
-  height: 1.75rem;
-  border: 3px solid var(--fb-tertiary);
-  box-sizing: border-box;
-}
-
-.player-fantasy-news-heading-icon::before,
-.player-fantasy-news-heading-icon::after {
-  position: absolute;
-  content: "";
-  background: var(--fb-tertiary);
-}
-
-.player-fantasy-news-heading-icon::before {
-  top: 0.25rem;
-  left: 0.35rem;
-  width: 0.4rem;
-  height: 0.8rem;
-}
-
-.player-fantasy-news-heading-icon::after {
-  top: 0.3rem;
-  right: 0.25rem;
-  width: 0.85rem;
-  height: 0.13rem;
-}
-
 .player-fantasy-profile-list {
   display: grid;
   gap: 0.7rem;
@@ -540,87 +368,6 @@
   font-size: 12px;
 }
 
-.player-fantasy-news-list,
-.player-fantasy-injury-list {
-  display: grid;
-  gap: 0.65rem;
-  margin: 0;
-  padding: 0;
-  list-style: none;
-}
-
-.player-fantasy-news-list li {
-  display: grid;
-  grid-template-columns: 1.6rem minmax(0, 1fr);
-  gap: 0.5rem;
-  align-items: start;
-  font-size: 0.87rem;
-}
-
-.player-fantasy-news-list li > img {
-  width: 1.5rem;
-  height: 1.5rem;
-}
-
-.player-fantasy-news-list time {
-  font-weight: 700;
-}
-
-.player-fantasy-news-list a {
-  color: var(--fb-secondary);
-  text-decoration: underline;
-  text-underline-offset: 2px;
-}
-
-.player-fantasy-news-list .player-fantasy-news-link {
-  display: flex;
-  width: 100%;
-  min-width: 0;
-  align-items: baseline;
-  gap: 0.3rem;
-}
-
-.player-fantasy-news-title-line {
-  display: block;
-  flex: 1 1 auto;
-  min-width: 0;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
-.player-fantasy-news-list a:visited {
-  color: var(--fb-primary);
-}
-
-.player-fantasy-news-list a:hover,
-.player-fantasy-news-list a:focus-visible {
-  color: var(--fb-primary);
-}
-
-.player-fantasy-news-list a strong {
-  flex: 0 0 auto;
-  white-space: nowrap;
-}
-
-.player-fantasy-news-source {
-  color: color-mix(in srgb, var(--fb-secondary) 65%, transparent);
-  font-size: 12px;
-}
-
-.player-fantasy-injury-list li {
-  text-align: center;
-  font-size: 12px;
-}
-
-.player-fantasy-injury-list p {
-  margin: 0.25rem 0;
-}
-
-.player-fantasy-injury-diagnosis {
-  font-weight: 700;
-}
-
 .player-fantasy-empty {
   color: color-mix(in srgb, var(--fb-secondary) 75%, transparent);
   font-size: 0.88rem;
@@ -645,15 +392,11 @@
     row-gap: 1.25rem;
   }
 
-  .player-form-grid {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-  }
 }
 
 @media (max-width: 650px) {
   .player-match-section > h2,
-  .player-fantasy-section > h2,
-  .player-detail-panel.player-detail-section.player-form-section > h2 {
+  .player-fantasy-section > h2 {
     font-size: 1.2rem;
   }
 
@@ -661,17 +404,7 @@
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 
-  .player-form-grid {
-    grid-template-columns: minmax(0, 1fr);
-  }
 
-  .player-fantasy-grid {
-    grid-template-columns: minmax(0, 1fr);
-  }
-
-  .player-fantasy-column:last-child {
-    grid-column: auto;
-  }
 }
 
 /* Neutral match and value panels. */
@@ -693,56 +426,95 @@
 @media(max-width:650px) { .player-match-grid { grid-template-columns:1fr; } }
 
 /* Fantasy profile and history presentation. */
-.player-detail-page .player-fantasy-section > h2 { margin:0 0 20px; padding:0 0 12px; width:fit-content; background:transparent; color:var(--fb-tertiary); text-align:left; font:400 20px/1.3 Anton,sans-serif; letter-spacing:.03em; text-transform:uppercase; border-bottom:2px solid var(--fb-primary); }
-.player-fantasy-grid { grid-template-columns:repeat(2,minmax(0,1fr)); gap:16px; }
-.player-fantasy-column { display:flex; flex-direction:column; padding:20px; border:1px solid var(--fb-line); }
-.player-fantasy-column > h3 { min-height:44px; justify-content:flex-start; font:400 20px/1.3 Anton,sans-serif; letter-spacing:.03em; text-transform:uppercase; }
-.player-fantasy-logo,.player-fantasy-heading-icon { width:20px; height:20px; }
-.player-fantasy-news-heading-icon { width:18px; height:18px; border-width:1px; }
-.player-fantasy-news-heading-icon::before,.player-fantasy-news-heading-icon::after { display:none; }
+.player-fantasy-logo { width:20px; height:20px; }
 .player-fantasy-profile-list > div { padding:8px 0; border-bottom:1px solid var(--fb-line); font-size:14px; }
 .player-fantasy-profile-list dt { font-weight:500; }
 .player-fantasy-profile-list dt img,.player-fantasy-form-icon { width:18px; height:18px; }
 .player-detail-fantasy-overview { grid-column:1 / -1; grid-row:2; align-self:start; min-width:0; }
-.player-detail-fantasy-overview > h2 { margin:0 0 12px; font:400 20px/1.3 Anton,sans-serif; letter-spacing:.03em; color:var(--fb-tertiary); }
-.player-detail-fantasy-summary { align-self:start; grid-template-columns:minmax(0,1.1fr) minmax(0,1.3fr) minmax(0,.9fr) minmax(0,1fr); gap:0; border:1px solid var(--fb-line); background:var(--fb-subtle); }
-.player-detail-fantasy-summary > div { position:relative; grid-template-columns:minmax(0,1fr); grid-template-rows:auto auto; align-items:center; gap:8px; padding:10px 16px; border:0; border-inline-end:1px solid var(--fb-line); text-align:center; cursor:help; transition:background-color .16s ease,color .16s ease; }
-.player-detail-fantasy-summary > div:last-child { border-inline-end:0; }
-.player-detail-fantasy-summary dt { justify-content:center; color:var(--fb-muted); font-size:18px; line-height:1.35; }
-.player-fantasy-summary-value { display:flex; align-items:center; justify-content:center; gap:10px; max-width:100%; font-weight:500; line-height:1.3; }
+/* One outlook panel: the starting estimate leads, with three supporting signals. */
+.player-outlook-heading { display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:12px 24px; margin-bottom:16px; }
+.player-outlook-heading h2 { display:flex; align-items:center; gap:12px; margin:0 0 6px; font:400 22px/1.3 Anton,sans-serif; letter-spacing:.03em; color:var(--fb-tertiary); }
+.player-outlook-heading h2::before { content:""; width:4px; height:22px; background:var(--fb-primary); }
+.player-outlook-heading .player-detail-context { margin:0; }
+.player-outlook-source { display:inline-flex; align-items:center; gap:8px; padding:6px 10px; border:1px solid var(--fb-line); color:var(--fb-muted); font-size:11px; font-weight:600; letter-spacing:.06em; text-transform:uppercase; }
+.player-outlook-source::before { content:""; width:6px; height:6px; background:var(--fb-primary); }
+.player-detail-fantasy-summary { align-self:start; grid-template-columns:minmax(0,1.2fr) repeat(3,minmax(0,1fr)); gap:0; border:1px solid var(--fb-line); background:var(--fb-surface); }
+.player-detail-fantasy-summary > .player-fantasy-summary-block { position:relative; display:flex; flex-direction:column; align-items:stretch; min-width:0; gap:20px; padding:22px 24px; border:0; border-inline-end:1px solid var(--fb-line); text-align:left; cursor:help; transition:background-color .16s ease; }
+.player-detail-fantasy-summary > .player-fantasy-summary-block:last-child { border-inline-end:0; }
+.player-detail-fantasy-summary > .player-fantasy-summary-block--starter { background:var(--fb-subtle); border-top:3px solid var(--fb-primary); padding-top:19px; }
+.player-detail-fantasy-summary dt { display:flex; justify-content:space-between; align-items:center; gap:8px; min-height:18px; color:var(--fb-muted); font-size:11px; font-weight:600; letter-spacing:.07em; line-height:1.5; text-transform:uppercase; }
+.player-outlook-help { display:grid; place-items:center; flex:0 0 16px; width:16px; height:16px; border:1px solid var(--fb-line); color:var(--fb-muted); font:500 11px/1 Arial,sans-serif; text-transform:none; }
+.player-outlook-help::before { content:"i"; }
+.player-detail-fantasy-summary dd { display:flex; flex:1; flex-direction:column; align-items:stretch; justify-content:center; min-width:0; min-height:78px; gap:12px; margin:0; text-align:left; font-size:22px; }
+.player-fantasy-summary-value { display:flex; align-items:center; justify-content:flex-start; gap:12px; max-width:100%; font-weight:600; line-height:1.25; color:var(--fb-tertiary); }
 .player-fantasy-summary-value > span { min-width:0; overflow-wrap:anywhere; }
+.player-outlook-icon { display:grid; place-items:center; flex:0 0 40px; width:40px; height:40px; border:1px solid var(--fb-line); background:var(--fb-subtle); color:var(--fb-muted); font-size:20px; font-weight:400; }
 .player-fantasy-summary-value img { display:block; flex-shrink:0; width:24px; height:24px; object-fit:contain; }
+.player-outlook-starter-readout { display:flex; align-items:center; gap:12px; }
+.player-outlook-probability { font:400 48px/1 Anton,sans-serif; letter-spacing:-.02em; font-variant-numeric:tabular-nums; }
+.player-outlook-starter-icon { width:22px; height:22px; }
+.player-outlook-meter { display:block; width:100%; height:6px; border:0; border-radius:0; background:var(--fb-line); appearance:none; }
+.player-outlook-meter::-webkit-meter-bar { height:6px; border:0; border-radius:0; background:var(--fb-line); box-shadow:none; }
+.player-outlook-meter::-webkit-meter-optimum-value { background:var(--fb-primary); border-radius:0; }
+.player-outlook-meter::-moz-meter-bar { background:var(--fb-primary); border-radius:0; }
+.player-outlook-caption,.player-detail-fantasy-summary .player-fantasy-matchday { font-size:12px; font-weight:400; line-height:1.5; color:var(--fb-muted); }
+.player-fantasy-summary-block--starter[data-unavailable] .player-outlook-probability { font:600 22px/1.25 var(--fb-font-body); letter-spacing:normal; }
 .player-fantasy-summary-value .player-form-rating-icon.is-dark { display:none; }
 :root[data-theme="dark"] .player-form-rating-icon.is-light { display:none; }
 :root[data-theme="dark"] .player-fantasy-summary-value .player-form-rating-icon.is-dark { display:block; }
-.player-detail-fantasy-summary dd { display:flex; flex-direction:column; align-items:center; justify-content:center; align-self:stretch; min-height:56px; gap:6px; text-align:center; font-size:18px; }
-.player-detail-fantasy-summary .player-fantasy-matchday { font-size:14px; }
-.player-fantasy-summary-block:is(:hover,:focus-visible) { background:var(--fb-coral); color:var(--fb-on-coral); }
-.player-fantasy-summary-block:is(:hover,:focus-visible) :is(dt,.player-fantasy-matchday) { color:inherit; }
-.player-fantasy-summary-block:focus-visible { outline:2px solid var(--fb-focus); outline-offset:2px; }
+.player-detail-fantasy-summary > .player-fantasy-summary-block:is(:hover,:focus-visible) { background:var(--fb-subtle); }
+.player-fantasy-summary-block:is(:hover,:focus-visible) .player-outlook-help { border-color:var(--fb-control-line); color:var(--fb-tertiary); }
+.player-fantasy-summary-block:focus-visible { outline:2px solid var(--fb-focus); outline-offset:-3px; }
 :root[data-theme="dark"] .player-fantasy-risk-icon.is-unknown { filter:brightness(0) invert(1); opacity:.75; }
-:root[data-theme="dark"] .player-fantasy-summary-block:is(:hover,:focus-visible) .player-fantasy-risk-icon.is-unknown { filter:brightness(0); opacity:1; }
+:root[data-theme="dark"] .player-outlook-neutral-icon { filter:brightness(0) invert(1); }
 .player-fantasy-form-rating { border-radius: 0; font-size:12px; }
 .player-fantasy-form-rating.is-bad { color:var(--fb-ink-on-status); }
-.player-fantasy-news-list { flex:1; gap:0; }
-.player-fantasy-news-list li { padding:12px 0; border-bottom:1px solid var(--fb-line); }
-.player-fantasy-news-list li > img { width:18px; height:18px; }
-.player-fantasy-news-list time { font-weight:400; color:var(--fb-muted); font-size:12px; }
-.player-fantasy-news-list .player-fantasy-news-link { display:block; font-size:14px; line-height:1.5; }
-.player-fantasy-news-title-line { display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; line-clamp:2; white-space:normal; }
-.player-fantasy-injury-list { flex:1; gap:0; }
-.player-fantasy-injury-list li { text-align:left; border-left:2px solid var(--fb-line); padding:12px 0 12px 16px; font-size:14px; }
-.player-fantasy-injury-list li.is-current { border-left-color:var(--fb-warning); }
-.player-fantasy-column .fb-pagination { margin-top:auto; padding-top:16px; justify-content:center; }
-.player-fantasy-column .fb-page-arrow:disabled { color:var(--fb-muted); cursor:default; opacity:.55; }
-.player-fantasy-column .fb-page-arrow:disabled:hover { background:var(--fb-surface); }
 .player-fantasy-empty { color:var(--fb-muted); text-align:left; }
-@media(max-width:1000px) { .player-fantasy-grid { grid-template-columns:1fr; } .player-fantasy-column:last-child { grid-column:auto; } }
 @media(max-width:600px) { .player-detail-header-identity { flex-direction:column; align-items:flex-start; } .player-detail-header-text { width:100%; } }
 @media(max-width:1100px) { .player-detail-header-averages { grid-row:3; } }
-@media(max-width:700px) {
+@media(max-width:900px) {
   .player-detail-fantasy-summary { grid-template-columns:repeat(2,minmax(0,1fr)); }
-  .player-detail-fantasy-summary > div { padding:10px 12px; }
-  .player-detail-fantasy-summary > div:nth-child(2n) { border-inline-end:0; }
-  .player-detail-fantasy-summary > div:nth-child(2n+1) { border-inline-end:1px solid var(--fb-line); }
+  .player-detail-fantasy-summary > .player-fantasy-summary-block { padding-inline:16px; }
+  .player-detail-fantasy-summary > .player-fantasy-summary-block:nth-child(2n) { border-inline-end:0; }
+  .player-detail-fantasy-summary > .player-fantasy-summary-block:nth-child(n+3) { border-top:1px solid var(--fb-line); }
+  .player-detail-fantasy-summary dd { font-size:20px; }
+  .player-fantasy-summary-value { gap:10px; }
+}
+@media(max-width:700px) {
+  .player-detail-fantasy-summary > .player-fantasy-summary-block { padding:18px 16px; gap:16px; }
+  .player-detail-fantasy-summary > .player-fantasy-summary-block--starter { padding-top:15px; }
+  .player-detail-fantasy-summary dd { min-height:96px; }
+  .player-fantasy-summary-value:not(.player-outlook-probability) { align-items:flex-start; flex-direction:column; gap:10px; }
+  .player-outlook-probability { font-size:44px; }
+  .player-outlook-heading { align-items:flex-start; gap:10px; }
+}
+@media(max-width:360px) {
+  .player-detail-fantasy-summary { grid-template-columns:minmax(0,1fr); }
+  .player-detail-fantasy-summary > .player-fantasy-summary-block { border-inline-end:0; }
+  .player-detail-fantasy-summary > .player-fantasy-summary-block:not(:first-child) { border-top:1px solid var(--fb-line); }
+  .player-detail-fantasy-summary dd { min-height:56px; }
+  .player-fantasy-summary-value:not(.player-outlook-probability) { flex-direction:row; align-items:center; }
+}
+
+.player-match-competition {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+}
+
+.player-match-competition-badge:has(img) {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 2rem;
+  height: 2rem;
+  padding: 0.2rem;
+  background: #fff;
+}
+
+.player-match-competition-badge img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
 }

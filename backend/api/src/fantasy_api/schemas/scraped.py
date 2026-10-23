@@ -52,6 +52,11 @@ class RawScrapedStat(RawScrapedModel):
 
 
 class RawScrapedMatch(RawScrapedModel):
+    home_badge: str | None = None
+    away_badge: str | None = None
+    opponent_badge: str | None = None
+    competition_badge: str | None = None
+
     date: str | None = None
     matchday: int | None = None
     competition: str | None = None
@@ -76,6 +81,11 @@ class RawScrapedMatches(RawScrapedModel):
 
 
 class RawScrapedFixture(RawScrapedModel):
+    home_badge: str | None = None
+    away_badge: str | None = None
+    opponent_badge: str | None = None
+    competition_badge: str | None = None
+
     date: str | None = None
     matchday: int | None = None
     match: RawScrapedFixtureMatch | None = None
@@ -119,6 +129,11 @@ class ScrapedStat(FlexibleModel):
 
 
 class ScrapedFixture(FlexibleModel):
+    home_badge: str | None = None
+    away_badge: str | None = None
+    opponent_badge: str | None = None
+    competition_badge: str | None = None
+
     date: Date | None = None
     competition: str | None = None
     matchweek: int | None = None
@@ -134,6 +149,11 @@ class ScrapedFixture(FlexibleModel):
 
 
 class ScrapedMatch(FlexibleModel):
+    home_badge: str | None = None
+    away_badge: str | None = None
+    opponent_badge: str | None = None
+    competition_badge: str | None = None
+
     date: Date | None = None
     kickoff_time: str | None = None
     matchweek: int | None = None

@@ -351,3 +351,9 @@ references. Failure/refusal/timeout returns unavailable prose without changing
 candidates. News never contributes deterministic points. The implementation follows
 [Responses structured outputs](https://developers.openai.com/api/docs/guides/structured-outputs?api-mode=responses)
 and [model-specific effort guidance](https://developers.openai.com/api/docs/guides/reasoning).
+
+A scraper identity conflict is preserved as `player_identity_ambiguous` in builder
+diagnostics. It means the profile could not be verified against the catalog club,
+not that the player is injured. The UI separates the build failure, source/player
+diagnostics and corrective steps. Conservative pending-bid reserves remain in the
+financial bound; a warning alone does not prove why a particular XI is infeasible.

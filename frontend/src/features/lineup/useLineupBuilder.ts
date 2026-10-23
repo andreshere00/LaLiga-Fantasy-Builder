@@ -41,6 +41,9 @@ export function useLineupBuilder(
   const [failure, setFailure] = useState<ApiError | NeedsReauthError | "unknown" | null>(null);
   useReauthOnError([failure]);
   let error: string | null = null;
+  let errorSummary: string | null = null;
+  let errorDetails: string[] = [];
+  let errorRecovery: string | null = null;
   if (failure instanceof ApiError) {
     const diagnostics = [...failure.diagnostics].sort((a, b) =>
       Number(b.playerId === null) - Number(a.playerId === null));
@@ -50,9 +53,15 @@ export function useLineupBuilder(
         : "Source";
       return SOURCE_MESSAGES[diagnostic.code] ??
         `${name}: ${builderDiagnosticMessage(diagnostic.code)}`;
-    }).join("; ");
-    error = (MESSAGES[failure.code] ?? `Lineup build failed (${failure.code}).`) +
-      (details ? ` ${details}` : "");
+    });
+    errorSummary = MESSAGES[failure.code] ?? `Lineup build failed (${failure.code}).`;
+    errorDetails = details;
+    error = [errorSummary, ...details].join(" ");
+    if (failure.code === "no_feasible_lineup") {
+      errorRecovery = "Try another formation, remove player locks or broaden the player pool. Review pending bids in Market if the reserved cash limits your options.";
+    } else if (failure.code === "mandatory_player_conflict") {
+      errorRecovery = "Remove excluded mandatory players or choose a formation that fits their positions, then rebuild.";
+    }
   } else if (failure instanceof NeedsReauthError) {
     error = "Reconnect your LaLiga account to build recommendations.";
   } else if (failure) {
@@ -91,5 +100,5 @@ export function useLineupBuilder(
       }
     }
   }
-  return { pending, progress, result, error, build, cancel };
+  return { pending, progress, result, error, errorSummary: errorSummary ?? error, errorDetails, errorRecovery, build, cancel };
 }
