@@ -14,6 +14,11 @@ for (const { theme, width } of [{ theme: "light", width: 1440 }, { theme: "dark"
 
     const averages = page.getByRole("region", { name: "Averages per match", exact: true });
     const moreAverages = averages.getByRole("button", { name: "More averages", exact: true });
+    const label = await moreAverages.getByText("More averages", { exact: true }).boundingBox();
+    const arrow = await moreAverages.locator("[aria-hidden='true']").boundingBox();
+    expect(label).not.toBeNull();
+    expect(arrow).not.toBeNull();
+    expect(arrow!.x - (label!.x + label!.width)).toBeGreaterThanOrEqual(15);
     await moreAverages.click();
     const performance = page.getByRole("dialog", { name: "Per-match performance", exact: true });
     await expect(performance).toBeVisible();
@@ -23,10 +28,14 @@ for (const { theme, width } of [{ theme: "light", width: 1440 }, { theme: "dark"
     await expect(moreAverages).toBeFocused();
 
     const sections = page.getByRole("navigation", { name: "Player sections" });
+    await expect(sections.getByRole("link", { name: "Overview", exact: true }))
+      .toHaveAttribute("aria-current", "location");
     await sections.getByRole("link", { name: "Market value", exact: true }).focus();
     await page.keyboard.press("Enter");
     const marketHeading = page.getByRole("heading", { name: "Market value", exact: true });
     await expect(marketHeading).toBeFocused();
+    await expect(sections.getByRole("link", { name: "Market value", exact: true }))
+      .toHaveAttribute("aria-current", "location");
     const headingTop = await marketHeading.evaluate((element) => element.getBoundingClientRect().top);
     const headerBottom = await page.locator(".app-header").evaluate((element) => element.getBoundingClientRect().bottom);
     const shortcutsBottom = await sections.evaluate((element) => getComputedStyle(element).position === "sticky"
@@ -44,12 +53,58 @@ for (const { theme, width } of [{ theme: "light", width: 1440 }, { theme: "dark"
 
     await sections.getByRole("link", { name: "Form", exact: true }).click();
     await expect(page.getByRole("heading", { name: "Form — fixture stats", exact: true })).toBeFocused();
+    await expect(sections.getByRole("link", { name: "Form", exact: true }))
+      .toHaveAttribute("aria-current", "location");
     const showStatistics = page.getByRole("button", { name: "Show match statistics", exact: true });
     await showStatistics.click();
-    await expect(page.locator(".player-form-details")).toHaveCount(3);
+    await expect(page.locator(".player-form-details")).toHaveCount(1);
     await page.getByRole("button", { name: "Hide match statistics", exact: true }).click();
     await expect(page.locator(".player-form-details")).toHaveCount(0);
     expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
+  });
+}
+
+test("section selection follows browser history and manual scrolling without changing the hash", async ({ page }) => {
+  await mockApplication(page);
+  await page.goto("/players/1");
+  const navigation = page.getByRole("navigation", { name: "Player sections" });
+  const market = navigation.getByRole("link", { name: "Market value", exact: true });
+  const form = navigation.getByRole("link", { name: "Form", exact: true });
+  await market.click();
+  await expect(market).toHaveAttribute("aria-current", "location");
+  await form.click();
+  await expect(form).toHaveAttribute("aria-current", "location");
+  await page.goBack();
+  await expect(page).toHaveURL(/#player-market-title$/);
+  await expect(market).toHaveAttribute("aria-current", "location");
+  await page.locator("#player-fantasy-title").evaluate((heading) => heading.scrollIntoView());
+  await expect(navigation.getByRole("link", { name: "News & injuries", exact: true }))
+    .toHaveAttribute("aria-current", "location");
+  await expect(page).toHaveURL(/#player-market-title$/);
+});
+
+for (const width of [375, 1440]) {
+  test(`profile actions are labeled and restore keyboard focus at ${width}px`, async ({ page }) => {
+    await mockApplication(page);
+    await page.setViewportSize({ width, height: 1000 });
+    await page.goto("/players/1");
+    const options = page.getByRole("button", { name: "Player 01, options", exact: true });
+    await expect(options).toHaveText("Player options");
+    await options.click();
+    const menu = page.getByRole("menu", { name: "Player 01 options", exact: true });
+    await expect(menu).toBeVisible();
+    const bounds = await menu.boundingBox();
+    expect(bounds!.x).toBeGreaterThanOrEqual(0);
+    expect(bounds!.x + bounds!.width).toBeLessThanOrEqual(width);
+    await page.keyboard.press("Escape");
+    await expect(options).toBeFocused();
+    const favorite = page.getByRole("button", { name: "Favorite Player 01", exact: true });
+    await expect(favorite).toContainText("Favorite");
+    await expect(favorite).toHaveAttribute("aria-pressed", "false");
+    await favorite.click();
+    await expect(favorite).toHaveAttribute("aria-pressed", "true");
+    await favorite.click();
+    await expect(favorite).toHaveAttribute("aria-pressed", "false");
   });
 }
 
@@ -83,7 +138,7 @@ test("partial failures preserve useful sections and can be retried", async ({ pa
   await expect(page.getByRole("status")).toContainText("Some player data is unavailable.");
   await expect(page.getByText("Recent matches are temporarily unavailable.", { exact: true })).toBeVisible();
   await expect(page.getByText("No recent matches available.", { exact: true })).toHaveCount(0);
-  await expect(page.locator(".player-form-card")).toHaveCount(3);
+  await expect(page.getByRole("radiogroup", { name: "Fixture performance" }).getByRole("radio")).toHaveCount(3);
   recovered = true;
   await page.getByRole("button", { name: "Retry player data", exact: true }).click();
   await expect(page.getByText("Some player data is unavailable.", { exact: false })).toHaveCount(0);
@@ -126,7 +181,7 @@ test("failed period updates retain the previous result with truthful scope and r
   release();
   await expect(page.getByRole("alert")).toHaveText("Player data could not be updated. Previous results are still shown.");
   await expect(period).toContainText("2026-10-01");
-  await expect(page.locator(".player-form-card")).toHaveCount(3);
+  await expect(page.getByRole("radiogroup", { name: "Fixture performance" }).getByRole("radio")).toHaveCount(3);
   fail = false;
   await page.getByRole("button", { name: "Retry market history", exact: true }).click();
   await expect(period).toContainText("2026-10-08");
@@ -145,7 +200,7 @@ test("initial detail failures offer a working retry", async ({ page }) => {
   await expect(page.locator(".player-detail-header")).toHaveCount(0);
   fail = false;
   await page.getByRole("button", { name: "Retry player data", exact: true }).click();
-  await expect(page.locator(".player-form-card")).toHaveCount(3);
+  await expect(page.getByRole("radiogroup", { name: "Fixture performance" }).getByRole("radio")).toHaveCount(3);
   await expect(page.getByRole("alert")).toHaveCount(0);
 });
 
@@ -194,8 +249,8 @@ test("a confirmed missing player replaces previously loaded results", async ({ p
       ? route.fulfill({ status: 404, json: { error: "player_not_found" } })
       : route.fulfill({ json: detail }));
   await page.goto("/players/1");
-  await expect(page.locator(".player-form-card")).toHaveCount(3);
+  await expect(page.getByRole("radiogroup", { name: "Fixture performance" }).getByRole("radio")).toHaveCount(3);
   await page.getByRole("button", { name: "5d", exact: true }).click();
   await expect(page.getByRole("heading", { name: "Player not found", exact: true })).toBeFocused();
-  await expect(page.locator(".player-form-card, .player-detail-header")).toHaveCount(0);
+  await expect(page.locator(".player-form-history, .player-detail-header")).toHaveCount(0);
 });

@@ -53,8 +53,9 @@ describe("validated player detail consumers", () => {
       /></>);
     expect(screen.getByText("80%")).toBeTruthy();
     expect(screen.getByText("Matchday 9")).toBeTruthy();
-    expect(screen.getByText("Ankle injury · 10 days")).toBeTruthy();
-    expect(screen.getByText("10/10/2026 ·", { exact: false })).toBeTruthy();
+    expect(screen.getByRole("heading", { name: "Ankle injury" })).toBeTruthy();
+    expect(screen.getByLabelText("10 days")).toBeTruthy();
+    expect(screen.getByText("10 Oct 2026")).toBeTruthy();
     expect(screen.getAllByText("FC Barcelona")).toHaveLength(2);
     expect(screen.getAllByText("Real Madrid")).toHaveLength(2);
     expect(screen.getByText("Low")).toBeTruthy();

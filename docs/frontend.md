@@ -16,6 +16,8 @@ surfaces, thin borders and coral primary actions. All buttons and button-styled
 links have rectangular corners, enforced globally across pages and portaled
 overlays. The header's **Dark/Light** control switches the whole document,
 including portaled overlays and charts.
+Links never use text underlines, including on hover, focus, and visited states;
+keyboard focus indicators remain visible.
 Light is the default; an explicit preference is saved under `lfb-theme`.
 The app uses Base UI for dialogs, selection, menus, tooltips, collapsibles and
 toasts, with local CSS and native buttons/fields where appropriate.
@@ -232,19 +234,40 @@ the fixture visible with a reason. A **View match timer** control shows the
 countdown to a confirmed kickoff.
 
 The **Form – fixture stats** section offers Last 5, Last 10, Last 20, Last 40,
-Last 60, and **Show match statistics** views. Its fixture cards show minutes and
-Fantasy points, with a total for the selected window and expandable per-match
-stats, including DAZN points. Missing points produce a labeled subtotal or
+Last 60, and **Show match statistics** views. A chronological bar chart puts
+Fantasy points on a shared scale with an average reference line, including
+negative scores and explicit zeroes. Total, average, and best scores summarize
+the fixtures actually shown. Select a fixture to see its points, minutes, and
+expandable event statistics, including DAZN points. The latest fixture is selected
+initially; native radio controls support arrow keys, and the chart scrolls
+horizontally on smaller screens or longer histories. Averages exclude missing
+scores and label that scope. Missing points produce a labeled subtotal or
 **Unavailable**, preserving the distinction from a genuine zero. The header's
-**Fantasy outlook** groups FutbolFantasy ratings and starting estimates;
-**News & injuries** presents the
-latest-news and injury-history panels. News titles show
-**Read more** only when the title exceeds its two-line region. News and injury
-history show five records per page with independent sliding three-number navigation.
-News and injury-history columns have matching widths on desktop.
+**Fantasy outlook** leads with the starting estimate in large type and a
+proportional meter, followed by the squad hierarchy, form, and injury risk.
+One panel groups the four signals with thin dividers, neutral icon tiles and
+compact labels; two columns on tablets and phones become one column on the
+narrowest screens, keeping long labels readable.
+The FutbolFantasy source is separate from the data. Explanations remain
+available on hover and keyboard focus. Missing estimates show **Unavailable**
+without a meter, while a reported zero remains **0%**.
+**News & injuries** gives the news feed more space beside a compact injury
+sidebar. The newest article has a larger headline; all headlines remain fully
+readable, with source, publication date, and an external-link cue. Article links
+announce that they open a new tab, while missing/invalid URLs remain plain text.
+Injury records form a timeline with distinct current, ended, and unreported-end
+labels, readable dates, and reported durations. Explicitly current records come
+first, followed by the remaining records from newest to oldest; ongoing records
+never present a future end date as a completed recovery. Both lists retain five
+records per page with independent sliding three-number navigation and result
+counts. Panels use their natural height and stack on phones and tablets.
 
-The player header separates club, Fantasy points, position, and availability. Six equal
-metric cells highlight position-specific averages; all
+The player header groups a compact portrait, club and position, player name,
+availability and a separate Fantasy-points reading. Labeled player options and
+favorite actions stay beside the identity on desktop and below it on phones.
+Six equal metric cells occupy a full-width row below the identity, adapting to
+three columns on tablets and two on phones. The **More averages** action sits
+beside the section heading. The cells highlight position-specific averages; all
 statistics open in a **More averages** performance dialog, keeping the profile
 header compact. FutbolFantasy season averages take priority.
 When a supported scraped metric is missing, the UI averages that metric across
@@ -278,8 +301,13 @@ assists without a goal remain separate from key passes. Source definitions and
 calculation details remain available inside the dialog. No API contracts changed.
 
 Section shortcuts link directly to keyboard-focusable headings for Overview,
-Form, Market value, Matches, and News & injuries. The shortcuts stay beneath the
-app header on desktop and flow normally on phones to leave room for content.
+Form, Market value, Matches, and News & injuries. Centered desktop shortcuts
+stay beneath the app header and identify the current reading section with a
+rectangular selection, a coral marker, and `aria-current="location"`.
+The current section updates when scrolling, using links, or navigating history.
+On phones, the shortcuts form a horizontally scrollable strip that flows
+normally with the page; the active link scrolls into the strip's viewport
+without moving page focus. Links retain native heading focus and URL hashes.
 Phone profiles place the portrait beside the player's identity. This grouping
 applies [proximity](https://lawsofux.com/law-of-proximity/) and
 [chunking](https://lawsofux.com/chunking/) to the existing data and design system.

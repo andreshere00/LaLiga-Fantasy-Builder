@@ -806,8 +806,6 @@
 
 .market-seller-link {
   color: inherit;
-  text-decoration: underline;
-  text-underline-offset: 2px;
 }
 
 .market-seller-link:is(:hover, :focus-visible) {

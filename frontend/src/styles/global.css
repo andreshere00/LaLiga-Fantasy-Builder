@@ -3,6 +3,8 @@ html { scroll-padding-top:calc(var(--app-header-height,0px) + 56px); }
 body { margin:0; min-height:100vh; background:var(--fb-bg); color:var(--fb-secondary); }
 button,input,select,textarea { font-family:inherit; }
 button { color:inherit; }
+/* Links stay free of underlines in every state, including portaled content. */
+:is(a,[role="link"]),:is(a,[role="link"]) * { text-decoration:none !important; }
 /* Rectangular buttons are a global invariant, including portaled controls and action links. */
 :is(button,[role="button"],input[type="button"],input[type="submit"],input[type="reset"],.fb-button) { border-radius:0 !important; }
 /* Labels supply the hit area for radio, checkbox and switch primitives. */

@@ -5,6 +5,7 @@ import {
   type PlayerAverage,
 } from "./playerAverages";
 import { PlayerPerformanceDialog } from "./PlayerPerformanceDialog";
+import "./PlayerAveragesPanel.css";
 
 type PlayerAveragesPanelProps = {
   rows: readonly PlayerAverage[];
@@ -33,14 +34,23 @@ export function PlayerAveragesPanel({ rows, positionId, playerName = "Player" }:
 
   return (
     <section className="player-detail-header-averages" aria-labelledby="player-averages-title">
-      <h2 id="player-averages-title">Averages per match</h2>
+      <div className="player-averages-heading">
+        <div>
+          <h2 id="player-averages-title">Averages per match</h2>
+          {hasValues && highlighted.some((row) => row.source === "futbolfantasy") ? (
+            <p className="player-detail-averages-source-note">Season averages from FutbolFantasy.</p>
+          ) : null}
+        </div>
+        {hasValues ? <Button variant="outline" shape="square" aria-haspopup="dialog"
+          className="player-averages-more"
+          onClick={() => setDetailsOpen(true)}>
+          <span>More averages</span><span className="player-averages-more-arrow" aria-hidden="true">↗</span>
+        </Button> : null}
+      </div>
       {!hasValues ? (
         <p className="status-copy">Per-match averages are unavailable.</p>
       ) : (
         <>
-          {highlighted.some((row) => row.source === "futbolfantasy") ? (
-            <p className="player-detail-averages-source-note">Season averages from FutbolFantasy.</p>
-          ) : null}
           <dl className="fb-metric-grid">
             {highlighted.map((row) => (
               <div key={row.code} title={averageSource(row)}>
@@ -53,10 +63,6 @@ export function PlayerAveragesPanel({ rows, positionId, playerName = "Player" }:
               {`LaLiga Fantasy API fallback averages use ${fantasySampleSize} played matchweek${fantasySampleSize === 1 ? "" : "s"}.`}
             </p>
           ) : null}
-          <div className="player-detail-averages-details">
-            <Button variant="outline" shape="square" aria-haspopup="dialog"
-              onClick={() => setDetailsOpen(true)}>More averages</Button>
-          </div>
           {detailsOpen ? <PlayerPerformanceDialog rows={rows} playerName={playerName}
             onClose={() => setDetailsOpen(false)} /> : null}
         </>

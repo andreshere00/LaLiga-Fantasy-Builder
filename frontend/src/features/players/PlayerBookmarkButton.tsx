@@ -5,12 +5,14 @@ type PlayerBookmarkButtonProps = {
   pressed: boolean;
   playerName: string;
   onToggle: () => void;
+  showLabel?: boolean;
 };
 
 export function PlayerBookmarkButton({
   pressed,
   playerName,
   onToggle,
+  showLabel = false,
 }: PlayerBookmarkButtonProps) {
   return (
     <button
@@ -23,6 +25,7 @@ export function PlayerBookmarkButton({
       <svg className="player-bookmark-icon" viewBox="0 0 24 24" aria-hidden="true">
         <path d="M6 3h12v18l-6-4-6 4V3Z" stroke="currentColor" strokeWidth="1.5" fill={pressed ? "currentColor" : "none"} />
       </svg>
+      {showLabel ? <span>Favorite</span> : null}
     </button>
   );
 }

@@ -1,5 +1,4 @@
 import { PulseRing } from "../../components/ui/PulseRing";
-import { Separator } from "../../components/ui/Separator";
 import { Button, buttonVariants } from "../../components/ui/Button";
 import { lazy, Suspense, useEffect, useMemo, useRef, useState } from "react";
 import { useQueries, useQuery } from "@tanstack/react-query";
@@ -48,17 +47,14 @@ import {
   YAxis,
 } from "recharts";
 import {
-  fixtureDateLabel,
   formatChartAxisDate,
   formatMarketChartTick,
   marketChangeTone,
   marketChartDomain,
-  statDisplay,
   withMarketTrend,
   MISSING_STAT,
   deltaRelPercent,
 } from "./playerDetailFormat";
-import { clubDisplayName } from "./clubNames";
 import { PlayerBookmarkButton } from "./PlayerBookmarkButton";
 import { usePlayerMarketListing } from "./usePlayerMarketListing";
 import { readFavoritePlayerIds, toggleFavoritePlayerId } from "./favorites";
@@ -66,12 +62,13 @@ import { rosterPhotoByMasterId, teamIdsFromLeagueTeams } from "./model/playerRow
 import { PlayerMatchesSection } from "./PlayerMatchesSection";
 import { PlayerFantasySection, PlayerFantasySummary } from "./PlayerFantasySection";
 import { PlayerAveragesPanel } from "./PlayerAveragesPanel";
+import { PlayerSectionNavigation } from "./PlayerSectionNavigation";
+import { PlayerFormHistory } from "./PlayerFormHistory";
 import { playerAverages } from "./playerAverages";
 import { PlayerDetailScreenLoading } from "./PlayerScreenLoading";
-import daznIcon from "../../assets/dazn.png";
 import injuryIcon from "../../assets/button_injury_red.svg";
-import { materialIconPaths } from "../../assets/material-icons/paths";
 import "./PlayerDetailPage.css";
+import "./PlayerProfileHeader.css";
 
 const DateRangeDialog = lazy(() => import("./DateRangeDialog").then((module) => ({ default: module.DateRangeDialog })));
 
@@ -82,55 +79,9 @@ const SEGMENT_LABELS: Record<string, string> = {
   upcoming: "Upcoming matches", profile: "Fantasy outlook, news and injuries",
 };
 
-const STAT_SPECS = [
-  ["minutesPlayed", "Minutes"], ["goals", "Goals"], ["assists", "Assists"],
-  ["bigChancesCreated", "Big chances"], ["ballsIntoBox", "Balls into box"],
-  ["penaltiesWon", "Penalties won"], ["penaltiesCommitted", "Penalties committed"],
-  ["penaltiesSaved", "Penalties saved"], ["saves", "Saves"], ["clearances", "Clearances"],
-  ["penaltiesMissed", "Penalties missed"], ["ownGoals", "Own goals"],
-  ["goalsConceded", "Goals conceded"], ["yellowCards", "Yellow cards"],
-  ["redCard", "Red card"], ["shots", "Shots"], ["successfulDribbles", "Dribbles"],
-  ["recoveries", "Recoveries"], ["ballsLost", "Balls lost"], ["daznPoints", "DAZN"],
-] as const;
-
-function fixtureLabel(fixture: Record<string, unknown> | null): string {
-  if (!fixture) return MISSING_STAT;
-  const home = clubDisplayName(text(fixture.homeTeam));
-  const away = clubDisplayName(text(fixture.awayTeam));
-  if (home && away) return `${home} vs ${away}`;
-  const opponent = clubDisplayName(text(fixture.opponent));
-  if (opponent) return opponent;
-  return MISSING_STAT;
-}
-
-
-function entryKey(parts: readonly (string | null | undefined)[], index: number): string {
-  const label = parts.filter((part): part is string => part != null && part.length > 0).join("|");
-  return label.length > 0 ? `${label}|${index}` : `row-${index}`;
-}
-
-function fixtureKey(fixture: Record<string, unknown> | null, index: number): string {
-  return entryKey(
-    [
-      text(fixture?.date),
-      text(fixture?.homeTeam),
-      text(fixture?.awayTeam),
-      text(fixture?.opponent),
-      text(fixture?.competition),
-    ],
-    index,
-  );
-}
-
 type PlayerDetailBodyProps = {
   masterId: MasterPlayerId;
 };
-
-function PlayerSectionIcon({ path }: { path: string }) {
-  return <svg className="player-section-icon" aria-hidden="true" focusable="false" viewBox="0 0 24 24">
-    <path d={path} />
-  </svg>;
-}
 
 function PlayerDetailUnavailable({ notFound = false, invalidLink = false, pending = false, onRetry }: {
   notFound?: boolean;
@@ -184,7 +135,6 @@ function PlayerDetailBody({ masterId }: PlayerDetailBodyProps) {
   const [dateEditorOpen, setDateEditorOpen] = useState(false);
   const [marketUseCustomRange, setMarketUseCustomRange] = useState(false);
   const [favorites, setFavorites] = useState(() => readFavoritePlayerIds(userId));
-  const [showAdvancedStats, setShowAdvancedStats] = useState(false);
   const [lastLoadedDetail, setLastLoadedDetail] = useState<Record<string, unknown> | null>(null);
 
   const detailQueryInput = useMemo((): PlayerStatsDetailQuery => {
@@ -343,9 +293,6 @@ function PlayerDetailBody({ masterId }: PlayerDetailBodyProps) {
   const currentValue = asFiniteNumber(marketBlock?.currentValue);
   const changeTone = marketChangeTone(deltaRel);
   const averages = playerAverages(profileBlock?.averages, fantasyAveragesPlayer);
-  const fixturePoints = fixtureRows.map((row) => asFiniteNumber(asRecord(row)?.fantasyPointsTotal));
-  const knownFixturePoints = fixturePoints.filter((value): value is number => value != null);
-  const missingFixturePoints = fixturePoints.length - knownFixturePoints.length;
   const marketWindow = asRecord(marketBlock?.window);
   const marketFrom = text(marketWindow?.from);
   const marketTo = text(marketWindow?.to);
@@ -353,6 +300,10 @@ function PlayerDetailBody({ masterId }: PlayerDetailBodyProps) {
   const injury = asRecord(profileBlock?.injury);
   const hasActiveInjury = injury?.active === true ||
     (injury?.active == null && text(injury?.diagnosis) != null);
+  const availabilityNote = text(injury?.availabilityText);
+  const showAvailabilityNote = hasActiveInjury || text(injury?.diagnosis) != null ||
+    (availabilityNote != null && (!text(catalogMaster?.playerStatus) ||
+      availabilityNote.toLocaleLowerCase("en") !== availability));
   const actionContext = {
     money: marketListing.money,
     now,
@@ -378,13 +329,7 @@ function PlayerDetailBody({ masterId }: PlayerDetailBodyProps) {
         <Link to={returnTo}>{returnTo === "/market" ? "Market" : "Players"}</Link>
         <span aria-hidden="true">/</span><span aria-current="page">{name}</span>
       </nav>
-      <nav className="player-detail-sections" aria-label="Player sections">
-        <a href="#player-overview"><PlayerSectionIcon path={materialIconPaths.account_circle} />Overview</a>
-        <a href="#player-form-title"><PlayerSectionIcon path={materialIconPaths.trending_up} />Form</a>
-        <a href="#player-market-title"><PlayerSectionIcon path={materialIconPaths.euro_symbol} />Market value</a>
-        {detailReady ? <a href="#player-matches-title"><PlayerSectionIcon path={materialIconPaths.event} />Matches</a> : null}
-        {detailReady ? <a href="#player-fantasy-title"><PlayerSectionIcon path={materialIconPaths.assignment} />News &amp; injuries</a> : null}
-      </nav>
+      <PlayerSectionNavigation detailReady={detailReady} />
       {detailQuery.isError ? (
         <div className="player-detail-panel player-detail-recovery">
           <p role="alert">Player data could not be updated. Previous results are still shown.</p>
@@ -418,14 +363,13 @@ function PlayerDetailBody({ masterId }: PlayerDetailBodyProps) {
         </div>
       ) : null}
 
-      <header className="player-detail-panel player-detail-header">
+      <header className="player-detail-panel player-detail-header player-profile-header">
         <div className="player-detail-header-identity">
           <PlayerTile
             name={name}
             captain={false}
             variant="squad"
             showName={false}
-            fixturePoints={points}
             photoUrl={
               leagueMedia.photoUrl ??
               marketListing.row?.photoUrl ??
@@ -449,21 +393,23 @@ function PlayerDetailBody({ masterId }: PlayerDetailBodyProps) {
             }
           />
           <div className="player-detail-header-text">
+            <div className="player-detail-header-facts">
+              <span>{teamName ?? MISSING_STAT}</span>
+              <span className="player-profile-position">{positionLabel(positionId) ?? MISSING_STAT}</span>
+            </div>
             <div className="player-detail-title-row"><h1 id="player-overview" tabIndex={-1}>{name}</h1>
               {text(catalogMaster?.playerStatus) ? <AvailabilityCell availability={availability} />
                 : <span className="player-detail-context">Availability unknown</span>}</div>
-            <div className="player-detail-header-facts">
-              <p>{teamName ?? MISSING_STAT}<Separator orientation="vertical" /></p>
-              <p>{points ?? MISSING_STAT} Fantasy points<Separator orientation="vertical" /></p>
-              <p>{positionLabel(positionId) ?? MISSING_STAT}</p>
-            </div>
-            {injury?.availabilityText || injury?.diagnosis ? (
+            <dl className="player-profile-points">
+              <div><dt>Fantasy points</dt><dd>{points ?? MISSING_STAT}</dd></div>
+            </dl>
+            {showAvailabilityNote ? (
               <p className="player-detail-availability-reason">
                 {hasActiveInjury ? (
                   <img className="player-detail-injury-icon" src={injuryIcon}
                     alt="Active injury" />
                 ) : null}
-                {[text(injury.availabilityText), text(injury.diagnosis)].filter(Boolean).join(" — ")}
+                {[availabilityNote, text(injury?.diagnosis)].filter(Boolean).join(" — ")}
               </p>
             ) : null}
           </div>
@@ -473,7 +419,7 @@ function PlayerDetailBody({ masterId }: PlayerDetailBodyProps) {
         ) : null}
         <div className="player-detail-header-actions">
           {ownSquadCard ? (
-            <SquadPlayerActions player={ownSquadCard} sales={squadSales}>
+            <SquadPlayerActions player={ownSquadCard} sales={squadSales} triggerText="Player options">
               <span className="player-detail-squad-hit">{name}</span>
             </SquadPlayerActions>
           ) : null}
@@ -481,47 +427,39 @@ function PlayerDetailBody({ masterId }: PlayerDetailBodyProps) {
             <MarketActionMenu row={marketRow} context={actionContext} actions={marketActions} />
           ) : null}
           <PlayerBookmarkButton
+            showLabel
             pressed={favorites.has(masterId)}
             playerName={name}
             onToggle={() => setFavorites(toggleFavoritePlayerId(userId, masterId))}
           />
         </div>
         <section className="player-detail-fantasy-overview" aria-labelledby="player-summary-fantasy-title">
-          <h2 id="player-summary-fantasy-title">Fantasy outlook</h2>
-          <p className="player-detail-context">FutbolFantasy ratings and starting estimates.</p>
+          <div className="player-outlook-heading">
+            <div>
+              <h2 id="player-summary-fantasy-title">Fantasy outlook</h2>
+              <p className="player-detail-context">Team role, starting estimates and recent form.</p>
+            </div>
+            <span className="player-outlook-source">FutbolFantasy</span>
+          </div>
           <PlayerFantasySummary profile={profileBlock} />
         </section>
       </header>
 
       <section className="player-detail-panel player-detail-section player-form-section" aria-labelledby="player-form-title"
         aria-busy={updatingPreviousDetail || undefined}>
-        <h2 id="player-form-title" tabIndex={-1}>Form — fixture stats</h2>
-        <div className="player-detail-fixture-actions" role="group" aria-label="Fixture history length">
-          {FIXTURE_LAST_STEPS.map((step) => (
-            <button
-              key={step}
-              type="button"
-              className={last === step ? "is-active" : undefined}
-              aria-pressed={last === step}
-              onClick={() => setLast(step)}
-            >
-              Last {step}
-            </button>
-          ))}
-        </div>
-        <div className="player-detail-form-context">
-          {fixturesBlock ? <p className="player-detail-context">
-            {fixtureRows.length} LaLiga fixtures shown · Oldest to newest
-          </p> : null}
-          <Button variant="outline"
-            type="button"
-            aria-expanded={showAdvancedStats}
-            aria-controls={fixtureRows.length > 0 ? "player-form-list" : undefined}
-            disabled={fixtureRows.length === 0}
-            onClick={() => setShowAdvancedStats((value) => !value)}
-          >
-            {showAdvancedStats ? "Hide match statistics" : "Show match statistics"}
-          </Button>
+        <div className="player-form-heading">
+          <div>
+            <h2 id="player-form-title" tabIndex={-1}>Form — fixture stats</h2>
+            <p>A closer look at recent performances.</p>
+          </div>
+          <div className="player-detail-fixture-actions" role="group" aria-label="Fixture history length">
+            {FIXTURE_LAST_STEPS.map((step) => (
+              <button key={step} type="button" className={last === step ? "is-active" : undefined}
+                aria-pressed={last === step} onClick={() => setLast(step)}>
+                Last {step}
+              </button>
+            ))}
+          </div>
         </div>
         {updatingPreviousDetail ? (
           <p className="player-detail-context">Updating fixture statistics… Previous results shown below.</p>
@@ -537,64 +475,7 @@ function PlayerDetailBody({ masterId }: PlayerDetailBodyProps) {
         ) : fixtureRows.length === 0 ? (
           <p className="status-copy">No LaLiga fixture stats available.</p>
         ) : (
-          <div id="player-form-list" className="player-form-grid">
-            {fixtureRows.map((row, index) => {
-              const record = asRecord(row);
-              const fixture = asRecord(record?.fixture);
-              const stats = asRecord(record?.stats);
-              const total = asFiniteNumber(record?.fantasyPointsTotal);
-              return (
-                <article className="player-form-card" key={fixtureKey(fixture, index)}>
-                  <header className="player-form-card-heading">
-                    <strong>{fixtureLabel(fixture)}</strong>
-                    <time dateTime={text(fixture?.date) ?? undefined}>
-                      {fixtureDateLabel(fixture)}
-                    </time>
-                  </header>
-                  {total == null && asFiniteNumber(record?.minutesPlayed) == null ? <p className="fb-helper">Statistics unavailable</p> : null}
-                  <dl className="player-form-summary">
-                    <div>
-                      <dt>Minutes</dt>
-                      <dd>{asFiniteNumber(record?.minutesPlayed) ?? MISSING_STAT}</dd>
-                    </div>
-                    <div>
-                      <dt>Fantasy points</dt>
-                      <dd>{total ?? MISSING_STAT}</dd>
-                    </div>
-                  </dl>
-                  {showAdvancedStats ? (
-                    <dl className="player-form-details">
-                      {STAT_SPECS.map(([key, label]) => (
-                        <div key={key}>
-                          <dt>
-                            {key === "daznPoints" ? (
-                              <>
-                                <img src={daznIcon} alt="" aria-hidden="true" /> DAZN
-                              </>
-                            ) : (
-                              label
-                            )}
-                          </dt>
-                          <dd>{statDisplay(stats?.[key], key)}</dd>
-                        </div>
-                      ))}
-                    </dl>
-                  ) : null}
-                </article>
-              );
-            })}
-            <p className="player-form-total">
-              <span>{missingFixturePoints > 0 ? "Known fantasy points" : "Total fantasy points"}
-                {missingFixturePoints > 0 ? <small>
-                  Points unavailable for {missingFixturePoints} of {fixtureRows.length} fixtures.
-                </small> : null}
-              </span>
-              <strong>
-                {knownFixturePoints.length > 0
-                  ? knownFixturePoints.reduce((sum, total) => sum + total, 0) : "Unavailable"}
-              </strong>
-            </p>
-          </div>
+          <PlayerFormHistory rows={fixtureRows} />
         )}
       </section>
 

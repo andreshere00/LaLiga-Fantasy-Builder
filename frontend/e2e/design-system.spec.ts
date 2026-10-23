@@ -30,10 +30,10 @@ for (const theme of ["light", "dark"]) {
         if (route.name === "detail") {
           const summary = page.locator(".player-detail-fantasy-summary");
           await expect(summary.locator(".player-fantasy-summary-block")).toHaveCount(4);
-          const hierarchy = summary.locator(".player-fantasy-summary-block").first();
+          const hierarchy = summary.locator(".player-fantasy-summary-block--hierarchy");
           await hierarchy.hover();
           await expect(page.getByRole("tooltip")).toContainText("player's role on the team");
-          await expect(hierarchy.locator("dd")).toHaveCSS("text-align", "center");
+          await expect(hierarchy.locator("dd")).toHaveCSS("text-align", "left");
           const summaryFontSize = await hierarchy.locator("dd").evaluate((element) =>
             parseFloat(getComputedStyle(element).fontSize));
           expect(summaryFontSize).toBeGreaterThanOrEqual(16);
@@ -47,13 +47,14 @@ for (const theme of ["light", "dark"]) {
           await expect(summary.getByText("Unknown", { exact: true })).toBeVisible();
           if (theme === "dark") await expect(riskIcon).toHaveCSS("filter", "brightness(0) invert(1)");
           if (width > 1100) {
-            const centers = await page.locator(
-              ".player-detail-header-identity, .player-detail-header-averages, .player-detail-header-actions",
+            const tops = await page.locator(
+              ".player-detail-header-identity, .player-detail-header-actions",
             ).evaluateAll((elements) => elements.map((element) => {
               const rect = element.getBoundingClientRect();
-              return rect.top + rect.height / 2;
+              return rect.top;
             }));
-            expect(Math.max(...centers) - Math.min(...centers)).toBeLessThan(2);
+            expect(Math.max(...tops) - Math.min(...tops)).toBeLessThan(2);
+            await expect(page.locator(".player-detail-header-averages .fb-metric-grid > div")).toHaveCount(6);
           }
           await hierarchy.focus();
           await expect(page.getByRole("tooltip")).toBeVisible();
