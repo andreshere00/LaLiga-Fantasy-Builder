@@ -58,28 +58,28 @@ data and user-confirmed writes with your linked account.
 
 ## Screenshots
 
-The lineup captures below were taken directly from the running local application
-on 21 October 2026 (Europe/Madrid), using the signed-in account and its actual data.
-They show the current fixture panel, forecasts, lineup controls, squad, and standings.
-Values reflect the captured session and can change. Other product captures were
-supplied on 19 October 2026 and remain next to their relevant features.
+Screenshots refreshed on 23 October 2026 (Europe/Madrid) from the current UI,
+using deterministic browser fixtures with fictional players and account data.
+Balances, offers, performance, standings, and weather illustrate the interface;
+they are not live account or provider values. Desktop captures use 1440 CSS pixels;
+mobile captures use 390 CSS pixels. See the [capture workflow](docs/frontend.md#refreshing-screenshots).
 
 ### Lineup
 
-Upcoming matches, expandable weather forecasts, and the lineup toolbar:
+Centered lineup controls and the current starting XI:
 
-![Current lineup with fixture 10 and weather forecasts, light theme](docs/images/screenshots/lineup-current-light.jpg)
+![Current lineup with centered controls and starting XI, light theme](docs/images/screenshots/lineup-current-light.jpg)
 
-![Current lineup with fixture 10 and weather forecasts, dark theme](docs/images/screenshots/lineup-current-dark.jpg)
+![Current lineup with centered controls and starting XI, dark theme](docs/images/screenshots/lineup-current-dark.jpg)
 
-Full-page desktop view with the current 4-4-2 starting XI, paginated squad,
+Full-page desktop view with the sample 4-3-3 starting XI, paginated squad,
 manager ranking, and LALIGA standings:
 
-![Full lineup page with the 4-4-2 pitch, squad, manager ranking, and LALIGA standings](docs/images/screenshots/lineup-current-squad.jpg)
+![Full lineup page with the 4-3-3 pitch, squad, manager ranking, and LALIGA standings](docs/images/screenshots/lineup-current-squad.jpg)
 
 Expanded kickoff forecast with rain, wind, and retrieval time:
 
-![Expanded Deportivo Alavés–Málaga CF kickoff forecast](docs/images/screenshots/lineup-current-forecast.jpg)
+![Expanded sample kickoff forecast](docs/images/screenshots/lineup-current-forecast.jpg)
 
 ![Lineup builder player scope, trade permissions, and mandatory players](docs/images/screenshots/lineup-builder-top.png)
 
@@ -90,7 +90,7 @@ and its squad projection, then choose **Use as draft** to prepare local changes.
 
 ![Lineup builder recommendation notes and current-squad versus external-player filters](docs/images/screenshots/lineup-builder-results.png)
 
-![Recommended 3-4-3 starting XI with individual player scores](docs/images/screenshots/lineup-builder-pitch.png)
+![Recommended 4-3-3 starting XI with individual player scores](docs/images/screenshots/lineup-builder-pitch.png)
 
 ![Projected cash, retained squad, deadlines, and transaction plan](docs/images/screenshots/lineup-builder-projection.png)
 
@@ -108,9 +108,9 @@ and its squad projection, then choose **Use as draft** to prepare local changes.
 
 ### Player profile
 
-![Lamine Yamal profile with availability, per-match averages, and Fantasy indicators](docs/images/screenshots/player-profile-overview.png)
+![Demo player profile with availability, per-match averages, and Fantasy indicators](docs/images/screenshots/player-profile-overview.png)
 
-![Last-five fixture statistics with minutes, Fantasy points, and a total](docs/images/screenshots/player-fixture-stats.png)
+![Last-five performance chart with club badges, summary metrics, and fixture details](docs/images/screenshots/player-fixture-stats.png)
 
 ![Latest player news and injury history with independent pagination](docs/images/screenshots/player-fantasy-data.png)
 

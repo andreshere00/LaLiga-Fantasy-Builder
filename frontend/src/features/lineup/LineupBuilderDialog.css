@@ -269,3 +269,10 @@
 .lineup-builder-locks > summary:hover { background:var(--fb-subtle); }
 .lineup-builder-locks[open] > summary { margin-bottom:12px; }
 .lineup-builder-locks[open] > summary > span { transform:rotate(45deg); }
+
+.lineup-builder-error { padding:16px; border:1px solid var(--fb-line); border-left:3px solid var(--fb-primary); background:var(--fb-subtle); font-size:13px; line-height:1.6; }
+.lineup-builder-error h3 { margin:0 0 8px; font:700 15px/1.4 var(--fb-font-body); }
+.lineup-builder-error p { margin:8px 0 0; }
+.lineup-builder-error ul { margin:12px 0; padding-left:20px; }
+.lineup-builder-error li + li { margin-top:6px; }
+.lineup-builder-error-recovery { font-weight:600; }

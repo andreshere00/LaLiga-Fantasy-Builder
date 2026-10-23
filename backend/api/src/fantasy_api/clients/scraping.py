@@ -100,6 +100,12 @@ class ScrapingClient:
                 status_code=404,
                 category=category,
             )
+        if response.status_code == 409 and path == "/internal/players/futbolfantasy":
+            raise UpstreamError(
+                "player identity could not be matched to the requested club",
+                status_code=409,
+                category="player_ambiguous",
+            )
         if response.status_code in {429, 503}:
             raise UpstreamError(
                 "scraping unavailable",

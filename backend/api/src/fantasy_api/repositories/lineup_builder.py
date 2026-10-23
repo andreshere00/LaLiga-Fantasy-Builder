@@ -567,7 +567,20 @@ class LineupBuilderRepository:
             )
         profile = detail.profile
         if profile is None:
-            raise UpstreamError("availability is unavailable", category="availability_unknown")
+            identity_conflict = any(
+                error.segment == "profile" and error.code == "player_ambiguous"
+                for error in detail.segment_errors
+            )
+            raise UpstreamError(
+                (
+                    "player identity is ambiguous"
+                    if identity_conflict
+                    else "availability is unavailable"
+                ),
+                category=(
+                    "player_identity_ambiguous" if identity_conflict else "availability_unknown"
+                ),
+            )
         availability_source = "futbolfantasy"
         if profile.availability is None:
             availability = {

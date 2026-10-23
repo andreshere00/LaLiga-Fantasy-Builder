@@ -148,3 +148,19 @@ it("should keep a source outage visible after more than five player exclusions",
   await act(() => result.current.build(preferences));
   expect(result.current.error).toContain("club standings source is unavailable or inconsistent");
 });
+
+it("should separate identity failures, player exclusions and financial warnings for recovery", async () => {
+  vi.mocked(streamLineupBuild).mockRejectedValueOnce(new ApiError(409, "no_feasible_lineup", [
+    { code: "cash_conservative_bid_reserve", playerId: null },
+    { code: "player_unavailable", playerId: "1" },
+    { code: "player_identity_ambiguous", playerId: "3284" },
+  ]));
+  const { result } = renderHook(() => useLineupBuilder("l1", "token", new Map([
+    ["1", { name: "P. Martínez" }], ["3284", { name: "Carvajal" }],
+  ])));
+  await act(() => result.current.build(preferences));
+  expect(result.current.errorDetails).toHaveLength(3);
+  expect(result.current.errorDetails[2]).toContain("Carvajal: The player profile could not be matched");
+  expect(result.current.errorRecovery).toContain("pending bids in Market");
+  expect(result.current.error).not.toContain(".;");
+});

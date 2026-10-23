@@ -79,6 +79,14 @@ class RouteResolver:
             narrowed = set.intersection(*targets)
             if not narrowed:
                 narrowed = targets[-1]
+            # Generated surnames can collide with a newly added catalog player.
+            # Keep literal sitemap names in the candidate set so club verification,
+            # rather than a weak surname alias, settles the identity.
+            if not full_name:
+                query = queries[0]
+                narrowed.update(
+                    slug for slug, base, tokens in self._entries if query == base or query in tokens
+                )
             return self._alias_resolution(sorted(narrowed))
         for query in queries:
             allowed = max(1, len(query) // 4)

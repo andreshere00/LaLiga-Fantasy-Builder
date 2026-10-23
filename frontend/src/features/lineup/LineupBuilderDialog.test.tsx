@@ -92,3 +92,25 @@ it.each(["success", "cancel"])("should discard an old draft confirmation after r
   expect(onApply).toHaveBeenCalledExactlyOnceWith(current.candidates[0], current.target.week);
   client.clear();
 });
+
+it("shows actionable build diagnostics as a readable list without losing settings", async () => {
+  const { ApiError } = await import("../../api/errors");
+  vi.mocked(streamLineupBuild).mockRejectedValueOnce(new ApiError(409, "no_feasible_lineup", [
+    { code: "cash_conservative_bid_reserve", playerId: null },
+    { code: "player_identity_ambiguous", playerId: "3284" },
+  ]));
+  const client = new QueryClient({ defaultOptions: { queries: { retry: false } } });
+  render(<QueryClientProvider client={client}>
+    <LineupBuilderDialog open onClose={vi.fn()} ranking={[]} squad={[]} selectedTeamId="t1"
+      formations={[]} canApply={() => true} onApply={vi.fn()} isDraftDirty={() => false} />
+  </QueryClientProvider>);
+  fireEvent.click(screen.getByLabelText("4-3-3"));
+  fireEvent.click(screen.getByRole("button", { name: "Build" }));
+  const alert = await screen.findByRole("alert");
+  expect(alert.querySelectorAll("li")).toHaveLength(2);
+  expect(alert.textContent).toContain("could not be matched to the catalog club");
+  expect(alert.textContent).toContain("Review pending bids in Market");
+  expect((screen.getByLabelText("4-3-3") as HTMLInputElement).checked).toBe(true);
+  expect(screen.getByRole("button", { name: "Build" }).hasAttribute("disabled")).toBe(false);
+  client.clear();
+});

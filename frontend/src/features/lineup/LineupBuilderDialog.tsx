@@ -331,7 +331,13 @@ function BuilderDialogSession({
           </div>
         </section>
 
-        {builder.error && <p role="alert">{builder.error}{builder.result ? " Previous results are stale." : ""}</p>}
+        {builder.error && <div className="lineup-builder-error" role="alert">
+          <h3>Could not build a lineup</h3>
+          <p>{builder.errorSummary}</p>
+          {builder.errorDetails.length > 0 && <ul>{builder.errorDetails.map((detail, index) => <li key={index}>{detail}</li>)}</ul>}
+          {builder.errorRecovery && <p className="lineup-builder-error-recovery">{builder.errorRecovery}</p>}
+          {builder.result && <p>Previous results are stale. Rebuild before applying a draft.</p>}
+        </div>}
         {builder.result && changedResult === builder.result && <p role="status">Your acquisition activity changed. Rebuild the recommendations before using a draft.</p>}
         {builder.result && <LineupBuilderResults key={builder.result.buildId} result={builder.result} playersById={playersById}
           ownedPlayerIds={new Set(ownSquad.flatMap((player) => player.masterPlayerId ? [player.masterPlayerId] : []))}

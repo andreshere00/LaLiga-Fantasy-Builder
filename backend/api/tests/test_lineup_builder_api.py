@@ -33,6 +33,7 @@ from fantasy_api.schemas.player_stats import (
     PlayerMarketResponse,
     PlayerProfileResponse,
     PlayerRef,
+    SegmentError,
     StartProbability,
     Travel,
     UpcomingMatch,
@@ -457,6 +458,17 @@ def _client(
             )
         if stats_failure == "market":
             return detail.model_copy(update={"market": None})
+        if stats_failure == "profile_identity":
+            return detail.model_copy(
+                update={
+                    "profile": None,
+                    "segment_errors": [
+                        SegmentError(
+                            segment="profile", code="player_ambiguous", detail="identity conflict"
+                        )
+                    ],
+                }
+            )
         if stats_failure == "profile":
             return detail.model_copy(update={"profile": None})
         if stats_failure == "recent":
@@ -1282,3 +1294,17 @@ def test_build_lineup_late_opponent_lock_reports_deadline_without_shield_lookup(
     assert {"code": code, "player_id": "199"} in result.json()["diagnostics"]
     assert not any(r.url.path.endswith("/check-shield") for r in requests)
     assert all(c["resource_group"] == "owned" for c in result.json()["candidates"])
+
+
+def test_build_lineup_identity_conflict_reports_cause_without_claiming_injury(rsa_pems) -> None:
+    client, jwt, _ = _client(rsa_pems, stats_failure="profile_identity")
+    with client:
+        response = client.post(
+            "/lineup-builder/leagues/league/build",
+            headers={"Authorization": f"Bearer {jwt}"},
+            json={},
+        )
+    assert response.status_code == 409
+    codes = {item["code"] for item in response.json()["diagnostics"]}
+    assert "player_identity_ambiguous" in codes
+    assert "player_unavailable" not in codes

@@ -71,45 +71,53 @@ or close-button dismissal until a result is available. Closing an idle dialog
 restores focus to its originating control. Date-range editing still uses an
 explicit Apply/Cancel workflow.
 
-Automated browser checks use fictional deterministic data and fallback
-portraits. The product captures below show the local account as it appeared at
-capture time.
-
-Screenshot assets live under [`docs/images/`](images/). Captures are embedded
-beside the feature they document, with their source and capture date stated there.
-Keep new screenshots in the same commit as their Markdown references so the
-gallery is available on GitHub as well as in a local checkout.
+Automated browser checks and documentation screenshots use fictional,
+deterministic account data. Screenshot assets live under
+[`docs/images/screenshots/`](images/screenshots/). Keep updated screenshots and
+their captions in the same commit.
 
 ### Product captures
 
-The following captures document the full local interface: lineup and builder,
-market and catalog tables, and the player profile's averages, form, match,
-market-value, Fantasy-data, and injury-history sections. Their values reflect
-the account and data available at capture time. The supplied desktop captures
-were taken on 19 October 2026; the lineup overview was refreshed directly from
-the running application on 21 October 2026. Synthetic demonstrations for other
-features are identified below. The product gallery is also embedded in
-the [project README](../README.md#screenshots).
+All 23 captures were refreshed on 23 October 2026 (Europe/Madrid) from the current
+React UI using mocked APIs. Player names, balances, offers, results, standings,
+and forecasts are illustrative fixtures, not live account or provider values.
+Player silhouettes are the application's normal fallback for these fictional
+players. Desktop captures use a 1440 × 1000 CSS-pixel viewport (up to 2400 pixels tall for
+expanded builder panels); mobile captures use
+390 × 844. Component captures include the whole panel, and the full lineup image
+includes content below the viewport. The gallery is also embedded in the
+[project README](../README.md#screenshots).
+
+#### Refreshing screenshots
+
+From `frontend/`, install the browser once and regenerate the complete gallery:
+
+```bash
+bunx playwright install chromium
+bun run screenshots:docs
+```
+
+The opt-in [capture suite](../frontend/e2e/docs-screenshots.spec.ts) writes the
+existing 23 image paths. Normal browser tests skip this suite. It waits for fonts
+and images, serves club badges from local fixtures, and blocks external traffic
+through the shared browser fixtures. The fixture clock is fixed to 12 October
+2026 so countdowns and dates remain repeatable. No live bids, trades, or lineup
+saves are submitted. The final check produces a contact sheet in Playwright’s test output for visual
+review. Review the resulting images and commit them with any caption updates.
 
 #### Lineup
 
-Captured directly from Brave at `http://localhost:3000/` on 21 October 2026
-(Europe/Madrid), using the authenticated local account. The light and dark
-views show fixture 10, actual pairings and kickoff times, expandable forecasts,
-and the lineup toolbar. The full-page desktop capture includes the complete
-4-4-2 starting XI, squad pagination, manager ranking, and LALIGA standings.
-The overview and forecast images are browser-window captures; the full-page
-image uses Brave's full-size screenshot command at a 1512 CSS-pixel desktop width.
-The captures use actual application responses, without mocked or generated data,
-and are stored as JPEGs.
+Light and dark overviews show centered lineup controls and a sample 4-3-3
+starting XI. The full-page view includes the squad, manager ranking, matchweek
+fixtures, and the full-width LALIGA standings at the bottom of the application.
 
 ![Current lineup and upcoming fixtures with weather, light theme](images/screenshots/lineup-current-light.jpg)
 
 ![Current lineup and upcoming fixtures with weather, dark theme](images/screenshots/lineup-current-dark.jpg)
 
-![Full lineup page with the 4-4-2 pitch, squad, manager ranking, and LALIGA standings](images/screenshots/lineup-current-squad.jpg)
+![Full lineup page with the 4-3-3 pitch, squad, manager ranking, and LALIGA standings](images/screenshots/lineup-current-squad.jpg)
 
-The builder captures below were supplied on 19 October 2026:
+The builder groups player sources, trade permissions, optional player locks, and formations:
 
 ![Lineup builder player scope, trade permissions, and mandatory players](images/screenshots/lineup-builder-top.png)
 
@@ -127,7 +135,7 @@ prepares local changes; building does not buy, sell, or save players.
 
 ![Lineup builder recommendation notes and result filters](images/screenshots/lineup-builder-results.png)
 
-![Recommended 3-4-3 starting XI with individual player scores](images/screenshots/lineup-builder-pitch.png)
+![Recommended 4-3-3 starting XI with individual player scores](images/screenshots/lineup-builder-pitch.png)
 
 ![Projected cash, retained squad, deadlines, and transaction plan](images/screenshots/lineup-builder-projection.png)
 
@@ -143,7 +151,7 @@ prepares local changes; building does not buy, sell, or save players.
 
 ![Players catalog in dark mode with form, release clauses, owners, and bookmarks](images/screenshots/players-catalog.png)
 
-The following bid-management and mobile captures use synthetic browser fixtures:
+Bid management and responsive mobile layouts:
 
 ![My bids and projected spending](images/screenshots/market-bids.png)
 
@@ -153,9 +161,9 @@ The following bid-management and mobile captures use synthetic browser fixtures:
 
 #### Player profile
 
-![Lamine Yamal profile with availability, per-match averages, and Fantasy indicators](images/screenshots/player-profile-overview.png)
+![Demo player profile with availability, per-match averages, and Fantasy indicators](images/screenshots/player-profile-overview.png)
 
-![Last-five fixture statistics with minutes, Fantasy points, and a total](images/screenshots/player-fixture-stats.png)
+![Last-five performance chart with club badges, summary metrics, and fixture details](images/screenshots/player-fixture-stats.png)
 
 ![Latest player news and injury history with independent pagination](images/screenshots/player-fantasy-data.png)
 
@@ -226,13 +234,13 @@ scores, or lineup editing. A forecast already received before kickoff may
 remain during play as **Saved kickoff forecast**, with its original timestamp;
 it is not observed current weather. Finished matches omit weather.
 
-The [current lineup captures above](#lineup) show this panel using the actual
-local session. The expanded forecast below shows actual provider values for
-Deportivo Alavés–Málaga CF captured on 21 October 2026:
+The [lineup gallery above](#lineup) includes the fixture panel. The expanded
+forecast below uses deterministic weather data to demonstrate rain probability,
+wind, and retrieval time:
 
-![Actual expanded kickoff forecast with rain, wind, and retrieval time](images/screenshots/lineup-current-forecast.jpg)
+![Expanded sample kickoff forecast with rain, wind, and retrieval time](images/screenshots/lineup-current-forecast.jpg)
 
-Synthetic browser-test captures stay in test output directories. See the [implementation record](frontend-fixture-panel-implementation-plan.md)
+See the [implementation record](frontend-fixture-panel-implementation-plan.md)
 for behavior and validation details.
 
 ### Player detail widgets

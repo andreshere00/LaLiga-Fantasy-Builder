@@ -451,3 +451,34 @@ test("preview keeps release-clause payment disabled when shield status is unknow
   await expect(options.getByRole("button", { name: "Pay release clause" })).toBeDisabled();
   await expect(options.getByText("The player's shield status could not be verified.")).toBeVisible();
 });
+
+for (const { theme, width } of [{ theme: "light", width: 1440 }, { theme: "dark", width: 375 }]) {
+  test(`builder failure distinguishes source issues from exclusions ${theme}`, async ({ page }, info) => {
+    await page.setViewportSize({ width, height: 1000 });
+    await page.addInitScript((value) => localStorage.setItem("lfb-theme", value), theme);
+    await mockApplication(page);
+    await page.route("**/api/lineup-builder/leagues/l1/build/stream", (route) => route.fulfill({
+      contentType: "application/x-ndjson",
+      body: JSON.stringify({ type: "error", status: 409, error: "no_feasible_lineup", diagnostics: [
+        { code: "cash_conservative_bid_reserve", player_id: null },
+        { code: "player_unavailable", player_id: "1" },
+        { code: "player_identity_ambiguous", player_id: "2" },
+      ] }) + "\n",
+    }));
+    await page.goto("/");
+    await page.getByRole("button", { name: "Lineup builder", exact: true }).click();
+    const dialog = page.getByRole("dialog", { name: "Build lineup" });
+    await dialog.getByRole("checkbox", { name: "4-3-3", exact: true }).check();
+    await dialog.getByRole("button", { name: "Build", exact: true }).click();
+    const alert = dialog.getByRole("alert");
+    await expect(alert.getByRole("heading", { name: "Could not build a lineup" })).toBeVisible();
+    await expect(alert.getByRole("listitem")).toHaveCount(3);
+    await expect(alert).toContainText("Player 02: The player profile could not be matched");
+    await expect(alert).toContainText("Review pending bids in Market");
+    await expect(dialog.getByRole("checkbox", { name: "4-3-3", exact: true })).toBeChecked();
+    await expect(dialog.getByRole("button", { name: "Build", exact: true })).toBeEnabled();
+    await alert.scrollIntoViewIfNeeded();
+    expect(await alert.evaluate((el) => el.scrollWidth <= el.clientWidth)).toBe(true);
+    await alert.screenshot({ path: info.outputPath(`builder-failure-${theme}.png`) });
+  });
+}
