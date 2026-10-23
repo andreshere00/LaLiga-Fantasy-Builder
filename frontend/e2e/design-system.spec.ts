@@ -131,7 +131,7 @@ for (const gate of ["signed-out", "unlinked", "needs-reauth", "unavailable"]) {
   });
 }
 
-for (const width of [800, 801]) {
+for (const width of [700, 701, 800, 801]) {
   test("catalog breakpoint " + width, async ({ page }) => {
     await mockApplication(page);
     await page.setViewportSize({ width, height: 1000 });
@@ -139,8 +139,12 @@ for (const width of [800, 801]) {
     await expect(page.getByRole("heading", { name: "Players", exact: true })).toBeVisible();
     await expect(page.locator(".players-player-heading")).toBeVisible();
     await expect(page.locator(".market-head-cell-team")).toBeVisible();
-    if (width === 800) await expect(page.locator(".market-head-cell-fsyp")).toBeHidden();
-    else await expect(page.locator(".market-head-cell-fsyp")).toBeVisible();
+    await expect(page.locator(".market-head-cell-fsyp")).toBeVisible();
+    await expect(page.locator(".players-row .market-fsyp-cell").first()).toBeVisible();
+    const tableOverflows = await page.locator(".players-list").evaluate(
+      (list) => list.scrollWidth > list.clientWidth,
+    );
+    expect(tableOverflows).toBe(width > 700);
   });
 }
 
