@@ -231,7 +231,7 @@ test("a successful direct offer never creates a synthetic market bid", async ({ 
 });
 
 for (const theme of ["light", "dark"]) {
-  for (const width of [375, 800, 1024, 1440, 720]) {
+  for (const width of [320, 375, 800, 1024, 1440, 720]) {
     test(`market presentation, focus and responsive layout: ${theme} ${width}`, async ({ page }, info) => {
       await page.clock.install({ time: new Date("2026-10-12T12:00:00Z") });
       await mockMarketBids(page);
@@ -245,7 +245,13 @@ for (const theme of ["light", "dark"]) {
       await name.hover();
       await expect(name).toHaveCSS("color", "rgb(255, 75, 68)");
       await expect(protectedRow.locator(".market-fsyp-primary")).toHaveCSS("font-weight", "700");
-      await expect(protectedRow.locator(".market-fsyp-primary")).toHaveCSS("font-size", "16px");
+      await expect(protectedRow.locator(".market-fsyp-primary")).toHaveCSS("font-size", "18px");
+      if (width <= 700) {
+        await expect(protectedRow.locator(".market-value")).toBeVisible();
+        await expect(protectedRow.locator(".market-cell-availability")).toBeVisible();
+        expect(await protectedRow.evaluate((row) => row.scrollWidth <= row.clientWidth)).toBe(true);
+        expect(await page.locator(".market-list").evaluate((list) => list.scrollWidth <= list.clientWidth)).toBe(true);
+      }
       const form = protectedRow.locator(".market-form");
       await expect(form.locator(".market-form-week")).toHaveText(["F3", "F4", "F5", "F6", "F7"]);
       if (width > 860) {

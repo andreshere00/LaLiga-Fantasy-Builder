@@ -109,7 +109,6 @@ function LineupPageContent() {
         </p>
       ) : null}
       <div className="board">
-        <FixtureMatchesPanel />
         <div className="board-controls-bar side-panel">
           <h1 className="board-controls-title">
             {owner} <span>lineup</span>
@@ -243,7 +242,6 @@ function LineupPageContent() {
         <div className="column column-players">
           <PlayersRankingPanel ranking={board.ranking} selectedTeamId={board.selectedTeamId}
             onSelectTeam={board.selectTeam} />
-          <LaligaStandingsPanel />
         </div>
 
         <div className="column column-pitch">
@@ -547,7 +545,9 @@ function LineupPageContent() {
             </div>
           </div>
         </div>
+        <FixtureMatchesPanel />
       </div>
+      <LaligaStandingsPanel />
       <PlayedFixtureNotice
         open={board.pastFixtureNoticeOpen}
         onClose={board.dismissPastFixtureNotice}

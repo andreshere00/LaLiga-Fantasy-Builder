@@ -6,10 +6,8 @@
   <title>Lineup fixture panel — design preview</title>
   <link rel="stylesheet" href="../../frontend/src/styles/design-system.css">
   <link rel="stylesheet" href="../../frontend/src/styles/tokens.css">
+  <link rel="stylesheet" href="../../frontend/src/styles/fonts.css">
   <style>
-    @font-face { font-family: "At Aero"; src: url("../../frontend/src/assets/fonts/AtAero-Regular.otf"); font-weight: 400; }
-    @font-face { font-family: "At Aero"; src: url("../../frontend/src/assets/fonts/AtAero-Medium.otf"); font-weight: 500; }
-    @font-face { font-family: Anton; src: url("../../frontend/src/assets/fonts/Anton-Regular.ttf"); font-weight: 400; }
     body { margin: 0; }
     .preview-tools { display: flex; flex-wrap: wrap; gap: 12px; margin: 24px 5vw; align-items: center; }
     .preview-tools p { flex: 1 1 320px; margin: 0; }
@@ -26,7 +24,7 @@
     .fixture-preview-state.is-active::before { content: ""; display: inline-block; width: 7px; height: 7px; background: var(--fb-primary); margin-right: 6px; }
     .fixture-preview-meta { margin: 5px 0 0; color: var(--fb-muted); font-size: 12px; line-height: 1.5; }
     .fixture-preview-actions { display: flex; gap: 6px; align-items: center; }
-    .fixture-preview-actions button { display: inline-flex; justify-content: center; align-items: center; width: 44px; height: 44px; background: var(--fb-surface); color: var(--fb-secondary); border: 1px solid var(--fb-control-line); border-radius: 0; font: 400 22px/1 "At Aero", sans-serif; }
+    .fixture-preview-actions button { display: inline-flex; justify-content: center; align-items: center; width: 44px; height: 44px; background: var(--fb-surface); color: var(--fb-secondary); border: 1px solid var(--fb-control-line); border-radius: 0; font: 400 22px/1 var(--fb-font-body); }
     .fixture-preview-actions button:disabled { opacity: .35; }
     .fixture-preview-actions button:hover:not(:disabled) { background: var(--fb-coral); color: var(--fb-on-coral); }
     .fixture-preview button:focus-visible, .fixture-preview-scroll:focus-visible { outline: 2px solid var(--fb-focus); outline-offset: -3px; }

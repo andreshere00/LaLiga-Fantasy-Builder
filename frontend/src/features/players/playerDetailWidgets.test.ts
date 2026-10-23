@@ -34,6 +34,20 @@ describe("player detail widget formatters", () => {
     expect(teamMediaFromFixture("Unknown FC")).toBeNull();
   });
 
+  it.each([
+    ["Elche", "Elche CF", "ELC"],
+    ["Rayo", "Rayo Vallecano", "RAY"],
+    ["Girona", "Girona FC", "GIR"],
+    ["Leganés", "CD Leganés", "LEG"],
+    ["Valladolid", "Real Valladolid CF", "VLL"],
+  ])("teamMediaFromFixture_resolvesScrapedAlias_%s", (alias, canonical, code) => {
+    const media = teamMediaFromFixture(alias);
+    expect(media).not.toBeNull();
+    expect(media).toEqual(teamMediaFromFixture(canonical));
+    expect(media).toEqual(teamMediaFromFixture(code));
+    expect(media?.badge).toContain("teambadge");
+  });
+
   it("fixtureDate_preservesDateOnlyValuesAndShowsUnknownDates", () => {
     expect(fixtureDate("2026-10-09")).toBe("2026-10-09");
     expect(fixtureDate(null)).toBe("Date TBC");

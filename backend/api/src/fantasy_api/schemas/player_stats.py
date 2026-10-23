@@ -171,6 +171,10 @@ class SegmentEnvelope(StatsModel):
 
 
 class FixtureRef(StatsModel):
+    home_badge: str | None = None
+    away_badge: str | None = None
+    opponent_badge: str | None = None
+    competition_badge: str | None = None
     date: Date | None = None
     competition: Competition
     competition_label: str | None = None

@@ -458,7 +458,7 @@
 .player-outlook-meter::-webkit-meter-optimum-value { background:var(--fb-primary); border-radius:0; }
 .player-outlook-meter::-moz-meter-bar { background:var(--fb-primary); border-radius:0; }
 .player-outlook-caption,.player-detail-fantasy-summary .player-fantasy-matchday { font-size:12px; font-weight:400; line-height:1.5; color:var(--fb-muted); }
-.player-fantasy-summary-block--starter[data-unavailable] .player-outlook-probability { font:600 22px/1.25 "At Aero",Arial,sans-serif; letter-spacing:normal; }
+.player-fantasy-summary-block--starter[data-unavailable] .player-outlook-probability { font:600 22px/1.25 var(--fb-font-body); letter-spacing:normal; }
 .player-fantasy-summary-value .player-form-rating-icon.is-dark { display:none; }
 :root[data-theme="dark"] .player-form-rating-icon.is-light { display:none; }
 :root[data-theme="dark"] .player-fantasy-summary-value .player-form-rating-icon.is-dark { display:block; }
@@ -494,4 +494,27 @@
   .player-detail-fantasy-summary > .player-fantasy-summary-block:not(:first-child) { border-top:1px solid var(--fb-line); }
   .player-detail-fantasy-summary dd { min-height:56px; }
   .player-fantasy-summary-value:not(.player-outlook-probability) { flex-direction:row; align-items:center; }
+}
+
+.player-match-competition {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+}
+
+.player-match-competition-badge:has(img) {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 2rem;
+  height: 2rem;
+  padding: 0.2rem;
+  background: #fff;
+}
+
+.player-match-competition-badge img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
 }

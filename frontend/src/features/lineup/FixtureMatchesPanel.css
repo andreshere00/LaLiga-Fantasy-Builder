@@ -1,4 +1,4 @@
-.fixture-matches-panel { grid-column:1 / -1; order:0; gap:0; min-width:0; container-type:inline-size; }
+.fixture-matches-panel { grid-column:1 / -1; order:5; gap:0; min-width:0; container-type:inline-size; }
 .fixture-matches-panel > .fb-card-header { padding:16px 20px 12px; }
 .fixture-panel-heading { display:grid; grid-template-columns:minmax(0,1fr) auto minmax(0,1fr); align-items:center; gap:12px 20px; }
 .fixture-panel-title { display:flex; align-items:center; gap:12px; flex-wrap:wrap; }
@@ -7,12 +7,9 @@
 .fixture-panel-title .fixture-panel-active { border-color:var(--fb-primary); }
 .fixture-panel-active::before { content:""; display:inline-block; width:7px; height:7px; margin-right:6px; background:var(--fb-primary); }
 .fixture-panel-meta { margin:5px 0 0; color:var(--fb-muted); font-size:12px; }
-.fixture-panel-actions { display:flex; align-items:center; justify-self:end; gap:6px; }
-.fixture-week-pagination, .fixture-match-pagination { display:flex; align-items:center; gap:6px; }
+.fixture-week-pagination { display:flex; align-items:center; gap:6px; }
 .fixture-week-pagination { justify-self:center; }
 .fixture-week-label { min-width:64px; text-align:center; font-size:12px; font-variant-numeric:tabular-nums; }
-.fixture-match-pagination .fb-button { font-size:22px; font-weight:400; }
-.fixture-panel-actions [aria-disabled="true"] { opacity:.45; cursor:default; }
 .fixture-matches-panel > .fb-card-content { flex:0 1 auto; padding:0 12px; }
 .fixture-matches-scroll { height:auto; }
 .fixture-matches-scroll > .fb-scroll-viewport { height:auto; overflow-y:hidden; }
@@ -25,9 +22,8 @@
 .fixture-match-date time { white-space:nowrap; }
 .fixture-match-team { display:grid; grid-template-columns:28px minmax(0,1fr) 28px; gap:9px; align-items:center; min-height:36px; font-size:14px; }
 .fixture-match-team > span:nth-child(2) { overflow-wrap:anywhere; }
-.fixture-match-crest { display:block; width:28px; height:28px; }
-.fixture-match-crest .fb-avatar { display:block; width:100%; height:100%; background:transparent; }
-.fixture-match-crest .fb-avatar-image { display:block; width:100%; height:100%; min-width:0; min-height:0; object-fit:contain; }
+.fixture-match-crest { display:grid; place-items:center; width:28px; height:28px; min-width:0; overflow:hidden; }
+.fixture-match-crest > img { display:block; width:100%; height:100%; min-width:0; min-height:0; max-width:100%; max-height:100%; object-fit:contain; }
 .fixture-match-score { text-align:right; font-size:18px; font-weight:500; font-variant-numeric:tabular-nums; }
 .fixture-match-weather { margin-top:10px; padding-top:9px; border-top:1px solid var(--fb-line); font-size:12px; }
 .fixture-forecast-content { padding-top:6px; overflow-wrap:anywhere; }
@@ -49,14 +45,12 @@
 @container (max-width:850px) {
   .fixture-panel-heading { grid-template-columns:minmax(0,1fr) auto; }
   .fixture-week-pagination { grid-column:1 / -1; grid-row:2; }
-  .fixture-panel-actions { grid-column:2; grid-row:1; }
 }
 @media(max-width:600px) {
   .fixture-matches-panel > .fb-card-header { padding:14px 12px 10px; }
   .fixture-panel-heading { grid-template-columns:minmax(0,1fr); gap:10px; }
   .fixture-panel-heading > div:first-child { width:100%; }
   .fixture-panel-title h2 { font-size:19px; }
-  .fixture-panel-actions { grid-column:1; grid-row:3; width:100%; justify-content:center; flex-wrap:wrap; }
   .fixture-week-pagination { width:100%; justify-content:center; }
   .fixture-matches-panel > .fb-card-content { padding:0 6px; }
   .fixture-match { flex-basis:248px; width:248px; padding-inline:12px; }

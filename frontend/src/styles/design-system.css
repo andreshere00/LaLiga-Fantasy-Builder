@@ -35,7 +35,7 @@
 .fb-panel,.fb-popup,.fb-calendar,.fb-table,.fb-toast,.fb-skeleton{border-radius:0;box-shadow:none;background:var(--fb-surface)}
 .fb-panel,.fb-popup,.fb-calendar{border:1px solid var(--fb-line);padding:20px}
 :is(.fb-button,.fb-input,.fb-native-select,.fb-page-button):focus-visible{outline:2px solid var(--fb-focus);outline-offset:3px;box-shadow:none}
-.fb-button{display:inline-flex;align-items:center;justify-content:center;gap:8px;min-height:44px;padding:0 16px;border:1px solid transparent;box-shadow:none;cursor:pointer;white-space:nowrap;font:600 14px/1 "At Aero",Arial,sans-serif;letter-spacing:.01em;text-transform:uppercase;transition:background-color .16s ease,color .16s ease,border-color .16s ease}
+.fb-button{display:inline-flex;align-items:center;justify-content:center;gap:8px;min-height:44px;padding:0 16px;border:1px solid transparent;box-shadow:none;cursor:pointer;white-space:nowrap;font:600 14px/1 var(--fb-font-body);letter-spacing:.01em;text-transform:uppercase;transition:background-color .16s ease,color .16s ease,border-color .16s ease}
 .fb-button{border-radius:0;min-width:44px;white-space:normal;line-height:1.35;text-align:center;text-decoration:none;padding-block:10px}
 .fb-button--default,.fb-button--destructive{background:var(--fb-primary);color:var(--fb-on-brand)}
 .fb-button--secondary{background:var(--fb-subtle);color:var(--fb-secondary)}
@@ -105,7 +105,7 @@
 .fb-toast{border:1px solid var(--fb-line);border-left:4px solid var(--fb-success);padding:16px;max-width:360px;color:var(--fb-secondary)}
 .fb-toast[data-tone="error"]{border-left-color:var(--fb-failure)}
 .fb-toast[data-tone="error"] .fb-toast-title{margin:0;color:var(--fb-secondary);font:600 20px/1.35 Anton,Arial,sans-serif;letter-spacing:normal;text-transform:none}
-.fb-tooltip{padding:8px 12px;max-width:260px;border-radius:0;border:1px solid var(--fb-control-line);background:var(--fb-surface);color:var(--fb-secondary);font:400 12px/1.4 "At Aero",Arial,sans-serif;box-shadow:none}
+.fb-tooltip{padding:8px 12px;max-width:260px;border-radius:0;border:1px solid var(--fb-control-line);background:var(--fb-surface);color:var(--fb-secondary);font:400 12px/1.4 var(--fb-font-body);box-shadow:none}
 .fb-skeleton{height:20px;background:var(--fb-subtle);animation:fb-pulse 1.4s ease-in-out infinite}
 @media(prefers-reduced-motion:reduce){:is(.fb-button,.fb-skeleton,.fb-pulse-ring__outer,.fb-pulse-ring__inner,.fb-button-spinner){animation:none;transition:none}.fb-pulse-ring__outer{opacity:1;transform:none}}
 

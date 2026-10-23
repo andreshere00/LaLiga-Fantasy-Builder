@@ -9,6 +9,7 @@ export function Footer() {
     <footer className="app-footer">
       <p className="app-footer-credit">
         © {SITE_YEAR} {AUTHOR_NAME}
+        {" · "}<a href="https://football-logos.cc/" target="_blank" rel="noopener noreferrer">Badges: football-logos.cc</a>
       </p>
       <nav className="app-footer-links" aria-label="Author">
         <a href={GITHUB_URL} target="_blank" rel="noopener noreferrer">

@@ -62,7 +62,7 @@ describe("FixtureMatchesPanel", () => {
     expect(screen.getByText("Up next")).toBeTruthy();
   });
 
-  it("browses adjacent fixtures independently and returns to the automatic fixture", async () => {
+  it("browses adjacent fixtures independently with only previous and next controls", async () => {
     mount(); await screen.findByText("Up next");
     expect(screen.queryByRole("button", { name: "Refresh fixture matches" })).toBeNull();
     fireEvent.click(screen.getByRole("button", { name: "Previous matchweek" }));
@@ -73,9 +73,10 @@ describe("FixtureMatchesPanel", () => {
     fireEvent.click(screen.getByRole("button", { name: "Next matchweek" }));
     await screen.findByRole("heading", { name: "LALIGA · Fixture 11" });
     await waitFor(() => expect(requests).toContain("/api/calendar/weeks/11/weather"));
-    fireEvent.click(screen.getByRole("button", { name: "Current fixture" }));
+    expect(screen.queryByRole("button", { name: "Current fixture" })).toBeNull();
+    expect(screen.queryByRole("group", { name: "Match scrolling" })).toBeNull();
+    fireEvent.click(screen.getByRole("button", { name: "Previous matchweek" }));
     await screen.findByRole("heading", { name: "LALIGA · Fixture 10" });
-    expect((screen.getByRole("button", { name: "Current fixture" }) as HTMLButtonElement).disabled).toBe(true);
   });
 
   it("bounds browsing to the season and preserves a manually selected completed fixture", async () => {

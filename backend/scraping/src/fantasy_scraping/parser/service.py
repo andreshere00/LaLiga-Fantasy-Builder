@@ -204,12 +204,19 @@ class ParserService:
         failed: list[str] = []
         identity = extract_identity(ctx)
         personal = self._isolate(ctx, extract_personal, section="profile.personal", failed=failed)
-        matches = self._isolate(ctx, extract_matches, section="matches.recent", failed=failed)
+        matches = self._isolate(
+            ctx,
+            lambda current: extract_matches(current, club_badge=identity.club_badge),
+            section="matches.recent",
+            failed=failed,
+        )
         season = self._isolate(ctx, extract_season_stats, section="season_stats", failed=failed)
         fixtures = self._isolate(
             ctx,
             lambda current: extract_fixtures(
-                current, is_goalkeeper=identity.position_code == "POR"
+                current,
+                is_goalkeeper=identity.position_code == "POR",
+                club_badge=identity.club_badge,
             ),
             section="fixtures",
             failed=failed,
@@ -221,6 +228,16 @@ class ParserService:
             raise UnsupportedLayoutError("layout_drift", "layout drift", section="meta")
         if matches is None:
             matches = MatchesBlock()
+        # Share published calendar media with the corresponding season fixture.
+        for recent in matches.recent:
+            matched = _match_fixture(recent, fixtures)
+            if matched is not None:
+                media = {
+                    field: getattr(recent, field)
+                    for field in ("home_badge", "away_badge", "opponent_badge", "competition_badge")
+                    if getattr(recent, field) is not None
+                }
+                fixtures[fixtures.index(matched)] = matched.model_copy(update=media)
         matches = _link_recent(ctx, matches, fixtures)
         season = _derive(ctx, season, fixtures)
         history = self._isolate(
@@ -387,6 +404,9 @@ def _link_recent(
             update["competition"] = fixture.competition
         if recent.player_side is None:
             update["player_side"] = fixture.player_side
+        for field in ("home_badge", "away_badge", "competition_badge"):
+            if getattr(recent, field) is None and getattr(fixture, field) is not None:
+                update[field] = getattr(fixture, field)
         update["stats"] = fixture.stats
         update["stats_source"] = "futbolfantasy"
         if fixture.week_points is not None:

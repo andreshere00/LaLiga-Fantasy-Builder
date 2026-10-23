@@ -12,7 +12,7 @@
 .players-free-agent { display:inline-flex; align-items:center; gap:6px; }
 .players-free-agent img { width:18px; height:18px; }
 .players-actions-cell .squad-tile-controls { position:static; width:auto; aspect-ratio:auto; }
-.players-actions-cell .squad-details-link.is-text-trigger { width:auto; min-height:44px; padding:0 10px; border:1px solid var(--fb-control-line); background:var(--fb-surface); color:var(--fb-secondary); font:500 14px/1.4 "At Aero",sans-serif; }
+.players-actions-cell .squad-details-link.is-text-trigger { width:auto; min-height:44px; padding:0 10px; border:1px solid var(--fb-control-line); background:var(--fb-surface); color:var(--fb-secondary); font:500 14px/1.4 var(--fb-font-body); }
 .players-squad-actions-target { display:none; }
 .players-detail-options { position:relative; }
 .players-detail-options > summary { list-style:none; display:flex; align-items:center; cursor:pointer; }
@@ -49,3 +49,47 @@
 }
 
 @media(max-width:800px) { .players-team-cell { font-size:12px; line-height:1.4; } }
+
+/* Share Market's density and hierarchy while retaining catalog-specific facts. */
+.market-page.players-page.comparison-page { max-width:1440px; }
+.players-page.comparison-page { --players-table-columns:48px minmax(100px,1.2fr) minmax(80px,.8fr) 48px 64px 148px minmax(155px,1.3fr) minmax(90px,.85fr) minmax(90px,.85fr) 136px; }
+.players-page.comparison-page .players-list { overflow-x:auto; }
+.players-page.comparison-page .players-list :is(.players-head-row,.players-row) { grid-template-columns:var(--players-table-columns); gap:14px; }
+.players-page.comparison-page .players-row { min-width:1240px; }
+.players-page.comparison-page .players-head-row { min-width:1240px; }
+.players-page.comparison-page .players-list .market-head-cell { display:flex; }
+.players-page.comparison-page .players-row > [data-label] { display:block; }
+.players-page.comparison-page .players-mobile-value-details { display:none; }
+.players-page.comparison-page .players-value-details { display:block; }
+.players-page.comparison-page .players-team-cell,
+.players-page.comparison-page .players-owner-cell { font-size:12px; line-height:1.5; }
+.players-page.comparison-page .players-actions-cell { padding-block:0; }
+.players-page.comparison-page .players-action-controls { flex-wrap:nowrap; gap:6px; }
+.players-page.comparison-page .players-actions-cell .squad-details-link.is-text-trigger { font-size:12px; }
+.players-page.comparison-page .market-bid-count { color:var(--fb-muted); font-size:11px; }
+.players-page.comparison-page .market-row > [data-label]::before { content:none; }
+@media(max-width:700px) {
+  .market-page.players-page.comparison-page { padding-inline:16px; }
+  .players-page.comparison-page .market-filter-row .market-search { max-width:none; width:100%; }
+  .players-page.comparison-page .players-list { overflow:visible; border:0; gap:12px; padding-bottom:0; }
+  .players-page.comparison-page .players-list .players-head-row { display:flex; overflow-x:auto; gap:12px; min-width:0; width:100%; padding:4px 8px; border:1px solid var(--fb-line); box-sizing:border-box; }
+  .players-page.comparison-page .players-head-row > .market-head-cell { display:flex; flex:0 0 auto; width:auto; }
+  .players-page.comparison-page .market-head-filter { gap:10px; }
+  .players-page.comparison-page .players-list .players-row { min-width:0; grid-template-columns:48px repeat(2,minmax(0,1fr)); gap:12px; padding:14px; border:1px solid var(--fb-line); }
+  .players-page.comparison-page .players-row > .market-card { grid-column:1; grid-row:1 / 3; align-self:start; }
+  .players-page.comparison-page .players-list .market-name-wrap { grid-column:2 / -1; grid-row:1; }
+  .players-page.comparison-page .players-team-cell { grid-column:2 / -1; grid-row:2; }
+  .players-page.comparison-page .players-row > :nth-child(4) { grid-column:1 / 3; grid-row:3; }
+  .players-page.comparison-page .market-fsyp-cell { grid-column:3; grid-row:3; }
+  .players-page.comparison-page .market-form { grid-column:1 / -1; grid-row:4; padding-top:10px; border-top:1px solid var(--fb-line); }
+  .players-page.comparison-page .players-value-cell { grid-column:1 / -1; grid-row:5; }
+  .players-page.comparison-page .market-cell-availability { grid-column:1 / 3; grid-row:6; }
+  .players-page.comparison-page .players-owner-cell { grid-column:3; grid-row:6; }
+  .players-page.comparison-page .players-actions-cell { grid-column:1 / -1; grid-row:7; padding-top:12px; border-top:1px solid var(--fb-line); }
+  .players-page.comparison-page .players-row > .market-cell::before { content:attr(data-label); display:block; margin-bottom:4px; color:var(--fb-muted); font-size:10px; line-height:1.4; text-transform:uppercase; letter-spacing:.04em; }
+  .players-page.comparison-page .players-row > .players-actions-cell::before { display:none; }
+  .players-page.comparison-page .market-form-nav { display:flex; flex-direction:row; align-items:center; justify-content:space-between; gap:6px; }
+  .players-page.comparison-page .market-form-nav-buttons { width:auto; flex-shrink:0; }
+}
+
+.players-page.comparison-page .players-details-heading { font-size:11px; letter-spacing:.025em; text-transform:uppercase; }

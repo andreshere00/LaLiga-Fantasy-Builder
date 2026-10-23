@@ -209,3 +209,63 @@
   .lineup-builder-rule-list > li { flex-direction:column; }
   .lineup-builder-rule-points { display:flex; flex-wrap:wrap; }
 }
+
+/* Configuration follows the decision order: pool, trades, locks, formations. */
+.fb-dialog.lineup-builder-dialog { width:min(860px,100%); padding:0; }
+.lineup-builder-dialog .fb-dialog-heading { padding:20px 24px 16px; border-bottom:1px solid var(--fb-line); }
+.lineup-builder-dialog .fb-dialog-heading .fb-section-title { font-size:24px; }
+.lineup-builder-dialog .fb-dialog-body { margin:0; padding:16px 24px 24px; }
+.lineup-builder-dialog .fb-dialog-description { margin:0 0 20px; font-size:14px; line-height:1.5; color:var(--fb-muted); }
+.lineup-builder-dialog .fb-dialog-footer { align-items:center; padding:14px 24px; border-top:1px solid var(--fb-line); background:var(--fb-surface); }
+.lineup-builder-dialog .fb-dialog-footer > .lineup-builder-close { margin-right:auto; }
+.lineup-builder { align-content:start; gap:20px; }
+.lineup-builder-section { align-content:start; gap:10px; padding-top:18px; min-width:0; }
+.lineup-builder-pool { padding-top:0; border-top:0; }
+.lineup-builder-section-heading { display:flex; align-items:baseline; justify-content:space-between; flex-wrap:wrap; gap:4px 12px; }
+.lineup-builder-section-heading h3 { font-family:var(--fb-font-body); font-size:15px; font-weight:700; text-transform:none; letter-spacing:0; }
+.lineup-builder-section-heading > span { color:var(--fb-muted); font-size:12px; font-variant-numeric:tabular-nums; }
+.lineup-builder-checks { grid-template-columns:repeat(3,minmax(0,1fr)); gap:10px; }
+.lineup-builder-checks .lineup-builder-source { align-items:flex-start; gap:10px; padding:14px 12px; border:1px solid var(--fb-control-line); cursor:pointer; background:var(--fb-surface); }
+.lineup-builder-source[data-selected="true"] { border-color:var(--fb-primary); box-shadow:inset 0 -2px var(--fb-primary); background:var(--fb-subtle); }
+.lineup-builder-source > span { min-width:0; }
+.lineup-builder-source strong { display:block; font-size:14px; font-weight:600; line-height:1.4; }
+.lineup-builder-source small { display:block; margin-top:4px; color:var(--fb-muted); font-size:12px; line-height:1.4; }
+.lineup-builder-dialog .lineup-builder input[type="checkbox"] { appearance:none; display:grid; place-content:center; width:18px; height:18px; min-height:18px; margin:1px 0 0; flex-shrink:0; border:1px solid var(--fb-control-line); border-radius:0; background:var(--fb-surface); cursor:pointer; }
+.lineup-builder-dialog .lineup-builder input[type="checkbox"]:checked { border-color:var(--fb-primary); background:var(--fb-primary); }
+.lineup-builder-dialog .lineup-builder input[type="checkbox"]:checked::after { content:""; width:8px; height:4px; border:solid var(--fb-on-brand); border-width:0 0 2px 2px; transform:rotate(-45deg) translateY(-1px); }
+.lineup-builder input[type="checkbox"]:focus-visible { outline:2px solid var(--fb-focus); outline-offset:3px; }
+.lineup-builder-source:focus-within { outline:2px solid var(--fb-focus); outline-offset:2px; }
+.lineup-builder-trade-options { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:4px 16px; }
+.lineup-builder-trade-options label,.lineup-builder-section > .lineup-builder-trading-option { display:flex; align-items:center; gap:10px; min-height:44px; font-size:13px; cursor:pointer; }
+.lineup-builder-preview-note { margin:0; padding:10px 12px; background:var(--fb-subtle); color:var(--fb-muted); font-size:12px; line-height:1.5; border-left:2px solid var(--fb-control-line); }
+.lineup-builder-scope-hint { margin:0; color:var(--fb-secondary); font-size:13px; line-height:1.5; }
+.lineup-builder-section-help { margin:0; color:var(--fb-muted); font-size:13px; line-height:1.5; }
+.lineup-builder-player-picker { display:grid; grid-template-columns:minmax(0,1.3fr) minmax(0,1fr); gap:16px; }
+.lineup-builder-player-search { min-width:0; display:grid; align-content:start; gap:8px; }
+.lineup-builder-player-search .lineup-builder-field { gap:6px; }
+.lineup-builder-player-search .lineup-builder-options { max-height:190px; }
+.lineup-builder-chosen { align-content:start; gap:8px; padding:12px; border:1px dashed var(--fb-control-line); background:var(--fb-subtle); min-width:0; }
+.lineup-builder-chosen h4 { font:600 12px/1.4 var(--fb-font-body); letter-spacing:0; text-transform:none; }
+.lineup-builder-chosen .fb-helper { font-size:12px; line-height:1.5; }
+.lineup-builder-chosen > button { background:var(--fb-surface); border-color:var(--fb-line); font-size:12px; padding:4px 8px; }
+.lineup-builder-formations { display:flex; flex-wrap:wrap; gap:8px; }
+.lineup-builder-formations label { display:flex; align-items:center; gap:8px; min-height:44px; padding:8px 12px; border:1px solid var(--fb-control-line); cursor:pointer; font-size:13px; }
+.lineup-builder-formations label:has(:checked) { border-color:var(--fb-primary); background:var(--fb-subtle); }
+@media(max-width:600px) {
+  .lineup-builder-dialog .fb-dialog-heading { padding:16px; }
+  .lineup-builder-dialog .fb-dialog-body { padding:14px 16px 20px; }
+  .lineup-builder-dialog .fb-dialog-footer { padding:12px 16px max(12px,env(safe-area-inset-bottom)); }
+  .lineup-builder-checks,.lineup-builder-trade-options,.lineup-builder-player-picker { grid-template-columns:1fr; }
+  .lineup-builder-checks .lineup-builder-source { align-items:center; min-height:60px; padding:10px 12px; }
+  .lineup-builder-source small { margin-top:2px; }
+  .lineup-builder-player-picker { gap:12px; }
+  .lineup-builder-dialog .fb-dialog-footer > .lineup-builder-close { margin-right:0; }
+  .lineup-builder-dialog .fb-dialog-footer > .fb-button { flex:1; }
+}
+.lineup-builder-locks { min-width:0; }
+.lineup-builder-locks > summary { display:flex; align-items:center; justify-content:space-between; gap:12px; min-height:44px; padding:10px 12px; border:1px solid var(--fb-control-line); cursor:pointer; list-style:none; font-size:13px; font-weight:600; }
+.lineup-builder-locks > summary::-webkit-details-marker { display:none; }
+.lineup-builder-locks > summary:focus-visible { outline:2px solid var(--fb-focus); outline-offset:2px; }
+.lineup-builder-locks > summary:hover { background:var(--fb-subtle); }
+.lineup-builder-locks[open] > summary { margin-bottom:12px; }
+.lineup-builder-locks[open] > summary > span { transform:rotate(45deg); }

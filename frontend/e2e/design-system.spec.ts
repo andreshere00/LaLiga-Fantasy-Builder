@@ -27,6 +27,11 @@ for (const theme of ["light", "dark"]) {
         if (route.name === "market") await expect(page.locator(".market-data-row")).toHaveCount(7);
         await expect(page.locator("html")).toHaveAttribute("data-theme", theme);
         await page.evaluate(() => document.fonts.ready);
+        expect(await page.evaluate(async () => {
+          const faces = await document.fonts.load('14px "LALIGA Text"');
+          return faces.length > 0 && faces.every((face) => face.status === "loaded");
+        })).toBe(true);
+        await expect(page.locator("body")).toHaveCSS("font-family", '"LALIGA Text", Arial, sans-serif');
         if (route.name === "detail") {
           const summary = page.locator(".player-detail-fantasy-summary");
           await expect(summary.locator(".player-fantasy-summary-block")).toHaveCount(4);

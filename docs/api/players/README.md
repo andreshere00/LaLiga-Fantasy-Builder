@@ -124,3 +124,9 @@ fetch, including repeated `include` segments on the detail endpoint.
 Builder profile facts preserve structured availability, official season total and
 played-match denominator, and parsed injury-history coverage. A missing official
 points block remains unavailable instead of its parser placeholder zeros.
+
+Fixture references in fixture stats, recent and upcoming matches preserve optional
+`home_badge`, `away_badge`, `opponent_badge` and `competition_badge` URLs published
+by the scraping source. These fields can be null for missing images or unknown
+sides; callers should retain catalog/local fallbacks. No image fetching proxy is
+introduced. See [badge sources](../../frontend-club-crest-sources.md).

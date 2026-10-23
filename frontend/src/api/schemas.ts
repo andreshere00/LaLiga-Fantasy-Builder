@@ -512,6 +512,10 @@ const competitionSchema = z.enum([
   "other",
 ]);
 const fixtureRefSchema = readObject({
+  homeBadge: nullableString.optional(),
+  awayBadge: nullableString.optional(),
+  opponentBadge: nullableString.optional(),
+  competitionBadge: nullableString.optional(),
   date: z.string().nullable().optional(),
   competition: competitionSchema,
   competitionLabel: nullableString.optional(),

@@ -1,6 +1,6 @@
 .lineup-page .column-players {
   display: grid;
-  grid-template-rows: repeat(2, minmax(0, 1fr));
+  grid-template-rows: minmax(0, 1fr);
   gap: var(--lineup-side-panel-section-gap);
   height: var(--lineup-side-panel-height);
 }
@@ -59,4 +59,29 @@
 @media (max-width: 1099px), (max-aspect-ratio: 4/3) {
   .lineup-page .column-players { height: auto; grid-template-rows: none; }
   .column-players > .fb-card .fb-card-content { flex: none; height: clamp(240px, 45vh, 420px); }
+}
+
+/* Standings follow the lineup and fixture panels in document and visual order. */
+.lineup-page > .standings-panel {
+  width:100%;
+  box-sizing:border-box;
+  margin-top:var(--lineup-board-row-gap);
+}
+.lineup-page > .standings-panel > .fb-card-header {
+  display:grid;
+  grid-template-columns:minmax(0,1fr) auto;
+  gap:4px 16px;
+  padding:16px 20px 0;
+}
+.lineup-page > .standings-panel .standings-heading,
+.lineup-page > .standings-panel .standings-legend,
+.lineup-page > .standings-panel .standings-error { grid-column:1 / -1; }
+.lineup-page > .standings-panel .standings-meta { margin:0; }
+.lineup-page > .standings-panel > .fb-card-content {
+  flex:none;
+  height:clamp(200px,45dvh,480px);
+  padding:0 12px 12px;
+}
+@media(max-width:600px) {
+  .lineup-page > .standings-panel > .fb-card-header { grid-template-columns:1fr; padding:16px 12px 0; }
 }

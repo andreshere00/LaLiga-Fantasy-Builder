@@ -1,7 +1,10 @@
 :root {
-  font-family:"At Aero",Arial,sans-serif;
-  font-synthesis:none;
-  font-size:14px;
+  --fb-font-body:"LALIGA Text",Arial,sans-serif;
+  --fb-font-size-body:clamp(14px, calc(13px + 0.15vw), 16px);
+  font-family:var(--fb-font-body);
+  /* Supplied face is static Regular; browsers synthesize emphasis. */
+  font-synthesis:weight style;
+  font-size:var(--fb-font-size-body);
   line-height:1.5;
   color:var(--fb-secondary);
   background:var(--fb-bg);

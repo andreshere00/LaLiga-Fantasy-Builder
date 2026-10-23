@@ -1,3 +1,5 @@
+import { BadgeImage } from "../../components/BadgeImage";
+import { clubMediaFromBadge } from "../../api/clubMedia";
 import { useState } from "react";
 import { Help } from "../../components/ui/Help";
 import "./PlayerTile.css";
@@ -41,13 +43,11 @@ export function PlayerScoreBadge({
 }
 
 function TeamBadge({ url }: { url: string | null | undefined }) {
-  const [failed, setFailed] = useState(false);
-  if (!url || failed) return null;
-  return (
-    <span className="player-badge" aria-hidden="true">
-      <img className="player-team-badge" src={url} onError={() => setFailed(true)} alt="" loading="lazy" decoding="async" />
-    </span>
-  );
+  const media = clubMediaFromBadge(url);
+  if (!media) return null;
+  return <span className="player-badge" aria-hidden="true">
+    <BadgeImage className="player-team-badge" media={media} fallback="" />
+  </span>;
 }
 
 function PlayerPhoto({ candidates }: { candidates: readonly string[] }) {

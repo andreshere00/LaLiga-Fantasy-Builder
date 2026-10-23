@@ -24,11 +24,19 @@ for (const { theme, width } of [{ theme: "light", width: 1440 }, { theme: "dark"
     await page.setViewportSize({ width, height: 1000 });
     await page.addInitScript((value) => localStorage.setItem("lfb-theme", value), theme);
     await mockPoints(page, [6, 4, 14, 11, 11]);
+    await page.route("https://assets-fantasy.llt-services.com/teambadge/**", (route) => route.fulfill({
+      contentType: "image/svg+xml",
+      body: '<svg xmlns="http://www.w3.org/2000/svg" width="32" height="32"><path fill="navy" d="M4 2h24v20L16 30 4 22z"/></svg>',
+    }));
     await page.goto("/players/1#player-form-title");
     const form = page.getByRole("region", { name: "Form — fixture stats", exact: true });
     const radios = form.getByRole("radio");
     await expect(radios).toHaveCount(5);
     await expect(radios.last()).toBeChecked();
+    const crests = form.locator(".player-form-club-badge img");
+    await expect(crests).toHaveCount(12);
+    await expect.poll(() => crests.evaluateAll((images) => images.every((image) =>
+      (image as HTMLImageElement).naturalWidth > 0))).toBe(true);
     await expect(form.locator(".player-form-total strong")).toHaveText("46");
     await expect(form.getByText("Average 9.2", { exact: true })).toBeVisible();
     const fiveFit = await form.locator(".player-form-chart-scroll").evaluate((element) =>
@@ -65,6 +73,19 @@ for (const { theme, width } of [{ theme: "light", width: 1440 }, { theme: "dark"
     await form.screenshot({ path: info.outputPath(`form-keyboard-${theme}-${width}.png`) });
   });
 }
+
+test("unavailable crest images keep fixture names and an initials fallback", async ({ page }) => {
+  await mockPoints(page, [6, 4, 8]);
+  await page.route("**/badges/football-logos/**", (route) => route.abort());
+  await page.route("https://assets-fantasy.llt-services.com/teambadge/**", (route) => route.abort());
+  await page.goto("/players/1#player-form-title");
+  const form = page.getByRole("region", { name: "Form — fixture stats", exact: true });
+  await expect(form.locator(".player-form-club-badge img")).toHaveCount(0);
+  await expect(form.getByRole("radio", { name: /Barcelona vs Real Madrid/ })).toHaveCount(3);
+  await expect(form.getByRole("region", { name: "Selected fixture details" }))
+    .toContainText("Barcelona vs Real Madrid");
+  await expect(form.locator('.player-form-club-badge[title="Real Madrid"]').first()).toHaveText("RM");
+});
 
 test("negative, zero and unavailable scores remain distinct in the graph and summary", async ({ page }) => {
   await mockPoints(page, [-3, 0, 8, null]);

@@ -92,7 +92,7 @@
   border: 1px solid var(--fb-control-line);
   background: var(--fb-surface);
   color: var(--fb-secondary);
-  font: 600 13px/1.35 "At Aero", Arial, sans-serif;
+  font: 600 13px/1.35 var(--fb-font-body);
   white-space: nowrap;
 }
 .player-profile-header .squad-details-link.is-text-trigger:is(:hover,:focus-visible) {

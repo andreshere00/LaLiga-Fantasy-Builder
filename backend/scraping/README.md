@@ -111,3 +111,9 @@ checks and retry limits. Successful tables have a one-hour single-flight cache.
 Malformed or incomplete tables fail explicitly. The API computes fixture totals
 and form and verifies them against this classification; the scraper provides
 positions and adjusted points. No player scraper allowlist is widened.
+
+Calendar parsing preserves rival and competition image URLs (including lazy
+`data-src` images), plus the header club badge URL. Match rows expose optional
+`homeBadge`, `awayBadge`, `opponentBadge` and `competitionBadge`; side association
+requires an explicit known home/away side. The parser never downloads badges.
+See [badge sources](../../docs/frontend-club-crest-sources.md).

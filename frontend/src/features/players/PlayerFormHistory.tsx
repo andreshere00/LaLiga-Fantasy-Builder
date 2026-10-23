@@ -1,5 +1,7 @@
 import { useId, useLayoutEffect, useRef, useState } from "react";
 import { asFiniteNumber, asRecord, text } from "../../api/mappers";
+import { fixtureClubMedia, type ClubMedia } from "../../api/clubMedia";
+import { BadgeImage } from "../../components/BadgeImage";
 import { Button } from "../../components/ui/Button";
 import { clubDisplayName } from "./clubNames";
 import { fixtureDateLabel, MISSING_STAT, statDisplay } from "./playerDetailFormat";
@@ -32,6 +34,8 @@ function formFixture(row: unknown, index: number) {
   return {
     key: [date, home, away, opponent, fixture?.matchweek, index].join("|"),
     label, home, away,
+    homeMedia: fixtureClubMedia(fixture, "home"),
+    awayMedia: fixtureClubMedia(fixture, "away"),
     date,
     dateLabel: date && Number.isFinite(Date.parse(date))
       ? dateFormat.format(new Date(date)) : fixtureDateLabel(fixture),
@@ -41,6 +45,13 @@ function formFixture(row: unknown, index: number) {
     minutes: asFiniteNumber(record?.minutesPlayed),
     stats: asRecord(record?.stats),
   };
+}
+
+function FormClubBadge({ media, name }: { media: ClubMedia | null; name: string | null }) {
+  const initials = name?.split(/\s+/).slice(0, 2).map((word) => word[0]).join("").toUpperCase() ?? "?";
+  return <span className="player-form-club-badge" title={name ?? "Club unavailable"}>
+    <BadgeImage media={media} fallback={initials} />
+  </span>;
 }
 
 /** A shared score scale with native radio selection for per-fixture details. */
@@ -161,12 +172,21 @@ export function PlayerFormHistory({ rows }: { rows: readonly unknown[] }) {
                     </strong>
                   </span>
                   <span className="player-form-fixture-meta" aria-hidden="true">
+                    <span className="player-form-fixture-clubs">
+                      <span className="player-form-fixture-club">
+                        <FormClubBadge media={fixture.homeMedia} name={fixture.home} />
+                        <span className="player-form-club-name">{fixture.home ?? "Unknown club"}</span>
+                      </span>
+                      <small className="player-form-clubs-versus">vs</small>
+                      <span className="player-form-fixture-club">
+                        <FormClubBadge media={fixture.awayMedia} name={fixture.away} />
+                        <span className="player-form-club-name">{fixture.away ?? "Unknown club"}</span>
+                      </span>
+                    </span>
                     <time dateTime={fixture.date ?? undefined}>
                       <span className="player-form-date-full">{fixture.dateLabel}</span>
                       <span className="player-form-date-compact">{fixture.compactDateLabel}</span>
                     </time>
-                    <span className="player-form-fixture-teams">{fixture.home && fixture.away
-                      ? <>{fixture.home}<small>vs</small>{fixture.away}</> : fixture.label}</span>
                     <span className="player-form-fixture-latest">{latest ? "Latest" : "\u00a0"}</span>
                   </span>
                 </label>
@@ -178,9 +198,15 @@ export function PlayerFormHistory({ rows }: { rows: readonly unknown[] }) {
 
       <section className="player-form-selected" id={detailsId} aria-label="Selected fixture details">
         <div className="player-form-selected-heading" aria-live="polite" aria-atomic="true">
-          <div>
+          <div className="player-form-selected-identity">
             <p className="player-form-eyebrow">{selected.key === fixtures.at(-1)?.key ? "Latest fixture" : "Selected fixture"}</p>
-            <h3>{selected.label}</h3>
+            <div className="player-form-selected-match">
+              <span className="player-form-selected-badges" aria-hidden="true">
+                <FormClubBadge media={selected.homeMedia} name={selected.home} />
+                <FormClubBadge media={selected.awayMedia} name={selected.away} />
+              </span>
+              <h3>{selected.label}</h3>
+            </div>
             <time dateTime={selected.date ?? undefined}>{selected.date?.slice(0, 10) ?? selected.dateLabel}</time>
           </div>
           <dl className="player-form-selected-scores">

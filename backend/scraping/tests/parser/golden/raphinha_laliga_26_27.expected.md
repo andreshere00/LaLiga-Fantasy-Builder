@@ -27,7 +27,6 @@ Ficha generada a partir de la página de FutbolFantasy. Los totales publicados e
 | Dorsal | 11 |
 | Nombre | Raphinha |
 | Posición | DEL |
-| Escudo | FC Barcelona |
 
 ---
 

@@ -68,6 +68,7 @@ import {
 import { usePlayersBoard } from "./usePlayersBoard";
 import "../../components/ui/RichList.css";
 import "./PlayersPage.css";
+import "../../components/ui/ComparisonList.css";
 
 function PlayersListRow({
   row,
@@ -163,6 +164,7 @@ function PlayersListRow({
       </span>
       <span className="market-cell market-fsyp-cell" data-label="FSYP">
         <FsypCell
+          labelAverage
           points={row.points}
           averagePoints={row.averagePoints}
           formRecent={row.formRecent}
@@ -361,6 +363,10 @@ function PlayersListContent() {
           suggestions={board.rows.map((row) => row.name)}
         />
       </div>
+      <div className="market-results-summary">
+        <p role="status">{visibleRows.length} of {filtered.length} players{leaderboard ? " · Top by points" : ""}{filterCount > 0 ? " · Filters active" : ""}</p>
+        <span>Form: oldest → latest</span>
+      </div>
       {board.isDegraded ? (
         <p className="market-notice status-copy" role="status">
           Some league data could not be loaded. Ownership and form may be incomplete.
@@ -419,7 +425,7 @@ export function PlayersPage() {
   const { status } = useAuth();
   if (status !== "ready") return <GatePanel status={status} />;
   return (
-    <section className="market-page players-page">
+    <section className="market-page players-page comparison-page">
       <PlayersList />
     </section>
   );

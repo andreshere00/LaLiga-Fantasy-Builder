@@ -11,14 +11,25 @@ directly and keeps the internal JWT in memory only.
 
 ## Visual system and screenshots
 
-The app uses Anton display headings, AT Aero body/actions, neutral square
+The app uses Anton display headings, LALIGA Text body/actions, neutral square
 surfaces, thin borders and coral primary actions. All buttons and button-styled
 links have rectangular corners, enforced globally across pages and portaled
 overlays. The header's **Dark/Light** control switches the whole document,
 including portaled overlays and charts.
+At widths up to 1000px, the main **Lineup / Market / Players** navigation is
+fixed to the bottom of the viewport. It accounts for device safe areas, keeps
+the active destination visible, and reserves space below the footer so content
+is not covered. Branding and account options stay in the top header; desktop
+navigation remains in the header.
 Links never use text underlines, including on hover, focus, and visited states;
 keyboard focus indicators remain visible.
 Light is the default; an explicit preference is saved under `lfb-theme`.
+LALIGA Text loads from the supplied WOFF2 face with a WOFF fallback. The shared
+`--fb-font-body` token controls body text, forms, buttons, tooltips, and chart
+labels. `--fb-font-size-body` scales the base size from 14px to 16px with viewport
+width, while component type scales retain their existing priorities. These supplied files are static Regular faces; bold and italic emphasis
+are synthesized by the browser. Width adaptation comes from responsive layout,
+wrapping, and the existing type scale, rather than variable-font width axes.
 The app uses Base UI for dialogs, selection, menus, tooltips, collapsibles and
 toasts, with local CSS and native buttons/fields where appropriate.
 The lineup sidebar uses local shadcn Base UI Card, ScrollArea, Table, and Badge
@@ -177,7 +188,8 @@ The shell header switches routes. The league dropdown applies to lineup, market,
 
 ### Fixture matches and stadium weather
 
-The lineup page starts with a full-width shadcn Card and horizontal ScrollArea.
+The lineup page ends with a full-width shadcn Card and horizontal ScrollArea,
+below the lineup, squad, and standings.
 It displays the current competition round from first play through the final
 result, including gaps between matches, then changes to the next fixture's
 pairings and kickoff dates/times. Ten distinct finished pairings are required
@@ -185,16 +197,16 @@ to establish completion. Until the next response is ready, the finished round
 remains clearly labeled, retries automatically, and offers retry after a failure. At season end it says **Season
 complete**. Historical lineup navigation and manager selection do not change
 this competition panel or discard an unsaved draft. The panel has its own previous/next
-fixture navigation, bounded to weeks 1–38. Browsing keeps the chosen fixture visible;
-**Current fixture** restores automatic current/next following. Navigation controls
-are centered at phone widths. There is no manual refresh button.
+fixture navigation, bounded to weeks 1–38. Browsing keeps the chosen fixture visible.
+The horizontal scrollbar and previous/next fixture pager are the only navigation
+controls. The pager is centered at phone widths. There is no manual refresh button.
 
 Matches include club names/crests, Madrid-local dates and times, and reported
 scores; scheduled score placeholders stay blank. Unrecognized provider match
 statuses say **Status unconfirmed**, with any reported score, instead of an
 invented live/final state. Incomplete round data cannot trigger advancement.
 Automatic updates preserve scroll and focus; native horizontal scrolling, arrow keys,
-explicit scroll buttons, and Home/End make every match reachable. Score-change
+and Home/End make every match reachable. Score-change
 announcements are concise rather than repeating all matches on every poll.
 
 Current metadata and fixture/score queries are shared with the lineup board and
@@ -240,7 +252,11 @@ negative scores and explicit zeroes. Total, average, and best scores summarize
 the fixtures actually shown. Select a fixture to see its points, minutes, and
 expandable event statistics, including DAZN points. The latest fixture is selected
 initially; native radio controls support arrow keys, and the chart scrolls
-horizontally on smaller screens or longer histories. Averages exclude missing
+horizontally for longer histories. The last five scores fit together on phones.
+Home and away crests identify each fixture and the selected match; unavailable
+images fall back to club initials, while full fixture names remain accessible.
+Scores and the selected-match title lead the type hierarchy, with smaller club
+labels, dates, and helper copy. Averages exclude missing
 scores and label that scope. Missing points produce a labeled subtotal or
 **Unavailable**, preserving the distinction from a genuine zero. The header's
 **Fantasy outlook** leads with the starting estimate in large type and a
@@ -682,3 +698,36 @@ sales or clause payments are performed. The suite covers both themes at
 routes, filter focus/cancellation, calendar apply/cancel, and confirmed-response
 notification timing. Screenshot artifacts go to `frontend/test-results/` by
 default; `PLAYWRIGHT_OUTPUT_DIR` can override the location.
+
+Club and competition badges use the shared candidate loader with published API,
+catalog/scraped, and verified local football-logos.cc fallbacks. Source manifests,
+refresh instructions and attribution are documented in
+[badge sources](frontend-club-crest-sources.md).
+
+Builder setup groups player sources into selectable tiles, separates optional
+trade recommendations, and keeps Build/Close outside the scrolling content.
+Mandatory player search expands on demand, with a persistent selection count;
+formations remain visible as individual checkboxes. Trading-only purchases are
+shown when purchase recommendations are enabled. Empty source selection explains
+why Build is unavailable. These controls retain their configuration while users
+explore options and generated previews.
+
+LaLiga standings sit below the lineup, squad, manager rankings and fixture
+schedule as a full-width section. Desktop can show all table columns together;
+mobile retains horizontal scrolling with pinned team identities. The bounded
+vertical table area keeps its heading, refresh action and column headers nearby.
+
+The market uses compact comparison rows on desktop and labeled player cards at
+700px and below. Phone cards keep points, form history, market value, availability,
+expiry and seller actions visible; column filters remain in a horizontally
+scrollable strip. The result count reflects the active filters. Season averages
+are labeled explicitly, and LaLiga listings omit the inapplicable release-clause
+line. Transaction dialogs and confirmations retain their existing behavior.
+
+Players and Market share `ComparisonList.css` for typography, portrait sizing,
+form controls and comparison-row styling. Players keeps club, ownership and
+favorite actions alongside the shared facts. At phone widths, both screens use
+labeled cards; Players shows value and clause details together in the value
+section, without duplicating them under Actions. Tablet retains all catalog
+columns through horizontal scrolling. Filtered counts and pagination distinguish
+the visible page from the full matching set.
