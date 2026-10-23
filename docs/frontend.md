@@ -34,6 +34,12 @@ The app uses Base UI for dialogs, selection, menus, tooltips, collapsibles and
 toasts, with local CSS and native buttons/fields where appropriate.
 The lineup sidebar uses local shadcn Base UI Card, ScrollArea, Table, and Badge
 components, adapted to these same tokens and plain CSS.
+Fixture and standings widgets share a fixed type scale in both themes and at
+phone and desktop widths: 20px titles, 14px content (including team names and
+scores), and 12px metadata, table headings, and status badges. The
+`--fb-widget-font-*` tokens keep equivalent content consistent across panels.
+These widgets also use normal letter spacing and a shared 1.5 line height,
+including headings, table labels, buttons, and badges.
 
 Button guidelines apply throughout the application, including portaled dialogs:
 

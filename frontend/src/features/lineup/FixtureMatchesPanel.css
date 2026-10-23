@@ -6,10 +6,10 @@
 .fixture-panel-title .fb-badge { background:var(--fb-subtle); padding:3px 8px; }
 .fixture-panel-title .fixture-panel-active { border-color:var(--fb-primary); }
 .fixture-panel-active::before { content:""; display:inline-block; width:7px; height:7px; margin-right:6px; background:var(--fb-primary); }
-.fixture-panel-meta { margin:5px 0 0; color:var(--fb-muted); font-size:12px; }
+.fixture-panel-meta { margin:5px 0 0; color:var(--fb-muted); font-size:var(--fb-widget-font-meta); }
 .fixture-week-pagination { display:flex; align-items:center; gap:6px; }
 .fixture-week-pagination { justify-self:center; }
-.fixture-week-label { min-width:64px; text-align:center; font-size:12px; font-variant-numeric:tabular-nums; }
+.fixture-week-label { min-width:64px; text-align:center; font-size:var(--fb-widget-font-meta); font-variant-numeric:tabular-nums; }
 .fixture-matches-panel > .fb-card-content { flex:0 1 auto; padding:0 12px; }
 .fixture-matches-scroll { height:auto; }
 .fixture-matches-scroll > .fb-scroll-viewport { height:auto; overflow-y:hidden; }
@@ -18,14 +18,14 @@
 .fixture-match { flex:0 0 244px; width:244px; box-sizing:border-box; padding:8px 16px 10px; border-left:1px solid var(--fb-line); }
 .fixture-match:first-child { border-left:0; }
 .fixture-match.is-updating { background:var(--fb-subtle); box-shadow:inset 0 3px var(--fb-primary); }
-.fixture-match-date { display:flex; justify-content:space-between; align-items:center; gap:8px; margin:0 0 9px; color:var(--fb-muted); font-size:12px; }
+.fixture-match-date { display:flex; justify-content:space-between; align-items:center; gap:8px; margin:0 0 9px; color:var(--fb-muted); font-size:var(--fb-widget-font-meta); }
 .fixture-match-date time { white-space:nowrap; }
-.fixture-match-team { display:grid; grid-template-columns:28px minmax(0,1fr) 28px; gap:9px; align-items:center; min-height:36px; font-size:14px; }
+.fixture-match-team { display:grid; grid-template-columns:28px minmax(0,1fr) 28px; gap:9px; align-items:center; min-height:36px; font-size:var(--fb-widget-font-body); }
 .fixture-match-team > span:nth-child(2) { overflow-wrap:anywhere; }
 .fixture-match-crest { display:grid; place-items:center; width:28px; height:28px; min-width:0; overflow:hidden; }
 .fixture-match-crest > img { display:block; width:100%; height:100%; min-width:0; min-height:0; max-width:100%; max-height:100%; object-fit:contain; }
-.fixture-match-score { text-align:right; font-size:18px; font-weight:500; font-variant-numeric:tabular-nums; }
-.fixture-match-weather { margin-top:10px; padding-top:9px; border-top:1px solid var(--fb-line); font-size:12px; }
+.fixture-match-score { text-align:right; font-size:inherit; font-weight:500; font-variant-numeric:tabular-nums; }
+.fixture-match-weather { margin-top:10px; padding-top:9px; border-top:1px solid var(--fb-line); font-size:var(--fb-widget-font-meta); }
 .fixture-forecast-content { padding-top:6px; overflow-wrap:anywhere; }
 .fixture-weather-summary { cursor:pointer; list-style:none; }
 .fixture-weather-summary::-webkit-details-marker { display:none; }
@@ -35,10 +35,10 @@
 .fixture-match-weather p { margin:0; line-height:1.5; }
 .fixture-weather-summary { display:flex; align-items:center; gap:7px; }
 .fixture-weather-icon { display:block; width:20px; height:20px; flex:0 0 20px; background:currentColor; mask:var(--weather-icon) center / contain no-repeat; }
-.fixture-weather-meta { color:var(--fb-muted); font-size:12px; }
-.fixture-panel-error { margin:12px 0 0; border-left:3px solid var(--fb-failure); padding-left:12px; }
-.fixture-panel-empty { padding:20px 8px; font-size:14px; }
-.fixture-panel-footer { display:flex; justify-content:space-between; flex-wrap:wrap; gap:6px 16px; padding:8px 20px 12px; font-size:12px; color:var(--fb-muted); }
+.fixture-weather-meta { color:var(--fb-muted); font-size:var(--fb-widget-font-meta); }
+.fixture-panel-error { font-size:var(--fb-widget-font-meta); line-height:1.5; margin:12px 0 0; border-left:3px solid var(--fb-failure); padding-left:12px; }
+.fixture-panel-empty { padding:20px 8px; font-size:var(--fb-widget-font-body); }
+.fixture-panel-footer { display:flex; justify-content:space-between; flex-wrap:wrap; gap:6px 16px; padding:8px 20px 12px; font-size:var(--fb-widget-font-meta); color:var(--fb-muted); }
 .fixture-panel-footer a { color:inherit; }
 .fixture-panel-sr-only { position:absolute; width:1px; height:1px; padding:0; margin:-1px; overflow:hidden; clip-path:inset(50%); white-space:nowrap; border:0; }
 @container (min-width:1100px) { .fixture-match { flex-basis:calc(100cqw / 5 - 24px / 5); width:calc(100cqw / 5 - 24px / 5); } }
@@ -50,7 +50,6 @@
   .fixture-matches-panel > .fb-card-header { padding:14px 12px 10px; }
   .fixture-panel-heading { grid-template-columns:minmax(0,1fr); gap:10px; }
   .fixture-panel-heading > div:first-child { width:100%; }
-  .fixture-panel-title h2 { font-size:19px; }
   .fixture-week-pagination { width:100%; justify-content:center; }
   .fixture-matches-panel > .fb-card-content { padding:0 6px; }
   .fixture-match { flex-basis:248px; width:248px; padding-inline:12px; }
