@@ -123,16 +123,19 @@ and its squad projection, then choose **Use as draft** to prepare local changes.
 
 ## Quick start
 
-`poe up` creates missing env files, then starts identity, Postgres, Redis, the
-local email sink, LaLiga auth, API, scraping and the frontend:
+Create the ignored root `.env` from `.env.template` and set its
+`SMTP_PASSWORD` to a Resend sending API key. Then `poe up` creates any missing
+service env files and starts identity, Postgres, Redis, LaLiga auth, API,
+scraping and the frontend:
 
 ```bash
+test -f .env || cp .env.template .env
 uv run poe install
 uv run poe up
 ```
 
 - App: http://localhost:3000 — register a new account; no shared demo password.
-- Development verification emails: http://localhost:8025.
+- Verification and recovery emails arrive in each user's own inbox through Resend.
 - API docs: http://localhost:8001/docs.
 - Scraping health: http://localhost:8002/health/live.
 
@@ -145,7 +148,7 @@ requires `USE_MEMORY_STORE=false` and a stable vault key; identity always uses P
 **Services on the host (Vite HMR):**
 
 ```bash
-docker compose up -d postgres redis mailpit
+docker compose up -d postgres redis
 uv run poe dev-clean
 ```
 

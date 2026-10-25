@@ -7,9 +7,10 @@ verify its Ed25519 JWTs; identity imports neither Python service.
 ## Local setup
 
 ```bash
+test -f .env || cp .env.template .env # set SMTP_PASSWORD to a Resend sending API key
 cp backend/identity/.env.example backend/identity/.env
 bun install --cwd backend/identity --frozen-lockfile
-docker compose up -d postgres redis mailpit
+docker compose up -d postgres redis
 cd backend/identity
 bun run migrate
 bun run dev
@@ -17,13 +18,14 @@ bun run dev
 
 Start the other services with `uv run poe dev-clean` from the root instead of
 starting identity separately. Visit `/register` on http://localhost:3000.
-Read verification mail in http://localhost:8025. There are no shared demo passwords.
+Verification mail is sent through Resend to the address entered at registration.
+Check that inbox, including spam. There are no shared demo passwords.
 Identity always persists to its own PostgreSQL database, even when the LaLiga
 vault runs in development memory mode.
 The local stack waits up to 60 seconds for identity's database and mail readiness
 before starting Vite. If it fails, check the migration output and ensure PostgreSQL
-and Mailpit are running. Use Node 24 as specified above; newer major versions are
-outside the supported runtime range.
+and the configured SMTP transport are available. Use Node 24 as specified above;
+newer major versions are outside the supported runtime range.
 
 Direct social providers are optional in every environment. The public
 `GET /auth/sign-in-options` response lists only configured methods; LaLiga SSO
@@ -34,6 +36,18 @@ To enable Google locally, create a Google OAuth web application with authorized 
 edit does not restart the Node source watcher. Without these credentials, use
 email/username registration and sign-in; Google returns `PROVIDER_NOT_FOUND`.
 
+Verify `fantasybuilder.es` in Resend, create a sending API key, and set
+`SMTP_PASSWORD` in the ignored root `.env` using `.env.template` as the reference.
+After adding DNS records, click **Verify** in Resend and wait until the domain
+shows **Verified**; SMTP authentication alone does not permit sending from it.
+The template sets `SMTP_HOST=smtp.resend.com`, port 465 with TLS, `SMTP_USER=resend`,
+and `MAIL_FROM=noreply@fantasybuilder.es`. Compose passes these settings to
+Identity; local `bun run dev` and `bun run start` load the root `.env` after
+the identity service's `.env`, so root SMTP settings take precedence. Restart
+Identity after changing them. Identity refuses to start without authenticated
+SMTP and a real sender. Verification and recovery messages go to each account's
+email address. Port 587 also works with STARTTLS when `SMTP_SECURE=false`.
+
 The initial SQL was generated with `auth@1.7.12` from `src/runtime.ts`, including
 username, JWT and shared database rate limits. `bun run migrate` applies reviewed
 SQL under a transaction and advisory lock, with a checksum journal. It is safe to
@@ -43,9 +57,10 @@ a disposable empty database and configured environment (`bun run schema:generate
 
 ## Production configuration
 
-Use `.env.example` as the variable reference. Inject secrets through deployment
-secret management, never `VITE_*` or source control. Set `NODE_ENV=production`, an
-exact HTTPS `BETTER_AUTH_URL`, matching HTTPS `INTERNAL_JWT_ISSUER`, a random
+Use `.env.example` and the root `.env.template` as variable references. Inject
+secrets through deployment secret management, never `VITE_*` or source control.
+Set `NODE_ENV=production`, an exact HTTPS `BETTER_AUTH_URL`, matching HTTPS
+`INTERNAL_JWT_ISSUER`, a random
 32+ character `BETTER_AUTH_SECRET`, isolated database credentials, authenticated
 SMTP, and complete credentials for each direct provider you enable. Keep the
 secret stable: it encrypts provider credentials and signing keys. Back it up
@@ -67,11 +82,10 @@ origin rather than trusting arbitrary forwarded host/proto headers. Do not expos
 Readiness checks the migrated user table and mail transport; health responses
 contain no dependency details. Termination drains requests and closes the pool.
 
-Production Compose: set `IDENTITY_NODE_ENV=production`, `IDENTITY_SMTP_HOST` to
-the real mail host, and the identity env's SMTP port/TLS/credentials. Set vault
+Production Compose: set `IDENTITY_NODE_ENV=production` and the root `SMTP_*`
+variables plus `MAIL_FROM` for the verified sender. Set vault
 `USE_MEMORY_STORE=false`, preserve its encryption key, and inject strong service
 and database secrets. The root Compose defaults are explicitly for local use.
-The optional local mail sink must not be exposed publicly.
 
 For repeatable HTTPS staging, point a dedicated DNS name to your ingress and run
 `docker compose -f docker-compose.yml -f docker-compose.https.yml --profile apps up --build`.

@@ -198,6 +198,11 @@ test("verification expiry, username uniqueness, wrong passwords and shared rate 
   assert.ok((await request("/email-otp/verify-email", { email, otp }, "")).status >= 400);
   const account = await pool.query('SELECT "emailVerified" FROM "user" WHERE email = $1', [email]);
   assert.equal(account.rows[0].emailVerified, false);
+  const sentBeforeRetry = outbox.length;
+  const retry = await request("/send-verification-email", { email, callbackURL: "/verify-email" }, "");
+  assert.equal(retry.status, 200);
+  assert.equal(outbox.length, sentBeforeRetry + 1);
+  assert.match(outbox.at(-1)!.text, /code is [0-9]{8}/);
   assert.ok((await request("/sign-up/email", { email: "other@example.test", password, name: "Other", username: "EXPIRY" }, "")).status >= 400);
   assert.equal((await request("/sign-in/email", { email: "alice@example.test", password: "wrong-password-123" }, "")).status, 401);
   const secondWorker = createIdentity(config, pool, async mail => { outbox.push(mail); });

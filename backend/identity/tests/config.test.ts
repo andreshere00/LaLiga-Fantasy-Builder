@@ -32,5 +32,14 @@ test("each optional provider needs complete credentials before it is offered", (
 
 test("production still requires HTTPS and authenticated mail", () => {
   assert.throws(() => readConfig({ ...base, BETTER_AUTH_URL: "http://example.test" }), /HTTPS/);
-  assert.throws(() => readConfig({ ...base, SMTP_PASSWORD: undefined }), /mail transport/);
+  assert.throws(() => readConfig({ ...base, SMTP_PASSWORD: undefined }), /SMTP_USER/);
+  assert.throws(() => readConfig({ ...base, SMTP_USER: undefined }), /SMTP_USER/);
+});
+
+test("development requires real authenticated mail delivery", () => {
+  const development = { ...base, NODE_ENV: "development", BETTER_AUTH_URL: "http://localhost:3000" };
+  assert.throws(() => readConfig({ ...development, SMTP_USER: undefined,
+    SMTP_PASSWORD: undefined }), /authenticated SMTP/);
+  assert.throws(() => readConfig({ ...development, SMTP_HOST: "mailpit" }), /authenticated SMTP/);
+  assert.throws(() => readConfig({ ...development, MAIL_FROM: "accounts@localhost.test" }), /authenticated SMTP/);
 });

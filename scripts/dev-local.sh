@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Auth :8000, API :8001, Vite :3000 on the host. Identity :8003; PostgreSQL and a mail sink are required.
+# Auth :8000, API :8001, Vite :3000 on the host. Identity :8003 needs PostgreSQL and SMTP.
 set -euo pipefail
 
 ROOT="$(cd "$(dirname "$0")/.." && pwd)"
@@ -30,7 +30,7 @@ trap cleanup EXIT INT TERM
 
 echo "Starting auth on :8000, API on :8001, frontend on :3000"
 echo "Starting scraping on :8002"
-echo "Dependencies: docker compose up -d postgres redis mailpit"
+echo "Dependencies: docker compose up -d postgres redis; configure Resend in root .env"
 export INTERNAL_JWT_ISSUER="${INTERNAL_JWT_ISSUER:-http://localhost:3000/auth}"
 export AUTH_JWKS_URL="${AUTH_JWKS_URL:-http://localhost:8003/auth/jwks}"
 (cd backend/identity && bun run migrate && exec bun run dev) &
@@ -48,7 +48,8 @@ until curl --silent --fail --output /dev/null --max-time 2 \
     exit 1
   fi
   if (( SECONDS >= identity_deadline )); then
-    echo "Identity is not ready. Check PostgreSQL, Mailpit and backend/identity/.env." >&2
+    echo "Identity is not ready. Check PostgreSQL, the configured SMTP transport," >&2
+    echo "backend/identity/.env and root .env SMTP overrides." >&2
     exit 1
   fi
   sleep 1

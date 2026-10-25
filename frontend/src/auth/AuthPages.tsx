@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState, type FormEvent } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { z } from "zod";
-import { Button } from "../components/ui/Button";
+import { Button, buttonVariants } from "../components/ui/Button";
 import { authClient } from "./auth-client";
 import { useAuth } from "./AuthProvider";
 import { ProviderLogo, type SocialProvider } from "./ProviderLogo";
@@ -130,8 +130,8 @@ export function AuthPage() {
       <p className="auth-eyebrow">LALIGA Fantasy Builder</p>
       <h1 id="auth-title" tabIndex={-1} ref={heading}>{titles[pathname]}</h1>
       <p className="auth-description">{descriptions[pathname]}</p>
-      {pathname === "/verify-email" && import.meta.env.DEV &&
-        <p className="auth-description">In local development, find your code in <a href="http://localhost:8025" target="_blank" rel="noreferrer">Mailpit</a>.</p>}
+      {pathname === "/verify-email" &&
+        <p className="auth-description">Check your inbox for the code. If it is missing, check your spam folder.</p>}
     </header>
     {(message || errorMessage) && <div className={`auth-feedback ${failure || errorMessage ? "auth-feedback--error" : ""}`} role={failure || errorMessage ? "alert" : "status"}>
       <p>{message || errorMessage}</p>
@@ -202,7 +202,7 @@ export function AuthPage() {
     </>}
     <nav className="auth-help" aria-label="Account help">
       {pathname === "/sign-in" ? <p>New to Fantasy Builder? <Link to="/register">Create account</Link></p>
-        : pathname === "/register" ? <p>Already have an account? <Link to="/sign-in">Sign in</Link></p>
+        : pathname === "/register" ? <><p>Already have an account?</p><Link to="/sign-in" className={buttonVariants({ variant: "outline", className: "auth-sign-in-link" })}>Sign in</Link></>
           : <><Link to="/sign-in">Back to sign in</Link>{pathname !== "/forgot-password" && <Link to="/forgot-password">Forgot password?</Link>}</>}
     </nav>
     {social && <aside className="auth-connection-note"><span className="auth-note-mark" aria-hidden="true">↗</span><p><strong>Next: connect your LaLiga account</strong><br />After sign-in, we’ll take you to LaLiga to authorize access to your Fantasy team.</p></aside>}

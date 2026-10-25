@@ -170,5 +170,7 @@ test("unconfigured social providers are not offered as sign-in choices", async (
   await page.goto("/register");
   await expect(page.getByRole("button", { name: /Continue with (Google|Facebook|Apple)/ })).toHaveCount(0);
   await expect(page.getByLabel("Email", { exact: true })).toBeVisible();
+  await page.getByRole("link", { name: "Sign in", exact: true }).click();
+  await expect(page.getByRole("heading", { name: "Sign in", exact: true })).toBeVisible();
   expect(socialStarts).toBe(0);
 });

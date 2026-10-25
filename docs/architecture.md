@@ -371,7 +371,7 @@ Run commands live in the [root README](../README.md).
   builds with Bun and serves static files plus `/auth`, `/laliga`, and `/api`
   proxies from Nginx.
 - Compose profile `apps` runs identity, auth, API, scraping and frontend, with
-  PostgreSQL, Redis and a development mail sink. `full` adds OTEL.
+  PostgreSQL and Redis. Identity sends email through configured SMTP. `full` adds OTEL.
   Identity owns its own logical database and role.
 - API and auth share a private network for `/internal/*`. Scraping joins that
   network and an `egress` network so a future downloader can reach the public

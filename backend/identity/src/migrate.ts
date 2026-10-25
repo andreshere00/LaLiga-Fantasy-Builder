@@ -1,8 +1,10 @@
 import { readFile } from "node:fs/promises";
 import { createHash } from "node:crypto";
 import { Pool } from "pg";
-import { readConfig } from "./config.js";
-const pool = new Pool({ connectionString: readConfig().IDENTITY_DATABASE_URL, connectionTimeoutMillis: 5000 });
+import { z } from "zod";
+const databaseURL = z.url().safeParse(process.env.IDENTITY_DATABASE_URL);
+if (!databaseURL.success) throw new Error("Invalid IDENTITY_DATABASE_URL");
+const pool = new Pool({ connectionString: databaseURL.data, connectionTimeoutMillis: 5000 });
 
 const sql = await readFile(new URL("../migrations/schema.sql", import.meta.url), "utf8");
 const checksum = createHash("sha256").update(sql).digest("hex");

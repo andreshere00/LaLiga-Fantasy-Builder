@@ -51,6 +51,7 @@
 .auth-feedback--error { border-left-color:var(--fb-failure); }
 .auth-help { display:flex; flex-wrap:wrap; justify-content:center; gap:8px 20px; margin-top:24px; font-size:14px; color:var(--fb-muted); }
 .auth-help p { margin:0; }
+.auth-sign-in-link.fb-button { width:100%; min-height:48px; }
 .auth-page a { color:var(--fb-secondary); font-weight:600; }
 .auth-page a:hover { color:var(--fb-tertiary); }
 .auth-connection-note { display:flex; align-items:flex-start; gap:12px; margin-top:24px; padding-top:20px; border-top:1px solid var(--fb-line); font-size:12px; color:var(--fb-muted); line-height:1.6; }

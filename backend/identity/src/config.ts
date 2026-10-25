@@ -8,12 +8,12 @@ const schema = z.object({
   BETTER_AUTH_SECRET: z.string().min(32),
   IDENTITY_DATABASE_URL: z.url(),
   INTERNAL_JWT_ISSUER: z.url().default("http://localhost:3000/auth"),
-  SMTP_HOST: z.string().min(1).default("localhost"),
-  SMTP_PORT: z.coerce.number().int().positive().default(1025),
-  SMTP_SECURE: z.enum(["true", "false"]).default("false"),
+  SMTP_HOST: z.string().min(1).default("smtp.resend.com"),
+  SMTP_PORT: z.coerce.number().int().positive().default(465),
+  SMTP_SECURE: z.enum(["true", "false"]).default("true"),
   SMTP_USER: optionalSecret,
   SMTP_PASSWORD: optionalSecret,
-  MAIL_FROM: z.email().default("accounts@localhost.test"),
+  MAIL_FROM: z.email().default("noreply@fantasybuilder.es"),
   GOOGLE_CLIENT_ID: optionalSecret,
   GOOGLE_CLIENT_SECRET: optionalSecret,
   FACEBOOK_CLIENT_ID: optionalSecret,
@@ -42,12 +42,18 @@ export function readConfig(env: NodeJS.ProcessEnv = process.env) {
       throw new Error(`Configure all provider fields: ${keys.join(", ")}`);
     }
   }
+  if (Boolean(cfg.SMTP_USER) !== Boolean(cfg.SMTP_PASSWORD)) {
+    throw new Error("Configure both SMTP_USER and SMTP_PASSWORD");
+  }
+  if (cfg.NODE_ENV !== "test" && (
+    !cfg.SMTP_USER || !cfg.SMTP_PASSWORD || cfg.MAIL_FROM.endsWith(".test") ||
+    ["localhost", "127.0.0.1", "mailpit"].includes(cfg.SMTP_HOST.toLowerCase())
+  )) {
+    throw new Error("Identity requires authenticated SMTP delivery to a real sender");
+  }
   if (cfg.NODE_ENV === "production") {
     if (origin.protocol !== "https:" || !cfg.INTERNAL_JWT_ISSUER.startsWith("https://")) {
       throw new Error("Production identity requires HTTPS origin and issuer");
-    }
-    if (!cfg.SMTP_USER || !cfg.SMTP_PASSWORD || cfg.MAIL_FROM.endsWith(".test")) {
-      throw new Error("Production requires an authenticated mail transport and sender");
     }
     if (cfg.BETTER_AUTH_SECRET.startsWith("development-")) throw new Error("Replace the development secret");
   }

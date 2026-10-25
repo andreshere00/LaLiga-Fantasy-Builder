@@ -6,13 +6,13 @@
     "node": ">=24.0.0 <25"
   },
   "scripts": {
-    "dev": "node --env-file-if-exists=.env --watch --import tsx src/server.ts",
-    "start": "node --env-file-if-exists=.env dist/server.js",
+    "dev": "node --env-file-if-exists=.env --env-file-if-exists=../../.env --watch --import tsx src/server.ts",
+    "start": "node --env-file-if-exists=.env --env-file-if-exists=../../.env dist/server.js",
     "build": "tsc",
     "typecheck": "tsc --noEmit",
     "lint": "tsc --noEmit",
     "test": "node --import tsx --test tests/*.test.ts",
-    "schema:generate": "auth generate --config src/runtime.ts --output migrations/schema.sql --yes",
+    "schema:generate": "node --env-file-if-exists=.env --env-file-if-exists=../../.env node_modules/.bin/auth generate --config src/runtime.ts --output migrations/schema.sql --yes",
     "migrate": "node --env-file-if-exists=.env --import tsx src/migrate.ts"
   },
   "dependencies": {
