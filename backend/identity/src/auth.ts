@@ -4,8 +4,9 @@ import { emailOTP, jwt, username } from "better-auth/plugins";
 import { importPKCS8, SignJWT } from "jose";
 import type { Pool } from "pg";
 import type { Config } from "./config.js";
+import { passwordResetMail, verificationMail, type MailContent } from "./mailTemplates.js";
 
-export type Mail = { to: string; subject: string; text: string };
+export type Mail = MailContent & { to: string };
 export type SendMail = (mail: Mail) => Promise<void>;
 
 export function createIdentity(cfg: Config, database: Pool, send: SendMail) {
@@ -50,7 +51,7 @@ export function createIdentity(cfg: Config, database: Pool, send: SendMail) {
       resetPasswordTokenExpiresIn: 1800,
       revokeSessionsOnPasswordReset: true,
       sendResetPassword: async ({ user, url }) => {
-        await send({ to: user.email, subject: "Reset your password", text: `Reset your password using this one-time link (valid for 30 minutes):\n${url}\nIf you did not request this, ignore this email.` });
+        await send({ to: user.email, ...passwordResetMail(url) });
       },
     },
     emailVerification: {
@@ -107,7 +108,7 @@ export function createIdentity(cfg: Config, database: Pool, send: SendMail) {
         otpLength: 8, allowedAttempts: 5,
         sendVerificationOTP: async ({ email, otp, type }) => {
           if (type !== "email-verification") throw new Error("Unsupported email operation");
-          await send({ to: email, subject: "Verify your email", text: `Your verification code is ${otp}. It expires in 10 minutes and can be used once.\nOpen ${cfg.BETTER_AUTH_URL}/verify-email and enter your email and code.` });
+          await send({ to: email, ...verificationMail(otp, cfg.BETTER_AUTH_URL) });
         },
       }),
       username({ validationOrder: { username: "pre-normalization" }, minUsernameLength: 3, maxUsernameLength: 30, usernameNormalization: value => value.trim().toLowerCase(), usernameValidator: value => /^[a-z0-9_]{3,30}$/.test(value.trim().toLowerCase()) }),

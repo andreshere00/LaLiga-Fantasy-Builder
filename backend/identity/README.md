@@ -19,7 +19,9 @@ bun run dev
 Start the other services with `uv run poe dev-clean` from the root instead of
 starting identity separately. Visit `/register` on http://localhost:3000.
 Verification mail is sent through Resend to the address entered at registration.
-Check that inbox, including spam. There are no shared demo passwords.
+Check that inbox, including spam. Verification and recovery messages use branded
+HTML matching the frontend and retain a plain-text fallback. There are no shared
+demo passwords.
 Identity always persists to its own PostgreSQL database, even when the LaLiga
 vault runs in development memory mode.
 The local stack waits up to 60 seconds for identity's database and mail readiness

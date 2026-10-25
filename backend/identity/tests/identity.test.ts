@@ -50,6 +50,7 @@ test("verified credentials, username, real Ed25519 JWT, recovery, revocation and
   response = await request("/sign-in/email", { email, password });
   assert.equal(response.status, 403);
   const otp = outbox.at(-1)!.text.match(/code is ([0-9]{8})/)![1];
+  assert.ok(outbox.at(-1)!.html.includes(otp));
   response = await request("/email-otp/verify-email", { email, otp }, "");
   assert.ok(response.status < 400);
   assert.ok((await request("/email-otp/verify-email", { email, otp }, "")).status >= 400);
@@ -84,6 +85,7 @@ test("verified credentials, username, real Ed25519 JWT, recovery, revocation and
   const oldCookie = cookie;
   response = await request("/request-password-reset", { email, redirectTo: "/reset-password" }, "");
   assert.equal(response.status, 200);
+  assert.match(outbox.at(-1)!.html, /Reset password/);
   const resetURL = latestLink();
   const redirect = await auth.handler(new Request(resetURL));
   const resetToken = new URL(redirect.headers.get("location")!, origin).searchParams.get("token");
