@@ -6,10 +6,11 @@ are provided by its pinned plugins and are separate from Python OpenAPI.
 
 | Method | Path | Credential / behavior |
 | --- | --- | --- |
+| GET | `/auth/sign-in-options` | Public availability flags for credential, direct provider and LaLiga SSO choices; no secrets |
 | POST | `/auth/sign-up/email` | Name, email, username, password; verification email |
 | POST | `/auth/sign-in/email` | Verified email and password |
 | POST | `/auth/sign-in/username` | Verified credential account, username and password |
-| POST | `/auth/sign-in/social` | Google, Facebook or Apple; framework state/PKCE |
+| POST | `/auth/sign-in/social` | Configured Google, Facebook or Apple provider; framework state/PKCE |
 | GET/POST | `/auth/callback/{provider}` | Provider callback proof; Apple supports form POST |
 | GET | `/auth/get-session` | Better Auth session cookie; public user and session |
 | POST | `/auth/sign-out` | Better Auth session and origin protections |

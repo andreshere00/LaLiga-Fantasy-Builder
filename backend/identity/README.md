@@ -25,8 +25,10 @@ before starting Vite. If it fails, check the migration output and ensure Postgre
 and Mailpit are running. Use Node 24 as specified above; newer major versions are
 outside the supported runtime range.
 
-Social providers are optional in development. To enable Google locally, create a
-Google OAuth web application with authorized redirect URI
+Direct social providers are optional in every environment. The public
+`GET /auth/sign-in-options` response lists only configured methods; LaLiga SSO
+remains unavailable until an approved web client and callback have been proven.
+To enable Google locally, create a Google OAuth web application with authorized redirect URI
 `http://localhost:3000/auth/callback/google`, set both `GOOGLE_CLIENT_ID` and
 `GOOGLE_CLIENT_SECRET` in `backend/identity/.env`, then restart identity. An `.env`
 edit does not restart the Node source watcher. Without these credentials, use
@@ -45,8 +47,9 @@ Use `.env.example` as the variable reference. Inject secrets through deployment
 secret management, never `VITE_*` or source control. Set `NODE_ENV=production`, an
 exact HTTPS `BETTER_AUTH_URL`, matching HTTPS `INTERNAL_JWT_ISSUER`, a random
 32+ character `BETTER_AUTH_SECRET`, isolated database credentials, authenticated
-SMTP, and all provider credentials. Keep the secret stable: it encrypts provider
-credentials and signing keys. Back it up separately from the database.
+SMTP, and complete credentials for each direct provider you enable. Keep the
+secret stable: it encrypts provider credentials and signing keys. Back it up
+separately from the database.
 
 Register callbacks at `https://your-domain/auth/callback/google`, `/facebook`,
 and `/apple`. Google needs its web OAuth client; Facebook needs its app ID/secret,

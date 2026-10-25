@@ -430,8 +430,9 @@ and `/laliga` requests. Sign-in, registration, one-time email verification,
 recovery and sign-in methods have separate routes. `needs_reauth` prompts the user to link LaLiga again. See
 [Authentication](authentication/authentication.md).
 
-Sign-in and registration show equally sized Google, Facebook and Apple buttons
-with locally served provider artwork. A divider separates them from the password
+Sign-in and registration show equally sized buttons only for configured direct
+Google, Facebook and Apple providers, with locally served artwork. A divider
+separates them from the password
 form; password visibility, adjacent recovery, preserved input on failure and
 provider-specific pending labels support correction without restarting the flow.
 The screen uses the shared square controls, coral primary action and both themes.
@@ -441,7 +442,8 @@ That route waits for a verified application session/JWT, checks the connection,
 returns connected users to the lineup, and starts the existing LaLiga authorization
 once for an unlinked user. Failures offer retry or public player browsing. Provider
 tokens are not passed to LaLiga; its own authorization code and PKCE flow grants
-Fantasy access. Development social providers still need configured credentials.
+Fantasy access. Direct social providers need their own configured credentials;
+the LaLiga SSO browser flow is unavailable pending an approved web client and callback.
 
 ## Shared building blocks
 

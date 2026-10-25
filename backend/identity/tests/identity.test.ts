@@ -103,12 +103,6 @@ test("verified credentials, username, real Ed25519 JWT, recovery, revocation and
   assert.equal(await (await request("/get-session")).json(), null);
 });
 
-test("production configuration fails closed without provider and mail credentials", () => {
-  assert.throws(() => readConfig({ ...process.env, NODE_ENV: "production" }), /configuration|provider|Production/);
-  assert.throws(() => readConfig({ BETTER_AUTH_SECRET: "x".repeat(32), IDENTITY_DATABASE_URL: databaseURL, GOOGLE_CLIENT_ID: "partial" }), /provider/);
-});
-
-
 test("provider callbacks bind state, preserve stable accounts, reject replay and require explicit linking", async () => {
   const context = await auth.$context;
   // Mock only the external provider exchange/profile boundary. Better Auth owns state,

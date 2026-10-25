@@ -12,6 +12,10 @@ for (const theme of ["light", "dark"]) {
         if (url.origin !== "http://127.0.0.1:3100") return route.abort();
         if (!url.pathname.startsWith("/auth/")) return route.continue();
         if (url.pathname === "/auth/get-session") return route.fulfill({ json: null });
+        if (url.pathname === "/auth/sign-in-options") return route.fulfill({ json: {
+          credentials: true, laligaSso: false,
+          directProviders: { google: true, facebook: true, apple: true },
+        } });
         requests.push({ path: url.pathname, body: request.postDataJSON() ?? {} });
         if (url.pathname === "/auth/sign-in/social") return route.fulfill({ status: 404, json: { code: "PROVIDER_NOT_FOUND", message: "Provider not found" } });
         if (url.pathname === "/auth/sign-in/username") return route.fulfill({ status: 403, json: { code: "EMAIL_NOT_VERIFIED", message: "Email not verified" } });
@@ -93,6 +97,10 @@ for (const provider of ["google", "facebook", "apple", "username"]) {
       const url = new URL(request.url());
       if (url.origin === "https://login.laliga.es") return route.fulfill({ contentType: "text/html", body: "<h1>LaLiga authorization fixture</h1>" });
       if (url.origin !== origin) return route.abort();
+      if (url.pathname === "/auth/sign-in-options") return route.fulfill({ json: {
+        credentials: true, laligaSso: false,
+        directProviders: { google: true, facebook: true, apple: true },
+      } });
       if (url.pathname === "/auth/get-session") return route.fulfill({ json: signedIn ? {
         user: { id: "alice", name: "Alice Fixture", email: "alice@example.test", emailVerified: true, createdAt: new Date().toISOString(), updatedAt: new Date().toISOString() },
         session: { id: "alice-session", userId: "alice", token: "synthetic-session", expiresAt: new Date(Date.now() + 86400000).toISOString(), createdAt: new Date().toISOString(), updatedAt: new Date().toISOString() },
@@ -141,3 +149,26 @@ for (const provider of ["google", "facebook", "apple", "username"]) {
     expect(errors).toEqual([]);
   });
 }
+
+test("unconfigured social providers are not offered as sign-in choices", async ({ page }) => {
+  let socialStarts = 0;
+  await page.route("**/auth/**", route => {
+    const path = new URL(route.request().url()).pathname;
+    if (!path.startsWith("/auth/")) return route.continue();
+    if (path === "/auth/get-session") return route.fulfill({ json: null });
+    if (path === "/auth/sign-in-options") return route.fulfill({ json: {
+      credentials: true, laligaSso: false,
+      directProviders: { google: false, facebook: false, apple: false },
+    } });
+    if (path === "/auth/sign-in/social") socialStarts++;
+    return route.fulfill({ status: 404, json: {} });
+  });
+  await page.goto("/sign-in");
+  await expect(page.getByRole("heading", { name: "Sign in", exact: true })).toBeVisible();
+  await expect(page.getByRole("button", { name: /Continue with (Google|Facebook|Apple)/ })).toHaveCount(0);
+  await expect(page.getByLabel("Username or email")).toBeVisible();
+  await page.goto("/register");
+  await expect(page.getByRole("button", { name: /Continue with (Google|Facebook|Apple)/ })).toHaveCount(0);
+  await expect(page.getByLabel("Email", { exact: true })).toBeVisible();
+  expect(socialStarts).toBe(0);
+});

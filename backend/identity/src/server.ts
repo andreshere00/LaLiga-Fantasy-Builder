@@ -1,6 +1,7 @@
 import express from "express";
 import { toNodeHandler } from "better-auth/node";
 import { auth, config, mailer, pool } from "./runtime.js";
+import { signInOptions } from "./config.js";
 
 const app = express();
 app.disable("x-powered-by");
@@ -19,6 +20,7 @@ app.get("/health/ready", async (_req, res) => {
     res.json({ status: "ok" });
   } catch { res.status(503).json({ status: "not_ready" }); }
 });
+app.get("/auth/sign-in-options", (_req, res) => { res.json(signInOptions(config)); });
 // Express must not parse the body before Better Auth reads it (including Apple POST callbacks).
 app.all("/auth/{*path}", toNodeHandler(auth));
 const server = app.listen(config.PORT, "0.0.0.0");

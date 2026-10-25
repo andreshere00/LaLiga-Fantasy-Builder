@@ -9,6 +9,11 @@ import "./AuthPages.css";
 
 const providers = ["google", "facebook", "apple"] as const;
 const names = { google: "Google", facebook: "Facebook", apple: "Apple" };
+const signInOptionsSchema = z.object({
+  credentials: z.boolean(),
+  laligaSso: z.boolean(),
+  directProviders: z.object({ google: z.boolean(), facebook: z.boolean(), apple: z.boolean() }),
+});
 const titles: Record<string, string> = {
   "/sign-in": "Sign in", "/register": "Create your account", "/verify-email": "Verify your email",
   "/forgot-password": "Reset your password", "/reset-password": "Choose a new password", "/account": "Sign-in methods",
@@ -44,11 +49,24 @@ export function AuthPage() {
   const [message, setMessage] = useState<string | null>(null);
   const [failure, setFailure] = useState(false);
   const [accountsFor, setAccountsFor] = useState<{ userId: string; accounts: { id: string; providerId: string; accountId: string }[] } | null>(null);
+  const [signInOptions, setSignInOptions] = useState<z.infer<typeof signInOptionsSchema> | null>(null);
+  const [optionsUnavailable, setOptionsUnavailable] = useState(false);
   const heading = useRef<HTMLHeadingElement>(null);
   const params = new URLSearchParams(search);
   const callbackError = params.get("error");
   const errorMessage = callbackError ? errors[callbackError] ?? "Sign-in could not be completed. Please try again." : null;
   useEffect(() => { heading.current?.focus(); setMessage(null); setShowPassword(false); }, [pathname]);
+  useEffect(() => {
+    const controller = new AbortController();
+    void fetch("/auth/sign-in-options", { signal: controller.signal })
+      .then(async response => {
+        if (!response.ok) throw new Error("Sign-in options unavailable");
+        return signInOptionsSchema.parse(await response.json());
+      })
+      .then(setSignInOptions)
+      .catch(() => { if (!controller.signal.aborted) setOptionsUnavailable(true); });
+    return () => controller.abort();
+  }, []);
   const accountUserId = auth.user?.userId;
   const accounts = accountsFor?.userId === accountUserId ? accountsFor?.accounts ?? [] : [];
   useEffect(() => {
@@ -101,6 +119,9 @@ export function AuthPage() {
     });
   }
   const social = pathname === "/sign-in" || pathname === "/register";
+  const availableProviders = providers.filter(provider => signInOptions?.directProviders[provider]);
+  const accountProviders = providers.filter(provider => signInOptions?.directProviders[provider]
+    || accounts.some(item => item.providerId === provider));
   const password = ["/sign-in", "/register", "/reset-password", "/account"].includes(pathname);
   const email = ["/register", "/forgot-password", "/verify-email"].includes(pathname);
   const account = pathname === "/account";
@@ -109,14 +130,17 @@ export function AuthPage() {
       <p className="auth-eyebrow">LALIGA Fantasy Builder</p>
       <h1 id="auth-title" tabIndex={-1} ref={heading}>{titles[pathname]}</h1>
       <p className="auth-description">{descriptions[pathname]}</p>
+      {pathname === "/verify-email" && import.meta.env.DEV &&
+        <p className="auth-description">In local development, find your code in <a href="http://localhost:8025" target="_blank" rel="noreferrer">Mailpit</a>.</p>}
     </header>
     {(message || errorMessage) && <div className={`auth-feedback ${failure || errorMessage ? "auth-feedback--error" : ""}`} role={failure || errorMessage ? "alert" : "status"}>
       <p>{message || errorMessage}</p>
       {message === errors.EMAIL_NOT_VERIFIED && <Link to="/verify-email">Verify your email</Link>}
     </div>}
-    {social && <>
+    {social && optionsUnavailable && <p className="auth-field-hint" role="status">Other sign-in options could not be checked. You can still use your username or email.</p>}
+    {social && availableProviders.length > 0 && <>
       <div className="auth-social" role="group" aria-label="Sign in with a provider">
-        {providers.map(provider => <Button key={provider} disabled={busy} loading={busyProvider === provider}
+        {availableProviders.map(provider => <Button key={provider} disabled={busy} loading={busyProvider === provider}
           loadingLabel={`Connecting to ${names[provider]}…`} variant="outline" className={`auth-provider auth-provider--${provider}`}
           icon={<ProviderLogo provider={provider} />} onClick={() => {
             setBusyProvider(provider);
@@ -131,14 +155,18 @@ export function AuthPage() {
     {account && !auth.user ? <p><Link to="/sign-in">Sign in</Link> to manage your account.</p> : <>
       {account && <>
         <p>Link another provider to this account. Sign in again first if your session is older than ten minutes.</p>
-        {providers.map(provider => {
+        {accountProviders.map(provider => {
           const linked = accounts.find(item => item.providerId === provider);
-          return <div className="auth-method" key={provider}><span className="auth-method-name"><ProviderLogo provider={provider} />{names[provider]}</span><Button variant="outline" disabled={busy || accountsFor?.userId !== accountUserId || (!!linked && accounts.length < 2)} onClick={() => void run(async () => {
+          const configured = signInOptions?.directProviders[provider] ?? false;
+          const alternative = accounts.some(item => item.id !== linked?.id &&
+            (item.providerId === "credential" || providers.some(other =>
+              other === item.providerId && signInOptions?.directProviders[other])));
+          return <div className="auth-method" key={provider}><span className="auth-method-name"><ProviderLogo provider={provider} />{names[provider]}</span><Button variant="outline" disabled={busy || accountsFor?.userId !== accountUserId || (linked ? !alternative : !configured)} onClick={() => void run(async () => {
             if (linked) {
               checked(await authClient.unlinkAccount({ accountId: linked.id }));
               const result = await authClient.listAccounts(); checked(result); setAccountsFor({ userId: accountUserId!, accounts: result.data ?? [] });
             } else checked(await authClient.linkSocial({ provider, callbackURL: "/account", errorCallbackURL: "/account" }));
-          })}>{linked ? "Unlink" : "Link"}</Button></div>;
+          })}>{linked ? "Unlink" : "Link"}</Button>{!configured && <span className="auth-field-hint">Currently unavailable</span>}</div>;
         })}
         {!accounts.some(item => item.providerId === "credential") && <p>To add a password, <Link to="/forgot-password">request a recovery email</Link> and follow its verification link.</p>}
       </>}

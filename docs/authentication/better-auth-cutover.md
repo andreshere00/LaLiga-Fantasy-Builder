@@ -58,8 +58,8 @@ These checks do not replace the real-provider and recovery rehearsal below.
 Automated tests cannot certify external registrations, email delivery or live
 provider browser policies. Record evidence for each of these before deployment:
 
-- Production configuration fails closed without HTTPS, provider credentials,
-  authenticated TLS mail and strong secrets. Identity and vault use distinct roles;
+- Production configuration fails closed without HTTPS, authenticated TLS mail and
+  strong secrets. Each enabled direct provider has complete credentials. Identity and vault use distinct roles;
   restarts preserve identity users, sessions, keys and sealed connections.
 - Google: success, denial/cancellation, repeat sign-in, explicit linking and
   same-email collision. Facebook: the same plus missing email and public app access.
@@ -78,6 +78,10 @@ provider browser policies. Record evidence for each of these before deployment:
   callback URLs, session cookies or API tokens in logs or telemetry.
 - Health checks, image builds, HTTPS ingress and mail transport failure behavior;
   Postgres backup/restore and rollback rehearsal on disposable staging.
+
+LaLiga SSO cannot enter this release gate until the approved web client,
+registered HTTPS callback, identity claims and Fantasy profile access are
+verified. See the [capability record](laliga-sso-capability.md).
 
 The HTTPS Caddy ingress routes `/auth/*` directly to identity and replaces
 `X-Real-IP` with the network client address. Identity has no published port. Do

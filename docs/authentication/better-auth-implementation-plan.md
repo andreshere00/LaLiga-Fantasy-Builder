@@ -1,5 +1,10 @@
 # Better Auth implementation plan
 
+Follow-up, 25 October 2026: the [LaLiga SSO plan](laliga-sso-implementation-plan.md)
+supersedes the direct-social-provider requirement and application-first login
+order below. Better Auth remains the application session/JWT authority. This
+document retains the original migration proposal as historical context.
+
 Status: proposed, 23 October 2026. Planning only; authentication has not changed.
 Scope clarified on 24 October 2026: fully replace Keycloak and custom application
 authentication with Better Auth's standard APIs and plugins.

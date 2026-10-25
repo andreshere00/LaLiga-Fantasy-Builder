@@ -7,6 +7,9 @@
   — auth vs API, CSRF, internal JWT
 - [Better Auth implementation plan](better-auth-implementation-plan.md) — replace
   Keycloak with Google, Facebook, Apple, and username/password authentication
+- [LaLiga SSO implementation plan](laliga-sso-implementation-plan.md) — use LaLiga's
+  social sign-in to establish a Better Auth session and Fantasy connection without
+  this installation owning direct social-provider credentials
 
 Related: [API](../api/README.md), [Architecture](../architecture.md),
 [AGENTS.md](../../AGENTS.md).

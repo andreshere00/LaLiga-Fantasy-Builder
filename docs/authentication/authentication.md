@@ -1,7 +1,7 @@
 # Authentication
 
 Better Auth 1.7.12 is the application identity authority. `backend/identity`
-(Node 24, port 8003) owns credentials, Google/Facebook/Apple login, verification,
+(Node 24, port 8003) owns credentials, optional direct Google/Facebook/Apple login, verification,
 recovery, account linking, database sessions and application JWT issuance.
 `backend/auth` (Python, port 8000) owns only LaLiga delegation and the encrypted vault.
 
@@ -36,6 +36,10 @@ on the identity server; browser provider-token endpoints are disabled.
 New Facebook accounts without email receive an actionable error. Returning
 provider accounts resolve omitted email/name only by their stored provider and
 provider account ID; email is never an ownership-migration key.
+
+The sign-in screen reads `GET /auth/sign-in-options` and displays only configured
+direct providers. LaLiga SSO remains unavailable without an approved web client
+and registered browser callback; see the [capability record](laliga-sso-capability.md).
 
 ## Application JWTs
 

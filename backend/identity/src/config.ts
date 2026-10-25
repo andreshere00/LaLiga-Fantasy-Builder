@@ -38,7 +38,7 @@ export function readConfig(env: NodeJS.ProcessEnv = process.env) {
     ["FACEBOOK_CLIENT_ID", "FACEBOOK_CLIENT_SECRET"],
     ["APPLE_CLIENT_ID", "APPLE_TEAM_ID", "APPLE_KEY_ID", "APPLE_PRIVATE_KEY"],
   ] as const) {
-    if ((cfg.NODE_ENV === "production" || keys.some(k => cfg[k])) && keys.some(k => !cfg[k])) {
+    if (keys.some(k => cfg[k]) && keys.some(k => !cfg[k])) {
       throw new Error(`Configure all provider fields: ${keys.join(", ")}`);
     }
   }
@@ -54,3 +54,16 @@ export function readConfig(env: NodeJS.ProcessEnv = process.env) {
   return cfg;
 }
 export type Config = ReturnType<typeof readConfig>;
+
+/** Return only sign-in choices backed by complete server configuration. */
+export function signInOptions(cfg: Config) {
+  return {
+    credentials: true,
+    laligaSso: false,
+    directProviders: {
+      google: Boolean(cfg.GOOGLE_CLIENT_ID),
+      facebook: Boolean(cfg.FACEBOOK_CLIENT_ID),
+      apple: Boolean(cfg.APPLE_CLIENT_ID),
+    },
+  };
+}
