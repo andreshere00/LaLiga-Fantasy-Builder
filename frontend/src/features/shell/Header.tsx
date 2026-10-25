@@ -104,7 +104,7 @@ export function Header() {
       <Dialog open={profileOpen} title="Profile" onClose={() => setProfileOpen(false)}>
         <p className="profile-name">{user?.name?.trim() || "Not signed in"}</p>
         {user?.email ? <p>{user.email}</p> : null}
-        {user ? <Link to="/account" onClick={() => setProfileOpen(false)}>Sign-in methods</Link> : null}
+        {user ? <Link to="/account" onClick={() => setProfileOpen(false)}>Account settings</Link> : null}
         {managerName ? <p>{managerName}</p> : null}
       </Dialog>
       {notice ? <p className="notice" role="status">{notice}</p> : null}

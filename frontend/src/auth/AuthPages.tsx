@@ -16,7 +16,7 @@ const signInOptionsSchema = z.object({
 });
 const titles: Record<string, string> = {
   "/sign-in": "Sign in", "/register": "Create your account", "/verify-email": "Verify your email",
-  "/forgot-password": "Reset your password", "/reset-password": "Choose a new password", "/account": "Sign-in methods",
+  "/forgot-password": "Reset your password", "/reset-password": "Choose a new password",
 };
 const descriptions: Record<string, string> = {
   "/sign-in": "Your leagues, your squad, your next move.",
@@ -24,7 +24,6 @@ const descriptions: Record<string, string> = {
   "/verify-email": "Enter the eight-digit code from your inbox. It expires in ten minutes.",
   "/forgot-password": "We’ll email you a link to choose a new password.",
   "/reset-password": "Choose a strong password you haven’t used before.",
-  "/account": "Manage the ways you sign in to Fantasy Builder.",
 };
 const errors: Record<string, string> = {
   PROVIDER_NOT_FOUND: "This sign-in provider is not configured for this installation. Use username or email sign-in, or create an account.",
@@ -48,13 +47,13 @@ export function AuthPage() {
   const [showPassword, setShowPassword] = useState(false);
   const [message, setMessage] = useState<string | null>(null);
   const [failure, setFailure] = useState(false);
-  const [accountsFor, setAccountsFor] = useState<{ userId: string; accounts: { id: string; providerId: string; accountId: string }[] } | null>(null);
   const [signInOptions, setSignInOptions] = useState<z.infer<typeof signInOptionsSchema> | null>(null);
   const [optionsUnavailable, setOptionsUnavailable] = useState(false);
   const heading = useRef<HTMLHeadingElement>(null);
   const params = new URLSearchParams(search);
   const callbackError = params.get("error");
   const errorMessage = callbackError ? errors[callbackError] ?? "Sign-in could not be completed. Please try again." : null;
+  const deleted = pathname === "/sign-in" && params.get("deleted") === "1";
   useEffect(() => { heading.current?.focus(); setMessage(null); setShowPassword(false); }, [pathname]);
   useEffect(() => {
     const controller = new AbortController();
@@ -67,18 +66,6 @@ export function AuthPage() {
       .catch(() => { if (!controller.signal.aborted) setOptionsUnavailable(true); });
     return () => controller.abort();
   }, []);
-  const accountUserId = auth.user?.userId;
-  const accounts = accountsFor?.userId === accountUserId ? accountsFor?.accounts ?? [] : [];
-  useEffect(() => {
-    if (pathname !== "/account" || !accountUserId) return;
-    let cancelled = false;
-    void authClient.listAccounts().then(result => {
-      if (cancelled) return;
-      if (result.data) setAccountsFor({ userId: accountUserId, accounts: result.data });
-      else { setFailure(true); setMessage("Sign-in methods could not be loaded. Reload this page to retry."); }
-    });
-    return () => { cancelled = true; };
-  }, [pathname, accountUserId]);
   async function run(action: () => Promise<void>) {
     setBusy(true); setMessage(null); setFailure(false);
     try { await action(); } catch (error) {
@@ -112,19 +99,13 @@ export function AuthPage() {
       } else if (pathname === "/verify-email") {
         checked(await authClient.emailOtp.verifyEmail({ email: field("email"), otp: field("otp") }));
         setMessage("Your email is verified. You can now sign in.");
-      } else if (pathname === "/account") {
-        checked(await authClient.changePassword({ currentPassword: field("currentPassword"), newPassword: field("password"), revokeOtherSessions: true }));
-        setMessage("Password changed. Other sessions have been signed out.");
       }
     });
   }
   const social = pathname === "/sign-in" || pathname === "/register";
   const availableProviders = providers.filter(provider => signInOptions?.directProviders[provider]);
-  const accountProviders = providers.filter(provider => signInOptions?.directProviders[provider]
-    || accounts.some(item => item.providerId === provider));
-  const password = ["/sign-in", "/register", "/reset-password", "/account"].includes(pathname);
+  const password = ["/sign-in", "/register", "/reset-password"].includes(pathname);
   const email = ["/register", "/forgot-password", "/verify-email"].includes(pathname);
-  const account = pathname === "/account";
   return <section className="auth-page" aria-labelledby="auth-title">
     <header className="auth-heading">
       <p className="auth-eyebrow">LALIGA Fantasy Builder</p>
@@ -133,8 +114,8 @@ export function AuthPage() {
       {pathname === "/verify-email" &&
         <p className="auth-description">Check your inbox for the code. If it is missing, check your spam folder.</p>}
     </header>
-    {(message || errorMessage) && <div className={`auth-feedback ${failure || errorMessage ? "auth-feedback--error" : ""}`} role={failure || errorMessage ? "alert" : "status"}>
-      <p>{message || errorMessage}</p>
+    {(message || errorMessage || deleted) && <div className={`auth-feedback ${failure || errorMessage ? "auth-feedback--error" : ""}`} role={failure || errorMessage ? "alert" : "status"}>
+      <p>{message || errorMessage || "Your Fantasy Builder account was deleted."}</p>
       {message === errors.EMAIL_NOT_VERIFIED && <Link to="/verify-email">Verify your email</Link>}
     </div>}
     {social && optionsUnavailable && <p className="auth-field-hint" role="status">Other sign-in options could not be checked. You can still use your username or email.</p>}
@@ -152,25 +133,7 @@ export function AuthPage() {
       <p className="auth-social-hint">{pathname === "/register" ? "No new password needed with a provider." : "Use the account you already know."}</p>
       <div className="auth-divider"><span>or continue with {pathname === "/sign-in" ? "your password" : "email"}</span></div>
     </>}
-    {account && !auth.user ? <p><Link to="/sign-in">Sign in</Link> to manage your account.</p> : <>
-      {account && <>
-        <p>Link another provider to this account. Sign in again first if your session is older than ten minutes.</p>
-        {accountProviders.map(provider => {
-          const linked = accounts.find(item => item.providerId === provider);
-          const configured = signInOptions?.directProviders[provider] ?? false;
-          const alternative = accounts.some(item => item.id !== linked?.id &&
-            (item.providerId === "credential" || providers.some(other =>
-              other === item.providerId && signInOptions?.directProviders[other])));
-          return <div className="auth-method" key={provider}><span className="auth-method-name"><ProviderLogo provider={provider} />{names[provider]}</span><Button variant="outline" disabled={busy || accountsFor?.userId !== accountUserId || (linked ? !alternative : !configured)} onClick={() => void run(async () => {
-            if (linked) {
-              checked(await authClient.unlinkAccount({ accountId: linked.id }));
-              const result = await authClient.listAccounts(); checked(result); setAccountsFor({ userId: accountUserId!, accounts: result.data ?? [] });
-            } else checked(await authClient.linkSocial({ provider, callbackURL: "/account", errorCallbackURL: "/account" }));
-          })}>{linked ? "Unlink" : "Link"}</Button>{!configured && <span className="auth-field-hint">Currently unavailable</span>}</div>;
-        })}
-        {!accounts.some(item => item.providerId === "credential") && <p>To add a password, <Link to="/forgot-password">request a recovery email</Link> and follow its verification link.</p>}
-      </>}
-      {(!account || accounts.some(item => item.providerId === "credential")) && <form key={pathname} className="auth-form" onSubmit={submit}>
+    <form key={pathname} className="auth-form" onSubmit={submit}>
         <fieldset disabled={busy}>
         <legend className="visually-hidden">{titles[pathname]} with {social ? "email or username" : "your account"}</legend>
         {pathname === "/register" && <>
@@ -180,14 +143,13 @@ export function AuthPage() {
         {pathname === "/sign-in" && <div className="auth-field"><label htmlFor="identifier">Username or email</label><input id="identifier" name="identifier" required autoComplete="username" autoCapitalize="none" spellCheck={false} /></div>}
         {email && <div className="auth-field"><label htmlFor="email">Email</label><input id="email" name="email" type="email" required autoComplete="email" /></div>}
         {pathname === "/verify-email" && <div className="auth-field"><label htmlFor="otp">Verification code</label><input id="otp" name="otp" inputMode="numeric" autoComplete="one-time-code" pattern="[0-9]{8}" required minLength={8} maxLength={8} /></div>}
-        {account && <div className="auth-field"><label htmlFor="currentPassword">Current password</label><input id="currentPassword" name="currentPassword" type="password" autoComplete="current-password" required /></div>}
         {password && <div className="auth-field">
           <div className="auth-label-row"><label htmlFor="password">{pathname === "/sign-in" ? "Password" : "New password (at least 12 characters)"}</label>{pathname === "/sign-in" && <Link to="/forgot-password">Forgot password?</Link>}</div>
           <div className="auth-password"><input id="password" name="password" type={showPassword ? "text" : "password"} required minLength={pathname === "/sign-in" ? 1 : 12} maxLength={128} autoComplete={pathname === "/sign-in" ? "current-password" : "new-password"} />
             <button type="button" className="auth-password-toggle" aria-label={showPassword ? "Hide password" : "Show password"} aria-pressed={showPassword} aria-controls="password" onClick={() => setShowPassword(value => !value)}>{showPassword ? "Hide" : "Show"}</button>
           </div>
         </div>}
-        <Button type="submit" className="auth-submit" loading={busy && !busyProvider}>{pathname === "/verify-email" ? "Verify email" : account ? "Change password" : titles[pathname]}</Button>
+        <Button type="submit" className="auth-submit" loading={busy && !busyProvider}>{pathname === "/verify-email" ? "Verify email" : titles[pathname]}</Button>
         {pathname === "/verify-email" && <Button variant="outline" disabled={busy} onClick={(event) => {
           const form = event.currentTarget.closest("form");
           const email = String(new FormData(form!).get("email") ?? "");
@@ -198,8 +160,7 @@ export function AuthPage() {
           });
         }}>Send a new code</Button>}
         </fieldset>
-      </form>}
-    </>}
+      </form>
     <nav className="auth-help" aria-label="Account help">
       {pathname === "/sign-in" ? <p>New to Fantasy Builder? <Link to="/register">Create account</Link></p>
         : pathname === "/register" ? <><p>Already have an account?</p><Link to="/sign-in" className={buttonVariants({ variant: "outline", className: "auth-sign-in-link" })}>Sign in</Link></>

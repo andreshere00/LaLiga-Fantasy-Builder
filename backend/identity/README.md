@@ -22,6 +22,12 @@ Verification mail is sent through Resend to the address entered at registration.
 Check that inbox, including spam. Verification and recovery messages use branded
 HTML matching the frontend and retain a plain-text fallback. There are no shared
 demo passwords.
+Account settings at `/account` support username and password changes, a verified
+email change by one-time code, provider linking, and permanent deletion. Deletion
+calls LaLiga Auth to remove the user's sealed connection before removing their
+identity; if that service is unavailable, the account is retained. Set
+`LALIGA_AUTH_URL` to the private Auth service origin (localhost:8000 for standalone
+local development, `http://auth:8000` in Compose).
 Identity always persists to its own PostgreSQL database, even when the LaLiga
 vault runs in development memory mode.
 The local stack waits up to 60 seconds for identity's database and mail readiness

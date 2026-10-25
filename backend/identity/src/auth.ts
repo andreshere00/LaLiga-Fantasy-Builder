@@ -1,15 +1,22 @@
 import { betterAuth } from "better-auth";
 import { APIError, createAuthMiddleware, getSessionFromCtx } from "better-auth/api";
 import { emailOTP, jwt, username } from "better-auth/plugins";
-import { importPKCS8, SignJWT } from "jose";
+import { decodeJwt, importPKCS8, SignJWT } from "jose";
+import { z } from "zod";
 import type { Pool } from "pg";
 import type { Config } from "./config.js";
-import { passwordResetMail, verificationMail, type MailContent } from "./mailTemplates.js";
+import { emailChangeMail, passwordResetMail, verificationMail, type MailContent } from "./mailTemplates.js";
 
 export type Mail = MailContent & { to: string };
 export type SendMail = (mail: Mail) => Promise<void>;
+export type DisconnectLaliga = (token: string) => Promise<void>;
 
-export function createIdentity(cfg: Config, database: Pool, send: SendMail) {
+export function createIdentity(cfg: Config, database: Pool, send: SendMail, disconnectLaliga: DisconnectLaliga = async token => {
+  const response = await fetch(`${cfg.LALIGA_AUTH_URL}/laliga/connection`, {
+    method: "DELETE", headers: { Authorization: `Bearer ${token}` }, signal: AbortSignal.timeout(10000),
+  });
+  if (!response.ok) throw new Error("LaLiga connection removal failed");
+}) {
   // Provider IDs are trusted only after the framework validates the provider response.
   // Reuse an existing account's profile if a returning provider omits email/name.
   const returningProfile = (provider: string) => async (profile: { id?: unknown; sub?: unknown; email?: unknown; name?: unknown }) => {
@@ -21,7 +28,7 @@ export function createIdentity(cfg: Config, database: Pool, send: SendMail) {
     const saved = result.rows[0] as { email: string; name: string } | undefined;
     return saved ? { ...(!profile.email ? { email: saved.email } : {}), ...(!profile.name ? { name: saved.name } : {}) } : {};
   };
-  return betterAuth({
+  const auth = betterAuth({
     appName: "LaLiga Fantasy Builder",
     // Framework error objects can contain OAuth state or provider response bodies.
     logger: { level: "warn", log: level => { console.warn(JSON.stringify({ service: "identity", event: "auth_event", level })); } },
@@ -61,6 +68,19 @@ export function createIdentity(cfg: Config, database: Pool, send: SendMail) {
       expiresIn: 3600,
 
     },
+    user: {
+      deleteUser: {
+        enabled: true,
+        beforeDelete: async (user, request) => {
+          if (!request) throw new Error("Account deletion requires an authenticated request");
+          const response = await auth.handler(new Request(`${cfg.BETTER_AUTH_URL}/auth/token`, { headers: request.headers }));
+          if (!response.ok) throw new Error("Account deletion requires an application token");
+          const { token } = z.object({ token: z.string().min(1) }).parse(await response.json());
+          if (decodeJwt(token).sub !== user.id) throw new Error("Account deletion subject mismatch");
+          await disconnectLaliga(token);
+        },
+      },
+    },
     account: {
       encryptOAuthTokens: true,
       accountLinking: {
@@ -72,7 +92,7 @@ export function createIdentity(cfg: Config, database: Pool, send: SendMail) {
     },
     disabledPaths: ["/get-access-token", "/refresh-token", "/account-info", "/verify-email",
       "/sign-in/email-otp", "/email-otp/request-password-reset", "/forget-password/email-otp",
-      "/email-otp/reset-password", "/email-otp/request-email-change", "/email-otp/change-email"],
+      "/email-otp/reset-password"],
     rateLimit: { enabled: true, storage: "database", window: 60, max: 100, customRules: {
       "/sign-in/*": { window: 60, max: 10 },
       "/sign-up/*": { window: 60, max: 5 },
@@ -105,10 +125,11 @@ export function createIdentity(cfg: Config, database: Pool, send: SendMail) {
     plugins: [
       emailOTP({
         overrideDefaultEmailVerification: true, storeOTP: "hashed", expiresIn: 600,
-        otpLength: 8, allowedAttempts: 5,
+        otpLength: 8, allowedAttempts: 5, changeEmail: { enabled: true },
         sendVerificationOTP: async ({ email, otp, type }) => {
-          if (type !== "email-verification") throw new Error("Unsupported email operation");
-          await send({ to: email, ...verificationMail(otp, cfg.BETTER_AUTH_URL) });
+          if (type === "email-verification") await send({ to: email, ...verificationMail(otp, cfg.BETTER_AUTH_URL) });
+          else if (type === "change-email") await send({ to: email, ...emailChangeMail(otp) });
+          else throw new Error("Unsupported email operation");
         },
       }),
       username({ validationOrder: { username: "pre-normalization" }, minUsernameLength: 3, maxUsernameLength: 30, usernameNormalization: value => value.trim().toLowerCase(), usernameValidator: value => /^[a-z0-9_]{3,30}$/.test(value.trim().toLowerCase()) }),
@@ -118,4 +139,5 @@ export function createIdentity(cfg: Config, database: Pool, send: SendMail) {
       }),
     ],
   });
+  return auth;
 }

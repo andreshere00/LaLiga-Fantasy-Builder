@@ -90,3 +90,17 @@ export function passwordResetMail(url: string): MailContent {
     html: emailShell("Reset your password", "Your password reset link expires in 30 minutes.", content),
   };
 }
+
+/** Create the one-time code sent to a proposed new email address. */
+export function emailChangeMail(otp: string): MailContent {
+  const content = `<p style="margin:0 0 24px;font-size:15px;line-height:1.6;">Enter this code in Account settings to confirm your new email address.</p>
+    <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%" style="border-collapse:collapse;background:${colors.subtle};border-left:4px solid ${colors.primary};">
+      <tr><td style="padding:20px 16px;color:${colors.heading};font-family:Arial,Helvetica,sans-serif;font-size:30px;font-weight:700;letter-spacing:5px;line-height:1.3;text-align:center;white-space:nowrap;">${escapeHtml(otp)}</td></tr>
+    </table>
+    <p style="margin:16px 0 0;color:${colors.muted};font-size:13px;line-height:1.6;">The code expires in 10 minutes and can be used once. If you did not request this change, you can ignore this email.</p>`;
+  return {
+    subject: "Confirm your new email",
+    text: `Your email change code is ${otp}. It expires in 10 minutes and can be used once.\nEnter it in Account settings. If you did not request this change, ignore this email.`,
+    html: emailShell("Confirm your new email", "Your email change code expires in 10 minutes.", content),
+  };
+}

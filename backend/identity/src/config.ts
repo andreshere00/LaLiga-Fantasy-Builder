@@ -8,6 +8,7 @@ const schema = z.object({
   BETTER_AUTH_SECRET: z.string().min(32),
   IDENTITY_DATABASE_URL: z.url(),
   INTERNAL_JWT_ISSUER: z.url().default("http://localhost:3000/auth"),
+  LALIGA_AUTH_URL: z.url().default("http://localhost:8000"),
   SMTP_HOST: z.string().min(1).default("smtp.resend.com"),
   SMTP_PORT: z.coerce.number().int().positive().default(465),
   SMTP_SECURE: z.enum(["true", "false"]).default("true"),
@@ -33,6 +34,10 @@ export function readConfig(env: NodeJS.ProcessEnv = process.env) {
   if (origin.origin !== cfg.BETTER_AUTH_URL || origin.username || origin.password) {
     throw new Error("BETTER_AUTH_URL must be an exact origin without a path");
   }
+  const laligaAuth = new URL(cfg.LALIGA_AUTH_URL);
+  if (laligaAuth.origin !== cfg.LALIGA_AUTH_URL || laligaAuth.username || laligaAuth.password) {
+    throw new Error("LALIGA_AUTH_URL must be an exact origin without a path");
+  }
   for (const keys of [
     ["GOOGLE_CLIENT_ID", "GOOGLE_CLIENT_SECRET"],
     ["FACEBOOK_CLIENT_ID", "FACEBOOK_CLIENT_SECRET"],
@@ -52,6 +57,7 @@ export function readConfig(env: NodeJS.ProcessEnv = process.env) {
     throw new Error("Identity requires authenticated SMTP delivery to a real sender");
   }
   if (cfg.NODE_ENV === "production") {
+    if (!env.LALIGA_AUTH_URL) throw new Error("Production identity requires LALIGA_AUTH_URL");
     if (origin.protocol !== "https:" || !cfg.INTERNAL_JWT_ISSUER.startsWith("https://")) {
       throw new Error("Production identity requires HTTPS origin and issuer");
     }

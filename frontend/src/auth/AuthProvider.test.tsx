@@ -26,7 +26,7 @@ function deferred<T>() {
 }
 function Probe() {
   const auth = useAuth();
-  return <><output data-testid="state">{JSON.stringify({ status: auth.status, user: auth.user?.userId, token: auth.accessToken })}</output><button onClick={() => { void auth.logout(); }}>Log out</button></>;
+  return <><output data-testid="state">{JSON.stringify({ status: auth.status, user: auth.user?.userId, token: auth.accessToken })}</output><button onClick={() => { void auth.logout(); }}>Log out</button><button onClick={() => { void auth.forgetDeletedAccount(); }}>Account deleted</button></>;
 }
 function mount() {
   const cache = new QueryClient();
@@ -40,6 +40,7 @@ beforeEach(() => {
   login("alice");
   identity.token.mockReset().mockImplementation(async () => ({ data: { token: token(identity.session.data!.user.id) }, error: null }));
   identity.signOut.mockReset().mockResolvedValue({ error: null });
+  identity.session.refetch.mockReset().mockResolvedValue(undefined);
   fetchMock.mockReset().mockImplementation(async () => new Response(JSON.stringify({ linked: false, needs_reauth: false }), { status: 200 }));
   vi.stubGlobal("fetch", fetchMock);
 });
@@ -98,6 +99,17 @@ it("clears the token and queries when another tab ends the session", async () =>
   await waitFor(() => expect(screen.getByTestId("state").textContent).toContain("signed-out"));
   expect(screen.getByTestId("state").textContent).not.toContain(token("alice"));
   expect(view.cache.getQueryData(["private"])).toBeUndefined();
+});
+
+it("clears private data immediately after account deletion", async () => {
+  const view = mount();
+  await waitFor(() => expect(screen.getByTestId("state").textContent).toContain(token("alice")));
+  view.cache.setQueryData(["private", "alice"], { secret: true });
+  fireEvent.click(screen.getByRole("button", { name: "Account deleted" }));
+  await waitFor(() => expect(screen.getByTestId("state").textContent).toContain("signed-out"));
+  expect(screen.getByTestId("state").textContent).not.toContain(token("alice"));
+  expect(view.cache.getQueryData(["private", "alice"])).toBeUndefined();
+  expect(identity.session.refetch).toHaveBeenCalledOnce();
 });
 
 it("does not sign out a new account while the previous account's cancellation finishes", async () => {

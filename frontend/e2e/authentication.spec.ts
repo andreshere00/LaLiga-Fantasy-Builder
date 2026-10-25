@@ -174,3 +174,78 @@ test("unconfigured social providers are not offered as sign-in choices", async (
   await expect(page.getByRole("heading", { name: "Sign in", exact: true })).toBeVisible();
   expect(socialStarts).toBe(0);
 });
+
+for (const width of [390, 1440]) {
+  test(`account settings update profile and confirm deletion ${width}`, async ({ page }) => {
+    await page.setViewportSize({ width, height: 900 });
+    const origin = "http://127.0.0.1:3100";
+    const iat = Math.floor(Date.now() / 1000);
+    const token = `fixture.${Buffer.from(JSON.stringify({ sub: "alice", iat, exp: iat + 900 })).toString("base64url")}.signature`;
+    const writes: { path: string; body: Record<string, string> }[] = [];
+    let username = "alice";
+    let email = "alice@example.test";
+    let deleted = false;
+    const errors: string[] = [];
+    page.on("pageerror", error => errors.push(error.message));
+    await page.route("**/*", async route => {
+      const request = route.request();
+      const url = new URL(request.url());
+      if (url.origin !== origin) return route.abort();
+      if (url.pathname === "/auth/get-session") return route.fulfill({ json: deleted ? null : {
+        user: { id: "alice", name: "Alice Fixture", email, username, emailVerified: true, createdAt: new Date().toISOString(), updatedAt: new Date().toISOString() },
+        session: { id: "session-alice", userId: "alice", token: "session-fixture", expiresAt: new Date(Date.now() + 3600000).toISOString(), createdAt: new Date().toISOString(), updatedAt: new Date().toISOString() },
+      } });
+      if (url.pathname === "/auth/token") return route.fulfill({ json: { token } });
+      if (url.pathname === "/laliga/connection") return route.fulfill({ json: { linked: false, needs_reauth: false, manager_id: null, manager_name: null, avatar: null } });
+      if (url.pathname === "/auth/sign-in-options") return route.fulfill({ json: { credentials: true, laligaSso: false, directProviders: { google: false, facebook: false, apple: false } } });
+      if (url.pathname === "/auth/list-accounts") return route.fulfill({ json: [{ id: "credential-account", providerId: "credential", accountId: "alice" }] });
+      if (url.pathname.startsWith("/auth/") && request.method() === "POST") {
+        const body = request.postDataJSON() ?? {};
+        writes.push({ path: url.pathname, body });
+        if (url.pathname === "/auth/update-user") username = body.username;
+        if (url.pathname === "/auth/email-otp/change-email") email = body.newEmail;
+        if (url.pathname === "/auth/delete-user") deleted = true;
+        return route.fulfill({ json: { status: true, success: true, message: deleted ? "User deleted" : undefined } });
+      }
+      return route.continue();
+    });
+    await page.goto("/account");
+    await expect(page.getByRole("heading", { name: "Account settings" })).toBeVisible();
+    await expect(page.getByRole("link", { name: /Open LaLiga account/ })).toHaveAttribute("href", "https://miliga.laliga.com/");
+    await page.screenshot({ path: `/tmp/fantasy-account-settings-${width}.png`, fullPage: true });
+    await page.getByRole("button", { name: /Change username/ }).click();
+    await page.getByLabel("New username").fill("new_alice");
+    await page.getByRole("button", { name: "Save username" }).click();
+    await expect(page.getByRole("status")).toContainText("Username updated");
+    expect(writes.find(write => write.path === "/auth/update-user")?.body.username).toBe("new_alice");
+
+    await page.getByRole("button", { name: /Change email/ }).click();
+    await page.getByLabel("New email address").fill("new@example.test");
+    await page.getByRole("button", { name: "Send verification code" }).click();
+    await expect(page.getByLabel("Verification code")).toBeVisible();
+    await page.getByLabel("Verification code").fill("12345678");
+    await page.getByRole("button", { name: "Confirm new email" }).click();
+    await expect(page.getByRole("status")).toContainText("Email updated and verified");
+    expect(writes.find(write => write.path === "/auth/email-otp/change-email")?.body).toMatchObject({ newEmail: "new@example.test", otp: "12345678" });
+
+    await page.getByRole("button", { name: /Change password/ }).click();
+    await page.getByLabel("Current password").fill("old-password-123");
+    await page.getByLabel("New password").fill("replacement-password-123");
+    await page.getByRole("button", { name: "Save password" }).click();
+    await expect(page.getByRole("status")).toContainText("Password changed");
+
+    await page.getByRole("button", { name: /Delete account/ }).click();
+    await page.getByLabel("Type DELETE to confirm").fill("wrong");
+    await page.getByLabel("Current password").fill("replacement-password-123");
+    await page.getByRole("button", { name: "Permanently delete account" }).click();
+    await expect(page.getByRole("alert")).toContainText("Type DELETE to confirm");
+    expect(writes.some(write => write.path === "/auth/delete-user")).toBe(false);
+    await page.getByLabel("Type DELETE to confirm").fill("DELETE");
+    await page.getByRole("button", { name: "Permanently delete account" }).click();
+    await expect(page).toHaveURL(/\/sign-in\?deleted=1$/);
+    await expect(page.getByRole("status")).toContainText("account was deleted");
+    expect(writes.find(write => write.path === "/auth/delete-user")?.body.password).toBe("replacement-password-123");
+    expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
+    expect(errors).toEqual([]);
+  });
+}

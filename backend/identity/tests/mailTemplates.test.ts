@@ -1,6 +1,6 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { passwordResetMail, verificationMail } from "../src/mailTemplates.js";
+import { emailChangeMail, passwordResetMail, verificationMail } from "../src/mailTemplates.js";
 
 test("verification email keeps the code and destination usable in HTML and plain text", () => {
   const mail = verificationMail("12345678", "https://fantasybuilder.es");
@@ -10,6 +10,14 @@ test("verification email keeps the code and destination usable in HTML and plain
   assert.match(mail.text, /https:\/\/fantasybuilder\.es\/verify-email/);
   assert.match(mail.html, /href="https:\/\/fantasybuilder\.es\/verify-email"/);
   assert.match(mail.html, /background:#FF4B44/);
+  assert.match(mail.html, /expires in 10 minutes/);
+});
+
+test("email change code is sent with the same branded HTML and text fallback", () => {
+  const mail = emailChangeMail("87654321");
+  assert.match(mail.text, /87654321/);
+  assert.match(mail.html, /87654321/);
+  assert.match(mail.html, /Account settings/);
   assert.match(mail.html, /expires in 10 minutes/);
 });
 

@@ -8,6 +8,7 @@ const base = {
   INTERNAL_JWT_ISSUER: "https://example.test/auth",
   BETTER_AUTH_SECRET: "x".repeat(32),
   IDENTITY_DATABASE_URL: "postgresql://identity:fixture@localhost:5432/identity",
+  LALIGA_AUTH_URL: "http://auth:8000",
   SMTP_USER: "mailer",
   SMTP_PASSWORD: "fixture",
   MAIL_FROM: "accounts@example.com",
@@ -34,6 +35,8 @@ test("production still requires HTTPS and authenticated mail", () => {
   assert.throws(() => readConfig({ ...base, BETTER_AUTH_URL: "http://example.test" }), /HTTPS/);
   assert.throws(() => readConfig({ ...base, SMTP_PASSWORD: undefined }), /SMTP_USER/);
   assert.throws(() => readConfig({ ...base, SMTP_USER: undefined }), /SMTP_USER/);
+  assert.throws(() => readConfig({ ...base, LALIGA_AUTH_URL: undefined }), /LALIGA_AUTH_URL/);
+  assert.throws(() => readConfig({ ...base, LALIGA_AUTH_URL: "http://auth:8000/path" }), /exact origin/);
 });
 
 test("development requires real authenticated mail delivery", () => {

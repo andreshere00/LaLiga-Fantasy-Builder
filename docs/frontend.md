@@ -427,7 +427,11 @@ zoom. Roster ownership and listing reconciliation have focused unit coverage in
 Better Auth's React client owns session state and calls `GET /auth/token`.
 The app keeps the JWT in memory and sends `Authorization: Bearer …` on `/api`
 and `/laliga` requests. Sign-in, registration, one-time email verification,
-recovery and sign-in methods have separate routes. `needs_reauth` prompts the user to link LaLiga again. See
+recovery and account settings have separate routes. The `/account` page groups the
+external LaLiga account link, username/email/password changes, linked providers,
+and confirmed account deletion. Email changes wait for a code delivered to the
+new address; deletion removes the sealed LaLiga connection first and clears local
+private data on success. `needs_reauth` prompts the user to link LaLiga again. See
 [Authentication](authentication/authentication.md).
 
 Sign-in and registration show equally sized buttons only for configured direct

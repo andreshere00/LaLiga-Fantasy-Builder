@@ -9,7 +9,7 @@ type AuthContextValue = {
   status: AuthStatus; user: SessionUser | null; managerName: string | null;
   managerAvatar: string | null; accessToken: string | null; notice: string | null;
   login: () => void; connectLaliga: () => void; logout: () => Promise<void>;
-  reload: () => Promise<void>; markNeedsReauth: () => void;
+  reload: () => Promise<void>; forgetDeletedAccount: () => Promise<void>; markNeedsReauth: () => void;
 };
 const AuthContext = createContext<AuthContextValue | null>(null);
 const empty = { accessToken: null, managerName: null, managerAvatar: null, notice: null };
@@ -82,6 +82,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, [userId, sessionId, blockedSessionId, pending, revision, clear, client]);
 
   const reload = useCallback(async () => { await session.refetch(); setRevision(value => value + 1); }, [session]);
+  const forgetDeletedAccount = useCallback(async () => {
+    setBlockedSessionId(sessionId ?? null);
+    clear();
+    setState({ ...empty, status: "signed-out" });
+    try { await session.refetch(); } catch { /* The account is already deleted; local data stays cleared. */ }
+  }, [clear, session, sessionId]);
   const logout = useCallback(async () => {
     if (loggingOut.current) return;
     loggingOut.current = true;
@@ -119,10 +125,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, [client]);
   const value = useMemo<AuthContextValue>(() => ({
     ...(activeSessionId === sessionId ? state : { ...empty, status: pending || userId ? "loading" : "signed-out" }),
-    user: session.data && state.status !== "signed-out" ? { userId: session.data.user.id, email: session.data.user.email, name: session.data.user.name } : null,
-    login: () => startLogin(), connectLaliga, logout, reload,
+    user: session.data && state.status !== "signed-out" ? { userId: session.data.user.id, email: session.data.user.email, name: session.data.user.name, username: session.data.user.username ?? null } : null,
+    login: () => startLogin(), connectLaliga, logout, reload, forgetDeletedAccount,
     markNeedsReauth: () => setState(previous => ({ ...previous, status: "needs-reauth" })),
-  }), [state, activeSessionId, sessionId, pending, userId, session.data, connectLaliga, logout, reload]);
+  }), [state, activeSessionId, sessionId, pending, userId, session.data, connectLaliga, logout, reload, forgetDeletedAccount]);
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 }
 export function useAuth(): AuthContextValue {

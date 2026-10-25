@@ -61,6 +61,7 @@ const sessionUserShape = z
     userId: z.string().min(1),
     email: z.string().nullable(),
     name: z.string().nullable(),
+    username: z.string().nullable().optional(),
   });
 
 export const sessionUserSchema = wireObject(sessionUserShape);

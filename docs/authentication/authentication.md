@@ -35,6 +35,20 @@ on the identity server; browser provider-token endpoints are disabled.
 The identity database enforces one owner per provider account with a unique
 `(providerId, accountId)` key, including when two callbacks run concurrently.
 
+Account settings also allow a username change, an email change confirmed by an
+eight-digit code sent to the new address, and a password change that revokes other
+sessions. The LaLiga option opens LaLiga's own account site; changing an application
+account does not change the LaLiga account. Permanent account deletion requires an
+explicit confirmation plus the current password for credential accounts (or a fresh
+session for social-only accounts). Identity obtains an application JWT for the
+authenticated user and asks Auth to remove that user's sealed LaLiga connection
+before deleting the Better Auth user. If Auth cannot confirm removal, deletion
+stops and the application account remains. A successful deletion clears the
+browser's in-memory token and private query cache.
+Previously issued self-contained API JWTs can remain valid until their normal
+15-minute expiry plus verifier clock tolerance; the LaLiga connection is removed
+before the user record, so those tokens cannot access sealed LaLiga credentials.
+
 New Facebook accounts without email receive an actionable error. Returning
 provider accounts resolve omitted email/name only by their stored provider and
 provider account ID; email is never an ownership-migration key.

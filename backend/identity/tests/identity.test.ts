@@ -5,7 +5,7 @@ import { generateKeyPairSync, randomUUID } from "node:crypto";
 import { Pool } from "pg";
 import { createIdentity, type Mail } from "../src/auth.js";
 import { readConfig } from "../src/config.js";
-import { createLocalJWKSet, jwtVerify } from "jose";
+import { createLocalJWKSet, decodeJwt, jwtVerify } from "jose";
 
 const databaseURL = process.env.IDENTITY_TEST_DATABASE_URL;
 if (!databaseURL) throw new Error("Set IDENTITY_TEST_DATABASE_URL to a disposable PostgreSQL database");
@@ -16,6 +16,7 @@ const outbox: Mail[] = [];
 const appleKey = generateKeyPairSync("ec", { namedCurve: "prime256v1" }).privateKey.export({ type: "pkcs8", format: "pem" }).toString();
 const config = readConfig({ GOOGLE_CLIENT_ID: "google-fixture", GOOGLE_CLIENT_SECRET: "fixture", FACEBOOK_CLIENT_ID: "facebook-fixture", FACEBOOK_CLIENT_SECRET: "fixture", APPLE_CLIENT_ID: "apple-fixture", APPLE_TEAM_ID: "team-fixture", APPLE_KEY_ID: "apple-key", APPLE_PRIVATE_KEY: appleKey, NODE_ENV: "test", BETTER_AUTH_SECRET: "test-secret-with-at-least-32-characters", IDENTITY_DATABASE_URL: databaseURL });
 let auth: ReturnType<typeof createIdentity>;
+let disconnectLaliga: (token: string) => Promise<void> = async () => {};
 const origin = "http://localhost:3000";
 let cookie = "";
 async function request(path: string, body?: unknown, session = cookie, extra: Record<string, string> = {}) {
@@ -35,9 +36,51 @@ function latestLink() {
 before(async () => {
   await admin.query(`CREATE SCHEMA ${schema}`);
   await pool.query(await readFile(new URL("../migrations/schema.sql", import.meta.url), "utf8"));
-  auth = createIdentity(config, pool, async mail => { outbox.push(mail); });
+  auth = createIdentity(config, pool, async mail => { outbox.push(mail); }, token => disconnectLaliga(token));
 });
 after(async () => { await pool.end(); await admin.query(`DROP SCHEMA ${schema} CASCADE`); await admin.end(); });
+
+test("account settings verify email changes and block deletion until LaLiga is disconnected", async () => {
+  const email = "settings@example.test";
+  const password = "settings-password-12345";
+  let response = await request("/sign-up/email", { name: "Settings", username: "settings", email, password }, "");
+  assert.equal(response.status, 200);
+  const signupCode = outbox.at(-1)!.text.match(/code is ([0-9]{8})/)![1];
+  assert.equal((await request("/email-otp/verify-email", { email, otp: signupCode }, "")).status, 200);
+  response = await request("/sign-in/email", { email, password }, "");
+  assert.equal(response.status, 200);
+  const settingsCookie = sessionCookie(response);
+
+  response = await request("/update-user", { username: "updated_settings" }, settingsCookie);
+  assert.equal(response.status, 200);
+  const session = await (await request("/get-session", undefined, settingsCookie)).json();
+  assert.equal(session.user.username, "updated_settings");
+
+  const newEmail = "updated-settings@example.test";
+  response = await request("/email-otp/request-email-change", { newEmail }, settingsCookie);
+  assert.equal(response.status, 200);
+  const changeCode = outbox.at(-1)!.text.match(/code is ([0-9]{8})/)![1];
+  assert.equal(outbox.at(-1)!.to, newEmail);
+  assert.equal((await request("/get-session", undefined, settingsCookie)).status, 200);
+  response = await request("/email-otp/change-email", { newEmail, otp: "00000000" }, settingsCookie);
+  assert.ok(response.status >= 400);
+  response = await request("/email-otp/change-email", { newEmail, otp: changeCode }, settingsCookie);
+  assert.equal(response.status, 200);
+  assert.equal((await (await request("/get-session", undefined, settingsCookie)).json()).user.email, newEmail);
+
+  disconnectLaliga = async () => { throw new Error("unavailable"); };
+  response = await request("/delete-user", { password }, settingsCookie);
+  assert.ok(response.status >= 400);
+  assert.ok((await (await request("/get-session", undefined, settingsCookie)).json()).user);
+
+  let disconnectedSubject = "";
+  disconnectLaliga = async token => { disconnectedSubject = decodeJwt(token).sub ?? ""; };
+  response = await request("/delete-user", { password }, settingsCookie);
+  assert.equal(response.status, 200);
+  assert.equal(disconnectedSubject, session.user.id);
+  assert.equal(await (await request("/get-session", undefined, settingsCookie)).json(), null);
+  disconnectLaliga = async () => {};
+});
 
 test("verified credentials, username, real Ed25519 JWT, recovery, revocation and isolation", async () => {
   const email = "alice@example.test";

@@ -69,6 +69,7 @@ services:
       SMTP_PASSWORD: ${SMTP_PASSWORD:-}
       MAIL_FROM: ${MAIL_FROM:-noreply@fantasybuilder.es}
       INTERNAL_JWT_ISSUER: ${INTERNAL_JWT_ISSUER:-http://localhost:3000/auth}
+      LALIGA_AUTH_URL: http://auth:8000
     depends_on:
       identity-migrate:
         condition: service_completed_successfully
