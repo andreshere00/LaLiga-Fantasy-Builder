@@ -10,11 +10,9 @@ from typing import Any
 
 from fantasy_auth.cli.browser_session.errors import BrowserSessionError
 
-DEFAULT_AUTH_BASE = "http://localhost:8000"
+DEFAULT_AUTH_BASE = "http://localhost:3000"
 DEFAULT_API_BASE = "http://localhost:8001"
-DEFAULT_ORIGIN = "http://localhost:8000"
-DEFAULT_USERNAME = "demo"
-DEFAULT_PASSWORD = "demo"
+DEFAULT_ORIGIN = "http://localhost:3000"
 
 _PLACEHOLDER_TEAM_IDS = {"YOUR_TEAM", "your_team", "<team-id>", "ID"}
 
@@ -30,7 +28,7 @@ def parse_args(argv: list[str] | None = None) -> argparse.Namespace:
     """
     parser = argparse.ArgumentParser(
         description=(
-            "Log in to local Keycloak with Playwright, mint an internal JWT, "
+            "Sign in interactively using Better Auth, obtain an application JWT, "
             "pair LaLiga if needed, and run optional API analysis flows."
         ),
     )
@@ -47,19 +45,16 @@ def parse_args(argv: list[str] | None = None) -> argparse.Namespace:
         default=os.environ.get("FANTASY_ORIGIN", DEFAULT_ORIGIN),
     )
     parser.add_argument(
-        "--username",
-        default=os.environ.get("KEYCLOAK_USERNAME", DEFAULT_USERNAME),
-    )
-    parser.add_argument(
-        "--password",
-        default=os.environ.get("KEYCLOAK_PASSWORD", DEFAULT_PASSWORD),
+        "--jwt",
+        default=os.environ.get("INTERNAL_JWT"),
+        help="Better Auth JWT; skips interactive browser login",
     )
     parser.add_argument("--player-id", default=None)
     parser.add_argument("--league-id", default=None)
     parser.add_argument(
         "--headless",
         action="store_true",
-        help=("Run Keycloak Chromium without a window " "(LaLiga pairing still opens a window)"),
+        help=("Use --jwt to run without a browser " "(LaLiga pairing still opens a window)"),
     )
     parser.add_argument(
         "--no-pair",
@@ -69,7 +64,7 @@ def parse_args(argv: list[str] | None = None) -> argparse.Namespace:
     parser.add_argument(
         "--exports",
         action="store_true",
-        help="Print FANTASY_SESSION / FANTASY_CSRF / INTERNAL_JWT exports",
+        help="Print the short-lived INTERNAL_JWT export",
     )
     parser.add_argument(
         "--print-jwt",

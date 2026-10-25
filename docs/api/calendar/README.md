@@ -115,7 +115,7 @@ Coordinates for the updated grounds were checked against OpenStreetMap:
    `uv run uvicorn fantasy_auth.main:app --port 8000` in `backend/auth`).
 2. **API** on port **8001** (`uv run uvicorn fantasy_api.main:app --reload --port 8001`
    in `backend/api`).
-3. An **internal JWT** (`INTERNAL_JWT`) from `POST /auth/token` after app login
+3. An **internal JWT** (`INTERNAL_JWT`) from `GET /auth/token` after app login
    (see [API README](../../../backend/api/README.md)). Calendar routes do **not**
    require LaLiga pairing for the upstream call, but the API still validates the
    JWT.
@@ -200,8 +200,7 @@ uv run fantasy-calendar --jwt "$INTERNAL_JWT" --week 10 --weather --json
 With session cookies instead of a JWT:
 
 ```bash
-export FANTASY_SESSION='…'
-export FANTASY_CSRF='…'
+export INTERNAL_JWT='…' # Obtain with fantasy-browser-session --exports
 uv run fantasy-calendar --auth-base http://localhost:8000 --api-base http://localhost:8001
 ```
 

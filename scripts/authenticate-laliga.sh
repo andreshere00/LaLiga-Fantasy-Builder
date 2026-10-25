@@ -18,7 +18,4 @@ fi
 
 cd "${AUTH_DIR}"
 uv sync --all-extras
-exec uv run authenticate-laliga \
-    --repo-root "${REPO_ROOT}" \
-    --skip-sync \
-    "$@"
+exec uv run authenticate-laliga "$@"

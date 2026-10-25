@@ -1,0 +1,16 @@
+# Staging/production ingress. Register APP_DOMAIN with each provider before use.
+services:
+  gateway:
+    image: caddy:2.10.2-alpine
+    environment:
+      APP_DOMAIN: ${APP_DOMAIN:?Set the registered HTTPS staging domain}
+    ports: ["80:80", "443:443"]
+    volumes:
+      - ./docker/Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy-data:/data
+      - caddy-config:/config
+    depends_on: [frontend]
+    networks: [public, internal]
+volumes:
+  caddy-data:
+  caddy-config:

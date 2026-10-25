@@ -71,7 +71,7 @@ async def get_league_player(
     league_id: str = Path(description="Fantasy league identifier."),
     authorization: str | None = Header(
         default=None,
-        description="Bearer internal JWT issued by auth ``POST /auth/token``.",
+        description="Bearer internal JWT issued by identity ``GET /auth/token``.",
     ),
 ) -> LeaguePlayer:
     """Return a player card contextualized to a league.

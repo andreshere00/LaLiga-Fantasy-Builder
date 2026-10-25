@@ -12,13 +12,7 @@ from fantasy_api.cli import common as cli_common
 RouteHandler = Callable[[httpx.Request], httpx.Response]
 Routes = dict[tuple[str, str], Any]
 
-_CREDENTIAL_ENV_KEYS = (
-    "FANTASY_SESSION",
-    "SESSION",
-    "FANTASY_CSRF",
-    "CSRF",
-    "INTERNAL_JWT",
-)
+_CREDENTIAL_ENV_KEYS = ("INTERNAL_JWT",)
 
 
 def handler_map(routes: Routes) -> RouteHandler:

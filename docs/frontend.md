@@ -424,10 +424,24 @@ zoom. Roster ownership and listing reconciliation have focused unit coverage in
 
 ## Authentication
 
-After Keycloak login, the app exchanges the session for an internal JWT
-(`POST /auth/token` with CSRF) and sends `Authorization: Bearer …` on `/api`
-requests. `needs_reauth` prompts the user to link LaLiga again. See
+Better Auth's React client owns session state and calls `GET /auth/token`.
+The app keeps the JWT in memory and sends `Authorization: Bearer …` on `/api`
+and `/laliga` requests. Sign-in, registration, one-time email verification,
+recovery and sign-in methods have separate routes. `needs_reauth` prompts the user to link LaLiga again. See
 [Authentication](authentication/authentication.md).
+
+Sign-in and registration show equally sized Google, Facebook and Apple buttons
+with locally served provider artwork. A divider separates them from the password
+form; password visibility, adjacent recovery, preserved input on failure and
+provider-specific pending labels support correction without restarting the flow.
+The screen uses the shared square controls, coral primary action and both themes.
+
+Social callbacks and successful credential sign-in continue to `/connect-laliga`.
+That route waits for a verified application session/JWT, checks the connection,
+returns connected users to the lineup, and starts the existing LaLiga authorization
+once for an unlinked user. Failures offer retry or public player browsing. Provider
+tokens are not passed to LaLiga; its own authorization code and PKCE flow grants
+Fantasy access. Development social providers still need configured credentials.
 
 ## Shared building blocks
 

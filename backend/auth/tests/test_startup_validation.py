@@ -79,12 +79,6 @@ def test_validate_settings_requires_database_and_redis() -> None:
         validate_settings(settings)
 
 
-def test_cookie_samesite_none_requires_secure() -> None:
-    # Arrange / Act / Assert
-    with pytest.raises(ValueError, match="COOKIE_SAMESITE=none"):
-        Settings(cookie_samesite="none", cookie_secure=False)
-
-
 # ---- Edge cases ---- #
 
 
@@ -98,24 +92,6 @@ def test_resolve_vault_key_rejects_wrong_length() -> None:
     # Act / Assert
     with pytest.raises(StartupError, match="32 bytes"):
         resolve_vault_key(settings)
-
-
-def test_validate_settings_requires_internal_jwt_in_production() -> None:
-    # Arrange
-    settings = Settings(
-        use_memory_store=False,
-        token_vault_key_base64=base64.b64encode(b"k" * 32).decode(),
-        database_url="postgresql://x",
-        redis_url="redis://x",
-        app_oidc_jwks_url="http://idp/certs",
-        internal_jwt_private_key_pem="",
-        internal_jwt_public_key_pem="",
-        internal_service_token="",
-    )
-
-    # Act / Assert
-    with pytest.raises(StartupError, match="INTERNAL_JWT_PRIVATE_KEY_PEM"):
-        validate_settings(settings)
 
 
 def test_validate_settings_requires_redis_url() -> None:
@@ -139,32 +115,12 @@ def test_validate_settings_requires_jwks_url() -> None:
         token_vault_key_base64=base64.b64encode(b"k" * 32).decode(),
         database_url="postgresql://x",
         redis_url="redis://x",
-        app_oidc_jwks_url="",
-        internal_jwt_private_key_pem="priv",
-        internal_jwt_public_key_pem="pub",
+        auth_jwks_url="",
         internal_service_token="tok",
     )
 
     # Act / Assert
-    with pytest.raises(StartupError, match="APP_OIDC_JWKS_URL"):
-        validate_settings(settings)
-
-
-def test_validate_settings_requires_public_key() -> None:
-    # Arrange
-    settings = Settings(
-        use_memory_store=False,
-        token_vault_key_base64=base64.b64encode(b"k" * 32).decode(),
-        database_url="postgresql://x",
-        redis_url="redis://x",
-        app_oidc_jwks_url="http://idp/certs",
-        internal_jwt_private_key_pem="priv",
-        internal_jwt_public_key_pem="",
-        internal_service_token="tok",
-    )
-
-    # Act / Assert
-    with pytest.raises(StartupError, match="INTERNAL_JWT_PUBLIC_KEY_PEM"):
+    with pytest.raises(StartupError, match="AUTH_JWKS_URL"):
         validate_settings(settings)
 
 
@@ -175,9 +131,7 @@ def test_validate_settings_requires_service_token() -> None:
         token_vault_key_base64=base64.b64encode(b"k" * 32).decode(),
         database_url="postgresql://x",
         redis_url="redis://x",
-        app_oidc_jwks_url="http://idp/certs",
-        internal_jwt_private_key_pem="priv",
-        internal_jwt_public_key_pem="pub",
+        auth_jwks_url="http://idp/certs",
         internal_service_token="",
     )
 

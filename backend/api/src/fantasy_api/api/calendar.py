@@ -22,7 +22,7 @@ router = APIRouter(tags=["calendar"])
 async def get_current_week(
     authorization: str | None = Header(
         default=None,
-        description="Bearer internal JWT issued by auth ``POST /auth/token``.",
+        description="Bearer internal JWT issued by identity ``GET /auth/token``.",
     ),
 ) -> CurrentWeek:
     """Return current matchday and open/close dates.
@@ -49,7 +49,7 @@ async def get_fixtures(
     week: int = Path(ge=1, description="Matchweek number."),
     authorization: str | None = Header(
         default=None,
-        description="Bearer internal JWT issued by auth ``POST /auth/token``.",
+        description="Bearer internal JWT issued by identity ``GET /auth/token``.",
     ),
 ) -> list[Fixture]:
     """Return fixtures for a matchday.
@@ -77,7 +77,7 @@ async def get_week_stats(
     week: int = Path(ge=1, description="Matchweek number."),
     authorization: str | None = Header(
         default=None,
-        description="Bearer internal JWT issued by auth ``POST /auth/token``.",
+        description="Bearer internal JWT issued by identity ``GET /auth/token``.",
     ),
 ) -> list[MatchStats]:
     """Return matchday statistics and per-player week points.

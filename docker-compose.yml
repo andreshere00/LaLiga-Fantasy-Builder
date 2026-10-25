@@ -2,56 +2,36 @@
 # Container paths below are image contracts; host paths and service URLs are env.
 
 services:
-  keycloak:
-    image: ${KEYCLOAK_IMAGE}
-    command: [start-dev, --import-realm]
-    environment:
-      KC_BOOTSTRAP_ADMIN_USERNAME: ${KEYCLOAK_ADMIN_USERNAME}
-      KC_BOOTSTRAP_ADMIN_PASSWORD: ${KEYCLOAK_ADMIN_PASSWORD}
-      KC_HTTP_PORT: ${KEYCLOAK_HTTP_PORT}
-      KC_HOSTNAME: ${KEYCLOAK_HOSTNAME}
-      KC_HOSTNAME_PORT: ${KEYCLOAK_HOSTNAME_PORT}
-      KC_HOSTNAME_STRICT: "false"
-      KC_HOSTNAME_STRICT_HTTPS: "false"
-    ports:
-      - "${KEYCLOAK_PUBLISH_PORT:-${KEYCLOAK_HTTP_PORT:-8080}}:${KEYCLOAK_HTTP_PORT:-8080}"
-    volumes:
-      - ${KEYCLOAK_REALM_IMPORT_PATH:-${KEYCLOAK_REALM_IMPORT_HOST_PATH:-./docker/keycloak/realm-fantasy-builder.json}}:${KEYCLOAK_REALM_IMPORT_CONTAINER_PATH:-/opt/keycloak/data/import/realm-fantasy-builder.json}:ro
-    healthcheck:
-      test: ["CMD-SHELL", "exec 3<>/dev/tcp/127.0.0.1/${KEYCLOAK_HTTP_PORT}"]
-      interval: 5s
-      timeout: 5s
-      retries: 30
-      start_period: 20s
-    networks: [public, internal]
-
   postgres:
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+      - ./docker/postgres/identity.sh:/docker-entrypoint-initdb.d/identity.sh:ro
     image: ${POSTGRES_IMAGE}
     environment:
       POSTGRES_USER: ${POSTGRES_USER}
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
       POSTGRES_DB: ${POSTGRES_DB}
+      IDENTITY_DB_PASSWORD: ${IDENTITY_DB_PASSWORD:-identity_dev}
+      VAULT_DB_PASSWORD: ${VAULT_DB_PASSWORD:-vault_dev}
     ports:
-      - "${POSTGRES_PUBLISH_PORT}:${POSTGRES_PORT}"
+      - "127.0.0.1:${POSTGRES_PUBLISH_PORT}:${POSTGRES_PORT}"
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_DB}"]
       interval: 5s
       timeout: 5s
       retries: 20
-    profiles: [full]
-    networks: [internal]
+    networks: [internal, local]
 
   redis:
     image: ${REDIS_IMAGE}
     ports:
-      - "${REDIS_PUBLISH_PORT}:${REDIS_PORT}"
+      - "127.0.0.1:${REDIS_PUBLISH_PORT}:${REDIS_PORT}"
     healthcheck:
       test: ["CMD", "redis-cli", "ping"]
       interval: 5s
       timeout: 3s
       retries: 20
-    profiles: [full]
-    networks: [internal]
+    networks: [internal, local]
 
   otel-collector:
     image: ${OTEL_COLLECTOR_IMAGE}
@@ -63,25 +43,56 @@ services:
     profiles: [full, otel]
     networks: [internal]
 
+  mailpit:
+    image: axllent/mailpit:v1.29.2
+    ports: ["127.0.0.1:1025:1025", "127.0.0.1:8025:8025"]
+    networks: [internal, local]
+
+  identity-migrate:
+    build: ./backend/identity
+    env_file: [./backend/identity/.env]
+    environment:
+      NODE_ENV: ${IDENTITY_NODE_ENV:-development}
+      IDENTITY_DATABASE_URL: postgresql://fantasy_identity:${IDENTITY_DB_PASSWORD:-identity_dev}@postgres:5432/fantasy_identity
+    command: ["node", "dist/migrate.js"]
+    depends_on:
+      postgres:
+        condition: service_healthy
+    profiles: [apps, full]
+    networks: [internal]
+
+  identity:
+    build: ./backend/identity
+    env_file: [./backend/identity/.env]
+    environment:
+      NODE_ENV: ${IDENTITY_NODE_ENV:-development}
+      IDENTITY_DATABASE_URL: postgresql://fantasy_identity:${IDENTITY_DB_PASSWORD:-identity_dev}@postgres:5432/fantasy_identity
+      SMTP_HOST: ${IDENTITY_SMTP_HOST:-mailpit}
+      INTERNAL_JWT_ISSUER: ${INTERNAL_JWT_ISSUER:-http://localhost:3000/auth}
+    depends_on:
+      identity-migrate:
+        condition: service_completed_successfully
+    profiles: [apps, full]
+    networks: [internal, egress]
+
   auth:
     build:
       context: ./backend/auth
       dockerfile: Dockerfile
     ports:
-      - "${AUTH_PUBLISH_PORT}:${AUTH_SERVICE_PORT}"
+      - "127.0.0.1:${AUTH_PUBLISH_PORT}:${AUTH_SERVICE_PORT}"
     env_file: [./backend/auth/.env]
     environment:
-      APP_OIDC_REDIRECT_URI: ${APP_OIDC_REDIRECT_URI:-http://localhost:3000/auth/callback}
-      APP_OIDC_TOKEN_URL: ${APP_OIDC_TOKEN_URL:-http://keycloak:8080/realms/fantasy-builder/protocol/openid-connect/token}
-      APP_OIDC_JWKS_URL: ${APP_OIDC_JWKS_URL:-http://keycloak:8080/realms/fantasy-builder/protocol/openid-connect/certs}
+      AUTH_JWKS_URL: http://identity:8003/auth/jwks
+      INTERNAL_JWT_ISSUER: ${INTERNAL_JWT_ISSUER:-http://localhost:3000/auth}
       FRONTEND_ORIGIN: ${FRONTEND_ORIGIN:-http://localhost:3000}
-      DATABASE_URL: ${DATABASE_URL:-postgresql://${POSTGRES_USER:-fantasy}:${POSTGRES_PASSWORD:-fantasy}@${POSTGRES_HOST:-postgres}:${POSTGRES_PORT:-5432}/${POSTGRES_DB:-fantasy_auth}}
+      DATABASE_URL: ${DATABASE_URL:-postgresql://fantasy_vault:${VAULT_DB_PASSWORD:-vault_dev}@${POSTGRES_HOST:-postgres}:${POSTGRES_PORT:-5432}/${POSTGRES_DB:-fantasy_auth}}
       REDIS_URL: ${REDIS_URL:-redis://${REDIS_HOST:-redis}:${REDIS_PORT:-6379}/${REDIS_DB:-0}}
       MIGRATION_AUTO_APPLY: ${MIGRATION_AUTO_APPLY}
       OTEL_EXPORTER_OTLP_ENDPOINT: ${OTEL_EXPORTER_OTLP_ENDPOINT}
       INTERNAL_SERVICE_TOKEN: ${INTERNAL_SERVICE_TOKEN}
     depends_on:
-      keycloak:
+      identity:
         condition: service_healthy
       postgres:
         condition: service_healthy
@@ -97,10 +108,10 @@ services:
       context: ./backend/api
       dockerfile: Dockerfile
     ports:
-      - "${API_PUBLISH_PORT}:${API_SERVICE_PORT}"
+      - "127.0.0.1:${API_PUBLISH_PORT}:${API_SERVICE_PORT}"
     env_file: [./backend/api/.env]
     environment:
-      AUTH_JWKS_URL: ${AUTH_JWKS_URL:-http://${AUTH_SERVICE_HOST:-auth}:${AUTH_SERVICE_PORT:-8000}/.well-known/jwks.json}
+      AUTH_JWKS_URL: ${AUTH_JWKS_URL:-http://identity:8003/auth/jwks}
       AUTH_INTERNAL_BASE_URL: ${AUTH_INTERNAL_BASE_URL:-http://${AUTH_SERVICE_HOST:-auth}:${AUTH_SERVICE_PORT:-8000}}
       INTERNAL_JWT_ISSUER: ${INTERNAL_JWT_ISSUER}
       INTERNAL_JWT_AUDIENCE: ${INTERNAL_JWT_AUDIENCE}
@@ -154,8 +165,10 @@ services:
       context: .
       dockerfile: frontend/Dockerfile
     ports:
-      - "${FRONTEND_PUBLISH_PORT:-3000}:80"
+      - "127.0.0.1:${FRONTEND_PUBLISH_PORT:-3000}:80"
     depends_on:
+      identity:
+        condition: service_healthy
       auth:
         condition: service_healthy
       api:
@@ -164,7 +177,11 @@ services:
     networks: [public, internal]
 
 networks:
+  local: # loopback-published development dependencies need a host-reachable bridge
   public:
   internal:
     internal: true
-  egress: # outbound internet for scraping only (not internal: true)
+  egress: # outbound internet for identity providers/mail and scraping
+
+volumes:
+  postgres-data:

@@ -143,6 +143,8 @@ class CredentialProvider:
                 raise NeedsReauth(user_id, "refresh_in_progress")
 
         try:
+            # Unlink/reconnect may have completed while this caller acquired the lock.
+            connection = await self._require_connection(user_id)
             bundle = self._vault.open(connection.sealed_blob)
             if not bundle.refresh_token:
                 await self._mark_needs_reauth(connection)

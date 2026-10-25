@@ -44,14 +44,15 @@ skip_empty = true
 [tool.basedpyright]
 executionEnvironments = [
     { root = "backend/api", extraPaths = ["src"], venvPath = "backend/api", venv = ".venv", pythonVersion = "3.14" },
-    { root = "backend/auth", extraPaths = ["src"], venvPath = "backend/auth", venv = ".venv", pythonVersion = "3.12" },
+    { root = "backend/auth", extraPaths = ["src"], venvPath = "backend/auth", venv = ".venv", pythonVersion = "3.14" },
     { root = "backend/scraping", extraPaths = ["src"], venvPath = "backend/scraping", venv = ".venv", pythonVersion = "3.14" },
 ]
 
 [tool.poe.tasks.up]
-help = "Build and start Keycloak, auth, API, scraping, and the frontend"
+help = "Build and start identity, auth, API, scraping, and the frontend"
 shell = """
 test -f .env || cp .env.template .env
+test -f backend/identity/.env || cp backend/identity/.env.example backend/identity/.env
 test -f backend/auth/.env || cp backend/auth/.env.example backend/auth/.env
 test -f backend/api/.env || cp backend/api/.env.example backend/api/.env
 test -f backend/scraping/.env || cp backend/scraping/.env.example backend/scraping/.env
@@ -59,7 +60,7 @@ docker compose --profile apps up --build
 """
 
 [tool.poe.tasks.dev]
-help = "Run auth, API, scraping, and Vite on the host (start Keycloak separately if you need login)"
+help = "Run auth, API, scraping, and Vite on the host with Better Auth"
 cmd = "bash scripts/dev-local.sh"
 
 [tool.poe.tasks.dev-clean]
@@ -73,6 +74,8 @@ uv sync --group dev
 uv sync --directory backend/auth --group dev
 uv sync --directory backend/api --group dev
 uv sync --directory backend/scraping --group dev
+bun install --cwd backend/identity --frozen-lockfile
+bun install --cwd frontend --frozen-lockfile
 uv run pre-commit install
 """
 

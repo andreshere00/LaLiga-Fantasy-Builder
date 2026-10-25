@@ -3,14 +3,9 @@
 from __future__ import annotations
 
 import re
-from typing import Literal
 
 from pydantic import (
     BaseModel,
-    ConfigDict,
-    Field,
-    StrictInt,
-    StrictStr,
     TypeAdapter,
     ValidationError,
 )
@@ -44,26 +39,6 @@ from fantasy_api.schemas.player_stats import (
 from fantasy_api.schemas.players import CatalogPlayer, LeaguePlayer, PlayerMarketValue
 from fantasy_api.schemas.standings import CompetitionStandings, StandingsQuery
 from fantasy_api.schemas.teams import TeamLineup, TeamMoney
-
-
-class InternalTokenResponse(BaseModel):
-    """Auth-service token response consumed by authenticated API CLIs."""
-
-    model_config = ConfigDict(extra="forbid", strict=True)
-
-    access_token: StrictStr
-    token_type: Literal["Bearer"]
-    expires_in: StrictInt = Field(ge=1)
-    expires_at: StrictInt = Field(ge=1)
-
-
-class AuthTokenError(BaseModel):
-    """Sanitized auth-service error consumed by token-exchange CLIs."""
-
-    model_config = ConfigDict(extra="forbid", strict=True)
-
-    error: StrictStr
-    detail: StrictStr | None = None
 
 
 def _model_response(pattern: str, model: type[BaseModel]):

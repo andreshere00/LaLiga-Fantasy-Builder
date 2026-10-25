@@ -10,23 +10,7 @@ from fantasy_auth.cli.browser_session.http import (
     _error_detail,
     _is_object,
     connection_linked,
-    exchange_token,
 )
-
-
-def _token_handler(request: httpx.Request) -> httpx.Response:
-    assert request.url.path == "/auth/token"
-    assert request.headers.get("X-CSRF-Token") == "csrf"
-    assert request.headers.get("Origin") == "http://localhost:8000"
-    return httpx.Response(
-        200,
-        json={
-            "access_token": "jwt-token",
-            "token_type": "Bearer",
-            "expires_in": 900,
-            "expires_at": 1_800_000_000,
-        },
-    )
 
 
 def _valid_lineup() -> dict[str, object]:
@@ -43,23 +27,6 @@ def _valid_lineup() -> dict[str, object]:
 # ---- Happy path ---- #
 
 
-def test_exchange_token_valid_session_returns_jwt() -> None:
-    # Arrange
-    transport = httpx.MockTransport(_token_handler)
-
-    # Act
-    token = exchange_token(
-        auth_base="http://auth.test",
-        origin="http://localhost:8000",
-        session="sess",
-        csrf="csrf",
-        transport=transport,
-    )
-
-    # Assert
-    assert token == "jwt-token"
-
-
 def test_connection_linked_true_payload_returns_true() -> None:
     # Arrange
     transport = httpx.MockTransport(
@@ -69,8 +36,7 @@ def test_connection_linked_true_payload_returns_true() -> None:
     # Act
     linked = connection_linked(
         auth_base="http://auth.test",
-        session="sess",
-        csrf="csrf",
+        jwt="jwt",
         transport=transport,
     )
 
@@ -81,51 +47,15 @@ def test_connection_linked_true_payload_returns_true() -> None:
 # ---- Error paths ---- #
 
 
-def test_exchange_token_unauthorized_raises() -> None:
-    # Arrange
-    transport = httpx.MockTransport(
-        lambda _r: httpx.Response(
-            401,
-            json={"error": "unauthorized", "detail": "csrf failed"},
-        ),
-    )
-
-    # Act / Assert
-    with pytest.raises(BrowserSessionError, match="csrf failed"):
-        exchange_token(
-            auth_base="http://auth.test",
-            origin="http://localhost:8000",
-            session="sess",
-            csrf="csrf",
-            transport=transport,
-        )
-
-
 def test_connection_linked_unauthorized_raises() -> None:
     # Arrange
     transport = httpx.MockTransport(lambda _r: httpx.Response(401))
 
     # Act / Assert
-    with pytest.raises(BrowserSessionError, match="unauthorized"):
+    with pytest.raises(BrowserSessionError, match="HTTP 401"):
         connection_linked(
             auth_base="http://auth.test",
-            session="sess",
-            csrf="csrf",
-            transport=transport,
-        )
-
-
-def test_exchange_token_missing_access_token_raises() -> None:
-    # Arrange
-    transport = httpx.MockTransport(lambda _r: httpx.Response(200, json={}))
-
-    # Act / Assert
-    with pytest.raises(BrowserSessionError, match="missing access_token"):
-        exchange_token(
-            auth_base="http://auth.test",
-            origin="http://localhost:8000",
-            session="sess",
-            csrf="csrf",
+            jwt="jwt",
             transport=transport,
         )
 
@@ -138,8 +68,7 @@ def test_connection_linked_http_error_raises() -> None:
     with pytest.raises(BrowserSessionError, match="HTTP 503"):
         connection_linked(
             auth_base="http://auth.test",
-            session="sess",
-            csrf="csrf",
+            jwt="jwt",
             transport=transport,
         )
 

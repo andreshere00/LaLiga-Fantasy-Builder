@@ -4,12 +4,8 @@ import { cleanup, render, waitFor } from "@testing-library/react";
 import { afterEach, expect, it, vi } from "vitest";
 import { AuthProvider } from "./AuthProvider";
 
-vi.mock("./client", () => ({
-  AuthClient: class {
-    async currentSession() { return null; }
-    clearToken() {}
-  },
-  connectionReady: vi.fn(), refreshDelayMs: vi.fn(), startLaligaLogin: vi.fn(), startLogin: vi.fn(),
+vi.mock("./auth-client", () => ({
+  authClient: { useSession: () => ({ data: null, isPending: false, refetch: vi.fn() }) },
 }));
 afterEach(cleanup);
 

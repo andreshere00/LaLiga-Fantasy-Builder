@@ -19,7 +19,7 @@ router = APIRouter(prefix="/buyout", tags=["buyout"])
 
 _AUTH_HEADER = Header(
     default=None,
-    description="Bearer internal JWT issued by auth ``POST /auth/token``.",
+    description="Bearer internal JWT issued by identity ``GET /auth/token``.",
 )
 
 

@@ -35,7 +35,7 @@ player league-card, market, and buyout routes exchange a LaLiga bearer.
 Market and buyout mutations are medium-confidence community contracts.
 `fantasy-market` and `fantasy-buyout` stay read-only.
 
-Callers send `Authorization: Bearer <jwt>` minted by `POST /auth/token`.
+Callers send `Authorization: Bearer <jwt>` minted by `GET /auth/token`.
 The browser app does this after sign-in. Market bid and buyout pay mutations
 are implemented in the UI only; see [Frontend — Market](../frontend.md#market-screen).
 Terminal sessions: `uv run fantasy-browser-session` from `backend/auth`.

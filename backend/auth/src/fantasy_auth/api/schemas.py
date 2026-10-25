@@ -13,34 +13,10 @@ class AuthResponse(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
 
-class SessionUserResponse(AuthResponse):
-    """Public app-user details in a browser session."""
-
-    user_id: StrictStr
-    email: StrictStr | None = None
-    name: StrictStr | None = None
-
-
-class SessionViewResponse(AuthResponse):
-    """Public session data returned after login and by ``/auth/me``."""
-
-    user: SessionUserResponse
-    csrf_token: StrictStr
-
-
 class OkResponse(AuthResponse):
     """Acknowledgement for completed auth mutations."""
 
     ok: StrictBool
-
-
-class InternalTokenResponse(AuthResponse):
-    """Short-lived internal JWT for the Fantasy API."""
-
-    access_token: StrictStr
-    token_type: StrictStr = "Bearer"
-    expires_in: StrictInt = Field(ge=1)
-    expires_at: StrictInt = Field(ge=1)
 
 
 class AuthErrorResponse(BaseModel):
@@ -83,23 +59,6 @@ class HealthNotReadyResponse(HealthResponse):
     """Readiness response when a dependency is unavailable."""
 
     detail: StrictStr
-
-
-class JsonWebKey(AuthResponse):
-    """Public RSA key published for internal JWT verification."""
-
-    kty: StrictStr
-    use: StrictStr | None = None
-    kid: StrictStr
-    alg: StrictStr | None = None
-    n: StrictStr
-    e: StrictStr
-
-
-class JwksResponse(AuthResponse):
-    """JSON Web Key Set response."""
-
-    keys: list[JsonWebKey]
 
 
 class PairingCreateResponse(AuthResponse):

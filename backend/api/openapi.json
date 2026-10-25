@@ -2,7 +2,7 @@
   "openapi": "3.1.0",
   "info": {
     "title": "LaLiga Fantasy Builder API",
-    "description": "LaLiga Fantasy Builder API.\n\nAuthenticated callers send an **internal JWT** minted by the auth service\n(``POST /auth/token``). League and team routes exchange that JWT for a\nshort-lived Fantasy bearer via auth's private credential endpoint; bearers are\nnever returned to clients. Calendar reads call public upstream Fantasy resources\nand omit the LaLiga bearer while still requiring the internal JWT.",
+    "description": "LaLiga Fantasy Builder API.\n\nAuthenticated callers send an **internal JWT** minted by the auth service\n(``GET /auth/token``). League and team routes exchange that JWT for a\nshort-lived Fantasy bearer via auth's private credential endpoint; bearers are\nnever returned to clients. Calendar reads call public upstream Fantasy resources\nand omit the LaLiga bearer while still requiring the internal JWT.",
     "version": "0.1.0"
   },
   "paths": {
@@ -27,10 +27,10 @@
                   "type": "null"
                 }
               ],
-              "description": "Bearer internal JWT issued by auth ``POST /auth/token``.",
+              "description": "Bearer internal JWT issued by identity ``GET /auth/token``.",
               "title": "Authorization"
             },
-            "description": "Bearer internal JWT issued by auth ``POST /auth/token``."
+            "description": "Bearer internal JWT issued by identity ``GET /auth/token``."
           }
         ],
         "responses": {
@@ -113,10 +113,10 @@
                   "type": "null"
                 }
               ],
-              "description": "Bearer internal JWT issued by auth ``POST /auth/token``.",
+              "description": "Bearer internal JWT issued by identity ``GET /auth/token``.",
               "title": "Authorization"
             },
-            "description": "Bearer internal JWT issued by auth ``POST /auth/token``."
+            "description": "Bearer internal JWT issued by identity ``GET /auth/token``."
           }
         ],
         "responses": {
@@ -199,10 +199,10 @@
                   "type": "null"
                 }
               ],
-              "description": "Bearer internal JWT issued by auth ``POST /auth/token``.",
+              "description": "Bearer internal JWT issued by identity ``GET /auth/token``.",
               "title": "Authorization"
             },
-            "description": "Bearer internal JWT issued by auth ``POST /auth/token``."
+            "description": "Bearer internal JWT issued by identity ``GET /auth/token``."
           }
         ],
         "responses": {
@@ -285,10 +285,10 @@
                   "type": "null"
                 }
               ],
-              "description": "Bearer internal JWT issued by auth ``POST /auth/token``.",
+              "description": "Bearer internal JWT issued by identity ``GET /auth/token``.",
               "title": "Authorization"
             },
-            "description": "Bearer internal JWT issued by auth ``POST /auth/token``."
+            "description": "Bearer internal JWT issued by identity ``GET /auth/token``."
           }
         ],
         "responses": {
@@ -386,10 +386,10 @@
                   "type": "null"
                 }
               ],
-              "description": "Bearer internal JWT issued by auth ``POST /auth/token``.",
+              "description": "Bearer internal JWT issued by identity ``GET /auth/token``.",
               "title": "Authorization"
             },
-            "description": "Bearer internal JWT issued by auth ``POST /auth/token``."
+            "description": "Bearer internal JWT issued by identity ``GET /auth/token``."
           }
         ],
         "responses": {
@@ -499,10 +499,10 @@
                   "type": "null"
                 }
               ],
-              "description": "Bearer internal JWT issued by auth ``POST /auth/token``.",
+              "description": "Bearer internal JWT issued by identity ``GET /auth/token``.",
               "title": "Authorization"
             },
-            "description": "Bearer internal JWT issued by auth ``POST /auth/token``."
+            "description": "Bearer internal JWT issued by identity ``GET /auth/token``."
           }
         ],
         "responses": {
@@ -612,10 +612,10 @@
                   "type": "null"
                 }
               ],
-              "description": "Bearer internal JWT issued by auth ``POST /auth/token``.",
+              "description": "Bearer internal JWT issued by identity ``GET /auth/token``.",
               "title": "Authorization"
             },
-            "description": "Bearer internal JWT issued by auth ``POST /auth/token``."
+            "description": "Bearer internal JWT issued by identity ``GET /auth/token``."
           }
         ],
         "responses": {
@@ -713,10 +713,10 @@
                   "type": "null"
                 }
               ],
-              "description": "Bearer internal JWT issued by auth ``POST /auth/token``.",
+              "description": "Bearer internal JWT issued by identity ``GET /auth/token``.",
               "title": "Authorization"
             },
-            "description": "Bearer internal JWT issued by auth ``POST /auth/token``."
+            "description": "Bearer internal JWT issued by identity ``GET /auth/token``."
           }
         ],
         "responses": {
@@ -825,10 +825,10 @@
                   "type": "null"
                 }
               ],
-              "description": "Bearer internal JWT issued by auth ``POST /auth/token``.",
+              "description": "Bearer internal JWT issued by identity ``GET /auth/token``.",
               "title": "Authorization"
             },
-            "description": "Bearer internal JWT issued by auth ``POST /auth/token``."
+            "description": "Bearer internal JWT issued by identity ``GET /auth/token``."
           }
         ],
         "responses": {
@@ -1139,10 +1139,10 @@
                   "type": "null"
                 }
               ],
-              "description": "Bearer internal JWT issued by auth ``POST /auth/token``.",
+              "description": "Bearer internal JWT issued by identity ``GET /auth/token``.",
               "title": "Authorization"
             },
-            "description": "Bearer internal JWT issued by auth ``POST /auth/token``."
+            "description": "Bearer internal JWT issued by identity ``GET /auth/token``."
           }
         ],
         "responses": {
@@ -1236,10 +1236,10 @@
                   "type": "null"
                 }
               ],
-              "description": "Bearer internal JWT issued by auth ``POST /auth/token``.",
+              "description": "Bearer internal JWT issued by identity ``GET /auth/token``.",
               "title": "Authorization"
             },
-            "description": "Bearer internal JWT issued by auth ``POST /auth/token``."
+            "description": "Bearer internal JWT issued by identity ``GET /auth/token``."
           }
         ],
         "responses": {
@@ -1332,10 +1332,10 @@
                   "type": "null"
                 }
               ],
-              "description": "Bearer internal JWT issued by auth ``POST /auth/token``.",
+              "description": "Bearer internal JWT issued by identity ``GET /auth/token``.",
               "title": "Authorization"
             },
-            "description": "Bearer internal JWT issued by auth ``POST /auth/token``."
+            "description": "Bearer internal JWT issued by identity ``GET /auth/token``."
           }
         ],
         "requestBody": {
@@ -1451,10 +1451,10 @@
                   "type": "null"
                 }
               ],
-              "description": "Bearer internal JWT issued by auth ``POST /auth/token``.",
+              "description": "Bearer internal JWT issued by identity ``GET /auth/token``.",
               "title": "Authorization"
             },
-            "description": "Bearer internal JWT issued by auth ``POST /auth/token``."
+            "description": "Bearer internal JWT issued by identity ``GET /auth/token``."
           }
         ],
         "responses": {
@@ -1537,10 +1537,10 @@
                   "type": "null"
                 }
               ],
-              "description": "Bearer internal JWT issued by auth ``POST /auth/token``.",
+              "description": "Bearer internal JWT issued by identity ``GET /auth/token``.",
               "title": "Authorization"
             },
-            "description": "Bearer internal JWT issued by auth ``POST /auth/token``."
+            "description": "Bearer internal JWT issued by identity ``GET /auth/token``."
           }
         ],
         "responses": {
@@ -1635,10 +1635,10 @@
                   "type": "null"
                 }
               ],
-              "description": "Bearer internal JWT issued by auth ``POST /auth/token``.",
+              "description": "Bearer internal JWT issued by identity ``GET /auth/token``.",
               "title": "Authorization"
             },
-            "description": "Bearer internal JWT issued by auth ``POST /auth/token``."
+            "description": "Bearer internal JWT issued by identity ``GET /auth/token``."
           }
         ],
         "responses": {
@@ -1737,10 +1737,10 @@
                   "type": "null"
                 }
               ],
-              "description": "Bearer internal JWT issued by auth ``POST /auth/token``.",
+              "description": "Bearer internal JWT issued by identity ``GET /auth/token``.",
               "title": "Authorization"
             },
-            "description": "Bearer internal JWT issued by auth ``POST /auth/token``."
+            "description": "Bearer internal JWT issued by identity ``GET /auth/token``."
           }
         ],
         "responses": {
@@ -2206,10 +2206,10 @@
                   "type": "null"
                 }
               ],
-              "description": "Bearer internal JWT issued by auth ``POST /auth/token``.",
+              "description": "Bearer internal JWT issued by identity ``GET /auth/token``.",
               "title": "Authorization"
             },
-            "description": "Bearer internal JWT issued by auth ``POST /auth/token``."
+            "description": "Bearer internal JWT issued by identity ``GET /auth/token``."
           }
         ],
         "responses": {
@@ -3372,10 +3372,10 @@
                   "type": "null"
                 }
               ],
-              "description": "Bearer internal JWT issued by auth ``POST /auth/token``.",
+              "description": "Bearer internal JWT issued by identity ``GET /auth/token``.",
               "title": "Authorization"
             },
-            "description": "Bearer internal JWT issued by auth ``POST /auth/token``."
+            "description": "Bearer internal JWT issued by identity ``GET /auth/token``."
           }
         ],
         "responses": {
@@ -3469,10 +3469,10 @@
                   "type": "null"
                 }
               ],
-              "description": "Bearer internal JWT issued by auth ``POST /auth/token``.",
+              "description": "Bearer internal JWT issued by identity ``GET /auth/token``.",
               "title": "Authorization"
             },
-            "description": "Bearer internal JWT issued by auth ``POST /auth/token``."
+            "description": "Bearer internal JWT issued by identity ``GET /auth/token``."
           }
         ],
         "responses": {
@@ -3581,10 +3581,10 @@
                   "type": "null"
                 }
               ],
-              "description": "Bearer internal JWT issued by auth ``POST /auth/token``.",
+              "description": "Bearer internal JWT issued by identity ``GET /auth/token``.",
               "title": "Authorization"
             },
-            "description": "Bearer internal JWT issued by auth ``POST /auth/token``."
+            "description": "Bearer internal JWT issued by identity ``GET /auth/token``."
           }
         ],
         "responses": {
@@ -3689,10 +3689,10 @@
                   "type": "null"
                 }
               ],
-              "description": "Bearer internal JWT issued by auth ``POST /auth/token``.",
+              "description": "Bearer internal JWT issued by identity ``GET /auth/token``.",
               "title": "Authorization"
             },
-            "description": "Bearer internal JWT issued by auth ``POST /auth/token``."
+            "description": "Bearer internal JWT issued by identity ``GET /auth/token``."
           }
         ],
         "requestBody": {
@@ -3818,10 +3818,10 @@
                   "type": "null"
                 }
               ],
-              "description": "Bearer internal JWT issued by auth ``POST /auth/token``.",
+              "description": "Bearer internal JWT issued by identity ``GET /auth/token``.",
               "title": "Authorization"
             },
-            "description": "Bearer internal JWT issued by auth ``POST /auth/token``."
+            "description": "Bearer internal JWT issued by identity ``GET /auth/token``."
           }
         ],
         "requestBody": {
@@ -3945,10 +3945,10 @@
                   "type": "null"
                 }
               ],
-              "description": "Bearer internal JWT issued by auth ``POST /auth/token``.",
+              "description": "Bearer internal JWT issued by identity ``GET /auth/token``.",
               "title": "Authorization"
             },
-            "description": "Bearer internal JWT issued by auth ``POST /auth/token``."
+            "description": "Bearer internal JWT issued by identity ``GET /auth/token``."
           }
         ],
         "responses": {
@@ -4043,10 +4043,10 @@
                   "type": "null"
                 }
               ],
-              "description": "Bearer internal JWT issued by auth ``POST /auth/token``.",
+              "description": "Bearer internal JWT issued by identity ``GET /auth/token``.",
               "title": "Authorization"
             },
-            "description": "Bearer internal JWT issued by auth ``POST /auth/token``."
+            "description": "Bearer internal JWT issued by identity ``GET /auth/token``."
           }
         ],
         "requestBody": {
@@ -4151,10 +4151,10 @@
                   "type": "null"
                 }
               ],
-              "description": "Bearer internal JWT issued by auth ``POST /auth/token``.",
+              "description": "Bearer internal JWT issued by identity ``GET /auth/token``.",
               "title": "Authorization"
             },
-            "description": "Bearer internal JWT issued by auth ``POST /auth/token``."
+            "description": "Bearer internal JWT issued by identity ``GET /auth/token``."
           }
         ],
         "requestBody": {
@@ -4269,10 +4269,10 @@
                   "type": "null"
                 }
               ],
-              "description": "Bearer internal JWT issued by auth ``POST /auth/token``.",
+              "description": "Bearer internal JWT issued by identity ``GET /auth/token``.",
               "title": "Authorization"
             },
-            "description": "Bearer internal JWT issued by auth ``POST /auth/token``."
+            "description": "Bearer internal JWT issued by identity ``GET /auth/token``."
           }
         ],
         "responses": {
@@ -4388,10 +4388,10 @@
                   "type": "null"
                 }
               ],
-              "description": "Bearer internal JWT issued by auth ``POST /auth/token``.",
+              "description": "Bearer internal JWT issued by identity ``GET /auth/token``.",
               "title": "Authorization"
             },
-            "description": "Bearer internal JWT issued by auth ``POST /auth/token``."
+            "description": "Bearer internal JWT issued by identity ``GET /auth/token``."
           }
         ],
         "requestBody": {
@@ -4517,10 +4517,10 @@
                   "type": "null"
                 }
               ],
-              "description": "Bearer internal JWT issued by auth ``POST /auth/token``.",
+              "description": "Bearer internal JWT issued by identity ``GET /auth/token``.",
               "title": "Authorization"
             },
-            "description": "Bearer internal JWT issued by auth ``POST /auth/token``."
+            "description": "Bearer internal JWT issued by identity ``GET /auth/token``."
           }
         ],
         "responses": {
@@ -4615,10 +4615,10 @@
                   "type": "null"
                 }
               ],
-              "description": "Bearer internal JWT issued by auth ``POST /auth/token``.",
+              "description": "Bearer internal JWT issued by identity ``GET /auth/token``.",
               "title": "Authorization"
             },
-            "description": "Bearer internal JWT issued by auth ``POST /auth/token``."
+            "description": "Bearer internal JWT issued by identity ``GET /auth/token``."
           }
         ],
         "requestBody": {
@@ -4744,10 +4744,10 @@
                   "type": "null"
                 }
               ],
-              "description": "Bearer internal JWT issued by auth ``POST /auth/token``.",
+              "description": "Bearer internal JWT issued by identity ``GET /auth/token``.",
               "title": "Authorization"
             },
-            "description": "Bearer internal JWT issued by auth ``POST /auth/token``."
+            "description": "Bearer internal JWT issued by identity ``GET /auth/token``."
           }
         ],
         "responses": {
@@ -4852,10 +4852,10 @@
                   "type": "null"
                 }
               ],
-              "description": "Bearer internal JWT issued by auth ``POST /auth/token``.",
+              "description": "Bearer internal JWT issued by identity ``GET /auth/token``.",
               "title": "Authorization"
             },
-            "description": "Bearer internal JWT issued by auth ``POST /auth/token``."
+            "description": "Bearer internal JWT issued by identity ``GET /auth/token``."
           }
         ],
         "responses": {
@@ -4960,10 +4960,10 @@
                   "type": "null"
                 }
               ],
-              "description": "Bearer internal JWT issued by auth ``POST /auth/token``.",
+              "description": "Bearer internal JWT issued by identity ``GET /auth/token``.",
               "title": "Authorization"
             },
-            "description": "Bearer internal JWT issued by auth ``POST /auth/token``."
+            "description": "Bearer internal JWT issued by identity ``GET /auth/token``."
           }
         ],
         "requestBody": {
@@ -5078,10 +5078,10 @@
                   "type": "null"
                 }
               ],
-              "description": "Bearer internal JWT issued by auth ``POST /auth/token``.",
+              "description": "Bearer internal JWT issued by identity ``GET /auth/token``.",
               "title": "Authorization"
             },
-            "description": "Bearer internal JWT issued by auth ``POST /auth/token``."
+            "description": "Bearer internal JWT issued by identity ``GET /auth/token``."
           }
         ],
         "requestBody": {
@@ -5186,10 +5186,10 @@
                   "type": "null"
                 }
               ],
-              "description": "Bearer internal JWT issued by auth ``POST /auth/token``.",
+              "description": "Bearer internal JWT issued by identity ``GET /auth/token``.",
               "title": "Authorization"
             },
-            "description": "Bearer internal JWT issued by auth ``POST /auth/token``."
+            "description": "Bearer internal JWT issued by identity ``GET /auth/token``."
           }
         ],
         "requestBody": {

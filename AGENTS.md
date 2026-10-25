@@ -19,13 +19,14 @@ guides live under [`docs/`](docs/README.md).
 | Service | Path | Port | Owns |
 |---------|------|------|------|
 | Frontend | `frontend` | 3000 | Lineup UI. Proxies `/auth`, `/laliga`, and `/api` |
-| Auth | `backend/auth` | 8000 | Sessions, OIDC, LaLiga pairing, vault, internal JWT |
+| Auth | `backend/auth` | 8000 | LaLiga pairing, vault, external JWT verification |
+| Identity | `backend/identity` | 8003 | Better Auth providers, credentials, sessions, JWT plugin |
 | API | `backend/api` | 8001 | Features; LaLiga via private bearer exchange |
 | Scraping | `backend/scraping` | 8002 | Private FutbolFantasy scraper + parser on `internal` and `egress`. `/internal/scrape/*` uses `SCRAPING_SERVICE_TOKEN`. CLIs are read-only. |
 
 ```text
 Browser → frontend origin
-        → POST /auth/token (auth) → internal JWT in memory
+        → GET /auth/token (identity) → application JWT in memory
         → /api/... with Bearer JWT
 API     → GET /internal/laliga/bearer (auth, private) → LaLiga bearer
 API     → Fantasy upstream with bearer → JSON (no tokens)

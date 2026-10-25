@@ -80,23 +80,12 @@ def test_main_json_mode_returns_aggregated_payload(
     assert payload["leagues"][0]["week"] == 3
 
 
-def test_exchange_token_then_fetch(
+def test_better_auth_jwt_then_fetch(
     monkeypatch: pytest.MonkeyPatch,
     capsys: pytest.CaptureFixture[str],
 ) -> None:
     # Arrange
     def handler(request: httpx.Request) -> httpx.Response:
-        if request.url.path == "/auth/token":
-            assert request.headers.get("X-CSRF-Token") == "csrf"
-            return httpx.Response(
-                200,
-                json={
-                    "access_token": "jwt-1",
-                    "token_type": "Bearer",
-                    "expires_in": 300,
-                    "expires_at": 1_800_000_000,
-                },
-            )
         if request.url.path == "/leagues":
             assert request.headers["Authorization"] == "Bearer jwt-1"
             return httpx.Response(200, json=[])
@@ -107,10 +96,8 @@ def test_exchange_token_then_fetch(
     # Act
     code = leagues_cli.main(
         [
-            "--session",
-            "sess",
-            "--csrf",
-            "csrf",
+            "--jwt",
+            "jwt-1",
             "--auth-base",
             "http://auth.test",
             "--api-base",

@@ -51,9 +51,7 @@ def test_pair_laliga_with_playwright_completes_from_captured_callback(
     # Act
     result = pairing.pair_laliga_with_playwright(
         auth_base="http://auth.test",
-        origin="http://localhost:8000",
-        session="sess",
-        csrf="csrf",
+        jwt="jwt",
         capture_fn=capture,
     )
 
@@ -97,9 +95,7 @@ def test_pair_laliga_with_playwright_create_failed_raises(
     with pytest.raises(BrowserSessionError, match="Create pairing failed"):
         pairing.pair_laliga_with_playwright(
             auth_base="http://auth.test",
-            origin="http://localhost:8000",
-            session="sess",
-            csrf="csrf",
+            jwt="jwt",
             capture_fn=lambda _url: "unused",
         )
 
@@ -167,9 +163,7 @@ def test_pair_laliga_complete_helper_error_raises(
     with pytest.raises(BrowserSessionError, match="bad callback"):
         pairing.pair_laliga_with_playwright(
             auth_base="http://auth.test",
-            origin="http://localhost:8000",
-            session="sess",
-            csrf="csrf",
+            jwt="jwt",
             capture_fn=lambda _url: "authredirect://cb",
         )
 

@@ -11,10 +11,9 @@ from fantasy_auth.adapters import postgres as pg
 from fantasy_auth.adapters.postgres import (
     PostgresConnectionRepo,
     PostgresPairingStore,
-    PostgresSessionStore,
 )
-from fantasy_auth.domain.users import AppUser, LaligaUser
-from fantasy_auth.ports.repos import ConnectionRecord, PairingRecord, SessionRecord
+from fantasy_auth.domain.users import LaligaUser
+from fantasy_auth.ports.repos import ConnectionRecord, PairingRecord
 
 NOW = 1_700_000_000
 
@@ -41,92 +40,6 @@ class FakePool:
 
 
 # ---- Happy path ---- #
-
-
-@pytest.mark.asyncio
-async def test_session_store_save_and_get_with_user() -> None:
-    # Arrange
-    pool = FakePool()
-    store = PostgresSessionStore(pool)  # type: ignore[arg-type]
-    session = SessionRecord(
-        session_id="s1",
-        user=AppUser(user_id="u1", email="a@b.c", name="Ann"),
-        csrf_token="csrf",
-        expires_at=NOW + 100,
-        oidc_state="st",
-        oidc_nonce="nn",
-        oidc_code_verifier="cv",
-    )
-
-    # Act
-    await store.save(session)
-    pool.fetchrow_result = FakeRow(
-        {
-            "session_id": "s1",
-            "user_id": "u1",
-            "email": "a@b.c",
-            "name": "Ann",
-            "csrf_token": "csrf",
-            "expires_at": datetime.fromtimestamp(NOW + 100, tz=UTC),
-            "oidc_state": "st",
-            "oidc_nonce": "nn",
-            "oidc_code_verifier": "cv",
-        }
-    )
-    loaded = await store.get("s1")
-
-    # Assert
-    assert len(pool.execute_calls) == 1
-    assert "INSERT INTO sessions" in pool.execute_calls[0][0]
-    assert loaded is not None
-    assert loaded.session_id == "s1"
-    assert loaded.user == AppUser(user_id="u1", email="a@b.c", name="Ann")
-    assert loaded.expires_at == NOW + 100
-    assert loaded.oidc_state == "st"
-
-
-@pytest.mark.asyncio
-async def test_session_store_get_without_user_and_delete() -> None:
-    # Arrange
-    pool = FakePool()
-    store = PostgresSessionStore(pool)  # type: ignore[arg-type]
-    pool.fetchrow_result = FakeRow(
-        {
-            "session_id": "s2",
-            "user_id": None,
-            "email": None,
-            "name": None,
-            "csrf_token": "c",
-            "expires_at": datetime.fromtimestamp(NOW, tz=UTC),
-            "oidc_state": None,
-            "oidc_nonce": None,
-            "oidc_code_verifier": None,
-        }
-    )
-
-    # Act
-    loaded = await store.get("s2")
-    await store.delete("s2")
-
-    # Assert
-    assert loaded is not None
-    assert loaded.user is None
-    assert pool.execute_calls[-1][1] == ("s2",)
-    assert "DELETE FROM sessions" in pool.execute_calls[-1][0]
-
-
-@pytest.mark.asyncio
-async def test_session_store_get_missing_returns_none() -> None:
-    # Arrange
-    pool = FakePool()
-    store = PostgresSessionStore(pool)  # type: ignore[arg-type]
-    pool.fetchrow_result = None
-
-    # Act
-    loaded = await store.get("missing")
-
-    # Assert
-    assert loaded is None
 
 
 @pytest.mark.asyncio

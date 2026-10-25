@@ -1,12 +1,12 @@
 [project]
 name = "laliga-fantasy-builder-auth"
 version = "0.1.0"
-description = "Auth service for LaLiga Fantasy Builder (app identity + LaLiga Fantasy delegation)"
+description = "Auth service for LaLiga Fantasy Builder (LaLiga delegation with Better Auth JWT verification)"
 readme = "README.md"
 authors = [
     { name = "Andrés Herencia" }
 ]
-requires-python = ">=3.12"
+requires-python = ">=3.14"
 dependencies = [
     "asyncpg>=0.30.0",
     "cryptography>=44.0.0",
@@ -57,7 +57,7 @@ include = ["src", "tests"]
 extraPaths = ["src"]
 venvPath = "."
 venv = ".venv"
-pythonVersion = "3.12"
+pythonVersion = "3.14"
 typeCheckingMode = "basic"
 
 [tool.uv]

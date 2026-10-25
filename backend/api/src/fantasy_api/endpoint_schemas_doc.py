@@ -34,7 +34,7 @@ are not included here.
 
 | Location | Name | Type | Required | Description |
 |----------|------|------|----------|-------------|
-| Header | `Authorization` | string | Yes* | `Bearer <internal JWT>` from auth `POST /auth/token` |
+| Header | `Authorization` | string | Yes* | `Bearer <internal JWT>` from `GET /auth/token` |
 
 \\* Not required for `/health`, `/health/live`, and `/health/ready`.
 

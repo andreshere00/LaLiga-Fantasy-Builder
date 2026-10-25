@@ -26,9 +26,11 @@ Human route tables and request/response fields:
 | Endpoint docstrings | Operation summaries |
 | Pydantic models on pairing and token routes | Component schemas |
 
-Session-only routes (`GET /auth/me`, cookie login) appear in OpenAPI but
-**security is cookie-based**, not Bearer. Only `/internal/laliga/bearer` uses
-the internal JWT in the `Authorization` header.
+Better Auth owns `/auth/*` and documents its endpoints separately in
+[Identity](../../backend/identity/README.md). Python LaLiga starts, reads, deletes
+and private bearer exchanges require an application Bearer JWT. Private routes
+also require `X-Service-Token`; native/helper completion uses its own one-time
+challenge. Python no longer accepts application session cookies.
 
 ## Regenerate the committed document
 

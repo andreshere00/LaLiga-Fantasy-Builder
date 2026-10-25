@@ -1,6 +1,6 @@
 # syntax=docker/dockerfile:1
 
-FROM oven/bun:1.3 AS build
+FROM oven/bun:1.3.14 AS build
 
 WORKDIR /app
 
@@ -10,6 +10,8 @@ RUN bun install --frozen-lockfile
 COPY frontend/ .
 # mappers.ts imports repo-root assets/teams_master.json (../../../assets from src/api).
 COPY assets/teams_master.json /assets/teams_master.json
+# Typechecking includes tests that import shared API contract fixtures.
+COPY contracts /contracts
 RUN bun run build
 
 FROM nginx:1.27-alpine AS runtime

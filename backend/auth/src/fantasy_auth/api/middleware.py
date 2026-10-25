@@ -120,7 +120,7 @@ def install_cors(app: ASGIApp, origins: list[str]) -> None:
     app.add_middleware(
         CORSMiddleware,
         allow_origins=origins,
-        allow_credentials=True,
+        allow_credentials=False,
         allow_methods=["GET", "POST", "DELETE", "OPTIONS"],
-        allow_headers=["Content-Type", "X-CSRF-Token", "X-Request-Id"],
+        allow_headers=["Content-Type", "Authorization", "X-Request-Id"],
     )

@@ -36,7 +36,6 @@ from jwt_mint import (
     DEFAULT_TEST_ISSUER as ISSUER,
 )
 from jwt_mint import (
-    InvalidTokenError,
     mint_internal_jwt,
 )
 from test_container import TEST_SERVICE_TOKEN as SERVICE_TOKEN
@@ -144,39 +143,6 @@ def test_health_ready_returns_ok(client: TestClient) -> None:
     # Assert
     assert response.status_code == 200
     assert response.json()["status"] == "ok"
-
-
-def test_internal_jwt_validator_valid_token_returns_claims(
-    rsa_pems: tuple[str, str],
-) -> None:
-    # Arrange
-    private_pem, public_pem = rsa_pems
-    token = mint_internal_jwt(
-        private_pem,
-        issuer=ISSUER,
-        audience=AUDIENCE,
-    )
-    mock_signing_key = MagicMock()
-    mock_signing_key.key = public_pem
-    mock_client = MagicMock()
-    mock_client.get_signing_key_from_jwt.return_value = mock_signing_key
-
-    with patch(
-        "fantasy_api.security.internal_jwt.PyJWKClient",
-        return_value=mock_client,
-    ):
-        validator = InternalJwtValidator(
-            jwks_url="http://auth.test/jwks",
-            issuer=ISSUER,
-            audience=AUDIENCE,
-        )
-
-        # Act
-        claims = validator.validate(token)
-
-    # Assert
-    assert claims["sub"] == "app-user-1"
-    mock_client.get_signing_key_from_jwt.assert_called_once_with(token)
 
 
 def test_build_container_defaults_wires_services() -> None:
@@ -547,46 +513,6 @@ async def test_credentials_client_invalid_success_payload_raises_upstream(
         await client.get_laliga_bearer(token)
     assert exc_info.value.status_code == 502
     assert exc_info.value.category == "auth_error"
-
-
-def test_internal_jwt_validator_pyjwt_error_raises_unauthorized() -> None:
-    # Arrange
-    mock_client = MagicMock()
-    mock_client.get_signing_key_from_jwt.side_effect = InvalidTokenError("bad jwt")
-
-    with patch(
-        "fantasy_api.security.internal_jwt.PyJWKClient",
-        return_value=mock_client,
-    ):
-        validator = InternalJwtValidator(
-            jwks_url="http://auth.test/jwks",
-            issuer=ISSUER,
-            audience=AUDIENCE,
-        )
-
-        # Act / Assert
-        with pytest.raises(UnauthorizedError, match="bad jwt"):
-            validator.validate("not-a-jwt")
-
-
-def test_internal_jwt_validator_generic_exception_raises_unauthorized() -> None:
-    # Arrange
-    mock_client = MagicMock()
-    mock_client.get_signing_key_from_jwt.side_effect = RuntimeError("jwks down")
-
-    with patch(
-        "fantasy_api.security.internal_jwt.PyJWKClient",
-        return_value=mock_client,
-    ):
-        validator = InternalJwtValidator(
-            jwks_url="http://auth.test/jwks",
-            issuer=ISSUER,
-            audience=AUDIENCE,
-        )
-
-        # Act / Assert
-        with pytest.raises(UnauthorizedError, match="jwks validation failed"):
-            validator.validate("token")
 
 
 def test_credential_probe_needs_reauth_returns_http_401(

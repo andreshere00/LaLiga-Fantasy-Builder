@@ -224,7 +224,7 @@ def _write_complete_script(path: Path) -> None:
                 "url = callback.read_text(encoding='utf-8').strip()",
                 "body = json.dumps({'callback': url}).encode()",
                 "request = urllib.request.Request(",
-                "    'http://localhost:8000/laliga/pairings/complete-redirect',",
+                "    'http://localhost:3000/laliga/pairings/complete-redirect',",
                 "    data=body,",
                 "    headers={'Content-Type': 'application/json'},",
                 ")",

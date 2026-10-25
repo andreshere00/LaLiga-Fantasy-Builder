@@ -17,10 +17,9 @@ from fantasy_auth.main import create_app
 AUTH_DESCRIPTION = """
 LaLiga Fantasy Builder **auth** service.
 
-Browser clients use **session cookies** (``fantasy_session``, ``fantasy_csrf``)
-and ``X-CSRF-Token`` on mutating routes. The frontend exchanges the session for
-a short-lived internal JWT via ``POST /auth/token`` and sends that JWT to
-``backend/api``.
+Application authentication is owned by Better Auth at ``/auth`` on the identity
+service. LaLiga connection and pairing creation require its Ed25519 Bearer JWT.
+Native callback completion uses a single-use server challenge, not browser cookies.
 
 ``/internal/*`` routes require the internal JWT **and** ``X-Service-Token`` on
 a private network. They must not be exposed on the public internet.
@@ -30,7 +29,7 @@ OPENAPI_TAGS: list[dict[str, str]] = [
     {"name": "health", "description": "Liveness and readiness probes."},
     {
         "name": "auth",
-        "description": "Application OIDC login, session, internal JWT, and JWKS.",
+        "description": "Application authentication is served by the separate identity runtime.",
     },
     {
         "name": "laliga",
@@ -47,7 +46,6 @@ def _doc_generation_settings() -> Settings:
     """Settings that avoid Postgres/Redis during schema export."""
     return Settings(
         use_memory_store=True,
-        cookie_secure=False,
         log_json=False,
         token_vault_key_base64=base64.b64encode(b"k" * 32).decode(),
         internal_service_token="openapi-generation",

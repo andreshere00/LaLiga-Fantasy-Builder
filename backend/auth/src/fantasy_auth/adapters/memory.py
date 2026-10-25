@@ -7,9 +7,9 @@ from collections import defaultdict, deque
 from dataclasses import replace
 
 from fantasy_auth.ports.repos import (
+    BrowserPairingRecord,
     ConnectionRecord,
     PairingRecord,
-    SessionRecord,
 )
 
 
@@ -50,56 +50,6 @@ class FixedClock:
             seconds: Seconds to add.
         """
         self._now += seconds
-
-
-class MemorySessionStore:
-    """Dict-backed session store."""
-
-    def __init__(self) -> None:
-        self._sessions: dict[str, SessionRecord] = {}
-
-    async def save(self, session: SessionRecord) -> None:
-        """Upsert a session record.
-
-        Args:
-            session: Session to persist.
-        """
-        self._sessions[session.session_id] = session
-
-    async def get(self, session_id: str) -> SessionRecord | None:
-        """Load a session by opaque ID.
-
-        Args:
-            session_id: Session cookie value.
-
-        Returns:
-            Session record or None.
-        """
-        return self._sessions.get(session_id)
-
-    async def delete(self, session_id: str) -> None:
-        """Delete a session.
-
-        Args:
-            session_id: Session to remove.
-        """
-        self._sessions.pop(session_id, None)
-
-    async def find_by_laliga_state(self, state: str) -> SessionRecord | None:
-        """Load the session waiting for this LaLiga B2C state.
-
-        Args:
-            state: ``state`` query value from the native callback.
-
-        Returns:
-            Matching session, or None.
-        """
-        if not state:
-            return None
-        for session in self._sessions.values():
-            if session.laliga_b2c_state == state:
-                return session
-        return None
 
 
 class MemoryPairingStore:
@@ -144,6 +94,12 @@ class MemoryPairingStore:
             return None
         self._pairings[pairing_id] = replace(pairing, consumed=True)
         return pairing
+
+    async def cancel(self, user_id: str) -> None:
+        """Invalidate outstanding challenges for this owner."""
+        for key, value in self._pairings.items():
+            if value.user_id == user_id:
+                self._pairings[key] = replace(value, consumed=True)
 
 
 class MemoryConnectionRepo:
@@ -206,3 +162,28 @@ class MemoryRateLimiter:
             return False
         bucket.append(now)
         return True
+
+
+class MemoryBrowserPairingStore:
+    """Atomic in-process native callback challenges; no application sessions."""
+
+    def __init__(self) -> None:
+        self._records: dict[str, BrowserPairingRecord] = {}
+
+    async def save(self, record: BrowserPairingRecord, *, now: int) -> None:
+        """Save a challenge, pruning expired secrets."""
+        self._records = {
+            key: value for key, value in self._records.items() if value.expires_at > now
+        }
+        self._records[record.state] = record
+
+    async def consume(self, state: str, *, now: int) -> BrowserPairingRecord | None:
+        """Consume at most once, rejecting expired challenges."""
+        record = self._records.pop(state, None)
+        return record if record and record.expires_at > now else None
+
+    async def cancel(self, user_id: str) -> None:
+        """Cancel only this user's pending native callbacks."""
+        self._records = {
+            key: value for key, value in self._records.items() if value.user_id != user_id
+        }
