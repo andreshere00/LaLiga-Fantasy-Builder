@@ -5,10 +5,12 @@ from __future__ import annotations
 from urllib.parse import parse_qs, urlparse
 
 from fastapi import APIRouter, Request
+from fastapi.responses import RedirectResponse
 from pydantic import BaseModel
 
 from fantasy_auth.api.deps import get_container, get_current_user
 from fantasy_auth.api.schemas import (
+    AuthErrorResponse,
     CompleteRedirectRequest,
     CompleteRedirectResponse,
     ConnectionStatusResponse,
@@ -17,7 +19,7 @@ from fantasy_auth.api.schemas import (
     PairingCompleteResponse,
     PairingCreateResponse,
 )
-from fantasy_auth.domain.errors import PairingError
+from fantasy_auth.domain.errors import AuthError, PairingError
 from fantasy_auth.ports.repos import BrowserPairingRecord
 
 router = APIRouter(tags=["laliga"])
@@ -51,12 +53,21 @@ class BrowserLoginResponse(BaseModel):
     authorize_url: str
 
 
-@router.post("/laliga/login", response_model=BrowserLoginResponse)
+@router.post(
+    "/laliga/login",
+    response_model=BrowserLoginResponse,
+    responses={503: {"model": AuthErrorResponse, "description": "Browser callback unavailable."}},
+)
 async def laliga_login(request: Request) -> BrowserLoginResponse:
-    """Start native LaLiga delegation for the verified application subject."""
+    """Start browser LaLiga delegation through a registered HTTPS callback."""
     user = await get_current_user(request)
     container = get_container()
-    started = await container.pairings.begin_browser_login(user.user_id)
+    redirect_uri = container.settings.laliga_browser_redirect_uri
+    if redirect_uri is None:
+        raise PairingError(
+            "Browser linking requires a registered HTTPS callback", category="browser_unavailable"
+        )
+    started = await container.pairings.begin_browser_login(user.user_id, redirect_uri=redirect_uri)
     await container.browser_pairings.save(
         BrowserPairingRecord(
             state=started.b2c_state,
@@ -69,6 +80,25 @@ async def laliga_login(request: Request) -> BrowserLoginResponse:
         now=container.clock.now(),
     )
     return BrowserLoginResponse(authorize_url=started.authorize_url)
+
+
+@router.get("/laliga/callback", response_class=RedirectResponse, status_code=303)
+async def laliga_browser_callback(request: Request) -> RedirectResponse:
+    """Complete a browser authorization and return to the fixed frontend origin."""
+    container = get_container()
+    redirect_uri = container.settings.laliga_browser_redirect_uri
+    if redirect_uri is None:
+        raise PairingError("Browser callback is unavailable", category="browser_unavailable")
+    callback = f"{redirect_uri}?{request.url.query}"
+    try:
+        await _complete_browser_challenge(request, callback, redirect_uri=redirect_uri)
+    except AuthError:
+        return RedirectResponse(
+            url=f"{container.settings.frontend_origin.rstrip('/')}/connect-laliga"
+            "?error=laliga_link_failed",
+            status_code=303,
+        )
+    return RedirectResponse(url=container.settings.frontend_origin, status_code=303)
 
 
 @router.delete("/laliga/pairings", response_model=OkResponse)
@@ -104,6 +134,17 @@ async def complete_redirect(
     Raises:
         PairingError: When the callback does not match a pending challenge.
     """
+    await _complete_browser_challenge(request, body.callback)
+    return CompleteRedirectResponse(
+        ok=True,
+        frontend_origin=get_container().settings.frontend_origin,
+    )
+
+
+async def _complete_browser_challenge(
+    request: Request, callback: str, *, redirect_uri: str | None = None
+) -> None:
+    """Rate-limit and consume one state before exchanging its authorization code."""
     container = get_container()
     client_ip = request.client.host if request.client else "unknown"
     allowed = await container.rate_limiter.allow(
@@ -113,22 +154,19 @@ async def complete_redirect(
     )
     if not allowed:
         raise PairingError("rate limited", category="rate_limited")
-    state = _state_from_callback(body.callback)
+    state = _state_from_callback(callback)
     if not state:
         raise PairingError("callback missing state", category="pairing_callback")
     challenge = await container.browser_pairings.consume(state, now=container.clock.now())
     if challenge is None:
         raise PairingError("pairing not found or expired", category="pairing_not_found")
     await container.pairings.complete_browser_redirect(
-        callback=body.callback,
+        callback=callback,
         pairing_id=challenge.pairing_id,
         secret=challenge.secret,
         code_verifier=challenge.code_verifier,
         expected_state=challenge.state,
-    )
-    return CompleteRedirectResponse(
-        ok=True,
-        frontend_origin=container.settings.frontend_origin,
+        redirect_uri=redirect_uri,
     )
 
 

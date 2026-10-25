@@ -79,15 +79,13 @@ it("clears tokens immediately and cannot reacquire them while logout changes ses
   expect(screen.getByTestId("state").textContent).toContain("signed-out");
 });
 
-it("allows logout retry after cancellation fails without restoring private data", async () => {
+it("signs out even when pairing cancellation fails", async () => {
   mount();
   await waitFor(() => expect(screen.getByTestId("state").textContent).toContain(token("alice")));
   fetchMock.mockResolvedValueOnce(new Response("unavailable", { status: 503 }));
   fireEvent.click(screen.getByRole("button", { name: "Log out" }));
-  await waitFor(() => expect(screen.getByTestId("state").textContent).toContain("unavailable"));
-  expect(identity.signOut).not.toHaveBeenCalled();
-  fireEvent.click(screen.getByRole("button", { name: "Log out" }));
   await waitFor(() => expect(screen.getByTestId("state").textContent).toContain("signed-out"));
+  expect(identity.signOut).toHaveBeenCalledOnce();
   expect(identity.token).toHaveBeenCalledOnce();
 });
 

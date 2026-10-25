@@ -198,7 +198,7 @@ def create_app(
         _request: Request,
         exc: PairingError,
     ) -> JSONResponse:
-        status = 429 if getattr(exc, "category", "") == "rate_limited" else 400
+        status = {"rate_limited": 429, "browser_unavailable": 503}.get(exc.category, 400)
         body = AuthErrorResponse(error=exc.category, detail=str(exc))
         return JSONResponse(status_code=status, content=body.model_dump(mode="json"))
 

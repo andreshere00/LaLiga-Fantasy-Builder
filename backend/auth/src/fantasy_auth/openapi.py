@@ -19,7 +19,9 @@ LaLiga Fantasy Builder **auth** service.
 
 Application authentication is owned by Better Auth at ``/auth`` on the identity
 service. LaLiga connection and pairing creation require its Ed25519 Bearer JWT.
-Native callback completion uses a single-use server challenge, not browser cookies.
+The registered HTTPS browser callback and native helper completion use single-use
+server challenges, not browser cookies. Browser linking is unavailable until its
+exact HTTPS redirect URI is configured and registered with LaLiga.
 
 ``/internal/*`` routes require the internal JWT **and** ``X-Service-Token`` on
 a private network. They must not be exposed on the public internet.

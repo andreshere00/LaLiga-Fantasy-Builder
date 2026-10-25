@@ -168,11 +168,12 @@ class PairingService:
             nonce=nonce,
         )
 
-    async def begin_browser_login(self, user_id: str) -> BrowserPairingStart:
+    async def begin_browser_login(self, user_id: str, *, redirect_uri: str) -> BrowserPairingStart:
         """Create a pairing and the B2C authorize URL for this app user.
 
         Args:
             user_id: Application user ID from the verified JWT.
+            redirect_uri: Registered HTTPS callback for the browser flow.
 
         Returns:
             Authorize URL and server-side PKCE material.
@@ -186,7 +187,7 @@ class PairingService:
         verifier = generate_verifier()
         state = generate_state()
         authorize_url = self._b2c.build_authorize_url(
-            redirect_uri=self._redirect_uri,
+            redirect_uri=redirect_uri,
             code_challenge=s256_challenge(verifier),
             state=state,
             nonce=created.nonce,
@@ -207,15 +208,17 @@ class PairingService:
         secret: str,
         code_verifier: str,
         expected_state: str,
+        redirect_uri: str | None = None,
     ) -> PairingCompleted:
-        """Exchange a native callback and seal the tokens for the pairing.
+        """Exchange a registered callback and seal the tokens for the pairing.
 
         Args:
-            callback: Full ``authredirect://`` URL.
+            callback: Full callback URL.
             pairing_id: Pending pairing id stored on the challenge.
             secret: Pending pairing secret stored on the challenge.
             code_verifier: PKCE verifier stored on the challenge.
             expected_state: B2C state stored on the challenge.
+            redirect_uri: Registered callback used in the authorization request.
 
         Returns:
             Completion result with the merged profile.
@@ -223,7 +226,10 @@ class PairingService:
         Raises:
             PairingError: When the callback or token exchange is invalid.
         """
-        params = _callback_params(callback, expected_state=expected_state)
+        resolved_redirect = redirect_uri or self._redirect_uri
+        params = _callback_params(
+            callback, expected_state=expected_state, redirect_uri=resolved_redirect
+        )
         if params.get("error"):
             raise PairingError(str(params["error"]), category="pairing_callback")
         code = params.get("code")
@@ -233,7 +239,7 @@ class PairingService:
             bundle = await self._b2c.exchange_code(
                 code=code,
                 code_verifier=code_verifier,
-                redirect_uri=self._redirect_uri,
+                redirect_uri=resolved_redirect,
             )
         except Exception as exc:
             raise PairingError("token exchange failed", category="provider") from exc
@@ -387,23 +393,26 @@ class PairingService:
             await self._operation_lock.release(user_id)
 
 
-def _callback_params(callback: str, *, expected_state: str) -> dict[str, str]:
-    """Read code and state from a native LaLiga callback URL.
+def _callback_params(callback: str, *, expected_state: str, redirect_uri: str) -> dict[str, str]:
+    """Read code and state from the configured LaLiga callback URL.
 
     Args:
-        callback: Full ``authredirect://`` URL.
+        callback: Full callback URL.
         expected_state: State stored on the independent pairing challenge.
+        redirect_uri: Exact callback URL sent to the provider.
 
     Returns:
         Query parameters, or ``{"error": ...}`` when state does not match.
     """
     parsed = urlparse(callback)
-    if parsed.scheme != "authredirect" or parsed.netloc != "com.lfp.laligafantasy":
+    registered = urlparse(redirect_uri)
+    same_origin = (parsed.scheme, parsed.netloc) == (registered.scheme, registered.netloc)
+    matching_path = parsed.path == registered.path or (
+        registered.scheme == "authredirect" and parsed.path == "/" and not registered.path
+    )
+    if not same_origin or not matching_path:
         return {"error": "invalid callback URL"}
-    query = parsed.query
-    if not query and "?" in callback:
-        query = callback.split("?", 1)[1]
-    params = {key: values[0] for key, values in parse_qs(query).items() if values}
+    params = {key: values[0] for key, values in parse_qs(parsed.query).items() if values}
     if params.get("state") != expected_state:
         return {"error": "state mismatch"}
     return params

@@ -22,6 +22,7 @@ beforeEach(() => {
   auth.status = "loading"; auth.user = null; auth.accessToken = null; auth.notice = null;
   auth.connectLaliga.mockReset(); auth.reload.mockReset();
 });
+
 afterEach(cleanup);
 
 // ---- Happy path ---- //
@@ -46,6 +47,17 @@ it("returns an already connected user to the lineup", async () => {
 });
 
 // ---- Error paths ---- //
+it("shows a returned callback error without automatically starting another authorization", () => {
+  auth.status = "unlinked"; auth.user = { userId: "alice" }; auth.accessToken = "application-token";
+  render(<StrictMode><MemoryRouter initialEntries={["/connect-laliga?error=laliga_link_failed"]}><Routes>
+    <Route path="/connect-laliga" element={<ConnectLaligaPage />} />
+  </Routes></MemoryRouter></StrictMode>);
+  expect(screen.getByRole("alert").textContent).toContain("could not be completed");
+  expect(auth.connectLaliga).not.toHaveBeenCalled();
+  fireEvent.click(screen.getByRole("button", { name: "Try again" }));
+  expect(auth.connectLaliga).toHaveBeenCalledOnce();
+});
+
 it("shows a failed handoff and lets the user retry", () => {
   auth.status = "unlinked"; auth.user = { userId: "alice" }; auth.accessToken = "application-token";
   const view = render(tree());

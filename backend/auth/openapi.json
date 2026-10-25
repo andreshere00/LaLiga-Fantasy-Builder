@@ -2,7 +2,7 @@
   "openapi": "3.1.0",
   "info": {
     "title": "LaLiga Fantasy Builder Auth",
-    "description": "LaLiga Fantasy Builder **auth** service.\n\nApplication authentication is owned by Better Auth at ``/auth`` on the identity\nservice. LaLiga connection and pairing creation require its Ed25519 Bearer JWT.\nNative callback completion uses a single-use server challenge, not browser cookies.\n\n``/internal/*`` routes require the internal JWT **and** ``X-Service-Token`` on\na private network. They must not be exposed on the public internet.",
+    "description": "LaLiga Fantasy Builder **auth** service.\n\nApplication authentication is owned by Better Auth at ``/auth`` on the identity\nservice. LaLiga connection and pairing creation require its Ed25519 Bearer JWT.\nThe registered HTTPS browser callback and native helper completion use single-use\nserver challenges, not browser cookies. Browser linking is unavailable until its\nexact HTTPS redirect URI is configured and registered with LaLiga.\n\n``/internal/*`` routes require the internal JWT **and** ``X-Service-Token`` on\na private network. They must not be exposed on the public internet.",
     "version": "0.1.0"
   },
   "paths": {
@@ -120,7 +120,7 @@
           "laliga"
         ],
         "summary": "Laliga Login",
-        "description": "Start native LaLiga delegation for the verified application subject.",
+        "description": "Start browser LaLiga delegation through a registered HTTPS callback.",
         "operationId": "laliga_login_laliga_login_post",
         "responses": {
           "200": {
@@ -132,6 +132,31 @@
                 }
               }
             }
+          },
+          "503": {
+            "description": "Browser callback unavailable.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AuthErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/laliga/callback": {
+      "get": {
+        "tags": [
+          "laliga"
+        ],
+        "summary": "Laliga Browser Callback",
+        "description": "Complete a browser authorization and return to the fixed frontend origin.",
+        "operationId": "laliga_browser_callback_laliga_callback_get",
+        "responses": {
+          "303": {
+            "description": "Successful Response"
           }
         }
       }
@@ -349,6 +374,32 @@
   },
   "components": {
     "schemas": {
+      "AuthErrorResponse": {
+        "properties": {
+          "error": {
+            "type": "string",
+            "title": "Error"
+          },
+          "detail": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Detail"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "error"
+        ],
+        "title": "AuthErrorResponse",
+        "description": "Sanitized error shape returned by auth routes."
+      },
       "BrowserLoginResponse": {
         "properties": {
           "authorize_url": {

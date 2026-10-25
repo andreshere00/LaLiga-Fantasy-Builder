@@ -48,4 +48,10 @@ describe("Better Auth application tokens", () => {
     await expect(client.startLaligaLogin()).rejects.toThrow("Invalid LaLiga");
     expect(fetch).toHaveBeenCalledWith("/laliga/login", expect.objectContaining({ method: "POST", credentials: "omit", headers: expect.objectContaining({ Authorization: "Bearer application-jwt" }) }));
   });
+  it("explains when browser linking has no registered callback", async () => {
+    const store = new MemoryTokenStore(); store.set("application-jwt");
+    const fetch = vi.fn().mockResolvedValue(new Response(JSON.stringify({ error: "browser_unavailable" }), { status: 503 }));
+    const client = new AuthClient(fetch, store);
+    await expect(client.startLaligaLogin()).rejects.toThrow("registered HTTPS callback");
+  });
 });

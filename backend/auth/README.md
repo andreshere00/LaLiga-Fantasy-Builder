@@ -26,8 +26,12 @@ LaLiga-backed read can prompt for interactive pairing when needed. The
 retains the independent PKCE helper. Old session/CSRF and provider-password flags
 are no longer supported.
 
-LaLiga linking is separate from application login. Native callbacks require their
-one-time state/nonce/PKCE proof and no browser cookie. All owner-scoped browser
+LaLiga linking is separate from application login. `POST /laliga/login` is available
+only after LaLiga registers the exact HTTPS `/laliga/callback` URL for this client
+and `LALIGA_BROWSER_REDIRECT_URI` is configured with the matching `FRONTEND_ORIGIN`.
+Without it, the browser receives `browser_unavailable`; the native CLI pairing
+helper remains available. Browser callbacks require one-time state/nonce/PKCE proof
+and no browser cookie. All owner-scoped browser
 routes require a verified Bearer token. `/internal/*` additionally requires
 `X-Service-Token` and private networking. No live financial actions should be used
 for authentication validation.

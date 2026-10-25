@@ -32,6 +32,8 @@ unlinking the last login method is rejected. Different provider emails may be
 linked only through the authenticated linking flow. Social-only accounts enroll
 a password through the verified recovery flow. Provider credentials are encrypted
 on the identity server; browser provider-token endpoints are disabled.
+The identity database enforces one owner per provider account with a unique
+`(providerId, accountId)` key, including when two callbacks run concurrently.
 
 New Facebook accounts without email receive an actionable error. Returning
 provider accounts resolve omitted email/name only by their stored provider and
@@ -65,14 +67,19 @@ on logout, expiry and account changes; Better Auth synchronizes sessions across 
 
 `POST /laliga/login`, `POST /laliga/pairings`, `GET/DELETE /laliga/connection`
 and `DELETE /laliga/pairings` require an application Bearer JWT. Owners come only
-from verified `sub`. Browser login returns `{ "authorize_url": "..." }`, then the
-browser navigates to LaLiga B2C. This is separate from application sign-in.
+from verified `sub`. Browser login returns `{ "authorize_url": "..." }` only when
+LaLiga has registered the exact HTTPS `LALIGA_BROWSER_REDIRECT_URI` for this
+client ID. The URL must be the frontend origin's `/laliga/callback`; otherwise
+browser linking returns 503 `browser_unavailable` instead of starting an unusable
+native redirect. The native CLI pairing flow remains available independently.
 
 The UI chains the two steps: successful social or credential sign-in returns to
 `/connect-laliga`, which waits for the application JWT and checks the connection.
 An already linked account returns to the lineup; an unlinked account continues
-to LaLiga's authorization page. The page retries failed starts explicitly, while
-ordinary rendering and connection polling never create duplicate starts.
+to LaLiga's authorization page when browser linking is configured. The public
+callback consumes state, exchanges the code with the original redirect URI, and
+returns to the fixed frontend origin. A failed callback shows a retry action
+without automatically creating another challenge.
 
 This is an authorization-code/PKCE exchange with LaLiga, not an exchange of this
 application's Google, Facebook or Apple credentials. The repository has no
@@ -82,13 +89,15 @@ LaLiga-side cooperation and issuer/audience validation, rather than reusing the
 application's keys. See Microsoft's [authorization code flow](https://learn.microsoft.com/en-us/azure/active-directory-b2c/authorization-code-flow)
 and [ID token hint policy](https://learn.microsoft.com/en-us/azure/active-directory-b2c/id-token-hint).
 
-The native return remains `authredirect://com.lfp.laligafantasy`. Independent
+The CLI's native return remains `authredirect://com.lfp.laligafantasy`. Independent
 pending records contain the immutable owner, state, pairing ID, secret, PKCE
 verifier and expiry. The paired challenge stores the nonce. Native callback
 completion is cookie-free, rate limited and single-use. Callback replay, expiry,
 bad nonce/state and mismatched ownership are rejected. Expired secrets are pruned
 on new challenge creation; deployments may also periodically delete expired rows.
-Logout cancels pending challenges before ending the application session.
+Logout attempts to cancel pending challenges before ending the application
+session. If the vault is unavailable, Better Auth sign-out still proceeds;
+outstanding challenges expire within the pairing TTL.
 
 Postgres advisory locks serialize pairing completion, cancellation, unlink and
 credential refresh for each owner. Connections retain AES-GCM encryption and the

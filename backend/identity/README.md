@@ -53,9 +53,12 @@ email address. Port 587 also works with STARTTLS when `SMTP_SECURE=false`.
 The initial SQL was generated with `auth@1.7.12` from `src/runtime.ts`, including
 username, JWT and shared database rate limits. `bun run migrate` applies reviewed
 SQL under a transaction and advisory lock, with a checksum journal. It is safe to
-repeat; changed already-applied SQL fails closed. Future schema changes need a
-new versioned migration, not edits to an applied schema. Schema generation needs
-a disposable empty database and configured environment (`bun run schema:generate`).
+repeat; changed already-applied SQL fails closed. Migration `0002` adds a unique
+provider/account key so concurrent OAuth links cannot create duplicate ownership.
+An existing database with conflicting rows must be reconciled before `0002` applies.
+Future schema changes need a new versioned migration, not edits to an applied
+schema. Schema generation needs a disposable empty database and configured
+environment (`bun run schema:generate`).
 
 ## Production configuration
 

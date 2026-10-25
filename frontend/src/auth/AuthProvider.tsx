@@ -91,7 +91,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     clear();
     setState({ ...empty, status: "loading" });
     try {
-      if (logoutToken.current) await client.cancelPairings(logoutToken.current.token);
+      if (logoutToken.current) {
+        try { await client.cancelPairings(logoutToken.current.token); }
+        catch { /* Sign out even if the vault cannot cancel a pending challenge. */ }
+      }
       if (latestSessionId.current !== sessionId) return;
       const result = await authClient.signOut();
       if (latestSessionId.current !== sessionId) return;
@@ -107,7 +110,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     const active = generation.current;
     void client.startLaligaLogin({ signal: work.current?.signal }).then(url => {
       if (active === generation.current) window.location.assign(url);
-    }).catch(() => { if (active === generation.current) setState(previous => ({ ...previous, notice: "LaLiga sign-in could not start. Try again." })); });
+    }).catch(error => {
+      if (active !== generation.current) return;
+      const notice = error instanceof Error && error.message.startsWith("Browser LaLiga linking")
+        ? error.message : "LaLiga sign-in could not start. Try again.";
+      setState(previous => ({ ...previous, notice }));
+    });
   }, [client]);
   const value = useMemo<AuthContextValue>(() => ({
     ...(activeSessionId === sessionId ? state : { ...empty, status: pending || userId ? "loading" : "signed-out" }),

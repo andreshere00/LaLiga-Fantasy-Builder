@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from functools import lru_cache
 
-from pydantic import Field
+from pydantic import Field, model_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
@@ -43,6 +43,7 @@ class Settings(BaseSettings):
     )
     laliga_issuer: str = "https://login.laliga.es/335316eb-f606-4361-bb86-35a7edcdcec1/v2.0/"
     laliga_redirect_uri: str = "authredirect://com.lfp.laligafantasy"
+    laliga_browser_redirect_uri: str | None = None
     laliga_fantasy_origin: str = "https://fantasy-api.llt-services.com"
     laliga_allow_id_token_fallback: bool = False
 
@@ -59,6 +60,37 @@ class Settings(BaseSettings):
     internal_jwt_audience: str = "fantasy-api"
     auth_jwks_url: str = "http://localhost:8003/auth/jwks"
     internal_service_token: str = ""
+
+    @model_validator(mode="after")
+    def validate_browser_redirect(self) -> Settings:
+        """Accept only an HTTPS callback on the configured frontend origin."""
+        if self.laliga_browser_redirect_uri is None:
+            return self
+        from urllib.parse import urlparse
+
+        callback = urlparse(self.laliga_browser_redirect_uri)
+        origin = urlparse(self.frontend_origin)
+        if (
+            callback.scheme != "https"
+            or origin.scheme != "https"
+            or callback.netloc != origin.netloc
+            or origin.path
+            or origin.params
+            or origin.query
+            or origin.fragment
+            or origin.username
+            or origin.password
+            or callback.path != "/laliga/callback"
+            or callback.params
+            or callback.query
+            or callback.fragment
+            or callback.username
+            or callback.password
+        ):
+            raise ValueError(
+                "LALIGA_BROWSER_REDIRECT_URI must be the HTTPS frontend /laliga/callback URL"
+            )
+        return self
 
     @property
     def laliga_authorize_url(self) -> str:

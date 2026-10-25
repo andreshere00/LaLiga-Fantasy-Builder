@@ -70,7 +70,15 @@ export class AuthClient {
       method, credentials: "omit", signal: options.signal,
       headers: { Accept: "application/json", Authorization: `Bearer ${token}` },
     });
-    if (!response.ok) throw new Error("LaLiga connection request failed. Try again.");
+    if (!response.ok) {
+      if (path === LALIGA_LOGIN_PATH) {
+        const body = await response.clone().json().catch(() => null);
+        if (z.object({ error: z.literal("browser_unavailable") }).safeParse(body).success) {
+          throw new Error("Browser LaLiga linking needs a registered HTTPS callback. Use the CLI pairing helper until it is configured.");
+        }
+      }
+      throw new Error("LaLiga connection request failed. Try again.");
+    }
     return response;
   }
 }

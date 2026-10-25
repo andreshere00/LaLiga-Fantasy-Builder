@@ -24,7 +24,8 @@ are provided by its pinned plugins and are separate from Python OpenAPI.
 | GET | `/auth/list-accounts` | Session; linked methods |
 | POST | `/auth/link-social` | Recent session plus provider proof |
 | POST | `/auth/unlink-account` | Recent session; requires another usable method |
-| POST | `/laliga/login` | Application JWT; `{authorize_url}` |
+| POST | `/laliga/login` | Application JWT; `{authorize_url}` when a registered HTTPS callback is configured, otherwise 503 `browser_unavailable` |
+| GET | `/laliga/callback` | Registered HTTPS authorization callback; one-time state/PKCE proof, then fixed frontend redirect |
 | GET/DELETE | `/laliga/connection` | Application JWT; connection status / unlink |
 | POST | `/laliga/pairings` | Application JWT; one-time helper challenge |
 | DELETE | `/laliga/pairings` | Application JWT; cancel this owner's challenges |

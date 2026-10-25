@@ -59,8 +59,10 @@ Better Auth owns application identity. Its React client uses `/auth` on the shar
 frontend origin for Google/Facebook/Apple and verified username/email credentials.
 The JWT plugin issues short-lived Ed25519 tokens used by both Python services.
 LaLiga is an independent delegated connection. `POST /laliga/login` requires a JWT
-and returns an authorization URL; native completion uses an independent one-time
-state/nonce/PKCE challenge. See [Authentication](authentication/authentication.md).
+and returns an authorization URL only when a registered HTTPS callback is configured.
+`GET /laliga/callback` consumes an independent one-time state/nonce/PKCE challenge.
+The native CLI uses its separate registered custom-scheme callback. See
+[Authentication](authentication/authentication.md).
 
 ## Service responsibilities
 

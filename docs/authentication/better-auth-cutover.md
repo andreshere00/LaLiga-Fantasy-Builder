@@ -20,7 +20,9 @@ are left untouched; matching email, username or manager name never transfers the
 3. Copy the new environment examples, preserving your vault key and service
    credentials. Replace the old identity issuer/JWKS settings in both Python services.
    Existing `.env` files are not automatically overwritten by setup commands.
-4. Run identity's reviewed migration and Python auth's additive migrations. Stop old
+4. Run identity's reviewed migrations (including `0002`, which rejects duplicate
+   provider/account ownership) and Python auth's additive migrations. Resolve any
+   duplicate provider rows under a write pause before retrying `0002`. Stop old
    token issuance and wait at least 16 minutes after the last token was issued.
 5. Start the new stack. Register at `/register`, verify the email code, sign in,
    then reconnect LaLiga. Existing legacy tokens and cookies grant no access.
@@ -70,8 +72,11 @@ provider browser policies. Record evidence for each of these before deployment:
   reset replay, password change and revoked-session behavior.
 - Linking from an old session is rejected; link a differing email with provider
   proof; reject last-method unlink and confirm a different account remains isolated.
-- LaLiga: native callback without cookies, nonce/state/PKCE rejection, replay,
-  cancellation, unlink/refresh race, reconnect and `needs_reauth`.
+- LaLiga: register the exact HTTPS `/laliga/callback` for the configured client
+  before setting `LALIGA_BROWSER_REDIRECT_URI`; test browser success, denial,
+  state/nonce/PKCE rejection, replay, cancellation, reconnect and `needs_reauth`.
+  Check that callback query strings are absent from ingress access logs. Verify
+  native CLI pairing separately.
 - Browser: phone/desktop and both themes; keyboard navigation; cross-tab logout and
   account switches clear tokens and queries; no stale response restores old data.
 - Secret/log review: no provider credentials, reset/verification material, native

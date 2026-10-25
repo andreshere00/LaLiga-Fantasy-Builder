@@ -3,7 +3,7 @@
 # ---- Mocks, fixtures & helpers ---- #
 import base64
 import time
-from urllib.parse import urlencode
+from urllib.parse import parse_qs, urlencode, urlparse
 
 import pytest
 from fantasy_auth.api.deps import build_container
@@ -11,6 +11,7 @@ from fantasy_auth.config import Settings
 from fantasy_auth.domain.errors import ValidationError
 from fantasy_auth.domain.tokens import TokenBundle
 from fantasy_auth.main import create_app
+from fantasy_auth.ports.repos import BrowserPairingRecord
 from fastapi.testclient import TestClient
 
 
@@ -55,6 +56,8 @@ def container():
         use_memory_store=True,
         token_vault_key_base64=base64.b64encode(b"t" * 32).decode(),
         internal_service_token="service",
+        frontend_origin="https://app.example.test",
+        laliga_browser_redirect_uri="https://app.example.test/laliga/callback",
     )
     result = build_container(cfg, jwt_validator=Identity())
     result.pairings._b2c = B2C()
@@ -74,22 +77,26 @@ def headers(user="alice"):
 
 
 # ---- Happy path ---- #
-def test_pairing_native_callback_preserves_owner_without_cookies(client, container):
+def test_pairing_browser_callback_preserves_owner_without_cookies(client, container):
     start = client.post("/laliga/login", headers=headers())
     assert start.status_code == 200
+    assert parse_qs(urlparse(start.json()["authorize_url"]).query)["redirect_uri"] == [
+        "https://app.example.test/laliga/callback"
+    ]
     records = container.browser_pairings._records
     challenge = next(iter(records.values()))
     assert challenge.secret not in start.text
     assert challenge.code_verifier not in start.text
-    callback = f"authredirect://com.lfp.laligafantasy?code=code&state={challenge.state}"
-    result = client.post("/laliga/pairings/complete-redirect", json={"callback": callback})
-    assert result.status_code == 200
-    assert "private" not in result.text
+    callback = f"/laliga/callback?code=code&state={challenge.state}"
+    result = client.get(callback, follow_redirects=False)
+    assert result.status_code == 303
+    assert result.headers["location"] == "https://app.example.test"
+    assert "private" not in result.headers["location"]
     assert client.get("/laliga/connection", headers=headers()).json()["linked"]
     assert not client.get("/laliga/connection", headers=headers("bob")).json()["linked"]
-    assert (
-        client.post("/laliga/pairings/complete-redirect", json={"callback": callback}).status_code
-        == 400
+    replay = client.get(callback, follow_redirects=False)
+    assert replay.headers["location"] == (
+        "https://app.example.test/connect-laliga?error=laliga_link_failed"
     )
     assert client.delete("/laliga/connection", headers=headers()).status_code == 200
     assert not client.get("/laliga/connection", headers=headers()).json()["linked"]
@@ -125,6 +132,34 @@ def test_pairing_helper_completion_private_bearer_and_retry_contract(client):
     )
 
 
+def test_pending_native_callback_remains_compatible(client, container):
+    """A pre-cutover native challenge can still complete through the helper route."""
+    import asyncio
+
+    async def prepare() -> str:
+        started = await container.pairings.begin_browser_login(
+            "alice", redirect_uri=container.settings.laliga_redirect_uri
+        )
+        await container.browser_pairings.save(
+            BrowserPairingRecord(
+                state=started.b2c_state,
+                user_id="alice",
+                pairing_id=started.pairing_id,
+                secret=started.secret,
+                code_verifier=started.code_verifier,
+                expires_at=container.clock.now() + 600,
+            ),
+            now=container.clock.now(),
+        )
+        return started.b2c_state
+
+    state = asyncio.run(prepare())
+    callback = f"authredirect://com.lfp.laligafantasy/?code=code&state={state}"
+    result = client.post("/laliga/pairings/complete-redirect", json={"callback": callback})
+    assert result.status_code == 200
+    assert client.get("/laliga/connection", headers=headers()).json()["linked"]
+
+
 # ---- Error paths ---- #
 @pytest.mark.parametrize(
     "method,path",
@@ -157,8 +192,9 @@ def test_pairing_cancellation_expiry_and_input_validation(client, container):
     assert client.delete("/laliga/pairings", headers=headers()).status_code == 200
     callback = f"authredirect://com.lfp.laligafantasy?code=code&state={challenge.state}"
     assert (
-        client.post("/laliga/pairings/complete-redirect", json={"callback": callback}).status_code
-        == 400
+        client.get(f"/laliga/callback?code=code&state={challenge.state}", follow_redirects=False)
+        .headers["location"]
+        .endswith("error=laliga_link_failed")
     )
     assert (
         client.post(
@@ -175,6 +211,24 @@ def test_pairing_cancellation_expiry_and_input_validation(client, container):
 
 
 # ---- Edge cases ---- #
+def test_browser_redirect_requires_matching_https_frontend_origin():
+    with pytest.raises(ValueError, match="HTTPS frontend"):
+        Settings(
+            _env_file=None,
+            frontend_origin="https://app.example.test",
+            laliga_browser_redirect_uri="https://other.example.test/laliga/callback",
+        )
+
+
+def test_browser_start_without_registered_callback_fails_closed(container):
+    container.settings.laliga_browser_redirect_uri = None
+    with TestClient(create_app(container.settings, container)) as client:
+        result = client.post("/laliga/login", headers=headers())
+    assert result.status_code == 503
+    assert result.json()["error"] == "browser_unavailable"
+    assert not container.browser_pairings._records
+
+
 def test_pairing_rate_limit_rejects_repeated_callbacks(client, container):
     container.settings.pairing_rate_limit_per_minute = 1
     assert (
