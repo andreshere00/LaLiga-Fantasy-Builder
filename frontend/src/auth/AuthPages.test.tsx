@@ -18,6 +18,7 @@ vi.mock("./AuthProvider", () => ({ useAuth: () => remembered }));
 vi.mock("./auth-client", () => ({ authClient: client }));
 
 const EMAIL_KEY = "lfb-pending-verification-email";
+const IDENTIFIER_KEY = "lfb-pending-sign-in-identifier";
 const unverified = {
   data: null,
   error: { code: "EMAIL_NOT_VERIFIED", message: "Email not verified" },
@@ -26,7 +27,7 @@ const accepted = { data: { status: true }, error: null };
 
 function renderAuth(path: string) {
   return render(<MemoryRouter initialEntries={[path]}><Routes>
-    {["sign-in", "register", "verify-email"].map(route =>
+    {["sign-in", "register", "verify-email", "reset-password"].map(route =>
       <Route key={route} path={`/${route}`} element={<AuthPage />} />)}
   </Routes></MemoryRouter>);
 }
@@ -135,7 +136,29 @@ it("submit_weakPassword_blocksRegistrationAndExplainsWhy", async () => {
   expect(authClient.signUp.email).not.toHaveBeenCalled();
 });
 
+it("submit_resetPasswordContainsRememberedUsername_blocksReset", async () => {
+  sessionStorage.setItem(IDENTIFIER_KEY, "alice");
+  renderAuth("/reset-password?token=abc");
+  fill("New password (at least 12 characters)", "alice-loves-football");
+  expect(screen.getByText("Do not include your username or email.")).toBeTruthy();
+  fireEvent.click(screen.getByRole("button", { name: "Choose a new password" }));
+  expect((await screen.findByRole("alert")).textContent).toContain("stronger password");
+  expect(authClient.resetPassword).not.toHaveBeenCalled();
+});
+
 // ---- Edge cases ---- //
+it("submit_verifyingDifferentEmail_ignoresStaleUsername", async () => {
+  sessionStorage.setItem(EMAIL_KEY, "alice@example.test");
+  sessionStorage.setItem(IDENTIFIER_KEY, "alice");
+  vi.mocked(authClient.emailOtp.verifyEmail).mockResolvedValue(accepted);
+  renderAuth("/verify-email");
+  fill("Email", "bob@example.test");
+  fill("Verification code", "12345678");
+  fireEvent.click(screen.getByRole("button", { name: "Verify email" }));
+  expect(await screen.findByRole("heading", { name: "Sign in" })).toBeTruthy();
+  expect(identifierValue()).toBe("bob@example.test");
+});
+
 it("submit_usernameSignInNeedsVerification_leavesEmailEmpty", async () => {
   vi.mocked(authClient.signIn.username).mockResolvedValue(unverified);
   renderAuth("/sign-in");

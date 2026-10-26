@@ -140,7 +140,9 @@ export function AuthPage() {
   }
   function problemsFor(data: FormData): string[] {
     if (pathname !== "/register" && pathname !== "/reset-password") return [];
-    const personal = [data.get("username"), data.get("email")].map(value => String(value ?? ""));
+    const personal = pathname === "/reset-password"
+      ? [readSignInIdentifier(), readVerificationEmail()]
+      : [data.get("username"), data.get("email")].map(value => String(value ?? ""));
     return passwordIssues(String(data.get("password") ?? ""), personal);
   }
   async function submit(event: FormEvent<HTMLFormElement>) {
@@ -186,7 +188,9 @@ export function AuthPage() {
       } else if (pathname === "/verify-email") {
         checked(await authClient.emailOtp.verifyEmail({ email: field("email"), otp: field("otp") }));
         const verifiedEmail = field("email");
-        const identifier = readSignInIdentifier() || verifiedEmail;
+        const rememberedIdentifier = readVerificationEmail() === verifiedEmail
+          ? readSignInIdentifier() : "";
+        const identifier = rememberedIdentifier || verifiedEmail;
         writeVerificationEmail(null);
         writeStored(SIGN_IN_IDENTIFIER_KEY, null);
         setRememberedEmail("");
