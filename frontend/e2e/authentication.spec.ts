@@ -62,11 +62,15 @@ for (const theme of ["light", "dark"]) {
       await page.getByRole("button", { name: "Create your account" }).click();
       await expect(page).toHaveURL(/\/verify-email$/);
       await expect(page.getByRole("heading")).toContainText("Verify your email");
+      await expect(page.getByLabel("Email", { exact: true })).toHaveValue("alice@example.test");
+      await page.reload();
+      await expect(page.getByLabel("Email", { exact: true })).toHaveValue("alice@example.test");
       expect(requests.find(item => item.path === "/auth/sign-up/email")?.body.username).toBe("alice");
-      await page.getByLabel("Email", { exact: true }).fill("alice@example.test");
       await page.getByLabel("Verification code").fill("12345678");
       await page.getByRole("button", { name: "Verify email", exact: true }).click();
+      await expect(page).toHaveURL(/\/sign-in$/);
       await expect(page.getByRole("status")).toContainText("Your email is verified");
+      await expect(page.getByLabel("Username or email")).toHaveValue("alice");
       await page.getByRole("link", { name: "Forgot password?" }).click();
       await expect(page.getByRole("heading", { name: "Reset your password", exact: true })).toBeVisible();
       await page.getByLabel("Email", { exact: true }).fill("alice@example.test");
@@ -249,3 +253,49 @@ for (const width of [390, 1440]) {
     expect(errors).toEqual([]);
   });
 }
+
+test("unverified email sign-in opens verification with that address", async ({ page }) => {
+  await page.route("**/*", async route => {
+    const url = new URL(route.request().url());
+    if (url.origin !== "http://127.0.0.1:3100") return route.abort();
+    if (!url.pathname.startsWith("/auth/")) return route.continue();
+    if (url.pathname === "/auth/get-session") return route.fulfill({ json: null });
+    if (url.pathname === "/auth/sign-in-options") return route.fulfill({ json: {
+      credentials: true, laligaSso: false,
+      directProviders: { google: false, facebook: false, apple: false },
+    } });
+    if (url.pathname === "/auth/sign-in/email") return route.fulfill({
+      status: 403, json: { code: "EMAIL_NOT_VERIFIED", message: "Email not verified" },
+    });
+    return route.fulfill({ json: { status: true } });
+  });
+  await page.goto("/sign-in");
+  await page.getByLabel("Username or email").fill("alice@example.test");
+  await page.getByLabel("Password", { exact: true }).fill("synthetic-password-123");
+  await page.getByRole("button", { name: "Sign in", exact: true }).click();
+  await page.getByRole("link", { name: "Verify your email" }).click();
+  await expect(page.getByLabel("Email", { exact: true })).toHaveValue("alice@example.test");
+});
+
+test("unverified username sign-in does not invent an email address", async ({ page }) => {
+  await page.route("**/*", async route => {
+    const url = new URL(route.request().url());
+    if (url.origin !== "http://127.0.0.1:3100") return route.abort();
+    if (!url.pathname.startsWith("/auth/")) return route.continue();
+    if (url.pathname === "/auth/get-session") return route.fulfill({ json: null });
+    if (url.pathname === "/auth/sign-in-options") return route.fulfill({ json: {
+      credentials: true, laligaSso: false,
+      directProviders: { google: false, facebook: false, apple: false },
+    } });
+    if (url.pathname === "/auth/sign-in/username") return route.fulfill({
+      status: 403, json: { code: "EMAIL_NOT_VERIFIED", message: "Email not verified" },
+    });
+    return route.fulfill({ json: { status: true } });
+  });
+  await page.goto("/sign-in");
+  await page.getByLabel("Username or email").fill("ALICE");
+  await page.getByLabel("Password", { exact: true }).fill("synthetic-password-123");
+  await page.getByRole("button", { name: "Sign in", exact: true }).click();
+  await page.getByRole("link", { name: "Verify your email" }).click();
+  await expect(page.getByLabel("Email", { exact: true })).toHaveValue("");
+});

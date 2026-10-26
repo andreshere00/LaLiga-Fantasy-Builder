@@ -4,6 +4,7 @@ import { z } from "zod";
 import { Button, buttonVariants } from "../components/ui/Button";
 import { authClient } from "./auth-client";
 import { useAuth } from "./AuthProvider";
+import { passwordIssues } from "./passwordPolicy";
 import { ProviderLogo, type SocialProvider } from "./ProviderLogo";
 import "./AuthPages.css";
 
@@ -34,17 +35,70 @@ const errors: Record<string, string> = {
   FRESH_SESSION_REQUIRED: "Sign out and sign in again before changing your sign-in methods.",
   EMAIL_NOT_VERIFIED: "Verify your email before signing in. Check your inbox or request another verification email.",
 };
+const VERIFICATION_EMAIL_KEY = "lfb-pending-verification-email";
+const SIGN_IN_IDENTIFIER_KEY = "lfb-pending-sign-in-identifier";
+const VERIFIED_NOTICE = "Your email is verified. Sign in to continue.";
+
+function isEmailAddress(value: string): boolean {
+  return z.email().safeParse(value).success;
+}
+
+function readVerificationEmail(): string {
+  try {
+    const value = sessionStorage.getItem(VERIFICATION_EMAIL_KEY) ?? "";
+    return isEmailAddress(value) ? value : "";
+  } catch {
+    return "";
+  }
+}
+
+function writeStored(key: string, value: string | null): void {
+  try {
+    if (value) sessionStorage.setItem(key, value);
+    else sessionStorage.removeItem(key);
+  } catch {
+    return;
+  }
+}
+
+function writeVerificationEmail(email: string | null): void {
+  writeStored(VERIFICATION_EMAIL_KEY, email);
+}
+
+function readSignInIdentifier(): string {
+  try {
+    return sessionStorage.getItem(SIGN_IN_IDENTIFIER_KEY) ?? "";
+  } catch {
+    return "";
+  }
+}
+
+function emailFromNavigation(state: unknown): string {
+  if (typeof state !== "object" || state === null || !("email" in state)) return "";
+  const email = state.email;
+  return typeof email === "string" && isEmailAddress(email) ? email : "";
+}
+
+function signInHandoff(state: unknown): { identifier: string; verified: boolean } {
+  if (typeof state !== "object" || state === null) return { identifier: "", verified: false };
+  const identifier = "identifier" in state && typeof state.identifier === "string"
+    ? state.identifier : "";
+  return { identifier, verified: "verified" in state && state.verified === true };
+}
+
 function checked(result: { error: { message?: string; code?: string } | null }) {
   if (result.error) throw new Error(errors[result.error.code ?? ""] ?? result.error.message ?? "Unable to complete this request. Try again.");
 }
 
 export function AuthPage() {
-  const { pathname, search } = useLocation();
+  const { pathname, search, state: navigationState } = useLocation();
   const navigate = useNavigate();
   const auth = useAuth();
   const [busy, setBusy] = useState(false);
+  const [rememberedEmail, setRememberedEmail] = useState(readVerificationEmail);
   const [busyProvider, setBusyProvider] = useState<SocialProvider | null>(null);
   const [showPassword, setShowPassword] = useState(false);
+  const [passwordProblems, setPasswordProblems] = useState<string[]>([]);
   const [message, setMessage] = useState<string | null>(null);
   const [failure, setFailure] = useState(false);
   const [signInOptions, setSignInOptions] = useState<z.infer<typeof signInOptionsSchema> | null>(null);
@@ -54,7 +108,19 @@ export function AuthPage() {
   const callbackError = params.get("error");
   const errorMessage = callbackError ? errors[callbackError] ?? "Sign-in could not be completed. Please try again." : null;
   const deleted = pathname === "/sign-in" && params.get("deleted") === "1";
-  useEffect(() => { heading.current?.focus(); setMessage(null); setShowPassword(false); }, [pathname]);
+  const navigationEmail = emailFromNavigation(navigationState);
+  const pendingVerificationEmail = pathname === "/verify-email"
+    ? navigationEmail || rememberedEmail
+    : "";
+  const handoff = pathname === "/sign-in" ? signInHandoff(navigationState) : null;
+  useEffect(() => {
+    heading.current?.focus(); setMessage(null); setShowPassword(false); setPasswordProblems([]);
+  }, [pathname]);
+  useEffect(() => {
+    if (!navigationEmail) return;
+    writeVerificationEmail(navigationEmail);
+    setRememberedEmail(navigationEmail);
+  }, [navigationEmail]);
   useEffect(() => {
     const controller = new AbortController();
     void fetch("/auth/sign-in-options", { signal: controller.signal })
@@ -72,22 +138,43 @@ export function AuthPage() {
       setFailure(true); setMessage(error instanceof Error ? error.message : "Request failed. Try again.");
     } finally { setBusy(false); }
   }
+  function problemsFor(data: FormData): string[] {
+    if (pathname !== "/register" && pathname !== "/reset-password") return [];
+    const personal = [data.get("username"), data.get("email")].map(value => String(value ?? ""));
+    return passwordIssues(String(data.get("password") ?? ""), personal);
+  }
   async function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     const data = new FormData(event.currentTarget);
     const field = (name: string) => String(data.get(name) ?? "");
     await run(async () => {
+      const problems = problemsFor(data);
+      if (problems.length) {
+        setPasswordProblems(problems);
+        throw new Error(`Choose a stronger password. ${problems[0]}`);
+      }
       if (pathname === "/sign-in") {
         const identifier = field("identifier").trim();
-        checked(identifier.includes("@")
+        const result = identifier.includes("@")
           ? await authClient.signIn.email({ email: identifier, password: field("password") })
-          : await authClient.signIn.username({ username: identifier, password: field("password") }));
+          : await authClient.signIn.username({ username: identifier, password: field("password") });
+        if (result.error?.code === "EMAIL_NOT_VERIFIED") {
+          writeStored(SIGN_IN_IDENTIFIER_KEY, identifier);
+          if (isEmailAddress(identifier)) {
+            writeVerificationEmail(identifier);
+            setRememberedEmail(identifier);
+          }
+        }
+        checked(result);
         await auth.reload(); navigate("/connect-laliga");
       } else if (pathname === "/register") {
         const registration = z.object({ name: z.string().trim().min(1).max(100), username: z.string().trim().toLowerCase().regex(/^[a-z0-9_]{3,30}$/, "Use 3–30 letters, digits or underscores."), email: z.email(), password: z.string().min(12).max(128) }).safeParse({ name: field("name"), username: field("username"), email: field("email"), password: field("password") });
         if (!registration.success) throw new Error(registration.error.issues[0]?.message);
         checked(await authClient.signUp.email({ ...registration.data, callbackURL: "/verify-email" }));
-        navigate("/verify-email");
+        writeVerificationEmail(registration.data.email);
+        writeStored(SIGN_IN_IDENTIFIER_KEY, registration.data.username);
+        setRememberedEmail(registration.data.email);
+        navigate("/verify-email", { state: { email: registration.data.email } });
       } else if (pathname === "/forgot-password") {
         checked(await authClient.requestPasswordReset({ email: field("email"), redirectTo: "/reset-password" }));
         setMessage("If this address has an account, you will receive a password reset link.");
@@ -98,7 +185,12 @@ export function AuthPage() {
         setMessage("Your password has changed. Sign in with your new password.");
       } else if (pathname === "/verify-email") {
         checked(await authClient.emailOtp.verifyEmail({ email: field("email"), otp: field("otp") }));
-        setMessage("Your email is verified. You can now sign in.");
+        const verifiedEmail = field("email");
+        const identifier = readSignInIdentifier() || verifiedEmail;
+        writeVerificationEmail(null);
+        writeStored(SIGN_IN_IDENTIFIER_KEY, null);
+        setRememberedEmail("");
+        navigate("/sign-in", { state: { identifier, verified: true } });
       }
     });
   }
@@ -114,9 +206,13 @@ export function AuthPage() {
       {pathname === "/verify-email" &&
         <p className="auth-description">Check your inbox for the code. If it is missing, check your spam folder.</p>}
     </header>
+    {handoff?.verified && !message && !errorMessage && <div className="auth-feedback" role="status">
+      <p>{VERIFIED_NOTICE}</p>
+    </div>}
     {(message || errorMessage || deleted) && <div className={`auth-feedback ${failure || errorMessage ? "auth-feedback--error" : ""}`} role={failure || errorMessage ? "alert" : "status"}>
       <p>{message || errorMessage || "Your Fantasy Builder account was deleted."}</p>
-      {message === errors.EMAIL_NOT_VERIFIED && <Link to="/verify-email">Verify your email</Link>}
+      {message === errors.EMAIL_NOT_VERIFIED && <Link to="/verify-email"
+        state={rememberedEmail ? { email: rememberedEmail } : undefined}>Verify your email</Link>}
     </div>}
     {social && optionsUnavailable && <p className="auth-field-hint" role="status">Other sign-in options could not be checked. You can still use your username or email.</p>}
     {social && availableProviders.length > 0 && <>
@@ -133,21 +229,26 @@ export function AuthPage() {
       <p className="auth-social-hint">{pathname === "/register" ? "No new password needed with a provider." : "Use the account you already know."}</p>
       <div className="auth-divider"><span>or continue with {pathname === "/sign-in" ? "your password" : "email"}</span></div>
     </>}
-    <form key={pathname} className="auth-form" onSubmit={submit}>
+    <form key={pathname} className="auth-form" onSubmit={submit}
+      onInput={event => setPasswordProblems(problemsFor(new FormData(event.currentTarget)))}>
         <fieldset disabled={busy}>
         <legend className="visually-hidden">{titles[pathname]} with {social ? "email or username" : "your account"}</legend>
         {pathname === "/register" && <>
           <div className="auth-field"><label htmlFor="name">Name</label><input id="name" name="name" required autoComplete="name" maxLength={100} /></div>
           <div className="auth-field"><label htmlFor="username">Username</label><input id="username" name="username" required autoComplete="username" minLength={3} maxLength={30} pattern="[A-Za-z0-9_]{3,30}" aria-describedby="username-hint" /><p id="username-hint" className="auth-field-hint">3–30 letters, digits or underscores.</p></div>
         </>}
-        {pathname === "/sign-in" && <div className="auth-field"><label htmlFor="identifier">Username or email</label><input id="identifier" name="identifier" required autoComplete="username" autoCapitalize="none" spellCheck={false} /></div>}
-        {email && <div className="auth-field"><label htmlFor="email">Email</label><input id="email" name="email" type="email" required autoComplete="email" /></div>}
+        {pathname === "/sign-in" && <div className="auth-field"><label htmlFor="identifier">Username or email</label><input id="identifier" name="identifier" required autoComplete="username" autoCapitalize="none" spellCheck={false} defaultValue={handoff?.identifier} /></div>}
+        {email && <div className="auth-field"><label htmlFor="email">Email</label>
+          <input id="email" name="email" type="email" required autoComplete="email"
+            defaultValue={pendingVerificationEmail} /></div>}
         {pathname === "/verify-email" && <div className="auth-field"><label htmlFor="otp">Verification code</label><input id="otp" name="otp" inputMode="numeric" autoComplete="one-time-code" pattern="[0-9]{8}" required minLength={8} maxLength={8} /></div>}
         {password && <div className="auth-field">
           <div className="auth-label-row"><label htmlFor="password">{pathname === "/sign-in" ? "Password" : "New password (at least 12 characters)"}</label>{pathname === "/sign-in" && <Link to="/forgot-password">Forgot password?</Link>}</div>
-          <div className="auth-password"><input id="password" name="password" type={showPassword ? "text" : "password"} required minLength={pathname === "/sign-in" ? 1 : 12} maxLength={128} autoComplete={pathname === "/sign-in" ? "current-password" : "new-password"} />
+          <div className="auth-password"><input id="password" name="password" type={showPassword ? "text" : "password"} required minLength={pathname === "/sign-in" ? 1 : 12} maxLength={128} autoComplete={pathname === "/sign-in" ? "current-password" : "new-password"} aria-describedby={pathname === "/sign-in" ? undefined : "password-hint"} aria-invalid={passwordProblems.length > 0 || undefined} />
             <button type="button" className="auth-password-toggle" aria-label={showPassword ? "Hide password" : "Show password"} aria-pressed={showPassword} aria-controls="password" onClick={() => setShowPassword(value => !value)}>{showPassword ? "Hide" : "Show"}</button>
           </div>
+          {pathname !== "/sign-in" && <p id="password-hint" className="auth-field-hint" aria-live="polite">
+            {passwordProblems[0] ?? "Longer is better. A few random words work well."}</p>}
         </div>}
         <Button type="submit" className="auth-submit" loading={busy && !busyProvider}>{pathname === "/verify-email" ? "Verify email" : titles[pathname]}</Button>
         {pathname === "/verify-email" && <Button variant="outline" disabled={busy} onClick={(event) => {

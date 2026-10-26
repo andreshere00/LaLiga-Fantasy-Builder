@@ -17,10 +17,15 @@ underscores. Both username and email sign-in require a verified email.
 
 Verification uses Better Auth's Email OTP plugin: an eight-digit code expires
 in ten minutes, is hashed in storage, has five allowed attempts and is consumed
-once. Enter it at `/verify-email`. The default stateless verification endpoint is
-disabled because it does not consume links. Recovery uses the framework's
-single-use reset link (30 minutes) at `/reset-password`; successful reset revokes
-sessions. Requests for unknown recovery addresses have the same public response.
+once. Enter it at `/verify-email`. The address from registration, or from an
+email sign-in that still needs verification, is filled in there and kept for
+this browser tab so a refresh does not clear it. After a successful code, the
+app opens `/sign-in` with the username (or email) entered earlier filled in; the
+password is never stored or prefilled. The default stateless
+verification endpoint is disabled because it does not consume links. Recovery
+uses the framework's single-use reset link (30 minutes) at `/reset-password`;
+successful reset revokes sessions. Requests for unknown recovery addresses have
+the same public response.
 
 Sessions expire after one day without sliding renewal or cookie caching.
 Better Auth owns cookie, Origin and CSRF validation; there is no separate Python
