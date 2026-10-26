@@ -92,6 +92,13 @@ client ID. The URL must be the frontend origin's `/laliga/callback`; otherwise
 browser linking returns 503 `browser_unavailable` instead of starting an unusable
 native redirect. The native CLI pairing flow remains available independently.
 
+The login response also sets an HttpOnly, Secure, `SameSite=Lax` cookie scoped to
+`/laliga/callback`; only its hash is stored with the challenge. The callback
+rejects a request without the matching cookie and leaves the challenge pending, so
+another person cannot complete a flow you started and attach their LaLiga account
+to your application account. Challenges created before migration 0005 have no
+binding and must be restarted.
+
 The UI chains the two steps: successful social or credential sign-in returns to
 `/connect-laliga`, which waits for the application JWT and checks the connection.
 An already linked account returns to the lineup; an unlinked account continues

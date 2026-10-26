@@ -120,7 +120,7 @@
           "laliga"
         ],
         "summary": "Laliga Login",
-        "description": "Start browser LaLiga delegation through a registered HTTPS callback.",
+        "description": "Start browser LaLiga delegation through a registered HTTPS callback.\n\nA random HttpOnly cookie binds the challenge to this browser; the callback\nrejects any other browser, so a victim cannot be linked to this account.",
         "operationId": "laliga_login_laliga_login_post",
         "responses": {
           "200": {

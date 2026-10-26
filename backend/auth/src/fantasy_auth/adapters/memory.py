@@ -177,10 +177,15 @@ class MemoryBrowserPairingStore:
         }
         self._records[record.state] = record
 
-    async def consume(self, state: str, *, now: int) -> BrowserPairingRecord | None:
-        """Consume at most once, rejecting expired challenges."""
-        record = self._records.pop(state, None)
-        return record if record and record.expires_at > now else None
+    async def consume(
+        self, state: str, *, now: int, binding_hash: str | None = None
+    ) -> BrowserPairingRecord | None:
+        """Consume at most once, rejecting expired or differently bound challenges."""
+        record = self._records.get(state)
+        if record is None or (binding_hash is not None and record.binding_hash != binding_hash):
+            return None
+        del self._records[state]
+        return record if record.expires_at > now else None
 
     async def cancel(self, user_id: str) -> None:
         """Cancel only this user's pending native callbacks."""

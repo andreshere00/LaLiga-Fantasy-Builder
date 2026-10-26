@@ -46,6 +46,12 @@ async def exercise_store(store):
     assert await store.consume("state-a", now=100) is None
     await store.save(record, now=100)
     assert await store.consume("state-a", now=200) is None
+    bound = BrowserPairingRecord(
+        "state-b", "alice", "pairing-a", "secret", "verifier", 200, binding_hash="good"
+    )
+    await store.save(bound, now=100)
+    assert await store.consume("state-b", now=100, binding_hash="bad") is None
+    assert await store.consume("state-b", now=100, binding_hash="good") == bound
 
 
 # ---- Happy path ---- #

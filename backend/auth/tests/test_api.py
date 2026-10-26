@@ -68,7 +68,9 @@ def container():
 
 @pytest.fixture
 def client(container):
-    with TestClient(create_app(container.settings, container)) as client:
+    with TestClient(
+        create_app(container.settings, container), base_url="https://app.example.test"
+    ) as client:
         yield client
 
 
@@ -94,6 +96,8 @@ def test_pairing_browser_callback_preserves_owner_without_cookies(client, contai
     assert "private" not in result.headers["location"]
     assert client.get("/laliga/connection", headers=headers()).json()["linked"]
     assert not client.get("/laliga/connection", headers=headers("bob")).json()["linked"]
+    assert "lfb_laliga_bind=" in result.headers["set-cookie"]
+    assert "Max-Age=0" in result.headers["set-cookie"]
     replay = client.get(callback, follow_redirects=False)
     assert replay.headers["location"] == (
         "https://app.example.test/connect-laliga?error=laliga_link_failed"
@@ -161,6 +165,38 @@ def test_pending_native_callback_remains_compatible(client, container):
 
 
 # ---- Error paths ---- #
+def test_browser_callback_without_binding_cookie_is_rejected_and_keeps_challenge(client, container):
+    client.post("/laliga/login", headers=headers())
+    challenge = next(iter(container.browser_pairings._records.values()))
+    victim = TestClient(
+        create_app(container.settings, container), base_url="https://app.example.test"
+    )
+
+    result = victim.get(
+        f"/laliga/callback?code=code&state={challenge.state}", follow_redirects=False
+    )
+
+    assert result.headers["location"].endswith("error=laliga_link_failed")
+    assert challenge.state in container.browser_pairings._records
+    assert not client.get("/laliga/connection", headers=headers()).json()["linked"]
+
+
+def test_browser_callback_with_other_browsers_cookie_is_rejected(client, container):
+    client.post("/laliga/login", headers=headers())
+    challenge = next(iter(container.browser_pairings._records.values()))
+    victim = TestClient(
+        create_app(container.settings, container), base_url="https://app.example.test"
+    )
+    victim.cookies.set("lfb_laliga_bind", "forged", path="/laliga/callback")
+
+    result = victim.get(
+        f"/laliga/callback?code=code&state={challenge.state}", follow_redirects=False
+    )
+
+    assert result.headers["location"].endswith("error=laliga_link_failed")
+    assert challenge.state in container.browser_pairings._records
+
+
 @pytest.mark.parametrize(
     "method,path",
     [

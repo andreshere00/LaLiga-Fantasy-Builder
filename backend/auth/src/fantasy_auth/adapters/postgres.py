@@ -247,21 +247,26 @@ class PostgresBrowserPairingStore:
             )
             await conn.execute(
                 """INSERT INTO browser_pairings
-                (state, user_id, pairing_id, secret, code_verifier, expires_at)
-                VALUES ($1, $2, $3, $4, $5, to_timestamp($6))""",
+                (state, user_id, pairing_id, secret, code_verifier, expires_at, binding_hash)
+                VALUES ($1, $2, $3, $4, $5, to_timestamp($6), $7)""",
                 record.state,
                 record.user_id,
                 record.pairing_id,
                 record.secret,
                 record.code_verifier,
                 record.expires_at,
+                record.binding_hash,
             )
 
-    async def consume(self, state: str, *, now: int) -> BrowserPairingRecord | None:
-        """Delete and return a live challenge exactly once across workers."""
+    async def consume(
+        self, state: str, *, now: int, binding_hash: str | None = None
+    ) -> BrowserPairingRecord | None:
+        """Delete and return a live, matching challenge exactly once across workers."""
         row = await self._pool.fetchrow(
-            "DELETE FROM browser_pairings WHERE state = $1 RETURNING *",
+            "DELETE FROM browser_pairings WHERE state = $1 "
+            "AND ($2::text IS NULL OR binding_hash = $2) RETURNING *",
             state,
+            binding_hash,
         )
         if row is None or _from_dt(row["expires_at"]) <= now:
             return None
@@ -272,6 +277,7 @@ class PostgresBrowserPairingStore:
             secret=row["secret"],
             code_verifier=row["code_verifier"],
             expires_at=_from_dt(row["expires_at"]),
+            binding_hash=row["binding_hash"],
         )
 
     async def cancel(self, user_id: str) -> None:

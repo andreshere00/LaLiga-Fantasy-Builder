@@ -135,6 +135,7 @@ class BrowserPairingRecord:
     secret: str
     code_verifier: str
     expires_at: int
+    binding_hash: str = ""
 
 
 class BrowserPairingStore(Protocol):
@@ -143,8 +144,13 @@ class BrowserPairingStore(Protocol):
     async def save(self, record: BrowserPairingRecord, *, now: int) -> None:
         """Store a challenge and clean up expired secrets."""
 
-    async def consume(self, state: str, *, now: int) -> BrowserPairingRecord | None:
-        """Atomically remove and return a live challenge."""
+    async def consume(
+        self, state: str, *, now: int, binding_hash: str | None = None
+    ) -> BrowserPairingRecord | None:
+        """Atomically remove and return a live challenge.
+
+        When ``binding_hash`` is given, a challenge with another binding stays pending.
+        """
 
     async def cancel(self, user_id: str) -> None:
         """Remove all pending challenges belonging to the verified user."""
