@@ -13,10 +13,15 @@ app.use((_req, res, next) => {
   next();
 });
 app.get("/health/live", (_req, res) => { res.json({ status: "ok" }); });
+const MAIL_CHECK_TTL_MS = 60_000;
+let mailCheckedAt = 0;
 app.get("/health/ready", async (_req, res) => {
   try {
     await pool.query('SELECT 1 FROM "user" LIMIT 1');
-    await mailer.verify();
+    if (Date.now() - mailCheckedAt > MAIL_CHECK_TTL_MS) {
+      await mailer.verify();
+      mailCheckedAt = Date.now();
+    }
     res.json({ status: "ok" });
   } catch { res.status(503).json({ status: "not_ready" }); }
 });
