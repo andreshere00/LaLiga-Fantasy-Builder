@@ -15,6 +15,11 @@ Register at `/register` with a name, username, email and a 12–128 character
 password. Usernames normalize to lowercase and contain 3–30 letters, digits or
 underscores. Both username and email sign-in require a verified email.
 
+The identity service enforces a password policy on registration and password reset:
+minimum length, common passwords, repeated or sequential characters and (at
+registration) the username or email. The registration and reset forms show the same
+rules while typing.
+
 Verification uses Better Auth's Email OTP plugin: an eight-digit code expires
 in ten minutes, is hashed in storage, has five allowed attempts and is consumed
 once. Enter it at `/verify-email`. The address from registration, or from an

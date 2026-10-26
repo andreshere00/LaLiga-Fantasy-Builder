@@ -42,7 +42,7 @@ after(async () => { await pool.end(); await admin.query(`DROP SCHEMA ${schema} C
 
 test("account settings verify email changes and block deletion until LaLiga is disconnected", async () => {
   const email = "settings@example.test";
-  const password = "settings-password-12345";
+  const password = "orange-lamp-river-12345";
   let response = await request("/sign-up/email", { name: "Settings", username: "settings", email, password }, "");
   assert.equal(response.status, 200);
   const signupCode = outbox.at(-1)!.text.match(/code is ([0-9]{8})/)![1];
@@ -233,10 +233,22 @@ test("credential enrollment requires recovery proof and expired sessions cannot 
   assert.equal((await request("/token", undefined, enrolledCookie)).status, 401);
 });
 
+test("weak passwords are rejected by sign-up and reset endpoints", async () => {
+  const weak = { name: "Weak", username: "weakling", email: "weak@example.test" };
+  for (const password of ["short1", "password123456", "aaaaaaaaaaaaaa", "weakling-is-here-1"]) {
+    const response = await request("/sign-up/email", { ...weak, password }, "", { "X-Real-IP": "192.0.2.77" });
+    assert.equal(response.status, 400);
+    assert.equal((await response.json()).code, "WEAK_PASSWORD");
+  }
+  const other = { "X-Real-IP": "192.0.2.78" };
+  const reset = await request("/reset-password", { token: "forged", newPassword: "abcdefghijklmn" }, "", other);
+  assert.equal((await reset.json()).code, "WEAK_PASSWORD");
+});
+
 test("verification expiry, username uniqueness, wrong passwords and shared rate limits fail closed", async () => {
   await pool.query('DELETE FROM "rateLimit"');
   const email = "expiry@example.test";
-  const password = "expiry-fixture-password-123";
+  const password = "stale-fixture-password-123";
   assert.equal((await request("/sign-up/email", { email, password, name: "Expiry", username: "expiry" }, "")).status, 200);
   const otp = outbox.at(-1)!.text.match(/code is ([0-9]{8})/)![1];
   await pool.query('UPDATE "verification" SET "expiresAt" = NOW() - INTERVAL \'1 second\'');
@@ -267,7 +279,7 @@ test("mail transport failure cannot create a verified account or authenticated s
   const failingMailer = createIdentity(config, pool, async () => { throw new Error("synthetic SMTP failure"); });
   const response = await failingMailer.handler(new Request(`${origin}/auth/sign-up/email`, {
     method: "POST", headers: { "X-Real-IP": "192.0.2.88", "Content-Type": "application/json", Origin: origin },
-    body: JSON.stringify({ email: "mail-failure@example.test", password: "mail-failure-password-123", name: "Mail", username: "mail_failure" }),
+    body: JSON.stringify({ email: "mail-failure@example.test", password: "transport-fixture-password-123", name: "Mail", username: "mail_failure" }),
   }));
   // Verification delivery is deliberately non-fatal in Better Auth; the account
   // remains unverified and the user can retry delivery from /verify-email.

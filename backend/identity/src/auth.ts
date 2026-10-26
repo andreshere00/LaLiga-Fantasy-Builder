@@ -5,6 +5,7 @@ import { decodeJwt, importPKCS8, SignJWT } from "jose";
 import { z } from "zod";
 import type { Pool } from "pg";
 import type { Config } from "./config.js";
+import { passwordIssues } from "./passwordPolicy.js";
 import { emailChangeMail, passwordResetMail, verificationMail, type MailContent } from "./mailTemplates.js";
 
 export type Mail = MailContent & { to: string };
@@ -114,6 +115,14 @@ export function createIdentity(cfg: Config, database: Pool, send: SendMail, disc
     },
     hooks: {
       before: createAuthMiddleware(async ctx => {
+        const candidate = ctx.path === "/sign-up/email" ? "password"
+          : ctx.path === "/reset-password" || ctx.path === "/change-password" ? "newPassword" : null;
+        if (candidate) {
+          const body = (ctx.body ?? {}) as Record<string, unknown>;
+          const text = (key: string) => (typeof body[key] === "string" ? body[key] as string : "");
+          const issues = passwordIssues(text(candidate), [text("username"), text("email")]);
+          if (issues.length) throw new APIError("BAD_REQUEST", { code: "WEAK_PASSWORD", message: issues[0] });
+        }
         if (ctx.path === "/link-social") {
           const session = await getSessionFromCtx(ctx);
           if (!session || Date.now() - session.session.createdAt.getTime() > 600_000) {
