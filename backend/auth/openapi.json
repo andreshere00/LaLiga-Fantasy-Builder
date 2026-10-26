@@ -2,224 +2,10 @@
   "openapi": "3.1.0",
   "info": {
     "title": "LaLiga Fantasy Builder Auth",
-    "description": "LaLiga Fantasy Builder **auth** service.\n\nBrowser clients use **session cookies** (``fantasy_session``, ``fantasy_csrf``)\nand ``X-CSRF-Token`` on mutating routes. The frontend exchanges the session for\na short-lived internal JWT via ``POST /auth/token`` and sends that JWT to\n``backend/api``.\n\n``/internal/*`` routes require the internal JWT **and** ``X-Service-Token`` on\na private network. They must not be exposed on the public internet.",
+    "description": "LaLiga Fantasy Builder **auth** service.\n\nApplication authentication is owned by Better Auth at ``/auth`` on the identity\nservice. LaLiga connection and pairing creation require its Ed25519 Bearer JWT.\nThe registered HTTPS browser callback and native helper completion use single-use\nserver challenges, not browser cookies. Browser linking is unavailable until its\nexact HTTPS redirect URI is configured and registered with LaLiga.\n\n``/internal/*`` routes require the internal JWT **and** ``X-Service-Token`` on\na private network. They must not be exposed on the public internet.",
     "version": "0.1.0"
   },
   "paths": {
-    "/auth/login": {
-      "get": {
-        "tags": [
-          "auth"
-        ],
-        "summary": "Auth Login",
-        "description": "Start app OIDC login and set pending session cookies.\n\nReturns:\n    Redirect to the app identity provider.",
-        "operationId": "auth_login_auth_login_get",
-        "responses": {
-          "302": {
-            "description": "Redirect to the application identity provider."
-          }
-        }
-      }
-    },
-    "/auth/callback": {
-      "get": {
-        "tags": [
-          "auth"
-        ],
-        "summary": "Auth Callback",
-        "description": "Complete app OIDC login from the IdP redirect.\n\nBrowsers (``Accept: text/html``) are sent to ``FRONTEND_ORIGIN`` after the\nsession cookies are set. Other clients still receive the JSON session view.\n\nArgs:\n    request: Incoming request (reads session cookie).\n    code: Authorization code.\n    state: OIDC state.\n\nReturns:\n    Redirect for HTML clients, otherwise a JSON session view. Both set the\n    rotated CSRF cookie.",
-        "operationId": "auth_callback_auth_callback_get",
-        "parameters": [
-          {
-            "name": "code",
-            "in": "query",
-            "required": true,
-            "schema": {
-              "type": "string",
-              "title": "Code"
-            }
-          },
-          {
-            "name": "state",
-            "in": "query",
-            "required": true,
-            "schema": {
-              "type": "string",
-              "title": "State"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "JSON session view for non-browser clients.",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/SessionViewResponse"
-                }
-              }
-            }
-          },
-          "302": {
-            "description": "Redirect to the frontend for browser clients."
-          },
-          "422": {
-            "description": "Validation Error",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/HTTPValidationError"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "/auth/logout": {
-      "post": {
-        "tags": [
-          "auth"
-        ],
-        "summary": "Auth Logout",
-        "description": "Delete the server-side session and clear cookies.\n\nRequires CSRF when a session cookie is present. Without a session cookie\nthe call is an idempotent success.\n\nNote:\n    B2C ``/logout`` must still be visited separately to clear SSO cookies.",
-        "operationId": "auth_logout_auth_logout_post",
-        "parameters": [
-          {
-            "name": "X-CSRF-Token",
-            "in": "header",
-            "required": false,
-            "schema": {
-              "anyOf": [
-                {
-                  "type": "string"
-                },
-                {
-                  "type": "null"
-                }
-              ],
-              "title": "X-Csrf-Token"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "Successful Response",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/OkResponse"
-                }
-              }
-            }
-          },
-          "422": {
-            "description": "Validation Error",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/HTTPValidationError"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "/auth/me": {
-      "get": {
-        "tags": [
-          "auth"
-        ],
-        "summary": "Auth Me",
-        "description": "Return the current app user and CSRF token.\n\nReturns:\n    Public session view.",
-        "operationId": "auth_me_auth_me_get",
-        "responses": {
-          "200": {
-            "description": "Successful Response",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/SessionViewResponse"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "/auth/token": {
-      "post": {
-        "tags": [
-          "auth"
-        ],
-        "summary": "Exchange Session For Token",
-        "description": "Mint an internal JWT from the authenticated browser session.\n\nArgs:\n    request: Incoming request with session cookies.\n    x_csrf_token: CSRF header matching the double-submit cookie.\n\nReturns:\n    Bearer JWT payload (not set as a cookie).",
-        "operationId": "exchange_session_for_token_auth_token_post",
-        "parameters": [
-          {
-            "name": "X-CSRF-Token",
-            "in": "header",
-            "required": false,
-            "schema": {
-              "anyOf": [
-                {
-                  "type": "string"
-                },
-                {
-                  "type": "null"
-                }
-              ],
-              "title": "X-Csrf-Token"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "Successful Response",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/InternalTokenResponse"
-                }
-              }
-            }
-          },
-          "422": {
-            "description": "Validation Error",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/HTTPValidationError"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "/.well-known/jwks.json": {
-      "get": {
-        "tags": [
-          "auth"
-        ],
-        "summary": "Jwks",
-        "description": "Publish the public JWKS used to verify internal JWTs.\n\nReturns:\n    JWKS document with RSA signing keys.",
-        "operationId": "jwks__well_known_jwks_json_get",
-        "responses": {
-          "200": {
-            "description": "Successful Response",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/JwksResponse"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
     "/internal/laliga/bearer": {
       "get": {
         "tags": [
@@ -292,26 +78,8 @@
           "laliga"
         ],
         "summary": "Create Pairing",
-        "description": "Create a one-time pairing for the authenticated app user.\n\nArgs:\n    request: Incoming request.\n    x_csrf_token: CSRF header.\n\nReturns:\n    Pairing ID, secret (shown once), expiry, and expected nonce.",
+        "description": "Create a one-time pairing for the authenticated app user.\n\nArgs:\n    request: Incoming request.\n\nReturns:\n    Pairing ID, secret (shown once), expiry, and expected nonce.",
         "operationId": "create_pairing_laliga_pairings_post",
-        "parameters": [
-          {
-            "name": "X-CSRF-Token",
-            "in": "header",
-            "required": false,
-            "schema": {
-              "anyOf": [
-                {
-                  "type": "string"
-                },
-                {
-                  "type": "null"
-                }
-              ],
-              "title": "X-Csrf-Token"
-            }
-          }
-        ],
         "responses": {
           "200": {
             "description": "Successful Response",
@@ -322,13 +90,23 @@
                 }
               }
             }
-          },
-          "422": {
-            "description": "Validation Error",
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "laliga"
+        ],
+        "summary": "Cancel Pairings",
+        "description": "Cancel the verified user's outstanding browser and helper challenges.",
+        "operationId": "cancel_pairings_laliga_pairings_delete",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/HTTPValidationError"
+                  "$ref": "#/components/schemas/OkResponse"
                 }
               }
             }
@@ -337,16 +115,48 @@
       }
     },
     "/laliga/login": {
-      "get": {
+      "post": {
         "tags": [
           "laliga"
         ],
         "summary": "Laliga Login",
-        "description": "Redirect an authenticated browser to LaLiga, or home if already linked.\n\nArgs:\n    request: Incoming request. Reads the session cookie.\n\nReturns:\n    Redirect to B2C or the frontend origin.\n\nRaises:\n    SessionError: When the caller has no application session.",
-        "operationId": "laliga_login_laliga_login_get",
+        "description": "Start browser LaLiga delegation through a registered HTTPS callback.\n\nA random HttpOnly cookie binds the challenge to this browser; the callback\nrejects any other browser, so a victim cannot be linked to this account.",
+        "operationId": "laliga_login_laliga_login_post",
         "responses": {
-          "302": {
-            "description": "Redirect to the frontend or LaLiga login."
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BrowserLoginResponse"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Browser callback unavailable.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AuthErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/laliga/callback": {
+      "get": {
+        "tags": [
+          "laliga"
+        ],
+        "summary": "Laliga Browser Callback",
+        "description": "Complete a browser authorization and return to the fixed frontend origin.",
+        "operationId": "laliga_browser_callback_laliga_callback_get",
+        "responses": {
+          "303": {
+            "description": "Successful Response"
           }
         }
       }
@@ -357,7 +167,7 @@
           "laliga"
         ],
         "summary": "Complete Redirect",
-        "description": "Finish pairing from a native ``authredirect://`` callback.\n\nThe URL handler posts the callback. Tokens stay inside auth. The response\ntells the handler which frontend origin to open.\n\nArgs:\n    body: Full native callback URL.\n    request: Used for client IP rate limiting.\n\nReturns:\n    Completion flag and frontend origin. No tokens or pairing secrets.\n\nRaises:\n    PairingError: When the callback does not match a pending session.",
+        "description": "Finish pairing from a native ``authredirect://`` callback.\n\nThe URL handler posts the callback. Tokens stay inside auth. The response\ntells the handler which frontend origin to open.\n\nArgs:\n    body: Full native callback URL.\n    request: Used for client IP rate limiting.\n\nReturns:\n    Completion flag and frontend origin. No tokens or pairing secrets.\n\nRaises:\n    PairingError: When the callback does not match a pending challenge.",
         "operationId": "complete_redirect_laliga_pairings_complete_redirect_post",
         "requestBody": {
           "content": {
@@ -399,7 +209,7 @@
           "laliga"
         ],
         "summary": "Complete Pairing",
-        "description": "Complete pairing from the local PKCE helper (rate-limited).\n\nThis endpoint is called by the helper CLI, not the browser, so it uses\nthe pairing secret instead of the session CSRF cookie.\n\nArgs:\n    pairing_id: Public pairing identifier.\n    body: Secret + raw B2C token response.\n    request: Used for client IP rate limiting.\n\nReturns:\n    Completion status with manager profile fields (no tokens).",
+        "description": "Complete pairing from the local PKCE helper (rate-limited).\n\nThis endpoint is called by the helper CLI, not the browser, so it uses\nthe pairing secret as its independent one-time proof.\n\nArgs:\n    pairing_id: Public pairing identifier.\n    body: Secret + raw B2C token response.\n    request: Used for client IP rate limiting.\n\nReturns:\n    Completion status with manager profile fields (no tokens).",
         "operationId": "complete_pairing_laliga_pairings__pairing_id__complete_post",
         "parameters": [
           {
@@ -452,26 +262,8 @@
           "laliga"
         ],
         "summary": "Get Connection",
-        "description": "Return LaLiga connection status for the current user.\n\nArgs:\n    request: Incoming request.\n    x_csrf_token: CSRF header (safe read still requires session).\n\nReturns:\n    Public status without tokens.",
+        "description": "Return LaLiga connection status for the current user.\n\nArgs:\n    request: Incoming request.\n\nReturns:\n    Public status without tokens.",
         "operationId": "get_connection_laliga_connection_get",
-        "parameters": [
-          {
-            "name": "X-CSRF-Token",
-            "in": "header",
-            "required": false,
-            "schema": {
-              "anyOf": [
-                {
-                  "type": "string"
-                },
-                {
-                  "type": "null"
-                }
-              ],
-              "title": "X-Csrf-Token"
-            }
-          }
-        ],
         "responses": {
           "200": {
             "description": "Successful Response",
@@ -479,16 +271,6 @@
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/ConnectionStatusResponse"
-                }
-              }
-            }
-          },
-          "422": {
-            "description": "Validation Error",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/HTTPValidationError"
                 }
               }
             }
@@ -500,26 +282,8 @@
           "laliga"
         ],
         "summary": "Delete Connection",
-        "description": "Remove sealed LaLiga tokens for the current user.\n\nArgs:\n    request: Incoming request.\n    x_csrf_token: CSRF header.\n\nReturns:\n    ``{\"ok\": true}``.",
+        "description": "Remove sealed LaLiga tokens for the current user.\n\nArgs:\n    request: Incoming request.\n\nReturns:\n    ``{\"ok\": true}``.",
         "operationId": "delete_connection_laliga_connection_delete",
-        "parameters": [
-          {
-            "name": "X-CSRF-Token",
-            "in": "header",
-            "required": false,
-            "schema": {
-              "anyOf": [
-                {
-                  "type": "string"
-                },
-                {
-                  "type": "null"
-                }
-              ],
-              "title": "X-Csrf-Token"
-            }
-          }
-        ],
         "responses": {
           "200": {
             "description": "Successful Response",
@@ -527,16 +291,6 @@
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/OkResponse"
-                }
-              }
-            }
-          },
-          "422": {
-            "description": "Validation Error",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/HTTPValidationError"
                 }
               }
             }
@@ -620,6 +374,46 @@
   },
   "components": {
     "schemas": {
+      "AuthErrorResponse": {
+        "properties": {
+          "error": {
+            "type": "string",
+            "title": "Error"
+          },
+          "detail": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Detail"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "error"
+        ],
+        "title": "AuthErrorResponse",
+        "description": "Sanitized error shape returned by auth routes."
+      },
+      "BrowserLoginResponse": {
+        "properties": {
+          "authorize_url": {
+            "type": "string",
+            "title": "Authorize Url"
+          }
+        },
+        "type": "object",
+        "required": [
+          "authorize_url"
+        ],
+        "title": "BrowserLoginResponse",
+        "description": "Validated server-created authorization URL; no PKCE secrets."
+      },
       "CompleteRedirectRequest": {
         "properties": {
           "callback": {
@@ -777,38 +571,6 @@
         "title": "HealthResponse",
         "description": "Liveness response."
       },
-      "InternalTokenResponse": {
-        "properties": {
-          "access_token": {
-            "type": "string",
-            "title": "Access Token"
-          },
-          "token_type": {
-            "type": "string",
-            "title": "Token Type",
-            "default": "Bearer"
-          },
-          "expires_in": {
-            "type": "integer",
-            "minimum": 1.0,
-            "title": "Expires In"
-          },
-          "expires_at": {
-            "type": "integer",
-            "minimum": 1.0,
-            "title": "Expires At"
-          }
-        },
-        "additionalProperties": false,
-        "type": "object",
-        "required": [
-          "access_token",
-          "expires_in",
-          "expires_at"
-        ],
-        "title": "InternalTokenResponse",
-        "description": "Short-lived internal JWT for the Fantasy API."
-      },
       "JsonValue": {
         "anyOf": [
           {
@@ -839,76 +601,6 @@
             "type": "null"
           }
         ]
-      },
-      "JsonWebKey": {
-        "properties": {
-          "kty": {
-            "type": "string",
-            "title": "Kty"
-          },
-          "use": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Use"
-          },
-          "kid": {
-            "type": "string",
-            "title": "Kid"
-          },
-          "alg": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Alg"
-          },
-          "n": {
-            "type": "string",
-            "title": "N"
-          },
-          "e": {
-            "type": "string",
-            "title": "E"
-          }
-        },
-        "additionalProperties": false,
-        "type": "object",
-        "required": [
-          "kty",
-          "kid",
-          "n",
-          "e"
-        ],
-        "title": "JsonWebKey",
-        "description": "Public RSA key published for internal JWT verification."
-      },
-      "JwksResponse": {
-        "properties": {
-          "keys": {
-            "items": {
-              "$ref": "#/components/schemas/JsonWebKey"
-            },
-            "type": "array",
-            "title": "Keys"
-          }
-        },
-        "additionalProperties": false,
-        "type": "object",
-        "required": [
-          "keys"
-        ],
-        "title": "JwksResponse",
-        "description": "JSON Web Key Set response."
       },
       "LaligaBearerResponse": {
         "properties": {
@@ -1053,62 +745,6 @@
         "title": "PairingCreateResponse",
         "description": "One-time pairing credentials for the local helper."
       },
-      "SessionUserResponse": {
-        "properties": {
-          "user_id": {
-            "type": "string",
-            "title": "User Id"
-          },
-          "email": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Email"
-          },
-          "name": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Name"
-          }
-        },
-        "additionalProperties": false,
-        "type": "object",
-        "required": [
-          "user_id"
-        ],
-        "title": "SessionUserResponse",
-        "description": "Public app-user details in a browser session."
-      },
-      "SessionViewResponse": {
-        "properties": {
-          "user": {
-            "$ref": "#/components/schemas/SessionUserResponse"
-          },
-          "csrf_token": {
-            "type": "string",
-            "title": "Csrf Token"
-          }
-        },
-        "additionalProperties": false,
-        "type": "object",
-        "required": [
-          "user",
-          "csrf_token"
-        ],
-        "title": "SessionViewResponse",
-        "description": "Public session data returned after login and by ``/auth/me``."
-      },
       "ValidationError": {
         "properties": {
           "loc": {
@@ -1158,7 +794,7 @@
     },
     {
       "name": "auth",
-      "description": "Application OIDC login, session, internal JWT, and JWKS."
+      "description": "Application authentication is served by the separate identity runtime."
     },
     {
       "name": "laliga",

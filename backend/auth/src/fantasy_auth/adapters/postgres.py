@@ -1,15 +1,16 @@
-"""Async PostgreSQL adapters for sessions, pairings, and connections."""
+"""Async PostgreSQL adapters for pairing challenges and connections."""
 
 from __future__ import annotations
 
+import asyncio
 import json
 from datetime import UTC, datetime
 from typing import Any
 
 import asyncpg
 
-from fantasy_auth.domain.users import AppUser, LaligaUser
-from fantasy_auth.ports.repos import ConnectionRecord, PairingRecord, SessionRecord
+from fantasy_auth.domain.users import LaligaUser
+from fantasy_auth.ports.repos import BrowserPairingRecord, ConnectionRecord, PairingRecord
 
 
 def _to_dt(unix_ts: int) -> datetime:
@@ -20,30 +21,6 @@ def _from_dt(value: datetime) -> int:
     if value.tzinfo is None:
         value = value.replace(tzinfo=UTC)
     return int(value.timestamp())
-
-
-def _session_from_row(row: Any) -> SessionRecord:
-    """Build a session from a Postgres row, including optional LaLiga fields."""
-    user = None
-    if row["user_id"] is not None:
-        user = AppUser(
-            user_id=row["user_id"],
-            email=row["email"],
-            name=row["name"],
-        )
-    return SessionRecord(
-        session_id=row["session_id"],
-        user=user,
-        csrf_token=row["csrf_token"],
-        expires_at=_from_dt(row["expires_at"]),
-        oidc_state=row["oidc_state"],
-        oidc_nonce=row["oidc_nonce"],
-        oidc_code_verifier=row["oidc_code_verifier"],
-        laliga_pairing_id=row.get("laliga_pairing_id"),
-        laliga_pairing_secret=row.get("laliga_pairing_secret"),
-        laliga_code_verifier=row.get("laliga_code_verifier"),
-        laliga_b2c_state=row.get("laliga_b2c_state"),
-    )
 
 
 def _profile_to_json(profile: LaligaUser | None) -> str | None:
@@ -87,104 +64,6 @@ def _profile_from_json(raw: Any) -> LaligaUser | None:
         manager_name=data.get("manager_name"),
         avatar=data.get("avatar"),
     )
-
-
-class PostgresSessionStore:
-    """Postgres-backed session store."""
-
-    def __init__(self, pool: asyncpg.Pool) -> None:
-        self._pool = pool
-
-    async def save(self, session: SessionRecord) -> None:
-        """Upsert a session record.
-
-        Args:
-            session: Session to persist.
-        """
-        user = session.user
-        await self._pool.execute(
-            """
-            INSERT INTO sessions (
-                session_id, user_id, email, name, csrf_token, expires_at,
-                oidc_state, oidc_nonce, oidc_code_verifier,
-                laliga_pairing_id, laliga_pairing_secret,
-                laliga_code_verifier, laliga_b2c_state
-            ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13)
-            ON CONFLICT (session_id) DO UPDATE SET
-                user_id = EXCLUDED.user_id,
-                email = EXCLUDED.email,
-                name = EXCLUDED.name,
-                csrf_token = EXCLUDED.csrf_token,
-                expires_at = EXCLUDED.expires_at,
-                oidc_state = EXCLUDED.oidc_state,
-                oidc_nonce = EXCLUDED.oidc_nonce,
-                oidc_code_verifier = EXCLUDED.oidc_code_verifier,
-                laliga_pairing_id = EXCLUDED.laliga_pairing_id,
-                laliga_pairing_secret = EXCLUDED.laliga_pairing_secret,
-                laliga_code_verifier = EXCLUDED.laliga_code_verifier,
-                laliga_b2c_state = EXCLUDED.laliga_b2c_state
-            """,
-            session.session_id,
-            user.user_id if user else None,
-            user.email if user else None,
-            user.name if user else None,
-            session.csrf_token,
-            _to_dt(session.expires_at),
-            session.oidc_state,
-            session.oidc_nonce,
-            session.oidc_code_verifier,
-            session.laliga_pairing_id,
-            session.laliga_pairing_secret,
-            session.laliga_code_verifier,
-            session.laliga_b2c_state,
-        )
-
-    async def get(self, session_id: str) -> SessionRecord | None:
-        """Load a session by opaque ID.
-
-        Args:
-            session_id: Session cookie value.
-
-        Returns:
-            Session record or None.
-        """
-        row = await self._pool.fetchrow(
-            "SELECT * FROM sessions WHERE session_id = $1",
-            session_id,
-        )
-        if row is None:
-            return None
-        return _session_from_row(row)
-
-    async def delete(self, session_id: str) -> None:
-        """Delete a session.
-
-        Args:
-            session_id: Session to remove.
-        """
-        await self._pool.execute(
-            "DELETE FROM sessions WHERE session_id = $1",
-            session_id,
-        )
-
-    async def find_by_laliga_state(self, state: str) -> SessionRecord | None:
-        """Load the session waiting for this LaLiga B2C state.
-
-        Args:
-            state: ``state`` query value from the native callback.
-
-        Returns:
-            Matching session, or None.
-        """
-        if not state:
-            return None
-        row = await self._pool.fetchrow(
-            "SELECT * FROM sessions WHERE laliga_b2c_state = $1",
-            state,
-        )
-        if row is None:
-            return None
-        return _session_from_row(row)
 
 
 class PostgresPairingStore:
@@ -276,6 +155,10 @@ class PostgresPairingStore:
             nonce=row["nonce"],
         )
 
+    async def cancel(self, user_id: str) -> None:
+        """Invalidate outstanding challenges for this owner."""
+        await self._pool.execute("UPDATE pairings SET consumed = TRUE WHERE user_id = $1", user_id)
+
 
 class PostgresConnectionRepo:
     """Postgres-backed LaLiga connection repository."""
@@ -348,3 +231,106 @@ class PostgresConnectionRepo:
             "DELETE FROM connections WHERE user_id = $1",
             user_id,
         )
+
+
+class PostgresBrowserPairingStore:
+    """Postgres native challenges with indexed state and atomic consumption."""
+
+    def __init__(self, pool: asyncpg.Pool) -> None:
+        self._pool = pool
+
+    async def save(self, record: BrowserPairingRecord, *, now: int) -> None:
+        """Save a challenge and remove expired secrets transactionally."""
+        async with self._pool.acquire() as conn, conn.transaction():
+            await conn.execute(
+                "DELETE FROM browser_pairings WHERE expires_at <= to_timestamp($1)", now
+            )
+            await conn.execute(
+                """INSERT INTO browser_pairings
+                (state, user_id, pairing_id, secret, code_verifier, expires_at, binding_hash)
+                VALUES ($1, $2, $3, $4, $5, to_timestamp($6), $7)""",
+                record.state,
+                record.user_id,
+                record.pairing_id,
+                record.secret,
+                record.code_verifier,
+                record.expires_at,
+                record.binding_hash,
+            )
+
+    async def consume(
+        self, state: str, *, now: int, binding_hash: str | None = None
+    ) -> BrowserPairingRecord | None:
+        """Delete and return a live, matching challenge exactly once across workers."""
+        row = await self._pool.fetchrow(
+            "DELETE FROM browser_pairings WHERE state = $1 "
+            "AND ($2::text IS NULL OR binding_hash = $2) RETURNING *",
+            state,
+            binding_hash,
+        )
+        if row is None or _from_dt(row["expires_at"]) <= now:
+            return None
+        return BrowserPairingRecord(
+            state=row["state"],
+            user_id=row["user_id"],
+            pairing_id=row["pairing_id"],
+            secret=row["secret"],
+            code_verifier=row["code_verifier"],
+            expires_at=_from_dt(row["expires_at"]),
+            binding_hash=row["binding_hash"],
+        )
+
+    async def cancel(self, user_id: str) -> None:
+        """Cancel pending callbacks for the verified owner."""
+        await self._pool.execute("DELETE FROM browser_pairings WHERE user_id = $1", user_id)
+
+
+class PostgresRefreshLock:
+    """Session advisory locks serialize vault writes without expiring mid-request."""
+
+    def __init__(self, pool: asyncpg.Pool) -> None:
+        self._pool = pool
+        self._held: dict[str, Any] = {}
+        # Runtime pools have ten connections. Reserve capacity for the repository
+        # queries executed while a lock connection is held; never exhaust the pool.
+        self._slots = asyncio.Semaphore(4)
+
+    async def acquire(self, user_id: str, *, ttl_seconds: int = 30) -> bool:
+        """Try to hold a dedicated connection until the vault operation finishes."""
+        del ttl_seconds
+        if self._slots.locked():
+            return False
+        await self._slots.acquire()
+        try:
+            conn = await self._pool.acquire(timeout=5)
+        except BaseException:
+            self._slots.release()
+            raise
+        try:
+            acquired = await conn.fetchval(
+                "SELECT pg_try_advisory_lock(hashtextextended($1, 94731))", user_id
+            )
+        except BaseException:
+            await self._pool.release(conn)
+            self._slots.release()
+            raise
+        if not acquired:
+            await self._pool.release(conn)
+            self._slots.release()
+            return False
+        self._held[user_id] = conn
+        return True
+
+    async def release(self, user_id: str) -> None:
+        """Release the owning database session and its advisory lock."""
+        conn = self._held.pop(user_id, None)
+        if conn is not None:
+            try:
+                await conn.execute(
+                    "SELECT pg_advisory_unlock(hashtextextended($1, 94731))", user_id
+                )
+            finally:
+                try:
+                    await self._pool.release(conn)
+                finally:
+                    self._slots.release()

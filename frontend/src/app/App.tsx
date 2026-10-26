@@ -5,6 +5,9 @@ import { lazy, Suspense } from "react";
 import { BrowserRouter, Route, Routes } from "react-router-dom";
 
 import { NeedsReauthError } from "../api/errors";
+import { AuthPage } from "../auth/AuthPages";
+import { AccountPage } from "../auth/AccountPage";
+import { ConnectLaligaPage } from "../auth/ConnectLaligaPage";
 import { AuthProvider, useAuth } from "../auth/AuthProvider";
 import { GatePanel } from "../features/gates/GatePanel";
 import { LeagueProvider } from "../features/lineup/LeagueProvider";
@@ -52,6 +55,9 @@ export function App() {
                 <Header />
                 <main className="app-main">
                   <Routes>
+                    <Route path="/connect-laliga" element={<ConnectLaligaPage />} />
+                    {["sign-in", "register", "verify-email", "forgot-password", "reset-password"].map(path => <Route key={path} path={`/${path}`} element={<AuthPage />} />)}
+                    <Route path="/account" element={<AccountPage />} />
                     <Route path="/" element={<LineupRoute />} />
                     <Route path="/market" element={<MarketPage />} />
                     <Route path="/players" element={<PlayersPage />} />

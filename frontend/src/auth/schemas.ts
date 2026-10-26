@@ -53,20 +53,21 @@ function wireObject<T extends z.ZodType>(shape: T) {
   return z.preprocess((value) => addDeclaredAliases(value, shape), shape);
 }
 
-export const csrfTokenInputSchema = z.string().min(1);
+export const browserLoginResponseSchema = wireObject(z.strictObject({ authorizeUrl: z.url() }));
+
 
 const sessionUserShape = z
   .strictObject({
     userId: z.string().min(1),
     email: z.string().nullable(),
     name: z.string().nullable(),
+    username: z.string().nullable().optional(),
   });
 
 export const sessionUserSchema = wireObject(sessionUserShape);
 
 const sessionViewShape = z.strictObject({
   user: sessionUserSchema,
-  csrfToken: z.string().min(1),
 });
 
 export const sessionViewSchema = wireObject(sessionViewShape);
@@ -142,26 +143,10 @@ export const healthNotReadyResponseSchema = wireObject(
   z.strictObject({ status: z.string().min(1), detail: z.string().min(1) }),
 );
 
-const jsonWebKeyShape = z.strictObject({
-  kty: z.string().min(1),
-  use: z.string().nullable(),
-  kid: z.string().min(1),
-  alg: z.string().nullable(),
-  n: z.string().min(1),
-  e: z.string().min(1),
-});
-export const jwksResponseSchema = wireObject(z.strictObject({ keys: z.array(jsonWebKeyShape) }));
-
 export function authResponseSchema(method: string, path: string): z.ZodType {
   const normalizedMethod = method.toUpperCase();
-  if (normalizedMethod === "GET" && ["/auth/callback", "/auth/me"].includes(path)) {
-    return sessionViewSchema;
-  }
-  if (normalizedMethod === "POST" && path === "/auth/logout") return okResponseSchema;
-  if (normalizedMethod === "POST" && path === "/auth/token") return accessTokenSchema;
-  if (normalizedMethod === "GET" && path === "/.well-known/jwks.json") {
-    return jwksResponseSchema;
-  }
+  if (normalizedMethod === "POST" && path === "/laliga/login") return browserLoginResponseSchema;
+  if (normalizedMethod === "DELETE" && path === "/laliga/pairings") return okResponseSchema;
   if (normalizedMethod === "POST" && path === "/laliga/pairings") {
     return pairingCreateResponseSchema;
   }
@@ -218,10 +203,7 @@ export function authRequestSchema(method: string, path: string): z.ZodType | nul
   return null;
 }
 
-export function authQuerySchema(method: string, path: string): z.ZodType | null {
-  if (method.toUpperCase() === "GET" && path === "/auth/callback") {
-    return z.strictObject({ code: z.string().min(1), state: z.string().min(1) });
-  }
+export function authQuerySchema(_method: string, _path: string): z.ZodType | null {
   return null;
 }
 

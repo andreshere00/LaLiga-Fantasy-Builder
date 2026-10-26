@@ -59,8 +59,8 @@ export async function mockApplication(page: Page, { rankingSize = 2 } = {}) {
     if (url.origin !== "http://127.0.0.1:3100") return route.abort();
     const p = url.pathname;
     let body: unknown;
-    if (p === "/auth/me") body = { user: { userId: "demo", name: "Demo Manager", email: "demo@example.com" }, csrfToken: "fixture-csrf" };
-    else if (p === "/auth/token") body = { accessToken: "fixture-token", tokenType: "Bearer", expiresIn: 3600, expiresAt: 1791810000 };
+    if (p === "/auth/get-session") body = { user: { id: "demo", name: "Demo Manager", email: "demo@example.com", emailVerified: true, createdAt: "2026-10-12T12:00:00Z", updatedAt: "2026-10-12T12:00:00Z" }, session: { id: "fixture-session", userId: "demo", token: "synthetic-session", expiresAt: "2026-10-13T12:00:00Z", createdAt: "2026-10-12T12:00:00Z", updatedAt: "2026-10-12T12:00:00Z" } };
+    else if (p === "/auth/token") body = { token: `fixture.${Buffer.from(JSON.stringify({ sub: "demo", iat: 1791806400, exp: 1791807300 })).toString("base64url")}.signature` };
     else if (p === "/laliga/connection") body = { linked: true, needsReauth: false, managerId: "demo", managerName: "Demo Manager", avatar: null };
     else if (!p.startsWith("/api/")) return route.continue();
     else if (request.method() !== "GET") body = p.includes("lineup") ? lineup : { ok: true, id: "fixture-bid" };

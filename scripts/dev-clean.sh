@@ -11,7 +11,7 @@ fi
 
 # Docker may still own the published ports from `poe up`.
 if command -v docker >/dev/null 2>&1; then
-  docker compose --profile apps stop auth api scraping frontend >/dev/null 2>&1 || true
+  docker compose --profile apps stop identity auth api scraping frontend >/dev/null 2>&1 || true
 fi
 
 service_for_port() {
@@ -59,7 +59,26 @@ for port in 8000 8001 8002; do
   stop_old_uvicorn "$port"
 done
 
-for port in 3000 8000 8001 8002; do
+# Match both executable intent and cwd before stopping project Node watchers.
+for entry in "3000 frontend vite" "8003 backend/identity src/server.ts"; do
+  read -r port directory marker <<< "$entry"
+  while IFS= read -r pid; do
+    [[ -n "$pid" ]] || continue
+    command="$(ps -ww -p "$pid" -o command= 2>/dev/null || true)"
+    process_dir="$(lsof -a -p "$pid" -d cwd -Fn 2>/dev/null | sed -n 's/^n//p')"
+    [[ "$process_dir" == "$ROOT/$directory" && "$command" == *"$marker"* ]] || continue
+    parent="$(ps -p "$pid" -o ppid= | tr -d ' ')"
+    parent_command="$(ps -ww -p "$parent" -o command= 2>/dev/null || true)"
+    parent_dir="$(lsof -a -p "$parent" -d cwd -Fn 2>/dev/null | sed -n 's/^n//p')"
+    if [[ "$parent_dir" == "$process_dir" && ( "$parent_command" == *"--watch"* || "$parent_command" == *"bun run dev"* ) ]]; then
+      kill -TERM "$parent" 2>/dev/null || true
+    fi
+    kill -TERM "$pid" 2>/dev/null || true
+    echo "Stopped stale $directory server (PID $pid) on port $port."
+  done < <(lsof -tiTCP:"$port" -sTCP:LISTEN 2>/dev/null || true)
+done
+
+for port in 3000 8000 8001 8002 8003; do
   if lsof -nP -iTCP:"$port" -sTCP:LISTEN >/dev/null 2>&1; then
     echo "Port $port is still occupied by another process:" >&2
     lsof -nP -iTCP:"$port" -sTCP:LISTEN >&2

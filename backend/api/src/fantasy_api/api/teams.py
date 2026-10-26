@@ -23,7 +23,7 @@ async def get_money(
     team_id: str = Path(description="Fantasy team identifier."),
     authorization: str | None = Header(
         default=None,
-        description="Bearer internal JWT issued by auth ``POST /auth/token``.",
+        description="Bearer internal JWT issued by identity ``GET /auth/token``.",
     ),
 ) -> TeamMoney:
     """Return cash (caja) and investment for a Fantasy team.
@@ -53,7 +53,7 @@ async def get_lineup(
     team_id: str = Path(description="Fantasy team identifier."),
     authorization: str | None = Header(
         default=None,
-        description="Bearer internal JWT issued by auth ``POST /auth/token``.",
+        description="Bearer internal JWT issued by identity ``GET /auth/token``.",
     ),
 ) -> TeamLineup:
     """Return the current Fantasy team lineup.
@@ -82,7 +82,7 @@ async def get_lineup_by_week(
     week: int = Path(ge=1, description="Matchweek number."),
     authorization: str | None = Header(
         default=None,
-        description="Bearer internal JWT issued by auth ``POST /auth/token``.",
+        description="Bearer internal JWT issued by identity ``GET /auth/token``.",
     ),
 ) -> TeamLineup:
     """Return a Fantasy team lineup for a matchweek.
@@ -116,7 +116,7 @@ async def put_lineup(
     team_id: str = Path(description="Fantasy team identifier."),
     authorization: str | None = Header(
         default=None,
-        description="Bearer internal JWT issued by auth ``POST /auth/token``.",
+        description="Bearer internal JWT issued by identity ``GET /auth/token``.",
     ),
 ) -> TeamLineup:
     """Replace the current Fantasy team lineup.

@@ -9,7 +9,7 @@ from typing import Any
 from fastapi import FastAPI, Request
 from fastapi.responses import JSONResponse
 
-from fantasy_auth.api import auth, internal_auth, internal_credentials, pairings
+from fantasy_auth.api import internal_credentials, pairings
 from fantasy_auth.api.deps import (
     AppContainer,
     build_container,
@@ -132,8 +132,6 @@ def create_app(
     app.add_middleware(RedactedAccessLogMiddleware)
     app.add_middleware(SecurityHeadersMiddleware)
 
-    app.include_router(auth.router)
-    app.include_router(internal_auth.router)
     app.include_router(internal_credentials.router)
     app.include_router(pairings.router)
 
@@ -159,10 +157,10 @@ def create_app(
                     await conn.fetchval("SELECT 1")
             if runtime.redis is not None:
                 await runtime.redis.ping()
-        except Exception as exc:
+        except Exception:
             body = HealthNotReadyResponse(
                 status="not_ready",
-                detail=str(exc),
+                detail="dependency unavailable",
             )
             return JSONResponse(
                 status_code=503,
@@ -200,7 +198,7 @@ def create_app(
         _request: Request,
         exc: PairingError,
     ) -> JSONResponse:
-        status = 429 if getattr(exc, "category", "") == "rate_limited" else 400
+        status = {"rate_limited": 429, "browser_unavailable": 503}.get(exc.category, 400)
         body = AuthErrorResponse(error=exc.category, detail=str(exc))
         return JSONResponse(status_code=status, content=body.model_dump(mode="json"))
 

@@ -31,6 +31,7 @@ from fantasy_auth.ports.repos import (
     ConnectionRepo,
     PairingRecord,
     PairingStore,
+    RefreshLock,
 )
 from fantasy_auth.ports.vault import TokenVault
 
@@ -67,7 +68,7 @@ class PairingCompleted:
 
 @dataclass(frozen=True, slots=True)
 class BrowserPairingStart:
-    """Authorize URL and secrets kept on the server session.
+    """Authorize URL and secrets kept on the pending challenge.
 
     Attributes:
         authorize_url: B2C URL to open in the browser.
@@ -117,8 +118,12 @@ class PairingService:
         pairing_ttl_seconds: int = 600,
         allow_id_token_fallback: bool = False,
         b2c: B2CClient | None = None,
+        operation_lock: RefreshLock | None = None,
         redirect_uri: str = "authredirect://com.lfp.laligafantasy",
     ) -> None:
+        from fantasy_auth.adapters.redis import MemoryRefreshLock
+
+        self._operation_lock = operation_lock or MemoryRefreshLock()
         self._pairings = pairings
         self._connections = connections
         self._vault = vault
@@ -137,7 +142,7 @@ class PairingService:
         """Issue a one-time pairing for the authenticated app user.
 
         Args:
-            user_id: Application user ID from the session.
+            user_id: Application user ID from the verified JWT.
 
         Returns:
             Pairing credentials (secret shown once).
@@ -163,11 +168,12 @@ class PairingService:
             nonce=nonce,
         )
 
-    async def begin_browser_login(self, user_id: str) -> BrowserPairingStart:
+    async def begin_browser_login(self, user_id: str, *, redirect_uri: str) -> BrowserPairingStart:
         """Create a pairing and the B2C authorize URL for this app user.
 
         Args:
-            user_id: Application user ID from the session.
+            user_id: Application user ID from the verified JWT.
+            redirect_uri: Registered HTTPS callback for the browser flow.
 
         Returns:
             Authorize URL and server-side PKCE material.
@@ -181,7 +187,7 @@ class PairingService:
         verifier = generate_verifier()
         state = generate_state()
         authorize_url = self._b2c.build_authorize_url(
-            redirect_uri=self._redirect_uri,
+            redirect_uri=redirect_uri,
             code_challenge=s256_challenge(verifier),
             state=state,
             nonce=created.nonce,
@@ -202,15 +208,17 @@ class PairingService:
         secret: str,
         code_verifier: str,
         expected_state: str,
+        redirect_uri: str | None = None,
     ) -> PairingCompleted:
-        """Exchange a native callback and seal the tokens for the pairing.
+        """Exchange a registered callback and seal the tokens for the pairing.
 
         Args:
-            callback: Full ``authredirect://`` URL.
-            pairing_id: Pending pairing id stored on the session.
-            secret: Pending pairing secret stored on the session.
-            code_verifier: PKCE verifier stored on the session.
-            expected_state: B2C state stored on the session.
+            callback: Full callback URL.
+            pairing_id: Pending pairing id stored on the challenge.
+            secret: Pending pairing secret stored on the challenge.
+            code_verifier: PKCE verifier stored on the challenge.
+            expected_state: B2C state stored on the challenge.
+            redirect_uri: Registered callback used in the authorization request.
 
         Returns:
             Completion result with the merged profile.
@@ -218,7 +226,10 @@ class PairingService:
         Raises:
             PairingError: When the callback or token exchange is invalid.
         """
-        params = _callback_params(callback, expected_state=expected_state)
+        resolved_redirect = redirect_uri or self._redirect_uri
+        params = _callback_params(
+            callback, expected_state=expected_state, redirect_uri=resolved_redirect
+        )
         if params.get("error"):
             raise PairingError(str(params["error"]), category="pairing_callback")
         code = params.get("code")
@@ -228,7 +239,7 @@ class PairingService:
             bundle = await self._b2c.exchange_code(
                 code=code,
                 code_verifier=code_verifier,
-                redirect_uri=self._redirect_uri,
+                redirect_uri=resolved_redirect,
             )
         except Exception as exc:
             raise PairingError("token exchange failed", category="provider") from exc
@@ -282,45 +293,60 @@ class PairingService:
         if not constant_time_equals(existing.secret_hash, hash_secret(secret)):
             raise PairingError("invalid pairing secret", category="pairing_secret")
 
-        # Secret verified — consume atomically (guards concurrent completes).
-        pairing = await self._pairings.consume(pairing_id, now=now)
-        if pairing is None:
-            raise PairingError("pairing already used", category="pairing_replay")
+        if not await self._operation_lock.acquire(existing.user_id):
+            raise PairingError("connection operation in progress", category="pairing_busy")
+        try:
+            # Secret verified — consume atomically (guards concurrent completes).
+            pairing = await self._pairings.consume(pairing_id, now=now)
+            if pairing is None:
+                raise PairingError("pairing already used", category="pairing_replay")
 
-        bundle = normalize_bundle(
-            token_response,
-            now=now,
-            client_id=self._client_id,
-            policy=self._policy,
-            scope=self._scope,
-            allow_id_token_fallback=self._allow_id_token_fallback,
-        )
+            bundle = normalize_bundle(
+                token_response,
+                now=now,
+                client_id=self._client_id,
+                policy=self._policy,
+                scope=self._scope,
+                allow_id_token_fallback=self._allow_id_token_fallback,
+            )
 
-        token_to_validate = bundle.id_token or bundle.access_token
-        claims = await self._jwks.validate(
-            token_to_validate,
-            policy=bundle.policy,
-            audience=bundle.client_id,
-            nonce=pairing.nonce,
-        )
-        jwt_user = extract_user_from_claims(claims)
+            token_to_validate = bundle.id_token or bundle.access_token
+            claims = await self._jwks.validate(
+                token_to_validate,
+                policy=bundle.policy,
+                audience=bundle.client_id,
+                nonce=pairing.nonce,
+            )
+            jwt_user = extract_user_from_claims(claims)
 
-        api_user = await self._fantasy.get_current_user(bundle.bearer())
-        profile = merge_jwt_with_profile(jwt_user, api_user)
+            api_user = await self._fantasy.get_current_user(bundle.bearer())
+            profile = merge_jwt_with_profile(jwt_user, api_user)
 
-        sealed = self._vault.seal(bundle)
-        connection = ConnectionRecord(
-            user_id=pairing.user_id,
-            sealed_blob=sealed,
-            policy=bundle.policy,
-            client_id=bundle.client_id,
-            scope=bundle.scope,
-            needs_reauth=False,
-            profile=profile,
-        )
-        await self._connections.save(connection)
+            sealed = self._vault.seal(bundle)
+            connection = ConnectionRecord(
+                user_id=pairing.user_id,
+                sealed_blob=sealed,
+                policy=bundle.policy,
+                client_id=bundle.client_id,
+                scope=bundle.scope,
+                needs_reauth=False,
+                profile=profile,
+            )
+            await self._connections.save(connection)
 
-        return PairingCompleted(user_id=pairing.user_id, profile=profile)
+            return PairingCompleted(user_id=pairing.user_id, profile=profile)
+
+        finally:
+            await self._operation_lock.release(existing.user_id)
+
+    async def cancel(self, user_id: str) -> None:
+        """Serialize cancellation against completion so secrets cannot reattach later."""
+        if not await self._operation_lock.acquire(user_id):
+            raise PairingError("connection operation in progress", category="pairing_busy")
+        try:
+            await self._pairings.cancel(user_id)
+        finally:
+            await self._operation_lock.release(user_id)
 
     async def get_status(self, user_id: str) -> dict[str, Any]:
         """Return public connection status for a user (no secrets).
@@ -355,29 +381,38 @@ class PairingService:
         Args:
             user_id: Application user ID.
         """
-        connection = await self._connections.get(user_id)
-        if connection is None:
-            return
-        if connection.user_id != user_id:
-            raise OwnershipError()
-        await self._connections.delete(user_id)
+        if not await self._operation_lock.acquire(user_id):
+            raise PairingError("connection operation in progress", category="pairing_busy")
+        try:
+            await self._pairings.cancel(user_id)
+            connection = await self._connections.get(user_id)
+            if connection is not None and connection.user_id != user_id:
+                raise OwnershipError()
+            await self._connections.delete(user_id)
+        finally:
+            await self._operation_lock.release(user_id)
 
 
-def _callback_params(callback: str, *, expected_state: str) -> dict[str, str]:
-    """Read code and state from a native LaLiga callback URL.
+def _callback_params(callback: str, *, expected_state: str, redirect_uri: str) -> dict[str, str]:
+    """Read code and state from the configured LaLiga callback URL.
 
     Args:
-        callback: Full ``authredirect://`` URL.
-        expected_state: State stored on the application session.
+        callback: Full callback URL.
+        expected_state: State stored on the independent pairing challenge.
+        redirect_uri: Exact callback URL sent to the provider.
 
     Returns:
         Query parameters, or ``{"error": ...}`` when state does not match.
     """
     parsed = urlparse(callback)
-    query = parsed.query
-    if not query and "?" in callback:
-        query = callback.split("?", 1)[1]
-    params = {key: values[0] for key, values in parse_qs(query).items() if values}
+    registered = urlparse(redirect_uri)
+    same_origin = (parsed.scheme, parsed.netloc) == (registered.scheme, registered.netloc)
+    matching_path = parsed.path == registered.path or (
+        registered.scheme == "authredirect" and parsed.path == "/" and not registered.path
+    )
+    if not same_origin or not matching_path:
+        return {"error": "invalid callback URL"}
+    params = {key: values[0] for key, values in parse_qs(parsed.query).items() if values}
     if params.get("state") != expected_state:
         return {"error": "state mismatch"}
     return params

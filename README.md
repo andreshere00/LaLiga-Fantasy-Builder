@@ -15,7 +15,7 @@ data and user-confirmed writes with your linked account.
 
 ### Lineup (`/`)
 
-- Sign in with Keycloak, link LaLiga once, pick a league from the shell.
+- Sign in with Better Auth, link LaLiga once, pick a league from the shell.
 - View matchweek standings and open another manager’s team via `/?team={teamId}`.
 - Change formation and save the full lineup to Fantasy.
 - Squad panel with pagination, fixture scores, and squad value in the toolbar.
@@ -49,7 +49,8 @@ data and user-confirmed writes with your linked account.
 
 ### Platform
 
-- **Auth BFF** (`backend/auth`): sessions, OIDC, LaLiga vault, internal JWT.
+- **Identity** (`backend/identity`): Better Auth login, recovery, sessions and JWTs.
+- **LaLiga auth** (`backend/auth`): pairing, encrypted vault and refresh.
 - **API** (`backend/api`): leagues, teams, players, calendar, market,
   buyout — OpenAPI at http://localhost:8001/docs when running locally. Player
   detail stats aggregate catalog, calendar, and private scraping data.
@@ -122,33 +123,37 @@ and its squad projection, then choose **Use as draft** to prepare local changes.
 
 ## Quick start
 
-`poe up` creates missing env files, then builds and starts Keycloak, auth,
-the API, scraping, and the frontend:
+Create the ignored root `.env` from `.env.template` and set its
+`SMTP_PASSWORD` to a Resend sending API key. Then `poe up` creates any missing
+service env files and starts identity, Postgres, Redis, LaLiga auth, API,
+scraping and the frontend:
 
 ```bash
+test -f .env || cp .env.template .env
+uv run poe install
 uv run poe up
 ```
 
-- App: http://localhost:3000 (`demo` / `demo`). First LaLiga link on macOS may
-  need `cd backend/auth && uv run fantasy-browser-session` and allowing
-  LaligaAuthredirect.
-- API docs: http://localhost:8001/docs
-- Scraping health: http://localhost:8002/health/live (Swagger at `/docs` when `SCRAPING_EXPOSE_DOCS=true`)
-- Keycloak admin: http://localhost:8080 (`admin` / `admin`)
+- App: http://localhost:3000 — register a new account; no shared demo password.
+- Verification and recovery emails arrive in each user's own inbox through Resend.
+- API docs: http://localhost:8001/docs.
+- Scraping health: http://localhost:8002/health/live.
 
-Postgres, Redis, and OpenTelemetry: set `USE_MEMORY_STORE=false`, vault key,
-and JWT PEMs in `backend/auth/.env`, then
-`docker compose --profile full up --build`.
+Configure Google/Facebook/Apple credentials in `backend/identity/.env`.
+Apple needs an HTTPS domain. Production configuration, provider setup and release
+checks: [identity](backend/identity/README.md) and
+[cutover](docs/authentication/better-auth-cutover.md). Persistent LaLiga storage
+requires `USE_MEMORY_STORE=false` and a stable vault key; identity always uses Postgres.
 
 **Services on the host (Vite HMR):**
 
 ```bash
-docker compose up -d keycloak
+docker compose up -d postgres redis
 uv run poe dev-clean
 ```
 
 `dev-clean` stops Compose app containers and stale project Uvicorn servers,
-then starts auth (`:8000`), API (`:8001`), scraping (`:8002`), and Vite
+then starts auth (`:8000`), API (`:8001`), scraping (`:8002`), identity (`:8003`), and Vite
 (`:3000`) with reload enabled. It reports occupied ports owned by other
 processes instead of stopping them. The command creates missing service
 `.env` files. Set `SCRAPER_CONTACT` in `backend/scraping/.env` to a contact
@@ -166,11 +171,12 @@ Per-service notes: [auth](backend/auth/README.md), [API](backend/api/README.md),
 | Path | Role |
 |------|------|
 | [`frontend/`](frontend/) | React lineup, market, players, and player-detail UI |
-| [`backend/auth/`](backend/auth/) | Sessions, Keycloak, LaLiga pairing, internal JWT |
+| [`backend/identity/`](backend/identity/) | Better Auth identity and application JWTs |
+| [`backend/auth/`](backend/auth/) | LaLiga pairing and encrypted vault |
 | [`backend/api/`](backend/api/) | Fantasy proxy routes and CLIs |
 | [`backend/scraping/`](backend/scraping/) | FutbolFantasy scraper + parser (port 8002, private) |
 | [`docs/`](docs/) | Architecture, authentication, API domain guides |
-| [`docker/`](docker/) | Keycloak realm import, OTEL collector |
+| [`docker/`](docker/) | Identity database initialization, HTTPS ingress, OTEL collector |
 | [`assets/`](assets/) | Sample Fantasy JSON trees |
 
 ## Tests

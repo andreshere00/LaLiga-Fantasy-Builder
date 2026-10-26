@@ -1,4 +1,4 @@
-"""Playwright helper: Keycloak login, JWT mint, optional pairing, API call."""
+"""Playwright helper: Better Auth login, application JWT, optional pairing, API call."""
 
 from __future__ import annotations
 
@@ -23,8 +23,8 @@ from fantasy_auth.cli.browser_session.flows import (
     run_standings_analysis,
     run_teams_analysis,
 )
-from fantasy_auth.cli.browser_session.http import connection_linked, exchange_token
-from fantasy_auth.cli.browser_session.keycloak import login_with_playwright
+from fantasy_auth.cli.browser_session.http import connection_linked
+from fantasy_auth.cli.browser_session.identity import login_with_playwright
 from fantasy_auth.cli.browser_session.pairing import pair_laliga_with_playwright
 
 # Back-compat aliases used by CLI tests that patch this package.
@@ -38,22 +38,12 @@ _run_standings_analysis = run_standings_analysis
 
 
 def main(argv: list[str] | None = None) -> int:
-    """Log in via Keycloak, mint a JWT, optionally pair, and call the API.
-
-    App identity uses the local demo user (default ``demo``/``demo``). LaLiga
-    pairing still needs one interactive B2C login when the vault has no link.
-
-    Args:
-        argv: Optional CLI arguments.
-
-    Returns:
-        Process exit code.
-    """
+    """Sign in interactively, optionally pair LaLiga, and run read analyses."""
     args = parse_args(argv)
     try:
-        session, csrf, jwt, linked = _bootstrap(args)
+        jwt, linked = _bootstrap(args)
         report = _run_requested(args, jwt=jwt, linked=linked)
-        _render(args, report, session=session, csrf=csrf, jwt=jwt)
+        _render(args, report, jwt=jwt)
         return 0
     except BrowserSessionError as exc:
         print(str(exc), file=sys.stderr)
@@ -63,66 +53,18 @@ def main(argv: list[str] | None = None) -> int:
         return 1
 
 
-def _bootstrap(args: Any) -> tuple[str, str, str, bool]:
-    """Log in, mint a JWT, and pair LaLiga when the selected flow needs it."""
+def _bootstrap(args: Any) -> tuple[str, bool]:
+    """Get an application token and pair only when the selected read needs LaLiga."""
     validate_analysis_args(args)
-    session, csrf = login_with_playwright(
-        args.auth_base,
-        args.username,
-        args.password,
-        headed=not args.headless,
-    )
-    jwt = exchange_token(
-        auth_base=args.auth_base,
-        origin=args.origin,
-        session=session,
-        csrf=csrf,
-    )
-    linked = (
-        False
-        if args.flow == "standings-analysis" and not needs_laliga(args)
-        else _connection_linked(
-            auth_base=args.auth_base,
-            session=session,
-            csrf=csrf,
-        )
-    )
-    if needs_laliga(args) and not linked:
-        jwt, linked = _pair_if_needed(args, session=session, csrf=csrf)
-    return session, csrf, jwt, linked
-
-
-def _pair_if_needed(args: Any, *, session: str, csrf: str) -> tuple[str, bool]:
-    """Run pairing when the vault is empty and pairing is allowed."""
-    if args.no_pair:
-        raise BrowserSessionError(
-            "LaLiga is not paired. Re-run without --no-pair, or "
-            "uv run pair-laliga with these session cookies.",
-        )
-    print(
-        "LaLiga is not linked. Opening your browser for B2C login "
-        "(Google sign-in is supported; authredirect:// is captured "
-        "automatically)...",
-        file=sys.stderr,
-    )
-    pair_laliga_with_playwright(
-        auth_base=args.auth_base,
-        origin=args.origin,
-        session=session,
-        csrf=csrf,
-        headed=True,
-    )
-    jwt = exchange_token(
-        auth_base=args.auth_base,
-        origin=args.origin,
-        session=session,
-        csrf=csrf,
-    )
-    linked = _connection_linked(
-        auth_base=args.auth_base,
-        session=session,
-        csrf=csrf,
-    )
+    jwt = args.jwt or login_with_playwright(args.auth_base, headed=not args.headless)
+    linked = False
+    if needs_laliga(args):
+        linked = _connection_linked(auth_base=args.auth_base, jwt=jwt)
+        if not linked:
+            if args.no_pair:
+                raise BrowserSessionError("LaLiga is not paired. Re-run without --no-pair.")
+            pair_laliga_with_playwright(auth_base=args.auth_base, jwt=jwt, headed=True)
+            linked = _connection_linked(auth_base=args.auth_base, jwt=jwt)
     return jwt, linked
 
 
@@ -190,14 +132,10 @@ def _render(
     args: Any,
     report: dict[str, Any],
     *,
-    session: str,
-    csrf: str,
     jwt: str,
 ) -> None:
     """Print JSON, exports, or a short ready message."""
     if args.exports:
-        print(f"export FANTASY_SESSION='{session}'", file=sys.stderr)
-        print(f"export FANTASY_CSRF='{csrf}'", file=sys.stderr)
         print(f"export INTERNAL_JWT='{jwt}'", file=sys.stderr)
     if args.json or args.player_id or args.flow:
         printable = dict(report)

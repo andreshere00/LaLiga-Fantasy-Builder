@@ -95,10 +95,10 @@ uv run fantasy-browser-session --exports
 uv run fantasy-browser-session leagues-analysis --json
 ```
 
-Repo wrapper: `./scripts/fantasy-browser-session.sh`. Keycloak is `demo` /
-`demo`. LaLiga pairing opens the system browser (Google SSO); the native
+Repo wrapper: `./scripts/fantasy-browser-session.sh`. Sign in interactively with
+Better Auth, or supply `--jwt` / `INTERNAL_JWT`. LaLiga pairing opens the system browser (Google SSO); the native
 callback is captured automatically — never paste `authredirect://`. `--no-pair`
-only for public-only flows.
+works for application-only flows such as standings.
 
 New authenticated bundle: `session_analysis.py` + `browser_session/args.py` +
 `flows.py`. Do not import `fantasy_api` from auth. Do not implement LaLiga ROPC.

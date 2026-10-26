@@ -124,6 +124,26 @@ def test_lifespan_without_prebuilt_container_uses_memory_store() -> None:
     assert response.json() == {"status": "ok", "store": "memory"}
 
 
+@pytest.mark.parametrize("prebuilt", [False, True])
+def test_lifespan_missing_memory_vault_key_logs_warning_once(
+    prebuilt: bool, capsys: pytest.CaptureFixture[str]
+) -> None:
+    # Arrange
+    from fantasy_auth.api.deps import build_container
+
+    settings = _memory_settings(token_vault_key_base64="")
+    container = build_container(settings) if prebuilt else None
+    app = create_app(settings=settings, container=container)
+
+    # Act
+    with TestClient(app) as client:
+        response = client.get("/health/ready")
+
+    # Assert
+    assert response.status_code == 200
+    assert capsys.readouterr().out.count("token_vault_using_dev_fallback") == 1
+
+
 def test_health_ready_memory_path(client: TestClient) -> None:
     # Arrange / Act
     response = client.get("/health/ready")
@@ -152,13 +172,12 @@ def test_health_ready_postgres_path_ok(
 
     container = AppContainer(
         settings=settings,
-        sessions=memory_container.sessions,
         pairings=memory_container.pairings,
         credentials=memory_container.credentials,
-        internal_tokens=memory_container.internal_tokens,
+        jwt_validator=memory_container.jwt_validator,
         rate_limiter=memory_container.rate_limiter,
         clock=memory_container.clock,
-        session_store=memory_container.session_store,
+        browser_pairings=memory_container.browser_pairings,
         refresh_lock=memory_container.refresh_lock,
         pg_pool=pool,
         redis=redis,
@@ -249,13 +268,12 @@ def test_health_ready_postgres_failure_returns_503(
     pool.close = AsyncMock()
     container = AppContainer(
         settings=settings,
-        sessions=memory_container.sessions,
         pairings=memory_container.pairings,
         credentials=memory_container.credentials,
-        internal_tokens=memory_container.internal_tokens,
+        jwt_validator=memory_container.jwt_validator,
         rate_limiter=memory_container.rate_limiter,
         clock=memory_container.clock,
-        session_store=memory_container.session_store,
+        browser_pairings=memory_container.browser_pairings,
         refresh_lock=memory_container.refresh_lock,
         pg_pool=pool,
         redis=redis,

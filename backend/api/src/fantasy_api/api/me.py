@@ -20,7 +20,7 @@ router = APIRouter(tags=["me"])
 async def me(
     authorization: str | None = Header(
         default=None,
-        description="Bearer internal JWT issued by auth ``POST /auth/token``.",
+        description="Bearer internal JWT issued by identity ``GET /auth/token``.",
     ),
 ) -> MeResponse:
     """Return the authenticated user from the internal JWT.
@@ -44,7 +44,7 @@ async def me(
 async def laliga_credential_probe(
     authorization: str | None = Header(
         default=None,
-        description="Bearer internal JWT issued by auth ``POST /auth/token``.",
+        description="Bearer internal JWT issued by identity ``GET /auth/token``.",
     ),
 ) -> LaligaCredentialProbeResponse:
     """Fetch a LaLiga bearer via auth without exposing the token.

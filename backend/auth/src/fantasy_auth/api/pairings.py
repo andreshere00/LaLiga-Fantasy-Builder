@@ -2,14 +2,16 @@
 
 from __future__ import annotations
 
-from dataclasses import replace
 from urllib.parse import parse_qs, urlparse
 
-from fastapi import APIRouter, Header, Request
+from fastapi import APIRouter, Request, Response
 from fastapi.responses import RedirectResponse
+from pydantic import BaseModel
 
-from fantasy_auth.api.deps import get_container, get_current_user, require_csrf
+from fantasy_auth.adapters.pkce import generate_pairing_secret, hash_secret
+from fantasy_auth.api.deps import get_container, get_current_user
 from fantasy_auth.api.schemas import (
+    AuthErrorResponse,
     CompleteRedirectRequest,
     CompleteRedirectResponse,
     ConnectionStatusResponse,
@@ -18,26 +20,28 @@ from fantasy_auth.api.schemas import (
     PairingCompleteResponse,
     PairingCreateResponse,
 )
-from fantasy_auth.domain.errors import PairingError, SessionError
+from fantasy_auth.domain.errors import AuthError, PairingError
+from fantasy_auth.ports.repos import BrowserPairingRecord
 
 router = APIRouter(tags=["laliga"])
+
+BINDING_COOKIE = "lfb_laliga_bind"
+CALLBACK_PATH = "/laliga/callback"
 
 
 @router.post("/laliga/pairings", response_model=PairingCreateResponse)
 async def create_pairing(
     request: Request,
-    x_csrf_token: str | None = Header(default=None, alias="X-CSRF-Token"),
 ) -> PairingCreateResponse:
     """Create a one-time pairing for the authenticated app user.
 
     Args:
         request: Incoming request.
-        x_csrf_token: CSRF header.
 
     Returns:
         Pairing ID, secret (shown once), expiry, and expected nonce.
     """
-    user = await require_csrf(request, x_csrf_token)
+    user = await get_current_user(request)
     created = await get_container().pairings.create_pairing(user.user_id)
     return PairingCreateResponse(
         pairing_id=created.pairing_id,
@@ -47,30 +51,85 @@ async def create_pairing(
     )
 
 
-@router.get(
+class BrowserLoginResponse(BaseModel):
+    """Validated server-created authorization URL; no PKCE secrets."""
+
+    authorize_url: str
+
+
+@router.post(
     "/laliga/login",
-    response_class=RedirectResponse,
-    response_model=None,
-    status_code=302,
-    responses={302: {"description": "Redirect to the frontend or LaLiga login."}},
+    response_model=BrowserLoginResponse,
+    responses={503: {"model": AuthErrorResponse, "description": "Browser callback unavailable."}},
 )
-async def laliga_login(request: Request) -> RedirectResponse:
-    """Redirect an authenticated browser to LaLiga, or home if already linked.
+async def laliga_login(request: Request, response: Response) -> BrowserLoginResponse:
+    """Start browser LaLiga delegation through a registered HTTPS callback.
 
-    Args:
-        request: Incoming request. Reads the session cookie.
-
-    Returns:
-        Redirect to B2C or the frontend origin.
-
-    Raises:
-        SessionError: When the caller has no application session.
+    A random HttpOnly cookie binds the challenge to this browser; the callback
+    rejects any other browser, so a victim cannot be linked to this account.
     """
+    user = await get_current_user(request)
     container = get_container()
-    session_id = request.cookies.get(container.settings.cookie_name)
-    if not session_id:
-        raise SessionError("missing session")
-    return RedirectResponse(url=await browser_landing_url(session_id), status_code=302)
+    redirect_uri = container.settings.laliga_browser_redirect_uri
+    if redirect_uri is None:
+        raise PairingError(
+            "Browser linking requires a registered HTTPS callback", category="browser_unavailable"
+        )
+    started = await container.pairings.begin_browser_login(user.user_id, redirect_uri=redirect_uri)
+    binding = generate_pairing_secret()
+    await container.browser_pairings.save(
+        BrowserPairingRecord(
+            state=started.b2c_state,
+            user_id=user.user_id,
+            pairing_id=started.pairing_id,
+            secret=started.secret,
+            code_verifier=started.code_verifier,
+            expires_at=container.clock.now() + container.settings.pairing_ttl_seconds,
+            binding_hash=hash_secret(binding),
+        ),
+        now=container.clock.now(),
+    )
+    response.set_cookie(
+        BINDING_COOKIE,
+        binding,
+        max_age=container.settings.pairing_ttl_seconds,
+        path=CALLBACK_PATH,
+        secure=True,
+        httponly=True,
+        samesite="lax",
+    )
+    return BrowserLoginResponse(authorize_url=started.authorize_url)
+
+
+@router.get("/laliga/callback", response_class=RedirectResponse, status_code=303)
+async def laliga_browser_callback(request: Request) -> RedirectResponse:
+    """Complete a browser authorization and return to the fixed frontend origin."""
+    container = get_container()
+    redirect_uri = container.settings.laliga_browser_redirect_uri
+    if redirect_uri is None:
+        raise PairingError("Browser callback is unavailable", category="browser_unavailable")
+    callback = f"{redirect_uri}?{request.url.query}"
+    try:
+        await _complete_browser_challenge(request, callback, redirect_uri=redirect_uri)
+        destination = container.settings.frontend_origin
+    except AuthError:
+        destination = (
+            f"{container.settings.frontend_origin.rstrip('/')}/connect-laliga"
+            "?error=laliga_link_failed"
+        )
+    redirect = RedirectResponse(url=destination, status_code=303)
+    redirect.delete_cookie(BINDING_COOKIE, path=CALLBACK_PATH, secure=True, httponly=True)
+    return redirect
+
+
+@router.delete("/laliga/pairings", response_model=OkResponse)
+async def cancel_pairings(request: Request) -> OkResponse:
+    """Cancel the verified user's outstanding browser and helper challenges."""
+    user = await get_current_user(request)
+    container = get_container()
+    await container.pairings.cancel(user.user_id)
+    await container.browser_pairings.cancel(user.user_id)
+    return OkResponse(ok=True)
 
 
 @router.post(
@@ -94,8 +153,19 @@ async def complete_redirect(
         Completion flag and frontend origin. No tokens or pairing secrets.
 
     Raises:
-        PairingError: When the callback does not match a pending session.
+        PairingError: When the callback does not match a pending challenge.
     """
+    await _complete_browser_challenge(request, body.callback)
+    return CompleteRedirectResponse(
+        ok=True,
+        frontend_origin=get_container().settings.frontend_origin,
+    )
+
+
+async def _complete_browser_challenge(
+    request: Request, callback: str, *, redirect_uri: str | None = None
+) -> None:
+    """Rate-limit and consume one state before exchanging its authorization code."""
     container = get_container()
     client_ip = request.client.host if request.client else "unknown"
     allowed = await container.rate_limiter.allow(
@@ -105,37 +175,27 @@ async def complete_redirect(
     )
     if not allowed:
         raise PairingError("rate limited", category="rate_limited")
-    state = _state_from_callback(body.callback)
+    state = _state_from_callback(callback)
     if not state:
         raise PairingError("callback missing state", category="pairing_callback")
-    session = await container.session_store.find_by_laliga_state(state)
-    if (
-        session is None
-        or not session.laliga_pairing_id
-        or not session.laliga_pairing_secret
-        or not session.laliga_code_verifier
-        or not session.laliga_b2c_state
-    ):
-        raise PairingError("pairing not found", category="pairing_not_found")
+    binding_hash: str | None = None
+    if redirect_uri is not None:
+        binding = request.cookies.get(BINDING_COOKIE)
+        if not binding:
+            raise PairingError("callback not bound to this browser", category="pairing_not_found")
+        binding_hash = hash_secret(binding)
+    challenge = await container.browser_pairings.consume(
+        state, now=container.clock.now(), binding_hash=binding_hash
+    )
+    if challenge is None:
+        raise PairingError("pairing not found or expired", category="pairing_not_found")
     await container.pairings.complete_browser_redirect(
-        callback=body.callback,
-        pairing_id=session.laliga_pairing_id,
-        secret=session.laliga_pairing_secret,
-        code_verifier=session.laliga_code_verifier,
-        expected_state=session.laliga_b2c_state,
-    )
-    await container.session_store.save(
-        replace(
-            session,
-            laliga_pairing_id=None,
-            laliga_pairing_secret=None,
-            laliga_code_verifier=None,
-            laliga_b2c_state=None,
-        )
-    )
-    return CompleteRedirectResponse(
-        ok=True,
-        frontend_origin=container.settings.frontend_origin,
+        callback=callback,
+        pairing_id=challenge.pairing_id,
+        secret=challenge.secret,
+        code_verifier=challenge.code_verifier,
+        expected_state=challenge.state,
+        redirect_uri=redirect_uri,
     )
 
 
@@ -151,7 +211,7 @@ async def complete_pairing(
     """Complete pairing from the local PKCE helper (rate-limited).
 
     This endpoint is called by the helper CLI, not the browser, so it uses
-    the pairing secret instead of the session CSRF cookie.
+    the pairing secret as its independent one-time proof.
 
     Args:
         pairing_id: Public pairing identifier.
@@ -189,21 +249,16 @@ async def complete_pairing(
 @router.get("/laliga/connection", response_model=ConnectionStatusResponse)
 async def get_connection(
     request: Request,
-    x_csrf_token: str | None = Header(default=None, alias="X-CSRF-Token"),
 ) -> ConnectionStatusResponse:
     """Return LaLiga connection status for the current user.
 
     Args:
         request: Incoming request.
-        x_csrf_token: CSRF header (safe read still requires session).
 
     Returns:
         Public status without tokens.
     """
-    # GET uses session auth; CSRF optional for safe methods but we still
-    # require a valid session via require_csrf's user path — use get_current.
-    del x_csrf_token
-    user, _session = await get_current_user(request)
+    user = await get_current_user(request)
     status = await get_container().pairings.get_status(user.user_id)
     return ConnectionStatusResponse(**status)
 
@@ -211,49 +266,19 @@ async def get_connection(
 @router.delete("/laliga/connection", response_model=OkResponse)
 async def delete_connection(
     request: Request,
-    x_csrf_token: str | None = Header(default=None, alias="X-CSRF-Token"),
 ) -> OkResponse:
     """Remove sealed LaLiga tokens for the current user.
 
     Args:
         request: Incoming request.
-        x_csrf_token: CSRF header.
 
     Returns:
         ``{"ok": true}``.
     """
-    user = await require_csrf(request, x_csrf_token)
+    user = await get_current_user(request)
     await get_container().pairings.unlink(user.user_id)
+    await get_container().browser_pairings.cancel(user.user_id)
     return OkResponse(ok=True)
-
-
-async def browser_landing_url(session_id: str) -> str:
-    """Return the frontend when LaLiga is linked, otherwise the B2C URL.
-
-    Args:
-        session_id: Application session id.
-
-    Returns:
-        Absolute URL for the next browser hop.
-    """
-    container = get_container()
-    session = await container.session_store.get(session_id)
-    if session is None or session.user is None:
-        return container.settings.frontend_origin
-    status = await container.pairings.get_status(session.user.user_id)
-    if status["linked"] and not status["needs_reauth"]:
-        return container.settings.frontend_origin
-    started = await container.pairings.begin_browser_login(session.user.user_id)
-    await container.session_store.save(
-        replace(
-            session,
-            laliga_pairing_id=started.pairing_id,
-            laliga_pairing_secret=started.secret,
-            laliga_code_verifier=started.code_verifier,
-            laliga_b2c_state=started.b2c_state,
-        )
-    )
-    return started.authorize_url
 
 
 def _state_from_callback(callback: str) -> str | None:

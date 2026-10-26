@@ -424,10 +424,30 @@ zoom. Roster ownership and listing reconciliation have focused unit coverage in
 
 ## Authentication
 
-After Keycloak login, the app exchanges the session for an internal JWT
-(`POST /auth/token` with CSRF) and sends `Authorization: Bearer …` on `/api`
-requests. `needs_reauth` prompts the user to link LaLiga again. See
+Better Auth's React client owns session state and calls `GET /auth/token`.
+The app keeps the JWT in memory and sends `Authorization: Bearer …` on `/api`
+and `/laliga` requests. Sign-in, registration, one-time email verification,
+recovery and account settings have separate routes. The `/account` page groups the
+external LaLiga account link, username/email/password changes, linked providers,
+and confirmed account deletion. Email changes wait for a code delivered to the
+new address; deletion removes the sealed LaLiga connection first and clears local
+private data on success. `needs_reauth` prompts the user to link LaLiga again. See
 [Authentication](authentication/authentication.md).
+
+Sign-in and registration show equally sized buttons only for configured direct
+Google, Facebook and Apple providers, with locally served artwork. A divider
+separates them from the password
+form; password visibility, adjacent recovery, preserved input on failure and
+provider-specific pending labels support correction without restarting the flow.
+The screen uses the shared square controls, coral primary action and both themes.
+
+Social callbacks and successful credential sign-in continue to `/connect-laliga`.
+That route waits for a verified application session/JWT, checks the connection,
+returns connected users to the lineup, and starts the existing LaLiga authorization
+once for an unlinked user. Failures offer retry or public player browsing. Provider
+tokens are not passed to LaLiga; its own authorization code and PKCE flow grants
+Fantasy access. Direct social providers need their own configured credentials;
+the LaLiga SSO browser flow is unavailable pending an approved web client and callback.
 
 ## Shared building blocks
 

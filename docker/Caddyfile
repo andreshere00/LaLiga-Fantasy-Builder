@@ -1,0 +1,12 @@
+{$APP_DOMAIN} {
+    # Terminate identity requests here so rate limits use the actual client IP.
+    # Caddy replaces this header; caller-supplied X-Real-IP is never trusted.
+    handle /auth/* {
+        reverse_proxy identity:8003 {
+            header_up X-Real-IP {remote_host}
+        }
+    }
+    handle {
+        reverse_proxy frontend:80
+    }
+}

@@ -7,18 +7,18 @@ map of what each part owns.
 
 ```text
 frontend/          React app — lineup, market, and player profiles (Bun, Vite). Nginx in Docker.
-backend/auth/      Sessions, Keycloak login, LaLiga vault, internal JWT
+backend/auth/      LaLiga pairing, vault and refresh
+backend/identity/  Better Auth sessions, credentials, providers, application JWTs
 backend/api/       Fantasy features. Calls LaLiga with a bearer from auth
 backend/scraping/  Private scraper + parser on port 8002 (`internal` + `egress`)
-docker/            Keycloak realm import and the OTEL collector config
+docker/            Identity database setup, HTTPS ingress and OTEL collector config
 ```
 
-Local identity is Keycloak. Postgres and Redis are used when
-`USE_MEMORY_STORE=false` (`full` Compose profile). OpenTelemetry is optional.
+Identity always uses PostgreSQL with its own role/database. The vault uses Postgres
+and Redis when `USE_MEMORY_STORE=false`. OpenTelemetry is optional.
 
-The browser talks only to the frontend origin (`http://localhost:3000`).
-Nginx proxies `/auth` and `/laliga` to auth and `/api` to the API. The React
-app keeps the internal JWT in memory.
+Nginx/Vite proxy `/auth` to identity, `/laliga` to Python auth and `/api` to the API.
+The browser uses one origin and keeps its application JWT only in memory.
 
 ## System context
 
@@ -26,7 +26,7 @@ app keeps the internal JWT in memory.
 flowchart LR
     Browser[Browser]
     Web[Frontend]
-    IdP[Keycloak]
+    IdP[Better Auth identity]
     Auth[Auth]
     Api[API]
     Postgres[(PostgreSQL)]
@@ -37,9 +37,12 @@ flowchart LR
     FutbolFantasy[FutbolFantasy]
 
     Browser -->|Same origin| Web
-    Web -->|Session cookie| Auth
+    Web -->|Session cookie| IdP
+    Web -->|Application JWT| Auth
     Web -->|Bearer JWT| Api
-    Auth -->|App OIDC| IdP
+    IdP -->|Own role and database| Postgres
+    Auth -.->|JWKS| IdP
+    Api -.->|JWKS| IdP
     Auth -->|Pair and refresh| LaligaIdP
     Auth -->|Confirm manager| LaligaApi
     Api -->|Private bearer request| Auth
@@ -52,41 +55,13 @@ flowchart LR
 
 ## Browser login
 
-Two identities stay separate. Keycloak is the application user. LaLiga is a
-delegated account stored only in the auth vault.
-
-```mermaid
-sequenceDiagram
-    participant Browser
-    participant Web as Frontend
-    participant Auth
-    participant Keycloak
-    participant Laliga as LaLigaB2C
-    participant Helper as AuthredirectHelper
-
-    Browser->>Web: Log in
-    Web->>Auth: GET /auth/login
-    Auth->>Keycloak: OIDC redirect
-    Keycloak->>Auth: GET /auth/callback
-    alt LaLiga not linked
-        Auth->>Laliga: B2C authorize
-        Laliga->>Helper: authredirect://
-        Helper->>Auth: POST /laliga/pairings/complete-redirect
-        Helper->>Browser: Open frontend origin
-    else Already linked
-        Auth->>Browser: Redirect to frontend origin
-    end
-```
-
-LaLiga's registered return address is `authredirect://com.lfp.laligafantasy`,
-not a browser URL. The macOS helper posts that callback to auth and opens the
-app. HTML clients are redirected; a request that does not ask for HTML still
-receives the JSON session view, which the CLIs use.
-
-`GET /laliga/login` starts the same LaLiga hop for a session that is already
-signed in. PKCE verifier and pairing secret stay on the server session.
-
-Token rules and CSRF are in
+Better Auth owns application identity. Its React client uses `/auth` on the shared
+frontend origin for Google/Facebook/Apple and verified username/email credentials.
+The JWT plugin issues short-lived Ed25519 tokens used by both Python services.
+LaLiga is an independent delegated connection. `POST /laliga/login` requires a JWT
+and returns an authorization URL only when a registered HTTPS callback is configured.
+`GET /laliga/callback` consumes an independent one-time state/nonce/PKCE challenge.
+The native CLI uses its separate registered custom-scheme callback. See
 [Authentication](authentication/authentication.md).
 
 ## Service responsibilities
@@ -108,9 +83,8 @@ In Docker, Nginx on port 3000 serves the built app and proxies `/auth`,
 
 `backend/auth` is the security boundary and owns:
 
-- OIDC login, callback, ID-token verification, and logout;
-- opaque browser sessions and CSRF tokens;
-- internal JWT signing and public JWKS;
+- Better Auth JWT verification from a configured JWKS;
+- independent native pairing challenge persistence;
 - LaLiga pairing and ownership confirmation;
 - LaLiga access and refresh tokens;
 - AES-GCM vault encryption;
@@ -121,7 +95,7 @@ Auth follows a ports-and-adapters structure:
 
 ```text
 api/          HTTP routes and request dependencies
-application/  Session, pairing, credentials, and token use cases
+application/  Pairing and credential use cases
 domain/       Users, tokens, and errors
 ports/        Storage, identity, vault, and client protocols
 adapters/     HTTP, JWKS, JWT, Postgres, Redis, and AES-GCM implementations
@@ -131,7 +105,7 @@ adapters/     HTTP, JWKS, JWT, Postgres, Redis, and AES-GCM implementations
 
 `backend/api` owns application features and:
 
-- validates auth-issued internal JWTs using the auth JWKS;
+- validates Better Auth-issued application JWTs using identity JWKS;
 - derives the current user exclusively from the verified `sub`;
 - requests short-lived LaLiga bearers through the private auth interface;
 - calls LaLiga Fantasy on behalf of that verified user;
@@ -212,11 +186,11 @@ upstream JSON into empty `{}` or `[]` — see the pitfalls doc.
 
 `fantasy-leagues`, `fantasy-teams`, `fantasy-players`, `fantasy-calendar`,
 `fantasy-market`, and `fantasy-buyout`
-are not part of the runtime API. They exchange session cookies for an internal
-JWT (or accept `--jwt`; players public reads need no JWT) and call local API
-routes. Shared flags and token exchange live in `cli/common.py`.
+are not part of the runtime API. They accept `--jwt` / `INTERNAL_JWT` and call
+local API routes (players public reads need no JWT). Shared flags live in
+`cli/common.py`; interactive Better Auth login is provided by the browser helper.
 
-Automated login: `fantasy-browser-session` in `backend/auth`.
+Interactive login: `fantasy-browser-session` in `backend/auth`.
 
 `fantasy-standings` and `fantasy-browser-session standings-analysis` fetch real
 club classification through the API without LaLiga pairing. The default source
@@ -232,8 +206,9 @@ See [Standings API](api/standings/README.md).
 
 ### Public browser-to-auth boundary
 
-Public auth routes accept session cookies. Mutations additionally enforce
-double-submit CSRF and allowed origins.
+Identity owns `/auth/*` cookies and uses Better Auth origin/CSRF protections.
+Python `/laliga/*` reads, starts, and deletes require a verified application Bearer
+JWT. Native/helper completion instead requires a one-time pairing challenge.
 
 ### Public browser-to-API boundary
 
@@ -282,14 +257,14 @@ bearer required for that call.
 ```mermaid
 sequenceDiagram
     participant Browser
-    participant Auth
+    participant Identity
     participant Api
 
-    Browser->>Auth: POST /auth/token with session and CSRF
-    Auth->>Auth: Validate session and mint RS256 JWT
-    Auth-->>Browser: Internal JWT
+    Browser->>Identity: GET /auth/token with Better Auth session
+    Identity->>Identity: Validate session and issue Ed25519 JWT
+    Identity-->>Browser: Application JWT
     Browser->>Api: GET /endpoint with Bearer JWT
-    Api->>Auth: Fetch and cache JWKS when required
+    Api->>Identity: Fetch and cache /auth/jwks when required
     Api->>Api: Verify signature and claims
     Api-->>Browser: User-scoped response
 ```
@@ -328,23 +303,25 @@ Memory adapters are intended for tests and local development.
 
 With `USE_MEMORY_STORE=false`:
 
-- PostgreSQL stores sessions, pairings, and connection records;
+- separate PostgreSQL databases/roles store identity sessions/keys and LaLiga
+  pairing challenges/connections;
 - pairing consumption is an atomic database update;
 - connection token bundles are encrypted before persistence;
-- Redis stores distributed rate-limit windows and refresh locks;
+- Redis stores distributed rate-limit windows; PostgreSQL advisory locks serialize
+  refresh, pairing completion, cancellation and unlink for each owner;
 - startup validates required secrets and connectivity;
 - migrations can be applied under a PostgreSQL advisory lock;
 - readiness checks verify PostgreSQL and Redis;
 - shutdown closes both clients.
 
-The deterministic development vault key and generated internal JWT key are
-not production features. Production requires configured key material.
+The deterministic development vault key is not a production feature. Production
+requires a configured vault key; only identity owns application signing keys.
 
 ## Error model
 
 Auth produces stable categories:
 
-- `unauthorized`: missing or invalid session/service credential;
+- `unauthorized`: missing or invalid application JWT/service credential;
 - `needs_reauth`: LaLiga connection is absent or cannot refresh;
 - `forbidden`: ownership violation;
 - `jwt_invalid` or validation categories: invalid signed token;
@@ -395,16 +372,16 @@ Run commands live in the [root README](../README.md).
   `python:3.14-slim-trixie` with uv only in the builder. The frontend image
   builds with Bun and serves static files plus `/auth`, `/laliga`, and `/api`
   proxies from Nginx.
-- Compose profile `apps` runs Keycloak, auth, API, scraping, and frontend. Profile
-  `full` adds Postgres, Redis, and OTEL. In-cluster OIDC URLs use
-  `keycloak:8080`. The browser still uses `localhost`.
+- Compose profile `apps` runs identity, auth, API, scraping and frontend, with
+  PostgreSQL and Redis. Identity sends email through configured SMTP. `full` adds OTEL.
+  Identity owns its own logical database and role.
 - API and auth share a private network for `/internal/*`. Scraping joins that
   network and an `egress` network so a future downloader can reach the public
   internet without putting the API on egress.
-- JWT private keys, the vault key, and the service token belong in a secret
+- The Better Auth encryption secret, the vault key, and the service token belong in a secret
   manager, not source control.
 - Auth and API must use the same internal JWT issuer and audience.
-- `AUTH_JWKS_URL` must reach the auth JWKS endpoint.
+- `AUTH_JWKS_URL` must reach the identity `/auth/jwks` endpoint.
 - Key rotation must keep old public keys until issued tokens expire.
 
 ## Lineup builder

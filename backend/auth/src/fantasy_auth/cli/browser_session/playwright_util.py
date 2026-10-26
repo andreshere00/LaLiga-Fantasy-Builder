@@ -12,7 +12,7 @@ from fantasy_auth.cli.browser_session.errors import (
 
 
 def import_sync_playwright() -> tuple[Any, Any, Callable[..., Any]]:
-    """Import Playwright sync types used by Keycloak login and capture.
+    """Import Playwright sync types used by application login and capture.
 
     Returns:
         Tuple of ``(PlaywrightError, PlaywrightTimeout, sync_playwright)``.

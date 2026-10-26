@@ -5,7 +5,8 @@ to add a route without crossing the trust boundary.
 
 - Application features belong in `backend/api` — follow
   [Adding endpoints](../api/adding-endpoints.md).
-- Login, session, pairing, vault, and credentials belong in `backend/auth`.
+- Application authentication belongs in `backend/identity`; LaLiga pairing, vault and
+  delegated credentials belong in `backend/auth`.
 - Encrypted LaLiga tokens stay inside auth.
 
 ## API identity (no LaLiga)
@@ -32,9 +33,9 @@ from logs; map auth `needs_reauth` to `NeedsReauthError`. If Fantasy returns
 
 ## Auth browser endpoint
 
-Reads: `get_current_user(request)` in `fantasy_auth.api`. Mutations:
-`require_csrf(request, x_csrf_token)` plus allowed Origin. Add `PUT`/`PATCH`
-to the **auth** CORS allow-list.
+Use `get_current_user(request)` in `fantasy_auth.api` for reads and mutations.
+It verifies a Better Auth Bearer JWT. Cookie/CSRF handling belongs exclusively to
+Better Auth's standard endpoints on the identity service.
 
 Browser calls to the Fantasy API use Bearer JWT, not cookies. API writes need
 the method on the **API** CORS allow-list (`create_app` in `backend/api`).

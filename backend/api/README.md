@@ -56,8 +56,8 @@ fallback values, and segment behavior.
 
 ## CLI
 
-Auth on port 8000 and this API on port 8001. Pass `--jwt` or
-`FANTASY_SESSION` and `FANTASY_CSRF`.
+API on port 8001; application login uses the shared frontend origin at port 3000.
+Pass `--jwt` / `INTERNAL_JWT` obtained from `fantasy-browser-session --exports`.
 
 ```bash
 cd backend/api

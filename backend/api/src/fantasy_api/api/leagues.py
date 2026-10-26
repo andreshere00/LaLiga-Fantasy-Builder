@@ -30,7 +30,7 @@ router = APIRouter(tags=["leagues"])
 async def leagues_probe(
     authorization: str | None = Header(
         default=None,
-        description="Bearer internal JWT issued by auth ``POST /auth/token``.",
+        description="Bearer internal JWT issued by identity ``GET /auth/token``.",
     ),
 ) -> LeaguesProbeResponse:
     """Verify Fantasy leagues connectivity without exposing the bearer.
@@ -61,7 +61,7 @@ async def leagues_probe(
 async def list_leagues(
     authorization: str | None = Header(
         default=None,
-        description="Bearer internal JWT issued by auth ``POST /auth/token``.",
+        description="Bearer internal JWT issued by identity ``GET /auth/token``.",
     ),
 ) -> list[FantasyLeague]:
     """Return competition leagues from Fantasy.
@@ -88,7 +88,7 @@ async def get_standing(
     league_id: str = Path(description="Fantasy league identifier."),
     authorization: str | None = Header(
         default=None,
-        description="Bearer internal JWT issued by auth ``POST /auth/token``.",
+        description="Bearer internal JWT issued by identity ``GET /auth/token``.",
     ),
 ) -> list[StandingRow]:
     """Return overall league standing.
@@ -117,7 +117,7 @@ async def get_standing_by_week(
     week: int = Path(ge=1, description="Matchweek number."),
     authorization: str | None = Header(
         default=None,
-        description="Bearer internal JWT issued by auth ``POST /auth/token``.",
+        description="Bearer internal JWT issued by identity ``GET /auth/token``.",
     ),
 ) -> list[StandingRow]:
     """Return league standing for a matchweek.
@@ -151,7 +151,7 @@ async def get_activity(
     page: int = Path(ge=0, description="Activity page index (typically starts at 0)."),
     authorization: str | None = Header(
         default=None,
-        description="Bearer internal JWT issued by auth ``POST /auth/token``.",
+        description="Bearer internal JWT issued by identity ``GET /auth/token``.",
     ),
 ) -> list[ActivityItem]:
     """Return a page of league activity.
@@ -184,7 +184,7 @@ async def list_teams(
     league_id: str = Path(description="Fantasy league identifier."),
     authorization: str | None = Header(
         default=None,
-        description="Bearer internal JWT issued by auth ``POST /auth/token``.",
+        description="Bearer internal JWT issued by identity ``GET /auth/token``.",
     ),
 ) -> list[LeagueTeam]:
     """Return teams/managers in a league.
@@ -213,7 +213,7 @@ async def get_team(
     team_id: str = Path(description="Fantasy team identifier."),
     authorization: str | None = Header(
         default=None,
-        description="Bearer internal JWT issued by auth ``POST /auth/token``.",
+        description="Bearer internal JWT issued by identity ``GET /auth/token``.",
     ),
 ) -> TeamDetail:
     """Return a team roster and clauses.

@@ -20,9 +20,8 @@ def _patch_session(monkeypatch: pytest.MonkeyPatch) -> None:
     monkeypatch.setattr(
         cli,
         "login_with_playwright",
-        lambda *_args, **_kwargs: ("sess", "csrf"),
+        lambda *_args, **_kwargs: "jwt-token",
     )
-    monkeypatch.setattr(cli, "exchange_token", lambda **_kwargs: "jwt-token")
     monkeypatch.setattr(cli, "_connection_linked", lambda **_kwargs: True)
 
 
@@ -91,9 +90,8 @@ def test_main_unlinked_pairs_via_playwright(
     monkeypatch.setattr(
         cli,
         "login_with_playwright",
-        lambda *_args, **_kwargs: ("sess", "csrf"),
+        lambda *_args, **_kwargs: "jwt-token",
     )
-    monkeypatch.setattr(cli, "exchange_token", lambda **_kwargs: "jwt-token")
     monkeypatch.setattr(
         cli,
         "_connection_linked",
@@ -172,9 +170,8 @@ def test_main_unlinked_leagues_analysis_pairs(
     monkeypatch.setattr(
         cli,
         "login_with_playwright",
-        lambda *_args, **_kwargs: ("sess", "csrf"),
+        lambda *_args, **_kwargs: "jwt-token",
     )
-    monkeypatch.setattr(cli, "exchange_token", lambda **_kwargs: "jwt-token")
     monkeypatch.setattr(
         cli,
         "_connection_linked",
@@ -280,13 +277,13 @@ def test_main_http_error_returns_1(
     monkeypatch.setattr(
         cli,
         "login_with_playwright",
-        lambda *_args, **_kwargs: ("sess", "csrf"),
+        lambda *_args, **_kwargs: "jwt-token",
     )
 
-    def boom(**_kwargs: object) -> str:
+    def boom(*_args: object, **_kwargs: object) -> str:
         raise httpx.ConnectError("down")
 
-    monkeypatch.setattr(cli, "exchange_token", boom)
+    monkeypatch.setattr(cli, "login_with_playwright", boom)
 
     # Act
     code = cli.main(["--json"])
@@ -303,9 +300,8 @@ def test_main_unlinked_with_no_pair_fails(
     monkeypatch.setattr(
         cli,
         "login_with_playwright",
-        lambda *_args, **_kwargs: ("sess", "csrf"),
+        lambda *_args, **_kwargs: "jwt-token",
     )
-    monkeypatch.setattr(cli, "exchange_token", lambda **_kwargs: "jwt-token")
     monkeypatch.setattr(cli, "_connection_linked", lambda **_kwargs: False)
 
     # Act

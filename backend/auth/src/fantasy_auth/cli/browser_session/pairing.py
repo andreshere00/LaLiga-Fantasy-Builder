@@ -20,9 +20,7 @@ CaptureFn = Callable[[str], str]
 def pair_laliga_with_playwright(
     *,
     auth_base: str,
-    origin: str,
-    session: str,
-    csrf: str,
+    jwt: str,
     headed: bool = True,
     capture_fn: CaptureFn | None = None,
 ) -> dict[str, Any]:
@@ -34,9 +32,7 @@ def pair_laliga_with_playwright(
 
     Args:
         auth_base: Auth service origin.
-        origin: Origin header for CSRF.
-        session: ``fantasy_session`` cookie.
-        csrf: CSRF cookie and header.
+        jwt: Better Auth application token.
         headed: When True, show a window for the Playwright fallback.
         capture_fn: Optional callback capture (tests). Receives the authorize URL.
 
@@ -48,9 +44,7 @@ def pair_laliga_with_playwright(
     """
     pairing = _create_pairing(
         api_base=auth_base,
-        session=session,
-        csrf=csrf,
-        origin=origin,
+        jwt=jwt,
     )
     if pairing is None:
         raise BrowserSessionError("Create pairing failed")

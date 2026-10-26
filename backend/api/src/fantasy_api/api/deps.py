@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import asyncio
 from dataclasses import dataclass
 from datetime import UTC, datetime
 from typing import Annotated, Any, Protocol
@@ -359,7 +360,7 @@ async def get_current_user(
     token = authorization.split(" ", 1)[1].strip()
     if not token:
         raise UnauthorizedError("missing bearer token")
-    claims = get_container().jwt_validator.validate(token)
+    claims = await asyncio.to_thread(get_container().jwt_validator.validate, token)
     try:
         user = extract_app_user_from_claims(claims)
     except ValueError as exc:

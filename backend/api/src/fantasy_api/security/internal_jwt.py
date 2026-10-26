@@ -1,6 +1,4 @@
-"""JWKS-backed validation for auth-issued internal JWTs."""
-
-from __future__ import annotations
+"""Verify Better Auth application JWTs against a configured, cached JWKS."""
 
 from collections.abc import Mapping
 from typing import Any
@@ -12,51 +10,42 @@ from fantasy_api.domain.errors import UnauthorizedError
 
 
 class InternalJwtValidator:
-    """Validate RS256 internal JWTs against the auth JWKS endpoint.
+    """Verify Ed25519 tokens; never trust token-supplied URLs or legacy RSA keys."""
 
-    Args:
-        jwks_url: Auth ``/.well-known/jwks.json`` URL.
-        issuer: Expected ``iss``.
-        audience: Expected ``aud``.
-    """
-
-    def __init__(
-        self,
-        *,
-        jwks_url: str,
-        issuer: str,
-        audience: str,
-    ) -> None:
+    def __init__(self, *, jwks_url: str, issuer: str, audience: str) -> None:
         self._issuer = issuer
         self._audience = audience
-        self._jwks_client = PyJWKClient(jwks_url, cache_keys=True)
+        self._jwks_client = PyJWKClient(
+            jwks_url, cache_keys=False, cache_jwk_set=True, lifespan=300, timeout=5
+        )
 
     def validate(self, token: str) -> Mapping[str, Any]:
-        """Validate signature and standard claims.
-
-        Args:
-            token: JWT string.
-
-        Returns:
-            Verified claims.
-
-        Raises:
-            UnauthorizedError: On validation failure.
-        """
+        """Validate signature, subject, issuer, audience, and bounded lifetime."""
         try:
-            signing_key = self._jwks_client.get_signing_key_from_jwt(token)
-            return jwt.decode(
+            header = jwt.get_unverified_header(token)
+            if header.get("alg") != "EdDSA" or not isinstance(header.get("kid"), str):
+                raise ValueError("invalid header")
+            key = self._jwks_client.get_signing_key_from_jwt(token)
+            claims = jwt.decode(
                 token,
-                signing_key.key,
-                algorithms=["RS256"],
+                key.key,
+                algorithms=["EdDSA"],
                 audience=self._audience,
                 issuer=self._issuer,
-                options={"require": ["exp", "iss", "aud", "sub"]},
+                leeway=30,
+                options={"require": ["exp", "iat", "iss", "aud", "sub"]},
             )
-        except jwt.PyJWTError as exc:
-            raise UnauthorizedError(str(exc)) from exc
-        except Exception as exc:
-            raise UnauthorizedError(f"jwks validation failed: {exc}") from exc
+            if not isinstance(claims["sub"], str) or not claims["sub"].strip():
+                raise ValueError("invalid subject")
+            if (
+                type(claims["exp"]) is not int
+                or type(claims["iat"]) is not int
+                or not 0 < claims["exp"] - claims["iat"] <= 900
+            ):
+                raise ValueError("invalid lifetime")
+            return claims
+        except (jwt.PyJWTError, ValueError, TypeError, KeyError, OSError) as exc:
+            raise UnauthorizedError("invalid application token") from exc
 
 
 class StaticInternalJwtValidator:

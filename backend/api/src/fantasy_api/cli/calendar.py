@@ -21,10 +21,9 @@ def _parse_week(value: str) -> int:
 
 
 def main(argv: list[str] | None = None) -> int:
-    """Exchange session cookies for a JWT and print calendar summaries.
+    """Use an application Bearer JWT and print calendar summaries.
 
     Environment (optional if flags are set):
-        FANTASY_SESSION / FANTASY_CSRF — auth session cookies
         INTERNAL_JWT — skip token exchange when already minted
         FANTASY_AUTH_BASE — auth origin (default ``http://localhost:8000``)
         FANTASY_API_BASE — Fantasy Builder API origin

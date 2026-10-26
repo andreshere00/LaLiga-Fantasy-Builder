@@ -19,10 +19,6 @@ def main(argv: list[str] | None = None) -> int:
     Automates curl + env var plumbing. The LaLiga browser login remains
     interactive (B2C / social SSO cannot be completed without user consent).
 
-    Environment (optional if flags are set):
-        FANTASY_SESSION / fantasy_session cookie value
-        FANTASY_CSRF / CSRF token (header + cookie)
-
     Args:
         argv: Optional CLI arguments.
 
@@ -36,23 +32,11 @@ def main(argv: list[str] | None = None) -> int:
     )
     parser.add_argument(
         "--api-base",
-        default=os.environ.get("FANTASY_API_BASE", "http://localhost:8000"),
+        default=os.environ.get("FANTASY_API_BASE", "http://localhost:3000"),
         help="BFF base URL",
     )
     parser.add_argument(
-        "--session",
-        default=os.environ.get("FANTASY_SESSION") or os.environ.get("SESSION"),
-        help="fantasy_session cookie (or env FANTASY_SESSION / SESSION)",
-    )
-    parser.add_argument(
-        "--csrf",
-        default=os.environ.get("FANTASY_CSRF") or os.environ.get("CSRF"),
-        help="CSRF token (or env FANTASY_CSRF / CSRF)",
-    )
-    parser.add_argument(
-        "--origin",
-        default=os.environ.get("FANTASY_ORIGIN", "http://localhost:8000"),
-        help="Origin header for CSRF checks",
+        "--jwt", default=os.environ.get("INTERNAL_JWT"), help="Better Auth application JWT"
     )
     callback = parser.add_mutually_exclusive_group()
     callback.add_argument(
@@ -72,25 +56,13 @@ def main(argv: list[str] | None = None) -> int:
     )
     args = parser.parse_args(argv)
 
-    session = _normalize_cookie(args.session)
-    csrf = _normalize_cookie(args.csrf)
-
-    if not session or not csrf:
+    jwt = _normalize_cookie(args.jwt)
+    if not jwt:
         print(
-            "Missing session cookies. Export them first:\n"
-            "  export FANTASY_SESSION='…'   # fantasy_session cookie\n"
-            "  export FANTASY_CSRF='…'      # fantasy_csrf cookie / /auth/me csrf\n"
-            "Then re-run: uv run pair-laliga",
-            file=sys.stderr,
+            "Provide --jwt / INTERNAL_JWT from fantasy-browser-session --exports.", file=sys.stderr
         )
         return 1
-
-    pairing = _create_pairing(
-        api_base=args.api_base,
-        session=session,
-        csrf=csrf,
-        origin=args.origin,
-    )
+    pairing = _create_pairing(api_base=args.api_base, jwt=jwt)
     if pairing is None:
         return 1
 
@@ -129,32 +101,14 @@ def _normalize_cookie(value: str | None) -> str:
 def _create_pairing(
     *,
     api_base: str,
-    session: str,
-    csrf: str,
-    origin: str,
+    jwt: str,
 ) -> dict[str, str] | None:
-    """POST /laliga/pairings with session cookies.
-
-    Args:
-        api_base: BFF origin.
-        session: Opaque session cookie.
-        csrf: CSRF token.
-        origin: Browser origin header.
-
-    Returns:
-        Pairing JSON fields, or None on failure.
-    """
+    """Create a challenge for the verified Better Auth subject."""
     url = f"{api_base.rstrip('/')}/laliga/pairings"
-    cookies = {"fantasy_session": session, "fantasy_csrf": csrf}
-    headers = {"Origin": origin, "X-CSRF-Token": csrf}
     with httpx.Client(timeout=30.0) as client:
-        response = client.post(url, headers=headers, cookies=cookies)
+        response = client.post(url, headers={"Authorization": f"Bearer {jwt}"})
     if response.status_code == 401:
-        print(
-            "Unauthorized — session expired or CSRF mismatch. "
-            "Re-login at /auth/login and copy fresh cookies.",
-            file=sys.stderr,
-        )
+        print("Session expired. Run fantasy-browser-session again.", file=sys.stderr)
         return None
     if not response.is_success:
         print(f"Create pairing failed: HTTP {response.status_code}", file=sys.stderr)

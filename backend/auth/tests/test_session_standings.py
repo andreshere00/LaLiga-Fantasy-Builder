@@ -45,8 +45,7 @@ def test_main_standings_flow_mints_jwt_without_laliga_probe_or_pairing(
     capsys: pytest.CaptureFixture[str],
 ) -> None:
     # Arrange
-    monkeypatch.setattr(cli, "login_with_playwright", lambda *_args, **_kwargs: ("session", "csrf"))
-    monkeypatch.setattr(cli, "exchange_token", lambda **_kwargs: "app-jwt")
+    monkeypatch.setattr(cli, "login_with_playwright", lambda *_args, **_kwargs: "app-jwt")
 
     def forbidden(**_kwargs: object) -> None:
         raise AssertionError("standings flow must not probe or pair LaLiga")
@@ -66,8 +65,7 @@ def test_main_standings_with_player_read_linked_account_skips_pairing(
     capsys: pytest.CaptureFixture[str],
 ) -> None:
     # Arrange
-    monkeypatch.setattr(cli, "login_with_playwright", lambda *_args, **_kwargs: ("session", "csrf"))
-    monkeypatch.setattr(cli, "exchange_token", lambda **_kwargs: "app-jwt")
+    monkeypatch.setattr(cli, "login_with_playwright", lambda *_args, **_kwargs: "app-jwt")
     monkeypatch.setattr(cli, "_connection_linked", lambda **_kwargs: True)
     monkeypatch.setattr(cli, "_run_standings_analysis", lambda **_kwargs: PAYLOAD)
     monkeypatch.setattr(cli, "_fetch_league_player", lambda **_kwargs: {"id": "1"})

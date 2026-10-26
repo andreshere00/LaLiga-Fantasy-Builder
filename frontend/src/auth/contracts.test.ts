@@ -70,18 +70,16 @@ describe("auth endpoint contract coverage", () => {
       }
     }
 
-    expect(covered).toBe(13);
+    expect(covered).toBe(10);
   });
 
   it("session_response_maps_only_declared_wire_aliases", () => {
     const parsed = sessionViewSchema.parse({
       user: { user_id: "u-1", email: null, name: null },
-      csrf_token: "csrf",
     });
 
     expect(parsed).toEqual({
       user: { userId: "u-1", email: null, name: null },
-      csrfToken: "csrf",
     });
   });
 

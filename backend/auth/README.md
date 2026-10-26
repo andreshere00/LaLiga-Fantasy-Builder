@@ -1,99 +1,42 @@
-# Auth service
+# LaLiga delegation and vault
 
-Application login (Keycloak) and the sealed LaLiga account. The browser flow
-is in [Architecture](../../docs/architecture.md#browser-login). Token rules
-are in [Authentication](../../docs/authentication/authentication.md).
+Python/FastAPI on port 8000. Application login, passwords, sessions and JWT
+issuance live in [identity](../identity/README.md). This service verifies identity
+JWTs and owns LaLiga pairing, manager confirmation, AES-GCM sealed credentials,
+refresh singleflight and the private bearer exchange. It never imports the API.
 
-Package import path: `fantasy_auth`. Stack startup is the
-[root README](../../README.md).
-
-## Local run
-
-```bash
-cd backend/auth
-cp .env.example .env
-uv sync --all-extras
-uv run uvicorn fantasy_auth.main:app --reload --port 8000
-```
-
-Keycloak, from the repo root: `docker compose up -d`.
-
-Standalone image:
+Copy `.env.example` to `.env`, set `AUTH_JWKS_URL`, issuer, audience, service token
+and vault key. Production requires Postgres and Redis with `USE_MEMORY_STORE=false`.
+Keep the existing vault key when upgrading. SQL migrations are additive; the old
+session tables are inert rollback data and are never read by active code.
 
 ```bash
-docker build -t laliga-fantasy-builder-auth -f backend/auth/Dockerfile backend/auth
-docker run --rm -p 8000:8000 --env-file backend/auth/.env laliga-fantasy-builder-auth
+uv sync --group dev
+uv run uvicorn fantasy_auth.main:app --port 8000
+uv run pytest --cov=src --cov-report=term-missing --cov-fail-under=90
 ```
 
-## Developer pairing CLIs
+The browser and native helper use the shared frontend origin at port 3000.
+`fantasy-browser-session --exports` opens the application sign-in screen for
+interactive credential or social login and exports only `INTERNAL_JWT` on explicit
+request. It never enters social-provider passwords. Use `--jwt` for headless reads.
+`--no-pair standings-analysis --json` exercises application-only access; a
+LaLiga-backed read can prompt for interactive pairing when needed. The
+`authenticate-laliga` entry point uses this same flow. `pair-laliga --jwt ...`
+retains the independent PKCE helper. Old session/CSRF and provider-password flags
+are no longer supported.
 
-The app pairs LaLiga itself. These commands are for analysis and for
-registering the macOS `authredirect://` handler.
+LaLiga linking is separate from application login. `POST /laliga/login` is available
+only after LaLiga registers the exact HTTPS `/laliga/callback` URL for this client
+and `LALIGA_BROWSER_REDIRECT_URI` is configured with the matching `FRONTEND_ORIGIN`.
+Without it, the browser receives `browser_unavailable`; the native CLI pairing
+helper remains available. Browser callbacks require one-time state/nonce/PKCE proof
+and no browser cookie. All owner-scoped browser
+routes require a verified Bearer token. `/internal/*` additionally requires
+`X-Service-Token` and private networking. No live financial actions should be used
+for authentication validation.
 
-```bash
-cd backend/auth
-uv sync --extra browser
-uv run playwright install chromium
-uv run fantasy-browser-session leagues-analysis --json
-uv run fantasy-browser-session standings-analysis --season 2026 --json
-```
-
-Allow LaligaAuthredirect if macOS asks. `--no-pair` skips LaLiga when you
-only need an internal JWT. `--exports` prints session cookies and
-`INTERNAL_JWT` for curl.
-
-`leagues-analysis`, `teams-analysis`, `market-analysis`, and
-`buyout-analysis` call the matching API reads. `fantasy-market` and
-`fantasy-buyout` stay read-only. `--put-lineup` needs a real JSON file and
-`--team-id`.
-
-`standings-analysis` fetches real LALIGA club classification with the internal
-app JWT only: it does not probe or pair a LaLiga account. Configure the provider
-key on the API service. The command defaults to completed-match mode; live mode
-returns 503 until a suitable live data source is verified. See
-[Standings API](../../docs/api/standings/README.md).
-
-Cookie-prompt alternative, from the repo root: `./scripts/authenticate-laliga.sh`.
-Against an auth process that is already up:
-
-```bash
-export FANTASY_SESSION='…'
-export FANTASY_CSRF='…'
-cd backend/auth && uv run pair-laliga
-```
-
-## Routes and OpenAPI
-
-Full route tables: [Auth endpoints](../../docs/authentication/endpoints.md).
-Regenerate committed schema: `uv run generate-openapi` (writes
-`backend/auth/openapi.json`). Swagger: http://localhost:8000/docs when running.
-
-Highlights:
-
-- `GET /health`, `/health/live`, `/health/ready` — liveness/readiness
-- `GET /auth/login`, `/auth/callback`, `/auth/me`, `POST /auth/logout` — app session
-- `POST /auth/token` — session + CSRF → internal JWT
-- `GET /laliga/connection`, `DELETE /laliga/connection` — link status / unlink
-- LaLiga pairing under `/laliga/pairings*`
-- `GET /.well-known/jwks.json` — internal JWT verification keys
-- `GET /internal/laliga/bearer` — private; JWT plus `X-Service-Token`
-
-`/internal/*` must not be exposed on the public internet.
-
-## Tests
-
-```bash
-cd backend/auth && uv run pytest
-```
-
-Browser-session API reads use independent Pydantic contracts with known nested
-Fantasy fields and recognized-field guards. Sparse money/offer responses and empty
-lineup write acknowledgements remain supported. Lineup writes preserve omitted
-premium fields using `exclude_unset=True`. Shared contract fixtures guard agreement
-with the API without importing `fantasy_api` into auth.
-
-## Read-only lineup builder
-
-See the [lineup builder guide](../../docs/api/lineup-builder.md) for the authenticated planning POST, CLI,
-browser-session flow, source restrictions and optional explanation configuration.
-The builder flow allows 130 seconds per request to cover the API's 120-second build deadline.
+See [authentication](../../docs/authentication/authentication.md),
+[endpoints](../../docs/authentication/endpoints.md),
+[cutover](../../docs/authentication/better-auth-cutover.md), and
+[OpenAPI](openapi.json).

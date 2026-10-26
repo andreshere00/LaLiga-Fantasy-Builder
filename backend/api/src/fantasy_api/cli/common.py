@@ -14,8 +14,6 @@ import httpx
 from pydantic import ValidationError
 
 from fantasy_api.cli.contracts import (
-    AuthTokenError,
-    InternalTokenResponse,
     dump_validated_response,
     query_adapter,
     response_adapter,
@@ -23,7 +21,7 @@ from fantasy_api.cli.contracts import (
     validate_response,
 )
 
-DEFAULT_AUTH_BASE = "http://localhost:8000"
+DEFAULT_AUTH_BASE = "http://localhost:3000"
 DEFAULT_API_BASE = "http://localhost:8001"
 DEFAULT_ORIGIN = "http://localhost:3000"
 
@@ -41,32 +39,22 @@ def add_common_cli_args(parser: argparse.ArgumentParser) -> None:
         help="Fantasy Builder API base URL",
     )
     parser.add_argument(
-        "--session",
-        default=os.environ.get("FANTASY_SESSION") or os.environ.get("SESSION"),
-        help="fantasy_session cookie (or env FANTASY_SESSION)",
-    )
-    parser.add_argument(
-        "--csrf",
-        default=os.environ.get("FANTASY_CSRF") or os.environ.get("CSRF"),
-        help="CSRF token (or env FANTASY_CSRF)",
-    )
-    parser.add_argument(
         "--jwt",
         default=os.environ.get("INTERNAL_JWT"),
-        help="Internal JWT (skips /auth/token when set)",
+        help="Better Auth application JWT",
     )
     parser.add_argument(
         "--origin",
         default=os.environ.get("FANTASY_ORIGIN", DEFAULT_ORIGIN),
-        help="Origin header for auth CSRF checks",
+        help="Application origin",
     )
 
 
 def resolve_jwt(args: argparse.Namespace, *, command: str) -> str | None:
-    """Return an internal JWT from ``args`` or exchange session cookies.
+    """Return the supplied Better Auth JWT without persisting credentials.
 
     Args:
-        args: Parsed CLI namespace with jwt/session/csrf/auth-base/origin.
+        args: Parsed CLI namespace.
         command: CLI name shown in missing-credentials help (e.g. ``fantasy-teams``).
 
     Returns:
@@ -76,24 +64,13 @@ def resolve_jwt(args: argparse.Namespace, *, command: str) -> str | None:
     if jwt:
         return jwt
 
-    session = normalize(args.session)
-    csrf = normalize(args.csrf)
-    if not session or not csrf:
-        print(
-            "Missing credentials. Provide --jwt / INTERNAL_JWT, or:\n"
-            "  export FANTASY_SESSION='…'\n"
-            "  export FANTASY_CSRF='…'\n"
-            f"Then re-run: uv run {command}",
-            file=sys.stderr,
-        )
-        return None
-
-    return exchange_token(
-        auth_base=args.auth_base,
-        session=session,
-        csrf=csrf,
-        origin=args.origin,
+    print(
+        "Missing credentials. Provide --jwt / INTERNAL_JWT. Run "
+        "fantasy-browser-session --exports to sign in using Better Auth. "
+        "Legacy session/CSRF exports are no longer supported.",
+        file=sys.stderr,
     )
+    return None
 
 
 def normalize(value: str | None) -> str:
@@ -101,54 +78,6 @@ def normalize(value: str | None) -> str:
     if not value:
         return ""
     return value.replace("\r", "").replace("\n", "").strip()
-
-
-def exchange_token(
-    *,
-    auth_base: str,
-    session: str,
-    csrf: str,
-    origin: str,
-) -> str | None:
-    """POST /auth/token and return the internal JWT.
-
-    Args:
-        auth_base: Auth service base URL.
-        session: ``fantasy_session`` cookie value.
-        csrf: CSRF token (header and cookie).
-        origin: ``Origin`` header for CSRF checks.
-
-    Returns:
-        Internal JWT string, or ``None`` when exchange fails (message printed).
-    """
-    url = f"{auth_base.rstrip('/')}/auth/token"
-    headers = {"Origin": origin, "X-CSRF-Token": csrf}
-    with httpx.Client(
-        timeout=30.0,
-        cookies={"fantasy_session": session, "fantasy_csrf": csrf},
-    ) as client:
-        response = client.post(url, headers=headers)
-    if response.status_code == 401:
-        print(
-            "Unauthorized — session expired or CSRF mismatch. "
-            "Re-login at /auth/login and copy fresh cookies.",
-            file=sys.stderr,
-        )
-        return None
-    if not response.is_success:
-        try:
-            error = AuthTokenError.model_validate(response.json())
-            detail = error.detail or error.error
-        except (ValueError, ValidationError):
-            detail = "auth service request failed"
-        print(f"Token exchange failed: {response.status_code} {detail}", file=sys.stderr)
-        return None
-    try:
-        token = InternalTokenResponse.model_validate(response.json())
-    except (ValueError, ValidationError):
-        print("Token exchange response had an unexpected shape", file=sys.stderr)
-        return None
-    return token.access_token
 
 
 def api_get(

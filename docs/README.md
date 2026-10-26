@@ -14,6 +14,8 @@ This folder is the detailed map.
 | [Lineup fixture panel implementation](frontend-fixture-panel-implementation-plan.md) | Current/next matchweek panel, automatic rollover, stadium weather, shadcn composition, tests, and captures |
 | [Frontend design-system migration plan](frontend-design-system-migration-plan.md) | Screen-by-screen commits, visual reference, staging boundaries, and acceptance checks |
 | [Authentication](authentication/authentication.md) | Sessions, internal JWT, LaLiga vault, CSRF |
+| [Better Auth implementation plan](authentication/better-auth-implementation-plan.md) | Google, Facebook, Apple, username/password, account migration, and Keycloak removal |
+| [LaLiga SSO implementation plan](authentication/laliga-sso-implementation-plan.md) | LaLiga-brokered social sign-in, Better Auth sessions, callback feasibility and Fantasy connection |
 | [Scraping service](scraping/README.md) | Private scraper HTTP, player profile parsing, TTLs, Compose `egress`, CLIs |
 | [FutbolFantasy parser](scraping/parser.md) | Offline HTML → player JSON and Markdown |
 | [Parser selectors](scraping/parser-discovery.md) | Fixture vs live FutbolFantasy DOM contract |
@@ -52,3 +54,6 @@ Contributors: [`AGENTS.md`](../AGENTS.md).
 features and player-stat aggregation. `backend/scraping` — private
 FutbolFantasy downloads and parsing. `frontend` — lineup, market, and player
 UI; no LaLiga secrets in the browser.
+
+Current runtime: [Identity setup](../backend/identity/README.md).
+Cutover and production release checks: [runbook](authentication/better-auth-cutover.md).

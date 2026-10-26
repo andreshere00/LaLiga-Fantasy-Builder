@@ -121,7 +121,7 @@ test("custom calendar cancels edits, applies confirmed dates, and follows the da
 for (const gate of ["signed-out", "unlinked", "needs-reauth", "unavailable"]) {
   test("access gate " + gate, async ({ page }) => {
     await mockApplication(page);
-    if (gate === "signed-out") await page.route("**/auth/me", (route) => route.fulfill({ status: 401, json: { error: "unauthorized" } }));
+    if (gate === "signed-out") await page.route("**/auth/get-session", (route) => route.fulfill({ status: 200, json: null }));
     else await page.route("**/laliga/connection", (route) => gate === "unavailable"
       ? route.fulfill({ status: 503, json: { error: "unavailable" } })
       : route.fulfill({ json: { linked: gate !== "unlinked", needsReauth: gate === "needs-reauth", managerId: "demo", managerName: null, avatar: null } }));

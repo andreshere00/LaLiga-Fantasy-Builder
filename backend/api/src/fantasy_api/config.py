@@ -22,8 +22,8 @@ class Settings(BaseSettings):
     debug: bool = False
     cors_origins: list[str] = Field(default_factory=lambda: ["http://localhost:3000"])
 
-    auth_jwks_url: str = "http://localhost:8000/.well-known/jwks.json"
-    internal_jwt_issuer: str = "https://auth.fantasy-builder.local"
+    auth_jwks_url: str = "http://localhost:8003/auth/jwks"
+    internal_jwt_issuer: str = "http://localhost:3000/auth"
     internal_jwt_audience: str = "fantasy-api"
     auth_internal_base_url: str = "http://localhost:8000"
     internal_service_token: str = ""

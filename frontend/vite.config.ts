@@ -8,8 +8,8 @@ export default defineConfig({
     strictPort: true,
     proxy: {
       "/auth": {
-        target: "http://localhost:8000",
-        changeOrigin: true,
+        target: "http://localhost:8003",
+        changeOrigin: false,
       },
       "/laliga": {
         target: "http://localhost:8000",

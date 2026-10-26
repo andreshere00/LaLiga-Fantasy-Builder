@@ -1,42 +1,11 @@
-"""Repository and clock ports for sessions, pairings, and connections."""
+"""Repository and clock ports for pairing challenges and connections."""
 
 from __future__ import annotations
 
 from dataclasses import dataclass
 from typing import Protocol
 
-from fantasy_auth.domain.users import AppUser, LaligaUser
-
-
-@dataclass(frozen=True, slots=True)
-class SessionRecord:
-    """Server-side application session.
-
-    Attributes:
-        session_id: Opaque session identifier (cookie value).
-        user: Authenticated app user.
-        csrf_token: CSRF double-submit token.
-        expires_at: Unix timestamp when the session expires.
-        oidc_state: Pending OIDC state during login (optional).
-        oidc_nonce: Pending OIDC nonce during login (optional).
-        oidc_code_verifier: PKCE verifier for app IdP (optional).
-        laliga_pairing_id: Pending LaLiga pairing id (optional).
-        laliga_pairing_secret: Pending pairing secret, server-side only.
-        laliga_code_verifier: PKCE verifier for the LaLiga authorize hop.
-        laliga_b2c_state: B2C state used to match the native callback.
-    """
-
-    session_id: str
-    user: AppUser | None
-    csrf_token: str
-    expires_at: int
-    oidc_state: str | None = None
-    oidc_nonce: str | None = None
-    oidc_code_verifier: str | None = None
-    laliga_pairing_id: str | None = None
-    laliga_pairing_secret: str | None = None
-    laliga_code_verifier: str | None = None
-    laliga_b2c_state: str | None = None
+from fantasy_auth.domain.users import LaligaUser
 
 
 @dataclass(frozen=True, slots=True)
@@ -90,29 +59,6 @@ class Clock(Protocol):
         """Return the current Unix timestamp in seconds."""
 
 
-class SessionStore(Protocol):
-    """Server-side session persistence."""
-
-    async def save(self, session: SessionRecord) -> None:
-        """Upsert a session record."""
-
-    async def get(self, session_id: str) -> SessionRecord | None:
-        """Load a session by opaque ID."""
-
-    async def delete(self, session_id: str) -> None:
-        """Delete a session (logout)."""
-
-    async def find_by_laliga_state(self, state: str) -> SessionRecord | None:
-        """Load the session waiting for this LaLiga B2C state.
-
-        Args:
-            state: ``state`` query value from the native callback.
-
-        Returns:
-            Matching session, or None.
-        """
-
-
 class PairingStore(Protocol):
     """One-time pairing persistence with atomic consume."""
 
@@ -132,6 +78,9 @@ class PairingStore(Protocol):
         Returns:
             The pre-consume record if successfully consumed, else None.
         """
+
+    async def cancel(self, user_id: str) -> None:
+        """Invalidate all pending pairings for the verified owner."""
 
 
 class ConnectionRepo(Protocol):
@@ -174,3 +123,34 @@ class RefreshLock(Protocol):
         Args:
             user_id: Application user ID.
         """
+
+
+@dataclass(frozen=True, slots=True)
+class BrowserPairingRecord:
+    """Pending native callback bound to its initiating application subject."""
+
+    state: str
+    user_id: str
+    pairing_id: str
+    secret: str
+    code_verifier: str
+    expires_at: int
+    binding_hash: str = ""
+
+
+class BrowserPairingStore(Protocol):
+    """Independent, expiring, single-use browser pairing persistence."""
+
+    async def save(self, record: BrowserPairingRecord, *, now: int) -> None:
+        """Store a challenge and clean up expired secrets."""
+
+    async def consume(
+        self, state: str, *, now: int, binding_hash: str | None = None
+    ) -> BrowserPairingRecord | None:
+        """Atomically remove and return a live challenge.
+
+        When ``binding_hash`` is given, a challenge with another binding stays pending.
+        """
+
+    async def cancel(self, user_id: str) -> None:
+        """Remove all pending challenges belonging to the verified user."""

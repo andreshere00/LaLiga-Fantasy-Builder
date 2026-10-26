@@ -1,4 +1,4 @@
-"""HTTP helpers for auth cookies and the Fantasy Builder API."""
+"""HTTP helpers for application JWTs and the Fantasy Builder API."""
 
 from __future__ import annotations
 
@@ -11,7 +11,6 @@ from pydantic import ValidationError
 from fantasy_auth.api.schemas import (
     AuthErrorResponse,
     ConnectionStatusResponse,
-    InternalTokenResponse,
 )
 from fantasy_auth.cli.browser_session.contracts import (
     BrowserCompetitionStandings,
@@ -20,87 +19,6 @@ from fantasy_auth.cli.browser_session.contracts import (
     validate_lineup_write,
 )
 from fantasy_auth.cli.browser_session.errors import BrowserSessionError
-
-
-@dataclass
-class AuthClient:
-    """Auth-service client using session cookies."""
-
-    base_url: str
-    session: str
-    csrf: str
-    origin: str
-    transport: httpx.BaseTransport | None = None
-
-    def exchange_token(self) -> str:
-        """POST /auth/token and return the internal JWT.
-
-        Returns:
-            Internal JWT string.
-
-        Raises:
-            BrowserSessionError: When exchange fails.
-        """
-        url = f"{self.base_url.rstrip('/')}/auth/token"
-        with httpx.Client(
-            transport=self.transport,
-            timeout=30.0,
-            cookies=self._cookies(),
-        ) as client:
-            response = client.post(
-                url,
-                headers={"Origin": self.origin, "X-CSRF-Token": self.csrf},
-            )
-        if not response.is_success:
-            raise BrowserSessionError(
-                f"POST /auth/token failed: {_error_detail(response)}",
-            )
-        try:
-            token = InternalTokenResponse.model_validate(response.json())
-        except ValidationError as exc:
-            if any(
-                error["loc"] == ("access_token",) and error["type"] == "missing"
-                for error in exc.errors()
-            ):
-                raise BrowserSessionError("POST /auth/token missing access_token") from None
-            raise BrowserSessionError("POST /auth/token returned an invalid response") from None
-        except ValueError:
-            raise BrowserSessionError("POST /auth/token returned an invalid response") from None
-        return token.access_token
-
-    def is_linked(self) -> bool:
-        """Return whether /laliga/connection reports a linked vault.
-
-        Returns:
-            True when the vault is linked.
-
-        Raises:
-            BrowserSessionError: When the connection probe fails.
-        """
-        url = f"{self.base_url.rstrip('/')}/laliga/connection"
-        with httpx.Client(
-            transport=self.transport,
-            timeout=15.0,
-            cookies=self._cookies(),
-        ) as client:
-            response = client.get(url)
-        if response.status_code == 401:
-            raise BrowserSessionError("GET /laliga/connection unauthorized")
-        if not response.is_success:
-            raise BrowserSessionError(
-                f"GET /laliga/connection failed: HTTP {response.status_code}",
-            )
-        try:
-            status = ConnectionStatusResponse.model_validate(response.json())
-        except (ValueError, ValidationError):
-            raise BrowserSessionError(
-                "GET /laliga/connection returned an invalid response"
-            ) from None
-        return status.linked
-
-    def _cookies(self) -> dict[str, str]:
-        """Return auth cookie header values."""
-        return {"fantasy_session": self.session, "fantasy_csrf": self.csrf}
 
 
 @dataclass
@@ -208,60 +126,21 @@ class FantasyClient:
         return response
 
 
-def exchange_token(
-    *,
-    auth_base: str,
-    origin: str,
-    session: str,
-    csrf: str,
-    transport: httpx.BaseTransport | None = None,
-) -> str:
-    """POST /auth/token and return the internal JWT.
-
-    Args:
-        auth_base: Auth service origin.
-        origin: Origin header for CSRF.
-        session: ``fantasy_session`` cookie.
-        csrf: CSRF cookie and header.
-        transport: Optional httpx transport (tests).
-
-    Returns:
-        Internal JWT string.
-    """
-    return AuthClient(
-        base_url=auth_base,
-        session=session,
-        csrf=csrf,
-        origin=origin,
-        transport=transport,
-    ).exchange_token()
-
-
 def connection_linked(
-    *,
-    auth_base: str,
-    session: str,
-    csrf: str,
-    transport: httpx.BaseTransport | None = None,
+    *, auth_base: str, jwt: str, transport: httpx.BaseTransport | None = None
 ) -> bool:
-    """Return whether /laliga/connection reports a linked vault.
-
-    Args:
-        auth_base: Auth service origin.
-        session: ``fantasy_session`` cookie.
-        csrf: CSRF cookie and header.
-        transport: Optional httpx transport (tests).
-
-    Returns:
-        True when the vault is linked.
-    """
-    return AuthClient(
-        base_url=auth_base,
-        session=session,
-        csrf=csrf,
-        origin="",
-        transport=transport,
-    ).is_linked()
+    """Read the verified subject's LaLiga connection using its application JWT."""
+    with httpx.Client(transport=transport, timeout=15) as client:
+        response = client.get(
+            f"{auth_base.rstrip('/')}/laliga/connection", headers={"Authorization": f"Bearer {jwt}"}
+        )
+    if not response.is_success:
+        raise BrowserSessionError(f"Connection check failed: HTTP {response.status_code}")
+    try:
+        status = ConnectionStatusResponse.model_validate(response.json())
+    except (ValueError, ValidationError):
+        raise BrowserSessionError("Connection check returned an invalid response") from None
+    return status.linked and not status.needs_reauth
 
 
 def _error_detail(response: httpx.Response) -> str:

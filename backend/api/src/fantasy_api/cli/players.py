@@ -21,7 +21,6 @@ def main(argv: list[str] | None = None) -> int:
     """Print player catalog, market value, and optional league card.
 
     Environment (optional if flags are set):
-        FANTASY_SESSION / FANTASY_CSRF — auth session cookies (league card only)
         INTERNAL_JWT — league card JWT (catalog and market value are public)
         FANTASY_AUTH_BASE — auth origin (default ``http://localhost:8000``)
         FANTASY_API_BASE — Fantasy Builder API origin
@@ -102,7 +101,7 @@ def _build_report(
         report["market_value"] = api_get(api_base, f"/players/{pid}/market-value")
     if player_id is not None and league_id is not None:
         if not jwt:
-            raise RuntimeError("League card requires --jwt or session credentials")
+            raise RuntimeError("League card requires --jwt or INTERNAL_JWT")
         lid = path_segment(league_id)
         report["league_id"] = league_id
         report["league_player"] = api_get(api_base, f"/players/{pid}/league/{lid}", jwt)
