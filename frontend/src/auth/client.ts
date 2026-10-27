@@ -97,7 +97,7 @@ export class AuthClient {
       if (path === LALIGA_LOGIN_PATH) {
         const body = await response.clone().json().catch(() => null);
         if (z.object({ error: z.literal("browser_unavailable") }).safeParse(body).success) {
-          throw new Error("Browser LaLiga linking needs a registered HTTPS callback. Use the CLI pairing helper until it is configured.");
+          throw new Error("Browser LaLiga linking needs a registered HTTPS callback. Return to the connection page and choose another available method.");
         }
       }
       throw new Error("LaLiga connection request failed. Try again.");

@@ -112,6 +112,7 @@ it("starts manual linking only after a click and submits the pasted callback", a
   auth.completeManualLink.mockResolvedValue(true);
   render(tree());
   expect(auth.startManualLink).not.toHaveBeenCalled();
+  expect(auth.connectLaliga).not.toHaveBeenCalled();
   fireEvent.click(screen.getByRole("button", { name: "Start LaLiga sign-in" }));
   await screen.findByLabelText("LaLiga return URL");
   expect(open).toHaveBeenCalledWith("", "_blank");

@@ -4,6 +4,13 @@
 installation, but the user must copy a one-time native callback URL in desktop
 DevTools. It does not silently capture a callback and is not a mobile flow.
 
+For a local trial, set `LALIGA_MANUAL_LINK_ENABLED=true` in
+`backend/auth/.env`, restart Auth, and reload `/connect-laliga`. The page should
+offer **Start LaLiga sign-in**. That button calls `/laliga/manual/start`;
+`/laliga/login` is the separate registered-HTTPS-callback flow and returns 503
+when no such callback is configured. Keep the manual flag disabled in deployed
+environments until the release gate below passes.
+
 ## User journey
 
 1. Sign in to Fantasy Builder and open `/connect-laliga`. Confirm the displayed
