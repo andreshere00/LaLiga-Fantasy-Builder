@@ -1,0 +1,169 @@
+name: fantasybuilder
+
+x-runtime: &runtime
+  restart: unless-stopped
+  stop_grace_period: 60s
+  logging:
+    driver: json-file
+    options:
+      max-size: "10m"
+      max-file: "3"
+
+services:
+  postgres:
+    <<: *runtime
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_USER: fantasy
+      POSTGRES_DB: fantasy_auth
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?Set POSTGRES_PASSWORD}
+      IDENTITY_DB_PASSWORD: ${IDENTITY_DB_PASSWORD:?Set IDENTITY_DB_PASSWORD}
+      VAULT_DB_PASSWORD: ${VAULT_DB_PASSWORD:?Set VAULT_DB_PASSWORD}
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+      - ./identity.sh:/docker-entrypoint-initdb.d/identity.sh:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U fantasy -d fantasy_auth"]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+    networks: [internal]
+
+  redis:
+    <<: *runtime
+    image: redis:7-alpine
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 20
+    networks: [internal]
+
+  identity-migrate:
+    image: ${IDENTITY_IMAGE:?Set IDENTITY_IMAGE}
+    restart: "no"
+    environment:
+      NODE_ENV: production
+      IDENTITY_DATABASE_URL: postgresql://fantasy_identity:${IDENTITY_DB_PASSWORD:?Set IDENTITY_DB_PASSWORD}@postgres:5432/fantasy_identity
+    command: ["node", "dist/migrate.js"]
+    depends_on:
+      postgres:
+        condition: service_healthy
+    networks: [internal]
+    logging:
+      driver: json-file
+      options: {max-size: "10m", max-file: "3"}
+
+  identity:
+    <<: *runtime
+    image: ${IDENTITY_IMAGE:?Set IDENTITY_IMAGE}
+    env_file: ["${CONFIG_DIR:-/etc/fantasybuilder/current}/identity.env"]
+    environment:
+      NODE_ENV: production
+      PORT: "8003"
+      BETTER_AUTH_URL: https://${APP_DOMAIN:?Set APP_DOMAIN}
+      INTERNAL_JWT_ISSUER: https://${APP_DOMAIN}/auth
+      IDENTITY_DATABASE_URL: postgresql://fantasy_identity:${IDENTITY_DB_PASSWORD:?Set IDENTITY_DB_PASSWORD}@postgres:5432/fantasy_identity
+      LALIGA_AUTH_URL: http://auth:8000
+    depends_on:
+      identity-migrate:
+        condition: service_completed_successfully
+    networks: [internal, egress]
+
+  auth:
+    <<: *runtime
+    image: ${AUTH_IMAGE:?Set AUTH_IMAGE}
+    env_file: ["${CONFIG_DIR:-/etc/fantasybuilder/current}/auth.env"]
+    environment:
+      DEBUG: "false"
+      USE_MEMORY_STORE: "false"
+      DATABASE_URL: postgresql://fantasy_vault:${VAULT_DB_PASSWORD:?Set VAULT_DB_PASSWORD}@postgres:5432/fantasy_auth
+      REDIS_URL: redis://redis:6379/0
+      AUTH_JWKS_URL: http://identity:8003/auth/jwks
+      INTERNAL_JWT_ISSUER: https://${APP_DOMAIN}/auth
+      INTERNAL_JWT_AUDIENCE: fantasy-api
+      INTERNAL_SERVICE_TOKEN: ${INTERNAL_SERVICE_TOKEN:?Set INTERNAL_SERVICE_TOKEN}
+      FRONTEND_ORIGIN: https://${APP_DOMAIN}
+      CORS_ORIGINS: '["https://${APP_DOMAIN}"]'
+      MIGRATION_AUTO_APPLY: "true"
+    depends_on:
+      identity:
+        condition: service_healthy
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    networks: [internal, egress]
+
+  api:
+    <<: *runtime
+    image: ${API_IMAGE:?Set API_IMAGE}
+    env_file: ["${CONFIG_DIR:-/etc/fantasybuilder/current}/api.env"]
+    environment:
+      DEBUG: "false"
+      AUTH_JWKS_URL: http://identity:8003/auth/jwks
+      AUTH_INTERNAL_BASE_URL: http://auth:8000
+      INTERNAL_JWT_ISSUER: https://${APP_DOMAIN}/auth
+      INTERNAL_JWT_AUDIENCE: fantasy-api
+      INTERNAL_SERVICE_TOKEN: ${INTERNAL_SERVICE_TOKEN:?Set INTERNAL_SERVICE_TOKEN}
+      SCRAPING_BASE_URL: http://scraping:8002
+      SCRAPING_SERVICE_TOKEN: ${SCRAPING_SERVICE_TOKEN:?Set SCRAPING_SERVICE_TOKEN}
+      CORS_ORIGINS: '["https://${APP_DOMAIN}"]'
+    depends_on:
+      auth:
+        condition: service_healthy
+      scraping:
+        condition: service_healthy
+    networks: [internal, egress]
+
+  scraping:
+    <<: *runtime
+    image: ${SCRAPING_IMAGE:?Set SCRAPING_IMAGE}
+    env_file: ["${CONFIG_DIR:-/etc/fantasybuilder/current}/scraping.env"]
+    environment:
+      DEBUG: "false"
+      SCRAPING_SERVICE_PORT: "8002"
+      SCRAPING_SERVICE_TOKEN: ${SCRAPING_SERVICE_TOKEN:?Set SCRAPING_SERVICE_TOKEN}
+      SCRAPING_EXPOSE_DOCS: "false"
+    # Rate limiting and cache remain in one process, as in the current service.
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8002/health/live')"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+    networks: [internal, egress]
+
+  frontend:
+    <<: *runtime
+    image: ${FRONTEND_IMAGE:?Set FRONTEND_IMAGE}
+    depends_on:
+      identity:
+        condition: service_healthy
+      auth:
+        condition: service_healthy
+      api:
+        condition: service_healthy
+    networks: [internal]
+
+  gateway:
+    <<: *runtime
+    image: caddy:2.10.2-alpine
+    environment:
+      APP_DOMAIN: ${APP_DOMAIN:?Set APP_DOMAIN}
+    ports: ["80:80", "443:443"]
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy-data:/data
+      - caddy-config:/config
+    depends_on: [frontend]
+    networks: [internal, egress]
+
+networks:
+  internal:
+    internal: true
+  egress:
+
+volumes:
+  postgres-data:
+  caddy-data:
+  caddy-config:

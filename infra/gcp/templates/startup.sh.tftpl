@@ -1,0 +1,45 @@
+#!/bin/bash
+# This file contains only public configuration. Never inject secret payloads here.
+set -euo pipefail
+export DEBIAN_FRONTEND=noninteractive
+umask 077
+
+if ! command -v docker >/dev/null || ! docker compose version >/dev/null 2>&1 || ! command -v gcloud >/dev/null || ! command -v python3 >/dev/null; then
+  apt-get update
+  apt-get install -y ca-certificates curl gnupg
+  install -m 0755 -d /etc/apt/keyrings
+  curl -fsSL https://download.docker.com/linux/debian/gpg -o /etc/apt/keyrings/docker.asc
+  curl -fsSL https://packages.cloud.google.com/apt/doc/apt-key.gpg |
+    gpg --dearmor --yes -o /etc/apt/keyrings/google-cloud.gpg
+  chmod 0644 /etc/apt/keyrings/docker.asc /etc/apt/keyrings/google-cloud.gpg
+  echo 'deb [arch=amd64 signed-by=/etc/apt/keyrings/docker.asc] https://download.docker.com/linux/debian bookworm stable' > /etc/apt/sources.list.d/docker.list
+  echo 'deb [signed-by=/etc/apt/keyrings/google-cloud.gpg] https://packages.cloud.google.com/apt cloud-sdk main' > /etc/apt/sources.list.d/google-cloud-sdk.list
+  apt-get update
+  apt-get install -y docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin google-cloud-cli python3
+fi
+
+install -d -m 0700 /etc/fantasybuilder
+install -d -m 0755 /opt/fantasybuilder
+install -d -m 0755 /etc/systemd/system/docker.service.d
+%{ for path, asset in assets ~}
+asset_tmp=$(mktemp '${path}.XXXXXX')
+base64 --decode > "$asset_tmp" <<'FANTASYBUILDER_ASSET'
+${base64encode(asset.content)}
+FANTASYBUILDER_ASSET
+chmod '${asset.mode}' "$asset_tmp"
+if cmp -s "$asset_tmp" '${path}'; then
+  rm "$asset_tmp"
+else
+  mv -f "$asset_tmp" '${path}'
+fi
+%{ endfor ~}
+
+systemctl daemon-reload
+systemctl enable --now docker
+/usr/local/sbin/fantasybuilder-metadata-guard
+systemctl enable fantasybuilder.service
+systemctl enable --now fantasybuilder-backup.timer
+# A new host waits for explicit activation after images, secrets, and DNS exist.
+if test -f /etc/fantasybuilder/enabled; then
+  systemctl start fantasybuilder.service
+fi

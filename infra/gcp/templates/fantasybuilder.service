@@ -1,0 +1,21 @@
+[Unit]
+Description=Fantasy Builder application containers
+Requires=docker.service
+After=docker.service network-online.target
+Wants=network-online.target
+ConditionPathExists=/etc/fantasybuilder/enabled
+
+[Service]
+Type=oneshot
+RemainAfterExit=yes
+UMask=0077
+WorkingDirectory=/opt/fantasybuilder
+EnvironmentFile=/etc/fantasybuilder/host.env
+ExecStart=/usr/local/sbin/fantasybuilder-start
+ExecReload=/usr/local/sbin/fantasybuilder-release
+ExecStop=/usr/bin/docker compose --env-file /etc/fantasybuilder/current/runtime.env -f /opt/fantasybuilder/compose.yml stop --timeout 90
+TimeoutStartSec=900
+TimeoutStopSec=120
+
+[Install]
+WantedBy=multi-user.target

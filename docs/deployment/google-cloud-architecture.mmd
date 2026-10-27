@@ -1,0 +1,57 @@
+flowchart TB
+    users["Up to 4 simultaneous users"]
+    dns["Registrar DNS<br/>fantasybuilder.es → VM IPv4"]
+    ci["CI builds immutable container images"]
+    registry["Container registry<br/>bounded retention"]
+    admin["Administration via IAP + OS Login"]
+    users -. "DNS lookup" .-> dns
+    ci -.-> registry
+
+    subgraph gcp["Google Cloud · us-central1"]
+      subgraph vm["One e2-small VM · 2 GiB RAM · Docker Compose"]
+        caddy["Caddy · HTTPS on 80/443"]
+        web["Nginx + React static files"]
+        subgraph private["Private service connections · no published backend ports"]
+          identity["Identity · 8003<br/>Better Auth sessions + JWTs"]
+          auth["Auth · 8000<br/>LaLiga pairing + encrypted vault"]
+          api["API · 8001<br/>Fantasy features + lineup builder"]
+          scraper["Scraping · 8002<br/>one worker · local cache + limiter"]
+          pg[("PostgreSQL<br/>separate identity + vault DBs/roles")]
+          redis[("Redis<br/>auth rate limits")]
+        end
+        disk["30 GiB standard persistent disk<br/>PostgreSQL volume + Caddy data + OS/images"]
+        caddy -->|"/auth/*; replace client IP"| identity
+        caddy -->|"other paths"| web
+        web -->|"/laliga/*"| auth
+        web -->|"/api/*; strip /api"| api
+        api -->|"private bearer exchange + service token"| auth
+        api -->|"private scrape + service token"| scraper
+        identity -->|"own DB role"| pg
+        auth -->|"vault, pairings, refresh locks"| pg
+        auth --> redis
+        auth -.->|"JWKS"| identity
+        api -.->|"JWKS"| identity
+        pg --- disk
+        caddy --- disk
+      end
+      backup[("Private Cloud Storage bucket<br/>daily DB backups · bounded retention")]
+      pg -.->|"logical backups"| backup
+    end
+
+    users -->|"HTTPS · fantasybuilder.es"| caddy
+    registry -.->|"pull pinned images"| vm
+    admin -.-> vm
+    identity -->|"TLS SMTP 465"| mail["Resend<br/>verification + recovery"]
+    identity --> providers["Optional Google / Facebook / Apple"]
+    auth --> laligaAuth["LaLiga authentication"]
+    auth --> laliga["LaLiga Fantasy API"]
+    api --> laliga
+    scraper --> ff["FutbolFantasy / official standings pages"]
+    api --> weather["OpenWeather · optional"]
+
+    classDef edge fill:#eff6ff,stroke:#60a5fa,color:#0f172a;
+    classDef data fill:#ecfdf5,stroke:#34d399,color:#064e3b;
+    classDef ops fill:#f5f3ff,stroke:#a78bfa,color:#312e81;
+    class caddy,web,identity,auth,api,scraper edge;
+    class pg,redis,disk,backup data;
+    class ci,registry,admin ops;

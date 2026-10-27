@@ -1,0 +1,11 @@
+[Unit]
+Description=Upload Fantasy Builder PostgreSQL backups
+Requires=docker.service
+After=docker.service fantasybuilder.service
+ConditionPathExists=/etc/fantasybuilder/enabled
+
+[Service]
+Type=oneshot
+UMask=0077
+ExecStart=/usr/local/sbin/fantasybuilder-backup
+TimeoutStartSec=900
