@@ -6,9 +6,20 @@
 *.key
 *.pem
 
+# Terraform state, credentials, plans and local inputs
+**/.terraform/
+*.tfstate
+*.tfstate.*
+*.tfplan
+*.tfvars
+*.tfvars.json
+!*.tfvars.example
+crash.log
+
 # Python / uv
 backend/**/.venv/
 backend/**/__pycache__/
+infra/**/__pycache__/
 backend/**/*.py[cod]
 backend/**/.pytest_cache/
 backend/**/.mypy_cache/
@@ -62,3 +73,7 @@ frontend/dist/
 frontend/coverage/
 frontend/test-results/
 frontend/playwright-report/
+
+# GitHub release references and temporary OIDC credentials
+release-images.env
+gha-creds-*.json

@@ -8,6 +8,9 @@ This folder is the detailed map.
 | Doc | Contents |
 |-----|----------|
 | [Architecture](architecture.md) | Services, login path, CRS, trust boundaries, errors |
+| [System architecture](../ARCHITECTURE.md) | Backend, frontend, and Google Cloud topology |
+| [Terraform deployment](../infra/gcp/README.md) | Provision the GCP VM, network, private backups, registry, secrets, and runtime |
+| [Google Cloud deployment assessment](deployment/google-cloud-cost-architecture.md) | Cost comparison and architecture for four concurrent users; trial, sizing, and production preparation |
 | [Frontend](frontend.md) | Lineup, market, and players UI, data loading, actions, details, and product screenshot gallery |
 | [Automatic lineup builder plan](lineup-builder-implementation-plan.md) | Deterministic scoring, candidate search, API/UI delivery and verification; [research and resolved policies](lineup-builder-research.md) |
 | [Frontend standings plan](frontend-standings-implementation-plan.md) | LALIGA table below Players Ranking, separate scrolling, data states, and verification |

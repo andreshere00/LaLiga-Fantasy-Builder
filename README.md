@@ -6,7 +6,9 @@ data and user-confirmed writes with your linked account.
 
 | Topic | Doc |
 |-------|-----|
-| Architecture and trust boundaries | [docs/architecture.md](docs/architecture.md) |
+| Backend, frontend, and cloud architecture | [ARCHITECTURE.md](ARCHITECTURE.md) |
+| Detailed service trust boundaries | [docs/architecture.md](docs/architecture.md) |
+| Google Cloud Terraform deployment | [infra/gcp/README.md](infra/gcp/README.md) |
 | UI behaviour (lineup, market, players) | [docs/frontend.md](docs/frontend.md) |
 | API routes and CLIs | [docs/api/README.md](docs/api/README.md) |
 | Agent / contributor rules | [AGENTS.md](AGENTS.md) |

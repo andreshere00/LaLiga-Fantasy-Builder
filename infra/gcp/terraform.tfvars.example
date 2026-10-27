@@ -1,0 +1,21 @@
+project_id = "your-existing-project-id"
+# Region and zone must change together.
+region       = "us-central1"
+zone         = "us-central1-a"
+domain       = "fantasybuilder.es"
+machine_type = "e2-small"
+admin_members = [
+  "user:your-google-account@example.com",
+]
+
+# Optional: this needs permission to create budgets on the billing account.
+# billing_account_id = "XXXXXX-XXXXXX-XXXXXX"
+# budget_currency    = "EUR" # Must match your billing account, not the USD estimate.
+# monthly_budget     = 20
+
+# Enable automatic publishing after successful CI on a push to main.
+# Obtain repository_id: gh api repos/andreshere00/LaLiga-Fantasy-Builder --jq '.id | tostring'
+# github_actions = {
+#   repository    = "andreshere00/LaLiga-Fantasy-Builder"
+#   repository_id = "REPLACE_WITH_NUMERIC_ID"
+# }

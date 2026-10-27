@@ -2,8 +2,11 @@ name: CI
 
 on:
   push:
-    branches: [main]
+    branches: ['**']
   pull_request:
+
+permissions:
+  contents: read
 
 jobs:
   test:
@@ -64,7 +67,7 @@ jobs:
         working-directory: frontend
 
       - name: Frontend contracts and behavior
-        run: bun run test && bun run build
+        run: bun run test
         working-directory: frontend
 
       - name: Authentication browser flows
@@ -81,22 +84,117 @@ jobs:
           AUTH_TEST_DATABASE_URL: postgresql://identity:test-only@localhost:5432/identity_test
         run: uv run poe test
 
-  docker:
+  build:
+    # Every branch push and PR builds all images after tests pass.
+    needs: test
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
 
+      - name: Check image publishing policy
+        run: python3 -m unittest discover -s infra/gcp/tests -p test_publish_images.py
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
       - name: Build identity image
-        run: docker build backend/identity
+        run: docker buildx build --platform linux/amd64 --load -t "fantasybuilder/identity:$GITHUB_SHA" backend/identity
 
       - name: Build auth image
-        run: docker build -f backend/auth/Dockerfile backend/auth
+        run: docker buildx build --platform linux/amd64 --load -t "fantasybuilder/auth:$GITHUB_SHA" backend/auth
 
       - name: Build API image
-        run: docker build -f backend/api/Dockerfile backend/api
+        run: docker buildx build --platform linux/amd64 --load -t "fantasybuilder/api:$GITHUB_SHA" backend/api
 
       - name: Build scraping image
-        run: docker build -f backend/scraping/Dockerfile backend/scraping
+        run: docker buildx build --platform linux/amd64 --load -t "fantasybuilder/scraping:$GITHUB_SHA" backend/scraping
 
       - name: Build frontend image
-        run: docker build -f frontend/Dockerfile .
+        run: docker buildx build --platform linux/amd64 --load -t "fantasybuilder/frontend:$GITHUB_SHA" -f frontend/Dockerfile .
+
+      - name: Export checked images for deployment
+        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+        run: |
+          images=()
+          for service in identity auth api scraping frontend; do
+            images+=("fantasybuilder/$service:$GITHUB_SHA")
+          done
+          docker save --output "$RUNNER_TEMP/application-images.tar" "${images[@]}"
+
+      - name: Transfer checked images
+        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+        uses: actions/upload-artifact@v4
+        with:
+          name: application-images-${{ github.sha }}
+          path: ${{ runner.temp }}/application-images.tar
+          if-no-files-found: error
+          retention-days: 1
+
+  deploy:
+    needs: build
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      id-token: write
+    env:
+      GCP_ARTIFACT_REGISTRY: ${{ vars.GCP_ARTIFACT_REGISTRY }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Download checked images
+        uses: actions/download-artifact@v4
+        with:
+          name: application-images-${{ github.sha }}
+          path: ${{ runner.temp }}
+
+      - name: Load checked images
+        run: docker load --input "$RUNNER_TEMP/application-images.tar"
+
+      - name: Validate publishing configuration
+        env:
+          GCP_PROJECT_ID: ${{ vars.GCP_PROJECT_ID }}
+          GCP_WORKLOAD_IDENTITY_PROVIDER: ${{ vars.GCP_WORKLOAD_IDENTITY_PROVIDER }}
+          GCP_IMAGE_PUBLISHER: ${{ vars.GCP_IMAGE_PUBLISHER }}
+        run: |
+          for name in GCP_PROJECT_ID GCP_ARTIFACT_REGISTRY GCP_WORKLOAD_IDENTITY_PROVIDER GCP_IMAGE_PUBLISHER; do
+            if [ -z "${!name}" ]; then
+              echo "::error::Configure the GitHub Actions variable $name before publishing."
+              exit 1
+            fi
+          done
+          echo "REGISTRY_HOST=${GCP_ARTIFACT_REGISTRY%%/*}" >> "$GITHUB_ENV"
+
+      - name: Authenticate image publisher
+        id: auth
+        uses: google-github-actions/auth@v3
+        with:
+          project_id: ${{ vars.GCP_PROJECT_ID }}
+          workload_identity_provider: ${{ vars.GCP_WORKLOAD_IDENTITY_PROVIDER }}
+          service_account: ${{ vars.GCP_IMAGE_PUBLISHER }}
+          token_format: access_token
+          create_credentials_file: false
+
+      - name: Log in to Artifact Registry
+        uses: docker/login-action@v4
+        with:
+          registry: ${{ env.REGISTRY_HOST }}
+          username: oauth2accesstoken
+          password: ${{ steps.auth.outputs.access_token }}
+
+      - name: Publish the checked images
+        run: bash scripts/publish-images.sh
+
+      - name: Save deployable image digests
+        uses: actions/upload-artifact@v4
+        with:
+          name: release-images-${{ github.sha }}
+          path: release-images.env
+          if-no-files-found: error
+          retention-days: 7
+
+      - name: Summarize published release
+        run: |
+          echo '### Published application images' >> "$GITHUB_STEP_SUMMARY"
+          echo 'Download the release-images artifact for the five pinned image references.' >> "$GITHUB_STEP_SUMMARY"
+          echo 'VM activation uses the documented deployment helper.' >> "$GITHUB_STEP_SUMMARY"
