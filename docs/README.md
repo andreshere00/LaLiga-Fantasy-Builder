@@ -22,7 +22,9 @@ and the lineup builder in light and dark themes.
 | [LALIGA standings](api/standings/README.md) | Completed-match table and provider limitations |
 | [Authentication](authentication/authentication.md) | Sessions, internal JWT, LaLiga vault, CSRF |
 | [LaLiga SSO implementation plan](authentication/laliga-sso-implementation-plan.md) | LaLiga-brokered social sign-in, Better Auth sessions, callback feasibility and Fantasy connection |
-| [LaLiga cloud helper implementation plan](authentication/laliga-cloud-helper-implementation-plan.md) | Guided local pairing with the GCP backend, capability-driven web UI, security, validation and rollout |
+| [LaLiga helper capability record](authentication/laliga-sso-capability.md) | Guided macOS helper trial, supported behavior and remaining release checks |
+| [Production helper rollout plan](authentication/laliga-production-helper-rollout-plan.md) | Pending installed background app and automatic website launch |
+| [Manual desktop LaLiga pairing](authentication/manual-browser-pairing.md) | DevTools callback copy/paste, server-held PKCE, security contract and release gate |
 | [Scraping service](scraping/README.md) | Private scraper HTTP, player profile parsing, TTLs, Compose `egress`, CLIs |
 | [FutbolFantasy parser](scraping/parser.md) | Offline HTML → player JSON and Markdown |
 | [Parser selectors](scraping/parser-discovery.md) | Fixture vs live FutbolFantasy DOM contract |

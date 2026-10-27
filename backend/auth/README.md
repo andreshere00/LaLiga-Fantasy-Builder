@@ -51,12 +51,26 @@ To set up the helper, clone the repository, install `uv`, open a terminal in
 the repository root, and run `./scripts/connect-laliga.sh`. The wrapper
 installs the browser dependency in `backend/auth/.venv`; no GCP credentials
 or application server secrets are needed on the Mac.
+After successful pairing, the wrapper opens the fixed website connection page.
+That page checks the signed-in website account when it regains focus and enters
+the application only when that account is linked. An installed background
+helper requires the distribution and handoff work in the
+[production helper plan](../../docs/authentication/laliga-production-helper-rollout-plan.md).
 
 `GET /laliga/link-options` requires an application JWT and reports enabled
-browser/helper methods and the verified application account. The helper flag
+browser/manual/helper methods and the verified application account. The helper flag
 controls advertising only; it does not disable existing developer pairing
-routes. A user returns to `/connect-laliga` and checks connection after
-the CLI reports success.
+routes. A user can still choose **Check connection** if the automatic focus
+check does not run.
+
+`LALIGA_MANUAL_LINK_ENABLED=false` controls an independent desktop flow that
+needs no local helper. The user signs in to LaLiga in a new tab, copies the
+canceled native callback URL from DevTools Network and pastes it into the
+original tab. Auth holds PKCE and accepts that callback only with the same
+verified application owner, browser-proof cookie and frontend Origin. The
+frontend confirms the connection and then navigates to the application.
+See the [manual pairing guide](../../docs/authentication/manual-browser-pairing.md)
+and its live release gate before enabling the flag.
 
 LaLiga linking is separate from application login. `POST /laliga/login` is available
 only after LaLiga registers the exact HTTPS `/laliga/callback` URL for this client

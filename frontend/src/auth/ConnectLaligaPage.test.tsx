@@ -11,9 +11,10 @@ const auth = vi.hoisted(() => ({
   user: null as null | { userId: string },
   accessToken: null as string | null,
   notice: null as string | null,
-  linkOptions: { browserAvailable: true, helperAvailable: false, helperPlatforms: [], userId: "alice", email: null, name: null } as LaligaLinkOptions,
+  linkOptions: { browserAvailable: true, manualAvailable: false, helperAvailable: false, helperPlatforms: [], userId: "alice", email: null, name: null } as LaligaLinkOptions,
   linkOptionsError: false,
-  connectLaliga: vi.fn(), reload: vi.fn(),
+  connectLaliga: vi.fn(), reload: vi.fn(), startManualLink: vi.fn(),
+  completeManualLink: vi.fn(), cancelManualLink: vi.fn(),
 }));
 vi.mock("./AuthProvider", () => ({ useAuth: () => auth }));
 const tree = () => <StrictMode><MemoryRouter initialEntries={["/connect-laliga"]}><Routes>
@@ -22,9 +23,10 @@ const tree = () => <StrictMode><MemoryRouter initialEntries={["/connect-laliga"]
 </Routes></MemoryRouter></StrictMode>;
 beforeEach(() => {
   auth.status = "loading"; auth.user = null; auth.accessToken = null; auth.notice = null;
-  auth.linkOptions = { browserAvailable: true, helperAvailable: false, helperPlatforms: [], userId: "alice", email: null, name: null };
+  auth.linkOptions = { browserAvailable: true, manualAvailable: false, helperAvailable: false, helperPlatforms: [], userId: "alice", email: null, name: null };
   auth.linkOptionsError = false;
   auth.connectLaliga.mockReset(); auth.reload.mockReset();
+  auth.startManualLink.mockReset(); auth.completeManualLink.mockReset(); auth.cancelManualLink.mockReset();
 });
 
 afterEach(cleanup);
@@ -92,16 +94,58 @@ it("requires application sign-in when opened without a session", () => {
 
 it("shows helper instructions and checks the connection without browser login", async () => {
   auth.status = "unlinked"; auth.user = { userId: "alice" }; auth.accessToken = "application-token";
-  auth.linkOptions = { browserAvailable: false, helperAvailable: true, helperPlatforms: ["macos"], userId: "alice", email: null, name: null };
+  auth.linkOptions = { browserAvailable: false, manualAvailable: false, helperAvailable: true, helperPlatforms: ["macos"], userId: "alice", email: null, name: null };
   render(tree());
   expect(auth.connectLaliga).not.toHaveBeenCalled();
   fireEvent.click(screen.getByRole("button", { name: "Check connection" }));
   await waitFor(() => expect(auth.reload).toHaveBeenCalledOnce());
 });
 
+it("starts manual linking only after a click and submits the pasted callback", async () => {
+  auth.status = "unlinked"; auth.user = { userId: "alice" }; auth.accessToken = "application-token";
+  auth.linkOptions = { browserAvailable: false, manualAvailable: true, helperAvailable: false,
+    helperPlatforms: [], userId: "alice", email: null, name: null };
+  const tab = { opener: window as Window | null, location: { href: "" }, close: vi.fn() };
+  const open = vi.spyOn(window, "open").mockReturnValue(tab as unknown as Window);
+  auth.startManualLink.mockResolvedValue({ authorizeUrl: "https://login.laliga.es/authorize",
+    expiresAt: Math.floor(Date.now() / 1000) + 600 });
+  auth.completeManualLink.mockResolvedValue(true);
+  render(tree());
+  expect(auth.startManualLink).not.toHaveBeenCalled();
+  fireEvent.click(screen.getByRole("button", { name: "Start LaLiga sign-in" }));
+  await screen.findByLabelText("LaLiga return URL");
+  expect(open).toHaveBeenCalledWith("", "_blank");
+  expect(tab.opener).toBeNull();
+  expect(tab.location.href).toBe("https://login.laliga.es/authorize");
+  const callback = "authredirect://com.lfp.laligafantasy?code=secret&state=valid";
+  fireEvent.change(screen.getByLabelText("LaLiga return URL"), { target: { value: callback } });
+  fireEvent.click(screen.getByRole("button", { name: "Complete connection" }));
+  await waitFor(() => expect(auth.completeManualLink).toHaveBeenCalledWith(callback));
+  expect(tab.close).not.toHaveBeenCalled();
+  open.mockRestore();
+});
+
+it("discards a pending manual callback when the application account changes", async () => {
+  auth.status = "unlinked"; auth.user = { userId: "alice" }; auth.accessToken = "application-token";
+  auth.linkOptions = { browserAvailable: false, manualAvailable: true, helperAvailable: false,
+    helperPlatforms: [], userId: "alice", email: null, name: null };
+  const open = vi.spyOn(window, "open").mockReturnValue({ opener: null,
+    location: { href: "" }, close: vi.fn() } as unknown as Window);
+  auth.startManualLink.mockResolvedValue({ authorizeUrl: "https://login.laliga.es/authorize",
+    expiresAt: Math.floor(Date.now() / 1000) + 600 });
+  const view = render(tree());
+  fireEvent.click(screen.getByRole("button", { name: "Start LaLiga sign-in" }));
+  await screen.findByLabelText("LaLiga return URL");
+  auth.user = { userId: "bob" };
+  view.rerender(tree());
+  await waitFor(() => expect(screen.queryByLabelText("LaLiga return URL")).toBeNull());
+  expect(auth.completeManualLink).not.toHaveBeenCalled();
+  open.mockRestore();
+});
+
 it("shows an honest unavailable state when no method is enabled", () => {
   auth.status = "unlinked"; auth.user = { userId: "alice" }; auth.accessToken = "application-token";
-  auth.linkOptions = { browserAvailable: false, helperAvailable: false, helperPlatforms: [], userId: "alice", email: null, name: null };
+  auth.linkOptions = { browserAvailable: false, manualAvailable: false, helperAvailable: false, helperPlatforms: [], userId: "alice", email: null, name: null };
   render(tree());
   expect(screen.getByText(/linking is not available/)).toBeTruthy();
   expect(auth.connectLaliga).not.toHaveBeenCalled();

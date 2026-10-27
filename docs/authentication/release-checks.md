@@ -34,15 +34,35 @@ and provider configuration.
   account's connection. Verify native CLI pairing separately.
 - Keep callback query strings, bearer tokens, vault secrets, session cookies,
   reset material, and service tokens out of logs and telemetry.
-- The proposed [cloud helper](laliga-cloud-helper-implementation-plan.md) and
-  [LaLiga SSO](laliga-sso-implementation-plan.md) have their own feasibility
-  gates. Do not treat either as released until verified and implemented.
+- The guided helper and proposed [LaLiga SSO](laliga-sso-implementation-plan.md)
+  have separate release gates. Do not treat either as released until its gates pass.
 - For helper mode, first verify a consented macOS pairing against the normal
   HTTPS origin, native handler ownership, cloud vault persistence, read-only
   lookup and refresh. Check two application users independently before setting
   `LALIGA_HELPER_ENABLED=true`. Keep the browser callback setting unset unless
   its own registration has been verified. Roll back helper advertising by
   clearing the flag; retain existing sealed connections and vault keys.
+- Verify that the helper opens the fixed connection page after success and that
+  a waiting tab navigates only after its own account-scoped connection check.
+  The installed background app and automatic website launch have additional
+  gates in the [production helper plan](laliga-production-helper-rollout-plan.md).
+- Before enabling the helper, confirm its destination is the fixed HTTPS
+  application origin, TLS checks remain enabled, and redirects cannot move a
+  credentialed request to another origin. Confirm the current native scheme
+  handler is not replaced, no legacy localhost completion runs during cloud
+  pairing, and an uncertain code exchange is not retried blindly. Check
+  cancellation, expiry, account mismatch, provider denial, cleanup of any
+  transient callback file, and absence of tokens, codes and pairing secrets
+  from URLs, logs, command output and persistent browser storage.
+- For manual desktop mode, keep `LALIGA_MANUAL_LINK_ENABLED=false` until a
+  consented Google sign-in on the deployment target confirms the complete
+  canceled native callback can be copied and redeemed. Test advertised Chrome,
+  Edge and Safari variants, with and without an installed native handler; check
+  read-only Fantasy access, refresh after expiry, service restart, two users,
+  wrong browser, cancellation, replay and recovery. Review whether native
+  client reuse is suitable for public distribution. Enable for a limited
+  audience, then roll back by clearing the flag if needed. See the
+  [manual pairing guide](manual-browser-pairing.md).
 
 ## Runtime and rollback
 

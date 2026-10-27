@@ -97,6 +97,16 @@ client ID. The URL must be the frontend origin's `/laliga/callback`; otherwise
 browser linking returns 503 `browser_unavailable` instead of starting an unusable
 native redirect. The native CLI pairing flow remains available independently.
 
+When `LALIGA_MANUAL_LINK_ENABLED=true`, a separate desktop option starts the
+same native redirect with server-held PKCE. The user copies the canceled native
+callback from DevTools and pastes it into the original application tab. Auth
+requires the initiating JWT owner, exact frontend Origin and a separate
+HttpOnly browser-proof cookie before consuming the one-time state. The page
+checks `/laliga/connection` and enters the application only after confirmation.
+This flow requires no local helper, but the first callback copy is visible and
+manual. The flag stays off pending the [live release gate](release-checks.md);
+see the [manual pairing guide](manual-browser-pairing.md).
+
 The login response also sets an HttpOnly, Secure, `SameSite=Lax` cookie scoped to
 `/laliga/callback`; only its hash is stored with the challenge. The callback
 rejects a request without the matching cookie and leaves the challenge pending, so

@@ -250,6 +250,17 @@ release, upload an Auth secret version with `LALIGA_HELPER_ENABLED=true` and run
 enable browser OAuth or change the native callback registration. Keep
 `LALIGA_BROWSER_REDIRECT_URI` unset without an approved HTTPS callback.
 
+The independent desktop manual flow is controlled by
+`LALIGA_MANUAL_LINK_ENABLED=false` in the Auth secret. It needs no installed
+helper. Keep it disabled until the
+[manual pairing release gate](../../docs/authentication/release-checks.md)
+passes; enable it with a new Auth secret version and roll back by clearing the
+flag. No HTTPS browser callback registration is implied.
+The requested installed background experience needs the separate
+[production helper rollout](../../docs/authentication/laliga-production-helper-rollout-plan.md)
+before this flag can advertise it. Deploying the cloud images alone does not
+install a process on users' Macs.
+
 On later releases, upload changed secret versions or image digests and run the
 same helper. Docker Compose reloads changed containers; the helper is not a
 zero-downtime deployment system. A startup/health failure can leave containers

@@ -23,6 +23,9 @@ The [SSO implementation plan](laliga-sso-implementation-plan.md) requires a
 consented browser proof, sanitized token/profile findings and verified framework
 integration before enabling anonymous LaLiga SSO. No production browser SSO
 support is claimed by this record.
+The [browser-only feasibility assessment](browser-only-laliga-feasibility.md)
+records why adding a cloud service does not receive the existing native
+callback and compares the publicly documented alternatives.
 
 ## Native helper to cloud
 
@@ -56,4 +59,5 @@ capability therefore defaults to off. This record does not establish ownership
 of the existing native return URI or justify replacing another installed
 application's handler. Enable the flag only after recording the remaining
 sanitized results for the checks in the
-[cloud helper plan](laliga-cloud-helper-implementation-plan.md).
+[release runbook](release-checks.md). The guided command and setup details are
+in the [Auth service README](../../backend/auth/README.md).

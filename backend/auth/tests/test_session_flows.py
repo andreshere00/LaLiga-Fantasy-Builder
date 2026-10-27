@@ -41,6 +41,7 @@ def test_confirm_account_uses_server_verified_owner(
                     200,
                     json={
                         "browser_available": False,
+                        "manual_available": False,
                         "helper_available": False,
                         "helper_platforms": [],
                         "user_id": "alice",

@@ -45,6 +45,7 @@ class Settings(BaseSettings):
     laliga_redirect_uri: str = "authredirect://com.lfp.laligafantasy"
     laliga_browser_redirect_uri: str | None = None
     laliga_helper_enabled: bool = False
+    laliga_manual_link_enabled: bool = False
     laliga_fantasy_origin: str = "https://fantasy-api.llt-services.com"
     laliga_allow_id_token_fallback: bool = False
 

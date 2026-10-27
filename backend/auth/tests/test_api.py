@@ -78,6 +78,11 @@ def headers(user="alice"):
     return {"Authorization": f"Bearer {user}"}
 
 
+def manual_headers(user="alice"):
+    """Browser-origin request with the verified application bearer."""
+    return {**headers(user), "Origin": "https://app.example.test"}
+
+
 # ---- Happy path ---- #
 def test_link_options_reports_configured_methods_for_verified_owner(client, container):
     # Arrange / Act / Assert
@@ -85,6 +90,7 @@ def test_link_options_reports_configured_methods_for_verified_owner(client, cont
     assert response.status_code == 200
     assert response.json() == {
         "browser_available": True,
+        "manual_available": False,
         "helper_available": False,
         "helper_platforms": [],
         "user_id": "alice",
@@ -96,6 +102,128 @@ def test_link_options_reports_configured_methods_for_verified_owner(client, cont
     assert enabled.json()["helper_platforms"] == ["macos"]
     assert enabled.json()["user_id"] == "bob"
     assert client.get("/laliga/link-options").status_code == 401
+
+
+def test_manual_link_owner_browser_and_replay(client, container):
+    # Arrange
+    container.settings.laliga_manual_link_enabled = True
+    container.settings.laliga_browser_redirect_uri = None
+    start = client.post("/laliga/manual/start", headers=manual_headers())
+    assert start.status_code == 200
+    assert client.get("/laliga/link-options", headers=headers()).json()["manual_available"]
+    assert parse_qs(urlparse(start.json()["authorize_url"]).query)["redirect_uri"] == [
+        "authredirect://com.lfp.laligafantasy"
+    ]
+    state = next(iter(container.browser_pairings._records))
+    callback = f"authredirect://com.lfp.laligafantasy?code=one-use&state={state}"
+    assert "one-use" not in start.text
+    # A different app user and the unauthenticated helper cannot consume this state.
+    assert (
+        client.post(
+            "/laliga/manual/complete", json={"callback": callback}, headers=manual_headers("bob")
+        ).status_code
+        == 400
+    )
+    assert (
+        client.post("/laliga/pairings/complete-redirect", json={"callback": callback}).status_code
+        == 400
+    )
+    assert state in container.browser_pairings._records
+
+    # Act / Assert
+    complete = client.post(
+        "/laliga/manual/complete", json={"callback": callback}, headers=manual_headers()
+    )
+    assert complete.status_code == 200
+    assert complete.json()["linked"] is True
+    assert "private" not in complete.text
+    assert client.get("/laliga/connection", headers=headers()).json()["linked"]
+    assert not client.get("/laliga/connection", headers=headers("bob")).json()["linked"]
+    assert (
+        client.post(
+            "/laliga/manual/complete", json={"callback": callback}, headers=manual_headers()
+        ).status_code
+        == 400
+    )
+
+
+def test_manual_link_replacement_cancel_and_invalid_callback(client, container):
+    container.settings.laliga_manual_link_enabled = True
+    first = client.post("/laliga/manual/start", headers=manual_headers())
+    assert first.status_code == 200
+    first_state = next(iter(container.browser_pairings._records))
+    assert client.post("/laliga/manual/start", headers=manual_headers()).status_code == 200
+    assert first_state not in container.browser_pairings._records
+    state = next(iter(container.browser_pairings._records))
+    valid = f"authredirect://com.lfp.laligafantasy?code=test&state={state}"
+    for bad in (
+        valid + "&state=duplicate",
+        valid + "#fragment",
+        valid.replace("code=test", "code=%ZZ"),
+        valid.replace("com.lfp.laligafantasy", "other.app"),
+        valid + "&error=denied",
+        "authredirect://[invalid-host?code=test&state=state",
+    ):
+        result = client.post(
+            "/laliga/manual/complete", json={"callback": bad}, headers=manual_headers()
+        )
+        assert result.status_code == 400
+        assert state in container.browser_pairings._records
+    assert (
+        client.post(
+            "/laliga/manual/complete", json={"callback": valid}, headers=headers()
+        ).status_code
+        == 400
+    )
+    assert state in container.browser_pairings._records
+    assert client.delete("/laliga/manual/pending", headers=manual_headers("bob")).status_code == 200
+    assert state in container.browser_pairings._records
+    assert client.delete("/laliga/manual/pending", headers=manual_headers()).status_code == 200
+    assert not container.browser_pairings._records
+
+
+def test_manual_link_disabled_and_missing_browser_proof(client, container):
+    assert client.post("/laliga/manual/start", headers=manual_headers()).status_code == 503
+    container.settings.laliga_manual_link_enabled = True
+    assert client.post("/laliga/manual/start", headers=manual_headers()).status_code == 200
+    state = next(iter(container.browser_pairings._records))
+    cookie = client.cookies.get("lfb_laliga_manual")
+    client.cookies.clear()
+    callback = f"authredirect://com.lfp.laligafantasy?code=test&state={state}"
+    assert (
+        client.post(
+            "/laliga/manual/complete", json={"callback": callback}, headers=manual_headers()
+        ).status_code
+        == 400
+    )
+    assert state in container.browser_pairings._records
+    client.cookies.set("lfb_laliga_manual", cookie, path="/laliga/manual")
+    assert (
+        client.post(
+            "/laliga/manual/complete", json={"callback": callback}, headers=manual_headers()
+        ).status_code
+        == 200
+    )
+
+
+def test_manual_invalid_body_does_not_echo_callback(client, container):
+    container.settings.laliga_manual_link_enabled = True
+    callback = "authredirect://com.lfp.laligafantasy?code=private-code"
+    response = client.post(
+        "/laliga/manual/complete",
+        json={"callback": callback, "unexpected": "private-value"},
+        headers=manual_headers(),
+    )
+    assert response.status_code == 422
+    assert callback not in response.text
+    assert "private-value" not in response.text
+    too_large = client.post(
+        "/laliga/manual/complete",
+        content=b"x" * 9000,
+        headers={**manual_headers(), "Content-Type": "application/json"},
+    )
+    assert too_large.status_code == 413
+    assert "private" not in too_large.text
 
 
 def test_pairing_browser_callback_preserves_owner_without_cookies(client, container):

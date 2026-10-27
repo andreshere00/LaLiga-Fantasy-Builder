@@ -1,6 +1,6 @@
 import { z } from "zod";
 import { authClient } from "./auth-client";
-import { browserLoginResponseSchema, laligaConnectionSchema, laligaLinkOptionsSchema } from "./schemas";
+import { browserLoginResponseSchema, laligaConnectionSchema, laligaLinkOptionsSchema, manualStartResponseSchema } from "./schemas";
 import type { AccessToken, LaligaConnection, LaligaLinkOptions } from "./types";
 import { MemoryTokenStore } from "./tokenStore";
 
@@ -60,6 +60,22 @@ export class AuthClient {
     }
     return url.href;
   }
+  async startManualLink(options: AuthRequestOptions = {}): Promise<{ authorizeUrl: string; expiresAt: number }> {
+    const response = await this.request("/laliga/manual/start", "POST", options, true);
+    const result = manualStartResponseSchema.parse(await response.json());
+    const url = new URL(result.authorizeUrl);
+    if (url.protocol !== "https:" || url.hostname !== "login.laliga.es" || url.username || url.password) {
+      throw new Error("Invalid LaLiga authorization URL");
+    }
+    return { ...result, authorizeUrl: url.href };
+  }
+  async completeManualLink(callback: string, options: AuthRequestOptions = {}): Promise<LaligaConnection> {
+    const response = await this.request("/laliga/manual/complete", "POST", options, true, { callback });
+    return laligaConnectionSchema.parse(await response.json());
+  }
+  async cancelManualLink(options: AuthRequestOptions = {}): Promise<void> {
+    await this.request("/laliga/manual/pending", "DELETE", options, true);
+  }
   async cancelPairings(token: string): Promise<void> {
     const response = await this.fetchFn("/laliga/pairings", {
       method: "DELETE", credentials: "omit", signal: AbortSignal.timeout(10000),
@@ -67,12 +83,15 @@ export class AuthClient {
     });
     if (!response.ok) throw new Error("Could not cancel pending LaLiga connections");
   }
-  private async request(path: string, method: string, options: AuthRequestOptions = {}): Promise<Response> {
+  private async request(path: string, method: string, options: AuthRequestOptions = {},
+    withBrowserProof = false, body?: unknown): Promise<Response> {
     const token = this.store.get();
     if (!token) throw new Error("Sign in again to continue");
     const response = await this.fetchFn(path, {
-      method, credentials: "omit", signal: options.signal,
-      headers: { Accept: "application/json", Authorization: `Bearer ${token}` },
+      method, credentials: withBrowserProof ? "same-origin" : "omit", signal: options.signal,
+      headers: { Accept: "application/json", Authorization: `Bearer ${token}`,
+        ...(body ? { "Content-Type": "application/json" } : {}) },
+      ...(body ? { body: JSON.stringify(body) } : {}),
     });
     if (!response.ok) {
       if (path === LALIGA_LOGIN_PATH) {

@@ -51,6 +51,16 @@ async def exercise_store(store):
     )
     await store.save(bound, now=100)
     assert await store.consume("state-b", now=100, binding_hash="bad") is None
+    assert await store.consume("state-b", now=100, binding_hash="good", user_id="bob") is None
+    await store.cancel_bound("bob", "good")
+    assert await store.consume("state-b", now=100, binding_hash="good", user_id="alice") == bound
+    await store.save(bound, now=100)
+    await store.cancel_bound("alice", "bad")
+    assert await store.consume("state-b", now=100, binding_hash="good", user_id="alice") == bound
+    await store.save(bound, now=100)
+    await store.cancel_bound("alice", "good")
+    assert await store.consume("state-b", now=100) is None
+    await store.save(bound, now=100)
     assert await store.consume("state-b", now=100, binding_hash="good") == bound
 
 

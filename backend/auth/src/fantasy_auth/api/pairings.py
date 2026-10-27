@@ -2,7 +2,8 @@
 
 from __future__ import annotations
 
-from urllib.parse import parse_qs, urlparse
+import re
+from urllib.parse import parse_qs, parse_qsl, urlparse
 
 from fastapi import APIRouter, Request, Response
 from fastapi.responses import RedirectResponse
@@ -16,6 +17,8 @@ from fantasy_auth.api.schemas import (
     CompleteRedirectResponse,
     ConnectionStatusResponse,
     LinkOptionsResponse,
+    ManualCompleteRequest,
+    ManualStartResponse,
     OkResponse,
     PairingCompleteRequest,
     PairingCompleteResponse,
@@ -28,6 +31,9 @@ router = APIRouter(tags=["laliga"])
 
 BINDING_COOKIE = "lfb_laliga_bind"
 CALLBACK_PATH = "/laliga/callback"
+MANUAL_COOKIE = "lfb_laliga_manual"
+MANUAL_PATH = "/laliga/manual"
+NATIVE_REDIRECT = "authredirect://com.lfp.laligafantasy"
 
 
 @router.get("/laliga/link-options", response_model=LinkOptionsResponse)
@@ -37,12 +43,159 @@ async def link_options(request: Request) -> LinkOptionsResponse:
     settings = get_container().settings
     return LinkOptionsResponse(
         browser_available=settings.laliga_browser_redirect_uri is not None,
+        manual_available=(
+            settings.laliga_manual_link_enabled and settings.laliga_redirect_uri == NATIVE_REDIRECT
+        ),
         helper_available=settings.laliga_helper_enabled,
         helper_platforms=["macos"] if settings.laliga_helper_enabled else [],
         user_id=user.user_id,
         email=user.email,
         name=user.name,
     )
+
+
+def _manual_container(request: Request):
+    """Require an enabled manual journey and its same-origin browser mutation."""
+    container = get_container()
+    if not container.settings.laliga_manual_link_enabled:
+        raise PairingError("Manual linking is unavailable", category="browser_unavailable")
+    if request.headers.get("origin") != container.settings.frontend_origin.rstrip("/"):
+        raise PairingError("Invalid request origin", category="pairing_callback")
+    if container.settings.laliga_redirect_uri != NATIVE_REDIRECT:
+        raise PairingError("Native callback is unavailable", category="browser_unavailable")
+    return container
+
+
+def _manual_state(callback: str) -> str:
+    """Validate a native callback before looking up or consuming a challenge."""
+    if re.search(r"%(?![0-9A-Fa-f]{2})", callback) or "\ufffd" in callback:
+        raise PairingError("Invalid callback URL", category="pairing_callback")
+    try:
+        parsed = urlparse(callback)
+    except ValueError as exc:
+        raise PairingError("Invalid callback URL", category="pairing_callback") from exc
+    if (
+        parsed.scheme != "authredirect"
+        or parsed.netloc != "com.lfp.laligafantasy"
+        or parsed.path not in ("", "/")
+        or parsed.params
+        or parsed.fragment
+        or parsed.username
+        or parsed.password
+        or not parsed.query
+    ):
+        raise PairingError("Invalid callback URL", category="pairing_callback")
+    try:
+        pairs = parse_qsl(
+            parsed.query, keep_blank_values=True, strict_parsing=True, errors="strict"
+        )
+    except (ValueError, UnicodeDecodeError) as exc:
+        raise PairingError("Invalid callback URL", category="pairing_callback") from exc
+    if len({key for key, _ in pairs}) != len(pairs):
+        raise PairingError("Duplicate callback parameter", category="pairing_callback")
+    params = dict(pairs)
+    if (
+        not params.get("code")
+        or not params.get("state")
+        or "error" in params
+        or any(ord(char) < 32 for char in params["code"] + params["state"])
+    ):
+        raise PairingError("Callback missing code or state", category="pairing_callback")
+    return params["state"]
+
+
+@router.post("/laliga/manual/start", response_model=ManualStartResponse)
+async def manual_start(request: Request, response: Response) -> ManualStartResponse:
+    """Start an explicitly requested, owner and browser bound native pairing."""
+    user = await get_current_user(request)
+    container = _manual_container(request)
+    client_ip = request.client.host if request.client else "unknown"
+    if not await container.rate_limiter.allow(
+        f"pairing-start:{user.user_id}:{client_ip}",
+        limit=container.settings.pairing_rate_limit_per_minute,
+        window_seconds=60,
+    ):
+        raise PairingError("rate limited", category="rate_limited")
+    binding = request.cookies.get(MANUAL_COOKIE) or generate_pairing_secret()
+    binding_hash = hash_secret(binding)
+    started = await container.pairings.begin_browser_login(
+        user.user_id, redirect_uri=NATIVE_REDIRECT
+    )
+    expiry = container.clock.now() + container.settings.pairing_ttl_seconds
+    await container.browser_pairings.save(
+        BrowserPairingRecord(
+            state=started.b2c_state,
+            user_id=user.user_id,
+            pairing_id=started.pairing_id,
+            secret=started.secret,
+            code_verifier=started.code_verifier,
+            expires_at=expiry,
+            binding_hash=binding_hash,
+        ),
+        now=container.clock.now(),
+    )
+    response.set_cookie(
+        MANUAL_COOKIE,
+        binding,
+        max_age=container.settings.pairing_ttl_seconds,
+        path=MANUAL_PATH,
+        secure=True,
+        httponly=True,
+        samesite="lax",
+    )
+    return ManualStartResponse(authorize_url=started.authorize_url, expires_at=expiry)
+
+
+@router.post(
+    "/laliga/manual/complete",
+    response_model=ConnectionStatusResponse,
+    responses={413: {"model": AuthErrorResponse, "description": "Callback request too large."}},
+)
+async def manual_complete(
+    body: ManualCompleteRequest, request: Request
+) -> ConnectionStatusResponse:
+    """Exchange a pasted callback only for its initiating user and browser."""
+    user = await get_current_user(request)
+    container = _manual_container(request)
+    binding = request.cookies.get(MANUAL_COOKIE)
+    if not binding:
+        raise PairingError("Pairing not found or expired", category="pairing_not_found")
+    client_ip = request.client.host if request.client else "unknown"
+    if not await container.rate_limiter.allow(
+        f"pairing-complete:{client_ip}",
+        limit=container.settings.pairing_rate_limit_per_minute,
+        window_seconds=60,
+    ):
+        raise PairingError("rate limited", category="rate_limited")
+    state = _manual_state(body.callback)
+    challenge = await container.browser_pairings.consume(
+        state,
+        now=container.clock.now(),
+        binding_hash=hash_secret(binding),
+        user_id=user.user_id,
+    )
+    if challenge is None:
+        raise PairingError("Pairing not found or expired", category="pairing_not_found")
+    await container.pairings.complete_browser_redirect(
+        callback=body.callback,
+        pairing_id=challenge.pairing_id,
+        secret=challenge.secret,
+        code_verifier=challenge.code_verifier,
+        expected_state=challenge.state,
+        redirect_uri=NATIVE_REDIRECT,
+    )
+    return ConnectionStatusResponse(**await container.pairings.get_status(user.user_id))
+
+
+@router.delete("/laliga/manual/pending", response_model=OkResponse)
+async def manual_cancel(request: Request) -> OkResponse:
+    """Cancel only the current user's pending manual attempt in this browser."""
+    user = await get_current_user(request)
+    container = _manual_container(request)
+    binding = request.cookies.get(MANUAL_COOKIE)
+    if binding:
+        await container.browser_pairings.cancel_bound(user.user_id, hash_secret(binding))
+    return OkResponse(ok=True)
 
 
 @router.post("/laliga/pairings", response_model=PairingCreateResponse)
@@ -194,7 +347,7 @@ async def _complete_browser_challenge(
     state = _state_from_callback(callback)
     if not state:
         raise PairingError("callback missing state", category="pairing_callback")
-    binding_hash: str | None = None
+    binding_hash: str | None = ""
     if redirect_uri is not None:
         binding = request.cookies.get(BINDING_COOKIE)
         if not binding:

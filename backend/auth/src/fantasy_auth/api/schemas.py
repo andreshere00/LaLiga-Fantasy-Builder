@@ -87,6 +87,21 @@ class CompleteRedirectRequest(BaseModel):
     callback: StrictStr = Field(min_length=8)
 
 
+class ManualCompleteRequest(BaseModel):
+    """Single-use native callback pasted into the browser linking page."""
+
+    model_config = ConfigDict(extra="forbid")
+
+    callback: StrictStr = Field(min_length=20, max_length=4096)
+
+
+class ManualStartResponse(AuthResponse):
+    """Public authorization URL and expiry for an explicit manual attempt."""
+
+    authorize_url: StrictStr
+    expires_at: StrictInt = Field(ge=1)
+
+
 class ConnectionStatusResponse(AuthResponse):
     """Public LaLiga connection state; contains no credential material."""
 
@@ -101,6 +116,7 @@ class LinkOptionsResponse(AuthResponse):
     """Available account-linking methods for this deployment."""
 
     browser_available: StrictBool
+    manual_available: StrictBool
     helper_available: StrictBool
     helper_platforms: list[StrictStr]
     user_id: StrictStr

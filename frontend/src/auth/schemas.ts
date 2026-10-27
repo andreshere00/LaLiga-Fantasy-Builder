@@ -54,6 +54,9 @@ function wireObject<T extends z.ZodType>(shape: T) {
 }
 
 export const browserLoginResponseSchema = wireObject(z.strictObject({ authorizeUrl: z.url() }));
+export const manualStartResponseSchema = wireObject(z.strictObject({
+  authorizeUrl: z.url(), expiresAt: z.number().int().positive(),
+}));
 
 
 const sessionUserShape = z
@@ -93,6 +96,7 @@ export const laligaConnectionSchema = wireObject(laligaConnectionShape);
 
 export const laligaLinkOptionsSchema = wireObject(z.strictObject({
   browserAvailable: z.boolean(),
+  manualAvailable: z.boolean(),
   helperAvailable: z.boolean(),
   helperPlatforms: z.array(z.enum(["macos"])),
   userId: z.string().min(1),
@@ -155,6 +159,9 @@ export const healthNotReadyResponseSchema = wireObject(
 export function authResponseSchema(method: string, path: string): z.ZodType {
   const normalizedMethod = method.toUpperCase();
   if (normalizedMethod === "POST" && path === "/laliga/login") return browserLoginResponseSchema;
+  if (normalizedMethod === "POST" && path === "/laliga/manual/start") return manualStartResponseSchema;
+  if (normalizedMethod === "POST" && path === "/laliga/manual/complete") return laligaConnectionSchema;
+  if (normalizedMethod === "DELETE" && path === "/laliga/manual/pending") return okResponseSchema;
   if (normalizedMethod === "DELETE" && path === "/laliga/pairings") return okResponseSchema;
   if (normalizedMethod === "POST" && path === "/laliga/pairings") {
     return pairingCreateResponseSchema;
@@ -195,7 +202,7 @@ export function authErrorResponseSchema(
   if (method.toUpperCase() === "GET" && path === "/health/ready" && status === "503") {
     return healthNotReadyResponseSchema;
   }
-  if (["400", "401", "403", "404", "409", "429", "500", "502", "503"].includes(status)) {
+  if (["400", "401", "403", "404", "409", "413", "429", "500", "502", "503"].includes(status)) {
     return authErrorSchema;
   }
   return null;
@@ -203,6 +210,9 @@ export function authErrorResponseSchema(
 
 export function authRequestSchema(method: string, path: string): z.ZodType | null {
   const normalizedMethod = method.toUpperCase();
+  if (normalizedMethod === "POST" && path === "/laliga/manual/complete") {
+    return z.strictObject({ callback: z.string().min(20).max(4096) });
+  }
   if (normalizedMethod === "POST" && path === "/laliga/pairings/complete-redirect") {
     return completeRedirectRequestSchema;
   }

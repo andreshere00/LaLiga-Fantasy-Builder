@@ -11,6 +11,9 @@ type AuthContextValue = {
   linkOptions: LaligaLinkOptions | null; linkOptionsError: boolean;
   login: () => void; connectLaliga: () => void; logout: () => Promise<void>;
   reload: () => Promise<void>; forgetDeletedAccount: () => Promise<void>; markNeedsReauth: () => void;
+  startManualLink: () => Promise<{ authorizeUrl: string; expiresAt: number }>;
+  completeManualLink: (callback: string) => Promise<boolean>;
+  cancelManualLink: () => Promise<void>;
 };
 const AuthContext = createContext<AuthContextValue | null>(null);
 const empty = { accessToken: null, managerName: null, managerAvatar: null, notice: null, linkOptions: null, linkOptionsError: false };
@@ -130,12 +133,34 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       setState(previous => ({ ...previous, notice }));
     });
   }, [client]);
+  const startManualLink = useCallback(async () => {
+    const active = generation.current;
+    const result = await client.startManualLink({ signal: work.current?.signal });
+    if (active !== generation.current) throw new Error("Session changed. Start again.");
+    return result;
+  }, [client]);
+  const completeManualLink = useCallback(async (callback: string) => {
+    const active = generation.current;
+    await client.completeManualLink(callback, { signal: work.current?.signal });
+    if (active !== generation.current) throw new Error("Session changed. Start again.");
+    const connection = await client.connection({ signal: work.current?.signal });
+    if (active !== generation.current) throw new Error("Session changed. Start again.");
+    if (!connection.linked || connection.needsReauth) return false;
+    setState(previous => ({ ...previous, status: "ready", managerName: connection.managerName,
+      managerAvatar: connection.avatar, notice: null }));
+    return true;
+  }, [client]);
+  const cancelManualLink = useCallback(async () => {
+    await client.cancelManualLink({ signal: work.current?.signal });
+  }, [client]);
   const value = useMemo<AuthContextValue>(() => ({
     ...(activeSessionId === sessionId ? state : { ...empty, status: pending || userId ? "loading" : "signed-out" }),
     user: session.data && state.status !== "signed-out" ? { userId: session.data.user.id, email: session.data.user.email, name: session.data.user.name, username: session.data.user.username ?? null } : null,
-    login: () => startLogin(), connectLaliga, logout, reload, forgetDeletedAccount,
+    login: () => startLogin(), connectLaliga, startManualLink, completeManualLink,
+    cancelManualLink, logout, reload, forgetDeletedAccount,
     markNeedsReauth: () => setState(previous => ({ ...previous, status: "needs-reauth" })),
-  }), [state, activeSessionId, sessionId, pending, userId, session.data, connectLaliga, logout, reload, forgetDeletedAccount]);
+  }), [state, activeSessionId, sessionId, pending, userId, session.data, connectLaliga,
+    startManualLink, completeManualLink, cancelManualLink, logout, reload, forgetDeletedAccount]);
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 }
 export function useAuth(): AuthContextValue {

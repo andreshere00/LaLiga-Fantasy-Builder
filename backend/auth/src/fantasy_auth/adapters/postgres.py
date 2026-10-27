@@ -242,9 +242,20 @@ class PostgresBrowserPairingStore:
     async def save(self, record: BrowserPairingRecord, *, now: int) -> None:
         """Save a challenge and remove expired secrets transactionally."""
         async with self._pool.acquire() as conn, conn.transaction():
+            if record.binding_hash:
+                await conn.execute(
+                    "SELECT pg_advisory_xact_lock(hashtextextended($1, 0))",
+                    f"{record.user_id}:{record.binding_hash}",
+                )
             await conn.execute(
                 "DELETE FROM browser_pairings WHERE expires_at <= to_timestamp($1)", now
             )
+            if record.binding_hash:
+                await conn.execute(
+                    "DELETE FROM browser_pairings WHERE user_id = $1 AND binding_hash = $2",
+                    record.user_id,
+                    record.binding_hash,
+                )
             await conn.execute(
                 """INSERT INTO browser_pairings
                 (state, user_id, pairing_id, secret, code_verifier, expires_at, binding_hash)
@@ -259,14 +270,21 @@ class PostgresBrowserPairingStore:
             )
 
     async def consume(
-        self, state: str, *, now: int, binding_hash: str | None = None
+        self,
+        state: str,
+        *,
+        now: int,
+        binding_hash: str | None = None,
+        user_id: str | None = None,
     ) -> BrowserPairingRecord | None:
         """Delete and return a live, matching challenge exactly once across workers."""
         row = await self._pool.fetchrow(
             "DELETE FROM browser_pairings WHERE state = $1 "
-            "AND ($2::text IS NULL OR binding_hash = $2) RETURNING *",
+            "AND ($2::text IS NULL OR binding_hash = $2) "
+            "AND ($3::text IS NULL OR user_id = $3) RETURNING *",
             state,
             binding_hash,
+            user_id,
         )
         if row is None or _from_dt(row["expires_at"]) <= now:
             return None
@@ -283,6 +301,19 @@ class PostgresBrowserPairingStore:
     async def cancel(self, user_id: str) -> None:
         """Cancel pending callbacks for the verified owner."""
         await self._pool.execute("DELETE FROM browser_pairings WHERE user_id = $1", user_id)
+
+    async def cancel_bound(self, user_id: str, binding_hash: str) -> None:
+        """Cancel only challenges belonging to this owner and browser proof."""
+        async with self._pool.acquire() as conn, conn.transaction():
+            await conn.execute(
+                "SELECT pg_advisory_xact_lock(hashtextextended($1, 0))",
+                f"{user_id}:{binding_hash}",
+            )
+            await conn.execute(
+                "DELETE FROM browser_pairings WHERE user_id = $1 AND binding_hash = $2",
+                user_id,
+                binding_hash,
+            )
 
 
 class PostgresRefreshLock:

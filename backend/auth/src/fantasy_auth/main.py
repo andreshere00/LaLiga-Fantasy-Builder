@@ -7,6 +7,7 @@ from contextlib import asynccontextmanager
 from typing import Any
 
 from fastapi import FastAPI, Request
+from fastapi.exceptions import RequestValidationError
 from fastapi.responses import JSONResponse
 
 from fantasy_auth.api import internal_credentials, pairings
@@ -17,6 +18,7 @@ from fantasy_auth.api.deps import (
     set_container,
 )
 from fantasy_auth.api.middleware import (
+    ManualCallbackBodyLimitMiddleware,
     RedactedAccessLogMiddleware,
     SecurityHeadersMiddleware,
     install_cors,
@@ -131,9 +133,25 @@ def create_app(
     install_cors(app, cfg.cors_origins)
     app.add_middleware(RedactedAccessLogMiddleware)
     app.add_middleware(SecurityHeadersMiddleware)
+    app.add_middleware(ManualCallbackBodyLimitMiddleware)
 
     app.include_router(internal_credentials.router)
     app.include_router(pairings.router)
+
+    @app.exception_handler(RequestValidationError)
+    async def request_validation_handler(
+        _request: Request, exc: RequestValidationError
+    ) -> JSONResponse:
+        """Return validation locations without echoing submitted callback URLs."""
+        issues = [
+            {
+                "loc": list(issue.get("loc", ())),
+                "msg": issue.get("msg", "Invalid input"),
+                "type": issue.get("type", "value_error"),
+            }
+            for issue in exc.errors()
+        ]
+        return JSONResponse(status_code=422, content={"detail": issues})
 
     @app.get("/health", tags=["health"], response_model=HealthResponse)
     @app.get("/health/live", tags=["health"], response_model=HealthResponse)
