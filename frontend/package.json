@@ -9,8 +9,7 @@
     "preview": "vite preview",
     "lint": "eslint src",
     "test": "vitest run",
-    "test:browser": "playwright test",
-    "screenshots:docs": "UPDATE_DOC_SCREENSHOTS=1 playwright test docs-screenshots.spec.ts"
+    "test:browser": "playwright test"
   },
   "dependencies": {
     "@base-ui/react": "^1.9.0",

@@ -120,4 +120,4 @@ uv run fantasy-browser-session standings-analysis --json
 ```
 
 Both CLIs accept an optional current-season selector and are read-only. See the
-[frontend plan](../../frontend-standings-implementation-plan.md) for the widget.
+[frontend guide](../../frontend.md) for the widget.

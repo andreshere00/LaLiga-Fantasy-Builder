@@ -240,6 +240,27 @@ providers need registered callbacks. LaLiga browser SSO still needs its separate
 approved client and callback; see the
 [capability record](../../docs/authentication/laliga-sso-capability.md).
 
+For the macOS LaLiga helper, deploy the Auth and frontend images together. The
+helper itself runs on each user's Mac through `scripts/connect-laliga.sh`; it is
+not a VM service. Keep `LALIGA_HELPER_ENABLED=false` in the Auth secret until the
+[helper release checks](../../docs/authentication/release-checks.md) pass for the
+intended users. After verifying the deployed route and helper against the pinned
+release, upload an Auth secret version with `LALIGA_HELPER_ENABLED=true` and run
+`fantasybuilder-deploy` again. This advertises the guided screen; it does not
+enable browser OAuth or change the native callback registration. Keep
+`LALIGA_BROWSER_REDIRECT_URI` unset without an approved HTTPS callback.
+
+The independent desktop manual flow is controlled by
+`LALIGA_MANUAL_LINK_ENABLED=false` in the Auth secret. It needs no installed
+helper. Keep it disabled until the
+[manual pairing release gate](../../docs/authentication/release-checks.md)
+passes; enable it with a new Auth secret version and roll back by clearing the
+flag. No HTTPS browser callback registration is implied.
+The requested installed background experience needs the separate
+[production helper rollout](../../docs/authentication/laliga-production-helper-rollout-plan.md)
+before this flag can advertise it. Deploying the cloud images alone does not
+install a process on users' Macs.
+
 On later releases, upload changed secret versions or image digests and run the
 same helper. Docker Compose reloads changed containers; the helper is not a
 zero-downtime deployment system. A startup/health failure can leave containers
@@ -289,7 +310,7 @@ contains `manifest.json` using
 an administrator with object-read access, and restore each with `pg_restore` to
 its corresponding database before starting the application. Do not restore over
 live writes. Full provider/recovery checks remain in the
-[release runbook](../../docs/authentication/better-auth-cutover.md).
+[release runbook](../../docs/authentication/release-checks.md).
 
 VM deletion protection defaults to true. The separate disk additionally has
 `prevent_destroy`, secrets have deletion protection, and a non-empty backup

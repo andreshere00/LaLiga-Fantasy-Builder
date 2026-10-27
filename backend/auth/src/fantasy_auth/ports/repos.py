@@ -145,12 +145,20 @@ class BrowserPairingStore(Protocol):
         """Store a challenge and clean up expired secrets."""
 
     async def consume(
-        self, state: str, *, now: int, binding_hash: str | None = None
+        self,
+        state: str,
+        *,
+        now: int,
+        binding_hash: str | None = None,
+        user_id: str | None = None,
     ) -> BrowserPairingRecord | None:
         """Atomically remove and return a live challenge.
 
-        When ``binding_hash`` is given, a challenge with another binding stays pending.
+        A challenge with another binding or owner stays pending.
         """
 
     async def cancel(self, user_id: str) -> None:
         """Remove all pending challenges belonging to the verified user."""
+
+    async def cancel_bound(self, user_id: str, binding_hash: str) -> None:
+        """Remove only challenges for this owner and browser proof."""

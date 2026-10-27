@@ -173,16 +173,32 @@ class MemoryBrowserPairingStore:
     async def save(self, record: BrowserPairingRecord, *, now: int) -> None:
         """Save a challenge, pruning expired secrets."""
         self._records = {
-            key: value for key, value in self._records.items() if value.expires_at > now
+            key: value
+            for key, value in self._records.items()
+            if value.expires_at > now
+            and not (
+                record.binding_hash
+                and value.user_id == record.user_id
+                and value.binding_hash == record.binding_hash
+            )
         }
         self._records[record.state] = record
 
     async def consume(
-        self, state: str, *, now: int, binding_hash: str | None = None
+        self,
+        state: str,
+        *,
+        now: int,
+        binding_hash: str | None = None,
+        user_id: str | None = None,
     ) -> BrowserPairingRecord | None:
         """Consume at most once, rejecting expired or differently bound challenges."""
         record = self._records.get(state)
-        if record is None or (binding_hash is not None and record.binding_hash != binding_hash):
+        if (
+            record is None
+            or (binding_hash is not None and record.binding_hash != binding_hash)
+            or (user_id is not None and record.user_id != user_id)
+        ):
             return None
         del self._records[state]
         return record if record.expires_at > now else None
@@ -191,4 +207,12 @@ class MemoryBrowserPairingStore:
         """Cancel only this user's pending native callbacks."""
         self._records = {
             key: value for key, value in self._records.items() if value.user_id != user_id
+        }
+
+    async def cancel_bound(self, user_id: str, binding_hash: str) -> None:
+        """Cancel one owner's pending callbacks for a single browser proof."""
+        self._records = {
+            key: value
+            for key, value in self._records.items()
+            if value.user_id != user_id or value.binding_hash != binding_hash
         }

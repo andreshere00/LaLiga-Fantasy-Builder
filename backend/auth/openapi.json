@@ -72,6 +72,124 @@
         }
       }
     },
+    "/laliga/link-options": {
+      "get": {
+        "tags": [
+          "laliga"
+        ],
+        "summary": "Link Options",
+        "description": "Describe enabled linking journeys to a verified application user.",
+        "operationId": "link_options_laliga_link_options_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/LinkOptionsResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/laliga/manual/start": {
+      "post": {
+        "tags": [
+          "laliga"
+        ],
+        "summary": "Manual Start",
+        "description": "Start an explicitly requested, owner and browser bound native pairing.",
+        "operationId": "manual_start_laliga_manual_start_post",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ManualStartResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/laliga/manual/complete": {
+      "post": {
+        "tags": [
+          "laliga"
+        ],
+        "summary": "Manual Complete",
+        "description": "Exchange a pasted callback only for its initiating user and browser.",
+        "operationId": "manual_complete_laliga_manual_complete_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ManualCompleteRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ConnectionStatusResponse"
+                }
+              }
+            }
+          },
+          "413": {
+            "description": "Callback request too large.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AuthErrorResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/laliga/manual/pending": {
+      "delete": {
+        "tags": [
+          "laliga"
+        ],
+        "summary": "Manual Cancel",
+        "description": "Cancel only the current user's pending manual attempt in this browser.",
+        "operationId": "manual_cancel_laliga_manual_pending_delete",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/OkResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/laliga/pairings": {
       "post": {
         "tags": [
@@ -627,6 +745,104 @@
         ],
         "title": "LaligaBearerResponse",
         "description": "Short-lived LaLiga bearer for Fantasy API calls."
+      },
+      "LinkOptionsResponse": {
+        "properties": {
+          "browser_available": {
+            "type": "boolean",
+            "title": "Browser Available"
+          },
+          "manual_available": {
+            "type": "boolean",
+            "title": "Manual Available"
+          },
+          "helper_available": {
+            "type": "boolean",
+            "title": "Helper Available"
+          },
+          "helper_platforms": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Helper Platforms"
+          },
+          "user_id": {
+            "type": "string",
+            "title": "User Id"
+          },
+          "email": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Email"
+          },
+          "name": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Name"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "browser_available",
+          "manual_available",
+          "helper_available",
+          "helper_platforms",
+          "user_id"
+        ],
+        "title": "LinkOptionsResponse",
+        "description": "Available account-linking methods for this deployment."
+      },
+      "ManualCompleteRequest": {
+        "properties": {
+          "callback": {
+            "type": "string",
+            "maxLength": 4096,
+            "minLength": 20,
+            "title": "Callback"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "callback"
+        ],
+        "title": "ManualCompleteRequest",
+        "description": "Single-use native callback pasted into the browser linking page."
+      },
+      "ManualStartResponse": {
+        "properties": {
+          "authorize_url": {
+            "type": "string",
+            "title": "Authorize Url"
+          },
+          "expires_at": {
+            "type": "integer",
+            "minimum": 1.0,
+            "title": "Expires At"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "authorize_url",
+          "expires_at"
+        ],
+        "title": "ManualStartResponse",
+        "description": "Public authorization URL and expiry for an explicit manual attempt."
       },
       "OkResponse": {
         "properties": {

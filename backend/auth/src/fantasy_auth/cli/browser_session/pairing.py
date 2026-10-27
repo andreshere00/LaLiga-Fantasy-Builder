@@ -6,9 +6,12 @@ import sys
 from collections.abc import Callable
 from typing import Any
 
+import httpx
+
 from fantasy_auth.cli import authredirect_macos
 from fantasy_auth.cli import helper as laliga_helper
 from fantasy_auth.cli.browser_session.errors import BrowserSessionError
+from fantasy_auth.cli.browser_session.http import connection_linked
 from fantasy_auth.cli.browser_session.playwright_capture import (
     capture_authredirect_with_playwright,
 )
@@ -78,6 +81,12 @@ def pair_laliga_with_playwright(
             b2c=pkce.b2c,
         )
     except laliga_helper.PairingHelperError as exc:
+        if "completion is uncertain" in str(exc):
+            try:
+                if connection_linked(auth_base=auth_base, jwt=jwt):
+                    return {"ok": True}
+            except (BrowserSessionError, httpx.HTTPError):
+                pass
         raise BrowserSessionError(str(exc)) from exc
 
 

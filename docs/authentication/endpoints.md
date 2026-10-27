@@ -25,6 +25,10 @@ are provided by its pinned plugins and are separate from Python OpenAPI.
 | POST | `/auth/link-social` | Recent session plus provider proof |
 | POST | `/auth/unlink-account` | Recent session; requires another usable method |
 | POST | `/laliga/login` | Application JWT; sets the `lfb_laliga_bind` callback-binding cookie; `{authorize_url}` when a registered HTTPS callback is configured, otherwise 503 `browser_unavailable` |
+| GET | `/laliga/link-options` | Application JWT; independent browser/manual/helper availability and verified application account, without credentials |
+| POST | `/laliga/manual/start` | Application JWT + exact Origin; when `LALIGA_MANUAL_LINK_ENABLED=true`, sets browser-proof cookie and returns `{authorize_url, expires_at}` |
+| POST | `/laliga/manual/complete` | Same JWT owner, Origin and cookie; `{callback}` in JSON, one-time state/PKCE proof; returns public connection status |
+| DELETE | `/laliga/manual/pending` | Same JWT owner, Origin and cookie; cancels only this browser's pending attempt |
 | GET | `/laliga/callback` | Registered HTTPS authorization callback; one-time state/PKCE proof and matching binding cookie, then fixed frontend redirect |
 | GET/DELETE | `/laliga/connection` | Application JWT; connection status / unlink |
 | POST | `/laliga/pairings` | Application JWT; one-time helper challenge |
@@ -37,3 +41,5 @@ are provided by its pinned plugins and are separate from Python OpenAPI.
 Provider token retrieval, OTP sign-in and alternate OTP recovery endpoints are
 intentionally disabled. Health is available at `/health/live` and `/health/ready`
 on each service's private origin (Python also retains `/health`).
+
+The manual desktop journey is documented in [manual pairing](manual-browser-pairing.md).

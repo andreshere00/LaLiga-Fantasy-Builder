@@ -23,7 +23,7 @@ Do not guess an upstream path or auth mode.
 
 | Question | Where to look |
 |----------|----------------|
-| Does Fantasy expose this, and at what confidence? | [Upstream catalog](../../.cursor/skills/developing-endpoints/upstream-api-reference.md) |
+| Does Fantasy expose this, and at what confidence? | Feature READMEs above; verify the documented upstream route and confidence |
 | Already proxied? | Feature READMEs, [`openapi.json`](../../backend/api/openapi.json) |
 | Public or authenticated? | Catalog **Public** vs **Authenticated** tables |
 | Identifiers? | `playerId` vs `playerTeamId`, `leagueId`, `teamId`, `week`, `page` |

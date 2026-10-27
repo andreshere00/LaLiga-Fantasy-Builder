@@ -53,6 +53,11 @@ flowchart LR
     Auth --> Redis
 ```
 
+For native helper pairing, the user's Mac exchanges the initial authorization
+code with LaLiga using PKCE, then sends the transient token bundle to Auth over
+HTTPS. Auth verifies the challenge, profile, and immutable application owner
+before sealing credentials. The browser and Fantasy API receive no LaLiga token.
+
 ## Browser login
 
 Better Auth owns application identity. Its React client uses `/auth` on the shared

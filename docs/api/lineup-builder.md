@@ -6,6 +6,13 @@ membership through the caller's `GET /leagues`; a caller cannot choose another
 manager's team. All Fantasy, scraper and football reads reuse existing services.
 No bid, offer acceptance, sale, clause, shield or lineup save is executed.
 
+The builder setup dialog below was captured from a signed-in application session
+with the current squad on 27 October 2026. Opening it does not submit a build.
+
+![Lineup builder in light theme](../images/screenshots/lineup-builder-live-light.jpg)
+
+![Lineup builder in dark theme](../images/screenshots/lineup-builder-live-dark.jpg)
+
 ## Live build progress
 
 The browser uses `POST /lineup-builder/leagues/{league_id}/build/stream` with
@@ -62,8 +69,7 @@ retained squad members and trading-only purchases. Ordered transaction cards
 show player names/photos, readable acquisition methods, estimates, balances
 after settlement and the conditions attached to each step.
 
-The [implementation plan](../lineup-builder-implementation-plan.md) and
-[research record](../lineup-builder-research.md) explain the workflow and policies.
+The [frontend guide](../frontend.md) explains the browser workflow and policies.
 Generated request/response models are in [endpoint schemas](endpoint-schemas.md).
 
 ## Request and result

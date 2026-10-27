@@ -109,6 +109,52 @@ def test_validate_analysis_args_with_put_lineup_file_passes(tmp_path: Path) -> N
 # ---- Error paths ---- #
 
 
+@pytest.mark.parametrize(
+    "base",
+    [
+        "https://fantasybuilder.es.evil.example",
+        "https://user@fantasybuilder.es",
+        "https://fantasybuilder.es/path",
+        "http://fantasybuilder.es",
+        "https://fantasybuilder.es#fragment",
+    ],
+)
+def test_validate_analysis_args_pair_only_rejects_untrusted_origin(base: str) -> None:
+    # Arrange
+    args = parse_args(["--pair-only", "--auth-base", base])
+
+    # Act / Assert
+    with pytest.raises(BrowserSessionError, match="pairing destination|trusted HTTPS"):
+        validate_analysis_args(args)
+
+
+def test_validate_analysis_args_pair_only_rejects_token_and_analysis() -> None:
+    # Arrange
+    args = parse_args(["--pair-only", "--jwt", "synthetic", "leagues-analysis"])
+
+    # Act / Assert
+    with pytest.raises(BrowserSessionError, match="cannot be combined"):
+        validate_analysis_args(args)
+
+
+def test_validate_analysis_args_pair_only_accepts_fixed_cloud_targets() -> None:
+    # Arrange
+    args = parse_args(
+        [
+            "--pair-only",
+            "--auth-base",
+            "https://fantasybuilder.es",
+            "--api-base",
+            "https://fantasybuilder.es/api",
+            "--origin",
+            "https://fantasybuilder.es",
+        ]
+    )
+
+    # Act / Assert
+    validate_analysis_args(args)
+
+
 def test_load_put_lineup_invalid_json_raises(tmp_path: Path) -> None:
     # Arrange
     path = tmp_path / "bad.json"

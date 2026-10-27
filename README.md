@@ -6,6 +6,7 @@ data and user-confirmed writes with your linked account.
 
 | Topic | Doc |
 |-------|-----|
+| Changes in v0.1.0 | [CHANGELOG.md](CHANGELOG.md) |
 | Backend, frontend, and cloud architecture | [ARCHITECTURE.md](ARCHITECTURE.md) |
 | Detailed service trust boundaries | [docs/architecture.md](docs/architecture.md) |
 | Google Cloud Terraform deployment | [infra/gcp/README.md](infra/gcp/README.md) |
@@ -61,67 +62,33 @@ data and user-confirmed writes with your linked account.
 
 ## Screenshots
 
-Screenshots refreshed on 23 October 2026 (Europe/Madrid) from the current UI,
-using deterministic browser fixtures with fictional players and account data.
-Balances, offers, performance, standings, and weather illustrate the interface;
-they are not live account or provider values. Desktop captures use 1440 CSS pixels;
-mobile captures use 390 CSS pixels. See the [capture workflow](docs/frontend.md#refreshing-screenshots).
+These ten captures were taken from the signed-in application in a browser on
+27 October 2026 (Europe/Madrid), with real league and player data. Values and
+availability can change. See the [capture notes](docs/frontend.md#product-captures).
 
-### Lineup
+### Light theme
 
-Centered lineup controls and the current starting XI:
+![Live lineup in light theme](docs/images/screenshots/lineup-live-light.jpg)
 
-![Current lineup with centered controls and starting XI, light theme](docs/images/screenshots/lineup-current-light.jpg)
+![Live market in light theme](docs/images/screenshots/market-live-light.jpg)
 
-![Current lineup with centered controls and starting XI, dark theme](docs/images/screenshots/lineup-current-dark.jpg)
+![Live players catalog in light theme](docs/images/screenshots/players-live-light.jpg)
 
-Full-page desktop view with the sample 4-3-3 starting XI, paginated squad,
-manager ranking, and LALIGA standings:
+![Ionut Radu player details in light theme](docs/images/screenshots/details-ionut-radu-live-light.jpg)
 
-![Full lineup page with the 4-3-3 pitch, squad, manager ranking, and LALIGA standings](docs/images/screenshots/lineup-current-squad.jpg)
+![Live lineup builder in light theme](docs/images/screenshots/lineup-builder-live-light.jpg)
 
-Expanded kickoff forecast with rain, wind, and retrieval time:
+### Dark theme
 
-![Expanded sample kickoff forecast](docs/images/screenshots/lineup-current-forecast.jpg)
+![Live lineup in dark theme](docs/images/screenshots/lineup-live-dark.jpg)
 
-![Lineup builder player scope, trade permissions, and mandatory players](docs/images/screenshots/lineup-builder-top.png)
+![Live market in dark theme](docs/images/screenshots/market-live-dark.jpg)
 
-![Lineup builder mandatory players and formation preferences](docs/images/screenshots/lineup-builder-options.png)
+![Live players catalog in dark theme](docs/images/screenshots/players-live-dark.jpg)
 
-Builder results remain previews. Filter recommendations, inspect a starting XI
-and its squad projection, then choose **Use as draft** to prepare local changes.
+![Lamine Yamal player details in dark theme](docs/images/screenshots/details-lamine-yamal-live-dark.jpg)
 
-![Lineup builder recommendation notes and current-squad versus external-player filters](docs/images/screenshots/lineup-builder-results.png)
-
-![Recommended 4-3-3 starting XI with individual player scores](docs/images/screenshots/lineup-builder-pitch.png)
-
-![Projected cash, retained squad, deadlines, and transaction plan](docs/images/screenshots/lineup-builder-projection.png)
-
-![Lineup player actions](docs/images/screenshots/lineup-player-actions.png)
-
-### Market and player catalog
-
-![Market board in dark mode with Offers, My bids, and available balance](docs/images/screenshots/market-board.png)
-
-![Hire player dialog with bid limits and amount controls](docs/images/screenshots/market-hire-dialog.png)
-
-![Market offers panel with amounts, expiry countdowns, and accept or reject actions](docs/images/screenshots/market-offers.png)
-
-![Players catalog in dark mode with form, release clauses, owners, and bookmarks](docs/images/screenshots/players-catalog.png)
-
-### Player profile
-
-![Demo player profile with availability, per-match averages, and Fantasy indicators](docs/images/screenshots/player-profile-overview.png)
-
-![Last-five performance chart with club badges, summary metrics, and fixture details](docs/images/screenshots/player-fixture-stats.png)
-
-![Latest player news and injury history with independent pagination](docs/images/screenshots/player-fantasy-data.png)
-
-![Previous and upcoming matches](docs/images/screenshots/player-matches.png)
-
-![Player market-value chart](docs/images/screenshots/player-market-value.png)
-
-![Per-match averages details](docs/images/screenshots/player-averages-details.png)
+![Live lineup builder in dark theme](docs/images/screenshots/lineup-builder-live-dark.jpg)
 
 ## Quick start
 
@@ -144,7 +111,7 @@ uv run poe up
 Configure Google/Facebook/Apple credentials in `backend/identity/.env`.
 Apple needs an HTTPS domain. Production configuration, provider setup and release
 checks: [identity](backend/identity/README.md) and
-[cutover](docs/authentication/better-auth-cutover.md). Persistent LaLiga storage
+[release checks](docs/authentication/release-checks.md). Persistent LaLiga storage
 requires `USE_MEMORY_STORE=false` and a stable vault key; identity always uses Postgres.
 
 **Services on the host (Vite HMR):**

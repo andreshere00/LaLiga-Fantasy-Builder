@@ -54,4 +54,21 @@ describe("Better Auth application tokens", () => {
     const client = new AuthClient(fetch, store);
     await expect(client.startLaligaLogin()).rejects.toThrow("registered HTTPS callback");
   });
+  it("sends a pasted callback only in a same-origin JSON body with browser proof", async () => {
+    const store = new MemoryTokenStore(); store.set("application-jwt");
+    const fetch = vi.fn()
+      .mockResolvedValueOnce(new Response(JSON.stringify({ authorize_url: "https://login.laliga.es/authorize", expires_at: 9999999999 })))
+      .mockResolvedValueOnce(new Response(JSON.stringify({ linked: true, needs_reauth: false,
+        manager_id: "manager", manager_name: "Manager", avatar: null })));
+    const client = new AuthClient(fetch, store);
+    await client.startManualLink();
+    const callback = "authredirect://com.lfp.laligafantasy?code=secret&state=valid";
+    await client.completeManualLink(callback);
+    expect(fetch).toHaveBeenNthCalledWith(1, "/laliga/manual/start",
+      expect.objectContaining({ credentials: "same-origin", method: "POST" }));
+    expect(fetch).toHaveBeenNthCalledWith(2, "/laliga/manual/complete",
+      expect.objectContaining({ credentials: "same-origin", method: "POST",
+        body: JSON.stringify({ callback }), headers: expect.objectContaining({
+          Authorization: "Bearer application-jwt", "Content-Type": "application/json" }) }));
+  });
 });

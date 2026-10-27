@@ -58,8 +58,8 @@ def capture_authredirect_with_playwright(
                 consider(str(exc))
                 if not captured:
                     raise BrowserSessionError(
-                        f"Failed to open LaLiga authorize URL: {exc}",
-                    ) from exc
+                        "Failed to open LaLiga authorization. Check browser access and retry."
+                    ) from None
             deadline = time.monotonic() + timeout_ms / 1000
             while time.monotonic() < deadline and not captured:
                 try:

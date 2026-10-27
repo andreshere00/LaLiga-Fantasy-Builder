@@ -3,6 +3,12 @@
 Start with the [project README](../README.md) for features and quick start.
 This folder is the detailed map.
 
+See the [v0.1.0 changelog](../CHANGELOG.md) for the main changes shipped so far.
+
+The [product gallery](frontend.md#product-captures) contains ten captures from
+the signed-in application, covering lineup, market, players, player details,
+and the lineup builder in light and dark themes.
+
 ## Core
 
 | Doc | Contents |
@@ -12,13 +18,13 @@ This folder is the detailed map.
 | [Terraform deployment](../infra/gcp/README.md) | Provision the GCP VM, network, private backups, registry, secrets, and runtime |
 | [Google Cloud deployment assessment](deployment/google-cloud-cost-architecture.md) | Cost comparison and architecture for four concurrent users; trial, sizing, and production preparation |
 | [Frontend](frontend.md) | Lineup, market, and players UI, data loading, actions, details, and product screenshot gallery |
-| [Automatic lineup builder plan](lineup-builder-implementation-plan.md) | Deterministic scoring, candidate search, API/UI delivery and verification; [research and resolved policies](lineup-builder-research.md) |
-| [Frontend standings plan](frontend-standings-implementation-plan.md) | LALIGA table below Players Ranking, separate scrolling, data states, and verification |
-| [Lineup fixture panel implementation](frontend-fixture-panel-implementation-plan.md) | Current/next matchweek panel, automatic rollover, stadium weather, shadcn composition, tests, and captures |
-| [Frontend design-system migration plan](frontend-design-system-migration-plan.md) | Screen-by-screen commits, visual reference, staging boundaries, and acceptance checks |
+| [Lineup builder](api/lineup-builder.md) | Read-only recommendations, scoring, and source contracts |
+| [LALIGA standings](api/standings/README.md) | Completed-match table and provider limitations |
 | [Authentication](authentication/authentication.md) | Sessions, internal JWT, LaLiga vault, CSRF |
-| [Better Auth implementation plan](authentication/better-auth-implementation-plan.md) | Google, Facebook, Apple, username/password, account migration, and Keycloak removal |
 | [LaLiga SSO implementation plan](authentication/laliga-sso-implementation-plan.md) | LaLiga-brokered social sign-in, Better Auth sessions, callback feasibility and Fantasy connection |
+| [LaLiga helper capability record](authentication/laliga-sso-capability.md) | Guided macOS helper trial, supported behavior and remaining release checks |
+| [Production helper rollout plan](authentication/laliga-production-helper-rollout-plan.md) | Pending installed background app and automatic website launch |
+| [Manual desktop LaLiga pairing](authentication/manual-browser-pairing.md) | DevTools callback copy/paste, server-held PKCE, security contract and release gate |
 | [Scraping service](scraping/README.md) | Private scraper HTTP, player profile parsing, TTLs, Compose `egress`, CLIs |
 | [FutbolFantasy parser](scraping/parser.md) | Offline HTML → player JSON and Markdown |
 | [Parser selectors](scraping/parser-discovery.md) | Fixture vs live FutbolFantasy DOM contract |
@@ -40,7 +46,6 @@ This folder is the detailed map.
 | [OpenAPI / Swagger](api/openapi.md) | Regenerating `openapi.json` |
 | [Endpoint schemas](api/endpoint-schemas.md) | Generated — do not edit by hand |
 | [Proxy endpoint pitfalls](api/proxy-endpoint-pitfalls.md) | Fail-closed proxy patterns |
-| [Schema validation migration record](api/schema-validation-migration-plan.md) | Pydantic/Zod compliance results, endpoint inventory, and verification |
 
 ### Domains
 
@@ -59,4 +64,4 @@ FutbolFantasy downloads and parsing. `frontend` — lineup, market, and player
 UI; no LaLiga secrets in the browser.
 
 Current runtime: [Identity setup](../backend/identity/README.md).
-Cutover and production release checks: [runbook](authentication/better-auth-cutover.md).
+Production release checks: [runbook](authentication/release-checks.md).

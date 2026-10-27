@@ -30,7 +30,7 @@ def login_with_playwright(auth_base: str, *, headed: bool = True) -> str:
             page = context.new_page()
             page.goto(f"{auth_base.rstrip('/')}/sign-in", wait_until="domcontentloaded")
             _wait_for_session(context.request, auth_base.rstrip("/"), playwright_error)
-            response = context.request.get(f"{auth_base.rstrip('/')}/auth/token")
+            response = context.request.get(f"{auth_base.rstrip('/')}/auth/token", max_redirects=0)
             try:
                 body = response.json() if response.ok else {}
             except ValueError:
@@ -55,7 +55,7 @@ def _wait_for_session(request: Any, auth_base: str, request_error: type[Exceptio
     deadline = time.monotonic() + 300
     while time.monotonic() < deadline:
         try:
-            response = request.get(f"{auth_base}/auth/get-session", timeout=5000)
+            response = request.get(f"{auth_base}/auth/get-session", timeout=5000, max_redirects=0)
             session = response.json() if response.ok else None
         except (request_error, ValueError):
             session = None

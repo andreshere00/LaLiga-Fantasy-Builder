@@ -15,8 +15,7 @@ authorization code and exchanges it for LaLiga-issued tokens. This is not an
 exchange of our Better Auth JWT for Google credentials, and it does not retrieve
 LaLiga's private social-provider credentials.
 
-This plan supersedes the direct-social-provider requirement and application-first
-login order in the [original Better Auth plan](better-auth-implementation-plan.md).
+This proposed flow would allow LaLiga authentication before application sign-in.
 It retains Better Auth as the application session/JWT authority, Python auth as
 the LaLiga vault, and all existing Fantasy API methods and JSON contracts.
 Username/email sign-in, verification and recovery remain available. Existing
@@ -304,7 +303,7 @@ real-user deployments need a separate reviewed ownership migration.
 Update identity/auth READMEs, architecture, authentication/endpoints, frontend,
 CLI docs, environment examples, Compose/HTTPS ingress and CI. Regenerate auth
 OpenAPI; regenerate API OpenAPI/endpoint schemas only if their inputs change.
-Record the capability gate and real-provider staging checks in the cutover runbook.
+Record the capability gate and real-provider staging checks in the release runbook.
 
 Ship behind a disabled-by-default flag until the upstream gate and staging checks
 pass, then enable for the target installation. Rollback disables the new initiation

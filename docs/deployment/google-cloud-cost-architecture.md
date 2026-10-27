@@ -179,7 +179,7 @@ on client-IP rate limits. The existing Caddy setup expects the actual network
 client address. Keeping DNS in DNS-only mode initially avoids that extra proxy.
 
 Release references: [identity configuration](../../backend/identity/README.md),
-[cutover and release checks](../authentication/better-auth-cutover.md), and
+[authentication release checks](../authentication/release-checks.md), and
 [LaLiga capability record](../authentication/laliga-sso-capability.md).
 
 ## Trial, budget, and sizing decision

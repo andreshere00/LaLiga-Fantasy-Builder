@@ -116,7 +116,9 @@ class FantasyClient:
         }
         if json_body is not None:
             headers["Content-Type"] = "application/json"
-        with httpx.Client(transport=self.transport, timeout=timeout) as client:
+        with httpx.Client(
+            transport=self.transport, timeout=timeout, follow_redirects=False
+        ) as client:
             response = client.request(method, url, headers=headers, json=json_body)
         if not response.is_success:
             verb = f"PUT {path}" if method == "PUT" else path
@@ -130,7 +132,7 @@ def connection_linked(
     *, auth_base: str, jwt: str, transport: httpx.BaseTransport | None = None
 ) -> bool:
     """Read the verified subject's LaLiga connection using its application JWT."""
-    with httpx.Client(transport=transport, timeout=15) as client:
+    with httpx.Client(transport=transport, timeout=15, follow_redirects=False) as client:
         response = client.get(
             f"{auth_base.rstrip('/')}/laliga/connection", headers={"Authorization": f"Bearer {jwt}"}
         )

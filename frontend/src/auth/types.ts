@@ -1,4 +1,4 @@
-export type { AccessToken, LaligaConnection, SessionUser, SessionView } from "./schemas";
+export type { AccessToken, LaligaConnection, LaligaLinkOptions, SessionUser, SessionView } from "./schemas";
 
 export type GateStatus = "signed-out" | "unlinked" | "needs-reauth" | "ready";
 

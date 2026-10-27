@@ -11,11 +11,55 @@ from collections.abc import Callable
 from starlette.middleware.base import BaseHTTPMiddleware
 from starlette.requests import Request
 from starlette.responses import Response
-from starlette.types import ASGIApp
+from starlette.types import ASGIApp, Message, Receive, Scope, Send
 
 from fantasy_auth.observability import current_trace_context
 
 logger = logging.getLogger("fantasy_auth")
+
+
+class ManualCallbackBodyLimitMiddleware:
+    """Bound a pasted callback request before JSON parsing allocates its body."""
+
+    def __init__(self, app: ASGIApp, max_bytes: int = 8192) -> None:
+        self.app = app
+        self.max_bytes = max_bytes
+
+    async def __call__(self, scope: Scope, receive: Receive, send: Send) -> None:
+        """Buffer one small manual callback request or return a sanitized 413."""
+        if scope["type"] != "http" or scope.get("path") != "/laliga/manual/complete":
+            await self.app(scope, receive, send)
+            return
+        messages: list[Message] = []
+        size = 0
+        while True:
+            message = await receive()
+            if message["type"] == "http.disconnect":
+                return
+            body = message.get("body", b"")
+            size += len(body)
+            if size > self.max_bytes:
+                from starlette.responses import JSONResponse
+
+                response = JSONResponse(
+                    {"error": "request_too_large", "detail": "Callback request is too large"},
+                    status_code=413,
+                    headers={"Cache-Control": "no-store"},
+                )
+                await response(scope, receive, send)
+                return
+            messages.append(message)
+            if not message.get("more_body", False):
+                break
+
+        async def replay() -> Message:
+            """Supply the bounded request body to FastAPI exactly once."""
+            if messages:
+                return messages.pop(0)
+            return {"type": "http.disconnect"}
+
+        await self.app(scope, replay, send)
+
 
 _REDACT_KEYS = re.compile(
     r"(authorization|access_token|id_token|refresh_token|code|secret|password|"

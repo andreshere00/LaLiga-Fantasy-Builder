@@ -24,6 +24,8 @@ def test_applescript_source_includes_callback_path(tmp_path: Path) -> None:
     # Assert
     assert "on open location theURL" in source
     assert str(callback.resolve()) in source
+    assert "complete_callback.py" not in source
+    assert "localhost" not in source
 
 
 def test_capture_authredirect_macos_reads_helper_file(tmp_path: Path) -> None:
@@ -89,6 +91,7 @@ def test_capture_authredirect_macos_timeout_raises(tmp_path: Path) -> None:
             sleep=lambda _seconds: None,
             monotonic=lambda: next(clock),
         )
+    assert not (tmp_path / macos.CALLBACK_NAME).exists()
 
 
 def test_applescript_source_quote_in_path_raises(tmp_path: Path) -> None:
@@ -280,6 +283,7 @@ def test_prepare_macos_handler_registers_ready_app(
 ) -> None:
     # Arrange
     registered: list[Path] = []
+    monkeypatch.setattr(macos, "_scheme_handlers", lambda: set())
     monkeypatch.setattr(macos, "_handler_app_ready", lambda *_a: True)
     monkeypatch.setattr(
         macos,
@@ -292,6 +296,20 @@ def test_prepare_macos_handler_registers_ready_app(
 
     # Assert
     assert registered == [tmp_path / macos.APP_NAME]
+
+
+def test_prepare_macos_handler_preserves_another_apps_scheme(
+    monkeypatch: pytest.MonkeyPatch, tmp_path: Path
+) -> None:
+    # Arrange
+    monkeypatch.setattr(macos, "_scheme_handlers", lambda: {"com.example.other"})
+    registered: list[Path] = []
+    monkeypatch.setattr(macos, "_register_handler_app", lambda app: registered.append(app))
+
+    # Act / Assert
+    with pytest.raises(macos.AuthredirectHandlerError, match="Another application owns"):
+        macos._prepare_macos_handler(tmp_path)
+    assert not registered
 
 
 def test_capture_unlinks_stale_callback_file(tmp_path: Path) -> None:

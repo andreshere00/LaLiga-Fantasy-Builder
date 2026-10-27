@@ -3,17 +3,21 @@ import { useQueryClient } from "@tanstack/react-query";
 import { authClient } from "./auth-client";
 import { AuthClient, refreshDelayMs, startLogin } from "./client";
 import { MemoryTokenStore } from "./tokenStore";
-import type { AuthStatus, SessionUser } from "./types";
+import type { AuthStatus, LaligaLinkOptions, SessionUser } from "./types";
 
 type AuthContextValue = {
   status: AuthStatus; user: SessionUser | null; managerName: string | null;
   managerAvatar: string | null; accessToken: string | null; notice: string | null;
+  linkOptions: LaligaLinkOptions | null; linkOptionsError: boolean;
   login: () => void; connectLaliga: () => void; logout: () => Promise<void>;
   reload: () => Promise<void>; forgetDeletedAccount: () => Promise<void>; markNeedsReauth: () => void;
+  startManualLink: () => Promise<{ authorizeUrl: string; expiresAt: number }>;
+  completeManualLink: (callback: string) => Promise<boolean>;
+  cancelManualLink: () => Promise<void>;
 };
 const AuthContext = createContext<AuthContextValue | null>(null);
-const empty = { accessToken: null, managerName: null, managerAvatar: null, notice: null };
-type State = Pick<AuthContextValue, "status" | "accessToken" | "managerName" | "managerAvatar" | "notice">;
+const empty = { accessToken: null, managerName: null, managerAvatar: null, notice: null, linkOptions: null, linkOptionsError: false };
+type State = Pick<AuthContextValue, "status" | "accessToken" | "managerName" | "managerAvatar" | "notice" | "linkOptions" | "linkOptionsError">;
 
 export function AuthProvider({ children }: { children: ReactNode }) {
   const session = authClient.useSession();
@@ -47,7 +51,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     const currentGeneration = generation.current;
     const current = () => !controller.signal.aborted && currentGeneration === generation.current;
     let timer: ReturnType<typeof setTimeout> | undefined;
-    let poll: ReturnType<typeof setTimeout> | undefined;
     setActiveSessionId(sessionId);
     if (logoutToken.current?.sessionId !== sessionId) logoutToken.current = null;
     // A pending sign-out or its retry must never reacquire a token for this session.
@@ -72,13 +75,20 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         if (!current()) return;
         const status = result.needsReauth ? "needs-reauth" : result.linked ? "ready" : "unlinked";
         setState(previous => ({ ...previous, status, managerName: result.managerName, managerAvatar: result.avatar, notice: null }));
-        if (status !== "ready") poll = setTimeout(() => { void connection(); }, 3000);
       } catch {
         if (current()) setState(previous => ({ ...previous, status: "unavailable", notice: "LaLiga connection could not be checked." }));
       }
     };
-    void refresh().then(() => { if (current() && client.token()) void connection(); });
-    return () => { controller.abort(); clearTimeout(timer); clearTimeout(poll); };
+    const options = async () => {
+      try {
+        const result = await client.linkOptions({ signal: controller.signal });
+        if (current()) setState(previous => ({ ...previous, linkOptions: result, linkOptionsError: false }));
+      } catch {
+        if (current()) setState(previous => ({ ...previous, linkOptionsError: true }));
+      }
+    };
+    void refresh().then(() => { if (current() && client.token()) { void connection(); void options(); } });
+    return () => { controller.abort(); clearTimeout(timer); };
   }, [userId, sessionId, blockedSessionId, pending, revision, clear, client]);
 
   const reload = useCallback(async () => { await session.refetch(); setRevision(value => value + 1); }, [session]);
@@ -123,12 +133,34 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       setState(previous => ({ ...previous, notice }));
     });
   }, [client]);
+  const startManualLink = useCallback(async () => {
+    const active = generation.current;
+    const result = await client.startManualLink({ signal: work.current?.signal });
+    if (active !== generation.current) throw new Error("Session changed. Start again.");
+    return result;
+  }, [client]);
+  const completeManualLink = useCallback(async (callback: string) => {
+    const active = generation.current;
+    await client.completeManualLink(callback, { signal: work.current?.signal });
+    if (active !== generation.current) throw new Error("Session changed. Start again.");
+    const connection = await client.connection({ signal: work.current?.signal });
+    if (active !== generation.current) throw new Error("Session changed. Start again.");
+    if (!connection.linked || connection.needsReauth) return false;
+    setState(previous => ({ ...previous, status: "ready", managerName: connection.managerName,
+      managerAvatar: connection.avatar, notice: null }));
+    return true;
+  }, [client]);
+  const cancelManualLink = useCallback(async () => {
+    await client.cancelManualLink({ signal: work.current?.signal });
+  }, [client]);
   const value = useMemo<AuthContextValue>(() => ({
     ...(activeSessionId === sessionId ? state : { ...empty, status: pending || userId ? "loading" : "signed-out" }),
     user: session.data && state.status !== "signed-out" ? { userId: session.data.user.id, email: session.data.user.email, name: session.data.user.name, username: session.data.user.username ?? null } : null,
-    login: () => startLogin(), connectLaliga, logout, reload, forgetDeletedAccount,
+    login: () => startLogin(), connectLaliga, startManualLink, completeManualLink,
+    cancelManualLink, logout, reload, forgetDeletedAccount,
     markNeedsReauth: () => setState(previous => ({ ...previous, status: "needs-reauth" })),
-  }), [state, activeSessionId, sessionId, pending, userId, session.data, connectLaliga, logout, reload, forgetDeletedAccount]);
+  }), [state, activeSessionId, sessionId, pending, userId, session.data, connectLaliga,
+    startManualLink, completeManualLink, cancelManualLink, logout, reload, forgetDeletedAccount]);
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 }
 export function useAuth(): AuthContextValue {

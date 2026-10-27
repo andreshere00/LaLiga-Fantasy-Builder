@@ -218,7 +218,7 @@ operator applies the template; DNS, provider registrations, actual secret values
 release validation, and cloud load testing still need to be supplied.
 
 Deployment instructions: [infra/gcp/README.md](infra/gcp/README.md).
-Release gates: [authentication runbook](docs/authentication/better-auth-cutover.md).
+Release gates: [authentication runbook](docs/authentication/release-checks.md).
 Editable diagram: [Mermaid](docs/deployment/google-cloud-architecture.mmd) and
 [SVG](docs/deployment/google-cloud-architecture.svg).
 The SVG and PNG use official Google Cloud product icons. See the

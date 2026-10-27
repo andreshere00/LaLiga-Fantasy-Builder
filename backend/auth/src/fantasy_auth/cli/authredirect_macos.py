@@ -2,11 +2,13 @@
 
 from __future__ import annotations
 
+import os
 import plistlib
 import subprocess
 import sys
 import time
 from collections.abc import Callable
+from ctypes import CDLL, c_char_p, c_long, c_size_t, c_uint32, c_void_p, create_string_buffer
 from pathlib import Path
 
 from fantasy_auth.cli import helper as laliga_helper
@@ -15,8 +17,7 @@ BUNDLE_ID = "local.laliga.fantasy.authredirect"
 APP_NAME = "LaligaAuthredirect.app"
 CALLBACK_NAME = "callback.txt"
 STAMP_NAME = "handler.stamp"
-HANDLER_VERSION = "2"
-COMPLETE_SCRIPT_NAME = "complete_callback.py"
+HANDLER_VERSION = "3"
 LSREGISTER = (
     "/System/Library/Frameworks/CoreServices.framework/"
     "Frameworks/LaunchServices.framework/Support/lsregister"
@@ -71,42 +72,52 @@ def capture_authredirect_macos(
     """
     directory = support_dir or macos_support_dir()
     directory.mkdir(parents=True, exist_ok=True)
+    directory.chmod(0o700)
     callback_path = directory / CALLBACK_NAME
     if callback_path.exists():
         callback_path.unlink()
-    prepare = prepare_handler or _prepare_macos_handler
-    prepare(directory)
-    opener = open_url or _open_macos_url
-    print(
-        "Opening your default browser for LaLiga sign-in (Google is supported).\n"
-        "If macOS asks to open LaligaAuthredirect, choose Open.\n"
-        "Do not copy or paste the callback URL.",
-        file=sys.stderr,
-    )
-    opener(authorize_url)
-    deadline = monotonic() + timeout_ms / 1000
-    while monotonic() < deadline:
-        picked = _read_complete_callback(callback_path, redirect_uri=redirect_uri)
-        if picked:
-            callback_path.unlink(missing_ok=True)
-            print(
-                f"Callback captured from system browser ({len(picked)} chars)",
-                file=sys.stderr,
-            )
-            return picked
-        sleep(0.2)
-    raise AuthredirectTimeoutError(
-        "Timed out waiting for LaLiga authredirect:// callback. "
-        "Finish Google/LaLiga sign-in in your browser, and allow the "
-        "LaligaAuthredirect helper if macOS prompts.",
-    )
+    descriptor = os.open(callback_path, os.O_CREAT | os.O_EXCL | os.O_WRONLY, 0o600)
+    os.close(descriptor)
+    try:
+        prepare = prepare_handler or _prepare_macos_handler
+        prepare(directory)
+        opener = open_url or _open_macos_url
+        print(
+            "Opening your default browser for LaLiga sign-in.\n"
+            "If macOS asks to open LaligaAuthredirect, choose Open.\n"
+            "Do not copy or paste the callback URL.",
+            file=sys.stderr,
+        )
+        opener(authorize_url)
+        deadline = monotonic() + timeout_ms / 1000
+        while monotonic() < deadline:
+            picked = _read_complete_callback(callback_path, redirect_uri=redirect_uri)
+            if picked:
+                print(
+                    f"Callback captured from system browser ({len(picked)} chars)",
+                    file=sys.stderr,
+                )
+                return picked
+            sleep(0.2)
+        raise AuthredirectTimeoutError(
+            "Timed out waiting for LaLiga authredirect:// callback. "
+            "Finish Google/LaLiga sign-in in your browser, and allow the "
+            "LaligaAuthredirect helper if macOS prompts.",
+        )
+    finally:
+        callback_path.unlink(missing_ok=True)
 
 
 def _read_complete_callback(path: Path, *, redirect_uri: str) -> str | None:
     """Return a complete callback from disk when the helper has written one."""
     if not path.is_file():
         return None
-    raw = path.read_text(encoding="utf-8").strip()
+    try:
+        if path.stat().st_size > 8192 or path.stat().st_mode & 0o077:
+            raise AuthredirectHandlerError("Callback file has unsafe permissions or size")
+        raw = path.read_text(encoding="utf-8").strip()
+    except (OSError, UnicodeError):
+        raise AuthredirectHandlerError("Callback file could not be read safely") from None
     return laliga_helper.pick_complete_callback(raw, redirect_uri=redirect_uri)
 
 
@@ -120,12 +131,59 @@ def _open_macos_url(url: str) -> None:
 
 def _prepare_macos_handler(support_dir: Path) -> None:
     """Compile and register the authredirect:// helper app."""
+    other_handlers = _scheme_handlers() - {BUNDLE_ID}
+    if other_handlers:
+        raise AuthredirectHandlerError(
+            "Another application owns authredirect:// on this Mac. "
+            "Keep its handler and use a supported alternative."
+        )
     callback_path = support_dir / CALLBACK_NAME
     app_path = support_dir / APP_NAME
-    _write_complete_script(support_dir / COMPLETE_SCRIPT_NAME)
     if not _handler_app_ready(app_path, callback_path):
         _compile_handler_app(app_path, callback_path)
     _register_handler_app(app_path)
+
+
+def _scheme_handlers() -> set[str]:
+    """Read registered macOS handlers without changing Launch Services."""
+    try:
+        foundation = CDLL("/System/Library/Frameworks/CoreFoundation.framework/CoreFoundation")
+        services = CDLL("/System/Library/Frameworks/CoreServices.framework/CoreServices")
+        foundation.CFStringCreateWithCString.argtypes = [c_void_p, c_char_p, c_uint32]
+        foundation.CFStringCreateWithCString.restype = c_void_p
+        foundation.CFStringGetCString.argtypes = [c_void_p, c_void_p, c_size_t, c_uint32]
+        foundation.CFStringGetCString.restype = bool
+        foundation.CFRelease.argtypes = [c_void_p]
+        foundation.CFArrayGetCount.argtypes = [c_void_p]
+        foundation.CFArrayGetCount.restype = c_long
+        foundation.CFArrayGetValueAtIndex.argtypes = [c_void_p, c_long]
+        foundation.CFArrayGetValueAtIndex.restype = c_void_p
+        services.LSCopyAllHandlersForURLScheme.argtypes = [c_void_p]
+        services.LSCopyAllHandlersForURLScheme.restype = c_void_p
+        scheme = foundation.CFStringCreateWithCString(None, b"authredirect", 0x08000100)
+        if not scheme:
+            raise AuthredirectHandlerError("Could not inspect the macOS callback handler")
+        try:
+            handlers = services.LSCopyAllHandlersForURLScheme(scheme)
+            if not handlers:
+                return set()
+            try:
+                names = set()
+                for index in range(foundation.CFArrayGetCount(handlers)):
+                    handler = foundation.CFArrayGetValueAtIndex(handlers, index)
+                    buffer = create_string_buffer(256)
+                    if not foundation.CFStringGetCString(handler, buffer, len(buffer), 0x08000100):
+                        raise AuthredirectHandlerError(
+                            "Could not inspect the macOS callback handler"
+                        )
+                    names.add(buffer.value.decode("utf-8"))
+                return names
+            finally:
+                foundation.CFRelease(handlers)
+        finally:
+            foundation.CFRelease(scheme)
+    except OSError:
+        raise AuthredirectHandlerError("Could not inspect the macOS callback handler") from None
 
 
 def _handler_app_ready(app_path: Path, callback_path: Path) -> bool:
@@ -192,8 +250,7 @@ def _applescript_source(callback_path: Path) -> str:
         AppleScript source.
     """
     posix = callback_path.expanduser().resolve()
-    script = posix.parent / COMPLETE_SCRIPT_NAME
-    if '"' in str(posix) or '"' in str(script):
+    if '"' in str(posix):
         raise AuthredirectHandlerError("Callback path contains a quote")
     return (
         "on open location theURL\n"
@@ -203,41 +260,9 @@ def _applescript_source(callback_path: Path) -> str:
         "    set eof of fd to 0\n"
         "    write theURL to fd as «class utf8»\n"
         "    close access fd\n"
-        f'    do shell script "/usr/bin/python3 " & quoted form of "{script}"\n'
         "end open location\n"
         "on run\n"
         "end run\n"
-    )
-
-
-def _write_complete_script(path: Path) -> None:
-    """Write the helper that posts the callback and opens the frontend."""
-    path.write_text(
-        "\n".join(
-            [
-                "import json",
-                "import pathlib",
-                "import subprocess",
-                "import urllib.request",
-                "",
-                "callback = pathlib.Path(__file__).with_name('callback.txt')",
-                "url = callback.read_text(encoding='utf-8').strip()",
-                "body = json.dumps({'callback': url}).encode()",
-                "request = urllib.request.Request(",
-                "    'http://localhost:3000/laliga/pairings/complete-redirect',",
-                "    data=body,",
-                "    headers={'Content-Type': 'application/json'},",
-                ")",
-                "with urllib.request.urlopen(request, timeout=30) as response:",
-                "    payload = json.load(response)",
-                "    if response.status != 200:",
-                "        raise SystemExit(1)",
-                "origin = payload.get('frontend_origin') or 'http://localhost:3000'",
-                "subprocess.run(['open', origin], check=True)",
-                "",
-            ]
-        ),
-        encoding="utf-8",
     )
 
 
