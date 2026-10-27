@@ -40,7 +40,7 @@ run "private_backends_and_protected_storage" {
     error_message = "Keep the five service-separated secret containers protected."
   }
   assert {
-    condition     = length(google_billing_budget.app) == 0 && length(google_project_iam_member.operator) == 0
+    condition     = length(google_billing_budget.app) == 0 && length(google_project_iam_member.operator) == 0 && length(google_service_account.image_publisher) == 0 && length(google_iam_workload_identity_pool.github) == 0
     error_message = "Optional budget and administrator IAM must not create unsolicited grants."
   }
   assert {
@@ -84,4 +84,43 @@ run "reject_domain_with_path" {
   command = plan
   variables { domain = "https://fantasybuilder.es/auth" }
   expect_failures = [var.domain]
+}
+
+run "main_ci_publisher_has_scoped_access" {
+  command = plan
+  variables {
+    github_actions = {
+      repository    = "example/fantasybuilder"
+      repository_id = "123456789"
+    }
+  }
+  assert {
+    condition     = google_artifact_registry_repository_iam_member.image_writer[0].role == "roles/artifactregistry.writer" && google_service_account_iam_member.github_publisher[0].role == "roles/iam.workloadIdentityUser"
+    error_message = "CI must use federation and repository-scoped writer access."
+  }
+  assert {
+    condition = alltrue([for restriction in [
+      "assertion.repository_id == '123456789'",
+      "assertion.repository == 'example/fantasybuilder'",
+      "assertion.ref == 'refs/heads/main'",
+      "assertion.event_name == 'push'",
+      "assertion.workflow_ref == 'example/fantasybuilder/.github/workflows/ci.yml@refs/heads/main'",
+    ] : strcontains(google_iam_workload_identity_pool_provider.github[0].attribute_condition, restriction)])
+    error_message = "Federation must reject forks, PRs, other branches, workflows, and recreated repositories."
+  }
+  assert {
+    condition     = contains(keys(google_project_service.required), "iamcredentials.googleapis.com") && contains(keys(google_project_service.required), "sts.googleapis.com")
+    error_message = "Enable token exchange and service-account impersonation APIs when CI is enabled."
+  }
+}
+
+run "reject_non_numeric_github_id" {
+  command = plan
+  variables {
+    github_actions = {
+      repository    = "example/fantasybuilder"
+      repository_id = "not-an-id"
+    }
+  }
+  expect_failures = [var.github_actions]
 }

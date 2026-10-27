@@ -1,13 +1,14 @@
 flowchart TB
     users["Up to 4 simultaneous users"]
     dns["Registrar DNS<br/>fantasybuilder.es → VM IPv4"]
-    ci["CI builds immutable container images"]
-    registry["Container registry<br/>bounded retention"]
+    ci["GitHub CI · tests + all 5 image builds<br/>publish only on main push after checks"]
     admin["Administration via IAP + OS Login"]
     users -. "DNS lookup" .-> dns
-    ci -.-> registry
+    ci -.->|"optional keyless publisher IAM<br/>repository writer only"| registry
 
     subgraph gcp["Google Cloud · us-central1"]
+      registry["Artifact Registry<br/>untagged cleanup after 7 days; keep 3 recent<br/>tagged releases retired manually"]
+      secrets["Secret Manager · 5 secret containers<br/>payloads uploaded separately by operator"]
       subgraph vm["One e2-small VM · 2 GiB RAM · Docker Compose"]
         caddy["Caddy · HTTPS on 80/443"]
         web["Nginx + React static files"]
@@ -39,8 +40,9 @@ flowchart TB
     end
 
     users -->|"HTTPS · fantasybuilder.es"| caddy
-    registry -.->|"pull pinned images"| vm
+    registry -.->|"operator activates pinned release"| vm
     admin -.-> vm
+    secrets -.->|"host fetches during explicit releases; scoped IAM<br/>reboots use local snapshot"| vm
     identity -->|"TLS SMTP 465"| mail["Resend<br/>verification + recovery"]
     identity --> providers["Optional Google / Facebook / Apple"]
     auth --> laligaAuth["LaLiga authentication"]
@@ -54,4 +56,4 @@ flowchart TB
     classDef ops fill:#f5f3ff,stroke:#a78bfa,color:#312e81;
     class caddy,web,identity,auth,api,scraper edge;
     class pg,redis,disk,backup data;
-    class ci,registry,admin ops;
+    class ci,registry,admin,secrets ops;

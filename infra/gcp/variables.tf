@@ -133,3 +133,20 @@ variable "budget_currency" {
     error_message = "Use an uppercase ISO currency code matching the billing account."
   }
 }
+
+variable "github_actions" {
+  description = "Optional main CI publisher. Pin both the owner/repository name and GitHub numeric repository ID."
+  type = object({
+    repository    = string
+    repository_id = string
+  })
+  default  = null
+  nullable = true
+  validation {
+    condition = var.github_actions == null ? true : (
+      can(regex("^[A-Za-z0-9_.-]+/[A-Za-z0-9_.-]+$", var.github_actions.repository)) &&
+      can(regex("^[1-9][0-9]*$", var.github_actions.repository_id))
+    )
+    error_message = "Set repository to owner/name and repository_id to its numeric GitHub ID."
+  }
+}

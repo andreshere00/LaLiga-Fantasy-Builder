@@ -10,3 +10,6 @@
 **/test-results
 **/playwright-report
 **/.coverage
+
+gha-creds-*.json
+release-images.env

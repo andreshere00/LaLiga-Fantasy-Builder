@@ -150,10 +150,22 @@ DNS is unaffected. No service-account keys are generated.
 ### Configuration, releases, and persistence
 
 Terraform creates an Artifact Registry repository, five Secret Manager secret
-containers, and root-owned deployment scripts/systemd units. Operators or CI
-upload immutable amd64 images and dotenv secret versions separately. Secret
-payloads never pass through Terraform variables, data sources, state, or instance
-metadata. Explicit releases stage configuration in root-only directories,
+containers, and root-owned deployment scripts/systemd units. Operators upload
+dotenv secret versions separately. With the optional GitHub publisher configured,
+CI builds immutable amd64 images after tests pass and publishes them only on
+pushes to `main`, once all five builds succeed. Pull requests never publish.
+Keyless federation is restricted to this repository ID/name and the main CI
+workflow; the publisher has repository writer access without VM or secret access.
+Each successful publishing run produces the five image digests as a release
+artifact. Updating runtime secret versions and activating the VM remain explicit
+operator steps; manual image publishing is also available.
+Artifact Registry cleans untagged versions older than seven days, except the three
+most recent versions of each image. Tagged releases remain until operators retire
+them; total registry storage is not automatically bounded. Keep active and needed
+rollback digests tagged.
+
+Secret payloads never pass through Terraform variables, data sources, state, or
+instance metadata. Explicit releases stage configuration in root-only directories,
 validate Compose, pull images, and wait for healthy startup before atomically
 switching the committed local snapshot. Reboots use the committed snapshot and
 cached images without contacting Secret Manager or the registry.

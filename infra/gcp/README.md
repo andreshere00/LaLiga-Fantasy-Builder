@@ -21,6 +21,7 @@ does not publish an application with development credentials.
 | Private backup bucket | Regional Standard storage, daily database dumps, lifecycle expiry after 14 days plus a 7-day soft-delete recovery window. |
 | Artifact Registry Docker repository | App images, cleanup of old untagged versions, protection for the three most recent versions. Tagged releases require deliberate cleanup. |
 | Five Secret Manager secret containers | Runtime, identity, auth, API, and scraper dotenv files; secret versions are uploaded outside Terraform. |
+| Optional GitHub publisher | Keyless federation restricted to this repository ID, `main` push events, and the CI workflow; repository-scoped image writer. |
 | Optional operator IAM | OS administrator login, Compute read access, instance-scoped IAP access, and service-account use. |
 | Optional billing budget | Project usage before credits at 50%, 90%, and 100% thresholds. Alerts do not stop spending. |
 
@@ -66,6 +67,63 @@ bucket is not intended as a Terraform-state bucket.
 
 ## 2. Build and upload images
 
+### Automatic publishing after CI on main
+
+The GitHub workflow runs checks for pull requests and pushes to `main`. Image
+builds wait for the test job. Every application image must build successfully
+before any registry login or push. Only a `push` event on `refs/heads/main`
+publishes the five checked Linux amd64 images, tagged `sha-<full commit SHA>`.
+PRs, other branches, and tags do not publish. A rerun of a main push can republish
+that commit. Registry pushes are not atomic: a failed push can leave some images
+uploaded, but the release artifact is produced only when all five succeed.
+
+Enable the optional publisher in your ignored `terraform.tfvars`:
+
+```bash
+gh api repos/andreshere00/LaLiga-Fantasy-Builder --jq '.id | tostring'
+```
+
+```hcl
+github_actions = {
+  repository    = "andreshere00/LaLiga-Fantasy-Builder"
+  repository_id = "REPLACE_WITH_THE_NUMERIC_ID_PRINTED_ABOVE"
+}
+```
+
+Apply the reviewed Terraform plan, then run:
+
+```bash
+terraform -chdir=infra/gcp output github_actions_variables
+```
+
+Copy its four values into GitHub **Settings → Secrets and variables → Actions →
+Variables** (repository variables, not secrets):
+
+| Variable | Source |
+| --- | --- |
+| `GCP_PROJECT_ID` | Existing GCP project ID. |
+| `GCP_ARTIFACT_REGISTRY` | Regional registry path, without a scheme or trailing slash. |
+| `GCP_WORKLOAD_IDENTITY_PROVIDER` | Full provider resource name including the numeric GCP project number. |
+| `GCP_IMAGE_PUBLISHER` | Dedicated publisher service-account email. |
+
+Terraform enables token-exchange APIs, creates the identity pool/provider and
+publisher service account, and grants only repository-level Artifact Registry
+writer access to that account. It does not grant VM, application-secret, or
+backup-bucket access. The provider checks the repository's numeric ID and full
+name, the push event, main ref, and `.github/workflows/ci.yml` workflow ref.
+Short-lived federated credentials replace service-account keys. Allow a few
+minutes for IAM changes to propagate before the first run.
+
+After merging to main, download the `release-images-<full commit SHA>` artifact
+from the successful Actions run. It contains `release-images.env` with only the
+five pinned image references. Merge those five entries into your private
+`runtime.env`, preserving its passwords and service tokens, upload a new runtime
+secret version, and activate the VM using the deployment helper below. The
+workflow publishes images; it does not update secrets or restart the live VM.
+No release artifact is uploaded for PRs or a failed publishing run.
+
+### Manual publishing fallback
+
 Use immutable Linux **amd64** images for this x86 VM. This matters when building
 on an Apple Silicon Mac. Run from the repository root after applying Terraform:
 
@@ -82,16 +140,20 @@ docker buildx build --platform linux/amd64 --push -t "$REGISTRY/scraping:$RELEAS
 docker buildx build --platform linux/amd64 --push -t "$REGISTRY/frontend:$RELEASE" -f frontend/Dockerfile .
 ```
 
-The image-pushing identity needs Artifact Registry writer access. Grant a CI
-principal that role on this repository when configuring automated builds; do not
-grant writer access to the VM. Source builds and checks can later run in the
-existing GitHub workflow; this module does not modify that workflow or grant
-trust to an unspecified GitHub identity.
+The identity used for manual publishing needs Artifact Registry writer access.
+The optional `github_actions` configuration grants that access only to the
+separate CI publisher. The VM retains repository reader access.
 
 Read each uploaded image's digest from the build output or Artifact Registry.
 In `runtime.env`, use `REGISTRY/service@sha256:...`, not `latest`. Keep a tag on the
 active digest so cleanup of old untagged versions cannot remove it. Retain a
 small set of known rollback tags and explicitly retire older tagged builds.
+Automatic cleanup deletes only untagged images older than seven days, except the
+three most recent versions of each image. It does not cap the number of tagged
+releases or total registry storage. After confirming a digest is neither deployed
+nor needed for rollback, remove its obsolete release tags so it can become
+eligible for cleanup. A digest used by a running VM must remain tagged even if
+it is older than the three most recent versions.
 
 ## 3. Configure application secrets
 

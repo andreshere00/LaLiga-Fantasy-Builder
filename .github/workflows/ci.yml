@@ -5,6 +5,9 @@ on:
     branches: [main]
   pull_request:
 
+permissions:
+  contents: read
+
 jobs:
   test:
     runs-on: ubuntu-latest
@@ -82,21 +85,88 @@ jobs:
         run: uv run poe test
 
   docker:
+    # Test first, then build every image before any registry authentication/push.
+    needs: test
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      id-token: write
+    env:
+      GCP_ARTIFACT_REGISTRY: ${{ vars.GCP_ARTIFACT_REGISTRY }}
     steps:
       - uses: actions/checkout@v4
 
+      - name: Check image publishing policy
+        run: python3 -m unittest discover -s infra/gcp/tests -p test_publish_images.py
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
       - name: Build identity image
-        run: docker build backend/identity
+        run: docker buildx build --platform linux/amd64 --load -t "fantasybuilder/identity:$GITHUB_SHA" backend/identity
 
       - name: Build auth image
-        run: docker build -f backend/auth/Dockerfile backend/auth
+        run: docker buildx build --platform linux/amd64 --load -t "fantasybuilder/auth:$GITHUB_SHA" backend/auth
 
       - name: Build API image
-        run: docker build -f backend/api/Dockerfile backend/api
+        run: docker buildx build --platform linux/amd64 --load -t "fantasybuilder/api:$GITHUB_SHA" backend/api
 
       - name: Build scraping image
-        run: docker build -f backend/scraping/Dockerfile backend/scraping
+        run: docker buildx build --platform linux/amd64 --load -t "fantasybuilder/scraping:$GITHUB_SHA" backend/scraping
 
       - name: Build frontend image
-        run: docker build -f frontend/Dockerfile .
+        run: docker buildx build --platform linux/amd64 --load -t "fantasybuilder/frontend:$GITHUB_SHA" -f frontend/Dockerfile .
+
+      - name: Validate publishing configuration
+        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+        env:
+          GCP_PROJECT_ID: ${{ vars.GCP_PROJECT_ID }}
+          GCP_WORKLOAD_IDENTITY_PROVIDER: ${{ vars.GCP_WORKLOAD_IDENTITY_PROVIDER }}
+          GCP_IMAGE_PUBLISHER: ${{ vars.GCP_IMAGE_PUBLISHER }}
+        run: |
+          for name in GCP_PROJECT_ID GCP_ARTIFACT_REGISTRY GCP_WORKLOAD_IDENTITY_PROVIDER GCP_IMAGE_PUBLISHER; do
+            if [ -z "${!name}" ]; then
+              echo "::error::Configure the GitHub Actions variable $name before publishing."
+              exit 1
+            fi
+          done
+          echo "REGISTRY_HOST=${GCP_ARTIFACT_REGISTRY%%/*}" >> "$GITHUB_ENV"
+
+      - name: Authenticate image publisher
+        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+        id: auth
+        uses: google-github-actions/auth@v3
+        with:
+          project_id: ${{ vars.GCP_PROJECT_ID }}
+          workload_identity_provider: ${{ vars.GCP_WORKLOAD_IDENTITY_PROVIDER }}
+          service_account: ${{ vars.GCP_IMAGE_PUBLISHER }}
+          token_format: access_token
+          create_credentials_file: false
+
+      - name: Log in to Artifact Registry
+        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+        uses: docker/login-action@v4
+        with:
+          registry: ${{ env.REGISTRY_HOST }}
+          username: oauth2accesstoken
+          password: ${{ steps.auth.outputs.access_token }}
+
+      - name: Publish the checked images
+        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+        run: bash scripts/publish-images.sh
+
+      - name: Save deployable image digests
+        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+        uses: actions/upload-artifact@v4
+        with:
+          name: release-images-${{ github.sha }}
+          path: release-images.env
+          if-no-files-found: error
+          retention-days: 7
+
+      - name: Summarize published release
+        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+        run: |
+          echo '### Published application images' >> "$GITHUB_STEP_SUMMARY"
+          echo 'Download the release-images artifact for the five pinned image references.' >> "$GITHUB_STEP_SUMMARY"
+          echo 'VM activation uses the documented deployment helper.' >> "$GITHUB_STEP_SUMMARY"

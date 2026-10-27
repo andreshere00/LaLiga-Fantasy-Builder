@@ -5,7 +5,7 @@ locals {
     "oslogin.googleapis.com", "storage.googleapis.com",
     "artifactregistry.googleapis.com", "secretmanager.googleapis.com",
     "cloudresourcemanager.googleapis.com",
-  ], var.billing_account_id == null ? [] : ["billingbudgets.googleapis.com"]))
+  ], var.github_actions == null ? [] : ["iamcredentials.googleapis.com", "sts.googleapis.com"], var.billing_account_id == null ? [] : ["billingbudgets.googleapis.com"]))
   secret_ids = { for name in ["runtime", "identity", "auth", "api", "scraping"] : name => "${var.name_prefix}-${name}-env" }
   operator_roles = {
     for pair in setproduct(var.admin_members, ["roles/compute.osAdminLogin", "roles/compute.viewer"]) :

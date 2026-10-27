@@ -137,7 +137,7 @@ the application and its databases.
 | Storage isolation | PostgreSQL identity/vault databases and roles remain separate; durable PostgreSQL and Caddy volumes. Redis stays private. |
 | Backups | Daily logical backups of both databases to a private regional Cloud Storage bucket. Bound retention; rehearse restoring them. Back up vault and identity secrets separately. |
 | Access | SSH through IAP with OS Login; restrict SSH to IAP's required source range rather than opening it to everyone. |
-| Build/release | Build immutable images in CI; pull them onto the VM. Avoid TypeScript/Python image builds competing with the app on the small host. |
+| Build/release | CI builds off-host after checks pass and publishes images only on pushes to main once optional keyless publisher IAM is configured; the VM pulls them. Operators activate releases explicitly. Clean old untagged images automatically and retire obsolete release tags manually; tagged storage is not automatically bounded. |
 | Monitoring | Container health checks, bounded Docker logs, disk/memory/OOM checks, and a billing budget. Add larger observability services only if needed. |
 
 Standard disk is chosen for low cost, not maximum database I/O. If database

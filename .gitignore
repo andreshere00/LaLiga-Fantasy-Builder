@@ -73,3 +73,7 @@ frontend/dist/
 frontend/coverage/
 frontend/test-results/
 frontend/playwright-report/
+
+# GitHub release references and temporary OIDC credentials
+release-images.env
+gha-creds-*.json

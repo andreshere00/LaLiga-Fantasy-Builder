@@ -14,7 +14,7 @@ output "ssh_command" {
 }
 
 output "registry" {
-  description = "Push Linux amd64 application images here; grant the CI identity repository writer access separately."
+  description = "Push Linux amd64 application images here; optional GitHub publisher IAM is managed by github_actions."
   value       = "${var.region}-docker.pkg.dev/${var.project_id}/${google_artifact_registry_repository.app.repository_id}"
 }
 
@@ -29,4 +29,14 @@ output "backup_bucket" {
 
 output "vm_service_account" {
   value = google_service_account.vm.email
+}
+
+output "github_actions_variables" {
+  description = "Set these GitHub Actions repository variables after applying with github_actions configured."
+  value = var.github_actions == null ? {} : {
+    GCP_PROJECT_ID                 = var.project_id
+    GCP_ARTIFACT_REGISTRY          = "${var.region}-docker.pkg.dev/${var.project_id}/${google_artifact_registry_repository.app.repository_id}"
+    GCP_WORKLOAD_IDENTITY_PROVIDER = google_iam_workload_identity_pool_provider.github[0].name
+    GCP_IMAGE_PUBLISHER            = google_service_account.image_publisher[0].email
+  }
 }
