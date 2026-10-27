@@ -117,6 +117,29 @@ def test_main_unlinked_pairs_via_playwright(
     assert "pt-1" in capsys.readouterr().out
 
 
+def test_main_pair_only_connects_without_running_analysis(
+    monkeypatch: pytest.MonkeyPatch,
+    capsys: pytest.CaptureFixture[str],
+) -> None:
+    # Arrange
+    linked = {"value": False}
+    monkeypatch.setattr(cli, "login_with_playwright", lambda *_args, **_kwargs: "jwt-token")
+    monkeypatch.setattr(cli, "_connection_linked", lambda **_kwargs: linked["value"])
+
+    def pair(**_kwargs: object) -> dict[str, object]:
+        linked["value"] = True
+        return {"ok": True}
+
+    monkeypatch.setattr(cli, "pair_laliga_with_playwright", pair)
+
+    # Act
+    code = cli.main(["--pair-only", "--json"])
+
+    # Assert
+    assert code == 0
+    assert '"linked": true' in capsys.readouterr().out
+
+
 def test_main_leagues_analysis_prints_bundle(
     monkeypatch: pytest.MonkeyPatch,
     capsys: pytest.CaptureFixture[str],

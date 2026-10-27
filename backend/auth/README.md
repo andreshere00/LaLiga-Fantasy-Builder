@@ -25,6 +25,12 @@ LaLiga-backed read can prompt for interactive pairing when needed. The
 `authenticate-laliga` entry point uses this same flow. `pair-laliga --jwt ...`
 retains the independent PKCE helper. Old session/CSRF and provider-password flags
 are no longer supported.
+Run `./scripts/authenticate-laliga.sh` from the repository root to install the
+matching Playwright Chromium, sign in to the application, and pair LaLiga when
+the vault is unlinked. With explicit arguments, the wrapper passes them through;
+use `--pair-only` to request pairing without an API analysis.
+The local frontend must be running at `http://localhost:3000` for interactive
+application sign-in.
 
 LaLiga linking is separate from application login. `POST /laliga/login` is available
 only after LaLiga registers the exact HTTPS `/laliga/callback` URL for this client

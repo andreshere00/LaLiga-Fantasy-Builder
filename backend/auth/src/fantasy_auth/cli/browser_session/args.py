@@ -62,6 +62,11 @@ def parse_args(argv: list[str] | None = None) -> argparse.Namespace:
         help="Do not start LaLiga pairing when the vault is empty",
     )
     parser.add_argument(
+        "--pair-only",
+        action="store_true",
+        help="Connect LaLiga if needed without running an API analysis",
+    )
+    parser.add_argument(
         "--exports",
         action="store_true",
         help="Print the short-lived INTERNAL_JWT export",
@@ -212,7 +217,9 @@ def load_put_lineup(path: str | None) -> dict[str, Any] | None:
 
 def needs_laliga(args: argparse.Namespace) -> bool:
     """Return whether this invocation requires a linked LaLiga vault."""
-    return bool(args.player_id or (args.flow and args.flow != "standings-analysis"))
+    return bool(
+        args.pair_only or args.player_id or (args.flow and args.flow != "standings-analysis")
+    )
 
 
 def _positive_competition(value: str) -> int:

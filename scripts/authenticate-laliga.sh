@@ -17,5 +17,11 @@ if [[ ! -f "${AUTH_DIR}/.env" ]]; then
 fi
 
 cd "${AUTH_DIR}"
+# This wrapper uses backend/auth/.venv even when the caller activated the root venv.
+unset VIRTUAL_ENV
 uv sync --all-extras
+uv run playwright install chromium
+if [[ $# -eq 0 ]]; then
+    set -- --pair-only
+fi
 exec uv run authenticate-laliga "$@"
