@@ -32,7 +32,7 @@ beforeEach(() => {
 afterEach(cleanup);
 
 // ---- Happy path ---- //
-it("starts LaLiga once after session and application token are ready", async () => {
+it("starts browser linking only after the user selects it", async () => {
   const view = render(tree());
   expect(auth.connectLaliga).not.toHaveBeenCalled();
   auth.status = "unlinked"; auth.user = { userId: "alice" };
@@ -40,7 +40,9 @@ it("starts LaLiga once after session and application token are ready", async () 
   expect(auth.connectLaliga).not.toHaveBeenCalled();
   auth.accessToken = "application-token";
   view.rerender(tree());
-  await waitFor(() => expect(auth.connectLaliga).toHaveBeenCalledOnce());
+  expect(auth.connectLaliga).not.toHaveBeenCalled();
+  fireEvent.click(screen.getByRole("button", { name: "Continue to LaLiga" }));
+  expect(auth.connectLaliga).toHaveBeenCalledOnce();
   view.rerender(tree());
   expect(auth.connectLaliga).toHaveBeenCalledOnce();
 });
@@ -61,6 +63,8 @@ it("shows a returned callback error without automatically starting another autho
   expect(screen.getByRole("alert").textContent).toContain("could not be completed");
   expect(auth.connectLaliga).not.toHaveBeenCalled();
   fireEvent.click(screen.getByRole("button", { name: "Try again" }));
+  expect(auth.connectLaliga).not.toHaveBeenCalled();
+  fireEvent.click(screen.getByRole("button", { name: "Continue to LaLiga" }));
   expect(auth.connectLaliga).toHaveBeenCalledOnce();
 });
 
@@ -71,17 +75,19 @@ it("shows a failed handoff and lets the user retry", () => {
   view.rerender(tree());
   expect(screen.getByRole("alert").textContent).toContain("LaLiga sign-in could not start");
   fireEvent.click(screen.getByRole("button", { name: "Try again" }));
-  expect(auth.connectLaliga).toHaveBeenCalledTimes(2);
+  expect(auth.connectLaliga).toHaveBeenCalledOnce();
 });
 
-it("rechecks an unavailable connection and starts authorization after recovery", async () => {
+it("rechecks an unavailable connection and offers authorization after recovery", async () => {
   auth.status = "unavailable"; auth.user = { userId: "alice" }; auth.accessToken = "application-token";
   const view = render(tree());
   fireEvent.click(screen.getByRole("button", { name: "Try again" }));
   expect(auth.reload).toHaveBeenCalledOnce();
   auth.status = "unlinked";
   view.rerender(tree());
-  await waitFor(() => expect(auth.connectLaliga).toHaveBeenCalledOnce());
+  expect(auth.connectLaliga).not.toHaveBeenCalled();
+  fireEvent.click(screen.getByRole("button", { name: "Continue to LaLiga" }));
+  expect(auth.connectLaliga).toHaveBeenCalledOnce();
 });
 
 // ---- Edge cases ---- //
@@ -99,6 +105,19 @@ it("shows helper instructions and checks the connection without browser login", 
   expect(auth.connectLaliga).not.toHaveBeenCalled();
   fireEvent.click(screen.getByRole("button", { name: "Check connection" }));
   await waitFor(() => expect(auth.reload).toHaveBeenCalledOnce());
+});
+
+it("offers browser and manual linking alongside the helper", () => {
+  auth.status = "unlinked"; auth.user = { userId: "alice" }; auth.accessToken = "application-token";
+  auth.linkOptions = { browserAvailable: true, manualAvailable: true, helperAvailable: true,
+    helperPlatforms: ["macos"], userId: "alice", email: null, name: null };
+  render(tree());
+  expect(screen.getByRole("heading", { name: "Connect with the Mac helper" })).toBeTruthy();
+  expect(screen.getByRole("button", { name: "Start LaLiga sign-in" })).toBeTruthy();
+  expect(auth.connectLaliga).not.toHaveBeenCalled();
+  fireEvent.click(screen.getByRole("button", { name: "Continue to LaLiga" }));
+  expect(auth.connectLaliga).toHaveBeenCalledOnce();
+  expect(auth.startManualLink).not.toHaveBeenCalled();
 });
 
 it("starts manual linking only after a click and submits the pasted callback", async () => {

@@ -63,6 +63,8 @@
 .auth-page p { overflow-wrap:anywhere; }
 .auth-continue-actions { display:grid; gap:12px; margin-top:24px; }
 .auth-connection-guide { display:grid; gap:12px; font-size:14px; line-height:1.6; }
+.auth-connection-guide + .auth-connection-guide { margin-top:24px; padding-top:24px; border-top:1px solid var(--fb-line); }
+.auth-connection-guide h2 { margin:0; font-size:18px; line-height:1.3; }
 .auth-connection-guide p { margin:0; }
 .auth-connection-guide .fb-button { justify-self:start; }
 .auth-helper-command { display:block; overflow-wrap:anywhere; padding:12px; border:1px solid var(--fb-line); background:var(--fb-subtle); }

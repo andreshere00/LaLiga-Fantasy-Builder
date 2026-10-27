@@ -14,7 +14,6 @@ export function ConnectLaligaPage() {
   const navigate = useNavigate();
   const { search } = useLocation();
   const callbackFailed = new URLSearchParams(search).get("error") === "laliga_link_failed";
-  const startedFor = useRef<string | null>(null);
   const checking = useRef(false);
   const [checkingConnection, setCheckingConnection] = useState(false);
   const [checkError, setCheckError] = useState(false);
@@ -90,11 +89,7 @@ export function ConnectLaligaPage() {
       void navigate("/", { replace: true });
       return;
     }
-    if (browser && !helper && !callbackFailed && (status === "unlinked" || status === "needs-reauth") && user && accessToken && startedFor.current !== user.userId) {
-      startedFor.current = user.userId;
-      connectLaliga();
-    }
-  }, [status, user, accessToken, navigate, connectLaliga, callbackFailed, browser, helper]);
+  }, [status, navigate]);
 
   const checkConnection = useCallback(async () => {
     if (checking.current) return;
@@ -106,7 +101,8 @@ export function ConnectLaligaPage() {
     finally { checking.current = false; setCheckingConnection(false); }
   }, [reload]);
   useEffect(() => {
-    if (!helper || !userId || (status !== "unlinked" && status !== "needs-reauth")) return;
+    if (!helper || !userId || manualExpiry !== null ||
+      (status !== "unlinked" && status !== "needs-reauth")) return;
     const checkWhenVisible = () => {
       if (document.visibilityState === "visible") void checkConnection();
     };
@@ -116,7 +112,7 @@ export function ConnectLaligaPage() {
       window.removeEventListener("focus", checkWhenVisible);
       document.removeEventListener("visibilitychange", checkWhenVisible);
     };
-  }, [helper, userId, status, checkConnection]);
+  }, [helper, userId, manualExpiry, status, checkConnection]);
   const signedOut = status === "signed-out";
   const failed = status === "unavailable" || !!notice || callbackFailed;
   const waiting = status === "loading" || (!!accessToken && !linkOptions && !linkOptionsError);
@@ -131,6 +127,7 @@ export function ConnectLaligaPage() {
     {!signedOut && waiting && <PulseRing label="Checking your session…" />}
     {!signedOut && !waiting && linkOptionsError && <div className="auth-feedback auth-feedback--error" role="alert">Linking methods could not be checked. Try again.</div>}
     {!signedOut && !waiting && !linkOptionsError && helper && <div className="auth-connection-guide">
+      <h2>Connect with the Mac helper</h2>
       <p>On a Mac, get the helper from the <a href="https://github.com/andreshere00/LaLiga-Fantasy-Builder">Fantasy Builder repository</a>, then run this command in its folder. Sign in with the same Fantasy Builder account. The helper will guide you through LaLiga authorization.</p>
       {isMac ? <><code className="auth-helper-command">{helperCommand}</code><Button onClick={() => { void navigator.clipboard.writeText(helperCommand).then(() => setCopied(true)); }}>{copied ? "Copied" : "Copy command"}</Button></> : <p>This helper currently supports macOS. Open this page on your Mac to connect; you can use the app here afterward.</p>}
       <p>This page checks your connection when you return to it after signing in to LaLiga.</p>
@@ -138,7 +135,13 @@ export function ConnectLaligaPage() {
       <Button onClick={() => { void checkConnection(); }} disabled={checkingConnection}>{checkingConnection ? "Checking…" : "Check connection"}</Button>
       {status === "needs-reauth" && <p>Your LaLiga connection needs renewal. Run the helper again.</p>}
     </div>}
-    {!signedOut && !waiting && !linkOptionsError && !helper && browser && !failed && <PulseRing label="Opening LaLiga…" />}
+    {!signedOut && !waiting && !linkOptionsError && browser &&
+      (status === "unlinked" || status === "needs-reauth") && !failed &&
+      <div className="auth-connection-guide">
+        <h2>Connect through LaLiga</h2>
+        <p>Continue in the LaLiga website and return here after authorization.</p>
+        <Button onClick={connectLaliga}>Continue to LaLiga</Button>
+      </div>}
     {!signedOut && !waiting && !linkOptionsError && manual && (status === "unlinked" || status === "needs-reauth") && <div className="auth-connection-guide">
       <h2>Connect from a desktop browser</h2>
       <p>This method needs no installation. You will sign in to LaLiga in another tab and copy one return URL from your browser’s Network tools. Keep this tab open.</p>
@@ -168,7 +171,7 @@ export function ConnectLaligaPage() {
     <div className="auth-continue-actions">
       {signedOut ? <Link className={buttonVariants()} to="/sign-in">Sign in</Link>
         : failed || linkOptionsError ? <Button onClick={() => {
-          if (callbackFailed) { startedFor.current = null; void navigate("/connect-laliga", { replace: true }); }
+          if (callbackFailed) void navigate("/connect-laliga", { replace: true });
           else if (status === "unavailable" || linkOptionsError) void checkConnection();
           else if (browser) connectLaliga();
         }}>Try again</Button> : null}

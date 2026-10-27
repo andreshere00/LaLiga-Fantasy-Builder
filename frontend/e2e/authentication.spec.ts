@@ -148,8 +148,11 @@ for (const provider of ["google", "facebook", "apple", "username"]) {
       await page.getByRole("button", { name: `Continue with ${label}` }).click();
     }
     if (provider === "facebook") {
+      await page.getByRole("button", { name: "Continue to LaLiga" }).click();
       await expect(page.getByRole("alert").last()).toContainText("LaLiga sign-in could not start");
       await page.getByRole("button", { name: "Try again", exact: true }).click();
+    } else {
+      await page.getByRole("button", { name: "Continue to LaLiga" }).click();
     }
     await expect(page).toHaveURL(/https:\/\/login\.laliga\.es\/authorize\?/);
     await expect(page.getByRole("heading", { name: "LaLiga authorization fixture" })).toBeVisible();
