@@ -7,7 +7,6 @@ directly and keeps the internal JWT in memory only.
 
 - System map: [Architecture](architecture.md)
 - HTTP routes the UI calls: [API overview](api/README.md)
-- Completed visual migration: [Design-system migration record](frontend-design-system-migration-plan.md)
 
 ## Visual system and screenshots
 
@@ -77,107 +76,51 @@ or close-button dismissal until a result is available. Closing an idle dialog
 restores focus to its originating control. Date-range editing still uses an
 explicit Apply/Cancel workflow.
 
-Automated browser checks and documentation screenshots use fictional,
-deterministic account data. Screenshot assets live under
-[`docs/images/screenshots/`](images/screenshots/). Keep updated screenshots and
-their captions in the same commit.
+Automated browser checks use fictional, deterministic account data. The ten
+product captures below come from a signed-in browser session with real league and
+player data. Screenshot assets live under [`docs/images/screenshots/`](images/screenshots/).
+Keep captions and screenshots in the same change.
 
 ### Product captures
 
-All 23 captures were refreshed on 23 October 2026 (Europe/Madrid) from the current
-React UI using mocked APIs. Player names, balances, offers, results, standings,
-and forecasts are illustrative fixtures, not live account or provider values.
-Player silhouettes are the application's normal fallback for these fictional
-players. Desktop captures use a 1440 × 1000 CSS-pixel viewport (up to 2400 pixels tall for
-expanded builder panels); mobile captures use
-390 × 844. Component captures include the whole panel, and the full lineup image
-includes content below the viewport. The gallery is also embedded in the
-[project README](../README.md#screenshots).
+Captured on 27 October 2026 (Europe/Madrid) from the running local React app.
+Each image shows the actual browser-rendered interface and live API data at capture
+time, including the account's league, lineup, market, and player profiles. Values,
+standings, availability, and market listings may change. The browser chrome was
+cropped away and the application viewport was reduced to 1512 × 760 pixels for
+documentation. The [project README](../README.md#screenshots) contains the same gallery.
+
+#### Light theme
+
+![Live lineup and squad in light theme](images/screenshots/lineup-live-light.jpg)
+
+![Live market listings in light theme](images/screenshots/market-live-light.jpg)
+
+![Live player catalog in light theme](images/screenshots/players-live-light.jpg)
+
+![Ionut Radu profile in light theme](images/screenshots/details-ionut-radu-live-light.jpg)
+
+![Lineup builder with the live squad in light theme](images/screenshots/lineup-builder-live-light.jpg)
+
+#### Dark theme
+
+![Live lineup and squad in dark theme](images/screenshots/lineup-live-dark.jpg)
+
+![Live market listings in dark theme](images/screenshots/market-live-dark.jpg)
+
+![Live player catalog in dark theme](images/screenshots/players-live-dark.jpg)
+
+![Lamine Yamal profile in dark theme](images/screenshots/details-lamine-yamal-live-dark.jpg)
+
+![Lineup builder with the live squad in dark theme](images/screenshots/lineup-builder-live-dark.jpg)
 
 #### Refreshing screenshots
 
-From `frontend/`, install the browser once and regenerate the complete gallery:
-
-```bash
-bunx playwright install chromium
-bun run screenshots:docs
-```
-
-The opt-in [capture suite](../frontend/e2e/docs-screenshots.spec.ts) writes the
-existing 23 image paths. Normal browser tests skip this suite. It waits for fonts
-and images, serves club badges from local fixtures, and blocks external traffic
-through the shared browser fixtures. The fixture clock is fixed to 12 October
-2026 so countdowns and dates remain repeatable. No live bids, trades, or lineup
-saves are submitted. The final check produces a contact sheet in Playwright’s test output for visual
-review. Review the resulting images and commit them with any caption updates.
-
-#### Lineup
-
-Light and dark overviews show centered lineup controls and a sample 4-3-3
-starting XI. The full-page view includes the squad, manager ranking, matchweek
-fixtures, and the full-width LALIGA standings at the bottom of the application.
-
-![Current lineup and upcoming fixtures with weather, light theme](images/screenshots/lineup-current-light.jpg)
-
-![Current lineup and upcoming fixtures with weather, dark theme](images/screenshots/lineup-current-dark.jpg)
-
-![Full lineup page with the 4-3-3 pitch, squad, manager ranking, and LALIGA standings](images/screenshots/lineup-current-squad.jpg)
-
-The builder groups player sources, trade permissions, optional player locks, and formations:
-
-![Lineup builder player scope, trade permissions, and mandatory players](images/screenshots/lineup-builder-top.png)
-
-Choose which player sources and trade recommendations the builder may consider.
-Mandatory selections must appear in the starting XI; leaving formation
-preferences empty permits all supported formations.
-
-![Lineup builder mandatory players and formation preferences](images/screenshots/lineup-builder-options.png)
-
-Results show recommendation notes and counts for **Only current squad** and
-**Squad with external players**. Each recommendation includes a pitch preview,
-player scores, and an expandable whole-squad projection with cash, squad size,
-value, pending bid slots, deadlines, and the transaction plan. **Use as draft**
-prepares local changes; building does not buy, sell, or save players.
-
-![Lineup builder recommendation notes and result filters](images/screenshots/lineup-builder-results.png)
-
-![Recommended 4-3-3 starting XI with individual player scores](images/screenshots/lineup-builder-pitch.png)
-
-![Projected cash, retained squad, deadlines, and transaction plan](images/screenshots/lineup-builder-projection.png)
-
-![Lineup player actions](images/screenshots/lineup-player-actions.png)
-
-#### Market and player catalog
-
-![Market board in dark mode with Offers, My bids, and available balance](images/screenshots/market-board.png)
-
-![Hire player dialog with bid limits and amount controls](images/screenshots/market-hire-dialog.png)
-
-![Market offers panel with amounts, expiry countdowns, and accept or reject actions](images/screenshots/market-offers.png)
-
-![Players catalog in dark mode with form, release clauses, owners, and bookmarks](images/screenshots/players-catalog.png)
-
-Bid management and responsive mobile layouts:
-
-![My bids and projected spending](images/screenshots/market-bids.png)
-
-![Market in dark mode on mobile](images/screenshots/market-mobile-dark.png)
-
-![Mobile Players catalog, dark theme](images/screenshots/players-mobile-dark.png)
-
-#### Player profile
-
-![Demo player profile with availability, per-match averages, and Fantasy indicators](images/screenshots/player-profile-overview.png)
-
-![Last-five performance chart with club badges, summary metrics, and fixture details](images/screenshots/player-fixture-stats.png)
-
-![Latest player news and injury history with independent pagination](images/screenshots/player-fantasy-data.png)
-
-![Previous and upcoming matches](images/screenshots/player-matches.png)
-
-![Player market-value chart](images/screenshots/player-market-value.png)
-
-![Per-match averages details](images/screenshots/player-averages-details.png)
+Open a signed-in local application session, select the intended league, and visit
+`/`, `/market`, `/players`, and each player's profile. Capture both themes and the
+builder setup dialog directly from the browser. Check that images and data have
+loaded, and review the ten resulting images together before updating captions.
+The builder setup view is read-only; no build, bid, trade, or lineup save is needed.
 
 ## Running locally
 
@@ -240,14 +183,8 @@ scores, or lineup editing. A forecast already received before kickoff may
 remain during play as **Saved kickoff forecast**, with its original timestamp;
 it is not observed current weather. Finished matches omit weather.
 
-The [lineup gallery above](#lineup) includes the fixture panel. The expanded
-forecast below uses deterministic weather data to demonstrate rain probability,
-wind, and retrieval time:
-
-![Expanded sample kickoff forecast with rain, wind, and retrieval time](images/screenshots/lineup-current-forecast.jpg)
-
-See the [implementation record](frontend-fixture-panel-implementation-plan.md)
-for behavior and validation details.
+The [product gallery above](#product-captures) includes the fixture panel.
+See the [calendar API guide](api/calendar/README.md) for provider behavior.
 
 ### Player detail widgets
 
@@ -500,7 +437,7 @@ Code: `frontend/src/features/lineup/`.
   refresh button can request data earlier. Source-update and retrieval times
   are labeled separately. Provider failures offer retry inside the widget,
   preserve any previous table, and do not block the lineup. See the
-  [standings implementation record](frontend-standings-implementation-plan.md).
+  [standings API guide](api/standings/README.md).
   The default `laliga-fixtures` source computes scores and form from completed
   public fixtures and verifies the table against the private official scraper.
   The optional API-Football source's `standings_plan_unavailable` response explains that the provider does

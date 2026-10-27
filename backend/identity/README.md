@@ -120,4 +120,4 @@ JWT/JWKS fixture. Run `tests/verify_python.py` in each Python service's environm
 to prove actual framework-token compatibility. CI also builds the identity image.
 
 Real Google/Facebook/Apple login, Apple HTTPS/form callback cookies and production
-mail deliverability require the [staging checklist](../../docs/authentication/better-auth-cutover.md).
+mail deliverability require the [staging checklist](../../docs/authentication/release-checks.md).

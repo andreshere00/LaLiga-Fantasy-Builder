@@ -9,6 +9,14 @@ and market history, optional OpenWeather) live under `/players/{player_id}/stats
 The UI should prefer **`/stats/detail`** over client-side `--segment all`.
 See the [scraping service](../../scraping/README.md) for scraper behavior.
 
+The live [catalog](../../frontend.md#product-captures) and player profiles were
+captured in both themes on 27 October 2026. The light profile shows Ionut Radu;
+the dark profile shows Lamine Yamal.
+
+![Ionut Radu profile in light theme](../../images/screenshots/details-ionut-radu-live-light.jpg)
+
+![Lamine Yamal profile in dark theme](../../images/screenshots/details-lamine-yamal-live-dark.jpg)
+
 ## Routes
 
 | Method | Path | Upstream | Auth | Response model |

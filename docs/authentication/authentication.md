@@ -137,4 +137,4 @@ both `X-Service-Token` and the user's JWT. LaLiga tokens never reach the browser
 Fantasy API storage.
 
 See [endpoints](endpoints.md), [identity setup](../../backend/identity/README.md),
-and the [cutover runbook](better-auth-cutover.md).
+and the [release checks](release-checks.md).

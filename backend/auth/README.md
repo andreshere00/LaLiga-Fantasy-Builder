@@ -44,5 +44,5 @@ for authentication validation.
 
 See [authentication](../../docs/authentication/authentication.md),
 [endpoints](../../docs/authentication/endpoints.md),
-[cutover](../../docs/authentication/better-auth-cutover.md), and
+[release checks](../../docs/authentication/release-checks.md), and
 [OpenAPI](openapi.json).

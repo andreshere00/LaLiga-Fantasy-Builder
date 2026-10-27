@@ -289,7 +289,7 @@ contains `manifest.json` using
 an administrator with object-read access, and restore each with `pg_restore` to
 its corresponding database before starting the application. Do not restore over
 live writes. Full provider/recovery checks remain in the
-[release runbook](../../docs/authentication/better-auth-cutover.md).
+[release runbook](../../docs/authentication/release-checks.md).
 
 VM deletion protection defaults to true. The separate disk additionally has
 `prevent_destroy`, secrets have deletion protection, and a non-empty backup

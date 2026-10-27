@@ -45,7 +45,7 @@ forwards whatever the client supplies.
   the league id, squad-entry id, and shield body. `fantasy-browser-session
   buyout-analysis` is **read-only** (shield status only; no pay, increase, or
   activate in automated flows).
-- **Frontend:** the [market screen](../frontend.md#market-screen) calls
+- **Frontend:** the [market screen](../../frontend.md#market-screen) calls
   `POST .../pay` after confirmation when a clause is unlocked. Lock countdowns
   use `buyoutClauseLockedEndTime` on market `playerTeam` or, when missing, on
   the seller’s `GET /leagues/{id}/teams/{team_id}` roster entry. No automated

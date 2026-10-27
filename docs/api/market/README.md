@@ -63,7 +63,7 @@ array, null, and nested `market` cases in `tests/test_market.py`.
 
 ## Frontend integration
 
-The [market screen](../frontend.md#market-screen) uses this domain for listings,
+The [market screen](../../frontend.md#market-screen) uses this domain for listings,
 `userBids`, bid mutations (`POST` / `PUT` / `DELETE` on `…/bids`), and a received-offer
 notification panel using the existing squad-entry offer read and accept/reject routes.
 `MarketOffer` declares optional bidder, listing, date and `isFromMarket`
@@ -72,9 +72,11 @@ behaviour (eligibility, bidded state, tooltips, pending-bid cache) is documented
 there — not duplicated here. Automated `fantasy-market` and browser-session
 flows remain **read-only**.
 
-Current market UI with deterministic demo data (refreshed 23 October 2026):
+Market UI captured from a signed-in application session on 27 October 2026:
 
-![Market UI — listings table](../../images/screenshots/market-board.png)
+![Live market listings in light theme](../../images/screenshots/market-live-light.jpg)
+
+![Live market listings in dark theme](../../images/screenshots/market-live-dark.jpg)
 
 ## Identifiers
 
