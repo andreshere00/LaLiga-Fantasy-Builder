@@ -105,7 +105,7 @@ def _create_pairing(
 ) -> dict[str, str] | None:
     """Create a challenge for the verified Better Auth subject."""
     url = f"{api_base.rstrip('/')}/laliga/pairings"
-    with httpx.Client(timeout=30.0) as client:
+    with httpx.Client(timeout=30.0, follow_redirects=False) as client:
         response = client.post(url, headers={"Authorization": f"Bearer {jwt}"})
     if response.status_code == 401:
         print("Session expired. Run fantasy-browser-session again.", file=sys.stderr)

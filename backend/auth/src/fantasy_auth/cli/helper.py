@@ -138,7 +138,7 @@ def complete_pairing_from_callback(
         )
     parsed = _parse_callback(callback, expected_state=expected_state)
     if parsed.get("error"):
-        raise PairingHelperError(f"B2C error: {parsed['error']}")
+        raise PairingHelperError("LaLiga authorization was cancelled or rejected")
     code = parsed.get("code")
     if not code:
         raise PairingHelperError("Callback missing code")
@@ -152,8 +152,8 @@ def complete_pairing_from_callback(
                 redirect_uri=redirect_uri,
             )
         )
-    except Exception as exc:
-        raise PairingHelperError(f"Token exchange failed: {exc}") from exc
+    except Exception:
+        raise PairingHelperError("LaLiga token exchange failed; start a fresh connection") from None
 
     token_response = {
         "access_token": bundle.access_token,
@@ -177,9 +177,18 @@ def complete_pairing_from_callback(
     except ValidationError:
         raise PairingHelperError("Pairing request had an invalid shape") from None
     print("Completing pairing with auth service...", file=sys.stderr)
-    with httpx.Client(timeout=30.0) as client:
-        response = client.post(complete_url, json=payload)
+    try:
+        with httpx.Client(timeout=30.0, follow_redirects=False) as client:
+            response = client.post(complete_url, json=payload)
+    except httpx.HTTPError:
+        raise PairingHelperError(
+            "Pairing completion is uncertain. Check the website connection before retrying."
+        ) from None
     if not response.is_success:
+        if response.status_code >= 500:
+            raise PairingHelperError(
+                "Pairing completion is uncertain. Check the website connection before retrying."
+            )
         raise PairingHelperError(
             f"Complete failed: HTTP {response.status_code}",
         )

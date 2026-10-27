@@ -1,7 +1,7 @@
 import { z } from "zod";
 import { authClient } from "./auth-client";
-import { browserLoginResponseSchema, laligaConnectionSchema } from "./schemas";
-import type { AccessToken, LaligaConnection } from "./types";
+import { browserLoginResponseSchema, laligaConnectionSchema, laligaLinkOptionsSchema } from "./schemas";
+import type { AccessToken, LaligaConnection, LaligaLinkOptions } from "./types";
 import { MemoryTokenStore } from "./tokenStore";
 
 export const LOGIN_PATH = "/sign-in";
@@ -46,6 +46,10 @@ export class AuthClient {
   async connection(options: AuthRequestOptions = {}): Promise<LaligaConnection> {
     const response = await this.request("/laliga/connection", "GET", options);
     return laligaConnectionSchema.parse(await response.json());
+  }
+  async linkOptions(options: AuthRequestOptions = {}): Promise<LaligaLinkOptions> {
+    const response = await this.request("/laliga/link-options", "GET", options);
+    return laligaLinkOptionsSchema.parse(await response.json());
   }
   async startLaligaLogin(options: AuthRequestOptions = {}): Promise<string> {
     const response = await this.request(LALIGA_LOGIN_PATH, "POST", options);

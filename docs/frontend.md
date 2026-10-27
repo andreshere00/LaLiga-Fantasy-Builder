@@ -380,11 +380,14 @@ The screen uses the shared square controls, coral primary action and both themes
 
 Social callbacks and successful credential sign-in continue to `/connect-laliga`.
 That route waits for a verified application session/JWT, checks the connection,
-returns connected users to the lineup, and starts the existing LaLiga authorization
-once for an unlinked user. Failures offer retry or public player browsing. Provider
-tokens are not passed to LaLiga; its own authorization code and PKCE flow grants
-Fantasy access. Direct social providers need their own configured credentials;
-the LaLiga SSO browser flow is unavailable pending an approved web client and callback.
+and returns connected users to the lineup. It reads owner-scoped
+`/laliga/link-options`: an enabled helper shows macOS instructions and a
+manual **Check connection** action; a registered browser callback starts the
+existing authorization; neither method shows an unavailable state. A failed
+capability lookup stays distinct from unavailable configuration. Provider
+tokens are not passed to the web app. Direct social providers need their own
+configured credentials; LaLiga SSO remains unavailable pending an approved
+web client and callback.
 
 ## Shared building blocks
 

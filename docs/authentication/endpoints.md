@@ -25,6 +25,7 @@ are provided by its pinned plugins and are separate from Python OpenAPI.
 | POST | `/auth/link-social` | Recent session plus provider proof |
 | POST | `/auth/unlink-account` | Recent session; requires another usable method |
 | POST | `/laliga/login` | Application JWT; sets the `lfb_laliga_bind` callback-binding cookie; `{authorize_url}` when a registered HTTPS callback is configured, otherwise 503 `browser_unavailable` |
+| GET | `/laliga/link-options` | Application JWT; enabled browser/helper methods and verified application account, without credentials |
 | GET | `/laliga/callback` | Registered HTTPS authorization callback; one-time state/PKCE proof and matching binding cookie, then fixed frontend redirect |
 | GET/DELETE | `/laliga/connection` | Application JWT; connection status / unlink |
 | POST | `/laliga/pairings` | Application JWT; one-time helper challenge |

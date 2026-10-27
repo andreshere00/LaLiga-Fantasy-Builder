@@ -91,6 +91,15 @@ const laligaConnectionShape = z.strictObject({
 
 export const laligaConnectionSchema = wireObject(laligaConnectionShape);
 
+export const laligaLinkOptionsSchema = wireObject(z.strictObject({
+  browserAvailable: z.boolean(),
+  helperAvailable: z.boolean(),
+  helperPlatforms: z.array(z.enum(["macos"])),
+  userId: z.string().min(1),
+  email: z.string().nullable(),
+  name: z.string().nullable(),
+}));
+
 export const okResponseSchema = wireObject(z.strictObject({ ok: z.literal(true) }));
 export const authErrorSchema = wireObject(
   z.strictObject({ error: z.string(), detail: z.string().nullable().optional() }),
@@ -162,6 +171,9 @@ export function authResponseSchema(method: string, path: string): z.ZodType {
   if (normalizedMethod === "GET" && path === "/laliga/connection") {
     return laligaConnectionSchema;
   }
+  if (normalizedMethod === "GET" && path === "/laliga/link-options") {
+    return laligaLinkOptionsSchema;
+  }
   if (normalizedMethod === "DELETE" && path === "/laliga/connection") {
     return okResponseSchema;
   }
@@ -232,3 +244,4 @@ export type SessionUser = z.infer<typeof sessionUserSchema>;
 export type SessionView = z.infer<typeof sessionViewSchema>;
 export type AccessToken = z.infer<typeof accessTokenSchema>;
 export type LaligaConnection = z.infer<typeof laligaConnectionSchema>;
+export type LaligaLinkOptions = z.infer<typeof laligaLinkOptionsSchema>;

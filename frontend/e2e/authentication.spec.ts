@@ -123,6 +123,10 @@ for (const provider of ["google", "facebook", "apple", "username"]) {
       }
       if (url.pathname === "/auth/token") return route.fulfill({ json: { token: applicationToken } });
       if (url.pathname === "/laliga/connection") return route.fulfill({ json: { linked: false, needs_reauth: false, manager_id: null, manager_name: null, avatar: null } });
+      if (url.pathname === "/laliga/link-options") return route.fulfill({ json: {
+        browser_available: true, helper_available: false, helper_platforms: [],
+        user_id: "alice", email: "alice@example.test", name: "Alice Fixture",
+      } });
       if (url.pathname === "/laliga/login") {
         expect(request.method()).toBe("POST");
         expect(request.headers().authorization).toBe(`Bearer ${applicationToken}`);
@@ -153,6 +157,42 @@ for (const provider of ["google", "facebook", "apple", "username"]) {
     expect(errors).toEqual([]);
   });
 }
+
+test("helper mode waits for an owner-scoped connection check", async ({ page }) => {
+  const origin = "http://127.0.0.1:3100";
+  const iat = Math.floor(Date.now() / 1000);
+  const token = `fixture.${Buffer.from(JSON.stringify({ sub: "alice", iat, exp: iat + 900 })).toString("base64url")}.signature`;
+  let linked = false;
+  let browserStarts = 0;
+  await page.route("**/*", route => {
+    const url = new URL(route.request().url());
+    if (url.origin !== origin) return route.abort();
+    if (url.pathname === "/auth/get-session") return route.fulfill({ json: {
+      user: { id: "alice", name: "Alice Fixture", email: "alice@example.test" },
+      session: { id: "alice-session", userId: "alice" },
+    } });
+    if (url.pathname === "/auth/token") return route.fulfill({ json: { token } });
+    if (url.pathname === "/laliga/link-options") return route.fulfill({ json: {
+      browser_available: false, helper_available: true, helper_platforms: ["macos"],
+      user_id: "alice", email: "alice@example.test", name: "Alice Fixture",
+    } });
+    if (url.pathname === "/laliga/connection") return route.fulfill({ json: {
+      linked, needs_reauth: false, manager_id: linked ? "manager" : null,
+      manager_name: linked ? "Manager" : null, avatar: null,
+    } });
+    if (url.pathname === "/laliga/login") { browserStarts++; return route.fulfill({ status: 500 }); }
+    if (url.pathname.startsWith("/api/")) return route.fulfill({ json: [] });
+    return route.continue();
+  });
+  await page.goto("/connect-laliga");
+  await expect(page.getByText("alice@example.test", { exact: false })).toBeVisible();
+  await expect(page.getByRole("button", { name: "Check connection" })).toBeVisible();
+  expect(browserStarts).toBe(0);
+  linked = true;
+  await page.getByRole("button", { name: "Check connection" }).click();
+  await expect(page).toHaveURL(origin + "/");
+  expect(browserStarts).toBe(0);
+});
 
 test("unconfigured social providers are not offered as sign-in choices", async ({ page }) => {
   let socialStarts = 0;

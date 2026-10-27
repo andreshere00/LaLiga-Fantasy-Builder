@@ -28,6 +28,39 @@ def _patch_session(monkeypatch: pytest.MonkeyPatch) -> None:
 # ---- Happy path ---- #
 
 
+def test_confirm_account_uses_server_verified_owner(
+    monkeypatch: pytest.MonkeyPatch, capsys: pytest.CaptureFixture[str]
+) -> None:
+    # Arrange
+    original_client = httpx.Client
+
+    def client(*_args: object, **_kwargs: object) -> httpx.Client:
+        return original_client(
+            transport=httpx.MockTransport(
+                lambda _request: httpx.Response(
+                    200,
+                    json={
+                        "browser_available": False,
+                        "helper_available": False,
+                        "helper_platforms": [],
+                        "user_id": "alice",
+                        "email": "alice@example.test",
+                        "name": None,
+                    },
+                )
+            )
+        )
+
+    monkeypatch.setattr(cli.httpx, "Client", client)
+    monkeypatch.setattr("builtins.input", lambda _prompt: "yes")
+
+    # Act
+    cli._confirm_account("https://fantasybuilder.es", "synthetic-jwt")
+
+    # Assert
+    assert "alice@example.test" in capsys.readouterr().err
+
+
 def test_first_league_id_list_payload_returns_id() -> None:
     # Arrange / Act
     league_id = first_league_id([{"id": "42", "name": "Liga"}])
@@ -124,6 +157,7 @@ def test_main_pair_only_connects_without_running_analysis(
     # Arrange
     linked = {"value": False}
     monkeypatch.setattr(cli, "login_with_playwright", lambda *_args, **_kwargs: "jwt-token")
+    monkeypatch.setattr(cli, "_confirm_account", lambda *_args: None)
     monkeypatch.setattr(cli, "_connection_linked", lambda **_kwargs: linked["value"])
 
     def pair(**_kwargs: object) -> dict[str, object]:

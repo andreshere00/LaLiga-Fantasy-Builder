@@ -37,6 +37,12 @@ and provider configuration.
 - The proposed [cloud helper](laliga-cloud-helper-implementation-plan.md) and
   [LaLiga SSO](laliga-sso-implementation-plan.md) have their own feasibility
   gates. Do not treat either as released until verified and implemented.
+- For helper mode, first verify a consented macOS pairing against the normal
+  HTTPS origin, native handler ownership, cloud vault persistence, read-only
+  lookup and refresh. Check two application users independently before setting
+  `LALIGA_HELPER_ENABLED=true`. Keep the browser callback setting unset unless
+  its own registration has been verified. Roll back helper advertising by
+  clearing the flag; retain existing sealed connections and vault keys.
 
 ## Runtime and rollback
 

@@ -1,7 +1,10 @@
 # LaLiga linking through a local helper and the cloud backend
 
-Status: proposed, 27 October 2026. Documentation only; no runtime changes or live
-provider verification are included in this plan.
+Status: implementation in progress, 27 October 2026. The helper command,
+capability route, guided screen, tests, and documentation are implemented.
+A consented native-to-cloud trial passed with Google sign-in and read-only
+lineup access. Token refresh, service restart, second-user isolation, other
+sign-in methods, helper enablement, and deployment remain pending.
 
 ## Objective and decision
 
@@ -353,6 +356,6 @@ continue to work independently of which linking instructions the UI advertises.
 - [RFC 9700](https://www.rfc-editor.org/rfc/rfc9700.html) informs redirect, PKCE,
   replay and credential-leakage controls. Neither RFC grants provider registration.
 
-References consulted on 27 October 2026. This plan adds documentation only and
-does not install a helper, access provider accounts, change cloud resources, or
-enable the proposed capability setting.
+References consulted on 27 October 2026. The local implementation has not
+accessed provider accounts, changed cloud resources, or enabled the helper
+capability setting.

@@ -15,6 +15,7 @@ from fantasy_auth.api.schemas import (
     CompleteRedirectRequest,
     CompleteRedirectResponse,
     ConnectionStatusResponse,
+    LinkOptionsResponse,
     OkResponse,
     PairingCompleteRequest,
     PairingCompleteResponse,
@@ -27,6 +28,21 @@ router = APIRouter(tags=["laliga"])
 
 BINDING_COOKIE = "lfb_laliga_bind"
 CALLBACK_PATH = "/laliga/callback"
+
+
+@router.get("/laliga/link-options", response_model=LinkOptionsResponse)
+async def link_options(request: Request) -> LinkOptionsResponse:
+    """Describe enabled linking journeys to a verified application user."""
+    user = await get_current_user(request)
+    settings = get_container().settings
+    return LinkOptionsResponse(
+        browser_available=settings.laliga_browser_redirect_uri is not None,
+        helper_available=settings.laliga_helper_enabled,
+        helper_platforms=["macos"] if settings.laliga_helper_enabled else [],
+        user_id=user.user_id,
+        email=user.email,
+        name=user.name,
+    )
 
 
 @router.post("/laliga/pairings", response_model=PairingCreateResponse)

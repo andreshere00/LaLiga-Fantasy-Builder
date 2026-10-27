@@ -326,7 +326,7 @@ def test_capture_authredirect_goto_failure_raises(
     _wire_playwright(monkeypatch, context)
 
     # Act / Assert
-    with pytest.raises(BrowserSessionError, match="Failed to open LaLiga authorize URL"):
+    with pytest.raises(BrowserSessionError, match="Failed to open LaLiga authorization"):
         capture_authredirect_with_playwright(
             "https://login.example/authorize",
             redirect_uri=REDIRECT,

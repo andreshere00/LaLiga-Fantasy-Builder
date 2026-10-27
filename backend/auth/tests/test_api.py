@@ -79,6 +79,25 @@ def headers(user="alice"):
 
 
 # ---- Happy path ---- #
+def test_link_options_reports_configured_methods_for_verified_owner(client, container):
+    # Arrange / Act / Assert
+    response = client.get("/laliga/link-options", headers=headers())
+    assert response.status_code == 200
+    assert response.json() == {
+        "browser_available": True,
+        "helper_available": False,
+        "helper_platforms": [],
+        "user_id": "alice",
+        "email": None,
+        "name": None,
+    }
+    container.settings.laliga_helper_enabled = True
+    enabled = client.get("/laliga/link-options", headers=headers("bob"))
+    assert enabled.json()["helper_platforms"] == ["macos"]
+    assert enabled.json()["user_id"] == "bob"
+    assert client.get("/laliga/link-options").status_code == 401
+
+
 def test_pairing_browser_callback_preserves_owner_without_cookies(client, container):
     start = client.post("/laliga/login", headers=headers())
     assert start.status_code == 200

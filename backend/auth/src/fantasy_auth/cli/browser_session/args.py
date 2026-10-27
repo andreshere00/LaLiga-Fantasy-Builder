@@ -7,6 +7,7 @@ import json
 import os
 from pathlib import Path
 from typing import Any
+from urllib.parse import urlsplit
 
 from fantasy_auth.cli.browser_session.errors import BrowserSessionError
 
@@ -148,6 +149,21 @@ def validate_analysis_args(args: argparse.Namespace) -> None:
     Raises:
         BrowserSessionError: When PUT flags are incomplete or invalid.
     """
+    if getattr(args, "pair_only", False):
+        if (
+            args.flow
+            or args.player_id
+            or args.league_id
+            or args.no_pair
+            or args.headless
+            or args.jwt
+            or args.exports
+            or args.print_jwt
+        ):
+            raise BrowserSessionError(
+                "--pair-only cannot be combined with analyses, --jwt, --no-pair, or token output"
+            )
+        _validate_pair_destination(args.auth_base, args.api_base, args.origin)
     if getattr(args, "flow", None) == "lineup-builder-analysis":
         load_builder_preferences(getattr(args, "preferences_file", None))
         if args.league_id in {"YOUR_LEAGUE", "<league-id>", "ID"} or not args.league_id.strip():
@@ -181,6 +197,42 @@ def validate_analysis_args(args: argparse.Namespace) -> None:
             "For a read-only report, omit --put-lineup.",
         )
     load_put_lineup(args.put_lineup)
+
+
+def _validate_pair_destination(auth_base: str, api_base: str, origin: str) -> None:
+    """Require a fixed production origin or explicit loopback development targets."""
+    parsed = urlsplit(auth_base)
+    if (
+        parsed.username
+        or parsed.password
+        or parsed.query
+        or parsed.fragment
+        or parsed.path not in {"", "/"}
+        or parsed.scheme not in {"https", "http"}
+    ):
+        raise BrowserSessionError("Invalid pairing destination")
+    production = auth_base == "https://fantasybuilder.es"
+    local = parsed.scheme == "http" and parsed.hostname in {"localhost", "127.0.0.1"}
+    if not production and not local:
+        raise BrowserSessionError(
+            "Pairing requires the trusted HTTPS origin or loopback development"
+        )
+    expected_api = "https://fantasybuilder.es/api" if production else api_base
+    api = urlsplit(api_base)
+    if production and api_base != expected_api:
+        raise BrowserSessionError("Production API base must be https://fantasybuilder.es/api")
+    if local and (
+        api.scheme != "http"
+        or api.hostname not in {"localhost", "127.0.0.1"}
+        or api.username
+        or api.password
+        or api.query
+        or api.fragment
+        or api.path not in {"", "/", "/api"}
+    ):
+        raise BrowserSessionError("Development API base must use loopback HTTP")
+    if origin != auth_base:
+        raise BrowserSessionError("Pairing origin must match the application origin")
 
 
 def load_put_lineup(path: str | None) -> dict[str, Any] | None:

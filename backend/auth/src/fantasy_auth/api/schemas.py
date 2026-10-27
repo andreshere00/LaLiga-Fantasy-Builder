@@ -95,3 +95,14 @@ class ConnectionStatusResponse(AuthResponse):
     manager_id: StrictStr | None = None
     manager_name: StrictStr | None = None
     avatar: StrictStr | None = None
+
+
+class LinkOptionsResponse(AuthResponse):
+    """Available account-linking methods for this deployment."""
+
+    browser_available: StrictBool
+    helper_available: StrictBool
+    helper_platforms: list[StrictStr]
+    user_id: StrictStr
+    email: StrictStr | None = None
+    name: StrictStr | None = None

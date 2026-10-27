@@ -72,6 +72,28 @@
         }
       }
     },
+    "/laliga/link-options": {
+      "get": {
+        "tags": [
+          "laliga"
+        ],
+        "summary": "Link Options",
+        "description": "Describe enabled linking journeys to a verified application user.",
+        "operationId": "link_options_laliga_link_options_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/LinkOptionsResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/laliga/pairings": {
       "post": {
         "tags": [
@@ -627,6 +649,61 @@
         ],
         "title": "LaligaBearerResponse",
         "description": "Short-lived LaLiga bearer for Fantasy API calls."
+      },
+      "LinkOptionsResponse": {
+        "properties": {
+          "browser_available": {
+            "type": "boolean",
+            "title": "Browser Available"
+          },
+          "helper_available": {
+            "type": "boolean",
+            "title": "Helper Available"
+          },
+          "helper_platforms": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Helper Platforms"
+          },
+          "user_id": {
+            "type": "string",
+            "title": "User Id"
+          },
+          "email": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Email"
+          },
+          "name": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Name"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "browser_available",
+          "helper_available",
+          "helper_platforms",
+          "user_id"
+        ],
+        "title": "LinkOptionsResponse",
+        "description": "Available account-linking methods for this deployment."
       },
       "OkResponse": {
         "properties": {

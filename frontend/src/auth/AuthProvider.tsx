@@ -3,17 +3,18 @@ import { useQueryClient } from "@tanstack/react-query";
 import { authClient } from "./auth-client";
 import { AuthClient, refreshDelayMs, startLogin } from "./client";
 import { MemoryTokenStore } from "./tokenStore";
-import type { AuthStatus, SessionUser } from "./types";
+import type { AuthStatus, LaligaLinkOptions, SessionUser } from "./types";
 
 type AuthContextValue = {
   status: AuthStatus; user: SessionUser | null; managerName: string | null;
   managerAvatar: string | null; accessToken: string | null; notice: string | null;
+  linkOptions: LaligaLinkOptions | null; linkOptionsError: boolean;
   login: () => void; connectLaliga: () => void; logout: () => Promise<void>;
   reload: () => Promise<void>; forgetDeletedAccount: () => Promise<void>; markNeedsReauth: () => void;
 };
 const AuthContext = createContext<AuthContextValue | null>(null);
-const empty = { accessToken: null, managerName: null, managerAvatar: null, notice: null };
-type State = Pick<AuthContextValue, "status" | "accessToken" | "managerName" | "managerAvatar" | "notice">;
+const empty = { accessToken: null, managerName: null, managerAvatar: null, notice: null, linkOptions: null, linkOptionsError: false };
+type State = Pick<AuthContextValue, "status" | "accessToken" | "managerName" | "managerAvatar" | "notice" | "linkOptions" | "linkOptionsError">;
 
 export function AuthProvider({ children }: { children: ReactNode }) {
   const session = authClient.useSession();
@@ -47,7 +48,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     const currentGeneration = generation.current;
     const current = () => !controller.signal.aborted && currentGeneration === generation.current;
     let timer: ReturnType<typeof setTimeout> | undefined;
-    let poll: ReturnType<typeof setTimeout> | undefined;
     setActiveSessionId(sessionId);
     if (logoutToken.current?.sessionId !== sessionId) logoutToken.current = null;
     // A pending sign-out or its retry must never reacquire a token for this session.
@@ -72,13 +72,20 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         if (!current()) return;
         const status = result.needsReauth ? "needs-reauth" : result.linked ? "ready" : "unlinked";
         setState(previous => ({ ...previous, status, managerName: result.managerName, managerAvatar: result.avatar, notice: null }));
-        if (status !== "ready") poll = setTimeout(() => { void connection(); }, 3000);
       } catch {
         if (current()) setState(previous => ({ ...previous, status: "unavailable", notice: "LaLiga connection could not be checked." }));
       }
     };
-    void refresh().then(() => { if (current() && client.token()) void connection(); });
-    return () => { controller.abort(); clearTimeout(timer); clearTimeout(poll); };
+    const options = async () => {
+      try {
+        const result = await client.linkOptions({ signal: controller.signal });
+        if (current()) setState(previous => ({ ...previous, linkOptions: result, linkOptionsError: false }));
+      } catch {
+        if (current()) setState(previous => ({ ...previous, linkOptionsError: true }));
+      }
+    };
+    void refresh().then(() => { if (current() && client.token()) { void connection(); void options(); } });
+    return () => { controller.abort(); clearTimeout(timer); };
   }, [userId, sessionId, blockedSessionId, pending, revision, clear, client]);
 
   const reload = useCallback(async () => { await session.refetch(); setRevision(value => value + 1); }, [session]);

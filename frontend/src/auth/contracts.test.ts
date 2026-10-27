@@ -70,7 +70,7 @@ describe("auth endpoint contract coverage", () => {
       }
     }
 
-    expect(covered).toBe(10);
+    expect(covered).toBe(11);
   });
 
   it("session_response_maps_only_declared_wire_aliases", () => {
