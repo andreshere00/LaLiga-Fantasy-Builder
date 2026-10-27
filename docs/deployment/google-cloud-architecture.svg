@@ -1,89 +1,329 @@
-<svg xmlns="http://www.w3.org/2000/svg" width="1660" height="1250" viewBox="0 0 1660 1250" role="img" aria-labelledby="title description"><title id="title">Fantasy Builder: Google Cloud architecture for four concurrent users</title><desc id="description">One e2-small VM runs Caddy, Nginx, four backend services, PostgreSQL and Redis. Only HTTP and HTTPS ports are public. The host reads five Secret Manager secrets during explicit releases. Databases are backed up to a private Cloud Storage bucket. External providers are reached by outbound connections.</desc><defs><marker id="arrow" markerWidth="9" markerHeight="9" refX="8" refY="4.5" orient="auto-start-reverse" markerUnits="userSpaceOnUse"><path d="M0,0 L9,4.5 L0,9 Z" fill="#64748b"/></marker></defs><rect width="1660" height="1250" fill="#f8fafc"/><g font-family="Arial, Helvetica, sans-serif">
-<text x="50" y="62" font-size="37" font-weight="700" fill="#0f172a" text-anchor="start"><tspan x="50" dy="0">Fantasy Builder · Google Cloud</tspan></text>
-<text x="50" y="103" font-size="23" font-weight="400" fill="#475569" text-anchor="start"><tspan x="50" dy="0">Recommended starting point for up to four simultaneous users</tspan></text>
-<rect x="1270" y="38" width="340" height="68" rx="16" fill="#0f172a"/>
-<text x="1440" y="68" font-size="24" font-weight="700" fill="#ffffff" text-anchor="middle"><tspan x="1440" dy="0">≈ $16–20 / month</tspan></text>
-<text x="1440" y="91" font-size="14" font-weight="400" fill="#cbd5e1" text-anchor="middle"><tspan x="1440" dy="0">after trial · low usage · before tax</tspan></text>
-<rect x="50" y="160" width="250" height="100" rx="16" fill="#ffffff" stroke="#cbd5e1" stroke-width="1.6"/>
-<text x="72" y="195" font-size="22" font-weight="700" fill="#0f172a" text-anchor="start"><tspan x="72" dy="0">Browser</tspan></text>
-<text x="72" y="225" font-size="17" font-weight="400" fill="#475569" text-anchor="start"><tspan x="72" dy="0">Up to 4 signed-in users</tspan></text>
-<rect x="370" y="160" width="300" height="100" rx="16" fill="#ffffff" stroke="#cbd5e1" stroke-width="1.6"/>
-<text x="392" y="195" font-size="22" font-weight="700" fill="#0f172a" text-anchor="start"><tspan x="392" dy="0">Existing registrar DNS</tspan></text>
-<text x="392" y="225" font-size="17" font-weight="400" fill="#475569" text-anchor="start"><tspan x="392" dy="0">fantasybuilder.es → VM IP</tspan></text>
-<rect x="1080" y="160" width="530" height="100" rx="16" fill="#f5f3ff" stroke="#c4b5fd" stroke-width="1.6"/>
-<text x="1102" y="195" font-size="22" font-weight="700" fill="#0f172a" text-anchor="start"><tspan x="1102" dy="0">Build and administration</tspan></text>
-<text x="1102" y="225" font-size="15" font-weight="400" fill="#475569" text-anchor="start"><tspan x="1102" dy="0">CI: tests + builds · publish on main push only</tspan><tspan x="1102" dy="25">Keyless writer IAM · IAP + OS Login</tspan></text>
-<rect x="710" y="150" width="340" height="135" rx="16" fill="#f5f3ff" stroke="#c4b5fd" stroke-width="1.6"/>
-<text x="730" y="179" font-size="21" font-weight="700" fill="#0f172a">Secret Manager · 5 secrets</text>
-<text x="730" y="204" font-size="15" fill="#475569"><tspan x="730">Operator uploads secret payloads</tspan><tspan x="730" dy="22">Host fetches on explicit releases</tspan><tspan x="730" dy="22">Scoped IAM · local snapshot at boot</tspan></text>
-<path d="M880 285 V330" fill="none" stroke="#64748b" stroke-width="2.1" stroke-dasharray="7 6" marker-end="url(#arrow)"/>
-<path d="M300 205 H370" fill="none" stroke="#64748b" stroke-width="2.1" stroke-linejoin="round" stroke-linecap="round" stroke-dasharray="7 6" marker-end="url(#arrow)"/>
-<text x="335" y="189" font-size="14" font-weight="400" fill="#475569" text-anchor="middle"><tspan x="335" dy="0">lookup</tspan></text>
-<rect x="50" y="330" width="1210" height="780" rx="24" fill="#ffffff" stroke="#94a3b8" stroke-width="1.8"/>
-<text x="78" y="370" font-size="25" font-weight="700" fill="#0f172a" text-anchor="start"><tspan x="78" dy="0">Compute Engine · e2-small · 2 GiB RAM · us-central1</tspan></text>
-<text x="78" y="398" font-size="16" font-weight="400" fill="#475569" text-anchor="start"><tspan x="78" dy="0">Docker Compose · one instance per service · private backend connections</tspan></text>
-<path d="M175 260 V290 H25 V475 H95" fill="none" stroke="#64748b" stroke-width="2.1" stroke-linejoin="round" stroke-linecap="round"  marker-end="url(#arrow)"/>
-<text x="50" y="308" font-size="16" font-weight="400" fill="#475569" text-anchor="start"><tspan x="50" dy="0">HTTPS 443</tspan></text>
-<path d="M1190 260 V330" fill="none" stroke="#64748b" stroke-width="2.1" stroke-linejoin="round" stroke-linecap="round" stroke-dasharray="7 6" marker-end="url(#arrow)"/>
-<text x="1210" y="302" font-size="14" font-weight="400" fill="#475569" text-anchor="start"><tspan x="1210" dy="0">activate / manage</tspan></text>
-<rect x="95" y="425" width="250" height="100" rx="16" fill="#eff6ff" stroke="#93c5fd" stroke-width="1.6"/>
-<text x="117" y="460" font-size="22" font-weight="700" fill="#0f172a" text-anchor="start"><tspan x="117" dy="0">Caddy</tspan></text>
-<text x="117" y="490" font-size="17" font-weight="400" fill="#475569" text-anchor="start"><tspan x="117" dy="0">TLS + public ingress</tspan></text>
-<rect x="440" y="425" width="300" height="100" rx="16" fill="#eff6ff" stroke="#93c5fd" stroke-width="1.6"/>
-<text x="462" y="460" font-size="22" font-weight="700" fill="#0f172a" text-anchor="start"><tspan x="462" dy="0">Frontend / Nginx</tspan></text>
-<text x="462" y="490" font-size="17" font-weight="400" fill="#475569" text-anchor="start"><tspan x="462" dy="0">React static files + routing</tspan></text>
-<rect x="860" y="425" width="300" height="100" rx="16" fill="#eff6ff" stroke="#93c5fd" stroke-width="1.6"/>
-<text x="882" y="460" font-size="22" font-weight="700" fill="#0f172a" text-anchor="start"><tspan x="882" dy="0">Identity · 8003</tspan></text>
-<text x="882" y="490" font-size="17" font-weight="400" fill="#475569" text-anchor="start"><tspan x="882" dy="0">Better Auth sessions + JWTs</tspan></text>
-<path d="M345 475 H440" fill="none" stroke="#64748b" stroke-width="2.1" stroke-linejoin="round" stroke-linecap="round"  marker-end="url(#arrow)"/>
-<text x="392" y="461" font-size="14" font-weight="400" fill="#475569" text-anchor="middle"><tspan x="392" dy="0">other paths</tspan></text>
-<path d="M295 425 V412 H1010 V425" fill="none" stroke="#64748b" stroke-width="2.1" stroke-linejoin="round" stroke-linecap="round"  marker-end="url(#arrow)"/>
-<text x="800" y="403" font-size="15" font-weight="400" fill="#475569" text-anchor="middle"><tspan x="800" dy="0">/auth/*</tspan></text>
-<rect x="190" y="640" width="300" height="100" rx="16" fill="#eff6ff" stroke="#93c5fd" stroke-width="1.6"/>
-<text x="212" y="675" font-size="22" font-weight="700" fill="#0f172a" text-anchor="start"><tspan x="212" dy="0">Auth · 8000</tspan></text>
-<text x="212" y="705" font-size="17" font-weight="400" fill="#475569" text-anchor="start"><tspan x="212" dy="0">LaLiga pairing + token vault</tspan></text>
-<rect x="650" y="640" width="300" height="100" rx="16" fill="#eff6ff" stroke="#93c5fd" stroke-width="1.6"/>
-<text x="672" y="675" font-size="22" font-weight="700" fill="#0f172a" text-anchor="start"><tspan x="672" dy="0">API · 8001</tspan></text>
-<text x="672" y="705" font-size="17" font-weight="400" fill="#475569" text-anchor="start"><tspan x="672" dy="0">Fantasy features + builder</tspan></text>
-<rect x="990" y="640" width="220" height="100" rx="16" fill="#eff6ff" stroke="#93c5fd" stroke-width="1.6"/>
-<text x="1012" y="675" font-size="22" font-weight="700" fill="#0f172a" text-anchor="start"><tspan x="1012" dy="0">Scraping · 8002</tspan></text>
-<text x="1012" y="705" font-size="17" font-weight="400" fill="#475569" text-anchor="start"><tspan x="1012" dy="0">One worker + cache</tspan></text>
-<path d="M520 525 V580 H340 V640" fill="none" stroke="#64748b" stroke-width="2.1" stroke-linejoin="round" stroke-linecap="round"  marker-end="url(#arrow)"/>
-<text x="425" y="569" font-size="16" font-weight="400" fill="#475569" text-anchor="middle"><tspan x="425" dy="0">/laliga/*</tspan></text>
-<path d="M660 525 V580 H800 V640" fill="none" stroke="#64748b" stroke-width="2.1" stroke-linejoin="round" stroke-linecap="round"  marker-end="url(#arrow)"/>
-<text x="764" y="569" font-size="16" font-weight="400" fill="#475569" text-anchor="middle"><tspan x="764" dy="0">/api/*</tspan></text>
-<path d="M650 690 H490" fill="none" stroke="#64748b" stroke-width="2.1" stroke-linejoin="round" stroke-linecap="round"  marker-end="url(#arrow)"/>
-<text x="570" y="659" font-size="15" font-weight="400" fill="#475569" text-anchor="middle"><tspan x="570" dy="0">private bearer</tspan></text>
-<text x="570" y="680" font-size="15" font-weight="400" fill="#475569" text-anchor="middle"><tspan x="570" dy="0">exchange</tspan></text>
-<path d="M950 690 H990" fill="none" stroke="#64748b" stroke-width="2.1" stroke-linejoin="round" stroke-linecap="round"  marker-end="url(#arrow)"/>
-<text x="1100" y="778" font-size="14" font-weight="400" fill="#475569" text-anchor="middle"><tspan x="1100" dy="0">Private scrape calls + service token</tspan></text>
-<rect x="190" y="900" width="370" height="120" rx="16" fill="#ecfdf5" stroke="#6ee7b7" stroke-width="1.6"/>
-<text x="212" y="935" font-size="22" font-weight="700" fill="#0f172a" text-anchor="start"><tspan x="212" dy="0">PostgreSQL</tspan></text>
-<text x="212" y="965" font-size="17" font-weight="400" fill="#475569" text-anchor="start"><tspan x="212" dy="0">Identity DB + vault DB</tspan><tspan x="212" dy="25">Separate roles; durable volume</tspan></text>
-<rect x="650" y="900" width="300" height="120" rx="16" fill="#ecfdf5" stroke="#6ee7b7" stroke-width="1.6"/>
-<text x="672" y="935" font-size="22" font-weight="700" fill="#0f172a" text-anchor="start"><tspan x="672" dy="0">Redis</tspan></text>
-<text x="672" y="965" font-size="17" font-weight="400" fill="#475569" text-anchor="start"><tspan x="672" dy="0">Auth rate limiting</tspan><tspan x="672" dy="25">Private network only</tspan></text>
-<path d="M300 740 V900" fill="none" stroke="#64748b" stroke-width="2.1" stroke-linejoin="round" stroke-linecap="round"  marker-end="url(#arrow)"/>
-<text x="85" y="812" font-size="16" font-weight="400" fill="#475569" text-anchor="start"><tspan x="85" dy="0">vault, pairings,</tspan></text>
-<text x="85" y="835" font-size="16" font-weight="400" fill="#475569" text-anchor="start"><tspan x="85" dy="0">refresh locks</tspan></text>
-<path d="M420 740 V860 H800 V900" fill="none" stroke="#64748b" stroke-width="2.1" stroke-linejoin="round" stroke-linecap="round"  marker-end="url(#arrow)"/>
-<text x="665" y="847" font-size="16" font-weight="400" fill="#475569" text-anchor="middle"><tspan x="665" dy="0">rate limits</tspan></text>
-<path d="M1160 475 H1230 V875 H500 V900" fill="none" stroke="#64748b" stroke-width="2.1" stroke-linejoin="round" stroke-linecap="round"  marker-end="url(#arrow)"/>
-<text x="1060" y="863" font-size="16" font-weight="400" fill="#475569" text-anchor="middle"><tspan x="1060" dy="0">identity DB</tspan></text>
-<text x="190" y="1060" font-size="18" font-weight="400" fill="#065f46" text-anchor="start"><tspan x="190" dy="0">30 GiB pd-standard · PostgreSQL + Caddy volumes, OS and images</tspan></text>
-<text x="190" y="1086" font-size="15" font-weight="400" fill="#475569" text-anchor="start"><tspan x="190" dy="0">Identity publishes JWKS privately to Auth and API (connections omitted).</tspan></text>
-<rect x="1300" y="430" width="310" height="310" rx="16" fill="#ffffff" stroke="#cbd5e1" stroke-width="1.6"/>
-<text x="1322" y="465" font-size="22" font-weight="700" fill="#0f172a" text-anchor="start"><tspan x="1322" dy="0">External services</tspan></text>
-<text x="1322" y="495" font-size="17" font-weight="400" fill="#475569" text-anchor="start"><tspan x="1322" dy="0">Outbound HTTPS:</tspan><tspan x="1322" dy="25">LaLiga login + Fantasy API</tspan><tspan x="1322" dy="25">FutbolFantasy / standings</tspan><tspan x="1322" dy="25">Optional OpenWeather</tspan><tspan x="1322" dy="25"></tspan><tspan x="1322" dy="25">Resend SMTP · TLS 465</tspan><tspan x="1322" dy="25">Optional social providers</tspan></text>
-<path d="M1260 600 H1300" fill="none" stroke="#64748b" stroke-width="2.1" stroke-linejoin="round" stroke-linecap="round"  marker-end="url(#arrow)"/>
-<text x="1435" y="775" font-size="15" font-weight="400" fill="#475569" text-anchor="middle"><tspan x="1435" dy="0">Services connect outbound;</tspan></text>
-<text x="1435" y="798" font-size="15" font-weight="400" fill="#475569" text-anchor="middle"><tspan x="1435" dy="0">no public database ports.</tspan></text>
-<rect x="1300" y="860" width="310" height="170" rx="16" fill="#ecfdf5" stroke="#6ee7b7" stroke-width="1.6"/>
-<text x="1322" y="895" font-size="22" font-weight="700" fill="#0f172a" text-anchor="start"><tspan x="1322" dy="0">Cloud Storage</tspan></text>
-<text x="1322" y="925" font-size="17" font-weight="400" fill="#475569" text-anchor="start"><tspan x="1322" dy="0">Private backup bucket</tspan><tspan x="1322" dy="25">Daily logical DB backups</tspan><tspan x="1322" dy="25">Bounded retention</tspan><tspan x="1322" dy="25">Vault secrets backed up apart</tspan></text>
-<path d="M375 1020 V1034 H75 V1125 H1280 V945 H1300" fill="none" stroke="#64748b" stroke-width="2.1" stroke-linejoin="round" stroke-linecap="round" stroke-dasharray="7 6" marker-end="url(#arrow)"/>
-<text x="1110" y="1147" font-size="15" font-weight="400" fill="#475569" text-anchor="middle"><tspan x="1110" dy="0">daily DB backups</tspan></text>
-<text x="50" y="1165" font-size="19" font-weight="700" fill="#0f172a" text-anchor="start"><tspan x="50" dy="0">Only ports 80/443 are public. Keep identity, auth, API, scraping, PostgreSQL and Redis private.</tspan></text>
-<text x="50" y="1197" font-size="15" fill="#475569">Registry: delete untagged after 7 days; keep 3 recent per image. Tagged releases require manual retirement.</text>
-<text x="50" y="1225" font-size="17" font-weight="400" fill="#475569" text-anchor="start"><tspan x="50" dy="0">US pricing baseline · validate 2 GiB with four-user load · one VM is one failure domain · 27 October 2026</tspan></text>
+<svg xmlns="http://www.w3.org/2000/svg" width="2000" height="1730" viewBox="0 0 2000 1730" role="img" aria-labelledby="title description">
+<title id="title">Fantasy Builder — current Google Cloud architecture</title>
+<desc id="description">Project dev-fantasybuilder in us-central1. One e2-small Compute Engine VM runs Docker Compose with Caddy, frontend, identity, auth, API, scraping, PostgreSQL, and Redis. Public ports 80 and 443 only; IAP and OS Login for SSH. Google Cloud Artifact Registry, Secret Manager, Cloud Storage backups, IAM, Workload Identity Federation, and a protected persistent disk support the host. GitHub main pushes publish images; operators activate releases separately. DNS is external. This describes configured topology, not verified live application health.</desc>
+<defs>
+<marker id="web" markerWidth="9" markerHeight="9" refX="8" refY="4.5" orient="auto-start-reverse" markerUnits="userSpaceOnUse"><path d="M0 0 L9 4.5 L0 9Z" fill="#1a73e8"/></marker>
+<marker id="ops" markerWidth="9" markerHeight="9" refX="8" refY="4.5" orient="auto-start-reverse" markerUnits="userSpaceOnUse"><path d="M0 0 L9 4.5 L0 9Z" fill="#7e57c2"/></marker>
+<marker id="data" markerWidth="9" markerHeight="9" refX="8" refY="4.5" orient="auto-start-reverse" markerUnits="userSpaceOnUse"><path d="M0 0 L9 4.5 L0 9Z" fill="#188038"/></marker>
+<marker id="muted" markerWidth="9" markerHeight="9" refX="8" refY="4.5" orient="auto-start-reverse" markerUnits="userSpaceOnUse"><path d="M0 0 L9 4.5 L0 9Z" fill="#7b8794"/></marker>
+</defs><rect width="2000" height="1730" fill="#ffffff"/><g font-family="Arial, Helvetica, sans-serif">
+<text x="55" y="46" font-size="17" fill="#1a73e8" font-weight="700" text-anchor="start">
+<tspan x="55" dy="0">FANTASY BUILDER  /  CLOUD ARCHITECTURE</tspan>
+</text>
+<text x="55" y="97" font-size="38" fill="#202124" font-weight="600" text-anchor="start">
+<tspan x="55" dy="0">One host. Separate services. Controlled releases.</tspan>
+</text>
+<text x="55" y="132" font-size="20" fill="#5f6368" font-weight="400" text-anchor="start">
+<tspan x="55" dy="0">Configured topology · up to 4 concurrent users · 27 October 2026</tspan>
+</text>
+<rect x="1610" y="45" width="335" height="75" rx="12" fill="#e8f0fe" stroke="#e8f0fe" stroke-width="1.5"/>
+<text x="1633" y="75" font-size="23" fill="#1967d2" font-weight="600" text-anchor="start">
+<tspan x="1633" dy="0">dev-fantasybuilder</tspan>
+</text>
+<text x="1633" y="102" font-size="18" fill="#1967d2" font-weight="400" text-anchor="start">
+<tspan x="1633" dy="0">Region: us-central1</tspan>
+</text>
+<rect x="55" y="180" width="270" height="115" rx="12" fill="#fff" stroke="#dadce0" stroke-width="1.5"/>
+<text x="77" y="215" font-size="23" fill="#202124" font-weight="600" text-anchor="start">
+<tspan x="77" dy="0">Users / browsers</tspan>
+</text>
+<text x="77" y="246" font-size="18" fill="#3c4043" font-weight="400" text-anchor="start">
+<tspan x="77" dy="0">HTTPS application access</tspan>
+<tspan x="77" dy="25.2">Up to 4 simultaneous users</tspan>
+</text>
+<rect x="375" y="180" width="355" height="115" rx="12" fill="#fff" stroke="#dadce0" stroke-width="1.5"/>
+<text x="397" y="215" font-size="23" fill="#202124" font-weight="600" text-anchor="start">
+<tspan x="397" dy="0">Existing DNS provider</tspan>
+</text>
+<text x="397" y="246" font-size="18" fill="#3c4043" font-weight="400" text-anchor="start">
+<tspan x="397" dy="0">fantasybuilder.es</tspan>
+<tspan x="397" dy="25.2">A → 35.209.215.112 (reported)</tspan>
+</text>
+<path d="M325 237 H375" fill="none" stroke="#7b8794" stroke-width="2.2" stroke-linejoin="round" stroke-linecap="round" stroke-dasharray="7 6" marker-end="url(#muted)"/>
+<rect x="1390" y="180" width="535" height="115" rx="12" fill="#fff" stroke="#dadce0" stroke-width="1.5"/>
+<text x="1412" y="215" font-size="23" fill="#202124" font-weight="600" text-anchor="start">
+<tspan x="1412" dy="0">GitHub Actions</tspan>
+</text>
+<text x="1412" y="246" font-size="18" fill="#3c4043" font-weight="400" text-anchor="start">
+<tspan x="1412" dy="0">test → build → deploy</tspan>
+<tspan x="1412" dy="25.2">Image publishing: main push only</tspan>
+</text>
+<rect x="940" y="180" width="355" height="115" rx="12" fill="#fff" stroke="#dadce0" stroke-width="1.5"/>
+<text x="962" y="215" font-size="23" fill="#202124" font-weight="600" text-anchor="start">
+<tspan x="962" dy="0">Operator</tspan>
+</text>
+<text x="962" y="246" font-size="18" fill="#3c4043" font-weight="400" text-anchor="start">
+<tspan x="962" dy="0">Uploads five secret versions</tspan>
+<tspan x="962" dy="25.2">Runs VM deployment helper</tspan>
+</text>
+<rect x="40" y="345" width="1920" height="1120" rx="18" fill="#fafcff" stroke="#9aa0a6" stroke-width="1.5"/>
+<text x="65" y="379" font-size="16" fill="#5f6368" font-weight="700" text-anchor="start">
+<tspan x="65" dy="0">GOOGLE CLOUD PROJECT</tspan>
+</text>
+<text x="310" y="379" font-size="22" fill="#202124" font-weight="600" text-anchor="start">
+<tspan x="310" dy="0">dev-fantasybuilder</tspan>
+</text>
+<rect x="940" y="365" width="355" height="83" rx="12" fill="#fff" stroke="#dadce0" stroke-width="1.5"/>
+<image x="960" y="385" width="44" height="44" href="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIyNHB4IiBoZWlnaHQ9IjI0cHgiIHZpZXdCb3g9IjAgMCAyNCAyNCI+PGRlZnM+PHN0eWxlPi5jbHMtMXtmaWxsOiM0Mjg1ZjQ7fS5jbHMtMntmaWxsOiM2NjlkZjY7fS5jbHMtM3tmaWxsOiNhZWNiZmE7fTwvc3R5bGU+PC9kZWZzPjx0aXRsZT5JY29uXzI0cHhfSWRlbnRpdHlBd2FyZVByb3h5X0NvbG9yPC90aXRsZT48ZyBkYXRhLW5hbWU9IlByb2R1Y3QgSWNvbnMiPjxwYXRoIGNsYXNzPSJjbHMtMSIgZD0iTTExLjg1LDdhNS4xLDUuMSwwLDEsMCw1LjEsNS4xaDBBNS4xLDUuMSwwLDAsMCwxMS44NSw3Wm0wLDkuMDhhNCw0LDAsMSwxLDQtNGgwQTQsNCwwLDAsMSwxMS44NSwxNi4wOVoiLz48cGF0aCBjbGFzcz0iY2xzLTIiIGQ9Ik0xMy43NywxMi43MWEyLjA5LDIuMDksMCwwLDAtLjI4LS4yMiwzLjExLDMuMTEsMCwwLDAtMi42MS0uMjgsMi4zMSwyLjMxLDAsMCwwLS44OS40Ny44Ni44NiwwLDAsMC0uMzcuNjV2MWg0LjQ3di0uODJBMSwxLDAsMCwwLDEzLjc3LDEyLjcxWiIvPjxwYXRoIGNsYXNzPSJjbHMtMiIgZD0iTTExLjg1LDExLjUzYTEuMTYsMS4xNiwwLDEsMC0xLjE3LTEuMTVoMEExLjE3LDEuMTcsMCwwLDAsMTEuODUsMTEuNTNaIi8+PHBvbHlnb24gY2xhc3M9ImNscy0zIiBwb2ludHM9IjIwLjc4IDEwLjcyIDE5Ljc0IDEwLjcyIDIwLjUxIDExLjQ5IDE4LjMgMTEuNDkgMTguMyAxMi4zOSAyMC41MSAxMi4zOSAxOS43NCAxMy4xNyAyMC43OCAxMy4xNyAyMiAxMS45NCAyMC43OCAxMC43MiIvPjxwb2x5Z29uIGNsYXNzPSJjbHMtMiIgcG9pbnRzPSIxNy41NCA4LjUgMTguMTggOS4xNCAxOS4xNiA4LjE3IDE5LjE2IDkuMjYgMTkuODkgOC41MiAxOS44OSA2Ljc5IDE4LjE2IDYuNzkgMTcuNDMgNy41MyAxOC41MiA3LjUzIDE3LjU0IDguNSIvPjxwb2x5Z29uIGNsYXNzPSJjbHMtMiIgcG9pbnRzPSIxOS4xNiAxNS44MyAxOC4xOCAxNC44NiAxNy41NCAxNS40OSAxOC41MiAxNi40NyAxNy40MyAxNi40NyAxOC4xNiAxNy4yIDE5Ljg5IDE3LjIgMTkuODkgMTUuNDcgMTkuMTYgMTQuNzQgMTkuMTYgMTUuODMiLz48cGF0aCBjbGFzcz0iY2xzLTIiIGQ9Ik0zLjM1LDEwLjY1QTEuMzUsMS4zNSwwLDEsMCw0LjcxLDEyYTEuMzUsMS4zNSwwLDAsMC0xLjM2LTEuMzVabTAsMi4xQS43Ni43NiwwLDEsMSw0LjExLDEyaDBhLjc2Ljc2LDAsMCwxLS43Ni43NVoiLz48L2c+PC9zdmc+"/>
+<text x="1022" y="400" font-size="23" fill="#202124" font-weight="600" text-anchor="start">
+<tspan x="1022" dy="0">IAP + OS Login</tspan>
+</text>
+<text x="1022" y="431" font-size="18" fill="#3c4043" font-weight="400" text-anchor="start">
+<tspan x="1022" dy="0">Admin SSH · TCP 22</tspan>
+</text>
+<path d="M1118 295 V365" fill="none" stroke="#7e57c2" stroke-width="2.2" stroke-linejoin="round" stroke-linecap="round" stroke-dasharray="7 6" marker-end="url(#ops)"/>
+<text x="1136" y="329" font-size="17" fill="#673ab7" font-weight="400" text-anchor="start">
+<tspan x="1136" dy="0">IAP tunnel</tspan>
+</text>
+<rect x="70" y="470" width="1230" height="850" rx="16" fill="#f4f8ff" stroke="#a8c7fa" stroke-width="1.5"/>
+<image x="90" y="485" width="36" height="36" href="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIyNHB4IiBoZWlnaHQ9IjI0cHgiIHZpZXdCb3g9IjAgMCAyNCAyNCI+PGRlZnM+PHN0eWxlPi5jbHMtMXtmaWxsOiNhZWNiZmE7fS5jbHMtMntmaWxsOiM2NjlkZjY7fS5jbHMtM3tmaWxsOiM0Mjg1ZjQ7fTwvc3R5bGU+PC9kZWZzPjx0aXRsZT5JY29uXzI0cHhfVmlydHVhbFByaXZhdGVDbG91ZF9Db2xvcjwvdGl0bGU+PGcgZGF0YS1uYW1lPSJQcm9kdWN0IEljb25zIj48cmVjdCBjbGFzcz0iY2xzLTEiIHg9IjE2IiB5PSIyIiB3aWR0aD0iNiIgaGVpZ2h0PSI2Ii8+PHJlY3QgY2xhc3M9ImNscy0yIiB4PSIxOSIgeT0iMiIgd2lkdGg9IjMiIGhlaWdodD0iNiIvPjxyZWN0IGNsYXNzPSJjbHMtMSIgeD0iMTYiIHk9IjE2IiB3aWR0aD0iNiIgaGVpZ2h0PSI2Ii8+PHJlY3QgY2xhc3M9ImNscy0yIiB4PSIxOSIgeT0iMTYiIHdpZHRoPSIzIiBoZWlnaHQ9IjYiLz48cmVjdCBjbGFzcz0iY2xzLTEiIHg9IjIiIHk9IjIiIHdpZHRoPSI2IiBoZWlnaHQ9IjYiLz48cmVjdCBjbGFzcz0iY2xzLTIiIHg9IjUiIHk9IjIiIHdpZHRoPSIzIiBoZWlnaHQ9IjYiLz48cmVjdCBjbGFzcz0iY2xzLTEiIHg9IjIiIHk9IjE2IiB3aWR0aD0iNiIgaGVpZ2h0PSI2Ii8+PHJlY3QgY2xhc3M9ImNscy0yIiB4PSI1IiB5PSIxNiIgd2lkdGg9IjMiIGhlaWdodD0iNiIvPjxyZWN0IGNsYXNzPSJjbHMtMiIgeD0iOCIgeT0iNCIgd2lkdGg9IjgiIGhlaWdodD0iMiIvPjxyZWN0IGNsYXNzPSJjbHMtMiIgeD0iOCIgeT0iMTgiIHdpZHRoPSI4IiBoZWlnaHQ9IjIiLz48cmVjdCBjbGFzcz0iY2xzLTIiIHg9IjE4IiB5PSI4IiB3aWR0aD0iMiIgaGVpZ2h0PSI4Ii8+PHJlY3QgY2xhc3M9ImNscy0yIiB4PSI0IiB5PSI4IiB3aWR0aD0iMiIgaGVpZ2h0PSI4Ii8+PHJlY3QgY2xhc3M9ImNscy0zIiB4PSI0IiB5PSI4IiB3aWR0aD0iMiIgaGVpZ2h0PSIyIi8+PHJlY3QgY2xhc3M9ImNscy0zIiB4PSIxOCIgeT0iOCIgd2lkdGg9IjIiIGhlaWdodD0iMiIvPjxyZWN0IGNsYXNzPSJjbHMtMyIgeD0iOCIgeT0iNCIgd2lkdGg9IjIiIGhlaWdodD0iMiIvPjxyZWN0IGNsYXNzPSJjbHMtMyIgeD0iOCIgeT0iMTgiIHdpZHRoPSIyIiBoZWlnaHQ9IjIiLz48L2c+PC9zdmc+"/>
+<text x="140" y="510" font-size="24" fill="#1967d2" font-weight="600" text-anchor="start">
+<tspan x="140" dy="0">VPC · fantasybuilder-network</tspan>
+</text>
+<text x="90" y="543" font-size="19" fill="#5f6368" font-weight="400" text-anchor="start">
+<tspan x="90" dy="0">us-central1 · subnet 10.42.0.0/24 · zone us-central1-a</tspan>
+</text>
+<image x="850" y="485" width="36" height="36" href="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIyNHB4IiBoZWlnaHQ9IjI0cHgiIHZpZXdCb3g9IjAgMCAyNCAyNCI+PGRlZnM+PHN0eWxlPi5jbHMtMXtmaWxsOiM0Mjg1ZjQ7fTwvc3R5bGU+PC9kZWZzPjx0aXRsZT5JY29uXzI0cHhfRmlyZXdhbGxSdWxlc19Db2xvcjwvdGl0bGU+PGcgZGF0YS1uYW1lPSJQcm9kdWN0IEljb25zIj48ZyA+PHJlY3QgY2xhc3M9ImNscy0xIiB4PSIxLjk4IiB5PSIyIiB3aWR0aD0iOC44OSIgaGVpZ2h0PSIyLjIyIi8+PHJlY3QgY2xhc3M9ImNscy0xIiB4PSIxLjk4IiB5PSIxOS43OCIgd2lkdGg9IjguODkiIGhlaWdodD0iMi4yMiIvPjxyZWN0IGNsYXNzPSJjbHMtMSIgeD0iMS45OCIgeT0iMTAuODkiIHdpZHRoPSI4Ljg5IiBoZWlnaHQ9IjIuMjIiLz48cmVjdCBjbGFzcz0iY2xzLTEiIHg9IjEzLjA5IiB5PSIyIiB3aWR0aD0iOC44OSIgaGVpZ2h0PSIyLjIyIi8+PHJlY3QgY2xhc3M9ImNscy0xIiB4PSIxMy4wOSIgeT0iMTkuNzgiIHdpZHRoPSI4Ljg5IiBoZWlnaHQ9IjIuMjIiLz48cmVjdCBjbGFzcz0iY2xzLTEiIHg9IjEzLjA5IiB5PSIxMC44OSIgd2lkdGg9IjguODkiIGhlaWdodD0iMi4yMiIvPjxyZWN0IGNsYXNzPSJjbHMtMSIgeD0iNy41MyIgeT0iNi40NCIgd2lkdGg9IjguODkiIGhlaWdodD0iMi4yMiIvPjxyZWN0IGNsYXNzPSJjbHMtMSIgeD0iNy41MyIgeT0iMTUuMzMiIHdpZHRoPSI4Ljg5IiBoZWlnaHQ9IjIuMjIiLz48cmVjdCBjbGFzcz0iY2xzLTEiIHg9IjEuOTgiIHk9IjYuNDQiIHdpZHRoPSIzLjMzIiBoZWlnaHQ9IjIuMjIiLz48cmVjdCBjbGFzcz0iY2xzLTEiIHg9IjEuOTgiIHk9IjE1LjMzIiB3aWR0aD0iMy4zMyIgaGVpZ2h0PSIyLjIyIi8+PHJlY3QgY2xhc3M9ImNscy0xIiB4PSIxOC42NSIgeT0iNi40NCIgd2lkdGg9IjMuMzMiIGhlaWdodD0iMi4yMiIvPjxyZWN0IGNsYXNzPSJjbHMtMSIgeD0iMTguNjUiIHk9IjE1LjMzIiB3aWR0aD0iMy4zMyIgaGVpZ2h0PSIyLjIyIi8+PC9nPjwvZz48L3N2Zz4="/>
+<text x="900" y="510" font-size="21" fill="#202124" font-weight="600" text-anchor="start">
+<tspan x="900" dy="0">Firewall rules</tspan>
+</text>
+<text x="850" y="541" font-size="18" fill="#5f6368" font-weight="400" text-anchor="start">
+<tspan x="850" dy="0">Web: 80/443 · SSH: IAP only</tspan>
+</text>
+<path d="M1118 448 V564" fill="none" stroke="#7e57c2" stroke-width="2.2" stroke-linejoin="round" stroke-linecap="round" stroke-dasharray="7 6" marker-end="url(#ops)"/>
+<text x="1135" y="461" font-size="16" fill="#673ab7" font-weight="400" text-anchor="start">
+<tspan x="1135" dy="0">22</tspan>
+</text>
+<rect x="100" y="565" width="1170" height="625" rx="14" fill="#ffffff" stroke="#8ab4f8" stroke-width="1.5"/>
+<image x="122" y="582" width="49" height="49" href="data:image/svg+xml;base64,PD94bWwgdmVyc2lvbj0iMS4wIiBlbmNvZGluZz0iVVRGLTgiPz4KPHN2ZyBpZD0ic3RhbmRhcmRfcHJvZHVjdF9pY29uIiB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZlcnNpb249IjEuMSIgdmlld0JveD0iMCAwIDUxMiA1MTIiPgogIDwhLS0gR2VuZXJhdG9yOiBBZG9iZSBJbGx1c3RyYXRvciAyOS4xLjAsIFNWRyBFeHBvcnQgUGx1Zy1JbiAuIFNWRyBWZXJzaW9uOiAyLjEuMCBCdWlsZCAxNDIpICAtLT4KICA8ZGVmcz4KICAgIDxzdHlsZT4KICAgICAgLnN0MCB7CiAgICAgICAgZmlsbDogbm9uZTsKICAgICAgfQoKICAgICAgLnN0MSB7CiAgICAgICAgZmlsbDogIzQyODVmNDsKICAgICAgfQoKICAgICAgLnN0MiB7CiAgICAgICAgZmlsbDogIzM0YTg1MzsKICAgICAgfQoKICAgICAgLnN0MyB7CiAgICAgICAgZmlsbDogI2ZiYmMwNDsKICAgICAgfQoKICAgICAgLnN0NCB7CiAgICAgICAgZmlsbDogI2VhNDMzNTsKICAgICAgfQogICAgPC9zdHlsZT4KICA8L2RlZnM+CiAgPGcgaWQ9ImJvdW5kaW5nX2JveCI+CiAgICA8cmVjdCBjbGFzcz0ic3QwIiB3aWR0aD0iNTEyIiBoZWlnaHQ9IjUxMiIvPgogIDwvZz4KICA8ZyBpZD0iYXJ0Ij4KICAgIDxwYXRoIGNsYXNzPSJzdDEiIGQ9Ik0zODAuNywzOTYuN2gtMjQ5LjNjLTguOCwwLTE2LTcuMi0xNi0xNnYtMjQ5LjNjMC04LjgsNy4yLTE2LDE2LTE2aDI0OS4zYzguOCwwLDE2LDcuMiwxNiwxNnYyNDkuM2MwLDguOC03LjIsMTYtMTYsMTZaTTE0Ny4zLDM2NC43aDIxNy4zdi0yMTcuM2gtMjE3LjN2MjE3LjNaIi8+CiAgICA8cGF0aCBjbGFzcz0ic3QzIiBkPSJNMTQ3LjMsMzY0LjdoLTMydi0yMzMuM2MwLTguOCw3LjItMTYsMTYtMTZoMTQ2LjF2MzJoLTEzMC4xdjIxNy4zaDBaIi8+CiAgICA8cGF0aCBjbGFzcz0ic3QxIiBkPSJNNDQzLDM2NC43aC02Mi4zYy04LjgsMC0xNi03LjItMTYtMTZzNy4yLTE2LDE2LTE2aDYyLjNjOC44LDAsMTYsNy4yLDE2LDE2cy03LjIsMTYtMTYsMTZaIi8+CiAgICA8cGF0aCBjbGFzcz0ic3Q0IiBkPSJNNDQzLDI3MmgtNjIuM2MtOC44LDAtMTYtNy4yLTE2LTE2czcuMi0xNiwxNi0xNmg2Mi4zYzguOCwwLDE2LDcuMiwxNiwxNnMtNy4yLDE2LTE2LDE2WiIvPgogICAgPHBhdGggY2xhc3M9InN0NCIgZD0iTTQ0MywxNzguNWgtNjIuM2MtOC44LDAtMTYtNy4yLTE2LTE2czcuMi0xNiwxNi0xNmg2Mi4zYzguOCwwLDE2LDcuMiwxNiwxNnMtNy4yLDE2LTE2LDE2WiIvPgogICAgPHBhdGggY2xhc3M9InN0NCIgZD0iTTM0OS41LDE0Ny4zYy04LjgsMC0xNi03LjItMTYtMTZ2LTYyLjNjMC04LjgsNy4yLTE2LDE2LTE2czE2LDcuMiwxNiwxNnY2Mi4zYzAsOC44LTcuMiwxNi0xNiwxNloiLz4KICAgIDxwYXRoIGNsYXNzPSJzdDQiIGQ9Ik0yNTYsMTQ3LjNjLTguOCwwLTE2LTcuMi0xNi0xNnYtNjIuM2MwLTguOCw3LjItMTYsMTYtMTZzMTYsNy4yLDE2LDE2djYyLjNjMCw4LjgtNy4yLDE2LTE2LDE2WiIvPgogICAgPHBhdGggY2xhc3M9InN0MyIgZD0iTTE2Mi41LDE0Ny4zYy04LjgsMC0xNi03LjItMTYtMTZ2LTYyLjNjMC04LjgsNy4yLTE2LDE2LTE2czE2LDcuMiwxNiwxNnY2Mi4zYzAsOC44LTcuMiwxNi0xNiwxNloiLz4KICAgIDxwYXRoIGNsYXNzPSJzdDIiIGQ9Ik0zMTUsMzMxaC0xMThjLTguOCwwLTE2LTcuMi0xNi0xNnYtMTE4YzAtOC44LDcuMi0xNiwxNi0xNmgxMThjOC44LDAsMTYsNy4yLDE2LDE2djExOGMwLDguOC03LjIsMTYtMTYsMTZaTTIxMywyOTloODZ2LTg2aC04NnY4NloiLz4KICAgIDxwYXRoIGNsYXNzPSJzdDQiIGQ9Ik0zOTYuNywzMzIuN2gtMzJ2LTE4NS4zaC0xMjQuNnYtMzJoMTQwLjZjOC44LDAsMTYsNy4yLDE2LDE2djIwMS4zWiIvPgogICAgPHBhdGggY2xhc3M9InN0MSIgZD0iTTE2Mi41LDQ1OWMtOC44LDAtMTYtNy4yLTE2LTE2di02Mi4zYzAtOC44LDcuMi0xNiwxNi0xNnMxNiw3LjIsMTYsMTZ2NjIuM2MwLDguOC03LjIsMTYtMTYsMTZaIi8+CiAgICA8cGF0aCBjbGFzcz0ic3QxIiBkPSJNMjU2LDQ1OWMtOC44LDAtMTYtNy4yLTE2LTE2di02Mi4zYzAtOC44LDcuMi0xNiwxNi0xNnMxNiw3LjIsMTYsMTZ2NjIuM2MwLDguOC03LjIsMTYtMTYsMTZaIi8+CiAgICA8cGF0aCBjbGFzcz0ic3QxIiBkPSJNMzQ5LjUsNDU5Yy04LjgsMC0xNi03LjItMTYtMTZ2LTYyLjNjMC04LjgsNy4yLTE2LDE2LTE2czE2LDcuMiwxNiwxNnY2Mi4zYzAsOC44LTcuMiwxNi0xNiwxNloiLz4KICAgIDxwYXRoIGNsYXNzPSJzdDMiIGQ9Ik0xMzEuMywxNzguNWgtNjIuM2MtOC44LDAtMTYtNy4yLTE2LTE2czcuMi0xNiwxNi0xNmg2Mi4zYzguOCwwLDE2LDcuMiwxNiwxNnMtNy4yLDE2LTE2LDE2WiIvPgogICAgPHBhdGggY2xhc3M9InN0MyIgZD0iTTEzMS4zLDI3MmgtNjIuM2MtOC44LDAtMTYtNy4yLTE2LTE2czcuMi0xNiwxNi0xNmg2Mi4zYzguOCwwLDE2LDcuMiwxNiwxNnMtNy4yLDE2LTE2LDE2WiIvPgogICAgPHBhdGggY2xhc3M9InN0MyIgZD0iTTEzMS4zLDM2NC43aC02Mi4zYy04LjgsMC0xNi03LjItMTYtMTZzNy4yLTE2LDE2LTE2aDYyLjNjOC44LDAsMTYsNy4yLDE2LDE2cy03LjIsMTYtMTYsMTZaIi8+CiAgPC9nPgo8L3N2Zz4="/>
+<text x="185" y="604" font-size="26" fill="#202124" font-weight="600" text-anchor="start">
+<tspan x="185" dy="0">Compute Engine · fantasybuilder</tspan>
+</text>
+<text x="185" y="635" font-size="19" fill="#5f6368" font-weight="400" text-anchor="start">
+<tspan x="185" dy="0">e2-small · 2 GiB RAM · Debian 12 · Shielded VM · Docker Compose</tspan>
+</text>
+<rect x="150" y="690" width="240" height="100" rx="12" fill="#e8f0fe" stroke="#a8c7fa" stroke-width="1.5"/>
+<text x="172" y="725" font-size="23" fill="#202124" font-weight="600" text-anchor="start">
+<tspan x="172" dy="0">Caddy</tspan>
+</text>
+<text x="172" y="756" font-size="18" fill="#3c4043" font-weight="400" text-anchor="start">
+<tspan x="172" dy="0">TLS termination</tspan>
+<tspan x="172" dy="25.2">Only public ingress</tspan>
+</text>
+<rect x="490" y="690" width="270" height="100" rx="12" fill="#e8f0fe" stroke="#a8c7fa" stroke-width="1.5"/>
+<text x="512" y="725" font-size="23" fill="#202124" font-weight="600" text-anchor="start">
+<tspan x="512" dy="0">Frontend / Nginx</tspan>
+</text>
+<text x="512" y="756" font-size="18" fill="#3c4043" font-weight="400" text-anchor="start">
+<tspan x="512" dy="0">React static files</tspan>
+<tspan x="512" dy="25.2">Same-origin routing</tspan>
+</text>
+<rect x="940" y="690" width="275" height="100" rx="12" fill="#e8f0fe" stroke="#a8c7fa" stroke-width="1.5"/>
+<text x="962" y="725" font-size="23" fill="#202124" font-weight="600" text-anchor="start">
+<tspan x="962" dy="0">Identity · 8003</tspan>
+</text>
+<text x="962" y="756" font-size="18" fill="#3c4043" font-weight="400" text-anchor="start">
+<tspan x="962" dy="0">Better Auth · sessions</tspan>
+<tspan x="962" dy="25.2">Application JWTs</tspan>
+</text>
+<path d="M190 295 V337 H20 V670 H270 V690" fill="none" stroke="#1a73e8" stroke-width="2.2" stroke-linejoin="round" stroke-linecap="round" marker-end="url(#web)"/>
+<text x="55" y="323" font-size="17" fill="#1967d2" font-weight="400" text-anchor="start">
+<tspan x="55" dy="0">HTTPS → reserved Standard Tier IPv4</tspan>
+</text>
+<path d="M390 740 H490" fill="none" stroke="#1a73e8" stroke-width="2.2" stroke-linejoin="round" stroke-linecap="round" marker-end="url(#web)"/>
+<text x="397" y="725" font-size="16" fill="#1967d2" font-weight="400" text-anchor="start">
+<tspan x="397" dy="0">UI</tspan>
+</text>
+<path d="M270 690 V667 H1077 V690" fill="none" stroke="#1a73e8" stroke-width="2.2" stroke-linejoin="round" stroke-linecap="round" marker-end="url(#web)"/>
+<text x="825" y="660" font-size="17" fill="#1967d2" font-weight="400" text-anchor="start">
+<tspan x="825" dy="0">/auth/*</tspan>
+</text>
+<rect x="150" y="890" width="270" height="95" rx="12" fill="#f8faff" stroke="#c3d7f7" stroke-width="1.5"/>
+<text x="172" y="925" font-size="23" fill="#202124" font-weight="600" text-anchor="start">
+<tspan x="172" dy="0">Auth · 8000</tspan>
+</text>
+<text x="172" y="956" font-size="18" fill="#3c4043" font-weight="400" text-anchor="start">
+<tspan x="172" dy="0">LaLiga pairing + vault</tspan>
+<tspan x="172" dy="25.2">Encrypted bearer storage</tspan>
+</text>
+<rect x="540" y="890" width="270" height="95" rx="12" fill="#f8faff" stroke="#c3d7f7" stroke-width="1.5"/>
+<text x="562" y="925" font-size="23" fill="#202124" font-weight="600" text-anchor="start">
+<tspan x="562" dy="0">API · 8001</tspan>
+</text>
+<text x="562" y="956" font-size="18" fill="#3c4043" font-weight="400" text-anchor="start">
+<tspan x="562" dy="0">Fantasy features</tspan>
+<tspan x="562" dy="25.2">Lineup builder</tspan>
+</text>
+<rect x="940" y="890" width="275" height="95" rx="12" fill="#f8faff" stroke="#c3d7f7" stroke-width="1.5"/>
+<text x="962" y="925" font-size="23" fill="#202124" font-weight="600" text-anchor="start">
+<tspan x="962" dy="0">Scraping · 8002</tspan>
+</text>
+<text x="962" y="956" font-size="18" fill="#3c4043" font-weight="400" text-anchor="start">
+<tspan x="962" dy="0">Private scrape + parse</tspan>
+<tspan x="962" dy="25.2">Single worker</tspan>
+</text>
+<path d="M490 768 H460 V837 H285 V890" fill="none" stroke="#1a73e8" stroke-width="2.2" stroke-linejoin="round" stroke-linecap="round" marker-end="url(#web)"/>
+<text x="306" y="826" font-size="17" fill="#1967d2" font-weight="400" text-anchor="start">
+<tspan x="306" dy="0">/laliga/*</tspan>
+</text>
+<path d="M675 790 V890" fill="none" stroke="#1a73e8" stroke-width="2.2" stroke-linejoin="round" stroke-linecap="round" marker-end="url(#web)"/>
+<text x="691" y="840" font-size="17" fill="#1967d2" font-weight="400" text-anchor="start">
+<tspan x="691" dy="0">/api/*</tspan>
+</text>
+<path d="M540 942 H420" fill="none" stroke="#1a73e8" stroke-width="2.2" stroke-linejoin="round" stroke-linecap="round" marker-end="url(#web)"/>
+<text x="433" y="919" font-size="16" fill="#1967d2" font-weight="400" text-anchor="start">
+<tspan x="433" dy="0">Bearer</tspan>
+</text>
+<path d="M810 942 H940" fill="none" stroke="#1a73e8" stroke-width="2.2" stroke-linejoin="round" stroke-linecap="round" marker-end="url(#web)"/>
+<text x="827" y="919" font-size="16" fill="#1967d2" font-weight="400" text-anchor="start">
+<tspan x="827" dy="0">Scrape</tspan>
+</text>
+<text x="150" y="868" font-size="17" fill="#5f6368" font-weight="600" text-anchor="start">
+<tspan x="150" dy="0">PRIVATE CONTAINER NETWORK · backend ports are not published on the host</tspan>
+</text>
+<rect x="150" y="1065" width="470" height="85" rx="12" fill="#e6f4ea" stroke="#a8dab5" stroke-width="1.5"/>
+<text x="172" y="1100" font-size="23" fill="#202124" font-weight="600" text-anchor="start">
+<tspan x="172" dy="0">PostgreSQL 16</tspan>
+</text>
+<text x="172" y="1131" font-size="18" fill="#3c4043" font-weight="400" text-anchor="start">
+<tspan x="172" dy="0">Identity DB + vault DB · separate roles</tspan>
+</text>
+<rect x="835" y="1065" width="380" height="85" rx="12" fill="#e6f4ea" stroke="#a8dab5" stroke-width="1.5"/>
+<text x="857" y="1100" font-size="23" fill="#202124" font-weight="600" text-anchor="start">
+<tspan x="857" dy="0">Redis 7</tspan>
+</text>
+<text x="857" y="1131" font-size="18" fill="#3c4043" font-weight="400" text-anchor="start">
+<tspan x="857" dy="0">Auth rate limiting · container</tspan>
+</text>
+<path d="M285 985 V1065" fill="none" stroke="#188038" stroke-width="2.2" stroke-linejoin="round" stroke-linecap="round" marker-end="url(#data)"/>
+<path d="M1215 755 H1235 V1019 H550 V1065" fill="none" stroke="#188038" stroke-width="2.2" stroke-linejoin="round" stroke-linecap="round" marker-end="url(#data)"/>
+<text x="754" y="1009" font-size="16" fill="#137333" font-weight="400" text-anchor="start">
+<tspan x="754" dy="0">Identity DB connection</tspan>
+</text>
+<path d="M420 972 H455 V1042 H1025 V1065" fill="none" stroke="#188038" stroke-width="2.2" stroke-linejoin="round" stroke-linecap="round" marker-end="url(#data)"/>
+<text x="660" y="1033" font-size="16" fill="#137333" font-weight="400" text-anchor="start">
+<tspan x="660" dy="0">Auth → Redis</tspan>
+</text>
+<text x="150" y="1175" font-size="17" fill="#5f6368" font-weight="400" text-anchor="start">
+<tspan x="150" dy="0">API → Auth / Scraping: service tokens · Auth / API → Identity: JWKS</tspan>
+</text>
+<rect x="120" y="1220" width="1130" height="78" rx="12" fill="#fff" stroke="#a8c7fa" stroke-width="1.5"/>
+<image x="140" y="1240" width="44" height="44" href="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIyNHB4IiBoZWlnaHQ9IjI0cHgiIHZpZXdCb3g9IjAgMCAyNCAyNCI+PGRlZnM+PHN0eWxlPi5jbHMtMXtmaWxsOiM0Mjg1ZjQ7fS5jbHMtMntmaWxsOiNhZWNiZmE7fS5jbHMtM3tmaWxsOiM2NjlkZjY7fTwvc3R5bGU+PC9kZWZzPjx0aXRsZT5JY29uXzI0cHhfUGVyc2lzdGVudERpc2tfQ29sb3I8L3RpdGxlPjxnIGRhdGEtbmFtZT0iUHJvZHVjdCBJY29ucyI+PHBvbHlnb24gY2xhc3M9ImNscy0xIiBwb2ludHM9IjE2LjE3IDEzLjY3IDE2LjE3IDE4LjI1IDQuMDggMTguMjUgNC4wOCAyMiAxOS45MiAyMiAxOS45MiAxMy42NyAxNi4xNyAxMy42NyIvPjxwb2x5Z29uIGNsYXNzPSJjbHMtMiIgcG9pbnRzPSI3LjgzIDEwLjMzIDcuODMgNS43NSAxOS45MiA1Ljc1IDE5LjkyIDIgNC4wOCAyIDQuMDggMTAuMzMgNy44MyAxMC4zMyIvPjxwb2x5Z29uIGNsYXNzPSJjbHMtMyIgcG9pbnRzPSI5LjkyIDcuODMgOS45MiAxMi40MiA0LjA4IDEyLjQyIDQuMDggMTYuMTcgMTQuMDggMTYuMTcgMTQuMDggMTEuNTggMTkuOTIgMTEuNTggMTkuOTIgNy44MyA5LjkyIDcuODMiLz48L2c+PC9zdmc+"/>
+<text x="202" y="1255" font-size="23" fill="#202124" font-weight="600" text-anchor="start">
+<tspan x="202" dy="0">Persistent Disk · 30 GiB pd-standard</tspan>
+</text>
+<text x="202" y="1286" font-size="18" fill="#3c4043" font-weight="400" text-anchor="start">
+<tspan x="202" dy="0">OS + images + PostgreSQL + Caddy volumes · auto_delete=false · prevent_destroy</tspan>
+</text>
+<path d="M680 1190 V1220" fill="none" stroke="#188038" stroke-width="2.2" stroke-linejoin="round" stroke-linecap="round"/>
+<rect x="1390" y="430" width="535" height="115" rx="12" fill="#fff" stroke="#dadce0" stroke-width="1.5"/>
+<image x="1410" y="450" width="44" height="44" href="data:image/svg+xml;base64,PHN2ZyBpZD0iYjJjN2FlNTQtMGNiMS00OTgyLWI4OTUtNGE5ZmVhOWJiMTU5IiBkYXRhLW5hbWU9IkFydHdvcmsiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyIgd2lkdGg9IjI0cHgiIGhlaWdodD0iMjRweCIgdmlld0JveD0iMCAwIDI0IDI0Ij48cmVjdCB4PSIzIiB5PSI2IiB3aWR0aD0iMTgiIGhlaWdodD0iMTIiIHJ4PSIxIiBmaWxsPSJub25lIiBzdHJva2U9IiM0Mjg1ZjQiIHN0cm9rZS1taXRlcmxpbWl0PSIxMCIgc3Ryb2tlLXdpZHRoPSIyIi8+PGxpbmUgeDE9IjE0LjAwMiIgeTE9IjEwLjQ3MSIgeDI9IjE4LjAwMiIgeTI9IjEwLjQ3MSIgZmlsbD0ibm9uZSIgc3Ryb2tlPSIjNjY5ZGY2IiBzdHJva2UtbWl0ZXJsaW1pdD0iMTAiLz48bGluZSB4MT0iMTQuMDAyIiB5MT0iMTMuNTEyIiB4Mj0iMTguMDAyIiB5Mj0iMTMuNTEyIiBmaWxsPSJub25lIiBzdHJva2U9IiM2NjlkZjYiIHN0cm9rZS1taXRlcmxpbWl0PSIxMCIvPjxyZWN0IHg9IjYuNDkyIiB5PSI5LjQ5IiB3aWR0aD0iNS4wMDciIGhlaWdodD0iNS4wMDciIGZpbGw9Im5vbmUiIHN0cm9rZT0iI2FlY2JmYSIgc3Ryb2tlLW1pdGVybGltaXQ9IjEwIi8+PHJlY3QgeD0iOC4wMDMiIHk9IjExLjAwOSIgd2lkdGg9IjIuMDE0IiBoZWlnaHQ9IjEuOTkxIiBmaWxsPSIjNDI4NWY0Ii8+PC9zdmc+"/>
+<text x="1472" y="465" font-size="23" fill="#202124" font-weight="600" text-anchor="start">
+<tspan x="1472" dy="0">Workload Identity Federation</tspan>
+</text>
+<text x="1472" y="496" font-size="18" fill="#3c4043" font-weight="400" text-anchor="start">
+<tspan x="1472" dy="0">GitHub OIDC → fantasybuilder-ci</tspan>
+<tspan x="1472" dy="25.2">Repository + main push + workflow restricted</tspan>
+</text>
+<path d="M1657 295 V430" fill="none" stroke="#7e57c2" stroke-width="2.2" stroke-linejoin="round" stroke-linecap="round" stroke-dasharray="7 6" marker-end="url(#ops)"/>
+<text x="1675" y="401" font-size="17" fill="#673ab7" font-weight="400" text-anchor="start">
+<tspan x="1675" dy="0">Keyless CI authentication</tspan>
+</text>
+<rect x="1390" y="590" width="535" height="135" rx="12" fill="#fff" stroke="#dadce0" stroke-width="1.5"/>
+<image x="1410" y="610" width="44" height="44" href="data:image/svg+xml;base64,PHN2ZyB2ZXJzaW9uPSIxLjEiIGJhc2VQcm9maWxlPSJ0aW55IiBpZD0iTGF5ZXJfMSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIiB4bWxuczp4bGluaz0iaHR0cDovL3d3dy53My5vcmcvMTk5OS94bGluayIKCSB4PSIwcHgiIHk9IjBweCIgd2lkdGg9IjI0cHgiIGhlaWdodD0iMjRweCIgdmlld0JveD0iMCAwIDI0IDI0IiBvdmVyZmxvdz0idmlzaWJsZSIgeG1sOnNwYWNlPSJwcmVzZXJ2ZSI+CjxnID4KCTxyZWN0IHk9IjAiIGZpbGw9Im5vbmUiIHdpZHRoPSIyNCIgaGVpZ2h0PSIyNCIvPgoJPHBvbHlnb24gZmlsbC1ydWxlPSJldmVub2RkIiBmaWxsPSIjNUM4NURFIiBwb2ludHM9IjYsMi40IDAuOCw1LjQgMC44LDE5LjEgNiwyMi4xIDYsMTkuNSAzLDE3LjggMyw2LjcgNiw1IAkiLz4KCTxwb2x5Z29uIGZpbGwtcnVsZT0iZXZlbm9kZCIgZmlsbD0iIzMzNjdENiIgcG9pbnRzPSIwLjgsOCAwLjgsMTYuNSAzLDE3LjggMyw2LjcgCSIvPgoJPHBvbHlnb24gZmlsbC1ydWxlPSJldmVub2RkIiBmaWxsPSIjMzM2N0Q2IiBwb2ludHM9IjAuOCw4IDMsNy41IDMsNi43IAkiLz4KCTxwb2x5Z29uIGZpbGwtcnVsZT0iZXZlbm9kZCIgZmlsbD0iIzVDODVERSIgcG9pbnRzPSIxOCwyLjQgMTgsNSAyMSw2LjcgMjEsMTcuOCAxOCwxOS41IDE4LDIyLjEgMjMuMiwxOS4xIDIzLjIsNS40IAkiLz4KCTxwb2x5Z29uIGZpbGwtcnVsZT0iZXZlbm9kZCIgZmlsbD0iIzMzNjdENiIgcG9pbnRzPSIyMSwxNy44IDIzLjIsMTYuNSAyMy4yLDggMjEsNi43IAkiLz4KCTxwb2x5Z29uIGZpbGwtcnVsZT0iZXZlbm9kZCIgZmlsbD0iIzMzNjdENiIgcG9pbnRzPSIyMSw3LjUgMjMuMiw4IDIxLDYuNyAJIi8+Cgk8cG9seWdvbiBmaWxsLXJ1bGU9ImV2ZW5vZGQiIGZpbGw9IiMzMzY3RDYiIHBvaW50cz0iMjEsMTcuMSAyMSwxNy44IDIzLjIsMTYuNSAJIi8+Cgk8ZyB0cmFuc2Zvcm09InRyYW5zbGF0ZSg2Ljg2MDAwMCwgNi41MDAwMDApIj4KCQk8ZyB0cmFuc2Zvcm09InRyYW5zbGF0ZSg0LjU0MDAwMCwgMC4wMDAwMDApIj4KCQkJPHBvbHlnb24gZmlsbC1ydWxlPSJldmVub2RkIiBmaWxsPSIjNUM4NURFIiBwb2ludHM9IjAuNiwtMSAtMi40LDAuNiAwLjYsMi4yIDMuNiwwLjYgCQkJIi8+CgkJCTxwb2x5Z29uIGZpbGwtcnVsZT0iZXZlbm9kZCIgZmlsbD0iIzMzNjdENiIgcG9pbnRzPSIxLDUuOSAzLjksNC4zIDMuOSwxLjIgMSwyLjggCQkJIi8+CgkJCTxwb2x5Z29uIGZpbGwtcnVsZT0iZXZlbm9kZCIgZmlsbD0iIzMzNjdENiIgcG9pbnRzPSIwLjMsMi44IC0yLjcsMS4yIC0yLjcsNC4zIDAuMyw1LjkgCQkJIi8+CgkJPC9nPgoJCTxnIHRyYW5zZm9ybT0idHJhbnNsYXRlKDAuMDAwMDAwLCA3Ljk3NjE5MCkiPgoJCQk8cG9seWdvbiBmaWxsLXJ1bGU9ImV2ZW5vZGQiIGZpbGw9IiM1Qzg1REUiIHBvaW50cz0iMS43LC0zLjEgLTEuMiwtMS41IDEuNywwLjEgNC41LC0xLjUgCQkJIi8+CgkJCTxwb2x5Z29uIGZpbGwtcnVsZT0iZXZlbm9kZCIgZmlsbD0iIzMzNjdENiIgcG9pbnRzPSIxLjksMy44IDQuOCwyLjIgNC44LC0xIDEuOSwwLjYgCQkJIi8+CgkJCTxwb2x5Z29uIGZpbGwtcnVsZT0iZXZlbm9kZCIgZmlsbD0iIzMzNjdENiIgcG9pbnRzPSIxLjQsMC42IC0xLjUsLTEgLTEuNSwyLjIgMS40LDMuOCAJCQkiLz4KCQk8L2c+CgkJPGcgdHJhbnNmb3JtPSJ0cmFuc2xhdGUoOS4zNjAwMDAsIDcuOTc2MTkwKSI+CgkJCTxwb2x5Z29uIGZpbGwtcnVsZT0iZXZlbm9kZCIgZmlsbD0iIzVDODVERSIgcG9pbnRzPSItMC43LC0zLjEgLTMuNiwtMS41IC0wLjcsMC4xIDIuMiwtMS41IAkJCSIvPgoJCQk8cG9seWdvbiBmaWxsLXJ1bGU9ImV2ZW5vZGQiIGZpbGw9IiMzMzY3RDYiIHBvaW50cz0iLTAuNCwzLjggMi41LDIuMiAyLjUsLTEgLTAuNCwwLjYgCQkJIi8+CgkJCTxwb2x5Z29uIGZpbGwtcnVsZT0iZXZlbm9kZCIgZmlsbD0iIzMzNjdENiIgcG9pbnRzPSItMSwwLjYgLTMuOSwtMSAtMy45LDIuMiAtMSwzLjggCQkJIi8+CgkJPC9nPgoJPC9nPgo8L2c+Cjwvc3ZnPgo="/>
+<text x="1472" y="625" font-size="23" fill="#202124" font-weight="600" text-anchor="start">
+<tspan x="1472" dy="0">Artifact Registry</tspan>
+</text>
+<text x="1472" y="656" font-size="18" fill="#3c4043" font-weight="400" text-anchor="start">
+<tspan x="1472" dy="0">Five application images · pinned sha256 digests</tspan>
+<tspan x="1472" dy="25.2">CI: repository writer · VM: repository reader</tspan>
+<tspan x="1472" dy="25.2">Old untagged cleanup; active releases stay tagged</tspan>
+</text>
+<path d="M1657 545 V590" fill="none" stroke="#7e57c2" stroke-width="2.2" stroke-linejoin="round" stroke-linecap="round" stroke-dasharray="7 6" marker-end="url(#ops)"/>
+<text x="1675" y="574" font-size="17" fill="#673ab7" font-weight="400" text-anchor="start">
+<tspan x="1675" dy="0">Publish checked images</tspan>
+</text>
+<path d="M1390 664 H1340 V621 H1270" fill="none" stroke="#7e57c2" stroke-width="2.2" stroke-linejoin="round" stroke-linecap="round" stroke-dasharray="7 6" marker-end="url(#ops)"/>
+<text x="1300" y="651" font-size="16" fill="#673ab7" font-weight="400" text-anchor="start">
+<tspan x="1300" dy="0">Pull</tspan>
+</text>
+<rect x="1390" y="770" width="535" height="125" rx="12" fill="#fff" stroke="#dadce0" stroke-width="1.5"/>
+<image x="1410" y="790" width="44" height="44" href="data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjRweCIgaGVpZ2h0PSIyNHB4IiB2aWV3Qm94PSIwIDAgMjQgMjQiIHZlcnNpb249IjEuMSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIiB4bWxuczp4bGluaz0iaHR0cDovL3d3dy53My5vcmcvMTk5OS94bGluayI+CiAgICA8ZyBzdHJva2U9Im5vbmUiIHN0cm9rZS13aWR0aD0iMSIgZmlsbD0ibm9uZSIgZmlsbC1ydWxlPSJldmVub2RkIj4KICAgICAgICA8ZyB0cmFuc2Zvcm09InRyYW5zbGF0ZSgyLjAwMDAwMCwgNi4wMDAwMDApIiBmaWxsPSIjNDI4NUY0IiBmaWxsLXJ1bGU9Im5vbnplcm8iPgogICAgICAgICAgICA8cGF0aCBkPSJNMjAsOS40MTQ2OTEyNWUtMTQgTDIwLDExLjg4Njc5MjUgTDE2LjAzNzczNTgsMTEuODg2NzkyNSBDMTUuOTMzNTMxMiwxMS44ODY3OTI1IDE1Ljg0OTA1NjYsMTEuODAyMzE3OSAxNS44NDkwNTY2LDExLjY5ODExMzIgTDE1Ljg0OTA1NjYsMTAuNTY2MDM3NyBDMTUuODQ5MDU2NiwxMC40NjE4MzMxIDE1LjkzMzUzMTIsMTAuMzc3MzU4NSAxNi4wMzc3MzU4LDEwLjM3NzM1ODUgTDE4LjQ5MDA1NjYsMTAuMzc3IEwxOC40OTAwNTY2LDEuNTA5IEwxNi4wMzc3MzU4LDEuNTA5NDMzOTYgQzE1LjkzMzUzMTIsMS41MDk0MzM5NiAxNS44NDkwNTY2LDEuNDI0OTU5MzkgMTUuODQ5MDU2NiwxLjMyMDc1NDcyIEwxNS44NDkwNTY2LDAuMTg4Njc5MjQ1IEMxNS44NDkwNTY2LDAuMDg0NDc0NTc1NSAxNS45MzM1MzEyLDkuNDExMDU0MzRlLTE0IDE2LjAzNzczNTgsOS40MTQ2OTEyNWUtMTQgTDIwLDkuNDE0NjkxMjVlLTE0IFogTTQuMzA5MTAxLDkuNDE0NjkxMjVlLTE0IEM0LjQxMzMwNTY3LDkuMzg3Nzg2OWUtMTQgNC40OTc3ODAyNCwwLjA4NDQ3NDU3NTUgNC40OTc3ODAyNCwwLjE4ODY3OTI0NSBMNC40OTc3ODAyNCwxLjMyMDc1NDcyIEM0LjQ5Nzc4MDI0LDEuNDI0OTU5MzkgNC40MTMzMDU2NywxLjUwOTQzMzk2IDQuMzA5MTAxLDEuNTA5NDMzOTYgTDEuNTA5LDEuNTA5IEwxLjUwOSwxMC4zNzcgTDQuMjkyNDUyODMsMTAuMzc3MzU4NSBDNC4zOTY2NTc1LDEwLjM3NzM1ODUgNC40ODExMzIwOCwxMC40NjE4MzMxIDQuNDgxMTMyMDgsMTAuNTY2MDM3NyBMNC40ODExMzIwOCwxMS42OTgxMTMyIEM0LjQ4MTEzMjA4LDExLjgwMjMxNzkgNC4zOTY2NTc1LDExLjg4Njc5MjUgNC4yOTI0NTI4MywxMS44ODY3OTI1IEwyLjE0MDUwOTk5ZS0xMywxMS44ODY3OTI1IEwyLjE0MDUwOTk5ZS0xMyw5LjQxNDY5MTI1ZS0xNCBMNC4zMDkxMDEsOS40MTQ2OTEyNWUtMTQgWiBNMTUuNDI3MTA5OCwzLjg2NzkyNDUzIEwxNS40MjcxMDk4LDUuMzI0MDU2NiBMMTUuNDg3OTMwNSw1LjM0ODUyOTQxIEwxNi44MzgxNDk0LDQuODcxMzA5NjYgTDE3LjExNzkyNDUsNS42OTExNDg3MiBMMTUuNzU1NTQxNCw2LjE1NjEzMjA4IEwxNS43MTkwNDksNi4yNTQwMjMzMSBMMTYuNjU1Njg3NCw3LjUxNDM3MjkyIEwxNS45NTAxNjc2LDguMDI4MzAxODkgTDE1LjAzNzg1NzUsNi43Njc5NTIyOCBMMTQuOTUyNzA4NSw2Ljc2Nzk1MjI4IEwxNC4wNDAzOTg0LDguMDI4MzAxODkgTDEzLjMzNDg3ODYsNy41MTQzNzI5MiBMMTQuMjU5MzUyOSw2LjI1NDAyMzMxIEwxNC4yMzUwMjQ2LDYuMTU2MTMyMDggTDEyLjg3MjY0MTUsNS42OTExNDg3MiBMMTMuMTUyNDE2Niw0Ljg3MTMwOTY2IEwxNC40OTA0NzE0LDUuMzQ4NTI5NDEgTDE0LjU2MzQ1NjIsNS4zMjQwNTY2IEwxNC41NjM0NTYyLDMuODY3OTI0NTMgTDE1LjQyNzEwOTgsMy44Njc5MjQ1MyBaIE01LjE5NTk3NzczLDMuODY3OTI0NTMgTDUuMTk1OTc3NzMsNS4zMDk2Mzk0NSBMNS4yNTY3OTg0LDUuMzMzODY5OTYgTDYuNjA3MDE3MzUsNC44NjEzNzUxNSBMNi44ODY3OTI0NSw1LjY3MzA5NyBMNS41MjQ0MDkzNiw2LjEzMzQ3NjU2IEw1LjQ4NzkxNjk2LDYuMjMwMzk4NTcgTDYuNDI0NTU1MzMsNy40NzgyNjk0NyBMNS43MTkwMzU1Miw3Ljk4NzExMDAzIEw0LjgwNjcyNTQxLDYuNzM5MjM5MTMgTDQuNzIxNTc2NDcsNi43MzkyMzkxMyBMMy44MDkyNjYzNyw3Ljk4NzExMDAzIEwzLjEwMzc0NjU1LDcuNDc4MjY5NDcgTDQuMDI4MjIwNzksNi4yMzAzOTg1NyBMNC4wMDM4OTI1Miw2LjEzMzQ3NjU2IEwyLjY0MTUwOTQzLDUuNjczMDk3IEwyLjkyMTI4NDUzLDQuODYxMzc1MTUgTDQuMjU5MzM5MzUsNS4zMzM4Njk5NiBMNC4zMzIzMjQxNiw1LjMwOTYzOTQ1IEw0LjMzMjMyNDE2LDMuODY3OTI0NTMgTDUuMTk1OTc3NzMsMy44Njc5MjQ1MyBaIE0xMC4yOTAzMTczLDMuODY3OTI0NTMgTDEwLjI5MDMxNzMsNS4zMDk2Mzk0NSBMMTAuMzUxMTM4LDUuMzMzODY5OTYgTDExLjcwMTM1Nyw0Ljg2MTM3NTE1IEwxMS45ODExMzIxLDUuNjczMDk3IEwxMC42MTg3NDksNi4xMzM0NzY1NiBMMTAuNTgyMjU2Niw2LjIzMDM5ODU3IEwxMS41MTg4OTUsNy40NzgyNjk0NyBMMTAuODEzMzc1MSw3Ljk4NzExMDAzIEw5LjkwMTA2NTA0LDYuNzM5MjM5MTMgTDkuODE1OTE2MDksNi43MzkyMzkxMyBMOC45MDM2MDU5OSw3Ljk4NzExMDAzIEw4LjE5ODA4NjE4LDcuNDc4MjY5NDcgTDkuMTIyNTYwNDIsNi4yMzAzOTg1NyBMOS4wOTgyMzIxNSw2LjEzMzQ3NjU2IEw3LjczNTg0OTA2LDUuNjczMDk3IEw4LjAxNTYyNDE2LDQuODYxMzc1MTUgTDkuMzUzNjc4OTcsNS4zMzM4Njk5NiBMOS40MjY2NjM3OCw1LjMwOTYzOTQ1IEw5LjQyNjY2Mzc4LDMuODY3OTI0NTMgTDEwLjI5MDMxNzMsMy44Njc5MjQ1MyBaIiA+PC9wYXRoPgogICAgICAgIDwvZz4KICAgIDwvZz4KPC9zdmc+"/>
+<text x="1472" y="805" font-size="23" fill="#202124" font-weight="600" text-anchor="start">
+<tspan x="1472" dy="0">Secret Manager</tspan>
+</text>
+<text x="1472" y="836" font-size="18" fill="#3c4043" font-weight="400" text-anchor="start">
+<tspan x="1472" dy="0">5 dotenv secrets · operator uploads payloads</tspan>
+<tspan x="1472" dy="25.2">Host reads during explicit activation</tspan>
+<tspan x="1472" dy="25.2">Reboots use the committed local snapshot</tspan>
+</text>
+<path d="M1390 831 H1320 V805 H1270" fill="none" stroke="#7e57c2" stroke-width="2.2" stroke-linejoin="round" stroke-linecap="round" stroke-dasharray="7 6" marker-end="url(#ops)"/>
+<text x="1278" y="793" font-size="16" fill="#673ab7" font-weight="400" text-anchor="start">
+<tspan x="1278" dy="0">Read secrets</tspan>
+</text>
+<rect x="1390" y="940" width="535" height="140" rx="12" fill="#fff" stroke="#dadce0" stroke-width="1.5"/>
+<image x="1410" y="960" width="44" height="44" href="data:image/svg+xml;base64,PD94bWwgdmVyc2lvbj0iMS4wIiBlbmNvZGluZz0iVVRGLTgiPz4KPHN2ZyBpZD0ic3RhbmRhcmRfcHJvZHVjdF9pY29uIiB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZlcnNpb249IjEuMSIgdmlld0JveD0iMCAwIDUxMiA1MTIiPgogIDwhLS0gR2VuZXJhdG9yOiBBZG9iZSBJbGx1c3RyYXRvciAyOS4xLjAsIFNWRyBFeHBvcnQgUGx1Zy1JbiAuIFNWRyBWZXJzaW9uOiAyLjEuMCBCdWlsZCAxNDIpICAtLT4KICA8ZGVmcz4KICAgIDxzdHlsZT4KICAgICAgLnN0MCB7CiAgICAgICAgZmlsbDogbm9uZTsKICAgICAgfQoKICAgICAgLnN0MSB7CiAgICAgICAgZmlsbDogIzQyODVmNDsKICAgICAgfQoKICAgICAgLnN0MiB7CiAgICAgICAgZmlsbDogIzM0YTg1MzsKICAgICAgfQoKICAgICAgLnN0MyB7CiAgICAgICAgZmlsbDogI2ZiYmMwNDsKICAgICAgfQoKICAgICAgLnN0NCB7CiAgICAgICAgZmlsbDogI2VhNDMzNTsKICAgICAgfQogICAgPC9zdHlsZT4KICA8L2RlZnM+CiAgPGcgaWQ9ImJvdW5kaW5nX2JveCI+CiAgICA8cmVjdCBjbGFzcz0ic3QwIiB3aWR0aD0iNTEyIiBoZWlnaHQ9IjUxMiIvPgogIDwvZz4KICA8ZyBpZD0iYXJ0Ij4KICAgIDxwYXRoIGNsYXNzPSJzdDIiIGQ9Ik00NDIsMjc3LjlINzBjLTguOCwwLTE2LDcuMi0xNiwxNnYxNDguMWMwLDguOCw3LjIsMTYsMTYsMTZoMTA3LjJjMS41LjUsMy4xLjcsNC44LjdzMy4zLS4zLDQuOC0uN2gyNTUuMmM4LjgsMCwxNi03LjIsMTYtMTZ2LTE0OC4xYzAtOC44LTcuMi0xNi0xNi0xNlpNODYsMzA5LjloODB2MTE2LjFoLTgwdi0xMTYuMVpNNDI2LDQyNS45aC0yMjh2LTExNi4xaDIyOHYxMTYuMVoiLz4KICAgIDxwYXRoIGNsYXNzPSJzdDMiIGQ9Ik00NDIsNTRINzBjLTguOCwwLTE2LDcuMi0xNiwxNnYxNDguOGMwLDguOCw3LjIsMTYsMTYsMTZoMzcyYzguOCwwLDE2LTcuMiwxNi0xNlY3MGMwLTguOC03LjItMTYtMTYtMTZaTTg2LDg2aDgwdjExNi44aC04MHYtMTE2LjhaTTQyNiwyMDIuOGgtMjI4di0xMTYuOGgyMjh2MTE2LjhaIi8+CiAgICA8cGF0aCBjbGFzcz0ic3Q0IiBkPSJNNDQyLDIzNC44aC0xNlY4Nkg1NHYtMTZjMC04LjgsNy4yLTE2LDE2LTE2aDM3MmM4LjgsMCwxNiw3LjIsMTYsMTZ2MTQ4LjhjMCw4LjgtNy4yLDE2LTE2LDE2WiIvPgogICAgPHBhdGggY2xhc3M9InN0MSIgZD0iTTQ0Miw0NTcuOWgtMTZ2LTE0OC4xSDU0di0xNmMwLTguOCw3LjItMTYsMTYtMTZoMzcyYzguOCwwLDE2LDcuMiwxNiwxNnYxNDguMWMwLDguOC03LjIsMTYtMTYsMTZaIi8+CiAgICA8Y2lyY2xlIGNsYXNzPSJzdDQiIGN4PSIzNDkiIGN5PSIxNDQuNCIgcj0iMzciLz4KICAgIDxjaXJjbGUgY2xhc3M9InN0MSIgY3g9IjM0OSIgY3k9IjM2Ny45IiByPSIzNyIvPgogIDwvZz4KPC9zdmc+"/>
+<text x="1472" y="975" font-size="23" fill="#202124" font-weight="600" text-anchor="start">
+<tspan x="1472" dy="0">Cloud Storage · private backups</tspan>
+</text>
+<text x="1472" y="1006" font-size="18" fill="#3c4043" font-weight="400" text-anchor="start">
+<tspan x="1472" dy="0">Daily systemd timer → 2 PostgreSQL dumps</tspan>
+<tspan x="1472" dy="25.2">Completion manifest uploaded last</tspan>
+<tspan x="1472" dy="25.2">14-day lifecycle + 7-day soft delete</tspan>
+</text>
+<path d="M1270 1104 H1340 V1010 H1390" fill="none" stroke="#188038" stroke-width="2.2" stroke-linejoin="round" stroke-linecap="round" stroke-dasharray="7 6" marker-end="url(#data)"/>
+<text x="1290" y="1087" font-size="16" fill="#137333" font-weight="400" text-anchor="start">
+<tspan x="1290" dy="0">Upload</tspan>
+</text>
+<rect x="1390" y="1125" width="535" height="110" rx="12" fill="#fff" stroke="#dadce0" stroke-width="1.5"/>
+<image x="1410" y="1145" width="44" height="44" href="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIyNHB4IiBoZWlnaHQ9IjI0cHgiIHZpZXdCb3g9IjAgMCAyNCAyNCI+PGRlZnM+PHN0eWxlPi5jbHMtMXtmaWxsOiM2NjlkZjY7fS5jbHMtMSwuY2xzLTJ7ZmlsbC1ydWxlOmV2ZW5vZGQ7fS5jbHMtMntmaWxsOiM0Mjg1ZjQ7fTwvc3R5bGU+PC9kZWZzPjx0aXRsZT5JY29uXzI0cHhfSUFNX0NvbG9yPC90aXRsZT48ZyBkYXRhLW5hbWU9IlByb2R1Y3QgSWNvbnMiPjxnID48cGF0aCBjbGFzcz0iY2xzLTEiIGQ9Ik0xMiwyLDMuNzksNS40MnY1LjYzYzAsNS4wNiwzLjUsOS44LDguMjEsMTEsNC43MS0xLjE1LDguMjEtNS44OSw4LjIxLTEwLjk1VjUuNDJabTAsMy43OWEyLjYzLDIuNjMsMCwxLDEtMS44Ni43N0EyLjYzLDIuNjMsMCwwLDEsMTIsNS43OVptNC4xMSwxMS4xNUE4LjY0LDguNjQsMCwwLDEsMTIsMTkuODdhOC42NCw4LjY0LDAsMCwxLTQuMTEtMi45M1YxNC42OWMwLTEuNjcsMi43NC0yLjUyLDQuMTEtMi41MnM0LjExLjg1LDQuMTEsMi41MnYyLjI1WiIvPjxwYXRoIGNsYXNzPSJjbHMtMiIgZD0iTTEyLDJWNS43OWEyLjYzLDIuNjMsMCwxLDEsMCw1LjI2djEuMTJjMS4zNywwLDQuMTEuODUsNC4xMSwyLjUydjIuMjVBOC42NCw4LjY0LDAsMCwxLDEyLDE5Ljg3VjIyYzQuNzEtMS4xNSw4LjIxLTUuODksOC4yMS0xMC45NVY1LjQyWiIvPjwvZz48L2c+PC9zdmc+"/>
+<text x="1472" y="1160" font-size="23" fill="#202124" font-weight="600" text-anchor="start">
+<tspan x="1472" dy="0">IAM · dedicated VM identity</tspan>
+</text>
+<text x="1472" y="1191" font-size="18" fill="#3c4043" font-weight="400" text-anchor="start">
+<tspan x="1472" dy="0">Registry reader + five secret accessors</tspan>
+<tspan x="1472" dy="25.2">Backup object creator · no key files</tspan>
+</text>
+<rect x="1390" y="1280" width="535" height="110" rx="12" fill="#fff" stroke="#dadce0" stroke-width="1.5"/>
+<image x="1410" y="1300" width="44" height="44" href="data:image/svg+xml;base64,PHN2ZyB2ZXJzaW9uPSIxLjEiIGJhc2VQcm9maWxlPSJ0aW55IiBpZD0iTGF5ZXJfMSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIiB4bWxuczp4bGluaz0iaHR0cDovL3d3dy53My5vcmcvMTk5OS94bGluayIKCSB4PSIwcHgiIHk9IjBweCIgd2lkdGg9IjI0cHgiIGhlaWdodD0iMjRweCIgdmlld0JveD0iMCAwIDI0IDI0IiBvdmVyZmxvdz0idmlzaWJsZSIgeG1sOnNwYWNlPSJwcmVzZXJ2ZSI+CjxnID4KCTxyZWN0IHk9IjAiIGZpbGw9Im5vbmUiIHdpZHRoPSIyNCIgaGVpZ2h0PSIyNCIvPgoJPGcgdHJhbnNmb3JtPSJ0cmFuc2xhdGUoMC4wMDAwMDAsIDUuMDAwMDAwKSI+CgkJPHBhdGggZmlsbC1ydWxlPSJldmVub2RkIiBmaWxsPSIjODVBNEU2IiBkPSJNMjIuNSwxNS4yaC0yMWMtMC44LDAtMS41LTAuNy0xLjUtMS41VjAuMmMwLTAuOCwwLjctMS41LDEuNS0xLjVoMjEKCQkJYzAuOCwwLDEuNSwwLjcsMS41LDEuNXYxMy41QzI0LDE0LjYsMjMuMywxNS4yLDIyLjUsMTUuMkwyMi41LDE1LjJ6Ii8+CgkJPHBhdGggZmlsbC1ydWxlPSJldmVub2RkIiBmaWxsPSIjNUM4NURFIiBkPSJNMjIuNSwxNS4ySDEyVi0xLjJoMTAuNWMwLjgsMCwxLjUsMC43LDEuNSwxLjV2MTMuNUMyNCwxNC42LDIzLjMsMTUuMiwyMi41LDE1LjIKCQkJTDIyLjUsMTUuMnoiLz4KCQk8cmVjdCB5PSIxIiBmaWxsLXJ1bGU9ImV2ZW5vZGQiIGZpbGw9IiM1Qzg1REUiIHdpZHRoPSIyNCIgaGVpZ2h0PSIzIi8+CgkJCTxyZWN0IGlkPSJSZWN0YW5nbGUtcGF0aF8wMDAwMDEzNTY3NDIxMTc3Mjg1NjM0Njc2MDAwMDAwMjczMDM2MjU1ODEyOTE1MjE2Ml8iIHg9IjEyIiB5PSIxIiBmaWxsLXJ1bGU9ImV2ZW5vZGQiIGZpbGw9IiMzMzY3RDYiIHdpZHRoPSIxMiIgaGVpZ2h0PSIzIi8+CgkJCTxyZWN0IGlkPSJSZWN0YW5nbGUtcGF0aF8wMDAwMDEyNzczMjQxMTY4NjQyMTM4NzIzMDAwMDAwNTg2NjMxMDI4MDkwNDMyODMyM18iIHg9IjIuMiIgeT0iNS41IiBmaWxsLXJ1bGU9ImV2ZW5vZGQiIGZpbGw9IiNGRkZGRkYiIHdpZHRoPSIxOS41IiBoZWlnaHQ9IjIuMiIvPgoJCQk8cmVjdCBpZD0iUmVjdGFuZ2xlLXBhdGhfMDAwMDAxNDQzMzY1NDc5NjIzNjcyNTYyNzAwMDAwMDQ2MDE4NjQ0NzgzNjY3Mzk2MTlfIiB4PSIyLjIiIHk9IjEwIiBmaWxsLXJ1bGU9ImV2ZW5vZGQiIGZpbGw9IiM1Qzg1REUiIHdpZHRoPSI0LjUiIGhlaWdodD0iMyIvPgoJCQk8cmVjdCBpZD0iUmVjdGFuZ2xlLXBhdGhfMDAwMDAxNjczNzIzNDI5Njk3NzY3MzE3NzAwMDAwMTA5MjI5MDA5Mjk1NDkzMTUyMTFfIiB4PSIxMy41IiB5PSIxMC44IiBmaWxsLXJ1bGU9ImV2ZW5vZGQiIGZpbGw9IiNGRkZGRkYiIHdpZHRoPSIxLjUiIGhlaWdodD0iMS41Ii8+CgkJCTxyZWN0IGlkPSJSZWN0YW5nbGUtcGF0aF8wMDAwMDAyNjg2NTA2MTc0NTQwODM5ODA0MDAwMDAxODAzNDE5NTc0NzQzOTQyMjE0Ml8iIHg9IjE2LjUiIHk9IjEwLjgiIGZpbGwtcnVsZT0iZXZlbm9kZCIgZmlsbD0iI0ZGRkZGRiIgd2lkdGg9IjEuNSIgaGVpZ2h0PSIxLjUiLz4KCQkJPHJlY3QgaWQ9IlJlY3RhbmdsZS1wYXRoXzAwMDAwMTY5NTQzMTA4MjIwMTQ1MDYwOTYwMDAwMDAxMjIwNzI0NDg2NDM5MTU3OTMwXyIgeD0iMTkuNSIgeT0iMTAuOCIgZmlsbC1ydWxlPSJldmVub2RkIiBmaWxsPSIjRkZGRkZGIiB3aWR0aD0iMS41IiBoZWlnaHQ9IjEuNSIvPgoJPC9nPgo8L2c+Cjwvc3ZnPgo="/>
+<text x="1472" y="1315" font-size="23" fill="#202124" font-weight="600" text-anchor="start">
+<tspan x="1472" dy="0">Cloud Billing budget · optional</tspan>
+</text>
+<text x="1472" y="1346" font-size="18" fill="#3c4043" font-weight="400" text-anchor="start">
+<tspan x="1472" dy="0">Usage alerts at 50% / 90% / 100%</tspan>
+<tspan x="1472" dy="25.2">Alerts do not cap spending</tspan>
+</text>
+<rect x="90" y="1350" width="1190" height="88" rx="12" fill="#f3eefb" stroke="#d8c8eb" stroke-width="1.5"/>
+<text x="112" y="1382" font-size="16" fill="#673ab7" font-weight="700" text-anchor="start">
+<tspan x="112" dy="0">RELEASE CONTROL</tspan>
+</text>
+<text x="112" y="1410" font-size="19" fill="#3c4043" font-weight="400" text-anchor="start">
+<tspan x="112" dy="0">CI publishes images → operator uploads secrets → operator runs fantasybuilder-deploy</tspan>
+</text>
+<path d="M1270 1155 H1285 V1332 H1355 V1497" fill="none" stroke="#7b8794" stroke-width="2.2" stroke-linejoin="round" stroke-linecap="round" stroke-dasharray="7 6" marker-end="url(#muted)"/>
+<text x="1355" y="1450" font-size="16" fill="#5f6368" font-weight="400" text-anchor="start">
+<tspan x="1355" dy="0">Outbound HTTPS / SMTP</tspan>
+</text>
+<rect x="55" y="1500" width="1890" height="100" rx="12" fill="#f8f9fa" stroke="#dadce0" stroke-width="1.5"/>
+<text x="80" y="1533" font-size="17" fill="#5f6368" font-weight="600" text-anchor="start">
+<tspan x="80" dy="0">EXTERNAL SERVICES · reached by egress-enabled containers</tspan>
+</text>
+<text x="80" y="1568" font-size="20" fill="#3c4043" font-weight="400" text-anchor="start">
+<tspan x="80" dy="0">LaLiga auth / Fantasy API     •     FutbolFantasy / standings     •     SMTP email provider     •     Optional social login / weather</tspan>
+</text>
+<path d="M60 1650 H107" fill="none" stroke="#1a73e8" stroke-width="2.2" stroke-linejoin="round" stroke-linecap="round" marker-end="url(#web)"/>
+<text x="120" y="1656" font-size="18" fill="#3c4043" font-weight="400" text-anchor="start">
+<tspan x="120" dy="0">Application traffic</tspan>
+</text>
+<path d="M360 1650 H407" fill="none" stroke="#7e57c2" stroke-width="2.2" stroke-linejoin="round" stroke-linecap="round" stroke-dasharray="7 6" marker-end="url(#ops)"/>
+<text x="420" y="1656" font-size="18" fill="#3c4043" font-weight="400" text-anchor="start">
+<tspan x="420" dy="0">Release / administration</tspan>
+</text>
+<path d="M745 1650 H792" fill="none" stroke="#188038" stroke-width="2.2" stroke-linejoin="round" stroke-linecap="round" stroke-dasharray="7 6" marker-end="url(#data)"/>
+<text x="805" y="1656" font-size="18" fill="#3c4043" font-weight="400" text-anchor="start">
+<tspan x="805" dy="0">Persistence / backups</tspan>
+</text>
+<text x="55" y="1700" font-size="17" fill="#5f6368" font-weight="400" text-anchor="start">
+<tspan x="55" dy="0">Based on Terraform + production Compose; activation / live health not verified. Google Cloud icons: cloud.google.com/icons.</tspan>
+</text>
 </g></svg>

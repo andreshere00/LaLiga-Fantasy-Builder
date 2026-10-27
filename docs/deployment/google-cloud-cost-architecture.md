@@ -28,10 +28,14 @@ Then test a downgrade to the free-tier-eligible `e2-micro` if there is enough
 memory and CPU headroom. Do not promise a free permanent deployment before that
 test. A public IPv4 address also has an ongoing charge even on a free VM.
 
-![Recommended deployment architecture](google-cloud-architecture.png)
+![Configured Google Cloud deployment architecture](google-cloud-architecture.png)
 
-The [editable Mermaid diagram](google-cloud-architecture.mmd) and
-[vector diagram](google-cloud-architecture.svg) are included alongside this document.
+The diagram uses [official Google Cloud product icons](https://cloud.google.com/icons).
+The [editable vector diagram](google-cloud-architecture.svg),
+[Mermaid flow view](google-cloud-architecture.mmd), and
+[diagram scope and component notes](google-cloud-architecture.md) are included
+alongside this document. It describes the configured topology; it does not confirm
+application activation or live health.
 
 ## Evidence from the current application
 

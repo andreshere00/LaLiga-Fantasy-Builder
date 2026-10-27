@@ -221,3 +221,6 @@ Deployment instructions: [infra/gcp/README.md](infra/gcp/README.md).
 Release gates: [authentication runbook](docs/authentication/better-auth-cutover.md).
 Editable diagram: [Mermaid](docs/deployment/google-cloud-architecture.mmd) and
 [SVG](docs/deployment/google-cloud-architecture.svg).
+The SVG and PNG use official Google Cloud product icons. See the
+[diagram notes](docs/deployment/google-cloud-architecture.md) for component scope,
+icon sources, and the distinction between configuration and verified live health.

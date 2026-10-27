@@ -1,15 +1,20 @@
 flowchart TB
     users["Up to 4 simultaneous users"]
     dns["Registrar DNS<br/>fantasybuilder.es → VM IPv4"]
-    ci["GitHub CI · tests + all 5 image builds<br/>publish only on main push after checks"]
-    admin["Administration via IAP + OS Login"]
+    ci["GitHub Actions · test → build → deploy<br/>all 5 amd64 images; publish only on main push"]
+    admin["Operator · secret uploads + explicit VM activation"]
     users -. "DNS lookup" .-> dns
-    ci -.->|"optional keyless publisher IAM<br/>repository writer only"| registry
+    ci -.->|"GitHub OIDC · main push + CI workflow"| wif
 
-    subgraph gcp["Google Cloud · us-central1"]
+    subgraph gcp["Google Cloud · dev-fantasybuilder"]
+      wif["Workload Identity Federation · opt-in<br/>repository + numeric ID + main workflow restricted"]
+      iap["IAP + OS Login<br/>SSH 22 from IAP range only"]
+      iam["Dedicated VM service account<br/>registry reader · five secret accessors · backup object creator"]
+      budget["Cloud Billing budget · optional<br/>50% / 90% / 100% alerts · not a spending cap"]
       registry["Artifact Registry<br/>untagged cleanup after 7 days; keep 3 recent<br/>tagged releases retired manually"]
       secrets["Secret Manager · 5 secret containers<br/>payloads uploaded separately by operator"]
-      subgraph vm["One e2-small VM · 2 GiB RAM · Docker Compose"]
+      subgraph vpc["VPC · us-central1 · subnet 10.42.0.0/24 · zone us-central1-a"]
+      subgraph vm["One e2-small Compute Engine VM · 2 GiB · Debian 12 · Docker Compose"]
         caddy["Caddy · HTTPS on 80/443"]
         web["Nginx + React static files"]
         subgraph private["Private service connections · no published backend ports"]
@@ -20,7 +25,6 @@ flowchart TB
           pg[("PostgreSQL<br/>separate identity + vault DBs/roles")]
           redis[("Redis<br/>auth rate limits")]
         end
-        disk["30 GiB standard persistent disk<br/>PostgreSQL volume + Caddy data + OS/images"]
         caddy -->|"/auth/*; replace client IP"| identity
         caddy -->|"other paths"| web
         web -->|"/laliga/*"| auth
@@ -30,10 +34,12 @@ flowchart TB
         identity -->|"own DB role"| pg
         auth -->|"vault, pairings, refresh locks"| pg
         auth --> redis
+        identity -->|"LaLiga integration"| auth
         auth -.->|"JWKS"| identity
         api -.->|"JWKS"| identity
-        pg --- disk
-        caddy --- disk
+      end
+      disk["30 GiB pd-standard Persistent Disk<br/>PostgreSQL volume + Caddy data + OS/images<br/>auto_delete=false · prevent_destroy"]
+      vm ---|"attached boot disk"| disk
       end
       backup[("Private Cloud Storage bucket<br/>daily DB backups · bounded retention")]
       pg -.->|"logical backups"| backup
@@ -41,7 +47,10 @@ flowchart TB
 
     users -->|"HTTPS · fantasybuilder.es"| caddy
     registry -.->|"operator activates pinned release"| vm
-    admin -.-> vm
+    admin -.->|"SSH administration"| iap
+    admin -.->|"upload dotenv versions"| secrets
+    iap -.-> vm
+    wif -.->|"CI publisher · repository writer only"| registry
     secrets -.->|"host fetches during explicit releases; scoped IAM<br/>reboots use local snapshot"| vm
     identity -->|"TLS SMTP 465"| mail["Resend<br/>verification + recovery"]
     identity --> providers["Optional Google / Facebook / Apple"]
