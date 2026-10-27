@@ -152,8 +152,10 @@ DNS is unaffected. No service-account keys are generated.
 Terraform creates an Artifact Registry repository, five Secret Manager secret
 containers, and root-owned deployment scripts/systemd units. Operators upload
 dotenv secret versions separately. With the optional GitHub publisher configured,
-CI builds immutable amd64 images after tests pass and publishes them only on
-pushes to `main`, once all five builds succeed. Pull requests never publish.
+CI runs `test` → `build` → `deploy`. Tests and amd64 image builds run on every
+branch push and on pull requests. After all five builds succeed, main pushes
+transfer the checked images to the deploy job for publishing without rebuilding.
+Pull requests and other branches never publish; tag pushes do not run CI.
 Keyless federation is restricted to this repository ID/name and the main CI
 workflow; the publisher has repository writer access without VM or secret access.
 Each successful publishing run produces the five image digests as a release

@@ -69,10 +69,14 @@ bucket is not intended as a Terraform-state bucket.
 
 ### Automatic publishing after CI on main
 
-The GitHub workflow runs checks for pull requests and pushes to `main`. Image
-builds wait for the test job. Every application image must build successfully
-before any registry login or push. Only a `push` event on `refs/heads/main`
-publishes the five checked Linux amd64 images, tagged `sha-<full commit SHA>`.
+The GitHub workflow has three stages: `test` → `build` → `deploy`. Tests and
+builds run for pull requests and pushes to every branch; tag pushes do not trigger
+the workflow. Image builds wait for the test job, and the frontend image build
+includes TypeScript checks and the production bundle. Every application image
+must build successfully before deployment. On a `push` event on `refs/heads/main`,
+the build job exports the five checked Linux amd64 images as a one-day artifact.
+The deploy job downloads and loads those exact images without rebuilding, then
+publishes them tagged `sha-<full commit SHA>`. Only deploy receives OIDC permission.
 PRs, other branches, and tags do not publish. A rerun of a main push can republish
 that commit. Registry pushes are not atomic: a failed push can leave some images
 uploaded, but the release artifact is produced only when all five succeed.
@@ -119,7 +123,7 @@ from the successful Actions run. It contains `release-images.env` with only the
 five pinned image references. Merge those five entries into your private
 `runtime.env`, preserving its passwords and service tokens, upload a new runtime
 secret version, and activate the VM using the deployment helper below. The
-workflow publishes images; it does not update secrets or restart the live VM.
+deploy stage publishes images; it does not update secrets or restart the live VM.
 No release artifact is uploaded for PRs or a failed publishing run.
 
 ### Manual publishing fallback

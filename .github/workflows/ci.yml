@@ -2,7 +2,7 @@ name: CI
 
 on:
   push:
-    branches: [main]
+    branches: ['**']
   pull_request:
 
 permissions:
@@ -67,7 +67,7 @@ jobs:
         working-directory: frontend
 
       - name: Frontend contracts and behavior
-        run: bun run test && bun run build
+        run: bun run test
         working-directory: frontend
 
       - name: Authentication browser flows
@@ -84,15 +84,10 @@ jobs:
           AUTH_TEST_DATABASE_URL: postgresql://identity:test-only@localhost:5432/identity_test
         run: uv run poe test
 
-  docker:
-    # Test first, then build every image before any registry authentication/push.
+  build:
+    # Every branch push and PR builds all images after tests pass.
     needs: test
     runs-on: ubuntu-latest
-    permissions:
-      contents: read
-      id-token: write
-    env:
-      GCP_ARTIFACT_REGISTRY: ${{ vars.GCP_ARTIFACT_REGISTRY }}
     steps:
       - uses: actions/checkout@v4
 
@@ -117,8 +112,46 @@ jobs:
       - name: Build frontend image
         run: docker buildx build --platform linux/amd64 --load -t "fantasybuilder/frontend:$GITHUB_SHA" -f frontend/Dockerfile .
 
-      - name: Validate publishing configuration
+      - name: Export checked images for deployment
         if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+        run: |
+          images=()
+          for service in identity auth api scraping frontend; do
+            images+=("fantasybuilder/$service:$GITHUB_SHA")
+          done
+          docker save --output "$RUNNER_TEMP/application-images.tar" "${images[@]}"
+
+      - name: Transfer checked images
+        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+        uses: actions/upload-artifact@v4
+        with:
+          name: application-images-${{ github.sha }}
+          path: ${{ runner.temp }}/application-images.tar
+          if-no-files-found: error
+          retention-days: 1
+
+  deploy:
+    needs: build
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      id-token: write
+    env:
+      GCP_ARTIFACT_REGISTRY: ${{ vars.GCP_ARTIFACT_REGISTRY }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Download checked images
+        uses: actions/download-artifact@v4
+        with:
+          name: application-images-${{ github.sha }}
+          path: ${{ runner.temp }}
+
+      - name: Load checked images
+        run: docker load --input "$RUNNER_TEMP/application-images.tar"
+
+      - name: Validate publishing configuration
         env:
           GCP_PROJECT_ID: ${{ vars.GCP_PROJECT_ID }}
           GCP_WORKLOAD_IDENTITY_PROVIDER: ${{ vars.GCP_WORKLOAD_IDENTITY_PROVIDER }}
@@ -133,7 +166,6 @@ jobs:
           echo "REGISTRY_HOST=${GCP_ARTIFACT_REGISTRY%%/*}" >> "$GITHUB_ENV"
 
       - name: Authenticate image publisher
-        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
         id: auth
         uses: google-github-actions/auth@v3
         with:
@@ -144,7 +176,6 @@ jobs:
           create_credentials_file: false
 
       - name: Log in to Artifact Registry
-        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
         uses: docker/login-action@v4
         with:
           registry: ${{ env.REGISTRY_HOST }}
@@ -152,11 +183,9 @@ jobs:
           password: ${{ steps.auth.outputs.access_token }}
 
       - name: Publish the checked images
-        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
         run: bash scripts/publish-images.sh
 
       - name: Save deployable image digests
-        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
         uses: actions/upload-artifact@v4
         with:
           name: release-images-${{ github.sha }}
@@ -165,7 +194,6 @@ jobs:
           retention-days: 7
 
       - name: Summarize published release
-        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
         run: |
           echo '### Published application images' >> "$GITHUB_STEP_SUMMARY"
           echo 'Download the release-images artifact for the five pinned image references.' >> "$GITHUB_STEP_SUMMARY"
