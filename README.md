@@ -37,7 +37,7 @@ data and user-confirmed writes with your linked account.
   tooltips explain lock countdown or premium-only coach hires.
 - **Hover detail:** FSYP breakdown, market-value history (high/low and 5d/14d
   ago with %), bid amounts, balance and clause warnings.
-- **Seal end** turns red when less than one hour remains on a listing.
+- **Seal end** uses a coral rail when less than one hour remains. The final minute replaces that rail with a warning icon.
 
 ### Players (`/players`)
 

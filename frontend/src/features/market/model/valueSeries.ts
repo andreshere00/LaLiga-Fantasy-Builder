@@ -5,6 +5,7 @@ export type ValuePoint = { time: number; value: number };
 const VARIATION_DAYS = 5;
 export const DAY_MS = 86_400_000;
 export const ONE_HOUR_MS = 3_600_000;
+export const ONE_MINUTE_MS = 60_000;
 
 /** Parses ``GET /players/{id}/market-value`` into an ascending value series. */
 export function valueSeries(history: unknown): ValuePoint[] {
@@ -49,11 +50,18 @@ export function isSealEndUnderOneHour(expiresAt: number | null, now: number): bo
   return left != null && left < ONE_HOUR_MS;
 }
 
-/** Human label such as ``2d 3h``, ``5h 10m`` or ``Expired``. */
+/** True while a listing still has time left, but less than one minute. */
+export function isSealEndUnderOneMinute(expiresAt: number | null, now: number): boolean {
+  const left = remainingMs(expiresAt, now);
+  return left != null && left > 0 && left < ONE_MINUTE_MS;
+}
+
+/** Human label such as ``2d 3h``, ``5h 10m``, ``<1m`` or ``Expired``. */
 export function remainingLabel(expiresAt: number | null, now: number): string {
   const left = remainingMs(expiresAt, now);
   if (left == null) return "—";
   if (left === 0) return "Expired";
+  if (left < ONE_MINUTE_MS) return "<1m";
   const minutes = Math.floor(left / 60_000);
   const days = Math.floor(minutes / 1_440);
   const hours = Math.floor((minutes % 1_440) / 60);

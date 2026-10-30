@@ -1,6 +1,12 @@
 import { describe, expect, it } from "vitest";
 
-import { clauseUnlockCountdown, isSealEndUnderOneHour, ONE_HOUR_MS } from "./valueSeries";
+import {
+  clauseUnlockCountdown,
+  isSealEndUnderOneHour,
+  isSealEndUnderOneMinute,
+  ONE_HOUR_MS,
+  remainingLabel,
+} from "./valueSeries";
 
 describe("isSealEndUnderOneHour", () => {
   const now = Date.parse("2026-06-01T12:00:00Z");
@@ -15,6 +21,14 @@ describe("isSealEndUnderOneHour", () => {
 
   it("isSealEndUnderOneHour_false_when_expiry_unknown", () => {
     expect(isSealEndUnderOneHour(null, now)).toBe(false);
+  });
+
+  it("isSealEndUnderOneMinute_true_only_while_time_remains", () => {
+    expect(isSealEndUnderOneMinute(now + 59_000, now)).toBe(true);
+    expect(isSealEndUnderOneMinute(now + 60_000, now)).toBe(false);
+    expect(isSealEndUnderOneMinute(now, now)).toBe(false);
+    expect(isSealEndUnderOneMinute(null, now)).toBe(false);
+    expect(remainingLabel(now + 30_000, now)).toBe("<1m");
   });
 });
 

@@ -1126,6 +1126,11 @@ a.market-actions-item {
 .market-position-badge:is(.is-fwd,.is-gk,.is-def,.is-mdf,.is-coa) { background:var(--fb-subtle); color:var(--fb-secondary); }
 .market-value-change,.market-seal-end.is-urgent { color:var(--fb-secondary); }
 .market-seal-end.is-urgent { border-left:3px solid var(--fb-primary); padding-left:6px; }
+.market-seal-end.is-expiring { display:inline-flex; align-items:center; gap:4px; font-weight:700; }
+.market-seal-end.is-expiring img { width:18px; height:18px; flex:0 0 auto; }
+.market-seal-end.is-expiring:focus-visible {
+  outline:2px solid var(--fb-focus); outline-offset:2px;
+}
 .market-availability { gap:6px; font-size:12px; }
 .market-form-nav-btn { width:44px; height:44px; min-width:44px; min-height:44px; color:var(--fb-secondary); font-size:18px; }
 .market-form-badges .player-score-badge { width:44px; height:44px; }
