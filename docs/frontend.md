@@ -315,7 +315,9 @@ the rating and its FutbolFantasy source. This is current form even while viewing
 an older fixture. Season total Fantasy points occupy the photo's upper-left
 corner; the pitch retains fixture points. Starter probability appears above the
 name on the left, with form on the right. The tooltip includes the probability's
-matchweek when supplied. Missing values show a dash; reported zeroes stay zero.
+matchweek when supplied. Starter badges use the profile icon colors: red below
+50%, yellow from 50% to below 75%, and green from 75%. Missing values show a
+neutral dash; reported zeroes stay zero.
 All squad profiles load in parallel and are cached for five minutes. A skeleton
 reserves the cards' space until the catalog and all profiles settle, then reveals
 the complete squad with a short fade and slide. Reduced motion skips the

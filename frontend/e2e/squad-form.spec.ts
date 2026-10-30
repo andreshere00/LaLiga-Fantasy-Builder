@@ -31,7 +31,7 @@ for (const theme of ["light", "dark"]) {
         return route.fulfill({ json: {
           ...detail.profile, playerId: id,
           form: { rating: ratings[Number(id) - 1] ?? null },
-          startProbability: { matchweek: 9, percent: [100, 0, 85, null, 120][Number(id) - 1] ?? null },
+          startProbability: { matchweek: 9, percent: [100, 0, 85, null, 120, 50][Number(id) - 1] ?? null },
         } });
       });
       await page.goto("/");
@@ -53,6 +53,14 @@ for (const theme of ["light", "dark"]) {
       await expect(tile("Player 03").locator(".player-starter-probability")).toHaveText("85%");
       await expect(tile("Player 04").locator(".player-starter-probability")).toHaveText("—");
       await expect(tile("Player 05").locator(".player-starter-probability")).toHaveText("—");
+      await expect(tile("Player 01").locator(".player-starter-probability"))
+        .toHaveCSS("background-color", "rgb(16, 189, 0)");
+      await expect(tile("Player 02").locator(".player-starter-probability"))
+        .toHaveCSS("background-color", "rgb(255, 75, 68)");
+      await expect(tile("Player 06").locator(".player-starter-probability"))
+        .toHaveCSS("background-color", "rgb(255, 196, 19)");
+      await expect(tile("Player 05").locator(".player-starter-probability"))
+        .not.toHaveAttribute("data-tone");
       await expect(page.locator(".squad-grid .player-score-badge")).toHaveCount(0);
       await expect(page.locator(".pitch-tile .player-score-badge").first()).toBeVisible();
       await expect(page.locator(".squad-grid--ready"))

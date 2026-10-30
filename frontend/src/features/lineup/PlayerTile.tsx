@@ -8,6 +8,7 @@ import { scoreTone, scoreWeekLabel } from "../../api/mappers";
 import { PersonIcon, WarningIcon } from "../shell/icons";
 import { NOT_SELECTED_PLAYER_LABEL } from "./playerTileCopy";
 import { playerFormPresentation } from "../players/playerForm";
+import { starterProbabilityTone } from "../players/starterProbability";
 import type { SquadPlayerStats } from "./useSquadStats";
 
 type PlayerTileProps = {
@@ -162,7 +163,8 @@ export function PlayerTile({
         <PlayerScoreBadge points={fixturePoints} isMvp={isMvp} />
       ) : null}
       <TeamBadge key={teamBadgeUrl ?? "no-badge"} url={teamBadgeUrl} />
-      {form ? <span className="player-starter-probability" aria-hidden="true">
+      {form ? <span className="player-starter-probability"
+        data-tone={starterProbabilityTone(form.starterProbability) ?? undefined} aria-hidden="true">
         {form.starterProbability == null ? "—" : `${form.starterProbability}%`}
       </span> : null}
       {form ? <span className="player-form-badge" aria-hidden="true">

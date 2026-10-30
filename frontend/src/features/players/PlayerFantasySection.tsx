@@ -13,6 +13,7 @@ import injuryYellow from "../../assets/button_injury_yellow.svg";
 import injuryRed from "../../assets/button_injury_red.svg";
 import injuryGray from "../../assets/button_injury_gray.svg";
 import { playerFormPresentation } from "./playerForm";
+import { starterProbabilityTone } from "./starterProbability";
 import { useEffect, useId, useState } from "react";
 import { asFiniteNumber, asRecord, text } from "../../api/mappers";
 import { formatInjuryHistoryEntry, newsItemHref } from "./playerDetailFormat";
@@ -143,11 +144,9 @@ export function PlayerFantasySummary({ profile }: FantasySectionProps) {
         : hierarchyKeyText.includes("reserva") || hierarchyKeyText.includes("reserve")
           ? hierarchyReserve
           : hierarchyImportant;
-  const starterIcon = startPercent == null || startPercent < 50
-    ? starterLow
-    : startPercent < 75
-      ? starterMid
-      : starterHigh;
+  const starterIcon = { low: starterLow, mid: starterMid, high: starterHigh }[
+    starterProbabilityTone(startPercent) ?? "low"
+  ];
   const riskIcon = injuryRisk?.level === "low"
     ? injuryGreen
     : injuryRisk?.level === "medium"
