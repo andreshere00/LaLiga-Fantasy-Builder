@@ -1080,8 +1080,13 @@
   z-index: 1;
 }
 
+.squad-pager .pager {
+  /* Keep the 44px touch targets inside the frame's two border pixels. */
+  height: calc(var(--lineup-control-height) + 2px);
+}
+
 .squad-pager .pager > :is(button, span) {
-  height: calc(var(--lineup-control-height) - 2px);
+  height: var(--lineup-control-height);
 }
 
 .lineup-page .pager button,
