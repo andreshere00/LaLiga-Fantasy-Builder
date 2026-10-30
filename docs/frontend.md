@@ -706,8 +706,8 @@ line. Transaction dialogs and confirmations retain their existing behavior.
 
 Players and Market share `ComparisonList.css` for typography, portrait sizing,
 form controls and comparison-row styling. Footballer portraits are 72 × 96px
-and manager avatars are 32px. Players keeps club, ownership and
-favorite actions alongside the shared facts. At phone widths, both screens use
+and manager avatars are 24px, matching the LaLiga seller symbol. Players keeps
+club, ownership and favorite actions alongside the shared facts. At phone widths, both screens use
 labeled cards; Players shows value and clause details together in the value
 section, without duplicating them under Actions. Ownership has its own full-width
 line on phones to keep larger avatars and long manager names together. Tablet
