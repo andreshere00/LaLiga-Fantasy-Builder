@@ -4,7 +4,6 @@ import { BadgeImage } from "../../components/BadgeImage";
 import { Button } from "../../components/ui/Button";
 import { Checkbox } from "../../components/ui/Checkbox";
 import { Dialog } from "../../components/ui/Dialog";
-import { Progress, ProgressLabel } from "../../components/ui/Progress";
 import { Slider } from "../../components/ui/Slider";
 import { ToggleGroup, ToggleGroupItem } from "../../components/ui/ToggleGroup";
 import { AVAILABILITY_FILTER_OPTIONS } from "../market/MarketFilterFields";
@@ -105,13 +104,12 @@ export function SquadFilterDialog({
             onChange={(minStarterProbability) => setDraft({ ...draft, minStarterProbability })} />
         </FilterGroup>
         <FilterGroup label="Form" summary={selectionSummary(FORM_OPTIONS, draft.forms)}>
-          <OptionToggles options={FORM_OPTIONS} selected={[...draft.forms]}
-            onChange={(values) => setDraft({ ...draft, forms: new Set(values) })} />
+          <FormScale selected={draft.forms}
+            onChange={(forms) => setDraft({ ...draft, forms })} />
         </FilterGroup>
         <FilterGroup label="Availability"
           summary={selectionSummary(AVAILABILITY_FILTER_OPTIONS, draft.availability)}>
-          <OptionToggles options={AVAILABILITY_FILTER_OPTIONS}
-            selected={[...draft.availability]}
+          <AvailabilityScale selected={[...draft.availability]}
             onChange={(values) => setDraft({
               ...draft,
               availability: new Set(AVAILABILITY_FILTER_OPTIONS
@@ -144,6 +142,56 @@ function FilterGroup({ label, summary, children, defaultOpen = false }: {
         {children}
       </fieldset>
     </details>
+  );
+}
+
+const FORM_BANDS = [
+  { label: "Poor", tone: "poor", options: ["Very poor", "Poor"] },
+  { label: "Average", tone: "average", options: ["Average"] },
+  { label: "Good", tone: "good", options: ["Good", "Very good"] },
+] as const;
+
+function FormScale({ selected, onChange }: {
+  selected: ReadonlySet<string>;
+  onChange: (forms: Set<string>) => void;
+}) {
+  return (
+    <div className="squad-form-scale">
+      {FORM_BANDS.map((band) => (
+        <div key={band.label} className="squad-form-band" data-tone={band.tone}
+          data-options={band.options.length}>
+          <span className="squad-form-band-label" id={`squad-form-${band.tone}`}>{band.label}</span>
+          <ToggleGroup multiple aria-labelledby={`squad-form-${band.tone}`}
+            value={band.options.filter((option) => selected.has(option))}
+            onValueChange={(values) => {
+              const next = new Set(selected);
+              for (const option of band.options) next.delete(option);
+              for (const value of values) next.add(String(value));
+              onChange(next);
+            }}>
+            {band.options.map((option) => (
+              <ToggleGroupItem key={option} value={option}>{option}</ToggleGroupItem>
+            ))}
+          </ToggleGroup>
+        </div>
+      ))}
+    </div>
+  );
+}
+
+function AvailabilityScale({ selected, onChange }: {
+  selected: readonly string[];
+  onChange: (values: string[]) => void;
+}) {
+  return (
+    <ToggleGroup multiple className="squad-availability" value={selected}
+      onValueChange={(values) => onChange(values.map(String))}>
+      {AVAILABILITY_FILTER_OPTIONS.map((option) => (
+        <ToggleGroupItem key={option.value} value={option.value} data-tone={option.value}>
+          {option.label}
+        </ToggleGroupItem>
+      ))}
+    </ToggleGroup>
   );
 }
 
@@ -230,10 +278,10 @@ function StarterProbabilityField({ players, value, onChange }: {
   const qualifying = known.filter((player) => (player.starterProbability ?? 0) >= value).length;
   return (
     <div className="squad-filter-slider">
-      <Progress value={value} className="squad-filter-probability">
-        <ProgressLabel>Minimum start probability</ProgressLabel>
+      <p className="squad-filter-probability">
+        <span className="squad-filter-probability-label">Minimum start probability</span>
         <span className="squad-filter-slider-value">{value > 0 ? `${value}%+` : "Any"}</span>
-      </Progress>
+      </p>
       <Slider thumbLabels={["Minimum start probability"]} min={0} max={100}
         step={STARTER_PROBABILITY_STEP} largeStep={25} value={value}
         onValueChange={(next) => { if (typeof next === "number") onChange(next); }} />

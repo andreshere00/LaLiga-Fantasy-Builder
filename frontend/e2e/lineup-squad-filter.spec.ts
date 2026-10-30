@@ -48,6 +48,27 @@ test("phone squad filter opens as a dialog", async ({ page }, info) => {
   await expect(crest).toBeVisible();
   await expect(crest).toHaveCSS("object-fit", "contain");
   await expect(clubDisclosure).toBeFocused();
+  const formDisclosure = dialog.locator("summary").filter({ hasText: "Form" });
+  await formDisclosure.click();
+  const poor = dialog.getByRole("group", { name: "Poor" });
+  const good = dialog.getByRole("group", { name: "Good" });
+  await expect(poor.getByRole("button", { name: "Very poor" })).toBeVisible();
+  await expect(dialog.getByRole("group", { name: "Average" })).toBeVisible();
+  await expect(good.getByRole("button", { name: "Very good" })).toBeVisible();
+  const poorBox = await poor.boundingBox();
+  const goodBox = await good.boundingBox();
+  expect(poorBox && goodBox && Math.abs(poorBox.x - goodBox.x)).toBeLessThan(2);
+  expect(poorBox && goodBox && Math.abs(poorBox.width - goodBox.width)).toBeLessThan(2);
+  await dialog.locator("summary").filter({ hasText: "Availability" }).click();
+  const availabilityButtons = ["Available", "Questionable", "Unavailable"].map((name) =>
+    dialog.getByRole("button", { name, exact: true }));
+  const availabilityBoxes = await Promise.all(availabilityButtons.map((button) => button.boundingBox()));
+  const [first, second, third] = availabilityBoxes;
+  expect(first && second && third).toBeTruthy();
+  expect(Math.abs(first!.width - second!.width)).toBeLessThan(2);
+  expect(Math.abs(second!.width - third!.width)).toBeLessThan(2);
+  expect(Math.abs(first!.x - third!.x)).toBeLessThan(2);
+  await availabilityButtons[2].scrollIntoViewIfNeeded();
   await page.screenshot({ path: info.outputPath("squad-filter-phone-dark.png") });
   await page.keyboard.press("Escape");
   await expect(dialog).toBeHidden();
@@ -75,7 +96,7 @@ test("start probability slider keeps players at or above the minimum", async ({ 
     await page.keyboard.press(key);
   }
   await expect(thumb).toHaveValue("85");
-  await expect(dialog.getByRole("progressbar")).toHaveAttribute("aria-valuenow", "85");
+  await expect(dialog.getByRole("progressbar")).toHaveCount(0);
   await expect(dialog.locator("summary").filter({ hasText: "Start probability" }))
     .toContainText("At least 85%");
   await page.screenshot({ path: info.outputPath("squad-filter-probability.png") });

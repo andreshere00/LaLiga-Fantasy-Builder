@@ -1,6 +1,6 @@
 import { Menu } from "@base-ui/react/menu";
 import { Help } from "../../components/ui/Help";
-import { useEffect, useId, useRef, useState, type ReactNode } from "react";
+import { Children, useEffect, useId, useRef, useState, type ReactNode } from "react";
 import { Link } from "react-router-dom";
 
 import { formatEuro, formatIntegerAmount, parseIntegerAmount } from "../../api/format";
@@ -25,6 +25,22 @@ import "./SquadPlayerActions.css";
 type SaleView = "options" | "choose" | "list" | "modify" | "cancel" | "immediate";
 
 const PLAYER_OPTIONS_HINT = "Click for player options";
+
+function ChoiceGroup({ label, tone, children }: {
+  label: string;
+  tone: "market" | "player" | "lineup";
+  children: ReactNode;
+}) {
+  const titleId = useId();
+  const items = Children.toArray(children);
+  if (items.length === 0) return null;
+  return (
+    <section className="squad-sale-choice-group" data-tone={tone} aria-labelledby={titleId}>
+      <h3 id={titleId} className="squad-sale-choice-group-label">{label}</h3>
+      <div className="squad-sale-choices">{items}</div>
+    </section>
+  );
+}
 
 export function SquadPlayerActions({
   player,
@@ -221,35 +237,41 @@ export function SquadPlayerActions({
         }
       >
         {view === "options" ? (
-          <div className="squad-sale-choices">
-            <button type="button" className="squad-sale-choice" onClick={() => setView("choose")}>
-              Market options
-            </button>
-            {ownPlayer && offersMenu && !/^player-\d+$/.test(player.id) ? (
-              <button type="button" className="squad-sale-choice" onClick={() => {
-                offersMenu.openForPlayer(player.id, player.name);
-                close();
-              }}>
-                View offers for this player
+          <div className="squad-sale-choice-groups">
+            <ChoiceGroup label="Market" tone="market">
+              <button type="button" className="squad-sale-choice" onClick={() => setView("choose")}>
+                Market options
               </button>
-            ) : null}
-            {player.masterPlayerId && player.positionId !== 5 ? (
-              <Link
-                className="squad-sale-choice"
-                to={`/players/${encodeURIComponent(player.masterPlayerId)}`}
-                onClick={close}
-              >
-                Player details
-              </Link>
-            ) : null}
-            {onSwap ? (
-              <button type="button" className="squad-sale-choice" onClick={() => {
-                close();
-                onSwap();
-              }}>
-                Swap player
-              </button>
-            ) : null}
+              {ownPlayer && offersMenu && !/^player-\d+$/.test(player.id) ? (
+                <button type="button" className="squad-sale-choice" onClick={() => {
+                  offersMenu.openForPlayer(player.id, player.name);
+                  close();
+                }}>
+                  View offers for this player
+                </button>
+              ) : null}
+            </ChoiceGroup>
+            <ChoiceGroup label="Details" tone="player">
+              {player.masterPlayerId && player.positionId !== 5 ? (
+                <Link
+                  className="squad-sale-choice"
+                  to={`/players/${encodeURIComponent(player.masterPlayerId)}`}
+                  onClick={close}
+                >
+                  Player details
+                </Link>
+              ) : null}
+            </ChoiceGroup>
+            <ChoiceGroup label="Lineup" tone="lineup">
+              {onSwap ? (
+                <button type="button" className="squad-sale-choice" onClick={() => {
+                  close();
+                  onSwap();
+                }}>
+                  Swap player
+                </button>
+              ) : null}
+            </ChoiceGroup>
           </div>
         ) : null}
         {view === "choose" ? (

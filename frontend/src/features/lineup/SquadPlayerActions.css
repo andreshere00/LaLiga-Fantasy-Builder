@@ -85,6 +85,23 @@
   translate: -50% 0;
 }
 
+.squad-sale-choice-groups { display: grid; }
+.squad-sale-choice-group { padding-left: 10px; border-left: 3px solid var(--fb-line); }
+.squad-sale-choice-group + .squad-sale-choice-group {
+  margin-top: 16px;
+  padding-top: 16px;
+  border-top: 1px solid var(--fb-line);
+}
+.squad-sale-choice-group[data-tone="market"] { border-left-color: var(--fb-primary); }
+.squad-sale-choice-group[data-tone="lineup"] { border-left-color: var(--fb-secondary); }
+.squad-sale-choice-group-label {
+  margin: 0 0 8px;
+  color: var(--fb-muted);
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.03em;
+  text-transform: uppercase;
+}
 .squad-sale-choices {
   display: flex;
   flex-direction: column;

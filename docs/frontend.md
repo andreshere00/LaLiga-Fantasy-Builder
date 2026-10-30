@@ -325,11 +325,13 @@ neutral dash; reported zeroes stay zero.
 **Filter squad** opens a dialog for position, season Fantasy points, club, start
 probability, form, and availability. Every selected condition applies together.
 The filter groups use expandable rows with a compact current-value summary;
-position opens first. Position, form, and availability use toggle groups; club
+position opens first. Position and availability use toggle groups. Form is grouped
+into Poor, Average, and Good, with equal buttons inside each band. Availability
+is three equal rows for Available, Questionable, and Unavailable. Club
 choices are checkboxes with their crest and name. FSYP is a two-thumb slider
 bounded by the squad's lowest and highest points. Start probability is a minimum:
-a progress bar and slider in 5% steps keep players at or above the value and
-report how many squad players qualify.
+a slider in 5% steps keeps players at or above the value and
+reports how many squad players qualify.
 **Show N players** previews the match count and updates the squad; **Cancel** and
 Escape leave it unchanged.
 **Clear filters** is available in the dialog and beside the button once a filter
@@ -349,8 +351,9 @@ has started or already finished, a pitch player who scored is shown on a purple
 background. A goalkeeper who played and did not concede is shown the same way.
 The accessible name and tooltip say how many goals were scored, or that the
 goalkeeper conceded none. Squad, market, and player cards stay neutral.
-Clicking a populated card opens a player menu with **Market options**
-and **Player details** (coaches have no details route). Market actions retain the
+Clicking a populated card opens a player menu. The actions stay the same size
+and are grouped: **Market** (sell or view offers), **Details** (open the profile;
+coaches have no details route), and **Lineup** (swap). Market actions retain the
 existing ownership, listing, balance and availability rules.
 
 When your editable lineup still has an empty slot, that slot and the squad players
