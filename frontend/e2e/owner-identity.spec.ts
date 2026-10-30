@@ -4,12 +4,20 @@ import { catalog, marketFixture, mockApplication } from "./fixtures";
 const longName = "Manager With A Very Long Name For Ownership Recognition";
 
 for (const theme of ["light", "dark"]) {
-  for (const width of [375, 1440]) {
+  for (const width of [320, 375, 800, 1440]) {
     for (const screen of ["market", "players"]) {
       test(`owner identity ${screen} ${theme} ${width}`, async ({ page }, info) => {
         await mockApplication(page);
         await page.setViewportSize({ width, height: 1000 });
         await page.addInitScript((value) => localStorage.setItem("lfb-theme", value), theme);
+        await page.route("**/api/players", (route) => route.fulfill({ json: catalog.map(
+          (player) => player.id === "14"
+            ? { ...player, photoUrl: "https://example.com/footballer.svg" } : player,
+        ) }));
+        await page.route("https://example.com/footballer.svg", (route) => route.fulfill({
+          contentType: "image/svg+xml",
+          body: '<svg xmlns="http://www.w3.org/2000/svg" width="72" height="96"><circle cx="36" cy="27" r="17" fill="#35353D"/><path d="M5 96V78a31 31 0 0 1 62 0v18" fill="#FF4B44"/></svg>',
+        }));
         const teams = [
           { id: "t1", manager: { managerName: "Demo Manager" }, players: [
             { playerTeamId: "own", playerMaster: catalog[0] },
@@ -57,13 +65,31 @@ for (const theme of ["light", "dark"]) {
           await expect(noPhoto.locator(".fb-avatar-fallback svg")).toBeVisible();
           await expect(page.locator(".players-free-agent .manager-identity")).toHaveCount(0);
         } else {
-          await expect(page.locator(cell).filter({ hasText: "LALIGA" }).locator(".manager-identity")).toHaveCount(0);
+          const laliga = page.locator(cell).filter({ hasText: "LALIGA" });
+          await expect(laliga.locator(".manager-identity")).toHaveCount(0);
+          await expect(laliga.locator(".market-laliga-icon")).toHaveCount(5);
+          await expect(laliga.locator(".market-laliga-icon").first()).toBeVisible();
+          expect(await laliga.locator(".market-laliga-icon").first().evaluate(
+            (image: HTMLImageElement) => image.complete && image.naturalWidth > 0,
+          )).toBe(true);
+          await page.locator(".market-data-row").filter({ hasText: "LALIGA" }).first()
+            .screenshot({ path: info.outputPath("laliga-row.png") });
         }
+        const ownerRow = page.locator(".market-data-row").filter({
+          has: page.getByRole("link", { name: "Other Manager", exact: true }),
+        });
+        const portrait = await ownerRow.locator(".player-tile").boundingBox();
+        await expect(ownerRow.locator(".player-photo")).toBeVisible();
+        const playerName = await ownerRow.locator(".market-name").boundingBox();
+        expect(portrait!.x + portrait!.width).toBeLessThanOrEqual(playerName!.x);
+        const rowBounds = await ownerRow.boundingBox();
+        expect(portrait!.y + portrait!.height).toBeLessThan(rowBounds!.y + rowBounds!.height);
         expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
         if (width < 700) {
           expect(await broken.evaluate((element) => element.scrollWidth <= element.clientWidth)).toBe(true);
         }
         await page.screenshot({ path: info.outputPath("owners.png"), fullPage: true });
+        await ownerRow.screenshot({ path: info.outputPath("owner-row.png") });
       });
     }
   }

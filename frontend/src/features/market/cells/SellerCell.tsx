@@ -15,7 +15,13 @@ type SellerCellProps = {
 function SellerName({ row }: { row: MarketRow }) {
   const { seller, sellerTeamId, sellerAvatarUrl } = row;
   if (row.sellerKind === "laliga") {
-    return <span className="market-seller">{seller}</span>;
+    return <span className="market-seller">
+      <span className="market-laliga-identity">
+        <img className="market-laliga-icon" src="/badges/football-logos/spain-la-liga.png"
+          alt="" aria-hidden="true" width={32} height={32} />
+        {seller}
+      </span>
+    </span>;
   }
   const identity = <ManagerIdentity name={seller} avatarUrl={sellerAvatarUrl} />;
   if (!sellerTeamId) return <span className="market-seller">{identity}</span>;

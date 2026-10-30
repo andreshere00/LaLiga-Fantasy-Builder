@@ -25,7 +25,8 @@ keyboard focus indicators remain visible.
 Market **Sell options** and catalog **Owned by** group each manager's avatar
 with their readable name and existing squad link. Missing or failed photos use
 a person icon. Names wrap within the cell; free agents and LaLiga listings keep
-their distinct labels. Photos reuse the available listing and roster data.
+their distinct labels; LaLiga sellers also show the LaLiga logo. Photos reuse
+the available listing and roster data.
 Light is the default; an explicit preference is saved under `lfb-theme`.
 LALIGA Text loads from the supplied WOFF2 face with a WOFF fallback. The shared
 `--fb-font-body` token controls body text, forms, buttons, tooltips, and chart
@@ -696,17 +697,19 @@ schedule as a full-width section. Desktop can show all table columns together;
 mobile retains horizontal scrolling with pinned team identities. The bounded
 vertical table area keeps its heading, refresh action and column headers nearby.
 
-The market uses compact comparison rows on desktop and labeled player cards at
-700px and below. Phone cards keep points, form history, market value, availability,
+The market uses comparison rows with a 144px minimum height on desktop and
+labeled player cards at 700px and below. Phone cards keep points, form history, market value, availability,
 expiry and seller actions visible; column filters remain in a horizontally
 scrollable strip. The result count reflects the active filters. Season averages
 are labeled explicitly, and LaLiga listings omit the inapplicable release-clause
 line. Transaction dialogs and confirmations retain their existing behavior.
 
 Players and Market share `ComparisonList.css` for typography, portrait sizing,
-form controls and comparison-row styling. Players keeps club, ownership and
+form controls and comparison-row styling. Footballer portraits are 72 × 96px
+and manager avatars are 32px. Players keeps club, ownership and
 favorite actions alongside the shared facts. At phone widths, both screens use
 labeled cards; Players shows value and clause details together in the value
-section, without duplicating them under Actions. Tablet retains all catalog
-columns through horizontal scrolling. Filtered counts and pagination distinguish
+section, without duplicating them under Actions. Ownership has its own full-width
+line on phones to keep larger avatars and long manager names together. Tablet
+retains all catalog columns through horizontal scrolling. Filtered counts and pagination distinguish
 the visible page from the full matching set.

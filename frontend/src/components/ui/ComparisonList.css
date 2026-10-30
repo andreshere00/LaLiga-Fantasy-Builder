@@ -1,4 +1,4 @@
-/* A compact comparison table, with a labeled card layout on phones. */
+/* Roomy comparison rows, with a labeled card layout on phones. */
 .market-page.comparison-page { max-width:1440px; width:100%; box-sizing:border-box; padding-inline:24px; }
 .market-page.comparison-page .market-toolbar { margin-bottom:18px; }
 .market-page.comparison-page .market-toolbar h1 { font-size:28px; }
@@ -10,6 +10,7 @@
 .market-results-summary p { margin:0; }
 .market-page.comparison-page .market-list { border-color:var(--fb-line); }
 .market-page.comparison-page .market-row { column-gap:14px; padding:10px 14px; }
+.market-page.comparison-page .market-data-row { min-height:144px; padding-block:18px; box-sizing:border-box; }
 .market-page.comparison-page .market-head { min-height:52px; padding-block:4px; }
 .market-page.comparison-page .market-head-label { font-size:11px; letter-spacing:.025em; }
 .market-page.comparison-page .market-head-filter-icon { width:15px; height:15px; opacity:.7; }
@@ -17,8 +18,8 @@
 .market-page.comparison-page .market-head-filter.is-active .market-head-label { text-decoration:none; }
 .market-page.comparison-page .market-data-row:hover { background:var(--fb-subtle); }
 .market-page.comparison-page .market-data-row:focus-within { box-shadow:inset 3px 0 var(--fb-primary); }
-.market-page.comparison-page .market-card .player-tile { width:48px; height:64px; }
-.market-page.comparison-page .market-card .player-team-badge { max-width:18px; max-height:22px; }
+.market-page.comparison-page .market-card .player-tile { width:72px; height:96px; }
+.market-page.comparison-page .market-card .player-team-badge { max-width:24px; max-height:28px; }
 .market-page.comparison-page .market-name { font-size:14px; line-height:1.4; }
 .market-page.comparison-page .market-fsyp-primary { font-size:18px; }
 .market-page.comparison-page .market-fsyp-average { color:var(--fb-muted); font-size:11px; font-weight:400; }
@@ -32,7 +33,9 @@
 .market-page.comparison-page .market-cell-seller { padding-block:0; }
 .market-page.comparison-page .market-seller-wrap { gap:4px; }
 .market-page.comparison-page .market-seller { font-size:11px; font-weight:500; color:var(--fb-muted); }
-.market-page.comparison-page .market-seller:has(.manager-identity) { font-size:12px; color:var(--fb-secondary); }
+.market-page.comparison-page .market-seller:has(.manager-identity,.market-laliga-identity) { font-size:12px; color:var(--fb-secondary); }
+.market-laliga-identity { display:inline-flex; align-items:center; gap:8px; min-height:44px; font-weight:700; }
+.market-laliga-icon { width:32px; height:32px; object-fit:contain; flex:0 0 32px; }
 .market-page.comparison-page .market-seller-link:is(:hover,:focus-visible) { color:var(--fb-primary); }
 .market-page.comparison-page .market-bid-count { font-size:11px; color:var(--fb-muted); }
 .market-page.comparison-page .market-actions-trigger { min-height:44px; font-size:12px; padding-inline:12px; }

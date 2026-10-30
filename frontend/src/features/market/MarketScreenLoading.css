@@ -45,8 +45,9 @@
     minmax(8.5rem, 1.35fr) 0.95fr minmax(6.75rem, 1.05fr));
   align-items: center;
   gap: 12px;
-  min-height: 5.25rem;
-  padding: 8px 12px;
+  min-height: 144px;
+  padding: 18px 14px;
+  box-sizing: border-box;
   border: 1px solid color-mix(in srgb, var(--fb-secondary) 12%, transparent);
   background: var(--fb-surface);
 }
@@ -61,8 +62,8 @@
 }
 
 .market-loading-row .market-loading-block.is-player {
-  width: 3.4rem;
-  height: 4.2rem;
+  width: 72px;
+  height: 96px;
 }
 
 .market-loading-row.is-heading {
