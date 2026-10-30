@@ -806,6 +806,8 @@
 
 .market-seller-link {
   color: inherit;
+  min-height:44px;
+  align-content:center;
 }
 
 .market-seller-link:is(:hover, :focus-visible) {

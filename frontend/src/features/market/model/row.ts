@@ -2,6 +2,7 @@ import {
   asFiniteNumber,
   asRecord,
   idText,
+  managerAvatarUrl,
   mediaFromPlayerMaster,
   teamNameFromPlayerMaster,
   text,
@@ -48,6 +49,7 @@ export type MarketRow = {
   expiresAt: number | null;
   seller: string;
   sellerTeamId: string | null;
+  sellerAvatarUrl?: string | null;
   sellerKind: SellerKind;
   buyoutClause: number | null;
   clauseUnlockAt: number | null;
@@ -186,6 +188,9 @@ export function marketRow(
     expiresAt: expiryOf(item),
     seller,
     sellerTeamId,
+    sellerAvatarUrl: managerAvatarUrl(asRecord(item.sellerTeam)?.manager)
+      ?? managerAvatarUrl(playerTeam?.manager) ?? managerAvatarUrl(item.manager)
+      ?? managerAvatarUrl(item.seller) ?? managerAvatarUrl(asRecord(item.team)?.manager),
     sellerKind: sellerKindOf(seller, sellerTeamId, callerTeamId),
     buyoutClause: asFiniteNumber(playerTeam?.buyoutClause),
     clauseUnlockAt:

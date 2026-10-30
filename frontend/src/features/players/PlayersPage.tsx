@@ -1,3 +1,4 @@
+import { ManagerIdentity } from "../shell/ManagerIdentity";
 import { Menu } from "@base-ui/react/menu";
 import { formatEuro } from "../../api/format";
 import { leagueId } from "../../api/mappers";
@@ -117,7 +118,7 @@ function PlayersListRow({
     </span>
   ) : row.ownerTeamId ? (
     <Link className="players-owner-link" to={`/?team=${encodeURIComponent(row.ownerTeamId)}`}>
-      {row.ownedBy}
+      <ManagerIdentity name={row.ownedBy} avatarUrl={row.ownerAvatarUrl} />
     </Link>
   ) : (
     row.ownedBy

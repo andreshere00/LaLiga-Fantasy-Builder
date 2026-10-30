@@ -8,7 +8,8 @@
 .players-value-details { display:block; }
 .players-page .market-name { white-space:normal; overflow-wrap:anywhere; }
 .players-name-link { color:var(--fb-secondary); text-decoration:none; }
-.players-owner-link { color:var(--fb-secondary); text-decoration:none; }
+.players-owner-link { display:inline-flex; align-items:center; min-height:44px; max-width:100%; color:var(--fb-secondary); text-decoration:none; }
+.players-owner-link:is(:hover,:focus-visible) { color:var(--fb-primary); }
 .players-free-agent { display:inline-flex; align-items:center; gap:6px; }
 .players-free-agent img { width:18px; height:18px; }
 .players-actions-cell .squad-tile-controls { position:static; width:auto; aspect-ratio:auto; }

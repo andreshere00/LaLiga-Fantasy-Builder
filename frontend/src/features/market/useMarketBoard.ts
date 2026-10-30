@@ -10,6 +10,7 @@ import {
   useReauthOnError,
 } from "../../api/queries";
 import {
+  avatarsByTeamId,
   callerTeamId,
   captainIdOf,
   catalogMediaByMasterId,
@@ -96,6 +97,13 @@ export function useMarketBoard(): MarketBoard {
   const now = useNow();
   const moneyQuery = useTeamMoneyQuery(id, teamId, enabled);
 
+  const leagueTeamsQuery = useQuery({
+    queryKey: ["league-teams", id],
+    enabled: enabled && id !== "",
+    staleTime: CALENDAR_STALE_MS,
+    queryFn: ({ signal }) => getJson(paths.leagueTeams(id), token, { signal }),
+  });
+
   const teamQuery = useQuery({
     queryKey: ["team", id, teamId],
     enabled: enabled && id !== "" && teamId != null && teamId !== "",
@@ -180,6 +188,7 @@ export function useMarketBoard(): MarketBoard {
   );
 
   useReauthOnError([
+    leagueTeamsQuery.error,
     marketQuery.error,
     catalogQuery.error,
     currentWeekQuery.error,
@@ -224,6 +233,11 @@ export function useMarketBoard(): MarketBoard {
     [market, catalogQuery.data, now, pendingBids],
   );
 
+  const sellerAvatars = useMemo(() => avatarsByTeamId([
+    ...(Array.isArray(leagueTeamsQuery.data) ? leagueTeamsQuery.data : []),
+    selected?.team, teamQuery.data, ...sellerTeams.data,
+  ]), [leagueTeamsQuery.data, selected?.team, teamQuery.data, sellerTeams.data]);
+
   const rows = useMemo(() => {
     const catalog = catalogById(catalogQuery.data);
     return items.map((item, index) => {
@@ -235,8 +249,10 @@ export function useMarketBoard(): MarketBoard {
         buyoutUnlockByPlayerTeamId: buyoutUnlockByPlayerTeamIdMap,
       });
       const bid = activeBids.bids.find((entry) => entry.marketId === row.marketId);
-      return { ...row, myBid: bid?.id && bid.money != null
-        ? { id: bid.id, money: bid.money } : null,
+      return { ...row,
+        sellerAvatarUrl: row.sellerAvatarUrl
+          ?? (row.sellerTeamId ? sellerAvatars.get(row.sellerTeamId) : null),
+        myBid: bid?.id && bid.money != null ? { id: bid.id, money: bid.money } : null,
         bidActionsAvailable: idText(item.id) != null && !pendingBids.has(row.marketId)
           && (!bid || bid.actionRow != null) };
     });
@@ -249,6 +265,7 @@ export function useMarketBoard(): MarketBoard {
     activeBids,
     pendingBids,
     buyoutUnlockByPlayerTeamIdMap,
+    sellerAvatars,
   ]);
 
   const money = useMemo(() => {

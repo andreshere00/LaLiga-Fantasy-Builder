@@ -22,6 +22,10 @@ is not covered. Branding and account options stay in the top header; desktop
 navigation remains in the header.
 Links never use text underlines, including on hover, focus, and visited states;
 keyboard focus indicators remain visible.
+Market **Sell options** and catalog **Owned by** group each manager's avatar
+with their readable name and existing squad link. Missing or failed photos use
+a person icon. Names wrap within the cell; free agents and LaLiga listings keep
+their distinct labels. Photos reuse the available listing and roster data.
 Light is the default; an explicit preference is saved under `lfb-theme`.
 LALIGA Text loads from the supplied WOFF2 face with a WOFF fallback. The shared
 `--fb-font-body` token controls body text, forms, buttons, tooltips, and chart

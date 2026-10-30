@@ -4,7 +4,7 @@ import { useQueries, useQuery, type UseQueryResult } from "@tanstack/react-query
 import { calendarFormContext } from "../market/model/form";
 import { getJson, paths } from "../../api/client";
 import type { CurrentWeek } from "../../api/mappers";
-import { lastPlayedWeek } from "../../api/mappers";
+import { avatarsByTeamId, lastPlayedWeek } from "../../api/mappers";
 import {
   CALENDAR_STALE_MS,
   useCurrentWeekQuery,
@@ -146,6 +146,11 @@ export function usePlayersBoard(): PlayersBoard {
     !rosterQueries.isLoading &&
     !rosterQueries.isError;
 
+  const ownerAvatars = useMemo(() => avatarsByTeamId([
+    ...(Array.isArray(leagueTeamsQuery.data) ? leagueTeamsQuery.data : []),
+    ...rosterQueries.data,
+  ]), [leagueTeamsQuery.data, rosterQueries.data]);
+
   const rows = useMemo(() => {
     const catalog = catalogById(catalogQuery.data);
     const list: PlayerRow[] = [];
@@ -159,13 +164,14 @@ export function usePlayersBoard(): PlayersBoard {
       const fromRoster = rosterPhotos.get(playerId) ?? null;
       list.push({
         ...row,
+        ownerAvatarUrl: owner ? ownerAvatars.get(owner.teamId) ?? null : null,
         photoUrl: row.photoUrl ?? fromRoster,
         photoFallbackUrl: row.photoUrl ? fromRoster : null,
       });
     }
     list.sort((left, right) => (right.points ?? -1) - (left.points ?? -1));
     return list;
-  }, [catalogQuery.data, ownership, ownershipComplete, ownershipPending, calendarForm, rosterPhotos]);
+  }, [catalogQuery.data, ownership, ownershipComplete, ownershipPending, calendarForm, rosterPhotos, ownerAvatars]);
 
   const isLoading = leaguesLoading || catalogQuery.isLoading;
 
