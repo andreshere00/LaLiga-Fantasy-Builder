@@ -345,9 +345,9 @@
 }
 
 .player-fantasy-form-rating.is-mid {
-  background: #ffc413;
-  color: var(--fb-tertiary);
-  border-color: color-mix(in srgb, #ffc413 78%, var(--fb-tertiary));
+  background: var(--fb-warning);
+  color: var(--fb-ink-on-status);
+  border-color: color-mix(in srgb, var(--fb-warning) 78%, var(--fb-tertiary));
 }
 
 .player-fantasy-form-rating.is-good,

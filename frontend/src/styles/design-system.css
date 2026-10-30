@@ -20,7 +20,7 @@
 }
 :root[data-theme="dark"] {
   --fb-secondary:#E5E5E5; --fb-tertiary:#FFFFFF;
-  --fb-purple:#E3AFFF; --fb-coral:#B85A55; --fb-warning:#CA9C10;
+  --fb-purple:#E3AFFF; --fb-coral:#B85A55; --fb-warning:#FF9913;
   --fb-bg:#18181C; --fb-surface:#24242B; --fb-subtle:#303039;
   --fb-line:#50505B; --fb-control-line:#9898A3; --fb-muted:#B7B7C2;
   --fb-on-coral:#FFFFFF; --fb-focus:#FFFFFF;
