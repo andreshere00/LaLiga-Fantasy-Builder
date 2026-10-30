@@ -17,8 +17,11 @@ function SellerName({ row }: { row: MarketRow }) {
   if (row.sellerKind === "laliga") {
     return <span className="market-seller">
       <span className="market-laliga-identity">
-        <img className="market-laliga-icon" src="/badges/football-logos/spain-la-liga.png"
-          alt="" aria-hidden="true" width={32} height={32} />
+        <svg className="market-laliga-icon" viewBox="70 0 380 350"
+          aria-hidden="true" width={24} height={24}>
+          {/* Crop the existing logo to its symbol, above the embedded wordmark. */}
+          <image href="/badges/football-logos/spain-la-liga.png" width={512} height={512} />
+        </svg>
         {seller}
       </span>
     </span>;

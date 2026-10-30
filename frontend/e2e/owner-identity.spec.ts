@@ -69,9 +69,8 @@ for (const theme of ["light", "dark"]) {
           await expect(laliga.locator(".manager-identity")).toHaveCount(0);
           await expect(laliga.locator(".market-laliga-icon")).toHaveCount(5);
           await expect(laliga.locator(".market-laliga-icon").first()).toBeVisible();
-          expect(await laliga.locator(".market-laliga-icon").first().evaluate(
-            (image: HTMLImageElement) => image.complete && image.naturalWidth > 0,
-          )).toBe(true);
+          await expect(laliga.locator(".market-laliga-icon image").first())
+            .toHaveAttribute("href", "/badges/football-logos/spain-la-liga.png");
           await page.locator(".market-data-row").filter({ hasText: "LALIGA" }).first()
             .screenshot({ path: info.outputPath("laliga-row.png") });
         }
