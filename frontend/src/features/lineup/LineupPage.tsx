@@ -554,6 +554,7 @@ function LineupPageContent() {
                   </div>
                 ) : squadStats.isLoading ? (
                   <div className="squad-loading">
+                    <PulseRing size="sm" label="Loading squad stats…" />
                     <div className="squad-grid squad-grid--loading" aria-hidden="true">
                       {board.squadPanelPlayers.map((player) => (
                         <div className="squad-tile-slot" key={player.id}>
@@ -561,7 +562,6 @@ function LineupPageContent() {
                         </div>
                       ))}
                     </div>
-                    <PulseRing label="Loading squad stats…" />
                   </div>
                 ) : (
                   <div
