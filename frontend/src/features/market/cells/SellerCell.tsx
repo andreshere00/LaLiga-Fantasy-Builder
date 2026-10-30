@@ -43,7 +43,7 @@ export function SellerCell({ row, actionContext, actions }: SellerCellProps) {
     <span className="market-seller-wrap">
       <MarketActionMenu row={row} context={actionContext} actions={actions} />
       <SellerName row={row} />
-      <span className="market-bid-count">Bids: {row.numberOfBids ?? "Unavailable"}</span>
+      <span className="market-bid-count">Bids: {row.numberOfBids ?? 0}</span>
     </span>
   );
 }

@@ -65,6 +65,7 @@ for (const theme of ["light", "dark"]) {
           await expect(noPhoto.locator(".fb-avatar-fallback svg")).toBeVisible();
           await expect(page.locator(".players-free-agent .manager-identity")).toHaveCount(0);
         } else {
+          await expect(page.locator(".market-bid-count")).toHaveText(Array(7).fill("Bids: 0"));
           const laliga = page.locator(cell).filter({ hasText: "LALIGA" });
           await expect(laliga.locator(".manager-identity")).toHaveCount(0);
           await expect(laliga.locator(".market-laliga-icon")).toHaveCount(5);

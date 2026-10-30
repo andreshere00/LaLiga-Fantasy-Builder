@@ -41,7 +41,7 @@
 .market-loading-row {
   display: grid;
   grid-template-columns: var(--market-table-columns,
-    72px minmax(0, 0.55fr) minmax(0, 0.55fr) 0.55fr 0.7fr 0.9fr 1.15fr
+    84px minmax(0, 0.55fr) minmax(0, 0.55fr) 0.55fr 0.7fr 0.9fr 1.15fr
     minmax(8.5rem, 1.35fr) 0.95fr minmax(6.75rem, 1.05fr));
   align-items: center;
   gap: 12px;
@@ -62,8 +62,8 @@
 }
 
 .market-loading-row .market-loading-block.is-player {
-  width: 72px;
-  height: 96px;
+  width: 84px;
+  height: 112px;
 }
 
 .market-loading-row.is-heading {

@@ -18,7 +18,7 @@
 .market-page.comparison-page .market-head-filter.is-active .market-head-label { text-decoration:none; }
 .market-page.comparison-page .market-data-row:hover { background:var(--fb-subtle); }
 .market-page.comparison-page .market-data-row:focus-within { box-shadow:inset 3px 0 var(--fb-primary); }
-.market-page.comparison-page .market-card .player-tile { width:72px; height:96px; }
+.market-page.comparison-page .market-card .player-tile { width:84px; height:112px; }
 .market-page.comparison-page .market-card .player-team-badge { max-width:24px; max-height:28px; }
 .market-page.comparison-page .market-name { font-size:14px; line-height:1.4; }
 .market-page.comparison-page .market-fsyp-primary { font-size:18px; }

@@ -595,8 +595,8 @@ Future verified gross accounting uses `B - P`; verified net accounting uses `B`.
 The player name occupies a single compact grid track beside the photo, wrapping
 long names. Table headers and loading placeholders use the same column layout.
 
-The seller/options cell also displays **Bids: 0** for a known zero count and
-**Bids: Unavailable** for missing/invalid counts; `numberOfOffers` is never added.
+The seller/options cell displays the listing's bid count, defaulting to **Bids: 0**
+when the count is omitted or unavailable; `numberOfOffers` is never added.
 Below the market value, **Release clause** shows the known positive euro value even while protected,
 Not applicable for a LaLiga listing without a clause, and Unavailable for other
 unknown values. The shield beside it follows the theme foreground (white in dark
@@ -705,7 +705,7 @@ are labeled explicitly, and LaLiga listings omit the inapplicable release-clause
 line. Transaction dialogs and confirmations retain their existing behavior.
 
 Players and Market share `ComparisonList.css` for typography, portrait sizing,
-form controls and comparison-row styling. Footballer portraits are 72 × 96px
+form controls and comparison-row styling. Footballer portraits are 84 × 112px
 and manager avatars are 24px, matching the LaLiga seller symbol. Players keeps
 club, ownership and favorite actions alongside the shared facts. At phone widths, both screens use
 labeled cards; Players shows value and clause details together in the value

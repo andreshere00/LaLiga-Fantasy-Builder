@@ -217,7 +217,7 @@ function PlayersListRow({
             onToggle={onToggleFavorite}
           />
         </span>
-        {marketRow ? <span className="market-bid-count">Bids: {marketRow.numberOfBids ?? "Unavailable"}</span> : null}
+        {marketRow ? <span className="market-bid-count">Bids: {marketRow.numberOfBids ?? 0}</span> : null}
         <span className="players-mobile-value-details">{moneyDetails}</span>
       </span>
     </RichRow>

@@ -1,5 +1,5 @@
 .market-page.players-page { max-width:1400px; width:100%; box-sizing:border-box; }
-.players-page { --players-table-columns:72px minmax(110px,1fr) minmax(80px,.8fr) 60px 72px 148px minmax(155px,1.2fr) minmax(110px,1fr) minmax(100px,.9fr) 108px; }
+.players-page { --players-table-columns:84px minmax(110px,1fr) minmax(80px,.8fr) 60px 72px 148px minmax(155px,1.2fr) minmax(110px,1fr) minmax(100px,.9fr) 108px; }
 .players-page .players-list :is(.players-head-row,.players-row) { grid-template-columns:var(--players-table-columns); gap:12px; }
 .players-page .players-list .market-name-wrap { grid-column:auto; }
 .players-actions-cell { display:flex; flex-direction:column; align-items:flex-start; gap:8px; padding-block:8px; }
@@ -24,15 +24,15 @@
 .players-player-heading { grid-column:span 2; font-size:12px; text-transform:uppercase; }
 .players-row.is-favorite { background:var(--fb-surface); }
 @media(max-width:1280px) {
- .players-page { --players-table-columns:72px minmax(100px,1fr) minmax(80px,.8fr) 60px 72px 148px minmax(115px,1.2fr) 108px; }
+ .players-page { --players-table-columns:84px minmax(100px,1fr) minmax(80px,.8fr) 60px 72px 148px minmax(115px,1.2fr) 108px; }
  .players-page :is(.market-head-cell-availability,.market-head-cell-owner,[data-label="Availability"],[data-label="Owned by"]) { display:none; }
 }
 @media(max-width:1000px) {
- .players-page { --players-table-columns:72px minmax(100px,1fr) minmax(80px,.8fr) 72px minmax(115px,1.2fr) 108px; }
+ .players-page { --players-table-columns:84px minmax(100px,1fr) minmax(80px,.8fr) 72px minmax(115px,1.2fr) 108px; }
  .players-page :is(.market-head-cell-position,.market-head-cell-form,[data-label="Position"],[data-label="Form"]) { display:none; }
 }
 @media(max-width:800px) {
- .players-page { --players-table-columns:72px minmax(78px,1fr) minmax(65px,.7fr) 80px; }
+ .players-page { --players-table-columns:84px minmax(78px,1fr) minmax(65px,.7fr) 80px; }
  .players-page .players-list { overflow-x:auto; }
  .players-page :is(.market-head-cell-fsyp,.market-head-cell-marketValue,[data-label="FSYP"],[data-label="Market value"]) { display:none; }
  .players-mobile-value-details { display:block; width:100%; }
@@ -53,7 +53,7 @@
 
 /* Share Market's density and hierarchy while retaining catalog-specific facts. */
 .market-page.players-page.comparison-page { max-width:1440px; }
-.players-page.comparison-page { --players-table-columns:72px minmax(100px,1.2fr) minmax(80px,.8fr) 48px 64px 148px minmax(155px,1.3fr) minmax(90px,.85fr) minmax(90px,.85fr) 136px; }
+.players-page.comparison-page { --players-table-columns:84px minmax(100px,1.2fr) minmax(80px,.8fr) 48px 64px 148px minmax(155px,1.3fr) minmax(90px,.85fr) minmax(90px,.85fr) 136px; }
 .players-page.comparison-page .players-list { overflow-x:auto; }
 .players-page.comparison-page .players-list :is(.players-head-row,.players-row) { grid-template-columns:var(--players-table-columns); gap:14px; }
 .players-page.comparison-page .players-row { min-width:1240px; }
@@ -76,7 +76,7 @@
   .players-page.comparison-page .players-list .players-head-row { display:flex; overflow-x:auto; gap:12px; min-width:0; width:100%; padding:4px 8px; border:1px solid var(--fb-line); box-sizing:border-box; }
   .players-page.comparison-page .players-head-row > .market-head-cell { display:flex; flex:0 0 auto; width:auto; }
   .players-page.comparison-page .market-head-filter { gap:10px; }
-  .players-page.comparison-page .players-list .players-row { min-width:0; grid-template-columns:72px repeat(2,minmax(0,1fr)); gap:16px 12px; padding:18px 14px; border:1px solid var(--fb-line); }
+  .players-page.comparison-page .players-list .players-row { min-width:0; grid-template-columns:84px repeat(2,minmax(0,1fr)); gap:16px 12px; padding:18px 14px; border:1px solid var(--fb-line); }
   .players-page.comparison-page .players-row > .market-card { grid-column:1; grid-row:1 / 3; align-self:start; }
   .players-page.comparison-page .players-list .market-name-wrap { grid-column:2 / -1; grid-row:1; }
   .players-page.comparison-page .players-team-cell { grid-column:2 / -1; grid-row:2; }
