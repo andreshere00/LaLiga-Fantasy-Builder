@@ -66,6 +66,12 @@ import {
   formationSelectOptions,
 } from "./formations";
 import {
+  fixtureHighlightsByMasterId,
+  fixturesStillInPlay,
+  lineupFixtureHighlightsVisible,
+  type FixtureHighlight,
+} from "./fixtureHighlight";
+import {
   applyFormationCode,
   applyPitchPick,
   draftFromGroups,
@@ -150,6 +156,8 @@ export type LineupBoard = {
   savePending: boolean;
   isPastFixture: boolean;
   fixtureScoresVisible: boolean;
+  fixtureHighlightsVisible: boolean;
+  fixtureHighlightByMasterId: ReadonlyMap<string, FixtureHighlight>;
   unplayedFixtureScoreTooltip: string | null;
   opponentLineupLocked: boolean;
   opponentLineupUnavailableMessage: string | null;
@@ -322,9 +330,16 @@ export function useLineupBoard(options: UseLineupBoardOptions = {}): LineupBoard
     setTeamValueRequested(false);
   }
 
+  const liveSquadRefresh =
+    week === currentWeek &&
+    fixturesStillInPlay(
+      Array.isArray(currentFixturesQuery.data) ? currentFixturesQuery.data : [],
+    );
   const teamQuery = useQuery({
     queryKey: ["team", leagueKey, activeTeamId],
     enabled: enabled && activeTeamId != null,
+    staleTime: liveSquadRefresh ? 30_000 : undefined,
+    refetchInterval: liveSquadRefresh ? 30_000 : false,
     queryFn: ({ signal }) =>
       getJson(paths.team(leagueKey, activeTeamId ?? ""), token, { signal }),
   });
@@ -373,6 +388,11 @@ export function useLineupBoard(options: UseLineupBoardOptions = {}): LineupBoard
     ? fixturesQuery.data
     : Array.isArray(weekStatsQuery.data) ? weekStatsQuery.data : [];
   const fixtureScoresVisible = fixtureScoresVisibleForWeek(week, current, scoreFixtures);
+  const fixtureHighlightsVisible = lineupFixtureHighlightsVisible(
+    week,
+    currentWeek,
+    scoreFixtures,
+  );
 
   const lineupQuery = useQuery({
     queryKey: [
@@ -439,6 +459,23 @@ export function useLineupBoard(options: UseLineupBoardOptions = {}): LineupBoard
 
   const lineupPayload =
     !lineupPending && lineupQuery.isSuccess ? lineupQuery.data : null;
+  const fixtureHighlightByMasterId = useMemo(
+    () =>
+      fixtureHighlightsVisible
+        ? fixtureHighlightsByMasterId(week, [
+          teamQuery.data,
+          lineupPayload,
+          scoringLineupQuery.data,
+        ])
+        : new Map<string, FixtureHighlight>(),
+    [
+      fixtureHighlightsVisible,
+      week,
+      teamQuery.data,
+      lineupPayload,
+      scoringLineupQuery.data,
+    ],
+  );
   const serverGroups = useMemo(
     () =>
       lineupPayload == null
@@ -953,6 +990,8 @@ export function useLineupBoard(options: UseLineupBoardOptions = {}): LineupBoard
     savePending: saveMutation.isPending,
     isPastFixture: !lineupUsesCurrent,
     fixtureScoresVisible,
+    fixtureHighlightsVisible,
+    fixtureHighlightByMasterId,
     unplayedFixtureScoreTooltip: unplayedFixtureScoreTooltipLabel,
     opponentLineupLocked,
     opponentLineupUnavailableMessage: opponentLineupUnavailableMessageLabel,

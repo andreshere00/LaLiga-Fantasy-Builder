@@ -326,7 +326,12 @@ updates keep the cards and focus in place. Coaches show total points but have
 no outlook badges or profile request.
 
 Pitch cards show fixture points in the upper-left corner, opposite the
-club crest; squad cards show season totals in that corner. Clicking a populated card opens a player menu with **Market options**
+club crest; squad cards show season totals in that corner. On a matchweek that
+has started or already finished, a pitch player who scored is shown on a purple
+background. A goalkeeper who played and did not concede is shown the same way.
+The accessible name and tooltip say how many goals were scored, or that the
+goalkeeper conceded none. Squad, market, and player cards stay neutral.
+Clicking a populated card opens a player menu with **Market options**
 and **Player details** (coaches have no details route). Market actions retain the
 existing ownership, listing, balance and availability rules.
 

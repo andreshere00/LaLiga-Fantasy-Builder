@@ -363,6 +363,9 @@ function LineupPageContent() {
                               listingId: null,
                               salePrice: null,
                             };
+                            const fixtureHighlight = board.fixtureHighlightsVisible && !empty
+                              ? board.fixtureHighlightByMasterId.get(player.masterPlayerId ?? "")
+                              : null;
                             const tile = (onSelect: () => void) => (
                               <PlayerTile
                                 name={player.name}
@@ -373,6 +376,7 @@ function LineupPageContent() {
                                 teamBadgeUrl={player.teamBadgeUrl}
                                 fixturePoints={board.fixtureScoresVisible && !empty ? player.fixturePoints : null}
                                 fixtureWeek={board.week}
+                                fixtureHighlight={fixtureHighlight}
                                 unplayedFixture={board.week === board.maxWeek && player.fixturePoints === 0}
                                 isMvp={board.fixtureScoresVisible && player.isMvp === true}
                                 interactive={!empty || board.editable}

@@ -251,6 +251,8 @@
 }
 
 .player-tile { border:1px solid var(--fb-line); background:var(--fb-subtle); }
+.player-tile.is-fixture-highlight,
+.player-tile.is-fixture-highlight:is(:hover, :active) { background:var(--fb-purple); }
 .player-tile.is-interactive { border:1px solid var(--fb-control-line); }
 .player-tile:is(:hover,:active) { background:var(--fb-subtle); }
 .player-name { justify-content:center; text-align:center; border-top:1px solid var(--fb-line); }

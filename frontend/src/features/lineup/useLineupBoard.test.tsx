@@ -192,6 +192,16 @@ function respond(path: string): unknown {
   return [];
 }
 
+function assignWeekStats(playerId: string, stats: Record<string, unknown>): () => void {
+  const player = teams["league-a:team-a"].players.find((entry) => entry.playerTeamId === playerId);
+  const master = player?.playerMaster as { lastStats?: unknown };
+  const previous = master.lastStats;
+  master.lastStats = [{ weekNumber: 8, stats }];
+  return () => {
+    master.lastStats = previous;
+  };
+}
+
 function playerIds(board: LineupBoard): string[] {
   return board.groups.flatMap((group) => group.players.map((player) => player.id));
 }
@@ -492,6 +502,47 @@ describe("useLineupBoard", () => {
     expect(result.current.captainId).toBeNull();
     expect(result.current.saveDisabled).toBe(true);
     expect(result.current.originalLineupAvailable).toBe(true);
+  });
+
+  it("useLineupBoard_started_fixture_highlights_scorers_and_clean_sheets", async () => {
+    api.fixtureStarted = true;
+    const restoreKeeper = assignWeekStats("gk", {
+      mins_played: [90, 2], goals: [0, 0], goals_conceded: [0, 4],
+    });
+    const restoreScorer = assignWeekStats("s1", {
+      mins_played: [80, 2], goals: [2, 8], goals_conceded: [0, 0],
+    });
+    const { result } = renderHook(() => useLineupBoard(), { wrapper: Wrapper });
+    try {
+      await waitFor(() => {
+        expect(result.current.fixtureHighlightsVisible).toBe(true);
+        expect(result.current.fixtureHighlightByMasterId.get("master-gk")?.kind).toBe(
+          "clean-sheet",
+        );
+        expect(result.current.fixtureHighlightByMasterId.get("master-s1")).toEqual({
+          kind: "goal",
+          goals: 2,
+        });
+      });
+      expect(result.current.fixtureHighlightByMasterId.has("master-d1")).toBe(false);
+    } finally {
+      restoreKeeper();
+      restoreScorer();
+    }
+  });
+
+  it("useLineupBoard_unplayed_fixture_hides_goal_highlights", async () => {
+    const restore = assignWeekStats("s1", {
+      mins_played: [80, 2], goals: [1, 4], goals_conceded: [0, 0],
+    });
+    const { result } = renderHook(() => useLineupBoard(), { wrapper: Wrapper });
+    try {
+      await loadCallerBoard(result);
+      expect(result.current.fixtureHighlightsVisible).toBe(false);
+      expect(result.current.fixtureHighlightByMasterId.size).toBe(0);
+    } finally {
+      restore();
+    }
   });
 
   it("useLineupBoard_missing_scoring_snapshot_does_not_substitute_last_saved", async () => {

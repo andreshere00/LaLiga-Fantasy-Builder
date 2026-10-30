@@ -6,6 +6,7 @@ import "./PlayerTile.css";
 
 import { scoreTone, scoreWeekLabel } from "../../api/mappers";
 import { PersonIcon, WarningIcon } from "../shell/icons";
+import { fixtureHighlightLabel, type FixtureHighlight } from "./fixtureHighlight";
 import { NOT_SELECTED_PLAYER_LABEL } from "./playerTileCopy";
 import { playerFormPresentation } from "../players/playerForm";
 import { starterProbabilityTone } from "../players/starterProbability";
@@ -23,6 +24,8 @@ type PlayerTileProps = {
   teamBadgeUrl?: string | null;
   fixturePoints?: number | null;
   fixtureWeek?: number;
+  /** Goal or clean sheet for the fixture shown on the lineup pitch. */
+  fixtureHighlight?: FixtureHighlight | null;
   squadStats?: SquadPlayerStats;
   unplayedFixture?: boolean;
   isMvp?: boolean;
@@ -92,6 +95,7 @@ export function PlayerTile({
   teamBadgeUrl = null,
   fixturePoints = null,
   fixtureWeek,
+  fixtureHighlight = null,
   squadStats,
   unplayedFixture = false,
   isMvp = false,
@@ -99,6 +103,8 @@ export function PlayerTile({
   interactive = false,
   onSelect,
 }: PlayerTileProps) {
+  const shownHighlight = empty ? null : fixtureHighlight;
+  const highlightText = fixtureHighlightLabel(shownHighlight);
   const className = [
     "player-tile",
     variant === "squad" ? "squad-tile" : "pitch-tile",
@@ -108,6 +114,7 @@ export function PlayerTile({
     selected ? "is-selected" : "",
     interactive ? "is-interactive" : "",
     unplayedFixture ? "is-unplayed-fixture" : "",
+    shownHighlight ? "is-fixture-highlight" : "",
   ]
     .filter(Boolean)
     .join(" ");
@@ -131,7 +138,9 @@ export function PlayerTile({
     : captain
       ? `${name}, captain${scoreLabel}`
       : `${name}${scoreLabel}`;
-  const label = [playerLabel, totalLabel, starterLabel, formLabel].filter(Boolean).join(", ");
+  const label = [playerLabel, highlightText, totalLabel, starterLabel, formLabel]
+    .filter(Boolean)
+    .join(", ");
   const photoCandidates = [
     ...new Set(
       [photoUrl, ...photoFallbackUrls].filter(
@@ -188,15 +197,18 @@ export function PlayerTile({
     ? `Fixture ${fixtureWeek == null ? "" : scoreWeekLabel(fixtureWeek)}`
       + " has not been played yet."
     : null;
-  const help = [fixtureHelp, totalLabel, starterLabel,
+  const help = [highlightText, fixtureHelp, totalLabel, starterLabel,
     formLabel ? `${formLabel}. Current FutbolFantasy rating.` : null]
     .filter(Boolean).join("\n");
+  const visibleLabel = highlightText
+    ? [captain ? `${name}, captain` : name, highlightText].join(", ")
+    : captain ? `${name}, captain` : undefined;
   if (interactive && onSelect) {
     return <Help content={help} trigger={<button type="button" className={className}
       aria-label={label} aria-pressed={selected} onClick={onSelect} />}>{body}</Help>;
   }
   return <Help content={help} trigger={<div className={className}
-    aria-label={empty || !showName ? label : captain ? name + ", captain" : undefined} />}>
+    aria-label={empty || !showName ? label : visibleLabel} />}>
     {body}
   </Help>;
 }
