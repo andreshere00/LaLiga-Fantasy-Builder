@@ -325,8 +325,13 @@ neutral dash; reported zeroes stay zero.
 **Filter squad** opens a dialog for position, season Fantasy points, club, start
 probability, form, and availability. Every selected condition applies together.
 The filter groups use expandable rows with a compact current-value summary;
-position opens first. Club choices include their crest and name.
-**Apply filters** updates the squad; **Cancel** and Escape leave it unchanged.
+position opens first. Position, form, and availability use toggle groups; club
+choices are checkboxes with their crest and name. FSYP is a two-thumb slider
+bounded by the squad's lowest and highest points. Start probability is a minimum:
+a progress bar and slider in 5% steps keep players at or above the value and
+report how many squad players qualify.
+**Show N players** previews the match count and updates the squad; **Cancel** and
+Escape leave it unchanged.
 **Clear filters** is available in the dialog and beside the button once a filter
 is active. An empty result explains that nothing matched and offers clear.
 Missing values stay visible while squad details are still loading, then drop out

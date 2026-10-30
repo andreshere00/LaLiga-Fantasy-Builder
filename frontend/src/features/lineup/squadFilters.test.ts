@@ -6,7 +6,7 @@ import {
   activeSquadFilterCount,
   applySquadFilters,
   createEmptySquadFilters,
-  squadRangeInvalid,
+  squadPointsBounds,
   type SquadFilterPlayer,
 } from "./squadFilters";
 
@@ -31,7 +31,7 @@ describe("applySquadFilters", () => {
     filters.positions = new Set([4]);
     filters.points = { min: 20, max: 50 };
     filters.clubs = new Set(["Barcelona"]);
-    filters.starterProbability = { min: 75, max: null };
+    filters.minStarterProbability = 75;
     filters.forms = new Set(["Good"]);
     filters.availability = new Set(["available"]);
     const rows = [
@@ -62,9 +62,25 @@ describe("applySquadFilters", () => {
 
   // ---- Edge cases ---- //
 
-  it("squadRangeInvalid_requires_both_bounds", () => {
-    expect(squadRangeInvalid({ min: 10, max: 4 })).toBe(true);
-    expect(squadRangeInvalid({ min: 4, max: 10 })).toBe(false);
-    expect(squadRangeInvalid({ min: null, max: 4 })).toBe(false);
+  it("applySquadFilters_keeps_players_at_exact_minimum_probability", () => {
+    const filters = createEmptySquadFilters();
+    filters.minStarterProbability = 80;
+    const rows = [player({ id: "equal" }), player({ id: "below", starterProbability: 75 })];
+
+    expect(applySquadFilters(rows, filters, false).map((row) => row.id)).toEqual(["equal"]);
+  });
+
+  it("activeSquadFilterCount_zero_probability_is_inactive", () => {
+    const filters = createEmptySquadFilters();
+    filters.minStarterProbability = 0;
+
+    expect(activeSquadFilterCount(filters)).toBe(0);
+  });
+
+  it("squadPointsBounds_ignores_unknown_points", () => {
+    const rows = [player({ points: 12 }), player({ points: null }), player({ points: -3 })];
+
+    expect(squadPointsBounds(rows)).toEqual({ min: -3, max: 12 });
+    expect(squadPointsBounds([player({ points: null })])).toBeNull();
   });
 });

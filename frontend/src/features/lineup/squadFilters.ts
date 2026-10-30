@@ -6,7 +6,7 @@ export type SquadFilters = {
   positions: ReadonlySet<number>;
   points: SquadNumericRange;
   clubs: ReadonlySet<string>;
-  starterProbability: SquadNumericRange;
+  minStarterProbability: number;
   forms: ReadonlySet<string>;
   availability: ReadonlySet<Availability>;
 };
@@ -21,6 +21,8 @@ export type SquadFilterPlayer = {
   availability: Availability | null;
 };
 
+export const STARTER_PROBABILITY_STEP: number = 5;
+
 export const SQUAD_FORM_OPTIONS = ["Very poor", "Poor", "Average", "Good", "Very good"] as const;
 
 /** Returns filters that keep every squad player. */
@@ -29,7 +31,7 @@ export function createEmptySquadFilters(): SquadFilters {
     positions: new Set(),
     points: { min: null, max: null },
     clubs: new Set(),
-    starterProbability: { min: null, max: null },
+    minStarterProbability: 0,
     forms: new Set(),
     availability: new Set(),
   };
@@ -41,15 +43,10 @@ export function cloneSquadFilters(filters: SquadFilters): SquadFilters {
     positions: new Set(filters.positions),
     points: { ...filters.points },
     clubs: new Set(filters.clubs),
-    starterProbability: { ...filters.starterProbability },
+    minStarterProbability: filters.minStarterProbability,
     forms: new Set(filters.forms),
     availability: new Set(filters.availability),
   };
-}
-
-/** True when minimum and maximum are both set and minimum is greater. */
-export function squadRangeInvalid(range: SquadNumericRange): boolean {
-  return range.min != null && range.max != null && range.min > range.max;
 }
 
 /** Counts selected filter groups. An empty selection does not count. */
@@ -58,7 +55,7 @@ export function activeSquadFilterCount(filters: SquadFilters): number {
     filters.positions.size > 0,
     rangeActive(filters.points),
     filters.clubs.size > 0,
-    rangeActive(filters.starterProbability),
+    filters.minStarterProbability > 0,
     filters.forms.size > 0,
     filters.availability.size > 0,
   ].filter(Boolean).length;
@@ -84,7 +81,7 @@ export function applySquadFilters<T extends SquadFilterPlayer>(
     matchesSet(player.positionId, filters.positions, pending)
     && matchesRange(player.points, filters.points, false)
     && matchesSet(player.club, filters.clubs, pending)
-    && matchesRange(player.starterProbability, filters.starterProbability, pending)
+    && matchesRange(player.starterProbability, minimumRange(filters), pending)
     && matchesSet(player.form, filters.forms, pending)
     && matchesSet(player.availability, filters.availability, pending));
 }
@@ -93,6 +90,18 @@ export function applySquadFilters<T extends SquadFilterPlayer>(
 export function squadClubOptions(players: readonly SquadFilterPlayer[]): string[] {
   return [...new Set(players.flatMap((player) => player.club ? [player.club] : []))]
     .sort((left, right) => left.localeCompare(right, "en"));
+}
+
+/** Lowest and highest season points in the squad, or null when none is known. */
+export function squadPointsBounds(
+  players: readonly SquadFilterPlayer[],
+): SquadNumericRange | null {
+  const points = players.flatMap((player) => player.points == null ? [] : [player.points]);
+  return points.length === 0 ? null : { min: Math.min(...points), max: Math.max(...points) };
+}
+
+function minimumRange(filters: SquadFilters): SquadNumericRange {
+  return { min: filters.minStarterProbability || null, max: null };
 }
 
 function rangeActive(range: SquadNumericRange): boolean {

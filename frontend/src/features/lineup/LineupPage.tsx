@@ -26,7 +26,6 @@ import {
   applySquadFilters,
   cloneSquadFilters,
   createEmptySquadFilters,
-  squadClubOptions,
   type SquadFilterPlayer,
   type SquadFilters,
 } from "./squadFilters";
@@ -666,7 +665,7 @@ function LineupPageContent() {
         onClose={board.dismissOpponentLineupNotice}
       />
       <SquadFilterDialog open={filterOpen} filters={squadFilters}
-        clubs={squadClubOptions(filterRows)}
+        players={filterRows} pending={squadStats.isLoading}
         onClose={() => setFilterOpen(false)}
         onApply={(next) => { setSquadFilters(cloneSquadFilters(next)); setFilterOpen(false); }}
         finalFocus={() => filterButton.current ?? false} />

@@ -1,0 +1,10 @@
+.fb-slider { width:100%; touch-action:none; }
+.fb-slider-control { display:flex; align-items:center; width:100%; min-height:44px; }
+.fb-slider-track { position:relative; width:100%; height:6px; background:var(--fb-subtle); }
+.fb-slider-range { background:var(--fb-primary); }
+.fb-slider-thumb {
+  width:20px; height:20px; box-sizing:border-box; border:2px solid var(--fb-primary);
+  border-radius:50%; background:var(--fb-surface); box-shadow:0 1px 3px rgb(0 0 0 / 25%);
+}
+.fb-slider-thumb:has(:focus-visible) { outline:2px solid var(--fb-focus); outline-offset:2px; }
+.fb-slider[data-disabled] { opacity:.5; }

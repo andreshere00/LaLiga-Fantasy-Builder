@@ -1,0 +1,7 @@
+.fb-checkbox {
+  display:inline-grid; place-items:center; flex:0 0 18px; width:18px; height:18px; padding:0;
+  border:1px solid var(--fb-control-line); background:var(--fb-surface); cursor:pointer;
+}
+.fb-checkbox[data-checked] { background:var(--fb-primary); border-color:var(--fb-primary); }
+.fb-checkbox:focus-visible { outline:2px solid var(--fb-focus); outline-offset:2px; }
+.fb-checkbox-indicator { color:var(--fb-on-brand); font-size:12px; font-weight:700; line-height:1; }
