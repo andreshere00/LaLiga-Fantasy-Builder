@@ -1,6 +1,6 @@
 import { Help } from "../../components/ui/Help";
 import { Select } from "@base-ui/react/select";
-import { Fragment, useEffect, useState, type CSSProperties } from "react";
+import { Fragment, useEffect, useMemo, useRef, useState, type CSSProperties } from "react";
 import { useSearchParams } from "react-router-dom";
 
 import { possessiveName, scoreWeekLabel } from "../../api/mappers";
@@ -17,12 +17,24 @@ import originalFixtureWhiteUrl from "../../assets/button_original_fixture_white.
 import originalFixtureGrayUrl from "../../assets/button_original_fixture_gray.svg";
 import { pitchRowGapFraction, pitchRows } from "./pitchLayout";
 import { SQUAD_PICKER_EMPTY_MESSAGE } from "./playerTileCopy";
-import { squadCountLabel } from "./squadPanel";
+import { squadCountLabel, squadPageSlice } from "./squadPanel";
+import { SquadFilterDialog } from "./SquadFilterDialog";
+import { playerFormPresentation } from "../players/playerForm";
+import type { SquadPlayerStats } from "./useSquadStats";
+import {
+  activeSquadFilterCount,
+  applySquadFilters,
+  cloneSquadFilters,
+  createEmptySquadFilters,
+  squadClubOptions,
+  type SquadFilterPlayer,
+  type SquadFilters,
+} from "./squadFilters";
 import { CurrentFixtureTooltip } from "./CurrentFixtureTooltip";
 import { OpponentLineupNotice } from "./OpponentLineupNotice";
 import { PlayedFixtureNotice } from "./PlayedFixtureNotice";
 import { PlayerTile } from "./PlayerTile";
-import { roleFromPositionId } from "./lineupDraft";
+import { roleFromPositionId, unfilledLineupRoles } from "./lineupDraft";
 import { SquadPlayerActions } from "./SquadPlayerActions";
 import { LineupMarketOptions } from "./LineupMarketOptions";
 import { TeamValueBox } from "./TeamValueBox";
@@ -46,6 +58,21 @@ function scorePointsLabel(weekLoading: boolean, points: number | null): string {
   return String(points);
 }
 
+function squadFilterPlayer(
+  card: { id: string; positionId: number | null; totalPoints?: number | null },
+  stats: SquadPlayerStats | undefined,
+): SquadFilterPlayer {
+  return {
+    id: card.id,
+    positionId: card.positionId,
+    points: stats?.totalPoints ?? card.totalPoints ?? null,
+    club: stats?.club ?? null,
+    starterProbability: stats?.outlook?.starterProbability ?? null,
+    form: playerFormPresentation(stats?.outlook?.rating)?.label ?? null,
+    availability: stats?.availability ?? null,
+  };
+}
+
 export function LineupPage() {
   return <MarketOffersProvider><LineupPageContent /></MarketOffersProvider>;
 }
@@ -67,6 +94,35 @@ function LineupPageContent() {
   const activeSwap = board.editable && swapCandidate?.teamId === board.selectedTeamId &&
     swapCandidate.week === board.week ? swapCandidate : null;
 
+  const [squadFilters, setSquadFilters] = useState<SquadFilters>(createEmptySquadFilters);
+  const [filterOpen, setFilterOpen] = useState(false);
+  const [filteredPage, setFilteredPage] = useState(0);
+  const filterButton = useRef<HTMLButtonElement>(null);
+  const picking = board.pitchSelection != null;
+  const squadSource = picking ? board.squadPicker : board.squad;
+  const filterRows = useMemo(() => squadSource.map((card) => squadFilterPlayer(
+    card, squadStats.stats.get(card.masterPlayerId ?? ""),
+  )), [squadSource, squadStats.stats]);
+  const visibleSquad = useMemo(() => {
+    const allowed = new Set(applySquadFilters(filterRows, squadFilters, squadStats.isLoading)
+      .map((row) => row.id));
+    return squadSource.filter((card) => allowed.has(card.id));
+  }, [filterRows, squadFilters, squadSource, squadStats.isLoading]);
+  const squadPageData = squadPageSlice(visibleSquad, filteredPage);
+  const filterCount = activeSquadFilterCount(squadFilters);
+  useEffect(() => { setFilteredPage(0); }, [board.selectedTeamId, picking, squadFilters]);
+  useEffect(() => {
+    setSquadFilters(createEmptySquadFilters());
+    setFilterOpen(false);
+  }, [board.selectedTeamId]);
+  useEffect(() => {
+    if (filteredPage > squadPageData.pageCount - 1) {
+      setFilteredPage(Math.max(0, squadPageData.pageCount - 1));
+    }
+  }, [filteredPage, squadPageData.pageCount]);
+  const unfilledRoles = unfilledLineupRoles(board.editable ? board.groups : []);
+  const startingIds = new Set(board.groups.flatMap((group) => group.players
+    .filter((player) => player.isEmpty !== true).map((player) => player.id)));
   const currentFixtureTooltip = board.unplayedFixtureScoreTooltip;
   const owner = possessiveName(board.titleName);
   const { pitchSelection, selectPitchPlayer } = board;
@@ -97,7 +153,6 @@ function LineupPageContent() {
     );
   }
 
-  const picking = board.pitchSelection != null;
   const saveNoChangesOnly =
     board.saveNoChangesTooltip != null && board.saveDisabled && !board.savePending;
 
@@ -378,6 +433,7 @@ function LineupPageContent() {
                                 fixtureWeek={board.week}
                                 fixtureHighlight={fixtureHighlight}
                                 unplayedFixture={board.week === board.maxWeek && player.fixturePoints === 0}
+                                positionNeeded={empty && unfilledRoles.has(group.role)}
                                 isMvp={board.fixtureScoresVisible && player.isMvp === true}
                                 interactive={!empty || board.editable}
                                 selected={selected}
@@ -435,6 +491,25 @@ function LineupPageContent() {
               {owner} squad
               <span className="squad-count">{squadCountLabel(board.squad.length)}</span>
             </h2>
+            <div className="squad-filter-bar">
+              <button ref={filterButton} type="button"
+                className={filterCount > 0 ? "squad-filter-open is-active" : "squad-filter-open"}
+                aria-haspopup="dialog" aria-expanded={filterOpen}
+                onClick={() => setFilterOpen(true)}>
+                {filterCount > 0 ? `Filter squad, ${filterCount} active` : "Filter squad"}
+              </button>
+              {filterCount > 0 ? (
+                <button type="button" className="squad-filter-clear"
+                  onClick={() => setSquadFilters(createEmptySquadFilters())}>
+                  Clear filters
+                </button>
+              ) : null}
+            </div>
+            {filterCount > 0 ? (
+              <p className="squad-filter-status" role="status">
+                Showing {visibleSquad.length} of {squadSource.length} players
+              </p>
+            ) : null}
             {board.squadLoading ? <p className="status-copy">Loading squad…</p> : null}
             {board.squadMessage ? (
               <p className="status-copy" role="alert">
@@ -463,7 +538,15 @@ function LineupPageContent() {
             ) : null}
             <div className="side-panel-body">
               <div className="side-panel-scroll squad-panel-scroll" aria-busy={squadStats.isLoading}>
-                {picking && board.squadPicker.length === 0 ? (
+                {filterCount > 0 && visibleSquad.length === 0 && !squadStats.isLoading ? (
+                  <div className="squad-filter-empty" role="status">
+                    <p>No squad players match these filters.</p>
+                    <button type="button" className="squad-filter-clear"
+                      onClick={() => setSquadFilters(createEmptySquadFilters())}>
+                      Clear filters
+                    </button>
+                  </div>
+                ) : picking && board.squadPicker.length === 0 ? (
                   <div className="squad-picker-empty" role="status">
                     <span className="squad-picker-empty-icon" aria-hidden="true">
                       <WarningIcon />
@@ -484,18 +567,25 @@ function LineupPageContent() {
                 ) : (
                   <div
                     className="squad-grid squad-grid--ready"
-                    key={`${board.selectedTeamId}-${board.squadPage}-${picking}`}
+                    key={`${board.selectedTeamId}-${squadPageData.page}-${picking}-${filterCount}`}
                   >
-                    {board.squadPanelPlayers.map((player) => {
+                    {squadPageData.pageItems.map((player) => {
+                      const squadRole = roleFromPositionId(player.positionId);
+                      const positionNeeded = squadRole != null && unfilledRoles.has(squadRole)
+                        && !startingIds.has(player.id);
                       const tile = (onSelect: () => void) => (
                         <PlayerTile
                           name={player.name}
                           captain={player.captain}
                           variant="squad"
                           squadStats={player.masterPlayerId ? squadStats.stats.get(player.masterPlayerId)
-                            : { totalPoints: player.totalPoints ?? null, outlook: null }}
+                            : {
+                              totalPoints: player.totalPoints ?? null,
+                              outlook: null, club: null, availability: null,
+                            }}
                           photoUrl={player.photoUrl}
                           teamBadgeUrl={player.teamBadgeUrl}
+                          positionNeeded={positionNeeded}
                           interactive
                           onSelect={onSelect}
                         />
@@ -533,24 +623,24 @@ function LineupPageContent() {
                   </div>
                 )}
               </div>
-              {board.squadPageCount > 1 &&
+              {squadPageData.pageCount > 1 && visibleSquad.length > 0 &&
               !(picking && board.squadPicker.length === 0) ? (
               <div className="squad-pager">
                 <div className="pager">
                   <button
                     type="button"
                     aria-label="Previous squad page"
-                    disabled={board.squadPage <= 1}
-                    onClick={() => board.squadPagePrev()}
+                    disabled={squadPageData.page <= 0}
+                    onClick={() => setFilteredPage((current) => Math.max(0, current - 1))}
                   >
                     ‹
                   </button>
-                  <span>{board.squadPage}</span>
+                  <span>{squadPageData.page + 1}</span>
                   <button
                     type="button"
                     aria-label="Next squad page"
-                    disabled={board.squadPage >= board.squadPageCount}
-                    onClick={() => board.squadPageNext()}
+                    disabled={squadPageData.page >= squadPageData.pageCount - 1}
+                    onClick={() => setFilteredPage((current) => current + 1)}
                   >
                     ›
                   </button>
@@ -575,6 +665,11 @@ function LineupPageContent() {
         }
         onClose={board.dismissOpponentLineupNotice}
       />
+      <SquadFilterDialog open={filterOpen} filters={squadFilters}
+        clubs={squadClubOptions(filterRows)}
+        onClose={() => setFilterOpen(false)}
+        onApply={(next) => { setSquadFilters(cloneSquadFilters(next)); setFilterOpen(false); }}
+        finalFocus={() => filterButton.current ?? false} />
       <LineupBuilderDialog open={builderOpen} onClose={() => setBuilderOpen(false)}
         ranking={board.ranking} squad={board.squad} selectedTeamId={board.selectedTeamId}
         formations={board.formationOptions} isDraftDirty={board.builderDraftDirty} canApply={board.canApplyBuilder}

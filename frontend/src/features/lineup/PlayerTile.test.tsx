@@ -4,6 +4,7 @@ import { render, screen } from "@testing-library/react";
 import { describe, expect, it } from "vitest";
 
 import { PlayerTile } from "./PlayerTile";
+import { LINEUP_POSITION_NEEDED_LABEL } from "./playerTileCopy";
 
 // ---- Happy path ---- //
 
@@ -55,6 +56,24 @@ describe("PlayerTile", () => {
 
     const card = screen.getByRole("button", { name: "Bench" });
     expect(card.className).not.toContain("is-fixture-highlight");
+  });
+
+  it("PlayerTile_unfilled_position_uses_a_red_background_and_black_text_name", () => {
+    render(
+      <PlayerTile
+        name="Bench striker"
+        captain={false}
+        variant="squad"
+        interactive
+        onSelect={() => undefined}
+        positionNeeded
+      />,
+    );
+
+    const card = screen.getByRole("button", {
+      name: `Bench striker, ${LINEUP_POSITION_NEEDED_LABEL}`,
+    });
+    expect(card.className).toContain("is-position-needed");
   });
 
   it("PlayerTile_empty_slot_ignores_a_fixture_highlight", () => {

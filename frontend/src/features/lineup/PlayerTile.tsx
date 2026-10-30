@@ -7,7 +7,7 @@ import "./PlayerTile.css";
 import { scoreTone, scoreWeekLabel } from "../../api/mappers";
 import { PersonIcon, WarningIcon } from "../shell/icons";
 import { fixtureHighlightLabel, type FixtureHighlight } from "./fixtureHighlight";
-import { NOT_SELECTED_PLAYER_LABEL } from "./playerTileCopy";
+import { LINEUP_POSITION_NEEDED_LABEL, NOT_SELECTED_PLAYER_LABEL } from "./playerTileCopy";
 import { playerFormPresentation } from "../players/playerForm";
 import { starterProbabilityTone } from "../players/starterProbability";
 import type { SquadPlayerStats } from "./useSquadStats";
@@ -28,6 +28,8 @@ type PlayerTileProps = {
   fixtureHighlight?: FixtureHighlight | null;
   squadStats?: SquadPlayerStats;
   unplayedFixture?: boolean;
+  /** Squad or empty pitch card for a position the lineup still needs. */
+  positionNeeded?: boolean;
   isMvp?: boolean;
   selected?: boolean;
   interactive?: boolean;
@@ -98,6 +100,7 @@ export function PlayerTile({
   fixtureHighlight = null,
   squadStats,
   unplayedFixture = false,
+  positionNeeded = false,
   isMvp = false,
   selected = false,
   interactive = false,
@@ -105,6 +108,8 @@ export function PlayerTile({
 }: PlayerTileProps) {
   const shownHighlight = empty ? null : fixtureHighlight;
   const highlightText = fixtureHighlightLabel(shownHighlight);
+  const positionNeededText = positionNeeded && !shownHighlight
+    ? LINEUP_POSITION_NEEDED_LABEL : null;
   const className = [
     "player-tile",
     variant === "squad" ? "squad-tile" : "pitch-tile",
@@ -115,6 +120,7 @@ export function PlayerTile({
     interactive ? "is-interactive" : "",
     unplayedFixture ? "is-unplayed-fixture" : "",
     shownHighlight ? "is-fixture-highlight" : "",
+    positionNeededText ? "is-position-needed" : "",
   ]
     .filter(Boolean)
     .join(" ");
@@ -138,7 +144,9 @@ export function PlayerTile({
     : captain
       ? `${name}, captain${scoreLabel}`
       : `${name}${scoreLabel}`;
-  const label = [playerLabel, highlightText, totalLabel, starterLabel, formLabel]
+  const label = [
+    playerLabel, highlightText, positionNeededText, totalLabel, starterLabel, formLabel,
+  ]
     .filter(Boolean)
     .join(", ");
   const photoCandidates = [
@@ -197,11 +205,12 @@ export function PlayerTile({
     ? `Fixture ${fixtureWeek == null ? "" : scoreWeekLabel(fixtureWeek)}`
       + " has not been played yet."
     : null;
-  const help = [highlightText, fixtureHelp, totalLabel, starterLabel,
+  const help = [highlightText, positionNeededText, fixtureHelp, totalLabel, starterLabel,
     formLabel ? `${formLabel}. Current FutbolFantasy rating.` : null]
     .filter(Boolean).join("\n");
-  const visibleLabel = highlightText
-    ? [captain ? `${name}, captain` : name, highlightText].join(", ")
+  const statusText = [highlightText, positionNeededText].filter(Boolean).join(", ");
+  const visibleLabel = statusText
+    ? [captain ? `${name}, captain` : name, statusText].join(", ")
     : captain ? `${name}, captain` : undefined;
   if (interactive && onSelect) {
     return <Help content={help} trigger={<button type="button" className={className}

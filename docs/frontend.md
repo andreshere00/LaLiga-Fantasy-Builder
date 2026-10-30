@@ -164,7 +164,11 @@ The horizontal scrollbar and previous/next fixture pager are the only navigation
 controls. The pager is centered at phone widths. There is no manual refresh button.
 
 Matches include club names/crests, Madrid-local dates and times, and reported
-scores; scheduled score placeholders stay blank. Unrecognized provider match
+scores; scheduled score placeholders stay blank. The heading states how long
+remains until the next kickoff still ahead in the matches shown. The countdown
+appears once at panel level so match cards stay focused on teams, score, and
+forecast. Finished rounds and matches without a confirmed kickoff do not show
+a countdown. Unrecognized provider match
 statuses say **Status unconfirmed**, with any reported score, instead of an
 invented live/final state. Incomplete round data cannot trigger advancement.
 Automatic updates preserve scroll and focus; native horizontal scrolling, arrow keys,
@@ -318,6 +322,15 @@ name on the left, with form on the right. The tooltip includes the probability's
 matchweek when supplied. Starter badges use the profile icon colors: red below
 50%, yellow from 50% to below 75%, and green from 75%. Missing values show a
 neutral dash; reported zeroes stay zero.
+**Filter squad** opens a dialog for position, season Fantasy points, club, start
+probability, form, and availability. Every selected condition applies together.
+The filter groups use expandable rows with a compact current-value summary;
+position opens first. Club choices include their crest and name.
+**Apply filters** updates the squad; **Cancel** and Escape leave it unchanged.
+**Clear filters** is available in the dialog and beside the button once a filter
+is active. An empty result explains that nothing matched and offers clear.
+Missing values stay visible while squad details are still loading, then drop out
+of an active filter. Changing team clears the filters.
 All squad profiles load in parallel and are cached for five minutes. A skeleton
 reserves the cards' space until the catalog and all profiles settle, then reveals
 the complete squad with a short fade and slide. Reduced motion skips the
@@ -334,6 +347,11 @@ goalkeeper conceded none. Squad, market, and player cards stay neutral.
 Clicking a populated card opens a player menu with **Market options**
 and **Player details** (coaches have no details route). Market actions retain the
 existing ownership, listing, balance and availability rules.
+
+When your editable lineup still has an empty slot, that slot and the squad players
+who can fill its position use a red background with black text. Players already
+in the lineup stay on the neutral background. Opponent and past lineups are not
+marked.
 
 **Swap player** is available only for footballers in your editable lineup.
 Choosing it on a pitch player opens the squad replacement picker. Choosing it on
