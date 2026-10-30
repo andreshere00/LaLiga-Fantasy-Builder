@@ -1,7 +1,10 @@
 // ---- Mocks, fixtures & helpers ---- //
 import { describe, expect, it } from "vitest";
 import type { CurrentWeekDto, FixturesDto, WeekWeatherDto } from "../../api/schemas";
-import { kickoffTimestamp, normalizeRound, retainWeatherForecasts, selectFixtureRound, validWeek, weatherMatchesFixture } from "./fixturePanelModel";
+import {
+  kickoffTimestamp, nextKickoff, normalizeRound, retainWeatherForecasts,
+  selectFixtureRound, validWeek, weatherMatchesFixture,
+} from "./fixturePanelModel";
 
 const now = Date.parse("2026-10-20T12:00:00Z");
 function fixtures(state = 1, week = 10): FixturesDto {
@@ -75,6 +78,26 @@ describe("fixture panel round selection", () => {
   it("hides scheduled score placeholders but preserves an actual final zero", () => {
     expect(round(fixtures()).matches[0].homeScore).toBeNull();
     expect(round(fixtures(7)).matches[0].homeScore).toBe(0);
+  });
+
+  it("nextKickoff_uses_the_soonest_future_kickoff_and_omits_zero_units", () => {
+    const shared = nextKickoff(round(fixtures()).matches, now);
+    expect(shared?.pairing).toBeNull();
+    expect(shared?.remaining).toBe("4 days 4 hours");
+    expect(shared?.matchKeys).toHaveLength(10);
+
+    const matches = round(fixtures()).matches.map((match, index) => index === 3
+      ? { ...match, kickoffMs: now + (26 * 60 + 1) * 60_000 } : match);
+    const next = nextKickoff(matches, now);
+    expect(next?.pairing).toBe(`${matches[3]?.home.name} vs ${matches[3]?.away.name}`);
+    expect(next?.remaining).toBe("1 day 2 hours 1 minute");
+    expect(next?.matchKeys).toEqual([matches[3]?.key]);
+  });
+
+  it("nextKickoff_ignores_finished_rounds_and_missing_kickoffs", () => {
+    expect(nextKickoff(round(fixtures(7)).matches, now)).toBeNull();
+    const matches = round(fixtures()).matches.map((match) => ({ ...match, kickoffMs: null }));
+    expect(nextKickoff(matches, now)).toBeNull();
   });
 
   it("handles unknown club identities without dropping the match", () => {

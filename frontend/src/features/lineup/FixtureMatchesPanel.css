@@ -7,6 +7,10 @@
 .fixture-panel-title .fixture-panel-active { border-color:var(--fb-primary); }
 .fixture-panel-active::before { content:""; display:inline-block; width:7px; height:7px; margin-right:6px; background:var(--fb-primary); }
 .fixture-panel-meta { margin:5px 0 0; color:var(--fb-muted); font-size:var(--fb-widget-font-meta); }
+.fixture-next-kickoff {
+  margin:8px 0 0; color:var(--fb-secondary); font-size:var(--fb-widget-font-body);
+  font-weight:600; line-height:1.5;
+}
 .fixture-week-pagination { display:flex; align-items:center; gap:6px; }
 .fixture-week-pagination { justify-self:center; }
 .fixture-week-label { min-width:64px; text-align:center; font-size:var(--fb-widget-font-meta); font-variant-numeric:tabular-nums; }

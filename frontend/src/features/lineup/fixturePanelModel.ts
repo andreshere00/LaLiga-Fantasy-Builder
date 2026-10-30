@@ -1,5 +1,6 @@
 import type { CurrentWeekDto, FixtureDto, FixtureWeatherDto, FixturesDto, WeekWeatherDto } from "../../api/schemas";
 import { clubMediaFromId } from "../../api/clubMedia";
+import { formatFixtureCountdown } from "../../api/mappers";
 import { z } from "zod";
 
 export const FIXTURE_TIME_ZONE = "Europe/Madrid";
@@ -14,6 +15,13 @@ export type PanelMatch = {
 export type PanelRound = {
   matches: PanelMatch[]; complete: boolean; started: boolean; consistent: boolean; signature: string;
 };
+export type NextKickoff = {
+  kickoffMs: number;
+  remaining: string;
+  matchKeys: string[];
+  pairing: string | null;
+};
+
 export type RoundSelection = {
   week: number; mode: "loading" | "upcoming" | "active" | "finished" | "season-complete" | "unavailable";
   nextWeek: number | null;
@@ -87,6 +95,32 @@ export function normalizeRound(rows: FixturesDto | undefined, now: number): Pane
       (item.state != null && item.state !== 1 && item.kickoffMs != null && item.kickoffMs <= now)),
     signature: JSON.stringify(matches.map((item) => [item.id, item.homeId, item.awayId, item.kickoff, item.venueKey])),
   };
+}
+
+/** Soonest kickoff still ahead in the matches on screen. */
+export function nextKickoff(matches: readonly PanelMatch[], now: number): NextKickoff | null {
+  const upcoming = matches.filter((item) =>
+    item.status !== "finished" && item.kickoffMs != null && item.kickoffMs > now);
+  if (upcoming.length === 0) return null;
+  const kickoffMs = Math.min(...upcoming.map((item) => item.kickoffMs ?? Infinity));
+  const atKickoff = upcoming.filter((item) => item.kickoffMs === kickoffMs);
+  const only = atKickoff.length === 1 ? atKickoff[0] : null;
+  return {
+    kickoffMs,
+    remaining: conciseFixtureCountdown(kickoffMs, now),
+    matchKeys: atKickoff.map((item) => item.key),
+    pairing: only ? `${only.home.name} vs ${only.away.name}` : null,
+  };
+}
+
+function conciseFixtureCountdown(targetMs: number, nowMs: number): string {
+  const parts = formatFixtureCountdown(targetMs, nowMs).split(" ");
+  const kept: string[] = [];
+  for (let index = 0; index < parts.length; index += 2) {
+    const count = Number(parts[index]);
+    if (count > 0) kept.push(`${count} ${parts[index + 1]}`);
+  }
+  return kept.join(" ") || "0 minutes";
 }
 
 /** Competition round selection is independent of the lineup editing week. */
