@@ -264,3 +264,6 @@
 .player-form-badge .is-dark { display:none; }
 :root[data-theme="dark"] .player-form-badge .is-light { display:none; }
 :root[data-theme="dark"] .player-form-badge .is-dark { display:block; }
+.player-total-points { position:absolute; z-index:5; top:5%; left:6.6667%; display:flex; align-items:baseline; gap:2px; padding:2px 4px; max-width:50%; background:var(--fb-surface); border:1px solid var(--fb-line); color:var(--fb-secondary); font-size:clamp(10px,1vw,12px); font-weight:700; line-height:1.2; white-space:nowrap; }
+.player-total-points > span { font-size:9px; font-weight:400; }
+.player-starter-probability { position:absolute; z-index:5; left:6.6667%; bottom:calc(20% + 4px); display:grid; place-items:center; min-height:18px; padding:1px 3px; background:var(--fb-surface); border:1px solid var(--fb-line); color:var(--fb-secondary); font-size:10px; font-weight:700; line-height:1.2; }

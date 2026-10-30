@@ -64,6 +64,8 @@ export type SquadCard = {
   teamBadgeUrl: string | null;
   fixturePoints?: number | null;
   isMvp?: boolean;
+  /** Season Fantasy total, independent of the displayed fixture. */
+  totalPoints?: number | null;
   /** Current whole-euro market value from the roster, when Fantasy sent one. */
   marketValue: number | null;
   /** True when the roster already has an active market listing for this entry. */
@@ -976,6 +978,7 @@ export function squadCards(
       teamBadgeUrl: media.teamBadgeUrl ?? fromCatalog?.teamBadgeUrl ?? null,
       fixturePoints,
       isMvp,
+      totalPoints: asFiniteNumber(master?.points),
       marketValue: rosterMarketValue(record),
       onMarket: rosterOnMarket(record),
       ...rosterListing(record),

@@ -28,7 +28,7 @@ import { LineupMarketOptions } from "./LineupMarketOptions";
 import { TeamValueBox } from "./TeamValueBox";
 import { useLineupBoard } from "./useLineupBoard";
 import { useSquadSales } from "./useSquadSales";
-import { useSquadForm } from "./useSquadForm";
+import { useSquadStats } from "./useSquadStats";
 import { LineupBuilderDialog } from "./LineupBuilderDialog";
 import { MarketOffers } from "../market/offers/MarketOffers";
 import { MarketOffersProvider } from "../market/offers/MarketOffersContext";
@@ -55,7 +55,7 @@ function LineupPageContent() {
   const board = useLineupBoard({ initialTeamId: searchParams.get("team") });
   const squadOffers = useOwnSquadOffers();
   const squadSales = useSquadSales();
-  const squadForm = useSquadForm(board.squadPanelPlayers);
+  const squadStats = useSquadStats(board.squad);
   const [builderOpen, setBuilderOpen] = useState(false);
   const [swapCandidate, setSwapCandidate] = useState<{
     playerId: string;
@@ -458,7 +458,7 @@ function LineupPageContent() {
               </div>
             ) : null}
             <div className="side-panel-body">
-              <div className="side-panel-scroll squad-panel-scroll">
+              <div className="side-panel-scroll squad-panel-scroll" aria-busy={squadStats.isLoading}>
                 {picking && board.squadPicker.length === 0 ? (
                   <div className="squad-picker-empty" role="status">
                     <span className="squad-picker-empty-icon" aria-hidden="true">
@@ -466,9 +466,20 @@ function LineupPageContent() {
                     </span>
                     <p className="squad-picker-empty-text">{SQUAD_PICKER_EMPTY_MESSAGE}</p>
                   </div>
+                ) : squadStats.isLoading ? (
+                  <div className="squad-loading">
+                    <div className="squad-grid squad-grid--loading" aria-hidden="true">
+                      {board.squadPanelPlayers.map((player) => (
+                        <div className="squad-tile-slot" key={player.id}>
+                          <div className="player-tile squad-tile squad-card-placeholder" />
+                        </div>
+                      ))}
+                    </div>
+                    <PulseRing label="Loading squad stats…" />
+                  </div>
                 ) : (
                   <div
-                    className="squad-grid"
+                    className="squad-grid squad-grid--ready"
                     key={`${board.selectedTeamId}-${board.squadPage}-${picking}`}
                   >
                     {board.squadPanelPlayers.map((player) => {
@@ -477,13 +488,10 @@ function LineupPageContent() {
                           name={player.name}
                           captain={player.captain}
                           variant="squad"
-                          form={player.masterPlayerId ? squadForm.get(player.masterPlayerId) : undefined}
+                          squadStats={player.masterPlayerId ? squadStats.stats.get(player.masterPlayerId)
+                            : { totalPoints: player.totalPoints ?? null, outlook: null }}
                           photoUrl={player.photoUrl}
                           teamBadgeUrl={player.teamBadgeUrl}
-                          fixturePoints={board.fixtureScoresVisible ? player.fixturePoints : null}
-                          fixtureWeek={board.week}
-                          unplayedFixture={board.week === board.maxWeek && player.fixturePoints === 0}
-                          isMvp={board.fixtureScoresVisible && player.isMvp === true}
                           interactive
                           onSelect={onSelect}
                         />

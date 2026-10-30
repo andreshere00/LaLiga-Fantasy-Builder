@@ -312,13 +312,19 @@ Squad cards show a small current-form icon above the name, using the same
 Poor/Average/Good/Very good symbols as player profiles (Very poor uses the poor
 symbol with its own accessible label). Hovering or focusing the card explains
 the rating and its FutbolFantasy source. This is current form even while viewing
-an older fixture, separate from the fixture-points badge. Only the visible squad
-page loads profiles, cached for five minutes. Loading shows an ellipsis; missing
-or failed ratings show a neutral dash without blocking card actions. Coaches
-have no form badge or profile request.
+an older fixture. Season total Fantasy points occupy the photo's upper-left
+corner; the pitch retains fixture points. Starter probability appears above the
+name on the left, with form on the right. The tooltip includes the probability's
+matchweek when supplied. Missing values show a dash; reported zeroes stay zero.
+All squad profiles load in parallel and are cached for five minutes. A skeleton
+reserves the cards' space until the catalog and all profiles settle, then reveals
+the complete squad with a short fade and slide. Reduced motion skips the
+transition. Failed profiles settle to unavailable values, and cached background
+updates keep the cards and focus in place. Coaches show total points but have
+no outlook badges or profile request.
 
-Pitch and squad cards show fixture points in the upper-left corner, opposite the
-club crest. Clicking a populated card opens a player menu with **Market options**
+Pitch cards show fixture points in the upper-left corner, opposite the
+club crest; squad cards show season totals in that corner. Clicking a populated card opens a player menu with **Market options**
 and **Player details** (coaches have no details route). Market actions retain the
 existing ownership, listing, balance and availability rules.
 

@@ -114,6 +114,14 @@ describe("formationLabel", () => {
 });
 
 describe("squadCards", () => {
+  it.each([120, 0, -3, null, undefined])("keeps season total %s separate from fixture points", (points) => {
+    const [card] = squadCards([
+      { playerTeamId: "entry", playerMaster: { id: "master", points } },
+    ], null, undefined, { week: 7, pointsByMasterId: new Map([["master", 6]]) });
+    expect(card.totalPoints).toBe(points ?? null);
+    expect(card.fixturePoints).toBe(6);
+  });
+
   it("squadCards_players_prefer_nickname", () => {
     const cards = squadCards(
       [
@@ -135,6 +143,7 @@ describe("squadCards", () => {
         photoUrl: null,
         teamBadgeUrl: null,
         fixturePoints: null,
+        totalPoints: null,
         isMvp: false,
         marketValue: null,
         onMarket: false,
@@ -150,6 +159,7 @@ describe("squadCards", () => {
         photoUrl: null,
         teamBadgeUrl: null,
         fixturePoints: null,
+        totalPoints: null,
         isMvp: false,
         marketValue: null,
         onMarket: false,

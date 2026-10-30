@@ -8,7 +8,7 @@ import { scoreTone, scoreWeekLabel } from "../../api/mappers";
 import { PersonIcon, WarningIcon } from "../shell/icons";
 import { NOT_SELECTED_PLAYER_LABEL } from "./playerTileCopy";
 import { playerFormPresentation } from "../players/playerForm";
-import type { SquadForm } from "./useSquadForm";
+import type { SquadPlayerStats } from "./useSquadStats";
 
 type PlayerTileProps = {
   name: string;
@@ -22,7 +22,7 @@ type PlayerTileProps = {
   teamBadgeUrl?: string | null;
   fixturePoints?: number | null;
   fixtureWeek?: number;
-  form?: SquadForm;
+  squadStats?: SquadPlayerStats;
   unplayedFixture?: boolean;
   isMvp?: boolean;
   selected?: boolean;
@@ -91,7 +91,7 @@ export function PlayerTile({
   teamBadgeUrl = null,
   fixturePoints = null,
   fixtureWeek,
-  form,
+  squadStats,
   unplayedFixture = false,
   isMvp = false,
   selected = false,
@@ -117,15 +117,20 @@ export function PlayerTile({
       : isMvp
         ? `, ${fixturePoints} points, MVP`
         : `, ${fixturePoints} points`;
+  const form = squadStats?.outlook;
   const formRating = playerFormPresentation(form?.rating);
-  const formLabel = form
-    ? `Current form: ${form.loading ? "Loading" : formRating?.label ?? "Unavailable"}` : null;
+  const formLabel = form ? `Current form: ${formRating?.label ?? "Unavailable"}` : null;
+  const totalLabel = squadStats
+    ? `Season total: ${squadStats.totalPoints ?? "Unavailable"} Fantasy points` : null;
+  const starterLabel = form ? `Starter probability: ${form.starterProbability == null
+    ? "Unavailable" : `${form.starterProbability}%`}${form.matchweek == null
+      ? "" : ` for ${scoreWeekLabel(form.matchweek)}`}` : null;
   const playerLabel = empty
     ? NOT_SELECTED_PLAYER_LABEL
     : captain
       ? `${name}, captain${scoreLabel}`
       : `${name}${scoreLabel}`;
-  const label = [playerLabel, formLabel].filter(Boolean).join(", ");
+  const label = [playerLabel, totalLabel, starterLabel, formLabel].filter(Boolean).join(", ");
   const photoCandidates = [
     ...new Set(
       [photoUrl, ...photoFallbackUrls].filter(
@@ -151,15 +156,20 @@ export function PlayerTile({
     <>
       <div className="player-card-spacer" aria-hidden="true" />
       <PlayerPhoto key={`${name}|${photoCandidates.join("|")}`} candidates={photoCandidates} />
-      {fixturePoints != null ? (
+      {squadStats ? <span className="player-total-points" aria-hidden="true">
+        {squadStats.totalPoints ?? "—"}<span>p</span>
+      </span> : fixturePoints != null ? (
         <PlayerScoreBadge points={fixturePoints} isMvp={isMvp} />
       ) : null}
       <TeamBadge key={teamBadgeUrl ?? "no-badge"} url={teamBadgeUrl} />
+      {form ? <span className="player-starter-probability" aria-hidden="true">
+        {form.starterProbability == null ? "—" : `${form.starterProbability}%`}
+      </span> : null}
       {form ? <span className="player-form-badge" aria-hidden="true">
         {formRating ? <>
           <img className="is-light" src={formRating.icons.light} alt="" />
           <img className="is-dark" src={formRating.icons.dark} alt="" />
-        </> : <span>{form.loading ? "…" : "—"}</span>}
+        </> : <span>—</span>}
       </span> : null}
       {showName ? (
         <>
@@ -176,7 +186,8 @@ export function PlayerTile({
     ? `Fixture ${fixtureWeek == null ? "" : scoreWeekLabel(fixtureWeek)}`
       + " has not been played yet."
     : null;
-  const help = [fixtureHelp, formLabel ? `${formLabel}. Current FutbolFantasy rating.` : null]
+  const help = [fixtureHelp, totalLabel, starterLabel,
+    formLabel ? `${formLabel}. Current FutbolFantasy rating.` : null]
     .filter(Boolean).join("\n");
   if (interactive && onSelect) {
     return <Help content={help} trigger={<button type="button" className={className}
