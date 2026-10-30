@@ -7,6 +7,8 @@ import "./PlayerTile.css";
 import { scoreTone, scoreWeekLabel } from "../../api/mappers";
 import { PersonIcon, WarningIcon } from "../shell/icons";
 import { NOT_SELECTED_PLAYER_LABEL } from "./playerTileCopy";
+import { playerFormPresentation } from "../players/playerForm";
+import type { SquadForm } from "./useSquadForm";
 
 type PlayerTileProps = {
   name: string;
@@ -20,6 +22,7 @@ type PlayerTileProps = {
   teamBadgeUrl?: string | null;
   fixturePoints?: number | null;
   fixtureWeek?: number;
+  form?: SquadForm;
   unplayedFixture?: boolean;
   isMvp?: boolean;
   selected?: boolean;
@@ -88,6 +91,7 @@ export function PlayerTile({
   teamBadgeUrl = null,
   fixturePoints = null,
   fixtureWeek,
+  form,
   unplayedFixture = false,
   isMvp = false,
   selected = false,
@@ -113,11 +117,15 @@ export function PlayerTile({
       : isMvp
         ? `, ${fixturePoints} points, MVP`
         : `, ${fixturePoints} points`;
-  const label = empty
+  const formRating = playerFormPresentation(form?.rating);
+  const formLabel = form
+    ? `Current form: ${form.loading ? "Loading" : formRating?.label ?? "Unavailable"}` : null;
+  const playerLabel = empty
     ? NOT_SELECTED_PLAYER_LABEL
     : captain
       ? `${name}, captain${scoreLabel}`
       : `${name}${scoreLabel}`;
+  const label = [playerLabel, formLabel].filter(Boolean).join(", ");
   const photoCandidates = [
     ...new Set(
       [photoUrl, ...photoFallbackUrls].filter(
@@ -147,6 +155,12 @@ export function PlayerTile({
         <PlayerScoreBadge points={fixturePoints} isMvp={isMvp} />
       ) : null}
       <TeamBadge key={teamBadgeUrl ?? "no-badge"} url={teamBadgeUrl} />
+      {form ? <span className="player-form-badge" aria-hidden="true">
+        {formRating ? <>
+          <img className="is-light" src={formRating.icons.light} alt="" />
+          <img className="is-dark" src={formRating.icons.dark} alt="" />
+        </> : <span>{form.loading ? "…" : "—"}</span>}
+      </span> : null}
       {showName ? (
         <>
           <div className="player-card-gap" aria-hidden="true" />
@@ -158,10 +172,12 @@ export function PlayerTile({
     </>
   );
 
-  const help = unplayedFixture
+  const fixtureHelp = unplayedFixture
     ? `Fixture ${fixtureWeek == null ? "" : scoreWeekLabel(fixtureWeek)}`
       + " has not been played yet."
     : null;
+  const help = [fixtureHelp, formLabel ? `${formLabel}. Current FutbolFantasy rating.` : null]
+    .filter(Boolean).join("\n");
   if (interactive && onSelect) {
     return <Help content={help} trigger={<button type="button" className={className}
       aria-label={label} aria-pressed={selected} onClick={onSelect} />}>{body}</Help>;

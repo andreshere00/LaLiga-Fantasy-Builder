@@ -12,14 +12,7 @@ import injuryGreen from "../../assets/button_injury_green.svg";
 import injuryYellow from "../../assets/button_injury_yellow.svg";
 import injuryRed from "../../assets/button_injury_red.svg";
 import injuryGray from "../../assets/button_injury_gray.svg";
-import formGoodLight from "../../assets/icon_good_form_light.svg";
-import formGoodDark from "../../assets/icon_good_form_dark.svg";
-import formMidLight from "../../assets/icon_mid_form_light.svg";
-import formMidDark from "../../assets/icon_mid_form_dark.svg";
-import formPoorLight from "../../assets/icon_poor_form_light.svg";
-import formPoorDark from "../../assets/icon_poor_form_dark.svg";
-import formVeryGoodLight from "../../assets/icon_very_good_form_light.svg";
-import formVeryGoodDark from "../../assets/icon_very_good_form_dark.svg";
+import { playerFormPresentation } from "./playerForm";
 import { useEffect, useId, useState } from "react";
 import { asFiniteNumber, asRecord, text } from "../../api/mappers";
 import { formatInjuryHistoryEntry, newsItemHref } from "./playerDetailFormat";
@@ -45,26 +38,6 @@ const HIERARCHY_LABELS: Record<string, string> = {
   other: "Other",
   reserva: "Reserve",
   reserve: "Reserve",
-};
-
-const FORM_RATINGS: Record<string, { label: string; code: string }> = {
-  poor: { label: "Poor", code: "bad" },
-  average: { label: "Average", code: "mid" },
-  bad: { label: "Poor", code: "bad" },
-  malo: { label: "Poor", code: "bad" },
-  mid: { label: "Average", code: "mid" },
-  regular: { label: "Average", code: "mid" },
-  good: { label: "Good", code: "good" },
-  bueno: { label: "Good", code: "good" },
-  very_good: { label: "Very good", code: "very_good" },
-  muy_bueno: { label: "Very good", code: "very_good" },
-};
-
-const FORM_ICONS: Record<string, { light: string; dark: string }> = {
-  bad: { light: formPoorLight, dark: formPoorDark },
-  mid: { light: formMidLight, dark: formMidDark },
-  good: { light: formGoodLight, dark: formGoodDark },
-  very_good: { light: formVeryGoodLight, dark: formVeryGoodDark },
 };
 
 const INJURY_RISK_LABELS: Record<string, string> = {
@@ -154,8 +127,8 @@ export function PlayerFantasySummary({ profile }: FantasySectionProps) {
   const startMatchweek = asFiniteNumber(startProbability?.matchweek);
   const formValue = asFiniteNumber(form?.value);
   const formRatingRaw = text(form?.rating);
-  const formRating = formRatingRaw ? FORM_RATINGS[normalizedFantasyValue(formRatingRaw)] : null;
-  const formIcons = formRating ? FORM_ICONS[formRating.code] : null;
+  const formRating = playerFormPresentation(formRatingRaw);
+  const formIcons = formRating?.icons;
   const injuryRaw = text(injuryRisk?.raw) ?? text(injuryRisk?.level);
   const injuryLabel = injuryRaw
     ? INJURY_RISK_LABELS[normalizedFantasyValue(injuryRaw)] ?? injuryRaw

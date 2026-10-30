@@ -28,6 +28,7 @@ import { LineupMarketOptions } from "./LineupMarketOptions";
 import { TeamValueBox } from "./TeamValueBox";
 import { useLineupBoard } from "./useLineupBoard";
 import { useSquadSales } from "./useSquadSales";
+import { useSquadForm } from "./useSquadForm";
 import { LineupBuilderDialog } from "./LineupBuilderDialog";
 import { MarketOffers } from "../market/offers/MarketOffers";
 import { MarketOffersProvider } from "../market/offers/MarketOffersContext";
@@ -54,6 +55,7 @@ function LineupPageContent() {
   const board = useLineupBoard({ initialTeamId: searchParams.get("team") });
   const squadOffers = useOwnSquadOffers();
   const squadSales = useSquadSales();
+  const squadForm = useSquadForm(board.squadPanelPlayers);
   const [builderOpen, setBuilderOpen] = useState(false);
   const [swapCandidate, setSwapCandidate] = useState<{
     playerId: string;
@@ -475,6 +477,7 @@ function LineupPageContent() {
                           name={player.name}
                           captain={player.captain}
                           variant="squad"
+                          form={player.masterPlayerId ? squadForm.get(player.masterPlayerId) : undefined}
                           photoUrl={player.photoUrl}
                           teamBadgeUrl={player.teamBadgeUrl}
                           fixturePoints={board.fixtureScoresVisible ? player.fixturePoints : null}

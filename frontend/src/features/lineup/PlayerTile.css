@@ -257,3 +257,10 @@
 .player-name-label { text-align:center; }
 .player-tile.is-captain .player-name { border-top:2px solid var(--fb-primary); }
 .player-score-badge:is(.is-red,.is-green,.is-yellow,.is-blue) { color:var(--fb-ink-on-status); }
+
+/* Current form sits above the name, separate from fixture scores and the club crest. */
+.player-form-badge { position:absolute; z-index:5; right:6.6667%; bottom:calc(20% + 4px); display:grid; place-items:center; width:clamp(18px,24%,24px); aspect-ratio:1; background:var(--fb-surface); border:1px solid var(--fb-line); color:var(--fb-muted); font-size:12px; line-height:1; pointer-events:none; }
+.player-form-badge img { display:block; width:80%; height:80%; object-fit:contain; }
+.player-form-badge .is-dark { display:none; }
+:root[data-theme="dark"] .player-form-badge .is-light { display:none; }
+:root[data-theme="dark"] .player-form-badge .is-dark { display:block; }

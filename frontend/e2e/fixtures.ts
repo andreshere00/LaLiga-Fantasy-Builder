@@ -75,6 +75,7 @@ export async function mockApplication(page: Page, { rankingSize = 2 } = {}) {
     else if (p === "/api/calendar/current") body = { weekNumber: 8, previousWeek: 7, nextWeek: 9, isLive: true, openingWeekDate: "2026-10-10T00:00:00Z" };
     else if (p.startsWith("/api/calendar/")) body = [];
     else if (p === "/api/players") body = catalog;
+    else if (p.endsWith("/stats/profile")) body = { ...detail.profile, playerId: p.split("/")[3] };
     else if (p.endsWith("/stats/detail")) body = detail;
     else if (p.endsWith("/market-value")) body = [{ date: "2026-10-07", marketValue: 2000000 }, { date: "2026-10-12", marketValue: 2100000 }];
     else if (p.includes("/players/") && p.includes("/league/")) body = slots[0];

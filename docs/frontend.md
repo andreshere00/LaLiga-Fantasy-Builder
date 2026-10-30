@@ -308,6 +308,15 @@ the query; Cancel leaves the current chart period intact.
 
 ### Lineup player actions
 
+Squad cards show a small current-form icon above the name, using the same
+Poor/Average/Good/Very good symbols as player profiles (Very poor uses the poor
+symbol with its own accessible label). Hovering or focusing the card explains
+the rating and its FutbolFantasy source. This is current form even while viewing
+an older fixture, separate from the fixture-points badge. Only the visible squad
+page loads profiles, cached for five minutes. Loading shows an ellipsis; missing
+or failed ratings show a neutral dash without blocking card actions. Coaches
+have no form badge or profile request.
+
 Pitch and squad cards show fixture points in the upper-left corner, opposite the
 club crest. Clicking a populated card opens a player menu with **Market options**
 and **Player details** (coaches have no details route). Market actions retain the
