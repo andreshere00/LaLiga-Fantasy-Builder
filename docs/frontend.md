@@ -650,8 +650,9 @@ Future verified gross accounting uses `B - P`; verified net accounting uses `B`.
 The player name occupies a single compact grid track beside the photo, wrapping
 long names. Table headers and loading placeholders use the same column layout.
 
-The seller/options cell displays the listing's bid count, defaulting to **Bids: 0**
-when the count is omitted or unavailable; `numberOfOffers` is never added.
+The seller/options cell displays the listing's bid count. An omitted count is
+**Bids: 0**. A null or invalid count stays **Bids: Unavailable**.
+`numberOfOffers` is never added.
 Below the market value, **Release clause** shows the known positive euro value even while protected,
 Not applicable for a LaLiga listing without a clause, and Unavailable for other
 unknown values. The shield beside it follows the theme foreground (white in dark

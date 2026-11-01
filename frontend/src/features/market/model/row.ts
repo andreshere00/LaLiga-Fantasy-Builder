@@ -112,6 +112,27 @@ function resolveMyBid(
   return userBidsByMarketId?.get(marketId) ?? null;
 }
 
+/** An omitted bid count is zero. Null and invalid counts stay unknown. */
+function bidCountOf(value: unknown): number | null {
+  if (value === undefined) return 0;
+  return typeof value === "number" && Number.isSafeInteger(value) && value >= 0
+    ? value
+    : null;
+}
+
+/**
+ * Formats a normalized bid count for seller cells.
+ *
+ * Args:
+ *   count: Non-negative bid count, or null when the listing count is unknown.
+ *
+ * Returns:
+ *   The count, or "Unavailable" when the count is unknown.
+ */
+export function bidCountLabel(count: number | null | undefined): string {
+  return count == null ? "Unavailable" : String(count);
+}
+
 function sellerKindOf(
   sellerLabel: string,
   sellerTeamId: string | null,
@@ -198,8 +219,7 @@ export function marketRow(
       buyoutClauseUnlockAt(item) ??
       (playerTeamId ? (buyoutUnlockByPlayerTeamId?.get(playerTeamId) ?? null) : null),
     isShielded: playerTeam?.isShielded === true,
-    numberOfBids: Number.isSafeInteger(item.numberOfBids) &&
-      typeof item.numberOfBids === "number" && item.numberOfBids >= 0 ? item.numberOfBids : null,
+    numberOfBids: bidCountOf(item.numberOfBids),
     myBid: resolveMyBid(item, marketId, userBidsByMarketId),
     directOffer: item.directOffer === true,
     valueHistory,

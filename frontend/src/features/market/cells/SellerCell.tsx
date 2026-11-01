@@ -4,7 +4,7 @@ import { MarketActionMenu } from "../actions/MarketActionMenu";
 import type { MarketActionsApi } from "../actions/useMarketActions";
 import type { MarketActionContext } from "../actions/marketActions";
 import { ManagerIdentity } from "../../shell/ManagerIdentity";
-import type { MarketRow } from "../model/row";
+import { bidCountLabel, type MarketRow } from "../model/row";
 
 type SellerCellProps = {
   row: MarketRow;
@@ -43,7 +43,7 @@ export function SellerCell({ row, actionContext, actions }: SellerCellProps) {
     <span className="market-seller-wrap">
       <MarketActionMenu row={row} context={actionContext} actions={actions} />
       <SellerName row={row} />
-      <span className="market-bid-count">Bids: {row.numberOfBids ?? 0}</span>
+      <span className="market-bid-count">Bids: {bidCountLabel(row.numberOfBids)}</span>
     </span>
   );
 }

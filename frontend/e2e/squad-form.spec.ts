@@ -110,8 +110,21 @@ for (const theme of ["light", "dark"]) {
       await expect(page.getByRole("dialog")).toBeVisible();
       await page.keyboard.press("Escape");
       await expect(page.getByRole("dialog")).toHaveCount(0);
+      const revealTime = animate
+        ? await page.locator(".squad-grid--ready").evaluate((element) => {
+          const animation = element.getAnimations()[0];
+          return animation == null ? null : Number(animation.currentTime);
+        })
+        : null;
       await page.getByRole("button", { name: "Next squad page" }).click();
       await expect(tile("Player 09")).toBeVisible();
+      if (animate) {
+        const afterPage = await page.locator(".squad-grid--ready").evaluate((element) => {
+          const animation = element.getAnimations()[0];
+          return animation == null ? null : Number(animation.currentTime);
+        });
+        expect(afterPage).toBeGreaterThanOrEqual(revealTime ?? 0);
+      }
       await expect.poll(() => requested.length).toBe(12);
       await page.getByRole("button", { name: "Previous squad page" }).click();
       await expect(tile("Player 03")).toHaveAttribute("aria-label", /Current form: Good/);

@@ -572,7 +572,7 @@ function LineupPageContent() {
                 ) : (
                   <div
                     className="squad-grid squad-grid--ready"
-                    key={`${board.selectedTeamId}-${squadPageData.page}-${picking}-${filterCount}`}
+                    key={board.selectedTeamId ?? "squad"}
                   >
                     {squadPageData.pageItems.map((player) => {
                       const squadRole = roleFromPositionId(player.positionId);
