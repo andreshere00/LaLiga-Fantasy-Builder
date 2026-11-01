@@ -11,6 +11,7 @@ import httpx
 from fantasy_api.clients.laliga_fantasy import LaligaFantasyClient
 from fantasy_api.config import get_settings
 from fantasy_api.domain.errors import UpstreamError
+from fantasy_api.radar.audits import SupplyAudits
 from fantasy_api.radar.catalog import CatalogInventory, build_inventory, inventory_report
 from fantasy_api.radar.files import atomic_json, read_json
 from fantasy_api.radar.registry import IdentityRegistry, propose_identities
@@ -45,8 +46,15 @@ def main(argv: list[str] | None = None) -> int:
     candidates.add_argument("--aliases", type=Path, required=True)
     registry = sub.add_parser("registry", help="Validate a reviewed, versioned identity registry")
     registry.add_argument("--registry", type=Path, required=True)
+    audit = sub.add_parser("audit", help="Verify source permissions and seven-column captures")
+    audit.add_argument("--audits", type=Path, required=True)
+    audit.add_argument("--captures", type=Path, required=True)
     args = parser.parse_args(argv)
     try:
+        if args.command == "audit":
+            audits = SupplyAudits.model_validate(read_json(args.audits))
+            print(json.dumps(audits.report(args.captures)))
+            return 0
         if args.command == "registry":
             result = IdentityRegistry.model_validate(read_json(args.registry))
             print(

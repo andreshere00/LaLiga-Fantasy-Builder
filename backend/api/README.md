@@ -135,3 +135,12 @@ identity decisions. Each master ID/season has increasing versions and one latest
 state (`pending_review`, `matched`, `ambiguous`, `not_found`). Matches require a
 reviewer, date, observed source key, expected name, validity start and evidence.
 A changed club does not rewrite identity history. Never infer provider URLs.
+
+### Supply and role gates (phase 3)
+
+`fantasy-radar-sync audit --audits audits.json --captures captures/` verifies
+reviewed permission/discovery/definition decisions and immutable seven-column
+captures. Roles are approved per identity/season with exactly one stable default.
+Six synthetic role tests establish contract behavior, not real supply approval.
+See [supply audit and remaining gates](../../docs/scraping/radar-supply-audit.md).
+DataMB remains disabled pending verified production evidence.

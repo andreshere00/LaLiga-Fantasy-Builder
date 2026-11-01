@@ -8,6 +8,7 @@ from urllib.parse import urlsplit
 
 from pydantic import AwareDatetime, BaseModel, ConfigDict, Field, model_validator
 
+from fantasy_api.radar.audits import RoleAssignment
 from fantasy_api.radar.catalog import CatalogInventory
 from fantasy_api.schemas.player_radar import RadarQuery
 
@@ -30,12 +31,20 @@ class IdentityDecision(BaseModel):
     reviewer: str | None = Field(default=None, min_length=1, max_length=120)
     valid_from: date | None = None
     valid_until: date | None = None
+    roles: list[RoleAssignment] = Field(default_factory=list, max_length=6)
     notes: str = Field(default="", max_length=1000)
 
     @model_validator(mode="after")
     def validate_decision(self) -> IdentityDecision:
         """Require traceable approval and canonical observed DataMB keys."""
         RadarQuery(season=self.season)
+        profiles = [r.profile for r in self.roles]
+        if len(profiles) != len(set(profiles)):
+            raise ValueError("duplicate identity role")
+        if self.roles and sum(r.default for r in self.roles) != 1:
+            raise ValueError("exactly one reviewed default role is required")
+        if self.roles and self.status != "matched":
+            raise ValueError("roles require a matched identity")
         for evidence in self.evidence:
             url = urlsplit(evidence)
             if url.scheme not in {"https", "http"} or not url.netloc or url.username:
