@@ -22,9 +22,11 @@ function roster() {
       ? [weekStats(8, 0, 0)]
       : index === 1
         ? [weekStats(7, 1, 1)]
-        : index === 10
-          ? [weekStats(8, 2, 0)]
-          : player.lastStats;
+        : index === 2
+          ? [weekStats(8, 0, 1)]
+          : index === 10
+            ? [weekStats(8, 2, 0)]
+            : player.lastStats;
     return {
       playerTeamId: "s" + player.id,
       buyoutClause: 10_000_000,
@@ -52,6 +54,14 @@ async function openHighlightedLineup(page: Page, theme: "light" | "dark") {
     visitorScore: 0,
   };
   await page.route(/\/api\/calendar\/weeks\/8$/, (route) => route.fulfill({ json: [started] }));
+  await page.route(/\/api\/calendar\/weeks\/8\/stats$/, (route) => route.fulfill({
+    json: [{
+      id: "1",
+      matchState: 2,
+      local: { id: 1, players: [{ id: "3", weekPoints: 1 }] },
+      visitor: { id: 2, players: [] },
+    }],
+  }));
   await page.route(/\/api\/leagues\/l1\/teams\/t1$/, (route) => route.fulfill({ json: roster() }));
   await page.goto("/");
   await expect(page.locator(".score-week")).toHaveText("F8");
@@ -74,6 +84,24 @@ test.describe("lineup fixture highlights", () => {
       await expect(scorer).toHaveCSS("background-color", purple);
       await scorer.hover();
       await expect(scorer).toHaveCSS("background-color", purple);
+      const scorerTip = page.getByRole("tooltip");
+      await expect(scorerTip).toContainText("Count");
+      await expect(scorerTip).toContainText("Points");
+      await expect(scorerTip).toContainText("+8");
+      await expect(scorerTip).not.toContainText("Marca");
+      await page.keyboard.press("Escape");
+      await expect(page.getByRole("tooltip")).toHaveCount(0);
+      const played = pitch.getByRole("button", { name: /Player 03/ });
+      await played.focus();
+      const playedTip = page.getByRole("tooltip");
+      await expect(playedTip).toContainText("Minutes");
+      await expect(playedTip).toContainText("+2");
+      await expect(playedTip).toContainText("Goals conceded");
+      await expect(playedTip).toContainText("-1");
+      await expect(playedTip).toContainText("DAZN");
+      await expect(playedTip).toContainText("+1");
+      await expect(playedTip).not.toContainText("Marca");
+      await expect(playedTip).not.toContainText("has not been played yet");
       await expect(page.locator(".squad-tile.is-fixture-highlight")).toHaveCount(0);
 
       await page.getByRole("button", { name: "Previous fixture" }).click();
@@ -97,6 +125,10 @@ test.describe("lineup fixture highlights", () => {
     await scorer.scrollIntoViewIfNeeded();
     await expect(scorer).toBeVisible();
     await expect(scorer).toHaveCSS("background-color", LIGHT_PURPLE);
+    await scorer.focus();
+    const tip = page.getByRole("tooltip");
+    await expect(tip).toContainText("+8");
+    await expect(tip).not.toContainText("Marca");
     await expect(page.locator(".squad-tile.is-fixture-highlight")).toHaveCount(0);
   });
 });

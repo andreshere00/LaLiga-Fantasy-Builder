@@ -7,6 +7,8 @@ import {
   defaultWeek,
   fixtureScoresVisibleForWeek,
   lastPlayedWeek,
+  rankingFixtureInPlay,
+  rankingFixtureWeek,
   lineupFixtureTotal,
   formatTeamValue,
   formationLabel,
@@ -115,6 +117,15 @@ describe("week score", () => {
     expect(points.get("7")).toBe(1200);
     expect(points.get("t-2")).toBe(1123);
     expect(points.get("t-0")).toBe(0);
+  });
+
+  it("weekPointsByTeamId_uses_live_points_when_the_week_score_is_missing", () => {
+    const points = weekPointsByTeamId([
+      { position: 1, livePoints: 18, team: { id: "live", manager: { managerName: "Live" } } },
+      { position: 2, points: 0, livePoints: 9, team: { id: "zero" } },
+    ]);
+    expect(points.get("live")).toBe(18);
+    expect(points.get("zero")).toBe(0);
   });
 });
 
@@ -575,6 +586,26 @@ describe("matchday bounds", () => {
     expect(lastPlayedWeek({ previousWeek: 7, weekNumber: 8 })).toBe(7);
     expect(lastPlayedWeek({ weekNumber: 8 })).toBe(7);
     expect(lastPlayedWeek({ weekNumber: 1 })).toBe(0);
+  });
+
+  it("rankingFixtureWeek_before_kickoff_keeps_the_previous_fixture", () => {
+    const current = { previousWeek: 11, weekNumber: 12 };
+    expect(rankingFixtureWeek(current, null)).toBe(11);
+    expect(rankingFixtureWeek(current, [])).toBe(11);
+    expect(rankingFixtureWeek(current, [{ matchState: 1 }])).toBe(11);
+    expect(rankingFixtureInPlay(current, [{ matchState: 1 }])).toBe(false);
+  });
+
+  it("rankingFixtureWeek_started_fixture_stays_until_the_next_kickoff", () => {
+    const current = { previousWeek: 11, weekNumber: 12 };
+    const live = [{ matchState: 2 }, { matchState: 1 }];
+    const finished = [{ matchState: 7 }, { matchState: 7 }];
+    expect(rankingFixtureWeek(current, live)).toBe(12);
+    expect(rankingFixtureInPlay(current, live)).toBe(true);
+    expect(rankingFixtureWeek(current, finished)).toBe(12);
+    expect(rankingFixtureInPlay(current, finished)).toBe(false);
+    expect(rankingFixtureWeek({ weekNumber: 1 }, [{ matchState: 1 }])).toBe(0);
+    expect(rankingFixtureWeek({ weekNumber: 1 }, [{ matchState: 2 }])).toBe(1);
   });
 
   it("fixtureScoresVisibleForWeek_limits_current_scores_to_active_matchweek", () => {

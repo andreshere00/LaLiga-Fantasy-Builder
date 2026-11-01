@@ -86,6 +86,16 @@ export async function mockApplication(page: Page, { rankingSize = 2 } = {}) {
     else if (p.startsWith("/api/calendar/")) body = [];
     else if (p === "/api/players") body = catalog;
     else if (p.endsWith("/stats/profile")) body = { ...detail.profile, playerId: p.split("/")[3] };
+    else if (p.endsWith("/stats/fixtures")) {
+      const playerId = p.split("/")[3];
+      body = {
+        ...envelope, playerId,
+        fixtures: playerId === "3" ? [{
+          fixture: { competition: "laliga", matchweek: 8 },
+          stats: { daznPoints: { daznPoints: 1 } },
+        }] : [],
+      };
+    }
     else if (p.endsWith("/stats/detail")) body = detail;
     else if (p.endsWith("/market-value")) body = [{ date: "2026-10-07", marketValue: 2000000 }, { date: "2026-10-12", marketValue: 2100000 }];
     else if (p.includes("/players/") && p.includes("/league/")) body = slots[0];

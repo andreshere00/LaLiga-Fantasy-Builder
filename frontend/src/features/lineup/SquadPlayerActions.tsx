@@ -26,16 +26,15 @@ type SaleView = "options" | "choose" | "list" | "modify" | "cancel" | "immediate
 
 const PLAYER_OPTIONS_HINT = "Click for player options";
 
-function ChoiceGroup({ label, tone, children }: {
+function ChoiceGroup({ label, children }: {
   label: string;
-  tone: "market" | "player" | "lineup";
   children: ReactNode;
 }) {
   const titleId = useId();
   const items = Children.toArray(children);
   if (items.length === 0) return null;
   return (
-    <section className="squad-sale-choice-group" data-tone={tone} aria-labelledby={titleId}>
+    <section className="squad-sale-choice-group" aria-labelledby={titleId}>
       <h3 id={titleId} className="squad-sale-choice-group-label">{label}</h3>
       <div className="squad-sale-choices">{items}</div>
     </section>
@@ -238,7 +237,7 @@ export function SquadPlayerActions({
       >
         {view === "options" ? (
           <div className="squad-sale-choice-groups">
-            <ChoiceGroup label="Market" tone="market">
+            <ChoiceGroup label="Market">
               <button type="button" className="squad-sale-choice" onClick={() => setView("choose")}>
                 Market options
               </button>
@@ -251,7 +250,7 @@ export function SquadPlayerActions({
                 </button>
               ) : null}
             </ChoiceGroup>
-            <ChoiceGroup label="Details" tone="player">
+            <ChoiceGroup label="Details">
               {player.masterPlayerId && player.positionId !== 5 ? (
                 <Link
                   className="squad-sale-choice"
@@ -262,7 +261,7 @@ export function SquadPlayerActions({
                 </Link>
               ) : null}
             </ChoiceGroup>
-            <ChoiceGroup label="Lineup" tone="lineup">
+            <ChoiceGroup label="Lineup">
               {onSwap ? (
                 <button type="button" className="squad-sale-choice" onClick={() => {
                   close();

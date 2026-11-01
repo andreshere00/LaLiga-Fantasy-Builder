@@ -285,3 +285,64 @@
 .player-tile.is-position-needed.is-captain .player-name {
   border-top-color:var(--fb-ink-on-status);
 }
+
+.fb-tooltip:has(.player-score-breakdown) {
+  max-width: min(20rem, calc(100vw - 24px));
+}
+.player-score-breakdown {
+  width: max-content;
+  max-width: 100%;
+  border-collapse: collapse;
+  margin-top: 4px;
+  font-variant-numeric: tabular-nums;
+}
+.player-score-breakdown caption {
+  caption-side: top;
+  padding-bottom: 4px;
+  text-align: left;
+  font-weight: 700;
+}
+.player-score-breakdown :is(th, td) {
+  padding: 3px 0;
+  font-weight: 400;
+  text-align: left;
+  vertical-align: baseline;
+}
+.player-score-breakdown thead th {
+  padding-bottom: 4px;
+  border-bottom: 1px solid var(--fb-line);
+  color: var(--fb-muted);
+  font-size: 12px;
+  font-weight: 500;
+  letter-spacing: 0.01em;
+  text-transform: uppercase;
+}
+.player-score-breakdown th[scope="row"] {
+  max-width: 11rem;
+  padding-right: 16px;
+  white-space: normal;
+}
+.player-score-breakdown :is(td, thead th:nth-child(n + 2)) {
+  min-width: 3.25rem;
+  padding-left: 12px;
+  text-align: right;
+}
+.player-score-points {
+  font-weight: 700;
+}
+.fb-tooltip .player-score-figure,
+.fb-tooltip .player-score-unit {
+  display: inline-block;
+  font-variant-numeric: tabular-nums;
+}
+.fb-tooltip .player-score-figure {
+  min-width: 2rem;
+  text-align: right;
+}
+.fb-tooltip .player-score-unit {
+  width: 0.8em;
+  margin-left: 3px;
+  color: var(--fb-muted);
+  font-weight: 400;
+  text-align: left;
+}

@@ -7,6 +7,11 @@ import "./PlayerTile.css";
 import { scoreTone, scoreWeekLabel } from "../../api/mappers";
 import { PersonIcon, WarningIcon } from "../shell/icons";
 import { fixtureHighlightLabel, type FixtureHighlight } from "./fixtureHighlight";
+import {
+  fixtureScoreLineLabel,
+  signedFixturePoints,
+  type FixtureScoreLine,
+} from "./fixtureScoreLines";
 import { LINEUP_POSITION_NEEDED_LABEL, NOT_SELECTED_PLAYER_LABEL } from "./playerTileCopy";
 import { playerFormPresentation } from "../players/playerForm";
 import { starterProbabilityTone } from "../players/starterProbability";
@@ -26,6 +31,8 @@ type PlayerTileProps = {
   fixtureWeek?: number;
   /** Goal or clean sheet for the fixture shown on the lineup pitch. */
   fixtureHighlight?: FixtureHighlight | null;
+  /** Matchweek events that make up the fixture score. */
+  fixtureScoreLines?: readonly FixtureScoreLine[] | null;
   squadStats?: SquadPlayerStats;
   unplayedFixture?: boolean;
   /** Squad or empty pitch card for a position the lineup still needs. */
@@ -35,6 +42,33 @@ type PlayerTileProps = {
   interactive?: boolean;
   onSelect?: () => void;
 };
+
+function FixtureScoreBreakdown({ lines }: { lines: readonly FixtureScoreLine[] }) {
+  return (
+    <table className="player-score-breakdown">
+      <caption>Fixture points</caption>
+      <thead>
+        <tr>
+          <th scope="col">Event</th>
+          <th scope="col">Count</th>
+          <th scope="col">Points</th>
+        </tr>
+      </thead>
+      <tbody>
+        {lines.map((line) => (
+          <tr key={line.key}>
+            <th scope="row">{line.label}</th>
+            <td className="player-score-count">{line.count ?? "—"}</td>
+            <td className="player-score-points">
+              <span className="player-score-figure">{signedFixturePoints(line.points)}</span>
+              <span className="player-score-unit">p</span>
+            </td>
+          </tr>
+        ))}
+      </tbody>
+    </table>
+  );
+}
 
 export function PlayerScoreBadge({
   points,
@@ -98,6 +132,7 @@ export function PlayerTile({
   fixturePoints = null,
   fixtureWeek,
   fixtureHighlight = null,
+  fixtureScoreLines = null,
   squadStats,
   unplayedFixture = false,
   positionNeeded = false,
@@ -108,6 +143,7 @@ export function PlayerTile({
 }: PlayerTileProps) {
   const shownHighlight = empty ? null : fixtureHighlight;
   const highlightText = fixtureHighlightLabel(shownHighlight);
+  const scoreLineTexts = (empty ? [] : fixtureScoreLines ?? []).map(fixtureScoreLineLabel);
   const positionNeededText = positionNeeded && !shownHighlight
     ? LINEUP_POSITION_NEEDED_LABEL : null;
   const className = [
@@ -145,7 +181,8 @@ export function PlayerTile({
       ? `${name}, captain${scoreLabel}`
       : `${name}${scoreLabel}`;
   const label = [
-    playerLabel, highlightText, positionNeededText, totalLabel, starterLabel, formLabel,
+    playerLabel, highlightText, positionNeededText, ...scoreLineTexts,
+    totalLabel, starterLabel, formLabel,
   ]
     .filter(Boolean)
     .join(", ");
@@ -205,9 +242,33 @@ export function PlayerTile({
     ? `Fixture ${fixtureWeek == null ? "" : scoreWeekLabel(fixtureWeek)}`
       + " has not been played yet."
     : null;
-  const help = [highlightText, positionNeededText, fixtureHelp, totalLabel, starterLabel,
-    formLabel ? `${formLabel}. Current FutbolFantasy rating.` : null]
-    .filter(Boolean).join("\n");
+  const helpLines = [
+    highlightText, positionNeededText, fixtureHelp, totalLabel, starterLabel,
+  ].filter((line): line is string => Boolean(line));
+  const help = helpLines.length === 0 && scoreLineTexts.length === 0 && !formLabel ? null : (
+    <>
+      {helpLines.map((line) => (
+        <span key={line}>
+          {line}
+          <br />
+        </span>
+      ))}
+      {scoreLineTexts.length > 0 ? (
+        <FixtureScoreBreakdown lines={empty ? [] : fixtureScoreLines ?? []} />
+      ) : null}
+      {formLabel ? (
+        <>
+          {formLabel}.
+          <br />
+          Current{" "}
+          <a href="https://www.futbolfantasy.com/" target="_blank" rel="noreferrer">
+            FutbolFantasy
+          </a>{" "}
+          rating.
+        </>
+      ) : null}
+    </>
+  );
   const statusText = [highlightText, positionNeededText].filter(Boolean).join(", ");
   const visibleLabel = statusText
     ? [captain ? `${name}, captain` : name, statusText].join(", ")

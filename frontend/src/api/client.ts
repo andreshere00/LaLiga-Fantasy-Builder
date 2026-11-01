@@ -68,6 +68,8 @@ export const paths = {
     `/api/players/${segment(playerId)}/market-value`,
   playerStatsProfile: (playerId: string) =>
     `/api/players/${segment(playerId)}/stats/profile`,
+  playerStatsFixtures: (playerId: string) =>
+    `/api/players/${segment(playerId)}/stats/fixtures?competition=laliga&last=60`,
   playerStatsDetail: (playerId: string, query?: PlayerStatsDetailQuery) => {
     const base = `/api/players/${segment(playerId)}/stats/detail`;
     if (!query) return base;

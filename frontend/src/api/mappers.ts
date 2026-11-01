@@ -584,6 +584,33 @@ export function lastPlayedWeek(current: CurrentWeek): number {
   return 0;
 }
 
+/**
+ * Matchweek for the ranking chip.
+ *
+ * The open week once any of its matches has started, including after that week
+ * finishes, until the next week's first match starts. Before that, the previous
+ * finished week. ``fixtures`` null means the open week is not known to have started.
+ */
+export function rankingFixtureWeek(
+  current: CurrentWeek,
+  fixtures: readonly unknown[] | null,
+): number {
+  const open = current.weekNumber;
+  if (open != null && open >= 1 && fixtures?.some(fixtureHasStarted)) return open;
+  return lastPlayedWeek(current);
+}
+
+/** True while the ranking chip is showing an open week that still has a match unfinished. */
+export function rankingFixtureInPlay(
+  current: CurrentWeek,
+  fixtures: readonly unknown[] | null,
+): boolean {
+  if (fixtures == null || rankingFixtureWeek(current, fixtures) !== current.weekNumber) {
+    return false;
+  }
+  return fixtures.some((fixture) => asFiniteNumber(asRecord(fixture)?.matchState) !== 7);
+}
+
 /** Show historical scores and current scores only between the first kickoff and last finish. */
 export function fixtureScoresVisibleForWeek(
   week: number,
@@ -621,8 +648,9 @@ export function weekPointsByTeamId(rows: readonly StandingRow[]): Map<string, nu
   const points = new Map<string, number>();
   for (const row of rows) {
     const teamId = teamIdOf(row);
-    if (teamId.length === 0 || row.points == null || Number.isNaN(row.points)) continue;
-    points.set(teamId, row.points);
+    const score = row.points ?? row.livePoints;
+    if (teamId.length === 0 || score == null || Number.isNaN(score)) continue;
+    points.set(teamId, score);
   }
   return points;
 }

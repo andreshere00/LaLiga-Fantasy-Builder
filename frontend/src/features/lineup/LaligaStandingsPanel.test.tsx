@@ -197,51 +197,54 @@ describe("PlayersRankingPanel", () => {
     expect(onSelectTeam).toHaveBeenCalledTimes(1);
   });
 
-  it("PlayersRankingPanel_finished_fixture_shows_score_beside_season_total", () => {
+  it("PlayersRankingPanel_finished_fixture_labels_the_score_under_the_name", () => {
     const onSelectTeam = vi.fn();
     render(<PlayersRankingPanel selectedTeamId="mine" onSelectTeam={onSelectTeam} ranking={ranking}
-      lastPlayedWeek={7}
+      fixtureWeek={7}
       lastFixturePoints={new Map([["mine", 72], ["other", 0], ["unavailable", -3]])} />);
-    expect(screen.getByText("F7").textContent).toBe("F7");
-    expect(screen.getByRole("button", { name: /My manager/ }).textContent).toMatch(/Fixture 7 72/);
-    expect(screen.getByRole("button", { name: /My manager/ }).textContent).toMatch(/Season\s+15 p/);
+    const mine = screen.getByRole("button", { name: /My manager/ });
+    expect(mine.querySelector(".rank-fixture")?.textContent).toBe("72");
+    expect(mine.querySelector(".rank-fixture-week")).toBeNull();
+    expect(mine.querySelector(".rank-points .rank-fixture")).toBeNull();
+    expect(mine.textContent).toMatch(/Fixture 7 72/);
+    expect(mine.textContent).toMatch(/Season\s+15 p/);
     const opponent = screen.getByRole("button", { name: /Fixture 7 0/ });
-    fireEvent.click(opponent);
+    fireEvent.click(opponent.querySelector(".rank-fixture")!);
     expect(onSelectTeam).toHaveBeenCalledWith("other");
     expect(screen.getByRole("button", { name: /Fixture 7 -3/ }).textContent).toMatch(/Season\s+—/);
   });
 
   it("PlayersRankingPanel_loading_fixture_keeps_managers_selectable", () => {
     render(<PlayersRankingPanel selectedTeamId="mine" onSelectTeam={vi.fn()} ranking={ranking}
-      lastPlayedWeek={7} lastFixturePoints={null} />);
+      fixtureWeek={7} lastFixturePoints={null} />);
     expect(screen.getAllByRole("button", { name: /Fixture 7 Loading/ })).toHaveLength(3);
     expect(screen.queryByRole("alert")).toBeNull();
   });
 
   it("PlayersRankingPanel_missing_fixture_score_reads_as_unavailable", () => {
     render(<PlayersRankingPanel selectedTeamId="mine" onSelectTeam={vi.fn()} ranking={ranking}
-      lastPlayedWeek={7} lastFixturePoints={new Map([["mine", 72]])} />);
+      fixtureWeek={7} lastFixturePoints={new Map([["mine", 72]])} />);
     expect(screen.getByRole("button", { name: /Opponent/ }).textContent)
       .toMatch(/Fixture 7 Unavailable/);
   });
 
   it("PlayersRankingPanel_fixture_failure_explains_that_scores_are_unavailable", () => {
     render(<PlayersRankingPanel selectedTeamId="mine" onSelectTeam={vi.fn()} ranking={ranking}
-      lastPlayedWeek={7} lastFixturePoints={null} lastFixtureUnavailable />);
+      fixtureWeek={7} lastFixturePoints={null} lastFixtureUnavailable />);
     expect(screen.getByRole("alert").textContent).toBe("Fixture 7 scores are unavailable.");
     expect(screen.getByRole("button", { name: /Opponent/ })).toBeTruthy();
   });
 
   it("PlayersRankingPanel_refresh_failure_keeps_the_previous_scores", () => {
     render(<PlayersRankingPanel selectedTeamId="mine" onSelectTeam={vi.fn()} ranking={ranking}
-      lastPlayedWeek={7} lastFixturePoints={new Map([["mine", 72]])} lastFixtureUnavailable />);
+      fixtureWeek={7} lastFixturePoints={new Map([["mine", 72]])} lastFixtureUnavailable />);
     expect(screen.getByRole("alert").textContent).toBe("Fixture 7 scores could not be refreshed.");
     expect(screen.getByRole("button", { name: /My manager/ }).textContent).toMatch(/Fixture 7 72/);
   });
 
   it("PlayersRankingPanel_before_first_fixture_hides_the_fixture_column", () => {
     render(<PlayersRankingPanel selectedTeamId="mine" onSelectTeam={vi.fn()} ranking={ranking}
-      lastPlayedWeek={0} />);
+      fixtureWeek={0} />);
     expect(screen.queryByText("F7")).toBeNull();
     expect(screen.queryByText("Season")).toBeNull();
     expect(screen.getByRole("button", { name: /My manager/ }).textContent).not.toMatch(/Fixture/);

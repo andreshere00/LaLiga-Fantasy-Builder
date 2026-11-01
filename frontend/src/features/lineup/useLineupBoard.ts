@@ -41,6 +41,8 @@ import {
   groupsFromLineup,
   hasPlayers,
   lastPlayedWeek,
+  rankingFixtureInPlay,
+  rankingFixtureWeek,
   lineupFixtureTotal,
   leagueId,
   mapRanking,
@@ -72,6 +74,7 @@ import {
   lineupFixtureHighlightsVisible,
   type FixtureHighlight,
 } from "./fixtureHighlight";
+import { fixtureScoreLinesByMasterId, type FixtureScoreLine } from "./fixtureScoreLines";
 import {
   applyFormationCode,
   applyPitchPick,
@@ -103,7 +106,7 @@ import {
 export type LineupBoard = {
   titleName: string | null;
   ranking: RankingEntry[];
-  lastPlayedWeek: number;
+  fixtureWeek: number;
   lastFixturePoints: ReadonlyMap<string, number> | null;
   lastFixtureUnavailable: boolean;
   selectedTeamId: string | null;
@@ -162,6 +165,7 @@ export type LineupBoard = {
   fixtureScoresVisible: boolean;
   fixtureHighlightsVisible: boolean;
   fixtureHighlightByMasterId: ReadonlyMap<string, FixtureHighlight>;
+  fixtureScoreLinesByMasterId: ReadonlyMap<string, readonly FixtureScoreLine[]>;
   unplayedFixtureScoreTooltip: string | null;
   opponentLineupLocked: boolean;
   opponentLineupUnavailableMessage: string | null;
@@ -291,11 +295,16 @@ export function useLineupBoard(options: UseLineupBoardOptions = {}): LineupBoard
     placeholderData: keepPreviousData,
     queryFn: ({ signal }) => getJson(paths.weekStanding(leagueKey, week), token, { signal }),
   });
-  const lastPlayedStandingQuery = useQuery({
-    queryKey: ["standing", leagueKey, playedWeek],
-    enabled: enabled && weekReady && playedWeek >= 1,
+  const openFixtures = currentFixturesQuery.isSuccess && Array.isArray(currentFixturesQuery.data)
+    ? currentFixturesQuery.data
+    : null;
+  const rankingWeek = rankingFixtureWeek(current, openFixtures);
+  const rankingStandingQuery = useQuery({
+    queryKey: ["standing", leagueKey, rankingWeek],
+    enabled: enabled && weekReady && rankingWeek >= 1,
+    refetchInterval: rankingFixtureInPlay(current, openFixtures) ? 30_000 : false,
     queryFn: ({ signal }) =>
-      getJson(paths.weekStanding(leagueKey, playedWeek), token, { signal }),
+      getJson(paths.weekStanding(leagueKey, rankingWeek), token, { signal }),
   });
 
   const fixturesQuery = useWeekFixturesQuery(
@@ -487,6 +496,25 @@ export function useLineupBoard(options: UseLineupBoardOptions = {}): LineupBoard
       scoringLineupQuery.data,
     ],
   );
+  const fixtureScoreLines = useMemo(
+    () =>
+      fixtureScoresVisible
+        ? fixtureScoreLinesByMasterId(week, [
+          teamQuery.data,
+          lineupPayload,
+          scoringLineupQuery.data,
+          weekStatsQuery.data,
+        ])
+        : new Map<string, readonly FixtureScoreLine[]>(),
+    [
+      fixtureScoresVisible,
+      week,
+      teamQuery.data,
+      lineupPayload,
+      scoringLineupQuery.data,
+      weekStatsQuery.data,
+    ],
+  );
   const serverGroups = useMemo(
     () =>
       lineupPayload == null
@@ -536,7 +564,7 @@ export function useLineupBoard(options: UseLineupBoardOptions = {}): LineupBoard
     standingQuery.error,
     teamsQuery.error,
     weekQuery.error,
-    lastPlayedStandingQuery.error,
+    rankingStandingQuery.error,
     teamQuery.error,
     ...peerTeamQueries.map((query) => query.error),
     lineupQuery.error,
@@ -775,17 +803,17 @@ export function useLineupBoard(options: UseLineupBoardOptions = {}): LineupBoard
     setOpponentLineupNoticeOpen(false);
   }, []);
 
-  const lastFixturePoints = playedWeek >= 1 && lastPlayedStandingQuery.data !== undefined
-    ? weekPointsByTeamId(asStanding(lastPlayedStandingQuery.data))
+  const lastFixturePoints = rankingWeek >= 1 && rankingStandingQuery.data !== undefined
+    ? weekPointsByTeamId(asStanding(rankingStandingQuery.data))
     : null;
-  const lastFixtureUnavailable = playedWeek >= 1
-    && lastPlayedStandingQuery.isError
-    && !(lastPlayedStandingQuery.error instanceof NeedsReauthError);
+  const lastFixtureUnavailable = rankingWeek >= 1
+    && rankingStandingQuery.isError
+    && !(rankingStandingQuery.error instanceof NeedsReauthError);
 
   return {
     titleName: displayName(row, isCaller, managerName),
     ranking,
-    lastPlayedWeek: playedWeek,
+    fixtureWeek: rankingWeek,
     lastFixturePoints,
     lastFixtureUnavailable,
     selectedTeamId: activeTeamId,
@@ -1013,6 +1041,7 @@ export function useLineupBoard(options: UseLineupBoardOptions = {}): LineupBoard
     fixtureScoresVisible,
     fixtureHighlightsVisible,
     fixtureHighlightByMasterId,
+    fixtureScoreLinesByMasterId: fixtureScoreLines,
     unplayedFixtureScoreTooltip: unplayedFixtureScoreTooltipLabel,
     opponentLineupLocked,
     opponentLineupUnavailableMessage: opponentLineupUnavailableMessageLabel,

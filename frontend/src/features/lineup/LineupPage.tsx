@@ -33,6 +33,12 @@ import { CurrentFixtureTooltip } from "./CurrentFixtureTooltip";
 import { OpponentLineupNotice } from "./OpponentLineupNotice";
 import { PlayedFixtureNotice } from "./PlayedFixtureNotice";
 import { PlayerTile } from "./PlayerTile";
+import {
+  daznPointsForMatchweek,
+  withDaznScoreLine,
+  type FixtureScoreLine,
+} from "./fixtureScoreLines";
+import { usePitchFixtureStats } from "./usePitchFixtureStats";
 import { roleFromPositionId, unfilledLineupRoles } from "./lineupDraft";
 import { SquadPlayerActions } from "./SquadPlayerActions";
 import { LineupMarketOptions } from "./LineupMarketOptions";
@@ -82,6 +88,18 @@ function LineupPageContent() {
   const squadOffers = useOwnSquadOffers();
   const squadSales = useSquadSales();
   const squadStats = useSquadStats(board.squad);
+  const pitchMasterIds = useMemo(() => {
+    if (!board.fixtureScoresVisible) return [];
+    const ids: string[] = [];
+    for (const group of board.groups) {
+      for (const player of group.players) {
+        if (player.isEmpty || !player.masterPlayerId) continue;
+        ids.push(player.masterPlayerId);
+      }
+    }
+    return ids;
+  }, [board.fixtureScoresVisible, board.groups]);
+  const pitchFixtures = usePitchFixtureStats(pitchMasterIds, board.fixtureScoresVisible);
   const [builderOpen, setBuilderOpen] = useState(false);
   const [swapCandidate, setSwapCandidate] = useState<{
     playerId: string;
@@ -300,7 +318,7 @@ function LineupPageContent() {
             ranking={board.ranking}
             selectedTeamId={board.selectedTeamId}
             onSelectTeam={board.selectTeam}
-            lastPlayedWeek={board.lastPlayedWeek}
+            fixtureWeek={board.fixtureWeek}
             lastFixturePoints={board.lastFixturePoints}
             lastFixtureUnavailable={board.lastFixtureUnavailable}
           />
@@ -426,6 +444,23 @@ function LineupPageContent() {
                             const fixtureHighlight = board.fixtureHighlightsVisible && !empty
                               ? board.fixtureHighlightByMasterId.get(player.masterPlayerId ?? "")
                               : null;
+                            const rosterLines = board.fixtureScoresVisible && !empty
+                              ? board.fixtureScoreLinesByMasterId.get(
+                                player.masterPlayerId ?? "",
+                              ) ?? []
+                              : null;
+                            const fixturePayload = player.masterPlayerId
+                              ? pitchFixtures.get(player.masterPlayerId)
+                              : undefined;
+                            const fixtureScoreLines: readonly FixtureScoreLine[] | null =
+                              rosterLines == null
+                                ? null
+                                : withDaznScoreLine(
+                                  rosterLines,
+                                  fixturePayload
+                                    ? daznPointsForMatchweek(fixturePayload, board.week)
+                                    : null,
+                                );
                             const tile = (onSelect: () => void) => (
                               <PlayerTile
                                 name={player.name}
@@ -437,7 +472,12 @@ function LineupPageContent() {
                                 fixturePoints={board.fixtureScoresVisible && !empty ? player.fixturePoints : null}
                                 fixtureWeek={board.week}
                                 fixtureHighlight={fixtureHighlight}
-                                unplayedFixture={board.week === board.maxWeek && player.fixturePoints === 0}
+                                fixtureScoreLines={fixtureScoreLines}
+                                unplayedFixture={
+                                  board.week === board.maxWeek
+                                  && player.fixturePoints === 0
+                                  && (fixtureScoreLines == null || fixtureScoreLines.length === 0)
+                                }
                                 positionNeeded={empty && unfilledRoles.has(group.role)}
                                 isMvp={board.fixtureScoresVisible && player.isMvp === true}
                                 interactive={!empty || board.editable}

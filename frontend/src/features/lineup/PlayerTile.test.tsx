@@ -5,6 +5,14 @@ import { describe, expect, it } from "vitest";
 
 import { PlayerTile } from "./PlayerTile";
 import { LINEUP_POSITION_NEEDED_LABEL } from "./playerTileCopy";
+import type { FixtureScoreLine } from "./fixtureScoreLines";
+
+const playedMinutes: FixtureScoreLine = {
+  key: "mins_played",
+  label: "Minutes",
+  count: 90,
+  points: 2,
+};
 
 // ---- Happy path ---- //
 
@@ -39,6 +47,46 @@ describe("PlayerTile", () => {
 
     const card = screen.getByRole("button", { name: "Courtois, No goals conceded" });
     expect(card.className).toContain("is-fixture-highlight");
+  });
+
+  it("PlayerTile_played_score_describes_the_nested_point_events", () => {
+    render(
+      <PlayerTile
+        name="Freeman"
+        captain={false}
+        variant="pitch"
+        interactive
+        onSelect={() => undefined}
+        fixturePoints={2}
+        fixtureScoreLines={[playedMinutes]}
+      />,
+    );
+
+    const card = screen.getByRole("button", {
+      name: "Freeman, 2 points, Minutes, 90, +2 points",
+    });
+    expect(card.className).toContain("pitch-tile");
+  });
+
+  it("PlayerTile_daznPoints_describesSignedPointsWithoutACount", () => {
+    render(
+      <PlayerTile
+        name="Freeman"
+        captain={false}
+        variant="pitch"
+        interactive
+        onSelect={() => undefined}
+        fixturePoints={5}
+        fixtureScoreLines={[{
+          key: "daznPoints", label: "DAZN", count: null, points: 3,
+        }]}
+      />,
+    );
+
+    const card = screen.getByRole("button", {
+      name: "Freeman, 5 points, DAZN, +3 points",
+    });
+    expect(card.className).toContain("pitch-tile");
   });
 
   // ---- Edge cases ---- //

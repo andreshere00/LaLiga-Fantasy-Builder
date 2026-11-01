@@ -535,8 +535,17 @@ describe("useLineupBoard", () => {
           kind: "goal",
           goals: 2,
         });
+        expect(result.current.fixtureScoreLinesByMasterId.get("master-gk")).toEqual([
+          { key: "mins_played", label: "Minutes", count: 90, points: 2 },
+          { key: "goals_conceded", label: "Goals conceded", count: 0, points: 4 },
+        ]);
+        expect(result.current.fixtureScoreLinesByMasterId.get("master-s1")).toEqual([
+          { key: "mins_played", label: "Minutes", count: 80, points: 2 },
+          { key: "goals", label: "Goals", count: 2, points: 8 },
+        ]);
       });
       expect(result.current.fixtureHighlightByMasterId.has("master-d1")).toBe(false);
+      expect(result.current.fixtureScoreLinesByMasterId.has("master-d1")).toBe(false);
     } finally {
       restoreKeeper();
       restoreScorer();
@@ -552,6 +561,7 @@ describe("useLineupBoard", () => {
       await loadCallerBoard(result);
       expect(result.current.fixtureHighlightsVisible).toBe(false);
       expect(result.current.fixtureHighlightByMasterId.size).toBe(0);
+      expect(result.current.fixtureScoreLinesByMasterId.size).toBe(0);
     } finally {
       restore();
     }
@@ -662,10 +672,18 @@ describe("useLineupBoard", () => {
   it("useLineupBoard_last_played_week_exposes_fixture_points_by_team", async () => {
     const { result } = renderHook(() => useLineupBoard(), { wrapper: Wrapper });
     await waitFor(() => expect(result.current.lastFixturePoints?.get("team-a")).toBe(42));
-    expect(result.current.lastPlayedWeek).toBe(7);
+    expect(result.current.fixtureWeek).toBe(7);
     expect(result.current.lastFixturePoints?.get("team-b")).toBe(0);
     expect(result.current.lastFixtureUnavailable).toBe(false);
     expect(result.current.ranking.find((row) => row.teamId === "team-a")?.points).toBe(10);
+  });
+
+  it("useLineupBoard_open_fixture_after_first_kickoff_uses_that_week", async () => {
+    api.fixtureStarted = true;
+    const { result } = renderHook(() => useLineupBoard(), { wrapper: Wrapper });
+    await waitFor(() => expect(result.current.fixtureWeek).toBe(8));
+    expect(result.current.lastFixturePoints?.get("team-a")).toBe(10);
+    expect(result.current.lastFixtureUnavailable).toBe(false);
   });
 });
 

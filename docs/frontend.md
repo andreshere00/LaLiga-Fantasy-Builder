@@ -350,7 +350,14 @@ club crest; squad cards show season totals in that corner. On a matchweek that
 has started or already finished, a pitch player who scored is shown on a purple
 background. A goalkeeper who played and did not concede is shown the same way.
 The accessible name and tooltip say how many goals were scored, or that the
-goalkeeper conceded none. Squad, market, and player cards stay neutral.
+goalkeeper conceded none. A played score also explains the events that changed
+it. Each event keeps the same three places: name, count, and signed points.
+Points are bold and end in `p`, so they stay distinct from the count. A non-zero
+DAZN value from that matchweek's fixture statistics, the same 1–4 figure as
+the player details page, is listed in the count column and as the points.
+Marca is not part of the Fantasy score and is omitted. Hover
+stays closed when a card has nothing further to explain. Squad, market, and
+player cards stay neutral.
 Clicking a populated card opens a player menu. The actions stay the same size
 and are grouped: **Market** (sell or view offers), **Details** (open the profile;
 coaches have no details route), and **Lineup** (swap). Market actions retain the
@@ -478,14 +485,18 @@ Code: `frontend/src/features/lineup/`.
   Acquisition lineups must score strictly higher than the strongest feasible
   current-squad lineup; fewer than seven total may qualify. If the current squad cannot
   form a valid XI, acquisitions can still complete one.
-- **Players Ranking** lists the user and opponents with season points. After a
-  matchweek has finished, each row also shows that manager’s score from the last
-  completed fixture, labeled `F{n}` like the lineup Score control. `0` is a
-  reported score; `—` means that manager has no score. The column shows `…`
-  while the week standing loads. If that request fails, the ranking stays
-  selectable and the card says the fixture scores are unavailable; a failed
-  refresh keeps the last scores. Before matchweek 1 finishes, the fixture column
-  is absent. **LALIGA standings** sits immediately below the ranking. Each card
+- **Players Ranking** lists the user and opponents. The season total stays the
+  only figure on the right, with its `p` suffix. Each manager’s matchweek score
+  sits under the name as the score alone. Hovering that score names the fixture,
+  for example Fixture 11. That score follows the open matchweek once its first
+  match has started, and keeps that matchweek after it finishes until the next
+  matchweek’s first match starts. Before that kickoff it shows the previous
+  matchweek. `0` is a reported score; `—` means that manager has no score. The
+  chip shows `…` while the week standing loads, and live scores refresh while a
+  match in that week is still unfinished. If that request fails, the ranking
+  stays selectable and the card says the fixture scores are unavailable; a failed
+  refresh keeps the last scores. Before matchweek 1 starts, the chip is absent.
+  **LALIGA standings** sits immediately below the ranking. Each card
   has an independently scrollable body and a fixed heading. On desktop they
   share the existing sidebar height; on stacked screens they follow the pitch
   and squad with bounded scrollable bodies.
