@@ -53,6 +53,22 @@ for (const theme of ["light", "dark"]) {
       const { managers, standings, heading } = panels(page);
       await expect(page.getByRole("table")).toBeVisible();
       await expect(page.getByRole("columnheader")).toHaveCount(10);
+      const rankings = page.getByRole("region", { name: "Players Ranking", exact: true });
+      await expect(rankings.getByText("F7", { exact: true })).toBeVisible();
+      await expect(page.getByRole("button", {
+        name: /Demo Manager\s+Fixture 7 40\s+Season\s+85 p/,
+      })).toBeVisible();
+      await expect(page.getByRole("button", {
+        name: /Another Manager\s+Fixture 7 0\s+Season\s+80 p/,
+      })).toBeVisible();
+      const fixtureHeader = rankings.getByText("F7", { exact: true });
+      const firstFixture = rankings.locator(".rank-row").first().locator(".rank-fixture");
+      const headerBox = await fixtureHeader.boundingBox();
+      const scoreBox = await firstFixture.boundingBox();
+      expect(headerBox).not.toBeNull();
+      expect(scoreBox).not.toBeNull();
+      expect(Math.abs((headerBox!.x + headerBox!.width) - (scoreBox!.x + scoreBox!.width)))
+        .toBeLessThan(2);
       const rankingBox = await page.getByRole("region", { name: "Players Ranking", exact: true }).boundingBox();
       const standingsBox = await page.getByRole("region", { name: "LALIGA standings", exact: true }).boundingBox();
       expect(standingsBox!.y).toBeGreaterThanOrEqual(rankingBox!.y + rankingBox!.height);

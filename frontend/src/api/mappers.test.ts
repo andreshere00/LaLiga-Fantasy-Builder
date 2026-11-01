@@ -37,6 +37,7 @@ import {
   squadCards,
   weekMvpMasterIds,
   weekPointsByMasterId,
+  weekPointsByTeamId,
   weekPointsForTeam,
   withCallerAvatar,
   type StandingRow,
@@ -104,6 +105,16 @@ describe("week score", () => {
     expect(scoreWeekLabel(1)).toBe("F1");
     expect(weekPointsForTeam(STANDING, "7")).toBe(1200);
     expect(pointsLabel(1200)).toBe("1200 p");
+  });
+
+  it("weekPointsByTeamId_indexes_reported_scores_including_zero", () => {
+    const points = weekPointsByTeamId([
+      ...STANDING,
+      { position: 3, points: 0, team: { id: "t-0", manager: { managerName: "Zero" } } },
+    ]);
+    expect(points.get("7")).toBe(1200);
+    expect(points.get("t-2")).toBe(1123);
+    expect(points.get("t-0")).toBe(0);
   });
 });
 
@@ -434,6 +445,17 @@ describe("mapper failures", () => {
 
   it("weekPointsForTeam_unknown_team_returns_null", () => {
     expect(weekPointsForTeam(STANDING, "missing")).toBeNull();
+  });
+
+  it("weekPointsByTeamId_missing_score_or_team_is_omitted", () => {
+    const points = weekPointsByTeamId([
+      { position: 4, team: { id: "t-null", manager: { managerName: "None" } } },
+      { position: 5, points: Number.NaN, teamId: "nan" },
+      { position: 6, points: -2 },
+    ]);
+    expect(points.has("t-null")).toBe(false);
+    expect(points.has("nan")).toBe(false);
+    expect(points.size).toBe(0);
   });
 
   it("mapRanking_non_array_is_empty", () => {

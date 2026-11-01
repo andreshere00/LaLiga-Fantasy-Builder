@@ -478,10 +478,17 @@ Code: `frontend/src/features/lineup/`.
   Acquisition lineups must score strictly higher than the strongest feasible
   current-squad lineup; fewer than seven total may qualify. If the current squad cannot
   form a valid XI, acquisitions can still complete one.
-- **Players Ranking** lists the user and opponents; **LALIGA standings** sits
-  immediately below it. Each card has an independently scrollable body and a
-  fixed heading. On desktop they share the existing sidebar height; on stacked
-  screens they follow the pitch and squad with bounded scrollable bodies.
+- **Players Ranking** lists the user and opponents with season points. After a
+  matchweek has finished, each row also shows that manager’s score from the last
+  completed fixture, labeled `F{n}` like the lineup Score control. `0` is a
+  reported score; `—` means that manager has no score. The column shows `…`
+  while the week standing loads. If that request fails, the ranking stays
+  selectable and the card says the fixture scores are unavailable; a failed
+  refresh keeps the last scores. Before matchweek 1 finishes, the fixture column
+  is absent. **LALIGA standings** sits immediately below the ranking. Each card
+  has an independently scrollable body and a fixed heading. On desktop they
+  share the existing sidebar height; on stacked screens they follow the pitch
+  and squad with bounded scrollable bodies.
 - The LALIGA table includes rank, team, points, wins, draws, losses, goals for,
   goals against, signed goal difference, and last-five results. Horizontal
   scrolling reveals every statistic while rank/team and the table header stay

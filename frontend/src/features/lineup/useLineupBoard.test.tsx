@@ -16,6 +16,7 @@ const api = vi.hoisted(() => ({
   failedLineups: new Set<string>(),
   scoringLineups: {} as Record<string, unknown>,
   fixtureStarted: false,
+  failLastFixture: false,
   roundLive: false,
   openingDate: "",
   league: null as FantasyLeague | null,
@@ -176,7 +177,17 @@ function respond(path: string): unknown {
     return [{ matchDate: api.openingDate, matchState: api.fixtureStarted ? 2 : 1 }];
   }
   if (path === paths.playersCatalog()) return [];
-  const standingMatch = /^\/api\/leagues\/([^/]+)\/standing(?:\/\d+)?$/.exec(path);
+  const weekStandingMatch = /^\/api\/leagues\/([^/]+)\/standing\/(\d+)$/.exec(path);
+  if (weekStandingMatch) {
+    const leagueId = weekStandingMatch[1] ?? "";
+    const week = Number(weekStandingMatch[2]);
+    if (week === 7 && api.failLastFixture) throw new ApiError(502, "bad_gateway");
+    return (standings[leagueId] ?? []).map((row) => ({
+      ...row,
+      points: week === 7 ? (row.team.id === "team-a" ? 42 : 0) : row.points,
+    }));
+  }
+  const standingMatch = /^\/api\/leagues\/([^/]+)\/standing$/.exec(path);
   if (standingMatch) return standings[standingMatch[1] ?? ""] ?? [];
   if (/^\/api\/leagues\/[^/]+\/teams$/.test(path)) return [];
   const teamMatch = /^\/api\/leagues\/([^/]+)\/teams\/([^/]+)$/.exec(path);
@@ -260,6 +271,7 @@ describe("useLineupBoard", () => {
     api.failedLineups.clear();
     api.scoringLineups = {};
     api.fixtureStarted = false;
+    api.failLastFixture = false;
     api.roundLive = false;
     api.openingDate = new Date(Date.now() + 7 * 86400_000).toISOString();
     api.league = leagueA;
@@ -645,5 +657,43 @@ describe("useLineupBoard", () => {
     expect(api.putJson).not.toHaveBeenCalled();
     expect(playerIds(result.current)).not.toContain("d5");
     expect(playerIds(result.current)).not.toContain("d1");
+  });
+
+  it("useLineupBoard_last_played_week_exposes_fixture_points_by_team", async () => {
+    const { result } = renderHook(() => useLineupBoard(), { wrapper: Wrapper });
+    await waitFor(() => expect(result.current.lastFixturePoints?.get("team-a")).toBe(42));
+    expect(result.current.lastPlayedWeek).toBe(7);
+    expect(result.current.lastFixturePoints?.get("team-b")).toBe(0);
+    expect(result.current.lastFixtureUnavailable).toBe(false);
+    expect(result.current.ranking.find((row) => row.teamId === "team-a")?.points).toBe(10);
+  });
+});
+
+// ---- Error paths ---- //
+
+describe("useLineupBoard fixture standing", () => {
+  beforeEach(() => {
+    queryClient = new QueryClient({
+      defaultOptions: { queries: { retry: false }, mutations: { retry: false } },
+    });
+    api.failedLineups.clear();
+    api.scoringLineups = {};
+    api.fixtureStarted = false;
+    api.failLastFixture = true;
+    api.roundLive = false;
+    api.openingDate = new Date(Date.now() + 7 * 86400_000).toISOString();
+    api.league = leagueA;
+    api.getJson.mockReset();
+    api.putJson.mockReset();
+    api.getJson.mockImplementation((path: string) => respond(path));
+    api.putJson.mockResolvedValue({});
+  });
+
+  it("useLineupBoard_failed_last_fixture_keeps_the_season_ranking", async () => {
+    const { result } = renderHook(() => useLineupBoard(), { wrapper: Wrapper });
+    await waitFor(() => expect(result.current.lastFixtureUnavailable).toBe(true));
+    expect(result.current.lastFixturePoints).toBeNull();
+    expect(result.current.ranking.map((row) => row.name)).toEqual(["Me", "Rival"]);
+    expect(result.current.errorMessage).toBeNull();
   });
 });

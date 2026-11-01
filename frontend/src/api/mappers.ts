@@ -616,6 +616,17 @@ export function weekPointsForTeam(rows: readonly StandingRow[], teamId: string):
   return match.points;
 }
 
+/** Matchweek points from a week standing, keyed by team id. Omits rows without a score. */
+export function weekPointsByTeamId(rows: readonly StandingRow[]): Map<string, number> {
+  const points = new Map<string, number>();
+  for (const row of rows) {
+    const teamId = teamIdOf(row);
+    if (teamId.length === 0 || row.points == null || Number.isNaN(row.points)) continue;
+    points.set(teamId, row.points);
+  }
+  return points;
+}
+
 /** Sum of the lineup players' fixture points, or null when none has a score. */
 export function lineupFixtureTotal(groups: readonly LineupGroup[]): number | null {
   const scores = groups

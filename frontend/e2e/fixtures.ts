@@ -66,6 +66,16 @@ export async function mockApplication(page: Page, { rankingSize = 2 } = {}) {
     else if (request.method() !== "GET") body = p.includes("lineup") ? lineup : { ok: true, id: "fixture-bid" };
     else if (p === "/api/leagues") body = [league];
     else if (/^\/api\/competitions\/\d+\/standings$/.test(p)) body = standingsFixture;
+    else if (/\/standing\/\d+$/.test(p)) {
+      const week = Number(p.split("/").pop());
+      body = Array.from({ length: rankingSize }, (_, index) => ({
+        position: index + 1,
+        points: week === 7 ? (index === 1 ? 0 : 40 - index) : 12,
+        team: index === 0 ? team : { id: "t" + (index + 1), manager: {
+          managerName: index === 1 ? "Another Manager" : "Manager " + (index + 1),
+        } },
+      }));
+    }
     else if (p.includes("/standing")) body = Array.from({ length: rankingSize }, (_, index) => ({
       position: index + 1, points: 85 - index * 5,
       team: index === 0 ? team : { id: "t" + (index + 1), manager: {

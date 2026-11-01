@@ -296,8 +296,14 @@ function LineupPageContent() {
         </div>
 
         <div className="column column-players">
-          <PlayersRankingPanel ranking={board.ranking} selectedTeamId={board.selectedTeamId}
-            onSelectTeam={board.selectTeam} />
+          <PlayersRankingPanel
+            ranking={board.ranking}
+            selectedTeamId={board.selectedTeamId}
+            onSelectTeam={board.selectTeam}
+            lastPlayedWeek={board.lastPlayedWeek}
+            lastFixturePoints={board.lastFixturePoints}
+            lastFixtureUnavailable={board.lastFixtureUnavailable}
+          />
         </div>
 
         <div className="column column-pitch">

@@ -53,6 +53,7 @@ import {
   tacticalOf,
   weekMvpMasterIds,
   weekPointsByMasterId,
+  weekPointsByTeamId,
   weekPointsForTeam,
   type LineupGroup,
   type RankingEntry,
@@ -102,6 +103,9 @@ import {
 export type LineupBoard = {
   titleName: string | null;
   ranking: RankingEntry[];
+  lastPlayedWeek: number;
+  lastFixturePoints: ReadonlyMap<string, number> | null;
+  lastFixtureUnavailable: boolean;
   selectedTeamId: string | null;
   selectTeam: (teamId: string) => void;
   week: number;
@@ -262,6 +266,7 @@ export function useLineupBoard(options: UseLineupBoardOptions = {}): LineupBoard
 
   const current = asCurrentWeek(currentQuery.data);
   const currentWeek = maxWeek(current);
+  const playedWeek = lastPlayedWeek(current);
   const weekReady = currentQuery.isSuccess || currentQuery.isError;
   const [nowMs, setNowMs] = useState(() => Date.now());
   const currentFixturesQuery = useWeekFixturesQuery(currentWeek, enabled && weekReady);
@@ -285,6 +290,12 @@ export function useLineupBoard(options: UseLineupBoardOptions = {}): LineupBoard
     enabled: enabled && weekReady,
     placeholderData: keepPreviousData,
     queryFn: ({ signal }) => getJson(paths.weekStanding(leagueKey, week), token, { signal }),
+  });
+  const lastPlayedStandingQuery = useQuery({
+    queryKey: ["standing", leagueKey, playedWeek],
+    enabled: enabled && weekReady && playedWeek >= 1,
+    queryFn: ({ signal }) =>
+      getJson(paths.weekStanding(leagueKey, playedWeek), token, { signal }),
   });
 
   const fixturesQuery = useWeekFixturesQuery(
@@ -525,6 +536,7 @@ export function useLineupBoard(options: UseLineupBoardOptions = {}): LineupBoard
     standingQuery.error,
     teamsQuery.error,
     weekQuery.error,
+    lastPlayedStandingQuery.error,
     teamQuery.error,
     ...peerTeamQueries.map((query) => query.error),
     lineupQuery.error,
@@ -763,13 +775,22 @@ export function useLineupBoard(options: UseLineupBoardOptions = {}): LineupBoard
     setOpponentLineupNoticeOpen(false);
   }, []);
 
+  const lastFixturePoints = playedWeek >= 1 && lastPlayedStandingQuery.data !== undefined
+    ? weekPointsByTeamId(asStanding(lastPlayedStandingQuery.data))
+    : null;
+  const lastFixtureUnavailable = playedWeek >= 1
+    && lastPlayedStandingQuery.isError
+    && !(lastPlayedStandingQuery.error instanceof NeedsReauthError);
+
   return {
     titleName: displayName(row, isCaller, managerName),
     ranking,
+    lastPlayedWeek: playedWeek,
+    lastFixturePoints,
+    lastFixtureUnavailable,
     selectedTeamId: activeTeamId,
     selectTeam: (teamId: string) => {
       if (ranking.some((item) => item.teamId === teamId && item.selectable)) {
-        const playedWeek = lastPlayedWeek(current);
         if (teamId === callerId) {
           if (weekBeforePeekRef.current != null) {
             setRequestedWeek(weekBeforePeekRef.current);
