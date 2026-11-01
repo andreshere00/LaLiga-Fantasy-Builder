@@ -25,6 +25,7 @@ from fantasy_api.repositories.fixture_standings import FixtureStandingsRepositor
 from fantasy_api.repositories.leagues import LeaguesRepository
 from fantasy_api.repositories.lineup_builder import LineupBuilderRepository
 from fantasy_api.repositories.market import MarketRepository
+from fantasy_api.repositories.player_radar import PlayerRadarRepository
 from fantasy_api.repositories.player_stats import PlayerStatsRepository
 from fantasy_api.repositories.players import PlayersRepository
 from fantasy_api.repositories.standings import StandingsRepository
@@ -42,6 +43,7 @@ from fantasy_api.services.lineup_builder_explanations import (
     OpenAIExplanationProvider,
 )
 from fantasy_api.services.market import MarketService
+from fantasy_api.services.player_radar import PlayerRadarService
 from fantasy_api.services.player_resolver import PlayerResolver
 from fantasy_api.services.player_stats import PlayerStatsService
 from fantasy_api.services.players import PlayersService
@@ -98,6 +100,7 @@ class AppContainer:
     standings_service: StandingsService | FixtureStandingsService
     calendar_weather_service: CalendarWeatherService
 
+    player_radar_service: PlayerRadarService | None = None
     lineup_builder_service: LineupBuilderService | None = None
 
     async def aclose(self) -> None:
@@ -297,6 +300,9 @@ def build_container(
             venues,
             enabled=weather.enabled,
             clock=lambda: datetime.now(tz=UTC),
+        ),
+        player_radar_service=PlayerRadarService(
+            PlayerRadarRepository(cfg.radar_store_path, scraper)
         ),
         lineup_builder_service=LineupBuilderService(
             LineupBuilderRepository(

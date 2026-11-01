@@ -578,6 +578,76 @@
         }
       }
     },
+    "/internal/radar/datamb": {
+      "get": {
+        "tags": [
+          "internal"
+        ],
+        "summary": "Get Datamb Player",
+        "description": "Read an allowed DataMB player profile only when explicitly enabled.",
+        "operationId": "get_datamb_player_internal_radar_datamb_get",
+        "parameters": [
+          {
+            "name": "profile_key",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "pattern": "^[A-Za-z0-9_-]{1,120}_stats$",
+              "title": "Profile Key"
+            }
+          },
+          {
+            "name": "season",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "pattern": "^20\\d{2}-\\d{2}$",
+              "title": "Season"
+            }
+          },
+          {
+            "name": "x-service-token",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Service-Token"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DataMBPlayer"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/internal/health": {
       "get": {
         "summary": "Internal Health",
@@ -1048,6 +1118,94 @@
         ],
         "title": "CurrentInjury",
         "description": "Medical state printed in the header. Absent when the header has none."
+      },
+      "DataMBPlayer": {
+        "properties": {
+          "name": {
+            "type": "string",
+            "maxLength": 120,
+            "minLength": 1,
+            "title": "Name"
+          },
+          "club": {
+            "type": "string",
+            "maxLength": 120,
+            "minLength": 1,
+            "title": "Club"
+          },
+          "league": {
+            "type": "string",
+            "maxLength": 120,
+            "minLength": 1,
+            "title": "League"
+          },
+          "age": {
+            "type": "integer",
+            "maximum": 100.0,
+            "minimum": 0.0,
+            "title": "Age"
+          },
+          "position": {
+            "type": "string",
+            "maxLength": 40,
+            "minLength": 1,
+            "title": "Position"
+          },
+          "season": {
+            "type": "string",
+            "pattern": "^20\\d{2}-\\d{2}$",
+            "title": "Season"
+          },
+          "minutes": {
+            "type": "integer",
+            "minimum": 0.0,
+            "title": "Minutes"
+          },
+          "percentiles": {
+            "items": {
+              "type": "number"
+            },
+            "type": "array",
+            "maxItems": 7,
+            "minItems": 7,
+            "title": "Percentiles"
+          },
+          "metric_labels": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "maxItems": 7,
+            "minItems": 7,
+            "title": "Metric Labels"
+          },
+          "fetched_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Fetched At"
+          },
+          "stale": {
+            "type": "boolean",
+            "title": "Stale",
+            "default": false
+          }
+        },
+        "additionalProperties": true,
+        "type": "object",
+        "required": [
+          "name",
+          "club",
+          "league",
+          "age",
+          "position",
+          "season",
+          "minutes",
+          "percentiles",
+          "metric_labels",
+          "fetched_at"
+        ],
+        "title": "DataMBPlayer",
+        "description": "Public percentile snapshot; no HTML, secrets or invented raw statistics."
       },
       "DaznStats": {
         "properties": {

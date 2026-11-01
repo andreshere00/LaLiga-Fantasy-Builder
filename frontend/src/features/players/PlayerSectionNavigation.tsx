@@ -5,6 +5,7 @@ const SECTIONS = [
   { id: "player-overview", label: "Overview", icon: materialIconPaths.account_circle },
   { id: "player-form-title", label: "Form", icon: materialIconPaths.trending_up },
   { id: "player-market-title", label: "Market value", icon: materialIconPaths.euro_symbol },
+  { id: "player-radar-title", label: "Performance", icon: materialIconPaths.trending_up },
   { id: "player-matches-title", label: "Matches", icon: materialIconPaths.event },
   { id: "player-fantasy-title", label: "News & injuries", icon: materialIconPaths.assignment },
 ] as const;

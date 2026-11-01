@@ -26,6 +26,12 @@ const PlayerDetailPage = lazy(() =>
   })),
 );
 
+const PlayerRadarPreviewPage = lazy(() =>
+  import("../features/players/radar/PlayerRadarPreviewPage").then((module) => ({
+    default: module.PlayerRadarPreviewPage,
+  })),
+);
+
 const queryClient = new QueryClient({
   defaultOptions: {
     queries: {
@@ -61,6 +67,9 @@ export function App() {
                     <Route path="/" element={<LineupRoute />} />
                     <Route path="/market" element={<MarketPage />} />
                     <Route path="/players" element={<PlayersPage />} />
+                    <Route path="/players/radar-preview" element={
+                      <Suspense fallback={<PulseRing label="Loading radar examples…" />}><PlayerRadarPreviewPage /></Suspense>
+                    } />
                     <Route
                       path="/players/:playerId"
                       element={

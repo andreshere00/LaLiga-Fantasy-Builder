@@ -13,7 +13,9 @@ from fantasy_api.domain.errors import UpstreamError
 
 logger = logging.getLogger(__name__)
 
-_ALLOWED_PATHS = frozenset({"/internal/players/futbolfantasy", "/internal/scrape/standings"})
+_ALLOWED_PATHS = frozenset(
+    {"/internal/players/futbolfantasy", "/internal/scrape/standings", "/internal/radar/datamb"}
+)
 
 
 class ScrapingClient:

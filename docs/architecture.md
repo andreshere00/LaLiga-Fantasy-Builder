@@ -117,6 +117,11 @@ adapters/     HTTP, JWKS, JWT, Postgres, Redis, and AES-GCM implementations
 - maps auth and upstream failures into stable API errors;
 - exposes OpenAPI/Swagger from committed `backend/api/openapi.json`.
 
+Player performance radars use an independent JWT-only endpoint and configured
+reviewed snapshots (`RADAR_STORE_PATH`), with an opt-in private DataMB adapter.
+Role templates, metric definitions and comparison populations remain separate
+from Fantasy scoring; optional source failure cannot block the detail aggregate.
+
 Player stats are aggregated by `PlayerStatsService`: catalog data and recent
 Fantasy matchweek statistics come from LaLiga Fantasy, while profile and
 fixture segments can use the private FutbolFantasy scraping service. Partial

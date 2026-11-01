@@ -779,3 +779,36 @@ section, without duplicating them under Actions. Ownership has its own full-widt
 line on phones to keep larger avatars and long manager names together. Tablet
 retains all catalog columns through horizontal scrolling. Filtered counts and pagination distinguish
 the visible page from the full matching set.
+
+## Player performance radar
+
+Player profiles include an optional **Performance** section. **Load performance
+radar** starts a separate authenticated query, with identity/season/profile/dataset
+compatibility independent of the existing detail aggregate. Season changes never
+relabel old values as the newly selected season; same-selection refreshes can
+retain saved content and display failures. Comparison choices are server-validated
+known compatible snapshots, with a maximum of two outlines.
+
+The shared Recharts view renders the seven fixed role axes on a 0–100 scale,
+accompanied by an accessible table and source/population details. Minutes are raw
+sample context. Missing spokes retain their table row and hide the polygon;
+zero is valid. Source failure does not block the rest of the player profile.
+
+`/players/radar-preview` is a separate, explicitly imported preview of the six
+user-supplied Barcelona examples. It never fetches or assigns those sample IDs
+to live Fantasy profiles. All populations/identities are marked unverified;
+comparison is unavailable, and Joan García retains both supplied 58.0 values
+with a source-check notice. The preview uses a fixed illustrative import date,
+not a claimed measurement time. The samples contain no compatible profile pair.
+
+To regenerate/check the exact 42 supplied percentiles from the repository root:
+
+```bash
+PYTHONPATH=backend/api/src backend/api/.venv/bin/python scripts/generate-radar-examples.py
+PYTHONPATH=backend/api/src backend/api/.venv/bin/python scripts/generate-radar-examples.py --check
+```
+
+Frontend Zod validation checks season, profile/position, fixed metric order,
+percentile bounds, missing-value status and comparison consistency. Python and
+frontend retain a contract test over all six profile definitions. The production
+component does not scrape or calculate population percentiles in the browser.

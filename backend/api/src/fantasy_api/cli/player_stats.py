@@ -21,6 +21,7 @@ def main(argv: list[str] | None = None) -> int:
         "--segment",
         choices=[
             "index",
+            "radar",
             "fixtures",
             "market",
             "recent",
@@ -31,6 +32,9 @@ def main(argv: list[str] | None = None) -> int:
         ],
         default="all",
     )
+    parser.add_argument("--season")
+    parser.add_argument("--profile")
+    parser.add_argument("--compare-player-id")
     parser.add_argument("--preset")
     parser.add_argument("--from")
     parser.add_argument("--to")
@@ -45,6 +49,20 @@ def main(argv: list[str] | None = None) -> int:
     if not _PLAYER_ID.match(args.player_id):
         print("invalid --player-id", file=sys.stderr)
         return 2
+
+    if args.segment == "radar":
+        from fantasy_api.schemas.player_radar import RadarQuery
+
+        try:
+            RadarQuery(
+                season=args.season, profile=args.profile, compare_player_id=args.compare_player_id
+            )
+        except ValueError:
+            print(
+                "radar requires --season; optional --profile and --compare-player-id must be valid",
+                file=sys.stderr,
+            )
+            return 2
 
     jwt = resolve_jwt(args, command="fantasy-player-stats")
     if jwt is None:
@@ -91,6 +109,13 @@ def _route(
     args: argparse.Namespace,
 ) -> tuple[str, dict[str, str | int | bool] | None]:
     base = f"/players/{player}/stats"
+    if segment == "radar":
+        params = {"season": args.season}
+        if args.profile:
+            params["profile"] = args.profile
+        if args.compare_player_id:
+            params["compare_player_id"] = args.compare_player_id
+        return f"{base}/radar", params
     if segment == "index":
         return base, None
     if segment == "fixtures":

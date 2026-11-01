@@ -22,6 +22,7 @@ from fantasy_api.schemas.leagues import (
 )
 from fantasy_api.schemas.lineup_builder import BuildResponse
 from fantasy_api.schemas.market import MarketHistoryEntry, MarketSnapshot, PlayerTeamOffers
+from fantasy_api.schemas.player_radar import RadarQuery, RadarResponse
 from fantasy_api.schemas.player_stats import (
     FixturesQuery,
     MarketQuery,
@@ -67,6 +68,7 @@ _RESPONSE_ADAPTERS = (
     _list_response(r"/players", CatalogPlayer),
     _list_response(r"/players/[^/]+/market-value", PlayerMarketValue),
     _model_response(r"/players/[^/]+/league/[^/]+", LeaguePlayer),
+    _model_response(r"/players/[^/]+/stats/radar", RadarResponse),
     _model_response(r"/players/[^/]+/stats/detail", PlayerDetailResponse),
     _model_response(r"/players/[^/]+/stats/fixtures", PlayerFixtureStatsResponse),
     _model_response(r"/players/[^/]+/stats/market", PlayerMarketResponse),
@@ -82,6 +84,7 @@ _RESPONSE_ADAPTERS = (
 
 _QUERY_ADAPTERS: tuple[tuple[re.Pattern[str], TypeAdapter], ...] = (
     (re.compile(r"/competitions/\d+/standings"), TypeAdapter(StandingsQuery)),
+    (re.compile(r"/players/[^/]+/stats/radar"), TypeAdapter(RadarQuery)),
     (re.compile(r"/players/[^/]+/stats/detail"), TypeAdapter(PlayerDetailQuery)),
     (re.compile(r"/players/[^/]+/stats/fixtures"), TypeAdapter(FixturesQuery)),
     (re.compile(r"/players/[^/]+/stats/market"), TypeAdapter(MarketQuery)),

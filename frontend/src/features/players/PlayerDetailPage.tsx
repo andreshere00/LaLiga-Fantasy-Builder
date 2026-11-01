@@ -62,6 +62,7 @@ import { rosterPhotoByMasterId, teamIdsFromLeagueTeams } from "./model/playerRow
 import { PlayerMatchesSection } from "./PlayerMatchesSection";
 import { PlayerFantasySection, PlayerFantasySummary } from "./PlayerFantasySection";
 import { PlayerAveragesPanel } from "./PlayerAveragesPanel";
+import { PlayerRadarSection } from "./radar/PlayerRadarSection";
 import { PlayerSectionNavigation } from "./PlayerSectionNavigation";
 import { PlayerFormHistory } from "./PlayerFormHistory";
 import { playerAverages } from "./playerAverages";
@@ -635,6 +636,8 @@ function PlayerDetailBody({ masterId }: PlayerDetailBodyProps) {
           </>
         )}
       </section>
+
+      {detailReady ? <PlayerRadarSection playerId={masterId} /> : null}
 
       {detailReady ? (
         <PlayerMatchesSection

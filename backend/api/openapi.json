@@ -3340,6 +3340,173 @@
         ]
       }
     },
+    "/players/{player_id}/stats/radar": {
+      "get": {
+        "tags": [
+          "player-stats"
+        ],
+        "summary": "Get independent role-specific player percentiles",
+        "operationId": "get_player_radar_players__player_id__stats_radar_get",
+        "parameters": [
+          {
+            "name": "player_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "pattern": "^[0-9]{1,10}$",
+              "description": "Master footballer id (`CatalogPlayer.id`).",
+              "title": "Player Id"
+            },
+            "description": "Master footballer id (`CatalogPlayer.id`)."
+          },
+          {
+            "name": "season",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "pattern": "^20\\d{2}-\\d{2}$",
+              "title": "Season"
+            }
+          },
+          {
+            "name": "profile",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "enum": [
+                    "defense_progression_v1",
+                    "defense_fullback_v1",
+                    "goalkeeper_v1",
+                    "attacker_finishing_v1",
+                    "attacker_winger_v1",
+                    "midfielder_v1"
+                  ],
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Profile"
+            }
+          },
+          {
+            "name": "compare_player_id",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "pattern": "^[0-9]{1,10}$"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Compare Player Id"
+            }
+          },
+          {
+            "name": "authorization",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Authorization"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RadarResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized or LaLiga re-auth required.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "502": {
+            "description": "Auth or Fantasy upstream failure.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Fantasy upstream unavailable.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Player or stats source not found.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Rate limit exceeded for scraped segments.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ]
+      }
+    },
     "/market/leagues/{league_id}": {
       "get": {
         "tags": [
@@ -10403,6 +10570,189 @@
         ],
         "title": "PlayerProfileResponse"
       },
+      "PlayerRadar": {
+        "properties": {
+          "player_id": {
+            "type": "string",
+            "title": "Player Id"
+          },
+          "player": {
+            "type": "string",
+            "title": "Player"
+          },
+          "club": {
+            "type": "string",
+            "title": "Club"
+          },
+          "age": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Age"
+          },
+          "season": {
+            "type": "string",
+            "title": "Season"
+          },
+          "competition": {
+            "type": "string",
+            "title": "Competition"
+          },
+          "period": {
+            "type": "string",
+            "title": "Period"
+          },
+          "minutes": {
+            "type": "integer",
+            "title": "Minutes"
+          },
+          "profile": {
+            "type": "string",
+            "enum": [
+              "defense_progression_v1",
+              "defense_fullback_v1",
+              "goalkeeper_v1",
+              "attacker_finishing_v1",
+              "attacker_winger_v1",
+              "midfielder_v1"
+            ],
+            "title": "Profile"
+          },
+          "profile_label": {
+            "type": "string",
+            "title": "Profile Label"
+          },
+          "position": {
+            "type": "string",
+            "enum": [
+              "Defense",
+              "Goalkeeper",
+              "Attacker",
+              "Midfielder"
+            ],
+            "title": "Position"
+          },
+          "source": {
+            "type": "string",
+            "title": "Source"
+          },
+          "method": {
+            "type": "string",
+            "title": "Method"
+          },
+          "recipe_version": {
+            "type": "string",
+            "title": "Recipe Version"
+          },
+          "snapshot_id": {
+            "type": "string",
+            "title": "Snapshot Id"
+          },
+          "fetched_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Fetched At"
+          },
+          "data_as_of": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Data As Of"
+          },
+          "cohort": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/RadarCohort"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "axes": {
+            "items": {
+              "$ref": "#/components/schemas/RadarAxis"
+            },
+            "type": "array",
+            "maxItems": 7,
+            "minItems": 7,
+            "title": "Axes"
+          },
+          "comparison_key": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Comparison Key"
+          },
+          "comparison_reason": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Comparison Reason"
+          },
+          "stale": {
+            "type": "boolean",
+            "title": "Stale"
+          },
+          "warnings": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Warnings"
+          }
+        },
+        "additionalProperties": true,
+        "type": "object",
+        "required": [
+          "player_id",
+          "player",
+          "club",
+          "age",
+          "season",
+          "competition",
+          "period",
+          "minutes",
+          "profile",
+          "profile_label",
+          "position",
+          "source",
+          "method",
+          "recipe_version",
+          "snapshot_id",
+          "fetched_at",
+          "data_as_of",
+          "cohort",
+          "axes",
+          "comparison_key",
+          "comparison_reason",
+          "stale",
+          "warnings"
+        ],
+        "title": "PlayerRadar",
+        "description": "Ready-to-render radar; compatibility is assigned by the application service."
+      },
       "PlayerRef": {
         "properties": {
           "id": {
@@ -10732,6 +11082,244 @@
         "type": "object",
         "title": "PrizeInformation",
         "description": "League prize copy."
+      },
+      "RadarAxis": {
+        "properties": {
+          "key": {
+            "type": "string",
+            "title": "Key"
+          },
+          "label": {
+            "type": "string",
+            "title": "Label"
+          },
+          "definition": {
+            "type": "string",
+            "title": "Definition"
+          },
+          "percentile": {
+            "anyOf": [
+              {
+                "type": "number",
+                "maximum": 100.0,
+                "minimum": 0.0
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Percentile"
+          },
+          "source": {
+            "type": "string",
+            "title": "Source"
+          },
+          "source_metric": {
+            "type": "string",
+            "title": "Source Metric"
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "available",
+              "not_published"
+            ],
+            "title": "Status"
+          }
+        },
+        "additionalProperties": true,
+        "type": "object",
+        "required": [
+          "key",
+          "label",
+          "definition",
+          "percentile",
+          "source",
+          "source_metric",
+          "status"
+        ],
+        "title": "RadarAxis",
+        "description": "One ordered percentile and its source-specific semantic reference."
+      },
+      "RadarCandidate": {
+        "properties": {
+          "player_id": {
+            "type": "string",
+            "title": "Player Id"
+          },
+          "player": {
+            "type": "string",
+            "title": "Player"
+          },
+          "profile": {
+            "type": "string",
+            "enum": [
+              "defense_progression_v1",
+              "defense_fullback_v1",
+              "goalkeeper_v1",
+              "attacker_finishing_v1",
+              "attacker_winger_v1",
+              "midfielder_v1"
+            ],
+            "title": "Profile"
+          }
+        },
+        "additionalProperties": true,
+        "type": "object",
+        "required": [
+          "player_id",
+          "player",
+          "profile"
+        ],
+        "title": "RadarCandidate",
+        "description": "A player with a cached, compatible and complete reference snapshot."
+      },
+      "RadarCohort": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "maxLength": 200,
+            "minLength": 1,
+            "title": "Id"
+          },
+          "label": {
+            "type": "string",
+            "maxLength": 300,
+            "minLength": 1,
+            "title": "Label"
+          },
+          "reference_snapshot": {
+            "type": "string",
+            "maxLength": 200,
+            "minLength": 1,
+            "title": "Reference Snapshot"
+          },
+          "eligibility": {
+            "type": "string",
+            "maxLength": 300,
+            "minLength": 1,
+            "title": "Eligibility"
+          },
+          "size": {
+            "anyOf": [
+              {
+                "type": "integer",
+                "minimum": 1.0
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Size"
+          },
+          "minimum_minutes": {
+            "anyOf": [
+              {
+                "type": "integer",
+                "minimum": 0.0
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Minimum Minutes"
+          }
+        },
+        "additionalProperties": true,
+        "type": "object",
+        "required": [
+          "id",
+          "label",
+          "reference_snapshot",
+          "eligibility"
+        ],
+        "title": "RadarCohort",
+        "description": "Published or documented population; unknown fields remain explicitly absent."
+      },
+      "RadarResponse": {
+        "properties": {
+          "player_id": {
+            "type": "string",
+            "title": "Player Id"
+          },
+          "season": {
+            "type": "string",
+            "title": "Season"
+          },
+          "available_seasons": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Available Seasons"
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "available",
+              "unavailable"
+            ],
+            "title": "Status"
+          },
+          "reason": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Reason"
+          },
+          "radars": {
+            "items": {
+              "$ref": "#/components/schemas/PlayerRadar"
+            },
+            "type": "array",
+            "title": "Radars"
+          },
+          "compatible_players": {
+            "items": {
+              "$ref": "#/components/schemas/RadarCandidate"
+            },
+            "type": "array",
+            "title": "Compatible Players"
+          },
+          "comparison": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/PlayerRadar"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "comparison_reason": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Comparison Reason"
+          }
+        },
+        "additionalProperties": true,
+        "type": "object",
+        "required": [
+          "player_id",
+          "season",
+          "available_seasons",
+          "status",
+          "reason",
+          "radars"
+        ],
+        "title": "RadarResponse",
+        "description": "Independent optional segment with honest missing and comparison states."
       },
       "RecentMatch": {
         "properties": {

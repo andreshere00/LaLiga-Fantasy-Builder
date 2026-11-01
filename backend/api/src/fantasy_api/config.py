@@ -38,6 +38,8 @@ class Settings(BaseSettings):
     standings_ttl_seconds: int = Field(default=3600, ge=3600, le=86400)
     standings_club_ids: dict[PositiveInt, PositiveInt] = Field(default_factory=dict)
 
+    radar_store_path: str = ""
+
     scraping_base_url: str = ""
     scraping_service_token: SecretStr = SecretStr("")
     scraping_timeout_seconds: float = 30.0

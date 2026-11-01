@@ -100,3 +100,12 @@ cd backend/api && uv run pytest --cov=src --cov-report=term-missing --cov-fail-u
 
 See the [lineup builder guide](../../docs/api/lineup-builder.md) for the authenticated planning POST, CLI,
 browser-session flow, source restrictions and optional explanation configuration.
+
+### Player radar datasets
+
+`RADAR_STORE_PATH` optionally points to a bounded, operator-managed JSON snapshot
+store. `GET /players/{id}/stats/radar` and
+`fantasy-player-stats --segment radar --season 2026-27` require only an application JWT, without LaLiga pairing.
+Unconfigured players return an honest unavailable state. For the file format,
+reviewed DataMB mappings and comparison rules, see
+[Players API](../../docs/api/players/README.md#role-specific-performance-radar).
