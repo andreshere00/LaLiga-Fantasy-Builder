@@ -3,7 +3,7 @@
 Start with the [project README](../README.md) for features and quick start.
 This folder is the detailed map.
 
-See the [v0.1.0 changelog](../CHANGELOG.md) for the main changes shipped so far.
+See the [v0.1.1 changelog](../CHANGELOG.md) for the main changes shipped so far.
 
 The [product gallery](frontend.md#product-captures) contains ten captures from
 the signed-in application, covering lineup, market, players, player details,

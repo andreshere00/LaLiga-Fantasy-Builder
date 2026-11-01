@@ -6,7 +6,7 @@ data and user-confirmed writes with your linked account.
 
 | Topic | Doc |
 |-------|-----|
-| Changes in v0.1.0 | [CHANGELOG.md](CHANGELOG.md) |
+| Changes in v0.1.1 | [CHANGELOG.md](CHANGELOG.md) |
 | Backend, frontend, and cloud architecture | [ARCHITECTURE.md](ARCHITECTURE.md) |
 | Detailed service trust boundaries | [docs/architecture.md](docs/architecture.md) |
 | Google Cloud Terraform deployment | [infra/gcp/README.md](infra/gcp/README.md) |
@@ -21,7 +21,10 @@ data and user-confirmed writes with your linked account.
 - Sign in with Better Auth, link LaLiga once, pick a league from the shell.
 - View matchweek standings and open another manager’s team via `/?team={teamId}`.
 - Change formation and save the full lineup to Fantasy.
-- Squad panel with pagination, fixture scores, and squad value in the toolbar.
+- Squad panel with pagination, season points, form and starter-probability badges,
+  filters, and squad value in the toolbar.
+- Highlight empty positions and eligible replacements, scorers and clean-sheet
+  goalkeepers; inspect fixture score breakdowns and manager matchweek totals.
 
 ### Market (`/market`)
 
@@ -107,6 +110,12 @@ uv run poe up
 - Verification and recovery emails arrive in each user's own inbox through Resend.
 - API docs: http://localhost:8001/docs.
 - Scraping health: http://localhost:8002/health/live.
+
+LaLiga linking offers the methods enabled by the server: an approved browser
+callback, optional [manual desktop pairing](docs/authentication/manual-browser-pairing.md),
+or the guided macOS helper described in the [auth setup](backend/auth/README.md).
+Manual pairing and helper advertising are disabled by default until their release
+checks pass. The helper runs with `./scripts/connect-laliga.sh` for cloud accounts.
 
 Configure Google/Facebook/Apple credentials in `backend/identity/.env`.
 Apple needs an HTTPS domain. Production configuration, provider setup and release

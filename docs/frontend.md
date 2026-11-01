@@ -340,9 +340,10 @@ Missing values stay visible while squad details are still loading, then drop out
 of an active filter. Changing team clears the filters.
 All squad profiles load in parallel and are cached for five minutes. A skeleton
 reserves the cards' space until the catalog and all profiles settle, then reveals
-the complete squad with a short fade and slide. Reduced motion skips the
-transition. Failed profiles settle to unavailable values, and cached background
-updates keep the cards and focus in place. Coaches show total points but have
+the complete squad with a short fade and slide on its first appearance for a
+team. Pagination, filters, and swaps do not replay that animation. Reduced motion
+skips the transition. Failed profiles settle to unavailable values, and cached
+background updates keep the cards and focus in place. Coaches show total points but have
 no outlook badges or profile request.
 
 Pitch cards show fixture points in the upper-left corner, opposite the
@@ -393,15 +394,14 @@ dividers without entrance motion. Filters edit a draft in a desktop side panel
 or mobile bottom panel; Apply writes the existing URL state, while Cancel or
 Escape discards edits. Catalog pagination uses a sliding three-number window.
 
-At viewport widths of **800px or less**, the table condenses to the player
-photo, name, team, and actions, with those four column headings shown.
-The Name and Team filters remain available; other data columns and their filters
-are hidden at that breakpoint. The loading state uses a table-shaped skeleton.
+Above **700px**, the catalog retains all comparison columns through horizontal
+scrolling. At **700px or less**, labeled player cards retain points, form,
+market value, clause, availability, ownership, and actions. Column filters remain
+in a horizontally scrollable strip. Loading placeholders follow the row layout.
 
 Market value also groups **Your bid** (red, only for a current bid) and **Release
-clause**, including its shield and lock countdown. These details move into Actions
-on small screens where Market value is hidden. Only listed players have a bid
-count in Actions: known zero stays zero; missing or invalid counts show Unavailable.
+clause**, including its shield and lock countdown. Phone cards keep these facts
+in the value section. Only listed players have a bid count in Actions: known zero stays zero; missing or invalid counts show Unavailable.
 Owned, unlisted players retain their roster clause; free agents show Not applicable,
 while unknown clause/ownership data shows Unavailable. Known roster fields take
 precedence over listings; missing fields may use a listing only when owner and
@@ -496,10 +496,9 @@ Code: `frontend/src/features/lineup/`.
   match in that week is still unfinished. If that request fails, the ranking
   stays selectable and the card says the fixture scores are unavailable; a failed
   refresh keeps the last scores. Before matchweek 1 starts, the chip is absent.
-  **LALIGA standings** sits immediately below the ranking. Each card
-  has an independently scrollable body and a fixed heading. On desktop they
-  share the existing sidebar height; on stacked screens they follow the pitch
-  and squad with bounded scrollable bodies.
+  **LALIGA standings** occupies a full-width section below the lineup, squad,
+  ranking, and fixture schedule. Both standings cards have bounded scrollable
+  bodies and fixed headings; long manager and club names stay on one line.
 - The LALIGA table includes rank, team, points, wins, draws, losses, goals for,
   goals against, signed goal difference, and last-five results. Horizontal
   scrolling reveals every statistic while rank/team and the table header stay

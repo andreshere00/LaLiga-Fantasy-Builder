@@ -4,6 +4,58 @@ Notable changes to LaLiga Fantasy Builder are recorded here. Version 0.1.0
 summarizes the application through 27 October 2026; it is the first changelog
 entry, not a claim that every optional provider or deployment gate is complete.
 
+## [0.1.1] - 2026-11-01
+
+### Lineup and planning
+
+- Added squad filters for position, season Fantasy points, club, starter
+  probability, form, and availability, with draft previews and explicit apply,
+  cancel, and clear actions.
+- Added current-form icons, season points, and starter-probability badges to
+  squad cards. Load profiles in parallel and reveal the squad together once
+  requests settle; pagination and swaps do not replay the entrance animation.
+- Highlight empty editable lineup positions and eligible squad replacements.
+  Highlight scorers and goalkeepers with a played clean sheet on fixture lineups.
+- Explain fixture points with event counts, signed points, and DAZN ratings.
+  Manager rankings show the active matchweek score alongside season totals,
+  retaining the previous week until the next matchweek starts.
+- Group player actions into Market, Details, and Lineup, fix clipped squad
+  pagination borders, and keep standings names on one line.
+- Show the next kickoff countdown once in the fixture panel.
+
+### Market and visual system
+
+- Enlarge footballer portraits and comparison rows, add manager avatars to
+  sellers and owners, and identify LaLiga listings with a compact logo.
+- Keep comparison details visible in labeled phone cards and horizontally
+  scrollable tablet rows. Align yellow and orange signals across the interface.
+- Replace the market expiry rail with a warning icon during the final minute.
+- Treat omitted market bid counts as zero while preserving null or invalid
+  counts as unavailable.
+
+### LaLiga linking
+
+- Added a guided macOS helper for linking a cloud account, with verified-account
+  confirmation and a return to the website after pairing. Preserve existing
+  native callback handlers instead of replacing another application's handler.
+- Added optional desktop manual pairing using a copied native callback URL,
+  server-held PKCE, and owner- and browser-bound state.
+- Let users choose among enabled browser, manual, and helper methods. Refresh
+  the website connection status on focus and offer an explicit connection check.
+- Keep the interactive application sign-in window open during terminal account
+  confirmation; an empty response repeats the prompt.
+
+### Documentation and availability
+
+- Updated linking setup, authentication contracts, release checks, cloud helper
+  instructions, and frontend behavior documentation.
+- Manual pairing and helper advertising remain disabled by default and require
+  their documented live compatibility checks before deployment. Browser pairing
+  still requires an approved HTTPS callback; an installed background helper
+  remains planned work.
+- The product gallery retains its dated 27 October captures; it does not depict
+  every interface change in this version.
+
 ## [0.1.0] - 2026-10-27
 
 ### Application and identity
