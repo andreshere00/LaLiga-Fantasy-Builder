@@ -85,10 +85,34 @@
   translate: -50% 0;
 }
 
+.squad-sale-choice-groups { display: grid; }
+.squad-sale-choice-group + .squad-sale-choice-group {
+  margin-top: 16px;
+  padding-top: 16px;
+  border-top: 1px solid var(--fb-line);
+}
+.squad-sale-choice-group-label {
+  margin: 0 0 8px;
+  color: var(--fb-muted);
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.03em;
+  text-transform: uppercase;
+}
 .squad-sale-choices {
   display: flex;
   flex-direction: column;
   gap: 8px;
+}
+.squad-sale-choices .squad-sale-choice {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-sizing: border-box;
+  width: 100%;
+  min-height: 44px;
+  text-align: center;
+  text-decoration: none;
 }
 
 .squad-sale-choice,
@@ -112,12 +136,6 @@
   border: 1px solid color-mix(in srgb, var(--fb-secondary) 12%, transparent);
 }
 
-.squad-sale-choices a.squad-sale-choice {
-  display: block;
-  box-sizing: border-box;
-  width: 100%;
-  text-align: center;
-}
 
 .squad-sale-choice:is(:hover, :active):not(:disabled),
 .squad-sale-secondary:is(:hover, :active):not(:disabled) {

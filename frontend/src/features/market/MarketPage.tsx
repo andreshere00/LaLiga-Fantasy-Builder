@@ -1,4 +1,4 @@
-import { useDeferredValue, useMemo, useState } from "react";
+import { useDeferredValue, useEffect, useMemo, useState } from "react";
 
 import { useAuth } from "../../auth/AuthProvider";
 import { leagueId } from "../../api/mappers";
@@ -42,11 +42,20 @@ function MarketListContent() {
   );
   const [filters, setFilters] = useState(createEmptyMarketFilters);
   const deferredFilters = useDeferredValue(filters);
-  const now = useNow();
+  const [tickMs, setTickMs] = useState(60_000);
+  const now = useNow(tickMs);
   const visibleRows = useMemo(
     () => applyMarketFilters(board.rows, deferredFilters),
     [board.rows, deferredFilters],
   );
+  useEffect(() => {
+    const soon = visibleRows.some((row) => {
+      if (row.expiresAt == null) return false;
+      const left = row.expiresAt - Date.now();
+      return left > 0 && left <= 2 * 60_000;
+    });
+    setTickMs(soon ? 1_000 : 60_000);
+  }, [visibleRows, now]);
   const filterCount = useMemo(() => activeFilterCount(filters), [filters]);
   const columnHeadings = useMemo(
     () => marketColumnHeadings(deferredFilters),

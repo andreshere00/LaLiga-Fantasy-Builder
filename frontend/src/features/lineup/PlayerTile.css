@@ -251,9 +251,98 @@
 }
 
 .player-tile { border:1px solid var(--fb-line); background:var(--fb-subtle); }
+.player-tile.is-fixture-highlight,
+.player-tile.is-fixture-highlight:is(:hover, :active) { background:var(--fb-purple); }
+.player-tile.is-position-needed,
+.player-tile.is-position-needed:is(:hover, :active) { background:var(--fb-primary); }
+.player-tile.is-position-needed .player-photo-frame-empty { background:transparent; }
+.player-tile.is-position-needed .player-empty-icon { color:var(--fb-ink-on-status); }
+.player-tile.is-position-needed :is(.player-name, .player-name-empty, .player-name-label) {
+  background:var(--fb-primary);
+  color:var(--fb-ink-on-status);
+  border-top-color:var(--fb-ink-on-status);
+}
 .player-tile.is-interactive { border:1px solid var(--fb-control-line); }
 .player-tile:is(:hover,:active) { background:var(--fb-subtle); }
 .player-name { justify-content:center; text-align:center; border-top:1px solid var(--fb-line); }
 .player-name-label { text-align:center; }
 .player-tile.is-captain .player-name { border-top:2px solid var(--fb-primary); }
 .player-score-badge:is(.is-red,.is-green,.is-yellow,.is-blue) { color:var(--fb-ink-on-status); }
+
+/* Current form sits above the name, separate from fixture scores and the club crest. */
+.player-form-badge { position:absolute; z-index:5; right:6.6667%; bottom:calc(20% + 4px); display:grid; place-items:center; width:clamp(18px,24%,24px); aspect-ratio:1; background:var(--fb-surface); border:1px solid var(--fb-line); color:var(--fb-muted); font-size:12px; line-height:1; pointer-events:none; }
+.player-form-badge img { display:block; width:80%; height:80%; object-fit:contain; }
+.player-form-badge .is-dark { display:none; }
+:root[data-theme="dark"] .player-form-badge .is-light { display:none; }
+:root[data-theme="dark"] .player-form-badge .is-dark { display:block; }
+.player-total-points { position:absolute; z-index:5; top:5%; left:6.6667%; display:flex; align-items:baseline; gap:2px; padding:2px 4px; max-width:50%; background:var(--fb-surface); border:1px solid var(--fb-line); color:var(--fb-secondary); font-size:clamp(10px,1vw,12px); font-weight:700; line-height:1.2; white-space:nowrap; }
+.player-total-points > span { font-size:9px; font-weight:400; }
+.player-starter-probability { position:absolute; z-index:5; left:6.6667%; bottom:calc(20% + 4px); display:grid; place-items:center; min-height:18px; padding:1px 3px; background:var(--fb-surface); border:1px solid var(--fb-line); color:var(--fb-secondary); font-size:10px; font-weight:700; line-height:1.2; }
+.player-starter-probability[data-tone] { color:var(--fb-ink-on-status); }
+.player-starter-probability[data-tone="low"] { background:var(--fb-failure); border-color:var(--fb-failure); }
+.player-starter-probability[data-tone="mid"] { background:#FFC413; border-color:#FFC413; }
+.player-starter-probability[data-tone="high"] { background:var(--fb-success); border-color:var(--fb-success); }
+.player-tile.is-position-needed.is-captain .player-name {
+  border-top-color:var(--fb-ink-on-status);
+}
+
+.fb-tooltip:has(.player-score-breakdown) {
+  max-width: min(20rem, calc(100vw - 24px));
+}
+.player-score-breakdown {
+  width: max-content;
+  max-width: 100%;
+  border-collapse: collapse;
+  margin-top: 4px;
+  font-variant-numeric: tabular-nums;
+}
+.player-score-breakdown caption {
+  caption-side: top;
+  padding-bottom: 4px;
+  text-align: left;
+  font-weight: 700;
+}
+.player-score-breakdown :is(th, td) {
+  padding: 3px 0;
+  font-weight: 400;
+  text-align: left;
+  vertical-align: baseline;
+}
+.player-score-breakdown thead th {
+  padding-bottom: 4px;
+  border-bottom: 1px solid var(--fb-line);
+  color: var(--fb-muted);
+  font-size: 12px;
+  font-weight: 500;
+  letter-spacing: 0.01em;
+  text-transform: uppercase;
+}
+.player-score-breakdown th[scope="row"] {
+  max-width: 11rem;
+  padding-right: 16px;
+  white-space: normal;
+}
+.player-score-breakdown :is(td, thead th:nth-child(n + 2)) {
+  min-width: 3.25rem;
+  padding-left: 12px;
+  text-align: right;
+}
+.player-score-points {
+  font-weight: 700;
+}
+.fb-tooltip .player-score-figure,
+.fb-tooltip .player-score-unit {
+  display: inline-block;
+  font-variant-numeric: tabular-nums;
+}
+.fb-tooltip .player-score-figure {
+  min-width: 2rem;
+  text-align: right;
+}
+.fb-tooltip .player-score-unit {
+  width: 0.8em;
+  margin-left: 3px;
+  color: var(--fb-muted);
+  font-weight: 400;
+  text-align: left;
+}

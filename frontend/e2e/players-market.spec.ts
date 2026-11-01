@@ -154,7 +154,7 @@ test("catalog preserves pagination, favorites, URL filters and player-specific o
   await expect(own.getByRole("button", { name: "Player 13, options", exact: true })).toBeFocused();
 });
 
-test("catalog keeps roster clauses when market fails and distinguishes unknown bid counts", async ({ page }) => {
+test("catalog keeps roster clauses when market fails and displays missing bid counts as zero", async ({ page }) => {
   const fixture = await mockPlayers(page);
   fixture.failRead(true);
   await page.goto("/players?q=Player+01");
@@ -162,7 +162,7 @@ test("catalog keeps roster clauses when market fails and distinguishes unknown b
   await expect(playerRow(page, "Player 01").locator(".market-bid-count")).toHaveCount(0);
   await page.route("**/api/market/leagues/l1", (route) => route.fulfill({ json: marketFixture }));
   await page.goto("/players?q=Player+16");
-  await expect(playerRow(page, "Player 16").getByText("Bids: Unavailable", { exact: true })).toBeVisible();
+  await expect(playerRow(page, "Player 16").getByText("Bids: 0", { exact: true })).toBeVisible();
 });
 
 test("catalog resets clause ownership and dialog state when switching leagues", async ({ page }) => {

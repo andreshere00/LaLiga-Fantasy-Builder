@@ -77,6 +77,11 @@ for (const theme of ["light", "dark"]) {
       const panel = page.getByRole("region", { name: "LALIGA · Fixture 8", exact: true });
       const viewport = panel.getByRole("region", { name: "Fixture matches", exact: true });
       await expect(panel.getByText("Forecast 0°C · Clear")).toBeVisible();
+      const countdown = panel.locator(".fixture-next-kickoff");
+      await expect(countdown).toHaveText("Next kickoff in 1 day 1 hour");
+      const ink = theme === "light" ? "rgb(53, 53, 61)" : "rgb(229, 229, 229)";
+      await expect(countdown).toHaveCSS("color", ink);
+      await expect(panel.getByText(/^Starts in /)).toHaveCount(0);
       await expect(panel.getByText("Rain 0% · Wind 0 km/h")).toBeHidden();
       await expect(panel.getByRole("listitem")).toHaveCount(10);
       const badgeImages = panel.locator(".fixture-match-crest > img");

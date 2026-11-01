@@ -42,7 +42,7 @@
 .players-loading-head,
 .players-loading-row {
   display: grid;
-  grid-template-columns: var(--players-table-columns, 72px repeat(8, minmax(0, 1fr)));
+  grid-template-columns: var(--players-table-columns, 84px repeat(8, minmax(0, 1fr)));
   align-items: center;
   gap: 12px;
   padding: 0.6rem 0.75rem;
@@ -60,7 +60,9 @@
 }
 
 .players-loading-row {
-  min-height: 5.25rem;
+  min-height: 144px;
+  padding-block: 18px;
+  box-sizing: border-box;
 }
 
 .players-loading-row .player-loading-block:not(.players-loading-avatar) {
@@ -68,8 +70,8 @@
 }
 
 .players-loading-row .players-loading-avatar {
-  width: 3.4rem;
-  height: 4.2rem;
+  width: 84px;
+  height: 112px;
 }
 
 .player-detail-loading-state {

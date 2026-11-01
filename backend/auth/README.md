@@ -29,6 +29,10 @@ Run `./scripts/authenticate-laliga.sh` from the repository root to install the
 matching Playwright Chromium, sign in to the application, and pair LaLiga when
 the vault is unlinked. With explicit arguments, the wrapper passes them through;
 use `--pair-only` to request pairing without an API analysis.
+The sign-in window stays open while the terminal asks you to confirm the
+server-verified account. Enter `yes` to proceed or `no` to cancel; an empty
+answer repeats the prompt. After confirmation, the sign-in window closes and
+the helper opens the LaLiga pairing flow if needed.
 The local frontend must be running at `http://localhost:3000` for interactive
 application sign-in.
 

@@ -64,6 +64,8 @@ export type SquadCard = {
   teamBadgeUrl: string | null;
   fixturePoints?: number | null;
   isMvp?: boolean;
+  /** Season Fantasy total, independent of the displayed fixture. */
+  totalPoints?: number | null;
   /** Current whole-euro market value from the roster, when Fantasy sent one. */
   marketValue: number | null;
   /** True when the roster already has an active market listing for this entry. */
@@ -582,6 +584,33 @@ export function lastPlayedWeek(current: CurrentWeek): number {
   return 0;
 }
 
+/**
+ * Matchweek for the ranking chip.
+ *
+ * The open week once any of its matches has started, including after that week
+ * finishes, until the next week's first match starts. Before that, the previous
+ * finished week. ``fixtures`` null means the open week is not known to have started.
+ */
+export function rankingFixtureWeek(
+  current: CurrentWeek,
+  fixtures: readonly unknown[] | null,
+): number {
+  const open = current.weekNumber;
+  if (open != null && open >= 1 && fixtures?.some(fixtureHasStarted)) return open;
+  return lastPlayedWeek(current);
+}
+
+/** True while the ranking chip is showing an open week that still has a match unfinished. */
+export function rankingFixtureInPlay(
+  current: CurrentWeek,
+  fixtures: readonly unknown[] | null,
+): boolean {
+  if (fixtures == null || rankingFixtureWeek(current, fixtures) !== current.weekNumber) {
+    return false;
+  }
+  return fixtures.some((fixture) => asFiniteNumber(asRecord(fixture)?.matchState) !== 7);
+}
+
 /** Show historical scores and current scores only between the first kickoff and last finish. */
 export function fixtureScoresVisibleForWeek(
   week: number,
@@ -612,6 +641,18 @@ export function weekPointsForTeam(rows: readonly StandingRow[], teamId: string):
   const match = rows.find((row) => teamIdOf(row) === teamId);
   if (!match || match.points == null) return null;
   return match.points;
+}
+
+/** Matchweek points from a week standing, keyed by team id. Omits rows without a score. */
+export function weekPointsByTeamId(rows: readonly StandingRow[]): Map<string, number> {
+  const points = new Map<string, number>();
+  for (const row of rows) {
+    const teamId = teamIdOf(row);
+    const score = row.points ?? row.livePoints;
+    if (teamId.length === 0 || score == null || Number.isNaN(score)) continue;
+    points.set(teamId, score);
+  }
+  return points;
 }
 
 /** Sum of the lineup players' fixture points, or null when none has a score. */
@@ -976,6 +1017,7 @@ export function squadCards(
       teamBadgeUrl: media.teamBadgeUrl ?? fromCatalog?.teamBadgeUrl ?? null,
       fixturePoints,
       isMvp,
+      totalPoints: asFiniteNumber(master?.points),
       marketValue: rosterMarketValue(record),
       onMarket: rosterOnMarket(record),
       ...rosterListing(record),

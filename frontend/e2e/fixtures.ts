@@ -66,6 +66,16 @@ export async function mockApplication(page: Page, { rankingSize = 2 } = {}) {
     else if (request.method() !== "GET") body = p.includes("lineup") ? lineup : { ok: true, id: "fixture-bid" };
     else if (p === "/api/leagues") body = [league];
     else if (/^\/api\/competitions\/\d+\/standings$/.test(p)) body = standingsFixture;
+    else if (/\/standing\/\d+$/.test(p)) {
+      const week = Number(p.split("/").pop());
+      body = Array.from({ length: rankingSize }, (_, index) => ({
+        position: index + 1,
+        points: week === 7 ? (index === 1 ? 0 : 40 - index) : 12,
+        team: index === 0 ? team : { id: "t" + (index + 1), manager: {
+          managerName: index === 1 ? "Another Manager" : "Manager " + (index + 1),
+        } },
+      }));
+    }
     else if (p.includes("/standing")) body = Array.from({ length: rankingSize }, (_, index) => ({
       position: index + 1, points: 85 - index * 5,
       team: index === 0 ? team : { id: "t" + (index + 1), manager: {
@@ -75,6 +85,17 @@ export async function mockApplication(page: Page, { rankingSize = 2 } = {}) {
     else if (p === "/api/calendar/current") body = { weekNumber: 8, previousWeek: 7, nextWeek: 9, isLive: true, openingWeekDate: "2026-10-10T00:00:00Z" };
     else if (p.startsWith("/api/calendar/")) body = [];
     else if (p === "/api/players") body = catalog;
+    else if (p.endsWith("/stats/profile")) body = { ...detail.profile, playerId: p.split("/")[3] };
+    else if (p.endsWith("/stats/fixtures")) {
+      const playerId = p.split("/")[3];
+      body = {
+        ...envelope, playerId,
+        fixtures: playerId === "3" ? [{
+          fixture: { competition: "laliga", matchweek: 8 },
+          stats: { daznPoints: { daznPoints: 1 } },
+        }] : [],
+      };
+    }
     else if (p.endsWith("/stats/detail")) body = detail;
     else if (p.endsWith("/market-value")) body = [{ date: "2026-10-07", marketValue: 2000000 }, { date: "2026-10-12", marketValue: 2100000 }];
     else if (p.includes("/players/") && p.includes("/league/")) body = slots[0];

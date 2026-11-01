@@ -11,7 +11,9 @@ import { weatherConditionFromSnapshot } from "../players/playerDetailWidgets";
 import { windKmhFromMs } from "../players/playerDetailFormat";
 import { BadgeImage } from "../../components/BadgeImage";
 import { clubMediaFromFixture } from "../../api/clubMedia";
-import { FIXTURE_TIME_ZONE, weatherMatchesFixture, type PanelMatch } from "./fixturePanelModel";
+import {
+  FIXTURE_TIME_ZONE, nextKickoff, weatherMatchesFixture, type PanelMatch,
+} from "./fixturePanelModel";
 import { useFixturePanel } from "./useFixturePanel";
 import "./FixtureMatchesPanel.css";
 
@@ -55,7 +57,8 @@ function MatchForecast({ match, row, loading, failed, now }: {
 }
 
 function FixtureMatch({ match, forecast, weatherLoading, weatherFailed, now }: {
-  match: PanelMatch; forecast: FixtureWeatherDto | undefined; weatherLoading: boolean; weatherFailed: boolean; now: number;
+  match: PanelMatch; forecast: FixtureWeatherDto | undefined; weatherLoading: boolean; weatherFailed: boolean;
+  now: number;
 }) {
   const status = match.status === "finished" ? "Finished" : match.status === "unconfirmed"
     ? "Status unconfirmed" : match.kickoffMs != null ? timeFormat.format(match.kickoffMs) : "Time TBC";
@@ -105,6 +108,10 @@ function FixtureMatchesPanelContent() {
   const label = mode === "active" ? "In progress" : mode === "season-complete" ? "Season complete"
     : mode === "finished" ? "Finished" : mode === "upcoming" ? "Up next" : "Awaiting updates";
   const weatherRows = panel.weather.data?.matches ?? [];
+  const upcoming = nextKickoff(matches, panel.now);
+  const nextKickoffText = upcoming == null ? null
+    : upcoming.pairing ? `Next: ${upcoming.pairing} in ${upcoming.remaining}`
+      : `Next kickoff in ${upcoming.remaining}`;
   const reportedScores = JSON.stringify(matches.map((match) => ({
     key: match.key, text: `${match.home.name} ${match.homeScore ?? "—"}, ${match.away.name} ${match.awayScore ?? "—"}`,
   })));
@@ -130,6 +137,7 @@ function FixtureMatchesPanelContent() {
             <p className="fixture-panel-meta">
               {mode === "active" ? `${matches.filter((match) => match.status === "finished").length} of 10 matches finished` : `${matches.length} matches`} · {FIXTURE_TIME_ZONE}
             </p>
+            {nextKickoffText ? <p className="fixture-next-kickoff">{nextKickoffText}</p> : null}
           </div>
           <nav className="fixture-week-pagination" aria-label="Fixture navigation">
             <Button variant="outline" shape="square" size="icon" aria-label="Previous matchweek"

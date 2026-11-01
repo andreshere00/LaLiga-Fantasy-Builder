@@ -10,8 +10,39 @@ import { ReleaseClauseDetail } from "./cells/ReleaseClauseDetail";
 import { SellerCell } from "./cells/SellerCell";
 import { ValueCell } from "./cells/ValueCell";
 import type { MarketColumnHeading, MarketColumnKey } from "./marketColumnHeadings";
+import warningIconUrl from "../../assets/button_warning.svg";
+import { Help } from "../../components/ui/Help";
 import type { MarketRow } from "./model/row";
-import { isSealEndUnderOneHour, remainingLabel } from "./model/valueSeries";
+import {
+  isSealEndUnderOneHour,
+  isSealEndUnderOneMinute,
+  remainingLabel,
+} from "./model/valueSeries";
+
+/** Listing countdown. The final minute uses a warning icon instead of the coral rail. */
+export function SealEnd({ expiresAt, now }: { expiresAt: number | null; now: number }) {
+  const imminent = isSealEndUnderOneMinute(expiresAt, now);
+  const urgent = !imminent && isSealEndUnderOneHour(expiresAt, now);
+  const label = remainingLabel(expiresAt, now);
+  const className = imminent
+    ? "market-seal-end is-expiring"
+    : urgent
+      ? "market-seal-end is-urgent"
+      : "market-seal-end";
+  const time = <span aria-hidden={imminent || undefined}>{label}</span>;
+  if (!imminent) return <span className={className}>{time}</span>;
+  return (
+    <Help
+      content="This listing expires in less than one minute."
+      trigger={
+        <span className={className} tabIndex={0} aria-label="Less than 1 minute remaining" />
+      }
+    >
+      <img src={warningIconUrl} alt="" />
+      {time}
+    </Help>
+  );
+}
 
 export type MarketRowCellsProps = {
   row: MarketRow;
@@ -64,15 +95,7 @@ export function MarketRowCells({
         <AvailabilityCell availability={row.availability} />
       </span>
       <span className="market-cell" data-label={columnHeadings.sealEnd.label}>
-        <span
-          className={
-            isSealEndUnderOneHour(row.expiresAt, now)
-              ? "market-seal-end is-urgent"
-              : "market-seal-end"
-          }
-        >
-          {remainingLabel(row.expiresAt, now)}
-        </span>
+        <SealEnd expiresAt={row.expiresAt} now={now} />
       </span>
       <span
         className="market-cell market-cell-seller"

@@ -229,6 +229,17 @@ export function allDraftPlayerIds(draft: LineupDraft): Set<string> {
   return ids;
 }
 
+/** Roles that still have an empty slot in the displayed lineup. */
+export function unfilledLineupRoles(
+  groups: readonly LineupGroup[],
+): ReadonlySet<LineupRole> {
+  const roles = new Set<LineupRole>();
+  for (const group of groups) {
+    if (group.players.some((player) => player.isEmpty === true)) roles.add(group.role);
+  }
+  return roles;
+}
+
 export function isDraftComplete(draft: LineupDraft): boolean {
   const [defenders, midfielders, strikers] = draft.tactical;
   const filledIds: string[] = [];

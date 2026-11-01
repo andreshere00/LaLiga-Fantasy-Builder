@@ -58,9 +58,14 @@ def main(argv: list[str] | None = None) -> int:
 def _bootstrap(args: Any) -> tuple[str, bool]:
     """Get an application token and pair only when the selected read needs LaLiga."""
     validate_analysis_args(args)
-    jwt = args.jwt or login_with_playwright(args.auth_base, headed=not args.headless)
     if args.pair_only:
-        _confirm_account(args.auth_base, jwt)
+        jwt = login_with_playwright(
+            args.auth_base,
+            headed=not args.headless,
+            confirm_account=lambda token: _confirm_account(args.auth_base, token),
+        )
+    else:
+        jwt = args.jwt or login_with_playwright(args.auth_base, headed=not args.headless)
     linked = False
     if needs_laliga(args):
         linked = _connection_linked(auth_base=args.auth_base, jwt=jwt)
@@ -89,10 +94,21 @@ def _confirm_account(auth_base: str, jwt: str) -> None:
     label = account.email or account.name or account.user_id
     print(f"Fantasy Builder account: {label} (ID: {account.user_id})", file=sys.stderr)
     try:
-        answer = input("Is this the account open in your website tab? Type yes to continue: ")
+        while True:
+            answer = (
+                input(
+                    "Is this the account open in your website tab? "
+                    "Type yes to continue or no to cancel: "
+                )
+                .strip()
+                .lower()
+            )
+            if answer in {"yes", "no"}:
+                break
+            print("Enter yes to continue or no to cancel.", file=sys.stderr)
     except (EOFError, KeyboardInterrupt):
         raise BrowserSessionError("Connection cancelled before LaLiga authorization") from None
-    if answer.strip().lower() != "yes":
+    if answer != "yes":
         raise BrowserSessionError("Connection cancelled. Sign in with the matching account.")
 
 

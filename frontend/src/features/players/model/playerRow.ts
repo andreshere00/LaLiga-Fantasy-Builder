@@ -32,6 +32,7 @@ export type PlayerRow = {
   availability: Availability;
   ownedBy: string;
   ownerTeamId: string | null;
+  ownerAvatarUrl?: string | null;
   ownership: PlayerOwner | null;
 };
 

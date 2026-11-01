@@ -1,5 +1,7 @@
+import { ManagerIdentity } from "../shell/ManagerIdentity";
 import { Menu } from "@base-ui/react/menu";
 import { formatEuro } from "../../api/format";
+import { bidCountLabel } from "../market/model/row";
 import { leagueId } from "../../api/mappers";
 import { Help } from "../../components/ui/Help";
 import shieldRedIcon from "../../assets/button_shield_red.svg";
@@ -117,7 +119,7 @@ function PlayersListRow({
     </span>
   ) : row.ownerTeamId ? (
     <Link className="players-owner-link" to={`/?team=${encodeURIComponent(row.ownerTeamId)}`}>
-      {row.ownedBy}
+      <ManagerIdentity name={row.ownedBy} avatarUrl={row.ownerAvatarUrl} />
     </Link>
   ) : (
     row.ownedBy
@@ -216,7 +218,7 @@ function PlayersListRow({
             onToggle={onToggleFavorite}
           />
         </span>
-        {marketRow ? <span className="market-bid-count">Bids: {marketRow.numberOfBids ?? "Unavailable"}</span> : null}
+        {marketRow ? <span className="market-bid-count">Bids: {bidCountLabel(marketRow.numberOfBids)}</span> : null}
         <span className="players-mobile-value-details">{moneyDetails}</span>
       </span>
     </RichRow>

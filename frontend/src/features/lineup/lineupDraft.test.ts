@@ -10,6 +10,7 @@ import {
   groupsForPitchDisplay,
   isDraftComplete,
   lineupWriteBody,
+  unfilledLineupRoles,
   roleFromPositionId,
   squadPickerPool,
 } from "./lineupDraft";
@@ -146,6 +147,22 @@ describe("lineupDraft", () => {
 });
 
 // ---- Edge cases ---- //
+
+describe("unfilledLineupRoles", () => {
+  it("unfilledLineupRoles_reports_only_roles_with_an_empty_slot", () => {
+    const groups: LineupGroup[] = [
+      { role: "goalkeeper", players: [{ id: "gk", masterPlayerId: null, name: "GK" }] },
+      {
+        role: "defender",
+        players: [{ id: "empty-defender-0", masterPlayerId: null, name: "", isEmpty: true }],
+      },
+      { role: "midfield", players: [{ id: "m1", masterPlayerId: null, name: "M1" }] },
+      { role: "striker", players: [] },
+    ];
+
+    expect([...unfilledLineupRoles(groups)]).toEqual(["defender"]);
+  });
+});
 
 describe("groupsForPitchDisplay", () => {
   it("groupsForPitchDisplay_keeps_fixture_points_from_lineup_slot", () => {

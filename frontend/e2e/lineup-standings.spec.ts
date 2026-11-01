@@ -53,6 +53,28 @@ for (const theme of ["light", "dark"]) {
       const { managers, standings, heading } = panels(page);
       await expect(page.getByRole("table")).toBeVisible();
       await expect(page.getByRole("columnheader")).toHaveCount(10);
+      const rankings = page.getByRole("region", { name: "Players Ranking", exact: true });
+      const firstRow = rankings.locator(".rank-row").first();
+      const fixtureChip = firstRow.locator(".rank-fixture");
+      const seasonTotal = firstRow.locator(".rank-points");
+      await expect(fixtureChip).toHaveText("40");
+      await fixtureChip.hover();
+      await expect(page.getByRole("tooltip")).toHaveText("Fixture 7");
+      await expect(seasonTotal).toContainText("85 p");
+      await expect(page.getByRole("button", {
+        name: /Demo Manager\s+Fixture 7 40\s+Season\s+85 p/,
+      })).toBeVisible();
+      await expect(page.getByRole("button", {
+        name: /Another Manager\s+Fixture 7 0\s+Season\s+80 p/,
+      })).toBeVisible();
+      const nameBox = await firstRow.locator(".rank-name").boundingBox();
+      const chipBox = await fixtureChip.boundingBox();
+      const totalBox = await seasonTotal.boundingBox();
+      expect(nameBox).not.toBeNull();
+      expect(chipBox).not.toBeNull();
+      expect(totalBox).not.toBeNull();
+      expect(chipBox!.y).toBeGreaterThan(nameBox!.y);
+      expect(chipBox!.x + chipBox!.width).toBeLessThan(totalBox!.x);
       const rankingBox = await page.getByRole("region", { name: "Players Ranking", exact: true }).boundingBox();
       const standingsBox = await page.getByRole("region", { name: "LALIGA standings", exact: true }).boundingBox();
       expect(standingsBox!.y).toBeGreaterThanOrEqual(rankingBox!.y + rankingBox!.height);
@@ -170,6 +192,52 @@ test("form details work by keyboard and tap, with focus restored on dismissal", 
   await page.getByRole("button", { name: "Close", exact: true }).click();
   await expect(result).toBeFocused();
   await context.close();
+});
+
+const longClubNames = [
+  "FC Barcelona",
+  "Atlético de Madrid",
+  "Real Madrid",
+  "Real Betis",
+  "Real Sociedad",
+  "Sevilla FC",
+];
+
+test("long club names stay on one line", async ({ page }) => {
+  await page.setViewportSize({ width: 1440, height: 900 });
+  await mockApplication(page);
+  await page.route("**/api/competitions/1/standings?*", (route) => route.fulfill({
+    json: {
+      ...standingsFixture,
+      rows: standingsFixture.rows.map((row: { team: { name: string } }, index: number) => ({
+        ...row,
+        team: { ...row.team, name: longClubNames[index] ?? row.team.name },
+      })),
+    },
+  }));
+  await page.goto("/");
+  const standings = page.getByRole("region", { name: "LALIGA standings", exact: true });
+  await standings.scrollIntoViewIfNeeded();
+  await expect(page.getByRole("table")).toBeVisible();
+  for (const name of longClubNames) {
+    const label = page.locator(".standing-club-name", { hasText: name });
+    await expect(label).toHaveCSS("font-weight", "700");
+    await expect(label).toHaveCSS("white-space", "nowrap");
+    const fit = await label.evaluate((element) => ({
+      clipped: element.scrollWidth > element.clientWidth + 1,
+      wrapped: element.getClientRects().length > 1,
+    }));
+    expect(fit.clipped, name).toBe(false);
+    expect(fit.wrapped, name).toBe(false);
+  }
+  const points = await page.locator(".standing-points").first().boundingBox();
+  expect(points!.width).toBeGreaterThan(28);
+  await page.setViewportSize({ width: 800, height: 900 });
+  const narrow = page.locator(".standing-club-name", { hasText: "Atlético de Madrid" });
+  const narrowFit = await narrow.evaluate((element) => (
+    element.scrollWidth <= element.clientWidth + 1
+  ));
+  expect(narrowFit).toBe(true);
 });
 
 test("two cards remain usable at a 200 percent zoom equivalent viewport", async ({ browser }) => {

@@ -1080,8 +1080,13 @@
   z-index: 1;
 }
 
+.squad-pager .pager {
+  /* Keep the 44px touch targets inside the frame's two border pixels. */
+  height: calc(var(--lineup-control-height) + 2px);
+}
+
 .squad-pager .pager > :is(button, span) {
-  height: calc(var(--lineup-control-height) - 2px);
+  height: var(--lineup-control-height);
 }
 
 .lineup-page .pager button,
@@ -1158,18 +1163,26 @@
 
   .squad-panel .side-panel-body {
     flex: 0 0 auto;
+    align-self: center;
+    width: min(100%, 440px);
   }
 
   .squad-panel .squad-panel-scroll {
     flex: 0 0 auto;
     height: auto;
     overflow: visible;
+    align-items: stretch;
+    justify-content: flex-start;
   }
 
   .squad-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
     grid-template-rows: repeat(4, auto);
+    justify-content: stretch;
+    width: 100%;
     height: auto;
     max-height: none;
+    padding-inline: 0;
   }
 
   .squad-grid .squad-tile {
@@ -1217,12 +1230,39 @@
 .save-lineup-button-icon,.recommend-button-icon { width:18px; height:18px; }
 .side-panel { border:1px solid var(--fb-line); }
 .side-panel-modal > .column-title { font:400 20px/1.3 Anton,sans-serif; letter-spacing:.03em; text-transform:uppercase; text-align:left; padding:20px 12px 0; margin-bottom:16px; }
+.squad-panel.side-panel-modal > .column-title { text-align:center; }
+.squad-panel .squad-filter-bar { justify-content:center; }
+.squad-panel :is(.squad-filter-status, .squad-filter-empty) { text-align:center; }
+@media (max-width:1099px), (max-aspect-ratio:4/3) {
+  .squad-panel.side-panel-modal > .column-title,
+  .squad-panel .squad-filter-bar,
+  .squad-panel .squad-filter-status,
+  .squad-panel .squad-filter-empty { margin-inline:0; padding-inline:0; }
+}
 .rank-list { gap:0; }
 .rank-row { min-height:52px; border-bottom:1px solid var(--fb-line); }
 .rank-row.active { background:var(--fb-surface); color:var(--fb-secondary); border-left:3px solid var(--fb-primary); }
 .pitch { background:var(--fb-surface); }
 .pitch-markings { width:100%; height:100%; display:block; }
 .squad-grid { animation:none; }
+.squad-loading {
+  display:flex; flex-direction:column; align-items:center; gap:8px;
+  width:100%; height:100%; min-height:0;
+}
+.squad-loading > .fb-loader { flex:0 0 auto; min-height:20px; gap:8px; }
+.squad-loading > .squad-grid { flex:1 1 0; height:auto; }
+@media (max-width:1099px), (max-aspect-ratio:4/3) {
+  .squad-loading { height:auto; }
+  .squad-loading > .squad-grid { flex:none; }
+}
+.squad-card-placeholder {
+  border:1px solid var(--fb-line); background:var(--fb-subtle);
+  animation:fb-pulse 1.4s ease-in-out infinite;
+}
+@media(prefers-reduced-motion:reduce) { .squad-card-placeholder { animation:none; } }
+.squad-grid.squad-grid--ready { animation:squad-reveal .24s ease-out both; }
+@keyframes squad-reveal { from { opacity:0; transform:translateY(4px); } to { opacity:1; transform:translateY(0); } }
+@media(prefers-reduced-motion:reduce) { .squad-grid.squad-grid--ready { animation:none; } }
 .pitch-opponent-lock { background:var(--fb-subtle); color:var(--fb-secondary); }
 .pitch-lineup-load-trigger { width:44px; height:44px; }
 .pitch-lineup-load-options { border:1px solid var(--fb-line); }

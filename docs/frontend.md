@@ -22,6 +22,11 @@ is not covered. Branding and account options stay in the top header; desktop
 navigation remains in the header.
 Links never use text underlines, including on hover, focus, and visited states;
 keyboard focus indicators remain visible.
+Market **Sell options** and catalog **Owned by** group each manager's avatar
+with their readable name and existing squad link. Missing or failed photos use
+a person icon. Names wrap within the cell; free agents and LaLiga listings keep
+their distinct labels; LaLiga sellers also show the LaLiga logo. Photos reuse
+the available listing and roster data.
 Light is the default; an explicit preference is saved under `lfb-theme`.
 LALIGA Text loads from the supplied WOFF2 face with a WOFF fallback. The shared
 `--fb-font-body` token controls body text, forms, buttons, tooltips, and chart
@@ -159,7 +164,11 @@ The horizontal scrollbar and previous/next fixture pager are the only navigation
 controls. The pager is centered at phone widths. There is no manual refresh button.
 
 Matches include club names/crests, Madrid-local dates and times, and reported
-scores; scheduled score placeholders stay blank. Unrecognized provider match
+scores; scheduled score placeholders stay blank. The heading states how long
+remains until the next kickoff still ahead in the matches shown. The countdown
+appears once at panel level so match cards stay focused on teams, score, and
+forecast. Finished rounds and matches without a confirmed kickoff do not show
+a countdown. Unrecognized provider match
 statuses say **Status unconfirmed**, with any reported score, instead of an
 invented live/final state. Incomplete round data cannot trigger advancement.
 Automatic updates preserve scroll and focus; native horizontal scrolling, arrow keys,
@@ -303,10 +312,61 @@ the query; Cancel leaves the current chart period intact.
 
 ### Lineup player actions
 
-Pitch and squad cards show fixture points in the upper-left corner, opposite the
-club crest. Clicking a populated card opens a player menu with **Market options**
-and **Player details** (coaches have no details route). Market actions retain the
+Squad cards show a small current-form icon above the name, using the same
+Poor/Average/Good/Very good symbols as player profiles (Very poor uses the poor
+symbol with its own accessible label). Hovering or focusing the card explains
+the rating and its FutbolFantasy source. This is current form even while viewing
+an older fixture. Season total Fantasy points occupy the photo's upper-left
+corner; the pitch retains fixture points. Starter probability appears above the
+name on the left, with form on the right. The tooltip includes the probability's
+matchweek when supplied. Starter badges use the profile icon colors: red below
+50%, yellow from 50% to below 75%, and green from 75%. Missing values show a
+neutral dash; reported zeroes stay zero.
+**Filter squad** opens a dialog for position, season Fantasy points, club, start
+probability, form, and availability. Every selected condition applies together.
+The filter groups use expandable rows with a compact current-value summary;
+position opens first. Position and availability use toggle groups. Form is grouped
+into Poor, Average, and Good, with equal buttons inside each band. Availability
+is three equal rows for Available, Questionable, and Unavailable. Club
+choices are checkboxes with their crest and name. FSYP is a two-thumb slider
+bounded by the squad's lowest and highest points. Start probability is a minimum:
+a slider in 5% steps keeps players at or above the value and
+reports how many squad players qualify.
+**Show N players** previews the match count and updates the squad; **Cancel** and
+Escape leave it unchanged.
+**Clear filters** is available in the dialog and beside the button once a filter
+is active. An empty result explains that nothing matched and offers clear.
+Missing values stay visible while squad details are still loading, then drop out
+of an active filter. Changing team clears the filters.
+All squad profiles load in parallel and are cached for five minutes. A skeleton
+reserves the cards' space until the catalog and all profiles settle, then reveals
+the complete squad with a short fade and slide. Reduced motion skips the
+transition. Failed profiles settle to unavailable values, and cached background
+updates keep the cards and focus in place. Coaches show total points but have
+no outlook badges or profile request.
+
+Pitch cards show fixture points in the upper-left corner, opposite the
+club crest; squad cards show season totals in that corner. On a matchweek that
+has started or already finished, a pitch player who scored is shown on a purple
+background. A goalkeeper who played and did not concede is shown the same way.
+The accessible name and tooltip say how many goals were scored, or that the
+goalkeeper conceded none. A played score also explains the events that changed
+it. Each event keeps the same three places: name, count, and signed points.
+Points are bold and end in `p`, so they stay distinct from the count. A non-zero
+DAZN value from that matchweek's fixture statistics, the same 1–4 figure as
+the player details page, is listed in the count column and as the points.
+Marca is not part of the Fantasy score and is omitted. Hover
+stays closed when a card has nothing further to explain. Squad, market, and
+player cards stay neutral.
+Clicking a populated card opens a player menu. The actions stay the same size
+and are grouped: **Market** (sell or view offers), **Details** (open the profile;
+coaches have no details route), and **Lineup** (swap). Market actions retain the
 existing ownership, listing, balance and availability rules.
+
+When your editable lineup still has an empty slot, that slot and the squad players
+who can fill its position use a red background with black text. Players already
+in the lineup stay on the neutral background. Opponent and past lineups are not
+marked.
 
 **Swap player** is available only for footballers in your editable lineup.
 Choosing it on a pitch player opens the squad replacement picker. Choosing it on
@@ -425,10 +485,21 @@ Code: `frontend/src/features/lineup/`.
   Acquisition lineups must score strictly higher than the strongest feasible
   current-squad lineup; fewer than seven total may qualify. If the current squad cannot
   form a valid XI, acquisitions can still complete one.
-- **Players Ranking** lists the user and opponents; **LALIGA standings** sits
-  immediately below it. Each card has an independently scrollable body and a
-  fixed heading. On desktop they share the existing sidebar height; on stacked
-  screens they follow the pitch and squad with bounded scrollable bodies.
+- **Players Ranking** lists the user and opponents. The season total stays the
+  only figure on the right, with its `p` suffix. Each manager’s matchweek score
+  sits under the name as the score alone. Hovering that score names the fixture,
+  for example Fixture 11. That score follows the open matchweek once its first
+  match has started, and keeps that matchweek after it finishes until the next
+  matchweek’s first match starts. Before that kickoff it shows the previous
+  matchweek. `0` is a reported score; `—` means that manager has no score. The
+  chip shows `…` while the week standing loads, and live scores refresh while a
+  match in that week is still unfinished. If that request fails, the ranking
+  stays selectable and the card says the fixture scores are unavailable; a failed
+  refresh keeps the last scores. Before matchweek 1 starts, the chip is absent.
+  **LALIGA standings** sits immediately below the ranking. Each card
+  has an independently scrollable body and a fixed heading. On desktop they
+  share the existing sidebar height; on stacked screens they follow the pitch
+  and squad with bounded scrollable bodies.
 - The LALIGA table includes rank, team, points, wins, draws, losses, goals for,
   goals against, signed goal difference, and last-five results. Horizontal
   scrolling reveals every statistic while rank/team and the table header stay
@@ -584,14 +655,15 @@ Future verified gross accounting uses `B - P`; verified net accounting uses `B`.
 | Form | Five matchweeks at a time, oldest→newest, in compact 26px score squares; current pending fixtures show 0 with a warning and are excluded from averages; ‹ earlier, › later (full season) |
 | Market value | Price, 5-day change, your active bid amount when present, then release clause with protection and lock countdown; hover on the price: last, highest, lowest, 5d/14d ago with % vs current |
 | Availability | SVG icons + hover text for next matchday readiness |
-| Seal end | Countdown with a coral status rail when under one hour remains |
+| Seal end | Countdown with a coral status rail when under one hour remains. In the final minute the rail is replaced by the warning icon and the time shows `<1m` |
 | Sell options | Seller link (`/?team=…`) or `LALIGA`; **Options** / **Bidded** action menu. On your own listings the menu offers **Withdraw from market** (confirmation modal, `DELETE /api/market/leagues/{id}/{marketId}`) and a disabled **Immediate sell** entry until a documented Fantasy route exists |
 
 The player name occupies a single compact grid track beside the photo, wrapping
 long names. Table headers and loading placeholders use the same column layout.
 
-The seller/options cell also displays **Bids: 0** for a known zero count and
-**Bids: Unavailable** for missing/invalid counts; `numberOfOffers` is never added.
+The seller/options cell displays the listing's bid count. An omitted count is
+**Bids: 0**. A null or invalid count stays **Bids: Unavailable**.
+`numberOfOffers` is never added.
 Below the market value, **Release clause** shows the known positive euro value even while protected,
 Not applicable for a LaLiga listing without a clause, and Unavailable for other
 unknown values. The shield beside it follows the theme foreground (white in dark
@@ -692,17 +764,19 @@ schedule as a full-width section. Desktop can show all table columns together;
 mobile retains horizontal scrolling with pinned team identities. The bounded
 vertical table area keeps its heading, refresh action and column headers nearby.
 
-The market uses compact comparison rows on desktop and labeled player cards at
-700px and below. Phone cards keep points, form history, market value, availability,
+The market uses comparison rows with a 144px minimum height on desktop and
+labeled player cards at 700px and below. Phone cards keep points, form history, market value, availability,
 expiry and seller actions visible; column filters remain in a horizontally
 scrollable strip. The result count reflects the active filters. Season averages
 are labeled explicitly, and LaLiga listings omit the inapplicable release-clause
 line. Transaction dialogs and confirmations retain their existing behavior.
 
 Players and Market share `ComparisonList.css` for typography, portrait sizing,
-form controls and comparison-row styling. Players keeps club, ownership and
-favorite actions alongside the shared facts. At phone widths, both screens use
+form controls and comparison-row styling. Footballer portraits are 84 × 112px
+and manager avatars are 24px, matching the LaLiga seller symbol. Players keeps
+club, ownership and favorite actions alongside the shared facts. At phone widths, both screens use
 labeled cards; Players shows value and clause details together in the value
-section, without duplicating them under Actions. Tablet retains all catalog
-columns through horizontal scrolling. Filtered counts and pagination distinguish
+section, without duplicating them under Actions. Ownership has its own full-width
+line on phones to keep larger avatars and long manager names together. Tablet
+retains all catalog columns through horizontal scrolling. Filtered counts and pagination distinguish
 the visible page from the full matching set.

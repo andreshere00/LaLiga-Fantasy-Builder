@@ -49,6 +49,33 @@ def test_login_completed_session_returns_only_framework_token(browser):
 
 
 # ---- Error paths ---- #
+def test_login_confirmation_runs_before_browser_closes(browser):
+    instance, _context, _session, _token = browser
+    confirmed = []
+
+    def confirm(token):
+        instance.close.assert_not_called()
+        confirmed.append(token)
+
+    assert (
+        identity.login_with_playwright("https://app.example.test", confirm_account=confirm)
+        == "synthetic-jwt"
+    )
+    assert confirmed == ["synthetic-jwt"]
+    instance.close.assert_called_once()
+
+
+def test_login_confirmation_cancelled_closes_browser(browser):
+    instance, _context, _session, _token = browser
+
+    def confirm(_token):
+        raise BrowserSessionError("Connection cancelled")
+
+    with pytest.raises(BrowserSessionError, match="Connection cancelled"):
+        identity.login_with_playwright("https://app.example.test", confirm_account=confirm)
+    instance.close.assert_called_once()
+
+
 def test_login_headless_without_token_is_rejected():
     with pytest.raises(BrowserSessionError, match="use --jwt"):
         identity.login_with_playwright("https://app.example.test", headed=False)

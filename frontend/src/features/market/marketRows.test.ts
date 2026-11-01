@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 
+import { bidCountLabel } from "./model/row";
 import {
   formDisplayPoints,
   formAverageLastThree,
@@ -14,10 +15,31 @@ import {
 } from "./marketRows";
 
 describe("market bid counts", () => {
-  it.each([0, 4, null, undefined, -1, 1.5, "2"])("should normalize count %s without adding offers", (count) => {
+  it.each([
+    [0, 0],
+    [4, 4],
+    [undefined, 0],
+    [null, null],
+    [-1, null],
+    [1.5, null],
+    ["2", null],
+  ] as const)("marketRow_bid_count_%s_normalizes_without_adding_offers", (count, expected) => {
     const row = marketRow({ id: "m", numberOfBids: count, numberOfOffers: 9 }, 0,
       { catalog: new Map(), history: new Map() });
-    expect(row.numberOfBids).toBe(count === 0 || count === 4 ? count : null);
+    expect(row.numberOfBids).toBe(expected);
+  });
+
+  it("marketRow_omitted_bid_count_is_zero", () => {
+    const row = marketRow({ id: "m", numberOfOffers: 9 }, 0,
+      { catalog: new Map(), history: new Map() });
+    expect(row.numberOfBids).toBe(0);
+  });
+
+  it("bidCountLabel_unknown_count_stays_unavailable", () => {
+    expect(bidCountLabel(0)).toBe("0");
+    expect(bidCountLabel(4)).toBe("4");
+    expect(bidCountLabel(null)).toBe("Unavailable");
+    expect(bidCountLabel(undefined)).toBe("Unavailable");
   });
 });
 

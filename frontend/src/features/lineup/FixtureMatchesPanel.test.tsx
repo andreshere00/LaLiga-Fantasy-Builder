@@ -48,6 +48,8 @@ describe("FixtureMatchesPanel", () => {
     await screen.findByText("Forecast 0°C · Clear");
     expect(screen.getByText("Rain 0% · Wind 0 km/h")).toBeTruthy();
     expect(screen.getByText("Up next")).toBeTruthy();
+    expect(screen.getByText("Next kickoff in 4 days 4 hours")).toBeTruthy();
+    expect(screen.queryByText(/^Starts in /)).toBeNull();
     expect(screen.getByText(/Europe\/Madrid/)).toBeTruthy();
     expect(requests.some((path) => path.includes("/stats"))).toBe(false);
     expect(screen.getAllByLabelText("Home goals: no result")).toHaveLength(10);
