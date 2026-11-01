@@ -11151,6 +11151,17 @@
             "type": "string",
             "title": "Player"
           },
+          "club": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Club"
+          },
           "profile": {
             "type": "string",
             "enum": [
@@ -11236,6 +11247,145 @@
         "title": "RadarCohort",
         "description": "Published or documented population; unknown fields remain explicitly absent."
       },
+      "RadarCoverage": {
+        "properties": {
+          "player_id": {
+            "type": "string",
+            "pattern": "^[0-9]{1,10}$",
+            "title": "Player Id"
+          },
+          "season": {
+            "type": "string",
+            "title": "Season"
+          },
+          "identity_status": {
+            "type": "string",
+            "enum": [
+              "pending_review",
+              "matched",
+              "ambiguous",
+              "not_found"
+            ],
+            "title": "Identity Status"
+          },
+          "data_status": {
+            "type": "string",
+            "enum": [
+              "ready",
+              "role_unresolved",
+              "not_published",
+              "insufficient_minutes",
+              "incomplete_metrics",
+              "out_of_scope",
+              "season_unavailable"
+            ],
+            "title": "Data Status"
+          },
+          "reason_code": {
+            "type": "string",
+            "enum": [
+              "ready",
+              "identity_pending",
+              "identity_ambiguous",
+              "identity_not_found",
+              "role_unresolved",
+              "not_published",
+              "insufficient_minutes",
+              "incomplete_metrics",
+              "out_of_scope",
+              "season_unavailable",
+              "expired"
+            ],
+            "title": "Reason Code"
+          },
+          "default_profile": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Default Profile"
+          },
+          "available_profiles": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Available Profiles"
+          },
+          "profile_errors": {
+            "additionalProperties": {
+              "type": "string"
+            },
+            "type": "object",
+            "title": "Profile Errors"
+          },
+          "last_success_at": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Last Success At"
+          },
+          "last_attempt_at": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Last Attempt At"
+          },
+          "last_error_code": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Last Error Code"
+          },
+          "stale": {
+            "type": "boolean",
+            "title": "Stale",
+            "default": false
+          },
+          "dataset_id": {
+            "type": "string",
+            "title": "Dataset Id"
+          },
+          "catalog_snapshot_id": {
+            "type": "string",
+            "title": "Catalog Snapshot Id"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "player_id",
+          "season",
+          "identity_status",
+          "data_status",
+          "reason_code",
+          "dataset_id",
+          "catalog_snapshot_id"
+        ],
+        "title": "RadarCoverage",
+        "description": "One accounted master ID in a published season, with safe product reason codes."
+      },
       "RadarResponse": {
         "properties": {
           "player_id": {
@@ -11278,6 +11428,35 @@
             },
             "type": "array",
             "title": "Radars"
+          },
+          "coverage": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/RadarCoverage"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "default_profile": {
+            "anyOf": [
+              {
+                "type": "string",
+                "enum": [
+                  "defense_progression_v1",
+                  "defense_fullback_v1",
+                  "goalkeeper_v1",
+                  "attacker_finishing_v1",
+                  "attacker_winger_v1",
+                  "midfielder_v1"
+                ]
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Default Profile"
           },
           "compatible_players": {
             "items": {

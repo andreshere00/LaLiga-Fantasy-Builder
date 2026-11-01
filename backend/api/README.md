@@ -168,3 +168,11 @@ contain catalog, radar store, coverage, comparison index, report and manifest.
 Cross-process locks exclude simultaneous writers; API storage is read-only.
 `report --root ...` reads the active report; `rollback --root ... --release-id ...`
 validates an existing release before promotion. Keep old releases for recovery.
+
+### Local published reads (phase 5)
+
+Set `RADAR_DATASET_ROOT=/data/radar/published` (API mount read-only). Leave
+`RADAR_STORE_PATH` unset; competing modes fail startup validation. The API pins
+and validates one complete release for each radar request, including comparison
+and coverage. `RADAR_STALE_DAYS=8`, `RADAR_MAXIMUM_DAYS=30` control active-season
+freshness and are checked on reads, so a failed scheduler cannot serve indefinitely.

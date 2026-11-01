@@ -104,3 +104,18 @@ describe("partial radar", () => {
     expect(screen.getByTestId("radar-polygon")).toBeTruthy();
   });
 });
+
+describe("published coverage", () => {
+  it("validates coverage identity and accepts missing coverage from manual MVP responses", () => {
+    const response = envelope();
+    expect(playerRadarResponseSchema.safeParse(response).success).toBe(true);
+    const coverage = {
+      player_id: "99", season: "2026-27", identity_status: "pending_review",
+      data_status: "not_published", reason_code: "identity_pending", default_profile: null,
+      available_profiles: [], profile_errors: {}, last_success_at: null, last_attempt_at: null,
+      last_error_code: null, stale: false, dataset_id: "test", catalog_snapshot_id: "catalog",
+    };
+    expect(playerRadarResponseSchema.safeParse({ ...response, coverage }).success).toBe(false);
+    expect(playerRadarResponseSchema.safeParse({ ...response, coverage: { ...coverage, player_id: "1" } }).success).toBe(true);
+  });
+});

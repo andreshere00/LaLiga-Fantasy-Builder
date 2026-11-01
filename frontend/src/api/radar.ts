@@ -55,11 +55,23 @@ export const playerRadarShape = readObject({
   }
 });
 export type PlayerRadarDto = z.infer<typeof playerRadarShape>;
+export const radarCoverageShape = readObject({
+  playerId: z.string().regex(/^[0-9]{1,10}$/), season: radarQuerySchema.shape.season,
+  identityStatus: z.enum(["pending_review", "matched", "ambiguous", "not_found"]),
+  dataStatus: z.enum(["ready", "role_unresolved", "not_published", "insufficient_minutes", "incomplete_metrics", "out_of_scope", "season_unavailable"]),
+  reasonCode: z.enum(["ready", "identity_pending", "identity_ambiguous", "identity_not_found", "role_unresolved", "not_published", "insufficient_minutes", "incomplete_metrics", "out_of_scope", "season_unavailable", "expired"]),
+  defaultProfile: radarProfileSchema.nullable(), availableProfiles: z.array(radarProfileSchema),
+  profileErrors: z.record(z.string(), z.string()),
+  lastSuccessAt: z.iso.datetime({ offset: true }).nullable(), lastAttemptAt: z.iso.datetime({ offset: true }).nullable(),
+  lastErrorCode: z.string().nullable(), stale: z.boolean(), datasetId: z.string().min(1), catalogSnapshotId: z.string().min(1),
+});
+export type RadarCoverageDto = z.infer<typeof radarCoverageShape>;
 export const radarResponseShape = readObject({
   playerId: z.string().regex(/^[0-9]{1,10}$/), season: radarQuerySchema.shape.season,
   availableSeasons: z.array(radarQuerySchema.shape.season),
   status: z.enum(["available", "unavailable"]), reason: z.string().nullable(),
-  compatiblePlayers: z.array(readObject({ playerId: z.string().regex(/^[0-9]{1,10}$/), player: z.string(), profile: radarProfileSchema })),
+  coverage: radarCoverageShape.nullable().optional(), defaultProfile: radarProfileSchema.nullable().optional(),
+  compatiblePlayers: z.array(readObject({ playerId: z.string().regex(/^[0-9]{1,10}$/), player: z.string(), club: z.string().nullable().optional(), profile: radarProfileSchema })),
   radars: z.array(playerRadarShape), comparison: playerRadarShape.nullable(),
   comparisonReason: z.string().nullable(),
 }).superRefine((r, ctx) => {
@@ -67,6 +79,9 @@ export const radarResponseShape = readObject({
       r.radars.some((v) => v.playerId !== r.playerId || v.season !== r.season) ||
       new Set(r.radars.map((v) => v.profile)).size !== r.radars.length) {
     ctx.addIssue({ code: "custom", message: "Inconsistent radar response" });
+  }
+  if (r.coverage && (r.coverage.playerId !== r.playerId || r.coverage.season !== r.season)) {
+    ctx.addIssue({ code: "custom", message: "Coverage identity differs from the radar selection" });
   }
   if (r.comparison && (r.radars.length !== 1 || !r.comparison.comparisonKey ||
       r.comparison.comparisonKey !== r.radars[0].comparisonKey ||

@@ -226,3 +226,26 @@ uv run fantasy-player-stats --player-id 1 --segment radar --season 2026-27 \
 
 The CLI uses shared automated application login/JWT handling. Invalid radar
 selections fail before login. `--segment all` retains its existing scope.
+
+### Published catalog coverage
+
+Set `RADAR_DATASET_ROOT` to the durable publisher root to serve immutable local
+releases. It is mutually exclusive with the transitional `RADAR_STORE_PATH` mode.
+A request pins `current.json` once: primary values, coverage and comparison all
+come from that release. Published reads never contact scraping or LaLiga.
+The persistent comparison index survives worker restarts and previous visits.
+
+`RadarResponse` additionally returns `default_profile` and optional `coverage`:
+identity state, data state, stable `reason_code`, available profiles, per-profile
+errors, last attempt/success, dataset/catalog IDs and freshness. Product clients
+translate reason codes; they should not render raw operator/provider errors.
+Unknown IDs/coaches return `out_of_scope`; an unpublished season returns
+`season_unavailable` without silently replacing it. An invalid release remains
+an operational 502. One failed role does not remove another valid role.
+
+Published freshness is configurable with `RADAR_STALE_DAYS=8` and
+`RADAR_MAXIMUM_DAYS=30`. Expiration is checked again on reads, even if the job
+stopped running. Expired observations remain archived on disk; they are excluded
+from active radars and comparison candidates. Reads never renew a source date.
+The manual MVP path retains its existing 72-hour warning during migration.
+`compatible_players` now includes the snapshot club for understandable searching.

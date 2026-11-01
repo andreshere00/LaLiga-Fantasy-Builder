@@ -1459,6 +1459,8 @@ Get independent role-specific player percentiles
 | `status` | string | yes |  |  |
 | `reason` | string | yes |  |  |
 | `radars` | array[PlayerRadar] | yes |  |  |
+| `coverage` | RadarCoverage | no |  | One accounted master ID in a published season, with safe product reason codes. |
+| `default_profile` | string | no |  |  |
 | `compatible_players` | array[RadarCandidate] | no |  |  |
 | `comparison` | PlayerRadar | no |  | Ready-to-render radar; compatibility is assigned by the application service. |
 | `comparison_reason` | string | no |  |  |
@@ -2593,6 +2595,7 @@ Type: `string`
 |-------|------|----------|-------------|-------------|
 | `player_id` | string | yes |  |  |
 | `player` | string | yes |  |  |
+| `club` | string | no |  |  |
 | `profile` | string | yes |  |  |
 
 ### `RadarCohort`
@@ -2606,6 +2609,25 @@ Type: `string`
 | `size` | integer | no |  |  |
 | `minimum_minutes` | integer | no |  |  |
 
+### `RadarCoverage`
+
+| Field | Type | Required | Constraints | Description |
+|-------|------|----------|-------------|-------------|
+| `player_id` | string | yes |  |  |
+| `season` | string | yes |  |  |
+| `identity_status` | string | yes |  |  |
+| `data_status` | string | yes |  |  |
+| `reason_code` | string | yes |  |  |
+| `default_profile` | string | no |  |  |
+| `available_profiles` | array[string] | no |  |  |
+| `profile_errors` | object | no |  |  |
+| `last_success_at` | string | no |  |  |
+| `last_attempt_at` | string | no |  |  |
+| `last_error_code` | string | no |  |  |
+| `stale` | boolean | no |  |  |
+| `dataset_id` | string | yes |  |  |
+| `catalog_snapshot_id` | string | yes |  |  |
+
 ### `RadarResponse`
 
 | Field | Type | Required | Constraints | Description |
@@ -2616,6 +2638,8 @@ Type: `string`
 | `status` | string | yes |  |  |
 | `reason` | string | yes |  |  |
 | `radars` | array[PlayerRadar] | yes |  |  |
+| `coverage` | RadarCoverage | no |  | One accounted master ID in a published season, with safe product reason codes. |
+| `default_profile` | string | no |  |  |
 | `compatible_players` | array[RadarCandidate] | no |  |  |
 | `comparison` | PlayerRadar | no |  | Ready-to-render radar; compatibility is assigned by the application service. |
 | `comparison_reason` | string | no |  |  |

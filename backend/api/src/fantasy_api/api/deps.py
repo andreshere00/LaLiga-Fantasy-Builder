@@ -302,7 +302,13 @@ def build_container(
             clock=lambda: datetime.now(tz=UTC),
         ),
         player_radar_service=PlayerRadarService(
-            PlayerRadarRepository(cfg.radar_store_path, scraper)
+            PlayerRadarRepository(
+                cfg.radar_store_path,
+                scraper,
+                dataset_root=cfg.radar_dataset_root,
+                stale_days=cfg.radar_stale_days,
+                maximum_days=cfg.radar_maximum_days,
+            )
         ),
         lineup_builder_service=LineupBuilderService(
             LineupBuilderRepository(

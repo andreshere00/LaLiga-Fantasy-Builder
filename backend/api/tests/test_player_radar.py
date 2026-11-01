@@ -107,7 +107,7 @@ def test_get_radar_documented_players_compares_without_laliga(tmp_path):
     data = response.json()
     assert data["comparison"]["player_id"] == "2"
     assert data["compatible_players"] == [
-        {"player_id": "2", "player": "Player 2", "profile": "midfielder_v1"}
+        {"player_id": "2", "player": "Player 2", "club": "Test Club", "profile": "midfielder_v1"}
     ]
     assert data["radars"][0]["axes"][0]["percentile"] == 0
     assert len(data["radars"][0]["axes"]) == 7

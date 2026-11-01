@@ -98,12 +98,19 @@ def publisher_lock(root: Path) -> Iterator[None]:
 def load_release(root: Path, release_id: str | None = None) -> PublishedDataset:
     """Pin a current release once, then validate hashes and all views without network I/O."""
     if release_id is None:
-        release_id = read_json(root / "current.json")["release_id"]
+        pointer = read_json(root / "current.json")
+        if not isinstance(pointer, dict):
+            raise ValueError("invalid release pointer")
+        release_id = pointer["release_id"]
     if not isinstance(release_id, str) or not re.fullmatch(r"[a-f0-9]{64}", release_id):
         raise ValueError("invalid release reference")
     directory = root / "releases" / release_id
     manifest = read_json(directory / "manifest.json")
-    if manifest.get("release_id") != release_id or set(manifest.get("files", {})) != set(FILES):
+    if (
+        not isinstance(manifest, dict)
+        or manifest.get("release_id") != release_id
+        or set(manifest.get("files", {})) != set(FILES)
+    ):
         raise ValueError("invalid release manifest")
     values = {name: read_json(directory / name) for name in FILES}
     hashes = {name: content_id(value) for name, value in values.items()}

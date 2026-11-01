@@ -19,7 +19,9 @@ from fantasy_api.schemas.player_radar import (
 )
 
 
-def build_radar(snapshot: RadarSnapshot, *, now: datetime | None = None) -> PlayerRadar:
+def build_radar(
+    snapshot: RadarSnapshot, *, now: datetime | None = None, stale_hours: int = 72
+) -> PlayerRadar:
     """Create seven fixed axes and a comparison key only for documented populations."""
     definition = PROFILES[snapshot.profile]
     complete = all(value is not None for value in snapshot.percentiles.values())
@@ -71,7 +73,8 @@ def build_radar(snapshot: RadarSnapshot, *, now: datetime | None = None) -> Play
         ],
         comparison_key=comparison_key,
         comparison_reason=reason,
-        stale=snapshot.stale or (current - snapshot.fetched_at).total_seconds() > 72 * 3600,
+        stale=snapshot.stale
+        or (current - snapshot.fetched_at).total_seconds() > stale_hours * 3600,
     )
 
 
@@ -83,13 +86,15 @@ class PlayerRadarService:
 
     async def get_radar(self, player_id: str, query: RadarQuery) -> RadarResponse:
         """Return available profiles and at most one server-validated comparison."""
-        snapshots, seasons = await self._repository.get_snapshots(
-            player_id, query.season, query.profile
-        )
+        repository = await self._repository.pin()
+        snapshots, seasons = await repository.get_snapshots(player_id, query.season, query.profile)
+        coverage = repository.coverage(player_id, query.season)
+
+        def render(row: RadarSnapshot) -> PlayerRadar:
+            return build_radar(row, stale_hours=repository.stale_hours)
+
         order = list(PROFILES)
-        radars = [
-            build_radar(row) for row in sorted(snapshots, key=lambda s: order.index(s.profile))
-        ]
+        radars = [render(row) for row in sorted(snapshots, key=lambda s: order.index(s.profile))]
         response = RadarResponse(
             player_id=player_id,
             season=query.season,
@@ -97,20 +102,25 @@ class PlayerRadarService:
             status="available" if radars else "unavailable",
             reason=None if radars else "No radar dataset is available for this selection.",
             radars=radars,
+            coverage=coverage,
+            default_profile=(
+                coverage.default_profile if coverage else (radars[0].profile if radars else None)
+            ),
         )
         keys = {r.comparison_key for r in radars if r.comparison_key}
         if keys:
-            known = await self._repository.comparison_snapshots()
+            known = await repository.comparison_snapshots(keys)
             for snapshot in known:
                 if snapshot.player_id == player_id:
                     continue
-                candidate = build_radar(snapshot)
+                candidate = render(snapshot)
                 if candidate.comparison_key in keys:
                     response.compatible_players.append(
                         RadarCandidate(
                             player_id=candidate.player_id,
                             player=candidate.player,
                             profile=candidate.profile,
+                            club=candidate.club,
                         )
                     )
         if query.compare_player_id:
@@ -122,10 +132,10 @@ class PlayerRadarService:
                 response.comparison_reason = radars[0].comparison_reason
             else:
                 try:
-                    candidates, _ = await self._repository.get_snapshots(
+                    candidates, _ = await repository.get_snapshots(
                         query.compare_player_id, query.season, radars[0].profile
                     )
-                    candidate = build_radar(candidates[0]) if len(candidates) == 1 else None
+                    candidate = render(candidates[0]) if len(candidates) == 1 else None
                     if candidate and candidate.comparison_key == radars[0].comparison_key:
                         response.comparison = candidate
                     else:

@@ -6,6 +6,7 @@ from typing import Annotated, Literal
 
 from pydantic import AwareDatetime, BaseModel, ConfigDict, Field, model_validator
 
+from fantasy_api.radar.coverage import RadarCoverage
 from fantasy_api.radar.profiles import PROFILES
 from fantasy_api.schemas.common import FlexibleModel
 
@@ -128,6 +129,7 @@ class RadarCandidate(FlexibleModel):
 
     player_id: str
     player: str
+    club: str | None = None
     profile: ProfileId
 
 
@@ -140,6 +142,8 @@ class RadarResponse(FlexibleModel):
     status: Literal["available", "unavailable"]
     reason: str | None
     radars: list[PlayerRadar]
+    coverage: RadarCoverage | None = None
+    default_profile: ProfileId | None = None
     compatible_players: list[RadarCandidate] = Field(default_factory=list)
     comparison: PlayerRadar | None = None
     comparison_reason: str | None = None
