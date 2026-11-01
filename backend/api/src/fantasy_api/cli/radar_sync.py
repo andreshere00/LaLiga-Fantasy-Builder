@@ -13,6 +13,7 @@ from fantasy_api.config import get_settings
 from fantasy_api.domain.errors import UpstreamError
 from fantasy_api.radar.catalog import CatalogInventory, build_inventory, inventory_report
 from fantasy_api.radar.files import atomic_json, read_json
+from fantasy_api.radar.registry import IdentityRegistry, propose_identities
 from fantasy_api.repositories.players import PlayersRepository
 from fantasy_api.schemas.player_radar import RadarQuery
 
@@ -39,8 +40,25 @@ def main(argv: list[str] | None = None) -> int:
     inventory.add_argument("--season", required=True)
     inventory.add_argument("--minimum-count", type=int, default=1)
     inventory.add_argument("--allow-large-removal", action="store_true")
+    candidates = sub.add_parser("candidates", help="Propose names by exact ID; never approve links")
+    candidates.add_argument("--work-dir", type=Path, required=True)
+    candidates.add_argument("--aliases", type=Path, required=True)
+    registry = sub.add_parser("registry", help="Validate a reviewed, versioned identity registry")
+    registry.add_argument("--registry", type=Path, required=True)
     args = parser.parse_args(argv)
     try:
+        if args.command == "registry":
+            result = IdentityRegistry.model_validate(read_json(args.registry))
+            print(
+                json.dumps({"identities": len(result.current()), "versions": len(result.records)})
+            )
+            return 0
+        if args.command == "candidates":
+            catalog = CatalogInventory.model_validate(read_json(args.work_dir / "catalog.json"))
+            proposals = propose_identities(catalog, read_json(args.aliases))
+            atomic_json(args.work_dir / "identity-review.json", proposals)
+            print(json.dumps({"pending_review": len(proposals)}))
+            return 0
         RadarQuery(season=args.season)
         path = args.work_dir / "catalog.json"
         previous = CatalogInventory.model_validate(read_json(path)) if path.exists() else None

@@ -121,3 +121,17 @@ are retained; coaches are excluded explicitly, unknown positions need review.
 The command writes an inventory, coverage entries and a JSON change/count report.
 Departures remain archived; invalid input never replaces the previous inventory.
 See the [coverage plan](../../docs/scraping/player-radar-coverage-plan.md).
+
+### Reviewed radar identities (phase 2)
+
+`fantasy-radar-sync candidates --work-dir /data/radar/staging --aliases names.json`
+exports name evidence by exact Fantasy ID, without approving any external link.
+`names.json` is an offline export (the existing `player_names.json` may be used);
+FutbolFantasy aliases never prove a DataMB identity. The generated review queue
+keeps homonyms separate and leaves provider keys empty.
+
+`fantasy-radar-sync registry --registry registry.json` validates append-only
+identity decisions. Each master ID/season has increasing versions and one latest
+state (`pending_review`, `matched`, `ambiguous`, `not_found`). Matches require a
+reviewer, date, observed source key, expected name, validity start and evidence.
+A changed club does not rewrite identity history. Never infer provider URLs.
