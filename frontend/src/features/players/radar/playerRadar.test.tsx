@@ -42,7 +42,7 @@ describe("role radar contract and supplied examples", () => {
   it("parses Python wire fields through the actual shared HTTP client", async () => {
     const fetchFn = vi.fn().mockResolvedValue(new Response(JSON.stringify(envelope()), { status: 200 }));
     const response = await getJson(paths.playerRadar("1", "2026-27"), "token", { fetchFn });
-    expect(response.radars[0].profileLabel).toBe("Progression defense");
+    expect(response.radars[0].profileLabel).toBe("Centre-back");
     expect(response.radars[0].axes[0].percentile).toBe(99.7);
     expect(fetchFn.mock.calls[0][1].headers.Authorization).toBe("Bearer token");
   });

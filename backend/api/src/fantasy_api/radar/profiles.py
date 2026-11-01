@@ -28,7 +28,7 @@ KEY = ("key_passes_p90", "Key passes", "Key passes per 90; source definition app
 PROFILES: dict[str, Profile] = {
     "defense_progression_v1": Profile(
         "Defense",
-        "Progression defense",
+        "Centre-back",
         (PASSES, FWD_PCT, PROG_PASSES, POSS, DEF_DUEL, AERIAL, CARRIES),
     ),
     "defense_fullback_v1": Profile(
@@ -49,7 +49,7 @@ PROFILES: dict[str, Profile] = {
     ),
     "attacker_finishing_v1": Profile(
         "Attacker",
-        "Finishing attacker",
+        "Striker",
         (
             NPG,
             NPXG,

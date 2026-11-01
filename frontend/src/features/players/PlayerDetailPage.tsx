@@ -315,14 +315,20 @@ function PlayerDetailBody({ masterId }: PlayerDetailBodyProps) {
   };
   const showMarketMenu = marketRow != null && ownSquadCard == null;
 
+  const radarSection = positionId !== 5 && (catalogMaster || detailReady)
+    ? <PlayerRadarSection key={`radar-${masterId}`} playerId={masterId} /> : null;
   if (detailQuery.error instanceof ApiError && detailQuery.error.status === 404) {
     return <PlayerDetailUnavailable notFound />;
   }
   if (!detailReady && detailQuery.isError) {
-    return <PlayerDetailUnavailable pending={detailQuery.isFetching}
-      onRetry={() => void detailQuery.refetch()} />;
+    return <section className="player-detail-page player-detail-independent-radar">
+      <PlayerDetailUnavailable pending={detailQuery.isFetching}
+        onRetry={() => void detailQuery.refetch()} />{radarSection}
+    </section>;
   }
-  if (!detailReady && !detailQuery.isError) return <PlayerDetailScreenLoading />;
+  if (!detailReady && !detailQuery.isError) return <section className="player-detail-page player-detail-independent-radar">
+    <PlayerDetailScreenLoading />{radarSection}
+  </section>;
 
   return (
     <section className="player-detail-page">
@@ -330,7 +336,7 @@ function PlayerDetailBody({ masterId }: PlayerDetailBodyProps) {
         <Link to={returnTo}>{returnTo === "/market" ? "Market" : "Players"}</Link>
         <span aria-hidden="true">/</span><span aria-current="page">{name}</span>
       </nav>
-      <PlayerSectionNavigation detailReady={detailReady} />
+      <PlayerSectionNavigation detailReady={detailReady} showRadar={positionId !== 5} />
       {detailQuery.isError ? (
         <div className="player-detail-panel player-detail-recovery">
           <p role="alert">Player data could not be updated. Previous results are still shown.</p>
@@ -637,7 +643,7 @@ function PlayerDetailBody({ masterId }: PlayerDetailBodyProps) {
         )}
       </section>
 
-      {detailReady ? <PlayerRadarSection playerId={masterId} /> : null}
+      {radarSection}
 
       {detailReady ? (
         <PlayerMatchesSection

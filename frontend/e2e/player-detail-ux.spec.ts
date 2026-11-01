@@ -135,7 +135,7 @@ test("partial failures preserve useful sections and can be retried", async ({ pa
     ],
   } }));
   await page.goto("/players/1");
-  await expect(page.getByRole("status")).toContainText("Some player data is unavailable.");
+  await expect(page.getByRole("status").filter({ hasText: "Some player data is unavailable." })).toBeVisible();
   await expect(page.getByText("Recent matches are temporarily unavailable.", { exact: true })).toBeVisible();
   await expect(page.getByText("No recent matches available.", { exact: true })).toHaveCount(0);
   await expect(page.getByRole("radiogroup", { name: "Fixture performance" }).getByRole("radio")).toHaveCount(3);

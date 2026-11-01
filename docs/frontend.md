@@ -812,3 +812,31 @@ Frontend Zod validation checks season, profile/position, fixed metric order,
 percentile bounds, missing-value status and comparison consistency. Python and
 frontend retain a contract test over all six profile definitions. The production
 component does not scrape or calculate population percentiles in the browser.
+
+### Published performance radars
+
+The player performance section reads independently when it enters the viewport
+or receives section-navigation focus. It also remains reachable when the detail
+aggregate is loading or temporarily fails; confirmed missing players and coaches
+retain their own appropriate flow. Player/account changes reset selections.
+The reviewed default role is selected; multiple published roles remain selectable.
+
+Coverage reason codes map to concrete English product messages. Definitive
+absence has no retry control; errors retry the local API only. Available data
+stays visible on refresh failure. The data date and retrieval date appear beside
+the sample context. Examples remain at `/players/radar-preview`, outside real
+player panels. No overall score or invented values are derived from the polygon.
+
+Comparison search is limited to compatible published candidates, with name,
+club and role. Native input/buttons support keyboard and touch, show empty search
+results and retain input during refresh. An overlay uses its primary from the
+same pinned server response. Changing role/season clears comparison explicitly;
+removing a comparison returns focus to its disclosure. Exact values remain in
+the table; missing axes hide the polygon, and a real zero remains visible.
+
+Validation of this flow uses synthetic browser fixtures: section navigation and
+keyboard selection, same-release overlays, failed background updates, default
+roles, explicit absence, coaches, missing metrics and independent detail failure.
+Phone/desktop and light/dark screenshots are inspected. Reflow is checked at
+320 CSS pixels with 200% text sizing; this is not a certification of accessibility
+or a study with representative users.

@@ -11,15 +11,16 @@ const SECTIONS = [
 ] as const;
 
 /** Native section links retain heading focus and track the current reading position. */
-export function PlayerSectionNavigation({ detailReady }: { detailReady: boolean }) {
+export function PlayerSectionNavigation({ detailReady, showRadar = true }: { detailReady: boolean; showRadar?: boolean }) {
   const navigation = useRef<HTMLElement>(null);
   const [current, setCurrent] = useState<string>(SECTIONS[0].id);
-  const sections = detailReady ? SECTIONS : SECTIONS.slice(0, 3);
+  const sections = (detailReady ? SECTIONS : SECTIONS.slice(0, 3)).filter((s) => showRadar || s.id !== "player-radar-title");
 
   useEffect(() => {
     const nav = navigation.current;
     if (!nav) return;
     const headings = (detailReady ? SECTIONS : SECTIONS.slice(0, 3))
+      .filter((s) => showRadar || s.id !== "player-radar-title")
       .map(({ id }) => document.getElementById(id))
       .filter((heading): heading is HTMLElement => heading != null);
     const header = document.querySelector(".app-header");
@@ -56,7 +57,7 @@ export function PlayerSectionNavigation({ detailReady }: { detailReady: boolean 
       window.removeEventListener("hashchange", schedule);
       if (frame != null) cancelAnimationFrame(frame);
     };
-  }, [detailReady]);
+  }, [detailReady, showRadar]);
 
   useEffect(() => {
     const nav = navigation.current;

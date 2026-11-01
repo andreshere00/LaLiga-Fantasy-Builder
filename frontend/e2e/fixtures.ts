@@ -96,6 +96,11 @@ export async function mockApplication(page: Page, { rankingSize = 2 } = {}) {
         }] : [],
       };
     }
+    else if (p.endsWith("/stats/radar")) body = {
+      player_id: p.split("/")[3], season: url.searchParams.get("season"), available_seasons: [],
+      status: "unavailable", reason: null, radars: [], compatible_players: [], comparison: null,
+      comparison_reason: null,
+    };
     else if (p.endsWith("/stats/detail")) body = detail;
     else if (p.endsWith("/market-value")) body = [{ date: "2026-10-07", marketValue: 2000000 }, { date: "2026-10-12", marketValue: 2100000 }];
     else if (p.includes("/players/") && p.includes("/league/")) body = slots[0];

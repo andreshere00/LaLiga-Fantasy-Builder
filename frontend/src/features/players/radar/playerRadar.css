@@ -45,3 +45,18 @@
   .player-radar-identity { gap: .75rem; }
   .player-radar-controls label { flex: 1 1 160px; }
 }
+.player-radar-section { min-height: 180px; }
+.player-radar-search { margin: 1rem 0; border-top: 1px solid var(--fb-muted); }
+.player-radar-search summary { cursor: pointer; min-height: 44px; padding: .85rem 0; }
+.player-radar-search label { display: grid; gap: .4rem; max-width: 32rem; font-size: .85rem; }
+.player-radar-search ul { list-style: none; padding: 0; display: grid; gap: .5rem; max-height: 22rem; overflow-y: auto; }
+.player-radar-search li button { width: 100%; min-height: 44px; justify-content: start; text-align: left; white-space: normal; overflow-wrap: anywhere; }
+.player-radar-search li button[aria-pressed="true"] { border-color: var(--fb-primary); box-shadow: inset 3px 0 var(--fb-primary); }
+.player-radar-search input { min-height: 44px; }
+.player-detail-independent-radar > .player-detail-page { width: 100%; margin: 0; padding: 0; }
+.player-radar-section :is(button, input, select, summary) { scroll-margin-block: 11rem 7rem; }
+.player-radar-section :is(th, p) { overflow-wrap: anywhere; }
+.player-radar-controls .fb-native-select { width: 100%; padding-inline-end: 2.5rem; }
+.player-radar-search ul { max-width: 44rem; }
+.player-radar-controls label { min-width: 0; grid-template-columns: minmax(0, 1fr); }
+.player-radar-controls .fb-select-shell { width: 9rem; min-width: 0; max-width: 100%; }

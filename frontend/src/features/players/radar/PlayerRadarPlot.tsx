@@ -43,9 +43,11 @@ export function PlayerRadarPlot({ radar, comparison }: { radar: PlayerRadarDto; 
     </header>
     <p className="player-radar-population">{radar.cohort ? `Percentiles against ${radar.cohort.label}` : "Reference population unverified"}</p>
     <p className="player-radar-context">{radar.competition} · {radar.period}</p>
-    {radar.stale ? <p className="player-radar-notice">Saved snapshot may be out of date. See its retrieval date below.</p> : null}
+    <p className="player-radar-context">Data updated: {radar.dataAsOf ? <time dateTime={radar.dataAsOf}>{radar.dataAsOf.slice(0, 10)}</time> : "Not published"}
+      {" · "}Retrieved / imported: <time dateTime={radar.fetchedAt}>{radar.fetchedAt.slice(0, 10)}</time></p>
+    {radar.stale ? <p className="player-radar-notice">Saved snapshot may be out of date. Its original retrieval date is shown above.</p> : null}
     {radar.warnings.length ? <ul className="player-radar-warnings">{radar.warnings.map((warning, i) => <li key={i}>{warning}</li>)}</ul> : null}
-    {!complete ? <p className="player-radar-notice">Some metrics are not published. The polygon is hidden; all seven axes remain in the table.</p> : null}
+    {!complete ? <p className="player-radar-notice">{radar.axes.filter((axis) => axis.percentile !== null).length} of 7 metrics available. The polygon is hidden; all seven axes remain in the table.</p> : null}
     {comparison && !other ? <p className="player-radar-notice">These players cannot be overlaid: their comparison contexts differ.</p> : null}
     <div className="player-radar-content">
       <figure className="player-radar-figure">
