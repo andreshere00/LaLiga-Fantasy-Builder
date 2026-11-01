@@ -109,3 +109,15 @@ store. `GET /players/{id}/stats/radar` and
 Unconfigured players return an honest unavailable state. For the file format,
 reviewed DataMB mappings and comparison rules, see
 [Players API](../../docs/api/players/README.md#role-specific-performance-radar).
+
+### Radar coverage inventory (phase 1)
+
+`fantasy-radar-sync inventory --season 2026-27 --work-dir /data/radar/staging`
+reads the public catalog through `PlayersRepository`, without login or a LaLiga
+bearer. `--catalog full-catalog.json` runs offline. Set `--minimum-count` to the
+expected catalog lower bound for the first run. Subsequent runs reject removals
+of over 10% unless reviewed with `--allow-large-removal`. All numeric master IDs
+are retained; coaches are excluded explicitly, unknown positions need review.
+The command writes an inventory, coverage entries and a JSON change/count report.
+Departures remain archived; invalid input never replaces the previous inventory.
+See the [coverage plan](../../docs/scraping/player-radar-coverage-plan.md).

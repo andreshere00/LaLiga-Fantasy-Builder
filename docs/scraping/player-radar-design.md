@@ -280,3 +280,7 @@ identidad. Sigue desactivado por defecto; no se han verificado en producción el
 acceso ni las tres posiciones pendientes. Los demás proveedores no rellenan ejes
 automáticamente. No se calcula una población propia ni se activa una ingesta
 histórica masiva. Configuración en [Players API](../api/players/README.md#role-specific-performance-radar).
+
+El [plan de cobertura del catálogo Fantasy](player-radar-coverage-plan.md)
+detalla el siguiente paso: identidades revisadas, roles, ingesta persistente,
+estados de disponibilidad, comparación y criterios UX para la implementación.
