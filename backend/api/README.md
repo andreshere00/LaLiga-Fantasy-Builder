@@ -144,3 +144,27 @@ captures. Roles are approved per identity/season with exactly one stable default
 Six synthetic role tests establish contract behavior, not real supply approval.
 See [supply audit and remaining gates](../../docs/scraping/radar-supply-audit.md).
 DataMB remains disabled pending verified production evidence.
+
+### Resumable radar publication (phase 4)
+
+The operational CLI separates `plan`, `fetch`, `validate`, `publish`, `report`
+and `rollback`. For plan/fetch/validate, supply `--work-dir`, `--registry`,
+`--audits` and `--captures`. Each operation revalidates approvals and captured
+column contracts; only `fetch` contacts the private scraping adapter. For an
+authorized offline feed, use `fetch --imports snapshots.json`. Imported records
+must match approved identity, role, recipe, source columns and cohort.
+
+Checkpoints are keyed by reviewed inputs and preserve valid observations after
+failures. Fresh records are skipped (default seven days); schema/identity failures
+are quarantined until the review changes. Blocking/unavailable responses stop
+the batch. Source timestamps are retained, including stale adapter cache hits.
+The semantic observation ID excludes retrieval timestamps and operational flags.
+
+`validate` writes `validated.json`; it includes every catalog footballer in its
+coverage denominator and distinguishes unknown eligibility from low minutes.
+`publish --validated /data/staging/validated.json --root /data/published` validates
+bounded files and checksums before atomically replacing `current.json`. Releases
+contain catalog, radar store, coverage, comparison index, report and manifest.
+Cross-process locks exclude simultaneous writers; API storage is read-only.
+`report --root ...` reads the active report; `rollback --root ... --release-id ...`
+validates an existing release before promotion. Keep old releases for recovery.
