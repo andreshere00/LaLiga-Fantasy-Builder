@@ -3,18 +3,25 @@
 from __future__ import annotations
 
 import time
+from collections.abc import Callable
 from typing import Any
 
 from fantasy_auth.cli.browser_session.errors import BrowserSessionError
 from fantasy_auth.cli.browser_session.playwright_util import import_sync_playwright
 
 
-def login_with_playwright(auth_base: str, *, headed: bool = True) -> str:
+def login_with_playwright(
+    auth_base: str,
+    *,
+    headed: bool = True,
+    confirm_account: Callable[[str], None] | None = None,
+) -> str:
     """Open the application sign-in screen and obtain its framework-issued JWT.
 
     Args:
         auth_base: Shared frontend origin, serving both screens and /auth.
         headed: Interactive login requires a visible browser.
+        confirm_account: Optional owner confirmation while the browser remains open.
 
     Returns:
         Short-lived application JWT. No session cookies are exported.
@@ -40,6 +47,8 @@ def login_with_playwright(auth_base: str, *, headed: bool = True) -> str:
             token = body.get("token") if isinstance(body, dict) else None
             if not isinstance(token, str) or not token:
                 raise BrowserSessionError("Better Auth did not return an application token")
+            if confirm_account is not None:
+                confirm_account(token)
             return token
         except playwright_error as exc:
             raise BrowserSessionError(

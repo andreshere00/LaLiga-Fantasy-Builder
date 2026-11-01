@@ -28,8 +28,13 @@ def _patch_session(monkeypatch: pytest.MonkeyPatch) -> None:
 # ---- Happy path ---- #
 
 
+@pytest.mark.parametrize(
+    "answers", [["yes"], ["", "yes"], ["unexpected", "yes"], ["no"], [EOFError]]
+)
 def test_confirm_account_uses_server_verified_owner(
-    monkeypatch: pytest.MonkeyPatch, capsys: pytest.CaptureFixture[str]
+    monkeypatch: pytest.MonkeyPatch,
+    capsys: pytest.CaptureFixture[str],
+    answers: list[str | type[EOFError]],
 ) -> None:
     # Arrange
     original_client = httpx.Client
@@ -53,10 +58,22 @@ def test_confirm_account_uses_server_verified_owner(
         )
 
     monkeypatch.setattr(cli.httpx, "Client", client)
-    monkeypatch.setattr("builtins.input", lambda _prompt: "yes")
+    responses = iter(answers)
+
+    def answer(_prompt: str) -> str:
+        response = next(responses)
+        if response is EOFError:
+            raise EOFError
+        return response
+
+    monkeypatch.setattr("builtins.input", answer)
 
     # Act
-    cli._confirm_account("https://fantasybuilder.es", "synthetic-jwt")
+    if answers[-1] == "yes":
+        cli._confirm_account("https://fantasybuilder.es", "synthetic-jwt")
+    else:
+        with pytest.raises(BrowserSessionError, match="Connection cancelled"):
+            cli._confirm_account("https://fantasybuilder.es", "synthetic-jwt")
 
     # Assert
     assert "alice@example.test" in capsys.readouterr().err
@@ -157,8 +174,14 @@ def test_main_pair_only_connects_without_running_analysis(
 ) -> None:
     # Arrange
     linked = {"value": False}
-    monkeypatch.setattr(cli, "login_with_playwright", lambda *_args, **_kwargs: "jwt-token")
-    monkeypatch.setattr(cli, "_confirm_account", lambda *_args: None)
+    confirmed = []
+
+    def login(_auth_base, *, headed, confirm_account):
+        confirm_account("jwt-token")
+        return "jwt-token"
+
+    monkeypatch.setattr(cli, "login_with_playwright", login)
+    monkeypatch.setattr(cli, "_confirm_account", lambda *args: confirmed.append(args))
     monkeypatch.setattr(cli, "_connection_linked", lambda **_kwargs: linked["value"])
 
     def pair(**_kwargs: object) -> dict[str, object]:
@@ -172,6 +195,7 @@ def test_main_pair_only_connects_without_running_analysis(
 
     # Assert
     assert code == 0
+    assert confirmed == [("http://localhost:3000", "jwt-token")]
     assert '"linked": true' in capsys.readouterr().out
 
 
