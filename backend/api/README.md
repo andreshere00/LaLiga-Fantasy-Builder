@@ -176,3 +176,16 @@ Set `RADAR_DATASET_ROOT=/data/radar/published` (API mount read-only). Leave
 and validates one complete release for each radar request, including comparison
 and coverage. `RADAR_STALE_DAYS=8`, `RADAR_MAXIMUM_DAYS=30` control active-season
 freshness and are checked on reads, so a failed scheduler cannot serve indefinitely.
+
+### Scheduling and operations (phase 7)
+
+Local and VM Compose provide an opt-in `radar-jobs` profile. Run the API-image
+`radar-job` with `--rm --no-deps -T`; its data mount is writable and its reviewed
+inputs are read-only. The API sees only the read-only data mount. Optional host
+timers are installed by Terraform but disabled until a real-data pilot passes.
+See the [ingestion, monitoring and rollback runbook](../../docs/scraping/radar-operations.md).
+
+Bulk DataMB tasks cannot assert a verified cohort: the current private adapter
+has no authoritative population revision field. Keep their cohort null; use an
+authorized frozen import for verified comparisons. Source schema errors quarantine
+a task; blocking/rate-limit categories are recorded safely without provider bodies.

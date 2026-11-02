@@ -40,3 +40,9 @@ remain null until their population and revision have independently been verified
 The source gate must be completed with real permitted captures and references
 before enabling the production timer. Until then, the remaining phases support
 validated offline imports and deterministic tests without inventing live data.
+
+Bulk publications reject a native DataMB cohort because the current adapter
+cannot return an authoritative population revision. They still show individual
+percentiles with population unverified. Verified frozen imports may enable
+comparison. Reviewed reference validity is checked before live tasks run and
+against capture timestamps during publication; expired references need review.

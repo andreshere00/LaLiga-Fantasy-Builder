@@ -354,3 +354,17 @@ Provider and platform references:
 [backup bucket](https://registry.terraform.io/providers/hashicorp/google/latest/docs/resources/storage_bucket),
 [Artifact Registry](https://registry.terraform.io/providers/hashicorp/google/latest/docs/resources/artifact_registry_repository),
 [Terraform provider mocks](https://developer.hashicorp.com/terraform/language/tests/mocking).
+
+### Optional player radar jobs
+
+The `radar-jobs` Compose profile uses a disposable API-image container. API mounts
+`RADAR_DATA_DIR` read-only; the job has write access to that data and read-only
+access to `RADAR_REVIEW_DIR`. No auth database, LaLiga bearer or additional paid
+provider credentials are passed to this job.
+
+Terraform installs `fantasybuilder-radar@.service`, daily inventory and weekly
+refresh timer files, but never enables them. Provision directories for UID/GID
+999 and complete the source/pilot gates before installing an enabled
+`radar.env`. See the [runbook](../../docs/scraping/radar-operations.md) and
+[configuration example](examples/radar.env.example). The default job flag is
+false. Source activation and live deployment are separate operational steps.

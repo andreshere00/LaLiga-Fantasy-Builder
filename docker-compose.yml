@@ -119,6 +119,8 @@ services:
       INTERNAL_SERVICE_TOKEN: ${INTERNAL_SERVICE_TOKEN}
       SCRAPING_BASE_URL: ${SCRAPING_BASE_URL:-http://scraping:8002}
       SCRAPING_SERVICE_TOKEN: ${SCRAPING_SERVICE_TOKEN}
+    volumes:
+      - "${RADAR_DATA_DIR:-./data/radar}:/data/radar:ro"
     depends_on:
       auth:
         condition: service_healthy
@@ -127,6 +129,26 @@ services:
         required: false
     profiles: [apps, full]
     networks: [public, internal]
+
+  radar-job:
+    build:
+      context: ./backend/api
+      dockerfile: Dockerfile
+    entrypoint: ["fantasy-radar-sync"]
+    command: ["--help"]
+    restart: "no"
+    read_only: true
+    tmpfs: [/tmp]
+    environment:
+      SCRAPING_BASE_URL: ${SCRAPING_BASE_URL:-http://scraping:8002}
+      SCRAPING_SERVICE_TOKEN: ${SCRAPING_SERVICE_TOKEN}
+      RADAR_DATASET_ROOT: ""
+      RADAR_STORE_PATH: ""
+    volumes:
+      - "${RADAR_DATA_DIR:-./data/radar}:/data/radar"
+      - "${RADAR_REVIEW_DIR:-./data/radar-review}:/data/radar-review:ro"
+    profiles: [radar-jobs]
+    networks: [internal, egress]
 
   scraping:
     build:

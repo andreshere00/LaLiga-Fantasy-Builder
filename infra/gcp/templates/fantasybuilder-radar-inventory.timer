@@ -1,0 +1,11 @@
+[Unit]
+Description=Refresh the Fantasy radar catalog daily (opt in after pilot)
+
+[Timer]
+OnCalendar=*-*-* 06:10:00 Europe/Madrid
+RandomizedDelaySec=600
+Persistent=true
+Unit=fantasybuilder-radar@inventory.service
+
+[Install]
+WantedBy=timers.target

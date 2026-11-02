@@ -85,6 +85,29 @@ class ScrapingClient:
                 status_code=503,
                 category="scraping_unavailable",
             ) from None
+        if path == "/internal/radar/datamb" and not response.is_success:
+            # Keep only a known code and numeric status; never expose upstream detail.
+            try:
+                body = response.json()
+            except ValueError:
+                body = None
+            code = body.get("error") if isinstance(body, dict) else None
+            provider_status = (
+                {
+                    "upstream_rate_limited": 429,
+                    "upstream_blocked": 403,
+                    "robots_disallowed": 403,
+                }.get(code, response.status_code)
+                if isinstance(code, str)
+                else response.status_code
+            )
+            invalid = code == "unexpected_content"
+            raise UpstreamError(
+                "Radar source is unavailable or invalid",
+                status_code=502 if invalid else 503,
+                category="radar_source_invalid" if invalid else "radar_source_unavailable",
+                provider_status=provider_status,
+            )
         if response.status_code == 404:
             category = "stats_source_not_found"
             try:

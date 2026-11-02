@@ -1,0 +1,12 @@
+[Unit]
+Description=Publish Fantasy player radar data (%i)
+Requires=docker.service
+After=docker.service fantasybuilder.service
+ConditionPathExists=/etc/fantasybuilder/enabled
+ConditionPathExists=/etc/fantasybuilder/radar.env
+
+[Service]
+Type=oneshot
+UMask=0027
+ExecStart=/usr/local/sbin/fantasybuilder-radar-sync %i
+TimeoutStartSec=10800

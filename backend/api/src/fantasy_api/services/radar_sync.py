@@ -14,7 +14,7 @@ from fantasy_api.domain.errors import UpstreamError
 from fantasy_api.radar.audits import RoleAssignment, SupplyAudit, SupplyAudits
 from fantasy_api.radar.catalog import CatalogInventory, inventory_report
 from fantasy_api.radar.coverage import RadarCoverage
-from fantasy_api.radar.files import atomic_json, content_id, read_json
+from fantasy_api.radar.files import atomic_json, content_id, read_json, semantic_snapshot_id
 from fantasy_api.radar.profiles import PROFILES
 from fantasy_api.radar.registry import IdentityDecision, IdentityRegistry
 from fantasy_api.radar.releases import PublishedDataset, publisher_lock
@@ -41,9 +41,12 @@ def plan_tasks(
     registry: IdentityRegistry,
     audits: SupplyAudits,
     captures: Path,
+    *,
+    now: datetime | None = None,
 ) -> list[IngestionTask]:
     """Plan offline; pending identities or roles never authorize source access."""
     audits.report(captures)
+    today = (now or datetime.now(UTC)).date()
     indexed = {row.audit_id: row for row in audits.audits}
     current = registry.current()
     tasks = []
@@ -64,6 +67,14 @@ def plan_tasks(
             if player.position_id != expected and not role.position_override_reason:
                 raise ValueError("Fantasy/source role conflict needs reviewed explanation")
             if identity.provider == "datamb":
+                if (identity.valid_from and today < identity.valid_from) or (
+                    identity.valid_until and today > identity.valid_until
+                ):
+                    raise ValueError("source reference is outside its reviewed validity window")
+                if role.cohort is not None:
+                    raise ValueError(
+                        "DataMB adapter has no population revision; use a frozen import"
+                    )
                 key = role.source_key or identity.source_key
                 url = f"https://datamb.football/{key}/"
                 if url != role.evidence and url not in identity.evidence:
@@ -83,25 +94,21 @@ def plan_tasks(
     return tasks
 
 
-def semantic_snapshot_id(snapshot: RadarSnapshot) -> str:
-    """Exclude retrieval timestamps and operational flags from statistical content IDs."""
-    return content_id(
-        snapshot.model_dump(
-            mode="json",
-            exclude={
-                "snapshot_id",
-                "fetched_at",
-                "stale",
-                "warnings",
-            },
-        )
-    )
+def _validate_binding_date(task: IngestionTask, fetched_at: datetime) -> None:
+    """A capture must belong to the period covered by its reviewed source identity."""
+    day = fetched_at.date()
+    identity = task.identity
+    if (identity.valid_from and day < identity.valid_from) or (
+        identity.valid_until and day > identity.valid_until
+    ):
+        raise ValueError("capture is outside the reviewed source identity interval")
 
 
 def _source_snapshot(task: IngestionTask, payload: Any) -> RadarSnapshot:
     """Validate private adapter shape and identity before mapping seven audited columns."""
     row = DataMBPlayer.model_validate(payload)
     audit, identity = task.audit, task.identity
+    _validate_binding_date(task, row.fetched_at)
     if (
         row.name != identity.expected_name
         or row.position != audit.source_position
@@ -134,6 +141,7 @@ def _source_snapshot(task: IngestionTask, payload: Any) -> RadarSnapshot:
 
 def _checked_import(task: IngestionTask, snapshot: RadarSnapshot) -> RadarSnapshot:
     """Apply the same reviewed identity and semantic contract to authorized imports."""
+    _validate_binding_date(task, snapshot.fetched_at)
     if (
         snapshot.player_id != task.identity.player_id
         or snapshot.player != task.identity.expected_name
@@ -215,12 +223,13 @@ async def fetch_tasks(
                 error = "cached_stale" if snapshot.stale else None
                 counts["success"] += 1
             except UpstreamError as exc:
-                error = "source_unavailable"
-                counts["source_unavailable"] += 1
+                invalid = exc.category == "radar_source_invalid"
+                error = "source_invalid" if invalid else "source_unavailable"
+                counts[error] += 1
                 # A missing page does not establish missing minutes or missing season.
                 if exc.provider_status in (403, 429):
                     counts[str(exc.provider_status)] += 1
-                stop = True
+                stop = not invalid
             except ValueError:
                 error = "source_invalid"
                 counts["source_invalid"] += 1
@@ -264,6 +273,7 @@ def compile_dataset(
             else None
         )
         if snapshot:
+            _validate_binding_date(task, snapshot.fetched_at)
             # Revalidate saved observations at publication, not only on download.
             if task.identity.provider == "imported":
                 snapshot = _checked_import(task, snapshot)
@@ -406,7 +416,18 @@ def compile_dataset(
         "matched": matched,
         "ready": ready,
         "association_pct": round(100 * matched / len(coverage), 2),
-        "complete_radar_pct": round(100 * ready / len(coverage), 2),
+        "complete_radar_pct": round(
+            100
+            * len(
+                {
+                    s.player_id
+                    for s in snapshots
+                    if all(v is not None for v in s.percentiles.values())
+                }
+            )
+            / len(coverage),
+            2,
+        ),
         "eligible_unknown": len(coverage) - len(known_eligibility),
         "reasons": dict(Counter(c.reason_code for c in coverage)),
         "profile_errors": dict(
@@ -419,4 +440,24 @@ def compile_dataset(
         coverage=coverage,
         index={k: sorted(v) for k, v in index.items()},
         report=report,
+        provenance={
+            "format": "radar-provenance-v1",
+            "catalog_snapshot_id": catalog.snapshot_id,
+            "season": catalog.season,
+            "identities": [
+                row.model_dump(mode="json")
+                for row in registry.current().values()
+                if row.player_id in {p.player_id for p in catalog.players}
+                and row.season == catalog.season
+            ],
+            "audits": [
+                row.model_dump(mode="json")
+                for row in {task.audit.audit_id: task.audit for task in tasks}.values()
+            ],
+            "task_hashes": sorted(task.key for task in tasks),
+            "parser_contracts": {
+                "datamb": "private-datamb-static-csv-v1",
+                "imported": "validated-radar-snapshot-json-v1",
+            },
+        },
     )

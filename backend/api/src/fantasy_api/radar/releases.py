@@ -14,12 +14,22 @@ from typing import Any
 
 from pydantic import BaseModel, ConfigDict, Field, model_validator
 
+from fantasy_api.radar.audits import SupplyAudits
 from fantasy_api.radar.catalog import CatalogInventory
 from fantasy_api.radar.coverage import RadarCoverage
-from fantasy_api.radar.files import atomic_json, content_id, read_json
+from fantasy_api.radar.files import atomic_json, content_id, read_json, semantic_snapshot_id
+from fantasy_api.radar.registry import IdentityRegistry
 from fantasy_api.schemas.player_radar import RadarStore
 
-FILES = ("catalog.json", "radar-store.json", "coverage.json", "index.json", "report.json")
+FILES = (
+    "catalog.json",
+    "radar-store.json",
+    "coverage.json",
+    "index.json",
+    "report.json",
+    "provenance.json",
+)
+LEGACY_FILES = set(FILES) - {"provenance.json"}
 
 
 class PublishedDataset(BaseModel):
@@ -31,6 +41,7 @@ class PublishedDataset(BaseModel):
     coverage: list[RadarCoverage] = Field(max_length=10000)
     index: dict[str, list[str]]
     report: dict[str, Any]
+    provenance: dict[str, Any] | None = None
 
     @model_validator(mode="after")
     def validate_consistency(self) -> PublishedDataset:
@@ -56,6 +67,58 @@ class PublishedDataset(BaseModel):
                 raise ValueError("coverage profiles do not match served observations")
             if profiles and row.identity_status != "matched":
                 raise ValueError("observations require a reviewed identity")
+        dataset_ids = {row.dataset_id for row in self.coverage}
+        if (
+            len(dataset_ids) != 1
+            or self.report.get("dataset_id") not in dataset_ids
+            or self.report.get("accounted") != len(ids)
+            or self.report.get("catalog_snapshot_id") != self.catalog.snapshot_id
+        ):
+            raise ValueError("publication report does not match its catalog and coverage")
+        if self.provenance is not None:
+            provenance = self.provenance
+            if (
+                provenance.get("format") != "radar-provenance-v1"
+                or provenance.get("catalog_snapshot_id") != self.catalog.snapshot_id
+                or provenance.get("season") != self.catalog.season
+            ):
+                raise ValueError("provenance does not match its published catalog")
+            registry = IdentityRegistry.model_validate({"records": provenance.get("identities")})
+            audits = SupplyAudits.model_validate({"audits": provenance.get("audits")})
+            audit_by_id = {audit.audit_id: audit for audit in audits.audits}
+            task_hashes = []
+            for identity in registry.current().values():
+                if identity.player_id not in ids or identity.season != self.catalog.season:
+                    raise ValueError("provenance identity outside catalog")
+                if identity.status != "matched":
+                    continue
+                for role in identity.roles:
+                    audit = audit_by_id.get(role.audit_id)
+                    if audit is None:
+                        raise ValueError("provenance has no audit for its approved role")
+                    task_hashes.append(
+                        content_id(
+                            {
+                                "identity": identity.model_dump(mode="json"),
+                                "role": role.model_dump(mode="json"),
+                                "audit": audit.model_dump(mode="json"),
+                            }
+                        )
+                    )
+            if sorted(task_hashes) != provenance.get("task_hashes"):
+                raise ValueError("provenance tasks do not match reviewed inputs")
+            if any(s.snapshot_id != semantic_snapshot_id(s) for s in self.store.snapshots):
+                raise ValueError("observation content hash differs from stored identity")
+            expected_id = content_id(
+                {
+                    "catalog": self.catalog.snapshot_id,
+                    "season": self.catalog.season,
+                    "tasks": sorted(task_hashes),
+                    "observations": sorted(s.snapshot_id for s in self.store.snapshots),
+                }
+            )
+            if expected_id != self.report["dataset_id"]:
+                raise ValueError("published observations do not match provenance")
         # Import locally to keep service -> repository -> releases imports acyclic.
         from fantasy_api.services.player_radar import build_radar
 
@@ -77,6 +140,7 @@ class PublishedDataset(BaseModel):
             "coverage.json": [row.model_dump(mode="json") for row in self.coverage],
             "index.json": self.index,
             "report.json": self.report,
+            "provenance.json": self.provenance,
         }
 
 
@@ -109,10 +173,10 @@ def load_release(root: Path, release_id: str | None = None) -> PublishedDataset:
     if (
         not isinstance(manifest, dict)
         or manifest.get("release_id") != release_id
-        or set(manifest.get("files", {})) != set(FILES)
+        or set(manifest.get("files", {})) not in (set(FILES), LEGACY_FILES)
     ):
         raise ValueError("invalid release manifest")
-    values = {name: read_json(directory / name) for name in FILES}
+    values = {name: read_json(directory / name) for name in manifest["files"]}
     hashes = {name: content_id(value) for name, value in values.items()}
     if hashes != manifest["files"] or content_id(hashes) != release_id:
         raise ValueError("release checksum mismatch")
@@ -122,11 +186,14 @@ def load_release(root: Path, release_id: str | None = None) -> PublishedDataset:
         coverage=values["coverage.json"],
         index=values["index.json"],
         report=values["report.json"],
+        provenance=values.get("provenance.json"),
     )
 
 
 def publish_release(root: Path, dataset: PublishedDataset) -> str:
     """Validate a release on disk before atomically changing the durable current pointer."""
+    if dataset.provenance is None:
+        raise ValueError("revalidate legacy datasets before publishing their provenance")
     with publisher_lock(root):
         values = dataset.files()
         hashes = {name: content_id(value) for name, value in values.items()}

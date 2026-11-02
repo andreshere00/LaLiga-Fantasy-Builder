@@ -64,3 +64,39 @@ async def test_get_json_identity_conflict_preserves_safe_category_without_raw_bo
     assert exc.value.category == "player_ambiguous"
     assert exc.value.status_code == 409
     assert "private-upstream-body" not in str(exc.value)
+
+
+@pytest.mark.parametrize(
+    "status,code,provider_status,category",
+    [
+        (503, "upstream_rate_limited", 429, "radar_source_unavailable"),
+        (503, "upstream_blocked", 403, "radar_source_unavailable"),
+        (403, "robots_disallowed", 403, "radar_source_unavailable"),
+        (502, "unexpected_content", 502, "radar_source_invalid"),
+        (404, "unknown", 404, "radar_source_unavailable"),
+    ],
+)
+async def test_get_json_radar_errors_preserve_safe_operational_status(
+    status,
+    code,
+    provider_status,
+    category,
+):
+    client = ScrapingClient(
+        base_url="http://private",
+        service_token=SecretStr("private-token"),
+        timeout_seconds=5,
+        transport=httpx.MockTransport(
+            lambda request: httpx.Response(
+                status, json={"error": code, "detail": "private-upstream-body"}
+            )
+        ),
+    )
+    try:
+        with pytest.raises(UpstreamError) as error:
+            await client.get_json("/internal/radar/datamb", {"profile_key": "Test_stats"})
+        assert error.value.category == category
+        assert error.value.provider_status == provider_status
+        assert "private-upstream-body" not in str(error.value)
+    finally:
+        await client.aclose()

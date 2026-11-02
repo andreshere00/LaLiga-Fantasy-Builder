@@ -1,7 +1,8 @@
 # Plan de implementación: radares para el catálogo Fantasy
 
-Fecha: 1 de noviembre de 2026. Estado: propuesta, posterior al MVP del commit
-`e46d7e1`. Este documento no activa proveedores ni ejecuta una ingesta.
+Fecha: 1 de noviembre de 2026. Estado: implementación entregada por fases,
+posterior al MVP `e46d7e1`. La activación real sigue condicionada a suministro
+revisado y piloto. Este documento no activa proveedores ni ejecuta una ingesta.
 
 ## Resultado que queremos conseguir
 
@@ -261,7 +262,7 @@ después de un reinicio o entre workers que leen la misma release.
 ## 6. Integración en la ficha y actualización programada
 
 Reutilizar `PlayerRadarSection` y `PlayerRadarPlot`. Activar la consulta cuando
-la sección entre en pantalla o se use su navegación, manteniendo una carga
+la sección entre en pantalla o reciba foco, manteniendo una carga
 independiente de `stats/detail`. Con lectura local ya no será necesario pulsar
 «Load performance radar» para descubrir si hay datos.
 
@@ -335,7 +336,7 @@ plantilla para entender el rendimiento por rol y, si lo necesita, compararlo
 con otro futbolista. Debe poder distinguir percentiles, puntos Fantasy, muestra
 y actualidad de los datos sin conocer los proveedores ni configurar el radar.
 
-Recorrido previsto: ficha → acceso «Performance» → contexto y radar ya cargado
+Recorrido previsto: ficha → Overview → Performance profile → contexto y radar ya cargado
 → lectura de una métrica → comparación compatible opcional → regreso a la ficha
 o al listado conservando filtros y posición. Una ausencia tiene una explicación
 en el mismo panel, sin enviar a otra pantalla para averiguar qué ha ocurrido.
@@ -521,3 +522,27 @@ justificado; todo snapshot válido publicado se abre automáticamente desde su
 ficha; las peticiones no descargan fuentes; y la cobertura puede explicarse y
 reproducirse desde una release. No se incluyen valores inventados para alcanzar
 un porcentaje de gráficos.
+
+## Estado de la entrega
+
+Implementación revisada el 2 de noviembre de 2026.
+
+Las fases 1, 2, 4, 5 y 6 tienen implementación y pruebas: inventario, identidades,
+checkpoints/releases, lectura local y UX. La fase 3 implementa el contrato y la
+puerta de auditoría, pero **no aprueba el suministro real**: faltan manifiesto de
+identidades y capturas permitidas revisadas para los seis roles. La fase 7 entrega
+Compose, trabajo contenedor, timers optativos, reportes y rollback; **no activa
+producción ni declara superado el piloto real**.
+
+La importación autorizada permite completar la publicación sin depender de un
+índice de scraping no permitido. El adaptador actual DataMB no acredita una
+revisión de población por respuesta; en la ingesta masiva exige cohort nulo y no
+habilita comparaciones nativas. Una importación congelada revisada puede incluir
+su población verificada. Ver [operaciones](radar-operations.md) y
+[auditoría de suministro](radar-supply-audit.md).
+
+La integración conserva los commits `7e49f5b` y `65355d0`: estilos y encabezados
+unificados, radar debajo de Fantasy outlook dentro de Overview y sin un enlace
+Performance independiente. La publicación operativa no cambia esa disposición.
+Cada release nueva conserva además la procedencia revisada en `provenance.json`,
+verificada contra sus tareas y hashes de contenido.

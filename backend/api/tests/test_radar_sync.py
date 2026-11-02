@@ -329,3 +329,117 @@ async def test_compile_dataset_future_capture_rejects(tmp_path):
     )
     with pytest.raises(ValueError, match="future"):
         compile_dataset(catalog, registry, tasks, tmp_path, now=NOW)
+
+
+async def test_fetch_tasks_adapter_schema_error_quarantines_without_retries(tmp_path):
+    _, _, tasks, _, _ = tasks_for(tmp_path)
+    scraper = AsyncMock()
+    scraper.get_json.side_effect = UpstreamError("sanitized", category="radar_source_invalid")
+    assert await fetch_tasks(tasks, tmp_path, scraper, now=NOW) == {"source_invalid": 1}
+    assert await fetch_tasks(tasks, tmp_path, scraper, now=NOW) == {"quarantined": 1}
+    assert scraper.get_json.await_count == 1
+
+
+def test_plan_tasks_native_cohort_without_source_revision_rejects(tmp_path):
+    catalog, registry, audits, _, _ = inputs(tmp_path)
+    registry.records[0].roles[0].cohort = snapshot().cohort
+    with pytest.raises(ValueError, match="population revision"):
+        plan_tasks(catalog, registry, audits, tmp_path, now=NOW)
+
+
+def test_plan_tasks_expired_identity_reference_needs_review_before_network(tmp_path):
+    from datetime import date
+
+    catalog, registry, audits, _, _ = inputs(tmp_path)
+    registry.records[0].valid_until = date(2026, 10, 31)
+    with pytest.raises(ValueError, match="validity window"):
+        plan_tasks(catalog, registry, audits, tmp_path, now=datetime(2026, 11, 1, tzinfo=UTC))
+
+
+async def test_fetch_tasks_import_outside_reviewed_identity_interval_quarantines(tmp_path):
+    _, _, tasks, imported, _ = tasks_for(tmp_path, "imported")
+    imported = imported.model_copy(update={"fetched_at": datetime(2026, 6, 1, tzinfo=UTC)})
+    assert await fetch_tasks(
+        tasks, tmp_path, AsyncMock(), imports=RadarStore(snapshots=[imported])
+    ) == {"source_invalid": 1}
+
+
+async def test_compile_dataset_low_minutes_remains_complete_but_not_eligible(tmp_path):
+    catalog, registry, tasks, imported, _ = tasks_for(tmp_path, "imported")
+    cohort = snapshot().cohort
+    role = tasks[0].role.model_copy(update={"cohort": cohort})
+    identity = tasks[0].identity.model_copy(update={"roles": [role]})
+    task = tasks[0].model_copy(update={"identity": identity, "role": role})
+    registry = IdentityRegistry(records=[identity])
+    imported = imported.model_copy(update={"minutes": 100, "cohort": cohort})
+    await fetch_tasks(
+        [task], tmp_path, AsyncMock(), imports=RadarStore(snapshots=[imported]), now=NOW
+    )
+    result = compile_dataset(catalog, registry, [task], tmp_path, now=NOW)
+    assert result.coverage[0].data_status == "insufficient_minutes"
+    assert result.report["ready"] == 0
+    assert result.report["complete_radar_pct"] == 50.0
+    assert result.report["eligible_unknown"] == 1
+    assert result.index == {}
+
+
+async def test_compile_dataset_failed_second_role_preserves_ready_primary(tmp_path):
+    catalog, registry, tasks, imported, _ = tasks_for(tmp_path, "imported")
+    second_role = tasks[0].role.model_copy(
+        update={
+            "profile": "attacker_winger_v1",
+            "default": False,
+            "audit_id": "attacker_winger_v1",
+            "position_override_reason": "Reviewed winger role in this sample",
+        }
+    )
+    second_audit = audit("attacker_winger_v1", provider="imported")
+    identity = registry.records[0].model_copy(update={"roles": [tasks[0].role, second_role]})
+    registry = IdentityRegistry(records=[identity])
+    second = tasks[0].model_copy(
+        update={"identity": identity, "role": second_role, "audit": second_audit}
+    )
+    tasks = [tasks[0].model_copy(update={"identity": identity}), second]
+    invalid = snapshot(profile="attacker_winger_v1", player="Wrong player")
+    result = await fetch_tasks(
+        tasks, tmp_path, AsyncMock(), imports=RadarStore(snapshots=[imported, invalid]), now=NOW
+    )
+    assert result == {"success": 1, "source_invalid": 1}
+    published = compile_dataset(catalog, registry, tasks, tmp_path, now=NOW)
+    assert [row.profile for row in published.store.snapshots] == ["midfielder_v1"]
+    assert published.coverage[0].data_status == "ready"
+    assert published.coverage[0].profile_errors == {"attacker_winger_v1": "source_invalid"}
+
+
+async def test_load_release_keeps_immutable_review_provenance_after_inputs_change(tmp_path):
+    catalog, registry, tasks, imported, _ = tasks_for(tmp_path, "imported")
+    await fetch_tasks(
+        tasks, tmp_path, AsyncMock(), imports=RadarStore(snapshots=[imported]), now=NOW
+    )
+    dataset = compile_dataset(catalog, registry, tasks, tmp_path, now=NOW)
+    root = tmp_path / "published"
+    release_id = publish_release(root, dataset)
+    (tmp_path / "midfielder_v1.json").unlink()
+    restored = load_release(root)
+    assert restored.provenance["identities"][0]["expected_name"] == "Player 1"
+    assert restored.provenance["audits"][0]["capture_hash"] == tasks[0].audit.capture_hash
+    assert restored.provenance["task_hashes"] == [tasks[0].key]
+    assert read_json(root / "releases" / release_id / "manifest.json")["files"]["provenance.json"]
+
+
+async def test_validate_dataset_tampered_review_or_observation_fails_before_publication(tmp_path):
+    from fantasy_api.radar.releases import PublishedDataset
+
+    catalog, registry, tasks, imported, _ = tasks_for(tmp_path, "imported")
+    await fetch_tasks(
+        tasks, tmp_path, AsyncMock(), imports=RadarStore(snapshots=[imported]), now=NOW
+    )
+    dataset = compile_dataset(catalog, registry, tasks, tmp_path, now=NOW)
+    changed = dataset.model_dump(mode="json")
+    changed["provenance"]["identities"][0]["expected_name"] = "Another person"
+    with pytest.raises(ValueError, match="provenance tasks"):
+        PublishedDataset.model_validate(changed)
+    changed = dataset.model_dump(mode="json")
+    changed["store"]["snapshots"][0]["percentiles"]["duel_win_pct"] = 99.0
+    with pytest.raises(ValueError, match="content hash"):
+        PublishedDataset.model_validate(changed)

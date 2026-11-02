@@ -34,6 +34,7 @@ class PlayerRadarRepository:
         self._root = Path(dataset_root) if dataset_root else None
         self._scraper = scraper
         self._dataset = dataset
+        self._pinned_at = datetime.now(UTC)
         self._stale_days = stale_days
         self._maximum_days = maximum_days
         self._observed: dict[tuple[str, str, str], RadarSnapshot] = {}
@@ -71,7 +72,7 @@ class PlayerRadarRepository:
     def _read_store(self) -> RadarStore:
         """Validate configured input; published mode never reads provider mappings."""
         if self._dataset:
-            current = datetime.now(UTC)
+            current = self._pinned_at
             snapshots = [
                 s.model_copy(
                     update={

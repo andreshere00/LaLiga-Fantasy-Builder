@@ -26,10 +26,14 @@ locals {
     "/opt/fantasybuilder/identity.sh"                          = { mode = "0644", content = file("${path.module}/../../docker/postgres/identity.sh") }
     "/etc/systemd/system/docker.service.d/fantasybuilder.conf" = { mode = "0644", content = file("${path.module}/templates/docker-metadata-guard.conf") }
     }, {
-    for name in ["fetch-secrets", "release", "start", "backup", "deploy", "metadata-guard"] :
+    for name in ["fetch-secrets", "release", "start", "backup", "deploy", "metadata-guard", "radar-sync"] :
     "/usr/local/sbin/fantasybuilder-${name}" => { mode = "0700", content = file("${path.module}/templates/${name}.sh") }
     }, {
-    for name in ["fantasybuilder.service", "fantasybuilder-backup.service", "fantasybuilder-backup.timer"] :
+    for name in [
+      "fantasybuilder.service", "fantasybuilder-backup.service", "fantasybuilder-backup.timer",
+      "fantasybuilder-radar@.service", "fantasybuilder-radar-inventory.timer",
+      "fantasybuilder-radar-refresh.timer"
+    ] :
     "/etc/systemd/system/${name}" => { mode = "0644", content = file("${path.module}/templates/${name}") }
   })
 }

@@ -1,11 +1,16 @@
 """Bounded JSON and durable atomic writes for offline radar operations."""
 
+from __future__ import annotations
+
 import hashlib
 import json
 import os
 import tempfile
 from pathlib import Path
-from typing import Any
+from typing import TYPE_CHECKING, Any
+
+if TYPE_CHECKING:
+    from fantasy_api.schemas.player_radar import RadarSnapshot
 
 MAX_BYTES = 5 * 1024 * 1024
 
@@ -50,3 +55,18 @@ def atomic_json(path: Path, value: Any) -> None:
             os.close(directory)
     finally:
         temporary.unlink(missing_ok=True)
+
+
+def semantic_snapshot_id(snapshot: RadarSnapshot) -> str:
+    """Hash statistical content without retrieval timestamps or operational flags."""
+    return content_id(
+        snapshot.model_dump(
+            mode="json",
+            exclude={
+                "snapshot_id",
+                "fetched_at",
+                "stale",
+                "warnings",
+            },
+        )
+    )
