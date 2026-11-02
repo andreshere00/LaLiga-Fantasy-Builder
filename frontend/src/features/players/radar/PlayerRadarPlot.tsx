@@ -18,7 +18,7 @@ function AxisTick({ x = 0, y = 0, payload }: { x?: number; y?: number; payload?:
   const words = (payload?.value ?? "").split(" ");
   const lines: string[] = [];
   for (const word of words) {
-    if (!lines.length || `${lines.at(-1)} ${word}`.length > 12) lines.push(word);
+    if (!lines.length || `${lines.at(-1)} ${word}`.length > 10) lines.push(word);
     else lines[lines.length - 1] += ` ${word}`;
   }
   return <text x={x} y={y - (lines.length - 1) * 6} textAnchor="middle" fill="var(--fb-secondary)" fontSize={12}>
@@ -41,21 +41,25 @@ export function PlayerRadarPlot({ radar, comparison }: { radar: PlayerRadarDto; 
       </div>
       <p className="player-radar-minutes"><strong>{radar.minutes.toLocaleString("en")}</strong><span>minutes in sample</span></p>
     </header>
-    <p className="player-radar-population">{radar.cohort ? `Percentiles against ${radar.cohort.label}` : "Reference population unverified"}</p>
-    <p className="player-radar-context">{radar.competition} · {radar.period}</p>
-    <p className="player-radar-context">Data updated: {radar.dataAsOf ? <time dateTime={radar.dataAsOf}>{radar.dataAsOf.slice(0, 10)}</time> : "Not published"}
-      {" · "}Retrieved / imported: <time dateTime={radar.fetchedAt}>{radar.fetchedAt.slice(0, 10)}</time></p>
+    <div className="player-radar-sample">
+      <p className="player-radar-population">{radar.cohort ? `Percentiles against ${radar.cohort.label}` : "Reference population unverified"}</p>
+      <p className="player-radar-context">{radar.competition} · {radar.period}</p>
+      <p className="player-radar-context">Data updated: {radar.dataAsOf ? <time dateTime={radar.dataAsOf}>{radar.dataAsOf.slice(0, 10)}</time> : "Not published"}
+        {" · "}Retrieved / imported: <time dateTime={radar.fetchedAt}>{radar.fetchedAt.slice(0, 10)}</time></p>
+    </div>
     {radar.stale ? <p className="player-radar-notice">Saved snapshot may be out of date. Its original retrieval date is shown above.</p> : null}
     {radar.warnings.length ? <ul className="player-radar-warnings">{radar.warnings.map((warning, i) => <li key={i}>{warning}</li>)}</ul> : null}
     {!complete ? <p className="player-radar-notice">{radar.axes.filter((axis) => axis.percentile !== null).length} of 7 metrics available. The polygon is hidden; all seven axes remain in the table.</p> : null}
     {comparison && !other ? <p className="player-radar-notice">These players cannot be overlaid: their comparison contexts differ.</p> : null}
+    <p className="player-radar-explanation">P80 means the published 80th percentile, not an 80% success rate. Minutes are sample context, not a radar metric.</p>
     <div className="player-radar-content">
       <figure className="player-radar-figure">
+        <p className="player-radar-scale">Percentile scale · 0 at centre · 100 at edge</p>
         <div className="player-radar-chart" role="img" aria-label={`Percentile radar for ${radar.player}${other ? ` and ${other.player}` : ""}. Scale 0 to 100. Exact values in the metric table.`}>
           <ResponsiveContainer width="100%" height="100%" minWidth={0}>
-            <RadarChart data={points} outerRadius="70%" startAngle={90} endAngle={-270} accessibilityLayer={false}>
+            <RadarChart data={points} outerRadius="58%" startAngle={90} endAngle={-270} accessibilityLayer={false}>
               <PolarGrid stroke="var(--fb-muted)" strokeOpacity={0.3} />
-              <PolarAngleAxis dataKey="label" tick={<AxisTick />} />
+              <PolarAngleAxis dataKey="label" tickSize={20} tick={<AxisTick />} />
               <PolarRadiusAxis domain={[0, 100]} ticks={[25, 50, 75, 100]} tick={{ fontSize: 10, fill: "var(--fb-muted)" }} axisLine={false} />
               {complete ? <Radar name={radar.player} dataKey="player" stroke="var(--fb-primary)" strokeWidth={2.5} fill="var(--fb-primary)" fillOpacity={0.13} isAnimationActive={false} /> : null}
               {other ? <Radar name={other.player} dataKey="comparison" stroke="var(--fb-secondary)" strokeWidth={2} strokeDasharray="6 4" fill="none" isAnimationActive={false} /> : null}
@@ -72,12 +76,13 @@ export function PlayerRadarPlot({ radar, comparison }: { radar: PlayerRadarDto; 
           <thead><tr><th scope="col">Metric</th><th scope="col">{other ? radar.player : "Percentile"}</th>{other ? <th scope="col">{other.player}</th> : null}</tr></thead>
           <tbody>{radar.axes.map((axis, i) => <tr key={axis.key}>
             <th scope="row">{axis.label}<small>{axis.definition}</small></th>
-            <td>{percentile(axis.percentile)}</td>{other ? <td>{percentile(other.axes[i].percentile)}</td> : null}
+            <td><span className="player-radar-value">{percentile(axis.percentile)}</span>
+              {axis.percentile !== null ? <span className="player-radar-meter" aria-hidden="true"><span style={{ width: `${axis.percentile}%` }} /></span> : null}
+            </td>{other ? <td>{percentile(other.axes[i].percentile)}</td> : null}
           </tr>)}</tbody>
         </table>
       </div>
     </div>
-    <p className="player-radar-explanation">P80 means the published 80th percentile, not an 80% success rate. Minutes are sample context, not a radar metric.</p>
     <details className="player-radar-methodology">
       <summary>Source and methodology</summary>
       <dl><div><dt>Source</dt><dd>{radar.source === "imported" ? "User-supplied import" : radar.source}</dd></div>

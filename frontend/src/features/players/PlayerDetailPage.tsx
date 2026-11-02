@@ -443,7 +443,7 @@ function PlayerDetailBody({ masterId }: PlayerDetailBodyProps) {
         <section className="player-detail-fantasy-overview" aria-labelledby="player-summary-fantasy-title">
           <div className="player-outlook-heading">
             <div>
-              <h2 id="player-summary-fantasy-title">Fantasy outlook</h2>
+              <h2 className="player-section-title" id="player-summary-fantasy-title">Fantasy outlook</h2>
               <p className="player-detail-context">Team role, starting estimates and recent form.</p>
             </div>
             <span className="player-outlook-source">FutbolFantasy</span>
@@ -456,7 +456,7 @@ function PlayerDetailBody({ masterId }: PlayerDetailBodyProps) {
         aria-busy={updatingPreviousDetail || undefined}>
         <div className="player-form-heading">
           <div>
-            <h2 id="player-form-title" tabIndex={-1}>Form — fixture stats</h2>
+            <h2 className="player-section-title" id="player-form-title" tabIndex={-1}>Form — fixture stats</h2>
             <p>A closer look at recent performances.</p>
           </div>
           <div className="player-detail-fixture-actions" role="group" aria-label="Fixture history length">
@@ -488,7 +488,7 @@ function PlayerDetailBody({ masterId }: PlayerDetailBodyProps) {
 
       <section className="player-detail-panel player-detail-section player-market-value-section" aria-labelledby="player-market-title"
         aria-busy={updatingPreviousDetail || undefined}>
-        <h2 id="player-market-title" tabIndex={-1}>Market value</h2>
+        <h2 className="player-section-title" id="player-market-title" tabIndex={-1}>Market value</h2>
         <div className="player-detail-market-presets" role="group" aria-label="Market value period">
           {MARKET_PRESETS.map((value) => (
             <button
