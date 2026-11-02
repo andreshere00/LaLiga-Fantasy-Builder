@@ -3,6 +3,7 @@
 import argparse
 import asyncio
 import json
+import re
 import sys
 from pathlib import Path
 
@@ -14,7 +15,7 @@ from fantasy_api.config import get_settings
 from fantasy_api.domain.errors import UpstreamError
 from fantasy_api.radar.audits import SupplyAudits
 from fantasy_api.radar.catalog import CatalogInventory, build_inventory, inventory_report
-from fantasy_api.radar.files import atomic_json, read_json
+from fantasy_api.radar.files import atomic_json, content_id, read_json
 from fantasy_api.radar.registry import IdentityRegistry, propose_identities
 from fantasy_api.radar.releases import (
     PublishedDataset,
@@ -23,7 +24,7 @@ from fantasy_api.radar.releases import (
     publisher_lock,
     rollback_release,
 )
-from fantasy_api.schemas.player_radar import RadarQuery, RadarStore
+from fantasy_api.schemas.player_radar import DataMBPlayer, RadarQuery, RadarStore
 from fantasy_api.services.radar_sync import compile_dataset, fetch_tasks, plan_tasks
 
 
@@ -59,6 +60,10 @@ def _parser() -> argparse.ArgumentParser:
     audit = sub.add_parser("audit", help="Verify supply permissions and seven-column captures")
     audit.add_argument("--audits", type=Path, required=True)
     audit.add_argument("--captures", type=Path, required=True)
+    capture = sub.add_parser("capture", help="Capture an observed DataMB profile for review")
+    capture.add_argument("--profile-key", required=True)
+    capture.add_argument("--season", required=True)
+    capture.add_argument("--output", type=Path, required=True)
     for command in ("plan", "fetch", "validate"):
         job = sub.add_parser(command)
         job.add_argument("--work-dir", type=Path, required=True)
@@ -99,8 +104,38 @@ async def _fetch(args: argparse.Namespace, tasks: list) -> dict[str, int]:
         await scraper.aclose()
 
 
+async def _capture(args: argparse.Namespace) -> dict[str, str]:
+    """Save a private-adapter capture without approving identity or publishing it."""
+    RadarQuery(season=args.season)
+    if not re.fullmatch(r"[A-Za-z0-9_-]{1,120}_stats", args.profile_key):
+        raise ValueError("invalid observed DataMB key")
+    if args.output.exists():
+        raise ValueError("capture already exists; use a new output path")
+    settings = get_settings()
+    scraper = ScrapingClient(
+        base_url=settings.scraping_base_url,
+        service_token=settings.scraping_service_token,
+        timeout_seconds=settings.scraping_timeout_seconds,
+    )
+    try:
+        payload = await scraper.get_json(
+            "/internal/radar/datamb",
+            {"profile_key": args.profile_key, "season": args.season},
+        )
+        row = DataMBPlayer.model_validate(payload)
+        if row.season != args.season:
+            raise ValueError("capture season mismatch")
+        value = row.model_dump(mode="json")
+        atomic_json(args.output, value)
+        return {"capture_hash": content_id(value), "output": str(args.output)}
+    finally:
+        await scraper.aclose()
+
+
 def _run(args: argparse.Namespace) -> dict:
     """Dispatch explicit operations without activating a provider or a scheduler."""
+    if args.command == "capture":
+        return asyncio.run(_capture(args))
     if args.command == "registry":
         registry = IdentityRegistry.model_validate(read_json(args.registry))
         return {"identities": len(registry.current()), "versions": len(registry.records)}

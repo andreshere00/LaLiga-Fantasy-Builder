@@ -38,6 +38,25 @@ and a hash-bound permitted capture. Never use example IDs as real identities.
 
 ## Explicit command sequence
 
+For a first isolated local radar, use the
+[activation plan](radar-first-live-plan.md). The
+[2026-11-02 local pilot results](radar-live-pilot-results.md) record six real
+captures and a local publication; they do not replace the wider acceptance gate
+or approve production scheduling.
+
+After reviewing access and explicitly enabling the private adapter, capture an
+already observed profile for semantic review (run from `backend/api`):
+
+```bash
+uv run fantasy-radar-sync capture --profile-key Pedri_Midfielder_stats --season 2026-27 --output /data/radar-review/captures/pedri-review.json
+```
+
+The command validates the response, saves JSON atomically and reports its semantic
+`capture_hash`. It refuses existing paths, uses the existing service token and
+adapter, and never approves identity, supply or publication. Run it with operator
+write access to the review directory, outside the job's read-only review mount.
+Use a new output path for each review; do not overwrite historical evidence.
+
 Run from `backend/api` with the reviewed manifests already on disk. Use the job
 container in production so newly created mode-0600 files belong to the same UID
 as the API. Host CLI execution requires a matching storage identity:

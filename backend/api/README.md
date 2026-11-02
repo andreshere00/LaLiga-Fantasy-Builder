@@ -138,6 +138,13 @@ A changed club does not rewrite identity history. Never infer provider URLs.
 
 ### Supply and role gates (phase 3)
 
+`fantasy-radar-sync capture --profile-key Pedri_Midfielder_stats --season 2026-27
+--output /path/to/captures/new-review.json` captures an observed profile through
+the enabled private adapter and prints the semantic hash for review. Existing
+paths are rejected. This operation does not approve supply or publish a radar.
+See the [local live pilot results](../../docs/scraping/radar-live-pilot-results.md)
+for the first six-role publication and remaining production gates.
+
 `fantasy-radar-sync audit --audits audits.json --captures captures/` verifies
 reviewed permission/discovery/definition decisions and immutable seven-column
 captures. Roles are approved per identity/season with exactly one stable default.

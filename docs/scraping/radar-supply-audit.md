@@ -3,6 +3,12 @@
 Reviewed 2026-11-01. The pipeline is implemented; no production supply is approved
 by this document. Synthetic fixtures validate software contracts only.
 
+Update 2026-11-02: a separate isolated local pilot captured all six roles with
+the existing adapter and published six real player snapshots. See
+[live results and exact source columns](radar-live-pilot-results.md).
+The table below records the pre-pilot production gate; bulk discovery, the wider
+acceptance pilot and a verified comparison population remain unresolved.
+
 The [official DataMB guide](https://datamb.football/guide/) was checked today:
 profiles cover the current season; data updates weekly; the current threshold
 for 2026/27 is 300 league minutes and increases during the season. The guide
