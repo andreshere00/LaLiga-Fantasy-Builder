@@ -49,6 +49,7 @@ test("radar loads independently, missing metrics hide its polygon, and failures 
     return route.fulfill({ json: response([sample]) });
   });
   await page.goto("/players/1");
+  await expect(page.locator(".player-profile-header")).toBeVisible();
   await expect(page.getByRole("heading", { name: "Performance profile", exact: true })).toBeAttached();
   await expect(page.getByRole("button", { name: "Load performance radar" })).toHaveCount(0);
   await page.getByRole("heading", { name: "Performance profile", exact: true }).scrollIntoViewIfNeeded();
@@ -70,6 +71,7 @@ test("a missing spoke is never drawn as zero", async ({ page }) => {
   Object.assign(sample.axes[0], { percentile: null, status: "not_published" });
   await page.route("**/api/players/1/stats/radar?*", (route) => route.fulfill({ json: response([sample]) }));
   await page.goto("/players/1");
+  await expect(page.locator(".player-profile-header")).toBeVisible();
   await page.getByRole("heading", { name: "Performance profile", exact: true }).scrollIntoViewIfNeeded();
   const table = page.getByRole("table", { name: "Percentiles for Pau Cubarsí" });
   await expect(table.getByRole("row")).toHaveCount(8);
@@ -111,9 +113,17 @@ for (const { theme, width } of [{ theme: "light", width: 375 }, { theme: "dark",
       }) });
     });
     await page.goto("/players/1");
-    await page.getByRole("navigation", { name: "Player sections" }).getByRole("link", { name: "Performance", exact: true }).focus();
+    await expect(page.locator(".player-profile-header")).toBeVisible();
+    const navigation = page.getByRole("navigation", { name: "Player sections" });
+    const overview = navigation.getByRole("link", { name: "Overview", exact: true });
+    await expect(navigation.getByRole("link", { name: "Performance", exact: true })).toHaveCount(0);
+    await overview.focus();
     await page.keyboard.press("Enter");
-    await expect(page.getByRole("heading", { name: "Performance profile", exact: true })).toBeFocused();
+    await expect(page.getByRole("heading", { level: 1, name: "Player 01", exact: true })).toBeFocused();
+    const radar = page.locator(".player-profile-header").getByRole("region", { name: "Performance profile", exact: true });
+    await expect(radar).toHaveCount(1);
+    await radar.scrollIntoViewIfNeeded();
+    await expect(overview).toHaveAttribute("aria-current", "location");
     await expect(page.getByRole("table", { name: "Percentiles for Pau Cubarsí", exact: true })).toBeVisible();
     await expect(page.getByRole("link", { name: "Preview the six supplied examples" })).toHaveCount(0);
     await expect(page.getByText("Data updated:")).toContainText("2026-10-11");
@@ -156,6 +166,7 @@ test("approved default role is selected, and definitive absence has no retry or 
     } : response([first, second], { coverage: { ...coverage(), default_profile: second.profile, available_profiles: [first.profile, second.profile] }, default_profile: second.profile }) });
   });
   await page.goto("/players/1");
+  await expect(page.locator(".player-profile-header")).toBeVisible();
   await page.getByRole("heading", { name: "Performance profile", exact: true }).scrollIntoViewIfNeeded();
   await expect(page.getByLabel("Radar profile")).toHaveValue(second.profile);
   await page.getByLabel("Radar profile").selectOption(first.profile);
@@ -180,6 +191,7 @@ test("coaches have no footballer radar or section link", async ({ page }) => {
   await page.route("**/api/players", (route) => route.fulfill({ json: catalog.map((p) => p.id === "1" ? { ...p, positionId: 5 } : p) }));
   await page.route("**/api/players/1/stats/detail?*", (route) => route.fulfill({ json: { ...detail, player: { ...detail.player, positionId: 5 } } }));
   await page.goto("/players/1");
+  await expect(page.locator(".player-profile-header")).toBeVisible();
   await expect(page.getByRole("heading", { name: "Form — fixture stats" })).toBeVisible();
   await expect(page.getByRole("heading", { name: "Performance profile", exact: true })).toHaveCount(0);
   await expect(page.getByRole("navigation", { name: "Player sections" }).getByRole("link", { name: "Performance", exact: true })).toHaveCount(0);
@@ -192,6 +204,7 @@ for (const theme of ["light", "dark"]) {
     await page.addInitScript((value) => localStorage.setItem("lfb-theme", value), theme);
     await page.route("**/api/players/1/stats/radar?*", (route) => route.fulfill({ json: response([comparable()]) }));
     await page.goto("/players/1");
+    await expect(page.locator(".player-profile-header")).toBeVisible();
     await page.getByRole("heading", { name: "Performance profile", exact: true }).scrollIntoViewIfNeeded();
     await expect(page.getByRole("table", { name: "Percentiles for Pau Cubarsí" })).toBeVisible();
     await page.evaluate(() => { document.documentElement.style.fontSize = "200%"; });

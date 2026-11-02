@@ -5,22 +5,20 @@ const SECTIONS = [
   { id: "player-overview", label: "Overview", icon: materialIconPaths.account_circle },
   { id: "player-form-title", label: "Form", icon: materialIconPaths.trending_up },
   { id: "player-market-title", label: "Market value", icon: materialIconPaths.euro_symbol },
-  { id: "player-radar-title", label: "Performance", icon: materialIconPaths.trending_up },
   { id: "player-matches-title", label: "Matches", icon: materialIconPaths.event },
   { id: "player-fantasy-title", label: "News & injuries", icon: materialIconPaths.assignment },
 ] as const;
 
 /** Native section links retain heading focus and track the current reading position. */
-export function PlayerSectionNavigation({ detailReady, showRadar = true }: { detailReady: boolean; showRadar?: boolean }) {
+export function PlayerSectionNavigation({ detailReady }: { detailReady: boolean }) {
   const navigation = useRef<HTMLElement>(null);
   const [current, setCurrent] = useState<string>(SECTIONS[0].id);
-  const sections = (detailReady ? SECTIONS : SECTIONS.slice(0, 3)).filter((s) => showRadar || s.id !== "player-radar-title");
+  const sections = detailReady ? SECTIONS : SECTIONS.slice(0, 3);
 
   useEffect(() => {
     const nav = navigation.current;
     if (!nav) return;
     const headings = (detailReady ? SECTIONS : SECTIONS.slice(0, 3))
-      .filter((s) => showRadar || s.id !== "player-radar-title")
       .map(({ id }) => document.getElementById(id))
       .filter((heading): heading is HTMLElement => heading != null);
     const header = document.querySelector(".app-header");
@@ -57,7 +55,7 @@ export function PlayerSectionNavigation({ detailReady, showRadar = true }: { det
       window.removeEventListener("hashchange", schedule);
       if (frame != null) cancelAnimationFrame(frame);
     };
-  }, [detailReady, showRadar]);
+  }, [detailReady]);
 
   useEffect(() => {
     const nav = navigation.current;

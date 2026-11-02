@@ -782,8 +782,8 @@ the visible page from the full matching set.
 
 ## Player performance radar
 
-Player profiles include an optional **Performance** section. **Load performance
-radar** starts a separate authenticated query, with identity/season/profile/dataset
+Player profiles include an optional **Performance profile** subsection in Overview.
+It loads a separate authenticated query on arrival, with identity/season/profile/dataset
 compatibility independent of the existing detail aggregate. Season changes never
 relabel old values as the newly selected season; same-selection refreshes can
 retain saved content and display failures. Comparison choices are server-validated
@@ -815,8 +815,9 @@ component does not scrape or calculate population percentiles in the browser.
 
 ### Published performance radars
 
-The player performance section reads independently when it enters the viewport
-or receives section-navigation focus. It also remains reachable when the detail
+The player performance radar sits below Fantasy outlook as a full-width subsection
+of Overview, sharing its panel and navigation selection. It reads independently
+when it enters the viewport or receives focus. It also remains reachable when the detail
 aggregate is loading or temporarily fails; confirmed missing players and coaches
 retain their own appropriate flow. Player/account changes reset selections.
 The reviewed default role is selected; multiple published roles remain selectable.

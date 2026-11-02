@@ -336,7 +336,7 @@ function PlayerDetailBody({ masterId }: PlayerDetailBodyProps) {
         <Link to={returnTo}>{returnTo === "/market" ? "Market" : "Players"}</Link>
         <span aria-hidden="true">/</span><span aria-current="page">{name}</span>
       </nav>
-      <PlayerSectionNavigation detailReady={detailReady} showRadar={positionId !== 5} />
+      <PlayerSectionNavigation detailReady={detailReady} />
       {detailQuery.isError ? (
         <div className="player-detail-panel player-detail-recovery">
           <p role="alert">Player data could not be updated. Previous results are still shown.</p>
@@ -370,7 +370,7 @@ function PlayerDetailBody({ masterId }: PlayerDetailBodyProps) {
         </div>
       ) : null}
 
-      <header className="player-detail-panel player-detail-header player-profile-header">
+      <section className="player-detail-panel player-detail-header player-profile-header" aria-labelledby="player-overview">
         <div className="player-detail-header-identity">
           <PlayerTile
             name={name}
@@ -450,7 +450,8 @@ function PlayerDetailBody({ masterId }: PlayerDetailBodyProps) {
           </div>
           <PlayerFantasySummary profile={profileBlock} />
         </section>
-      </header>
+        {radarSection}
+      </section>
 
       <section className="player-detail-panel player-detail-section player-form-section" aria-labelledby="player-form-title"
         aria-busy={updatingPreviousDetail || undefined}>
@@ -642,8 +643,6 @@ function PlayerDetailBody({ masterId }: PlayerDetailBodyProps) {
           </>
         )}
       </section>
-
-      {radarSection}
 
       {detailReady ? (
         <PlayerMatchesSection
