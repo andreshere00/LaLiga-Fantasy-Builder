@@ -186,6 +186,15 @@ freshness and are checked on reads, so a failed scheduler cannot serve indefinit
 
 ### Scheduling and operations (phase 7)
 
+For the active local Barcelona/Real Madrid scope, use
+`bash scripts/radar-weekly-local.sh` from the repository root (`--check` is offline).
+The `fantasy-radar-sync weekly` command enforces Wednesday in Europe/Madrid and
+one persisted attempt per ISO week, including failures, while fetching only the
+selected team IDs. `discover` produces a complete scoped review queue from
+observed URLs without automatically approving identities. See the
+[scoped discovery runbook](../../docs/scraping/radar-barcelona-madrid.md) for
+inputs, local recurrence, results and outstanding cases.
+
 Local and VM Compose provide an opt-in `radar-jobs` profile. Run the API-image
 `radar-job` with `--rm --no-deps -T`; its data mount is writable and its reviewed
 inputs are read-only. The API sees only the read-only data mount. Optional host

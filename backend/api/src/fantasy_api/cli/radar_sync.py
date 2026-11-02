@@ -15,6 +15,7 @@ from fantasy_api.config import get_settings
 from fantasy_api.domain.errors import UpstreamError
 from fantasy_api.radar.audits import SupplyAudits
 from fantasy_api.radar.catalog import CatalogInventory, build_inventory, inventory_report
+from fantasy_api.radar.discovery import DiscoveryManifest, discovery_report, weekly_slot
 from fantasy_api.radar.files import atomic_json, content_id, read_json
 from fantasy_api.radar.registry import IdentityRegistry, propose_identities
 from fantasy_api.radar.releases import (
@@ -64,16 +65,38 @@ def _parser() -> argparse.ArgumentParser:
     capture.add_argument("--profile-key", required=True)
     capture.add_argument("--season", required=True)
     capture.add_argument("--output", type=Path, required=True)
-    for command in ("plan", "fetch", "validate"):
+    discovery = sub.add_parser(
+        "discover", help="Account for scoped players and observed candidates"
+    )
+    discovery.add_argument("--work-dir", type=Path, required=True)
+    discovery.add_argument("--registry", type=Path, required=True)
+    discovery.add_argument("--observations", type=Path, required=True)
+    discovery.add_argument("--team-id", action="append", required=True)
+    for command in ("plan", "fetch", "validate", "weekly"):
         job = sub.add_parser(command)
         job.add_argument("--work-dir", type=Path, required=True)
         job.add_argument("--registry", type=Path, required=True)
         job.add_argument("--audits", type=Path, required=True)
         job.add_argument("--captures", type=Path, required=True)
-        if command == "fetch":
+        if command == "weekly":
+            job.add_argument("--root", type=Path, required=True)
+            job.add_argument("--team-id", action="append", required=True)
+            job.add_argument("--observations", type=Path, required=True)
+            job.add_argument(
+                "--weekday",
+                choices=("mon", "tue", "wed", "thu", "fri", "sat", "sun"),
+                default="wed",
+            )
+            job.add_argument("--check", action="store_true")
+        if command in ("fetch", "weekly"):
             job.add_argument("--imports", type=Path)
-            job.add_argument("--refresh-days", type=int, choices=range(1, 31), default=7)
-        if command == "validate":
+            job.add_argument(
+                "--refresh-days",
+                type=int,
+                choices=range(1, 31),
+                default=1 if command == "weekly" else 7,
+            )
+        if command in ("validate", "weekly"):
             job.add_argument("--stale-days", type=int, choices=range(1, 31), default=8)
             job.add_argument("--maximum-days", type=int, choices=range(1, 366), default=30)
     publish = sub.add_parser("publish", help="Promote an already validated dataset")
@@ -107,7 +130,7 @@ async def _fetch(args: argparse.Namespace, tasks: list) -> dict[str, int]:
 async def _capture(args: argparse.Namespace) -> dict[str, str]:
     """Save a private-adapter capture without approving identity or publishing it."""
     RadarQuery(season=args.season)
-    if not re.fullmatch(r"[A-Za-z0-9_-]{1,120}_stats", args.profile_key):
+    if not re.fullmatch(r"[A-Za-z0-9_-]{1,120}_stats[0-9]{0,3}", args.profile_key):
         raise ValueError("invalid observed DataMB key")
     if args.output.exists():
         raise ValueError("capture already exists; use a new output path")
@@ -134,6 +157,8 @@ async def _capture(args: argparse.Namespace) -> dict[str, str]:
 
 def _run(args: argparse.Namespace) -> dict:
     """Dispatch explicit operations without activating a provider or a scheduler."""
+    if args.command == "weekly":
+        return _weekly(args)
     if args.command == "capture":
         return asyncio.run(_capture(args))
     if args.command == "registry":
@@ -183,6 +208,15 @@ def _run(args: argparse.Namespace) -> dict:
         atomic_json(args.work_dir / "identity-review.json", proposals)
         return {"pending_review": len(proposals)}
     registry = IdentityRegistry.model_validate(read_json(args.registry))
+    if args.command == "discover":
+        result = discovery_report(
+            catalog,
+            registry,
+            DiscoveryManifest.model_validate(read_json(args.observations)),
+            set(args.team_id),
+        )
+        atomic_json(args.work_dir / "discovery.json", result)
+        return result
     audits = SupplyAudits.model_validate(read_json(args.audits))
     tasks = plan_tasks(catalog, registry, audits, args.captures)
     if args.command == "plan":
@@ -207,6 +241,67 @@ def _run(args: argparse.Namespace) -> dict:
         )
         atomic_json(args.work_dir / "validated.json", dataset.model_dump(mode="json"))
     return dataset.report
+
+
+def _weekly(args: argparse.Namespace) -> dict:
+    """Attempt one scoped refresh per Madrid week, only on the configured weekday."""
+    if args.stale_days >= args.maximum_days:
+        raise ValueError("stale threshold must precede maximum age")
+    week, allowed = weekly_slot(args.weekday)
+    state_path = args.work_dir / "weekly-attempt.json"
+    with publisher_lock(args.work_dir / "weekly-lock"):
+        state = read_json(state_path) if state_path.exists() else {}
+        due = allowed and state.get("week") != week
+        if args.check or not due:
+            return {"due": due, "week": week, "weekday": args.weekday, "previous": state}
+        # Claim before network access: even a failed run cannot cause repeated weekly downloads.
+        atomic_json(
+            state_path, {"week": week, "status": "started", "team_ids": sorted(set(args.team_id))}
+        )
+        previous = CatalogInventory.model_validate(read_json(args.work_dir / "catalog.json"))
+        catalog = build_inventory(
+            asyncio.run(_public_catalog()),
+            previous.season,
+            previous,
+            minimum_count=max(1, len(previous.players) * 9 // 10),
+        )
+        atomic_json(args.work_dir / "catalog.json", catalog.model_dump(mode="json"))
+        registry = IdentityRegistry.model_validate(read_json(args.registry))
+        audits = SupplyAudits.model_validate(read_json(args.audits))
+        discovery = discovery_report(
+            catalog,
+            registry,
+            DiscoveryManifest.model_validate(read_json(args.observations)),
+            set(args.team_id),
+        )
+        atomic_json(args.work_dir / "discovery.json", discovery)
+        tasks = plan_tasks(catalog, registry, audits, args.captures)
+        scoped_ids = {p.player_id for p in catalog.players if p.team_id in args.team_id}
+        counts = asyncio.run(_fetch(args, [t for t in tasks if t.identity.player_id in scoped_ids]))
+        dataset = compile_dataset(
+            catalog,
+            registry,
+            tasks,
+            args.work_dir,
+            stale_days=args.stale_days,
+            maximum_days=args.maximum_days,
+        )
+        release = publish_release(args.root, dataset)
+        failed = any(
+            counts.get(k)
+            for k in ("source_invalid", "source_unavailable", "quarantined", "missing_import")
+        )
+        result = {
+            "week": week,
+            "status": "partial" if failed else "complete",
+            "release_id": release,
+            "fetch": counts,
+            "accounted": discovery["accounted"],
+        }
+        atomic_json(state_path, result)
+        if failed:
+            raise ValueError("weekly source refresh incomplete; inspect checkpoints")
+        return result
 
 
 def main(argv: list[str] | None = None) -> int:

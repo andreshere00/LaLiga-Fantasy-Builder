@@ -25,7 +25,7 @@ class RoleAssignment(BaseModel):
     profile: ProfileId
     default: bool = False
     audit_id: str = Field(pattern=r"^[A-Za-z0-9_-]{1,100}$")
-    source_key: str | None = Field(default=None, pattern=r"^[A-Za-z0-9_-]{1,120}_stats$")
+    source_key: str | None = Field(default=None, pattern=r"^[A-Za-z0-9_-]{1,120}_stats[0-9]{0,3}$")
     evidence: str = Field(pattern=r"^https://[^\s]+$", max_length=1000)
     reviewed_at: AwareDatetime
     reviewer: str = Field(min_length=1, max_length=120)

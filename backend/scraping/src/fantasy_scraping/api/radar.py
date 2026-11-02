@@ -21,7 +21,7 @@ router = APIRouter(prefix="/internal/radar", dependencies=[Depends(require_servi
 @router.get("/datamb", response_model=DataMBPlayer, tags=["internal"])
 async def get_datamb_player(
     request: Request,
-    profile_key: str = Query(pattern=r"^[A-Za-z0-9_-]{1,120}_stats$"),
+    profile_key: str = Query(pattern=r"^[A-Za-z0-9_-]{1,120}_stats[0-9]{0,3}$"),
     season: str = Query(pattern=r"^20\d{2}-\d{2}$"),
 ) -> DataMBPlayer:
     """Read an allowed DataMB player profile only when explicitly enabled."""

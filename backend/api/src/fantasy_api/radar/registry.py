@@ -66,7 +66,7 @@ class IdentityDecision(BaseModel):
             if self.provider == "datamb":
                 import re
 
-                if not re.fullmatch(r"[A-Za-z0-9_-]{1,120}_stats", self.source_key or ""):
+                if not re.fullmatch(r"[A-Za-z0-9_-]{1,120}_stats[0-9]{0,3}", self.source_key or ""):
                     raise ValueError("invalid observed DataMB key")
                 url = f"https://datamb.football/{self.source_key}/"
                 if url not in self.evidence:

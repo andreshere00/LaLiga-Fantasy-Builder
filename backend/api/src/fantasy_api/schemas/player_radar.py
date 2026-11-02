@@ -154,7 +154,7 @@ class DataMBMapping(FlexibleModel):
 
     player_id: str = Field(pattern=r"^[0-9]{1,10}$")
     profile: ProfileId
-    profile_key: str = Field(pattern=r"^[A-Za-z0-9_-]{1,120}_stats$")
+    profile_key: str = Field(pattern=r"^[A-Za-z0-9_-]{1,120}_stats[0-9]{0,3}$")
     expected_name: str = Field(min_length=1, max_length=120)
     source_position: str = Field(min_length=1, max_length=40)
     source_labels: list[str] = Field(min_length=7, max_length=7)

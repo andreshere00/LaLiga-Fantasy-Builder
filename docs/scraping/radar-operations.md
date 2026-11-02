@@ -2,6 +2,12 @@
 
 Updated 2026-11-02.
 
+For the current Barcelona/Real Madrid expansion and its active Wednesday local
+recurrence, see the [scoped runbook](radar-barcelona-madrid.md). That path uses
+`weekly` with a durable attempt marker and explicit team IDs. The VM timers below
+remain a separate production deployment and have not been enabled by that local
+recurrence.
+
 The API serves a bounded immutable release. The browser does not start ingestion.
 All commands below are operational writes to radar storage; Fantasy account and
 market CLIs remain read-only. No provider or production timer is activated by

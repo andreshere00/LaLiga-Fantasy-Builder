@@ -23,7 +23,8 @@ def allowed_url(url: str) -> str:
         or parts.query
         or parts.fragment
         or not (
-            parts.path == "/robots.txt" or re.fullmatch(r"/[A-Za-z0-9_-]{1,120}_stats/", parts.path)
+            parts.path == "/robots.txt"
+            or re.fullmatch(r"/[A-Za-z0-9_-]{1,120}_stats[0-9]{0,3}/", parts.path)
         )
     ):
         raise HostNotAllowedError()

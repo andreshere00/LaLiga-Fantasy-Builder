@@ -240,3 +240,14 @@ def test_get_player_failed_refresh_retains_old_snapshot_with_explicit_stale():
         assert record.percentiles == old.percentiles
 
     asyncio.run(run())
+
+
+@pytest.mark.parametrize("key", ["J_Bellingham_Midfielder_stats1", "Test_stats999"])
+def test_allowed_url_observed_numeric_suffix_preserves_canonical_path(key):
+    assert allowed_url(f"{ORIGIN}/{key}/") == f"{ORIGIN}/{key}/"
+
+
+@pytest.mark.parametrize("key", ["Test_stats1000", "Test_stats1.csv", "Test_stats1?x=1"])
+def test_allowed_url_invalid_numeric_suffix_rejects(key):
+    with pytest.raises(HostNotAllowedError):
+        allowed_url(f"{ORIGIN}/{key}/")
