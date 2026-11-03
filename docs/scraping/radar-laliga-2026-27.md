@@ -36,6 +36,9 @@ minute count is not replaced with zero or labelled as insufficient minutes.
 Discovery used the active Fantasy roster, reviewed full-name aliases, and public
 search results containing observed DataMB URLs. The first pass covered all 571
 active IDs; a second surname/club pass addressed initials and abbreviated names.
+The November 3 expansion reviewed 70 operator-supplied IDs against rendered public
+club rosters and the site name search. These observed links supplement search
+engine results; URL slugs are never generated from names.
 No profile URL was generated from a name. No excluded CSV/XLSX feed, alternate-host
 mirror or robot bypass was used. Source failures stop an acquisition batch; a
 reviewed isolated stale/404 URL is not proof that the player has no data.
@@ -113,33 +116,42 @@ The following counts describe the local publication verified on 2026-11-03,
 not a live coverage guarantee. Use `report` for the current release. Unresolved
 profiles remain pending; search results do not establish complete coverage.
 
-Release: `de0bf5af50843426145f62cb8689eb19839079480578f481cc6320f11d637922` (dataset `7013a45c1c8daa1dd894b16e3d7b80c7f5f951e024226a88613c24d67ccda41d`). The release serves **267 players / 282 role snapshots**, across all 20 clubs. All served observations pass the season, league and active-membership checks; no minimum-minute cutoff applies.
+Release: `2c98a761e39f73428bba378c09a94fb7b43bb1321b533e5190488762c11b7eed` (dataset `93c2bc2510d9234d7e73bd7b88dbfab4e41deeb59a8a96b8692fcd5e3252255a`). The release serves **333 players / 348 role snapshots**, across all 20 clubs. All served observations pass the season, league and active-membership checks; no minimum-minute cutoff applies.
 
-Of 571 active roster IDs, **267 have verified published radars**, including the **26 previously excluded for fewer than 300 minutes**. The remaining **304 still have unknown minutes / unresolved source identity**. The other 270 historical/out-of-scope catalog entries are accounted for but not served. Unknown minutes do not prove ineligibility.
+Of 571 active roster IDs, **333 have verified published radars**, including the **26 previously excluded for fewer than 300 minutes**. The remaining **238 have unresolved source identity or acquisition**. The other 270 historical/out-of-scope catalog entries are accounted for but not served. Unknown minutes do not prove ineligibility.
 
 | Club | Active roster IDs | Players with published radars |
 | --- | --- | --- |
-| Athletic Club | 28 | 16 |
-| Atlético Madrid | 28 | 14 |
-| Barcelona | 28 | 13 |
-| Celta de Vigo | 27 | 16 |
-| Deportivo Alavés | 27 | 11 |
-| Deportivo La Coruña | 28 | 11 |
-| Elche | 29 | 12 |
-| Espanyol | 29 | 12 |
-| Getafe | 30 | 9 |
-| Levante | 27 | 10 |
-| Málaga | 30 | 12 |
-| Osasuna | 27 | 18 |
-| Racing Santander | 27 | 7 |
-| Rayo Vallecano | 33 | 17 |
-| Real Betis | 26 | 11 |
+| Athletic Club | 28 | 18 |
+| Atlético Madrid | 28 | 17 |
+| Barcelona | 28 | 17 |
+| Celta de Vigo | 27 | 19 |
+| Deportivo Alavés | 27 | 13 |
+| Deportivo La Coruña | 28 | 15 |
+| Elche | 29 | 18 |
+| Espanyol | 29 | 16 |
+| Getafe | 30 | 13 |
+| Levante | 27 | 16 |
+| Málaga | 30 | 16 |
+| Osasuna | 27 | 19 |
+| Racing Santander | 27 | 13 |
+| Rayo Vallecano | 33 | 18 |
+| Real Betis | 26 | 17 |
 | Real Madrid | 32 | 17 |
-| Real Sociedad | 27 | 17 |
-| Sevilla | 30 | 14 |
-| Valencia | 32 | 13 |
-| Villarreal | 26 | 17 |
+| Real Sociedad | 27 | 18 |
+| Sevilla | 30 | 16 |
+| Valencia | 32 | 18 |
+| Villarreal | 26 | 19 |
 
-Discovery recorded 329 distinct observed player profile URLs from the two search passes. Successful observations were acquired through the private DataMB adapter; review used master-ID full-name evidence and club/role context. No native comparison population was invented. The final ingestion reported 122 successful observations and 160 fresh checkpoints reused.
+The tracked discovery manifest now registers **367 distinct observed player profile URLs**. The November 3 review added 68 candidate references for the 70 requested master IDs; Osorio (`2922`) and Noubi (`2985`) already had published radars. **66 additional players** were captured, reviewed and published; **68 of the 70 requested players now have radars**. Isco and Sergio Canales use their explicitly linked midfielder profiles; Raphinha and Iñaki Williams use their observed striker profiles.
 
-Verification: all 267 real published players read successfully without source calls. All 26 previously excluded IDs are now served; their archived snapshot values and retrieval dates are preserved. Trent (`2531`, 285 minutes) and Álvaro Carreras (`2533`, 269 minutes) return available radars. The prior 300-minute release remains available for rollback.
+Two requested players remain pending because their observed public links returned HTTP 404. Their candidate URLs and review notes are retained; a broken link does not establish that the provider lacks statistics:
+
+| Player | Fantasy master ID | Observed DataMB profile | Result |
+| --- | --- | --- | --- |
+| Diego Villares | 2991 | [Midfielder](https://datamb.football/Diego_Villares_Midfielder_stats/) | HTTP 404; identity/acquisition pending |
+| Vanja Drkušić | 3177 | [Centre-back](https://datamb.football/V_Drku_i__Centre-back_stats/) | HTTP 404; identity/acquisition pending |
+
+Acquisition reused the existing robots-aware, rate-limited DataMB adapter. Static profile HTML sometimes reports different minutes or rounded percentiles from the operator's supplied tables. The publication retains the acquired HTML values and original retrieval timestamps, without substituting manually supplied numbers or claiming a source update date. Native comparison populations remain unverified.
+
+Verification: all **333 published players** read successfully through the radar service without source calls. The ingestion reused **282 fresh checkpoints** and created **66 successful checkpoints**; every previous snapshot retained its values and retrieval dates. All 26 previously restored IDs remain served, including Trent (`2531`, 285 minutes) and Álvaro Carreras (`2533`, 269 minutes). The prior 267-player release (`de0bf5af50843426145f62cb8689eb19839079480578f481cc6320f11d637922`) remains available for rollback.
