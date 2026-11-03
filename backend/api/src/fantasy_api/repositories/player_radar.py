@@ -1,4 +1,4 @@
-"""Read pinned local releases or explicitly configured transitional source mappings."""
+"""Read pinned local radar releases without provider access."""
 
 from __future__ import annotations
 
@@ -7,10 +7,8 @@ from datetime import UTC, datetime, timedelta
 from pathlib import Path
 from typing import TYPE_CHECKING
 
-from fantasy_api.clients.scraping import ScrapingClient
 from fantasy_api.domain.errors import UpstreamError
 from fantasy_api.radar.coverage import RadarCoverage
-from fantasy_api.radar.files import read_json
 from fantasy_api.schemas.player_radar import RadarSnapshot, RadarStore
 
 if TYPE_CHECKING:
@@ -18,35 +16,30 @@ if TYPE_CHECKING:
 
 
 class PlayerRadarRepository:
-    """Pin immutable local datasets; retain manual MVP mode as an explicit transition."""
+    """Read one immutable publication consistently throughout a request."""
 
     def __init__(
         self,
-        store_path: str,
-        scraper: ScrapingClient,
         *,
         dataset_root: str = "",
         stale_days: int = 8,
         maximum_days: int = 30,
         dataset: PublishedDataset | None = None,
     ) -> None:
-        self._path = Path(store_path) if store_path else None
         self._root = Path(dataset_root) if dataset_root else None
-        self._scraper = scraper
         self._dataset = dataset
         self._pinned_at = datetime.now(UTC)
         self._stale_days = stale_days
         self._maximum_days = maximum_days
-        self._observed: dict[tuple[str, str, str], RadarSnapshot] = {}
 
     @property
     def stale_hours(self) -> int:
-        """Use the weekly publication threshold only for pinned dataset mode."""
-        return self._stale_days * 24 if self._dataset else 72
+        """Use the configured publication freshness threshold."""
+        return self._stale_days * 24
 
     @property
     def published(self) -> bool:
-        """Distinguish weekly local publications from the transitional manual MVP mode."""
+        """Report whether a publication has been pinned."""
         return self._dataset is not None
 
     async def pin(self) -> PlayerRadarRepository:
@@ -58,8 +51,6 @@ class PlayerRadarRepository:
         try:
             dataset = await asyncio.to_thread(load_release, self._root)
             return PlayerRadarRepository(
-                "",
-                self._scraper,
                 dataset=dataset,
                 stale_days=self._stale_days,
                 maximum_days=self._maximum_days,
@@ -70,7 +61,7 @@ class PlayerRadarRepository:
             ) from None
 
     def _read_store(self) -> RadarStore:
-        """Validate configured input; published mode never reads provider mappings."""
+        """Apply freshness to the pinned publication without altering stored dates."""
         if self._dataset:
             current = self._pinned_at
             snapshots = [
@@ -84,19 +75,7 @@ class PlayerRadarRepository:
                 if current - s.fetched_at <= timedelta(days=self._maximum_days)
             ]
             return RadarStore(snapshots=snapshots)
-        if self._path is None:
-            return RadarStore()
-        try:
-            payload = read_json(self._path)
-            if not isinstance(payload, dict) or not {"snapshots", "datamb_mappings"}.intersection(
-                payload
-            ):
-                raise ValueError("unrecognized radar store")
-            return RadarStore.model_validate(payload)
-        except (OSError, ValueError):
-            raise UpstreamError(
-                "Radar dataset is unavailable or invalid", category="radar_dataset_invalid"
-            ) from None
+        return RadarStore()
 
     def coverage(self, player_id: str, season: str) -> RadarCoverage | None:
         """Return pinned coverage with elapsed-time expiration, without altering retrieval dates."""
@@ -151,16 +130,6 @@ class PlayerRadarRepository:
             and s.season == season
             and (profile is None or s.profile == profile)
         ]
-        for mapping in store.datamb_mappings:
-            if mapping.player_id != player_id or (profile and mapping.profile != profile):
-                continue
-            # The compatibility path remains explicit. Bulk publications never have mappings.
-            from fantasy_api.repositories.radar_manual import fetch_manual_mapping
-
-            row = await fetch_manual_mapping(self._scraper, mapping, season)
-            snapshots.append(row)
-            self._observed[(player_id, season, mapping.profile)] = row
-            seasons = sorted(set(seasons) | {season}, reverse=True)
         return snapshots, seasons
 
     async def comparison_snapshots(self, keys: set[str] | None = None) -> list[RadarSnapshot]:
@@ -169,4 +138,4 @@ class PlayerRadarRepository:
         if self._dataset and keys is not None:
             ids = {reference for key in keys for reference in self._dataset.index.get(key, [])}
             return [s for s in store.snapshots if f"{s.player_id}:{s.profile}" in ids]
-        return store.snapshots + list(self._observed.values())
+        return store.snapshots

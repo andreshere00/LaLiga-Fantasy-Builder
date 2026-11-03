@@ -143,7 +143,6 @@ services:
       SCRAPING_BASE_URL: ${SCRAPING_BASE_URL:-http://scraping:8002}
       SCRAPING_SERVICE_TOKEN: ${SCRAPING_SERVICE_TOKEN}
       RADAR_DATASET_ROOT: ""
-      RADAR_STORE_PATH: ""
     volumes:
       - "${RADAR_DATA_DIR:-./data/radar}:/data/radar"
       - "${RADAR_REVIEW_DIR:-./data/radar-review}:/data/radar-review:ro"

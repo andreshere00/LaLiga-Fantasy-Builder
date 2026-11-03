@@ -93,7 +93,7 @@ async def test_get_radar_publication_during_request_keeps_primary_and_comparison
     tmp_path, monkeypatch
 ):
     root, dataset = await published(tmp_path)
-    repository = PlayerRadarRepository("", AsyncMock(), dataset_root=str(root))
+    repository = PlayerRadarRepository(dataset_root=str(root))
     original = PlayerRadarRepository.get_snapshots
 
     async def swap(self, player_id, season, profile):
@@ -123,9 +123,10 @@ def test_get_radar_invalid_release_is_operational_error_not_empty_coverage(tmp_p
     assert str(tmp_path) not in result.text
 
 
-def test_settings_competing_store_modes_rejects():
-    with pytest.raises(ValueError, match="exclusive"):
-        Settings(_env_file=None, radar_store_path="manual.json", radar_dataset_root="published")
+@pytest.mark.parametrize("root", ["", "published"])
+def test_settings_retired_store_rejects(root):
+    with pytest.raises(ValueError, match="retired"):
+        Settings(_env_file=None, radar_store_path="manual.json", radar_dataset_root=root)
     with pytest.raises(ValueError, match="threshold"):
         Settings(_env_file=None, radar_stale_days=30, radar_maximum_days=8)
 
@@ -156,3 +157,8 @@ async def test_get_radar_expired_between_jobs_stops_serving_without_freshness_re
     assert result["coverage"]["reason_code"] == "expired"
     assert result["coverage"]["last_success_at"] is not None
     assert result["compatible_players"] == []
+
+
+def test_store_retired_mappings_rejects_without_provider_access():
+    with pytest.raises(ValueError, match="retired"):
+        RadarStore(datamb_mappings=[{"player_id": "1"}])

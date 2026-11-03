@@ -303,8 +303,6 @@ def build_container(
         ),
         player_radar_service=PlayerRadarService(
             PlayerRadarRepository(
-                cfg.radar_store_path,
-                scraper,
                 dataset_root=cfg.radar_dataset_root,
                 stale_days=cfg.radar_stale_days,
                 maximum_days=cfg.radar_maximum_days,

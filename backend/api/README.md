@@ -103,12 +103,11 @@ browser-session flow, source restrictions and optional explanation configuration
 
 ### Player radar datasets
 
-`RADAR_STORE_PATH` optionally points to a bounded, operator-managed JSON snapshot
-store. `GET /players/{id}/stats/radar` and
-`fantasy-player-stats --segment radar --season 2026-27` require only an application JWT, without LaLiga pairing.
-Unconfigured players return an honest unavailable state. For the file format,
-reviewed DataMB mappings and comparison rules, see
-[Players API](../../docs/api/players/README.md#role-specific-performance-radar).
+`RADAR_DATASET_ROOT` points to immutable published releases. Radar GET and CLI
+reads require an application JWT without LaLiga pairing and never fetch providers.
+`RADAR_STORE_PATH` is retired: ingest reviewed snapshots through the operational
+pipeline, validate and publish, then configure the release root. Legacy mappings
+cannot be read or silently converted into approved identities.
 
 ### Radar coverage inventory
 
@@ -184,7 +183,7 @@ validates an existing release before promotion. Keep old releases for recovery.
 ### Local published reads (phase 5)
 
 Set `RADAR_DATASET_ROOT=/data/radar/published` (API mount read-only). Leave
-`RADAR_STORE_PATH` unset; competing modes fail startup validation. The API pins
+`RADAR_STORE_PATH` unset; the retired setting fails startup validation. The API pins
 and validates one complete release for each radar request, including comparison
 and coverage. `RADAR_STALE_DAYS=8`, `RADAR_MAXIMUM_DAYS=30` control active-season
 freshness and are checked on reads, so a failed scheduler cannot serve indefinitely.

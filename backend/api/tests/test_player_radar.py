@@ -68,20 +68,61 @@ def snapshot(player_id="1", profile="midfielder_v1", **changes) -> RadarSnapshot
 
 def app_client(tmp_path: Path, rows=(), *, mappings=(), handler=None, raw=None):
     """Configure explicit storage; all HTTP remains deterministic MockTransport."""
-    file = tmp_path / "radars.json"
-    file.write_text(
-        raw
-        if raw is not None
-        else json.dumps(
-            {
-                "snapshots": [row.model_dump(mode="json") for row in rows],
-                "datamb_mappings": list(mappings),
-            }
-        )
+    from fantasy_api.radar.catalog import CatalogEntry, CatalogInventory
+    from fantasy_api.radar.coverage import RadarCoverage
+    from fantasy_api.radar.files import atomic_json, content_id
+    from fantasy_api.radar.releases import PublishedDataset
+    from fantasy_api.radar.views import comparison_index
+
+    entries = [
+        CatalogEntry(player_id=id, name=f"Player {id}", club="Test Club")
+        for id in sorted({r.player_id for r in rows} or {"1"})
+    ]
+    catalog = CatalogInventory(
+        snapshot_id=content_id([p.model_dump() for p in entries]),
+        season="2026-27",
+        fetched_at=NOW,
+        players=entries,
     )
+    coverage = [
+        RadarCoverage(
+            player_id=p.player_id,
+            season=catalog.season,
+            identity_status="matched",
+            data_status="ready" if rows else "not_published",
+            reason_code="ready" if rows else "not_published",
+            dataset_id="test",
+            catalog_snapshot_id=catalog.snapshot_id,
+            available_profiles=[r.profile for r in rows if r.player_id == p.player_id],
+        )
+        for p in entries
+    ]
+    dataset = PublishedDataset(
+        catalog=catalog,
+        store=RadarStore(snapshots=list(rows)),
+        coverage=coverage,
+        index=comparison_index(list(rows)),
+        report={
+            "dataset_id": "test",
+            "accounted": len(entries),
+            "catalog_snapshot_id": catalog.snapshot_id,
+        },
+    )
+    # Exercise backwards-compatible reads of a frozen pre-provenance release.
+    values = dataset.files()
+    values.pop("provenance.json")
+    hashes = {name: content_id(value) for name, value in values.items()}
+    release_id = content_id(hashes)
+    directory = tmp_path / "releases" / release_id
+    for name, value in values.items():
+        atomic_json(directory / name, value)
+    atomic_json(directory / "manifest.json", {"release_id": release_id, "files": hashes})
+    atomic_json(tmp_path / "current.json", {"release_id": release_id})
+    if raw is not None:
+        (tmp_path / "current.json").write_text(raw)
     cfg = Settings(
         _env_file=None,
-        radar_store_path=str(file),
+        radar_dataset_root=str(tmp_path),
         scraping_base_url="http://private",
         scraping_service_token=SecretStr("private-service-secret"),
     )
@@ -122,46 +163,6 @@ def test_build_radar_profile_keeps_seven_axes_and_context_separate(profile):
     assert all("minutes" not in axis.key for axis in record.axes)
     assert record.comparison_key is None
     assert record.position == PROFILES[profile].position
-
-
-def test_get_radar_datamb_mapping_validates_identity_labels_and_private_headers(tmp_path):
-    labels = [label for _, label, _ in PROFILES["midfielder_v1"].metrics]
-    mapping = dict(
-        player_id="1",
-        profile="midfielder_v1",
-        profile_key="Pedri_Midfielder_stats",
-        expected_name="Pedri",
-        source_position="Midfielder",
-        source_labels=labels,
-        identity_verified=True,
-    )
-
-    def handler(request):
-        assert request.url.path == "/internal/radar/datamb"
-        assert request.headers["X-Service-Token"] == "private-service-secret"
-        assert "Authorization" not in request.headers
-        assert request.url.params["season"] == "2026-27"
-        return httpx.Response(
-            200,
-            json=dict(
-                name="Pedri",
-                club="Barcelona",
-                league="La Liga",
-                age=23,
-                position="Midfielder",
-                season="2026-27",
-                minutes=769,
-                percentiles=[44.3, 55.7, 63.9, 87.9, 59.4, 84.8, 97.1],
-                metric_labels=labels,
-                fetched_at=NOW.isoformat(),
-            ),
-        )
-
-    with app_client(tmp_path, mappings=[mapping], handler=handler) as client:
-        response = client.get(URL, headers=AUTH)
-    assert response.status_code == 200
-    assert response.json()["radars"][0]["axes"][-1]["percentile"] == 97.1
-    assert "private-service-secret" not in response.text
 
 
 # ---- Error paths ---- #
@@ -254,41 +255,6 @@ def test_store_duplicate_or_mislabelled_profiles_rejects_ambiguous_data():
     data["profile"] = "defense_fullback_v1"
     with pytest.raises(ValidationError):
         RadarSnapshot.model_validate(data)
-
-
-@pytest.mark.parametrize(
-    "status,body",
-    [
-        (200, {"unexpected": "provider-secret"}),
-        (200, "not-json-provider-secret"),
-        (403, {"secret": "provider-secret"}),
-        (429, {"secret": "provider-secret"}),
-        (503, {"secret": "provider-secret"}),
-    ],
-)
-def test_get_radar_bad_provider_response_is_sanitized(tmp_path, status, body):
-    mapping = dict(
-        player_id="1",
-        profile="midfielder_v1",
-        profile_key="Pedri_Midfielder_stats",
-        expected_name="Pedri",
-        source_position="Midfielder",
-        source_labels=[label for _, label, _ in PROFILES["midfielder_v1"].metrics],
-        identity_verified=True,
-    )
-
-    def handler(request):
-        return (
-            httpx.Response(status, json=body)
-            if not isinstance(body, str)
-            else httpx.Response(status, text=body)
-        )
-
-    with app_client(tmp_path, mappings=[mapping], handler=handler) as client:
-        response = client.get(URL, headers=AUTH)
-    assert response.status_code in {502, 503}
-    assert "provider-secret" not in response.text
-    assert "private-service-secret" not in response.text
 
 
 def test_build_radar_extra_input_cannot_override_derived_fields():

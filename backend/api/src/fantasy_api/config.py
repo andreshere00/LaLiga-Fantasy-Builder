@@ -46,8 +46,10 @@ class Settings(BaseSettings):
     @model_validator(mode="after")
     def _radar_configuration(self) -> Settings:
         """Keep source modes explicit and require ordered freshness thresholds."""
-        if self.radar_store_path and self.radar_dataset_root:
-            raise ValueError("radar store modes are mutually exclusive")
+        if self.radar_store_path:
+            raise ValueError(
+                "RADAR_STORE_PATH is retired; ingest reviewed snapshots and set RADAR_DATASET_ROOT"
+            )
         if self.radar_stale_days >= self.radar_maximum_days:
             raise ValueError("radar stale threshold must precede maximum age")
         return self

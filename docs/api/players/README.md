@@ -171,11 +171,10 @@ A failed comparator preserves the primary radar and supplies `comparison_reason`
 Unknown populations, incomplete metrics and insufficient documented minutes have
 no comparison key. Same position alone does not establish compatibility.
 
-Configure `RADAR_STORE_PATH` with an operator-managed UTF-8 JSON file containing
-`snapshots` and/or `datamb_mappings`. The API revalidates it on reads, enforces a
-5 MiB cap and rejects duplicates. Use atomic file replacement for updates. The
-file is durable input, not a public write endpoint or an identity database.
-No store is configured by default; no source is automatically activated.
+Configure `RADAR_DATASET_ROOT` to read immutable publications. GET never accesses
+DataMB. `RADAR_STORE_PATH` is retired and a nonempty value fails startup with a
+migration message. Import snapshots through the reviewed ingestion pipeline;
+then validate, publish and point the API at the release directory.
 
 An imported snapshot has this structure (ID `1` is illustrative; replace it with
 a verified Fantasy master ID before use):
@@ -207,16 +206,9 @@ actual source population, position and season. A cohort does not become LaLiga
 merely because the player plays there. Changing definitions, source recipe,
 population reference or period invalidates comparison compatibility.
 
-To use DataMB, configure `SCRAPING_BASE_URL`/`SCRAPING_SERVICE_TOKEN`, enable
-`DATAMB_ENABLED=true` on scraping, and add reviewed `datamb_mappings` to the store.
-Each mapping requires `player_id`, `profile`, `profile_key`, `expected_name`,
-`source_position`, the seven exact ordered `source_labels`, and
-`identity_verified: true`; `cohort` is optional. For example, the observed Pedri
-profile key is `Pedri_Midfielder_stats`; its source labels are `Duels won %`,
-`Possessions won`, `Progressive carries`, `Forward passes completed`,
-`Forward pass completion %`, `Key passes`, `Progressive passes completed`.
-Do not infer other identities or source labels from player names. A mapping and
-an imported snapshot cannot compete for the same player/profile.
+DataMB acquisition runs only through reviewed identity records and supply audits
+in `fantasy-radar-sync`. Configure the private scraping service there; mappings
+in read stores are rejected, including in legacy releases.
 
 The reviewed DataMB adapter validates identity, source position, labels and
 season. A source profile is current-season data, not a historical API: a season
@@ -239,7 +231,7 @@ selections fail before login. `--segment all` retains its existing scope.
 ### Published catalog coverage
 
 Set `RADAR_DATASET_ROOT` to the durable publisher root to serve immutable local
-releases. It is mutually exclusive with the transitional `RADAR_STORE_PATH` mode.
+releases. The retired `RADAR_STORE_PATH` setting must be unset.
 A request pins `current.json` once: primary values, coverage and comparison all
 come from that release. Published reads never contact scraping or LaLiga.
 The persistent comparison index survives worker restarts and previous visits.
@@ -256,5 +248,5 @@ Published freshness is configurable with `RADAR_STALE_DAYS=8` and
 `RADAR_MAXIMUM_DAYS=30`. Expiration is checked again on reads, even if the job
 stopped running. Expired observations remain archived on disk; they are excluded
 from active radars and comparison candidates. Reads never renew a source date.
-The manual MVP path retains its existing 72-hour warning during migration.
+All API reads use the configured publication freshness thresholds.
 `compatible_players` now includes the snapshot club for understandable searching.

@@ -149,34 +149,20 @@ class RadarResponse(FlexibleModel):
     comparison_reason: str | None = None
 
 
-class DataMBMapping(FlexibleModel):
-    """Operator-reviewed identity and column mapping; never derived from fuzzy names."""
-
-    player_id: str = Field(pattern=r"^[0-9]{1,10}$")
-    profile: ProfileId
-    profile_key: str = Field(pattern=r"^[A-Za-z0-9_-]{1,120}_stats[0-9]{0,3}$")
-    expected_name: str = Field(min_length=1, max_length=120)
-    source_position: str = Field(min_length=1, max_length=40)
-    source_labels: list[str] = Field(min_length=7, max_length=7)
-    identity_verified: Literal[True]
-    cohort: RadarCohort | None = None
-
-
 class RadarStore(FlexibleModel):
     """Explicit configured datasets; never ships sample identities into player profiles."""
 
     snapshots: list[RadarSnapshot] = Field(default_factory=list, max_length=10000)
-    datamb_mappings: list[DataMBMapping] = Field(default_factory=list, max_length=2000)
+    datamb_mappings: list[dict] = Field(default_factory=list, max_length=2000)
 
     @model_validator(mode="after")
     def validate_unique(self) -> RadarStore:
         """Reject ambiguous active records and competing sources for the same profile."""
         keys = [(s.player_id, s.season, s.profile) for s in self.snapshots]
-        mapping_keys = [(m.player_id, m.profile) for m in self.datamb_mappings]
-        if len(keys) != len(set(keys)) or len(mapping_keys) != len(set(mapping_keys)):
+        if self.datamb_mappings:
+            raise ValueError("request-time mappings are retired; use reviewed ingestion")
+        if len(keys) != len(set(keys)):
             raise ValueError("duplicate radar identity")
-        if any((s.player_id, s.profile) in mapping_keys for s in self.snapshots):
-            raise ValueError("ambiguous radar source")
         return self
 
 
