@@ -17,6 +17,10 @@ Parser detail: [parser.md](parser.md). Selector contract (fixture + live):
 Player identity coverage, name variants, collisions and regeneration:
 [player-aliases.md](player-aliases.md).
 
+Radar ingestion and publication: [operations runbook](radar-operations.md).
+Current selection, coverage and weekly discovery:
+[LaLiga 2026/27](radar-laliga-2026-27.md).
+
 ## Compose networking
 
 | Network | Scraping |
@@ -132,3 +136,34 @@ Run and test: [backend/scraping/README.md](../../backend/scraping/README.md).
 
 Injury history includes `coverage`, `parsedRows` and `droppedRows`; unparsed rows
 prevent complete coverage. The verified `arrow-5` form class maps to `very_bad`.
+
+## Optional DataMB radar adapter
+
+`GET /internal/radar/datamb?profile_key=Pedri_Midfielder_stats&season=2026-27`
+requires `X-Service-Token` and explicit `DATAMB_ENABLED=true` (disabled by default).
+It returns a typed seven-percentile `DataMBPlayer`, not HTML. API-side reviewed
+mappings verify source identity, position and exact ordered column labels before
+attaching a snapshot to a Fantasy master ID.
+
+The adapter only reads allowed HTTPS `*_stats/` profile pages and robots.txt.
+It never downloads CSV/XLSX datasets, follows redirects, evaluates JavaScript,
+uses a browser to bypass blocking, or inherits FutbolFantasy's request budget.
+Its separate client uses one concurrent request, burst one, an initial five-second
+interval and no automatic retry; robots and the shared breaker remain enforced.
+These are conservative application settings, not a provider-authorized quota.
+
+The parser reads a bounded static JS string with explicit escapes, the single CSV
+row, and the exact fifteen-column header array. Dynamic expressions, interpolation,
+changed labels/schema, invalid fractions or a different season fail explicitly.
+It converts the documented 0–1 fractions once to 0–100. Cache is bounded to 256
+profiles for 24 hours, coalesced by the provider lock, and remains in memory;
+restarts clear it. A failed refresh can return the last valid cached snapshot
+for up to seven days, explicitly marked `stale`; invalid data is never cached.
+Use the reviewed ingestion pipeline and immutable releases for durable data;
+authorized imports are also supported. Historical ingestion and a complete
+population feed are not enabled.
+
+See [radar setup and API contract](../api/players/README.md#role-specific-performance-radar)
+and [operations runbook](radar-operations.md). Enabling acquisition requires
+reviewed access, observed profile URLs, identity evidence and exact metric audits.
+Native DataMB reference populations remain unverified, so comparisons stay disabled.

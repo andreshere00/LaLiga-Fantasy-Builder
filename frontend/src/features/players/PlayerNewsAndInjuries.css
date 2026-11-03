@@ -1,11 +1,5 @@
 .player-updates-heading { margin-bottom: 28px; }
-.player-updates-heading h2 {
-  margin: 0 0 6px;
-  padding-left: 12px;
-  border-left: 3px solid var(--fb-primary);
-  font: 400 24px/1.3 Anton, sans-serif;
-  color: var(--fb-tertiary);
-}
+
 .player-updates-heading > p { margin: 0; color: var(--fb-muted); font-size: 13px; }
 .player-updates-layout { display: grid; grid-template-columns: minmax(0, 1.4fr) minmax(0, 1fr); align-items: start; gap: 32px; }
 .player-updates-news, .player-updates-injuries { min-width: 0; }

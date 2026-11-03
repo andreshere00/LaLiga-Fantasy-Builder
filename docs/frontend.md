@@ -779,3 +779,78 @@ section, without duplicating them under Actions. Ownership has its own full-widt
 line on phones to keep larger avatars and long manager names together. Tablet
 retains all catalog columns through horizontal scrolling. Filtered counts and pagination distinguish
 the visible page from the full matching set.
+
+## Player performance radar
+
+Player profiles include an optional **Performance profile** subsection in Overview.
+It loads a separate authenticated query on arrival, with identity/season/profile/dataset
+compatibility independent of the existing detail aggregate. Player panels are
+pinned to 2026/27 and have no season selector; same-selection refreshes can
+retain saved content and display failures. Comparison choices are server-validated
+known compatible snapshots, with a maximum of two outlines.
+
+The shared Recharts view renders the seven fixed role axes on a 0–100 scale,
+accompanied by an accessible table and source/population details. Minutes are raw
+sample context. Missing spokes retain their table row and hide the polygon;
+zero is valid. Source failure does not block the rest of the player profile.
+
+The six supplied role examples live in `frontend/test/fixtures/player-radars.json`
+for shared Python/frontend contract tests and mocked browser tests of real player
+pages. These synthetic test records are never bundled as a product preview or
+assigned to live Fantasy profiles. Their populations remain unverified.
+
+To regenerate/check the exact 42 supplied percentiles from the repository root:
+
+```bash
+PYTHONPATH=backend/api/src backend/api/.venv/bin/python scripts/generate-radar-examples.py
+PYTHONPATH=backend/api/src backend/api/.venv/bin/python scripts/generate-radar-examples.py --check
+```
+
+Frontend Zod validation checks season, profile/position, fixed metric order,
+percentile bounds, missing-value status and comparison consistency. Python and
+frontend retain a contract test over all six profile definitions. The production
+component does not scrape or calculate population percentiles in the browser.
+
+### Published performance radars
+
+The player performance radar sits below Fantasy outlook as a full-width subsection
+of Overview, sharing its panel and navigation selection. It reads independently
+when it enters the viewport or receives focus. It also remains reachable when the detail
+aggregate is loading or temporarily fails; confirmed missing players and coaches
+retain their own appropriate flow. Player/account changes reset selections.
+The reviewed default role is selected; multiple published roles remain selectable. Within
+Overview the main header owns the player's name, club, Fantasy position and age
+when a birth date is available. Age uses the current date in Europe/Madrid. The
+embedded radar shows the performance role, league and sample minutes; it
+omits a single-player legend and keeps its table caption available to assistive
+technology. Standalone previews and independent fallback radars retain identity.
+
+The performance toolbar places optional role and refresh alongside the
+section title on desktop, stacking on mobile. A quiet chart surface balances the
+metric table; population status stays visible in a compact information label.
+Source and methodology groups provenance, dates and a reading guide in a native
+keyboard-accessible disclosure with three separated columns on desktop and
+stacked groups on mobile. Provider methods use product labels rather than
+recipe IDs. Retrieval and provider-update dates are distinct; an unknown update
+is explicitly marked as not provided. Population uncertainty remains visible
+beside the graph, and raw values are never inferred from percentiles.
+
+When the API confirms no published radar for the selection, the entire subsection
+is omitted, including its heading, controls and absence message. Partial profiles
+with available data remain visible. Errors retry the local API only. Available data
+stays visible on refresh failure. The data date and retrieval date appear in
+Source and methodology. No overall score or invented values are derived from the polygon.
+
+Comparison search is limited to compatible published candidates, with name,
+club and role. Native input/buttons support keyboard and touch, show empty search
+results and retain input during refresh. An overlay uses its primary from the
+same pinned server response. Changing role clears comparison explicitly;
+removing a comparison returns focus to its disclosure. Exact values remain in
+the table; missing axes hide the polygon, and a real zero remains visible.
+
+Validation of this flow uses synthetic browser fixtures: section navigation and
+keyboard selection, same-release overlays, failed background updates, default
+roles, explicit absence, coaches, missing metrics and independent detail failure.
+Phone/desktop and light/dark screenshots are inspected. Reflow is checked at
+320 CSS pixels with 200% text sizing; this is not a certification of accessibility
+or a study with representative users.

@@ -8,7 +8,18 @@ for (const { theme, width } of [{ theme: "light", width: 1440 }, { theme: "dark"
     await page.addInitScript((value) => localStorage.setItem("lfb-theme", value), theme);
     await page.goto("/players/1");
     await expect(page.getByRole("heading", { name: "Fantasy outlook", exact: true })).toBeVisible();
+    await expect(page.locator(".player-detail-header-facts")).toContainText("29 years old");
     await page.evaluate(() => document.fonts.ready);
+    // The unavailable radar may disappear after its lazy query resolves.
+    // Every persistent peer section shares the same visual hierarchy.
+    const headings = page.locator(".player-detail-page h2").filter({ hasNotText: "Performance profile" });
+    await expect(headings).toHaveCount(6);
+    const headingStyles = await headings.evaluateAll((elements) => elements.map((element) => {
+      const style = getComputedStyle(element);
+      return [style.font, style.color, style.letterSpacing, style.textTransform,
+        style.padding, style.borderLeft, style.borderBottom, style.margin].join(";");
+    }));
+    expect(new Set(headingStyles).size).toBe(1);
     expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
     await page.screenshot({ path: info.outputPath(`player-overview-${theme}-${width}.png`) });
 
@@ -135,7 +146,7 @@ test("partial failures preserve useful sections and can be retried", async ({ pa
     ],
   } }));
   await page.goto("/players/1");
-  await expect(page.getByRole("status")).toContainText("Some player data is unavailable.");
+  await expect(page.getByRole("status").filter({ hasText: "Some player data is unavailable." })).toBeVisible();
   await expect(page.getByText("Recent matches are temporarily unavailable.", { exact: true })).toBeVisible();
   await expect(page.getByText("No recent matches available.", { exact: true })).toHaveCount(0);
   await expect(page.getByRole("radiogroup", { name: "Fixture performance" }).getByRole("radio")).toHaveCount(3);

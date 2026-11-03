@@ -39,7 +39,7 @@ export const detail = {
   recent: { ...envelope, matches: [{ fixture: match, minutes: { minutes: 90 }, fantasyPointsTotal: 8 }] },
   upcoming: { ...envelope, matches: [{ fixture: { ...match, date: "2026-10-15T18:00:00Z", homeScore: null, awayScore: null, result: null },
     kickoff: "2026-10-15T18:00:00Z", weather: { reason: "beyond_forecast_horizon" }, travel: {} }] },
-  profile: { ...envelope, injury: { availabilityText: "Available" }, form: { rating: "good", value: 6 },
+  profile: { ...envelope, birthDate: "1996-12-14", injury: { availabilityText: "Available" }, form: { rating: "good", value: 6 },
     startProbability: { percent: 85, matchweek: 8 }, injuryRisk: { level: "low" }, maxProfitableBid: {},
     hierarchy: { label: "Key" }, averages: ["DE", "PI", "BR", "-Pos", "S", "GC"].map((code, index) => ({ code, label: ["Effective clearances", "Interceptions", "Balls recovered", "Possessions lost", "Saves", "Goals conceded"][index], value: index + 0.5 })),
     news: Array.from({ length: 21 }, (_, index) => ({ title: "Training report " + (index + 1) + ": a longer headline to check wrapping and source attribution",
@@ -61,6 +61,8 @@ export async function mockApplication(page: Page, { rankingSize = 2 } = {}) {
     let body: unknown;
     if (p === "/auth/get-session") body = { user: { id: "demo", name: "Demo Manager", email: "demo@example.com", emailVerified: true, createdAt: "2026-10-12T12:00:00Z", updatedAt: "2026-10-12T12:00:00Z" }, session: { id: "fixture-session", userId: "demo", token: "synthetic-session", expiresAt: "2026-10-13T12:00:00Z", createdAt: "2026-10-12T12:00:00Z", updatedAt: "2026-10-12T12:00:00Z" } };
     else if (p === "/auth/token") body = { token: `fixture.${Buffer.from(JSON.stringify({ sub: "demo", iat: 1791806400, exp: 1791807300 })).toString("base64url")}.signature` };
+    else if (p === "/laliga/link-options") body = { browserAvailable: false, manualAvailable: false,
+      helperAvailable: false, helperPlatforms: [], userId: "demo", email: "demo@example.com", name: "Demo Manager" };
     else if (p === "/laliga/connection") body = { linked: true, needsReauth: false, managerId: "demo", managerName: "Demo Manager", avatar: null };
     else if (!p.startsWith("/api/")) return route.continue();
     else if (request.method() !== "GET") body = p.includes("lineup") ? lineup : { ok: true, id: "fixture-bid" };
@@ -96,6 +98,11 @@ export async function mockApplication(page: Page, { rankingSize = 2 } = {}) {
         }] : [],
       };
     }
+    else if (p.endsWith("/stats/radar")) body = {
+      player_id: p.split("/")[3], season: url.searchParams.get("season"), available_seasons: [],
+      status: "unavailable", reason: null, radars: [], compatible_players: [], comparison: null,
+      comparison_reason: null,
+    };
     else if (p.endsWith("/stats/detail")) body = detail;
     else if (p.endsWith("/market-value")) body = [{ date: "2026-10-07", marketValue: 2000000 }, { date: "2026-10-12", marketValue: 2100000 }];
     else if (p.includes("/players/") && p.includes("/league/")) body = slots[0];

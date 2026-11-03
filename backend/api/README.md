@@ -100,3 +100,114 @@ cd backend/api && uv run pytest --cov=src --cov-report=term-missing --cov-fail-u
 
 See the [lineup builder guide](../../docs/api/lineup-builder.md) for the authenticated planning POST, CLI,
 browser-session flow, source restrictions and optional explanation configuration.
+
+### Player radar datasets
+
+`RADAR_DATASET_ROOT` points to immutable published releases. Radar GET and CLI
+reads require an application JWT without LaLiga pairing and never fetch providers.
+`RADAR_STORE_PATH` is retired: ingest reviewed snapshots through the operational
+pipeline, validate and publish, then configure the release root. Legacy mappings
+cannot be read or silently converted into approved identities.
+
+### Radar coverage inventory
+
+`fantasy-radar-sync inventory --season 2026-27 --work-dir /data/radar/staging`
+reads the public catalog through `PlayersRepository`, without login or a LaLiga
+bearer. `--catalog full-catalog.json` runs offline. Set `--minimum-count` to the
+expected catalog lower bound for the first run. Subsequent runs reject removals
+of over 10% unless reviewed with `--allow-large-removal`. All numeric master IDs
+are retained; coaches are excluded explicitly, unknown positions need review.
+The command writes an inventory, coverage entries and a JSON change/count report.
+Departures remain archived; invalid input never replaces the previous inventory.
+See the [current coverage runbook](../../docs/scraping/radar-laliga-2026-27.md).
+
+### Reviewed radar identities
+
+`fantasy-radar-sync candidates --work-dir /data/radar/staging --aliases names.json`
+exports name evidence by exact Fantasy ID, without approving any external link.
+`names.json` is an offline export (the existing `player_names.json` may be used);
+FutbolFantasy aliases never prove a DataMB identity. The generated review queue
+keeps homonyms separate and leaves provider keys empty.
+
+`fantasy-radar-sync registry --registry registry.json` validates append-only
+identity decisions. Each master ID/season has increasing versions and one latest
+state (`pending_review`, `matched`, `ambiguous`, `not_found`). Matches require a
+reviewer, date, observed source key, expected name, validity start and evidence.
+A changed club does not rewrite identity history. Never infer provider URLs.
+
+### Supply and role gates
+
+`fantasy-radar-sync capture --profile-key Pedri_Midfielder_stats --season 2026-27
+--output /path/to/captures/new-review.json` captures an observed profile through
+the enabled private adapter and prints the semantic hash for review. Existing
+paths are rejected. This operation does not approve supply or publish a radar.
+See the [operations runbook](../../docs/scraping/radar-operations.md)
+for capture review and production gates.
+
+`fantasy-radar-sync audit --audits audits.json --captures captures/` verifies
+reviewed permission/discovery/definition decisions and immutable seven-column
+captures. Roles are approved per identity/season with exactly one stable default.
+Six synthetic role tests establish contract behavior, not real supply approval.
+All six roles have reviewed local captures. DataMB remains opt-in; production
+activation requires the [operational gates](../../docs/scraping/radar-operations.md#pilot-and-api-cutover).
+
+### Resumable radar publication
+
+The operational CLI separates `plan`, `fetch`, `validate`, `publish`, `report`
+and `rollback`. For plan/fetch/validate, supply `--work-dir`, `--registry`,
+`--audits` and `--captures`. Each operation revalidates approvals and captured
+column contracts; only `fetch` contacts the private scraping adapter. For an
+authorized offline feed, use `fetch --imports snapshots.json`. Imported records
+must match approved identity, role, recipe, source columns and cohort.
+
+Checkpoints are keyed by reviewed inputs and preserve valid observations after
+failures. Fresh records are skipped (default seven days); schema/identity failures
+are quarantined until the review changes. Blocking/unavailable responses stop
+the batch. Source timestamps are retained, including stale adapter cache hits.
+`fetch` prints its counts and exits nonzero for source errors, quarantined tasks,
+missing imports or stale cache fallbacks, so scheduled refresh scripts stop before
+publication. Stale fallbacks count as `cached_stale`, never `success`. The weekly
+command may publish retained valid data but records `partial` and exits nonzero
+when any refresh is incomplete; the once-per-week attempt guard still applies.
+The semantic observation ID excludes retrieval timestamps and operational flags.
+
+`validate` writes `validated.json`; it includes every catalog footballer in its
+coverage denominator and distinguishes unknown eligibility from low minutes.
+`publish --validated /data/staging/validated.json --root /data/published` validates
+bounded files and checksums before atomically replacing `current.json`. Releases
+contain catalog, radar store, coverage, comparison index, report and manifest.
+Cross-process locks exclude simultaneous writers; API storage is read-only.
+`report --root ...` reads the active report; `rollback --root ... --release-id ...`
+validates an existing release before promotion. Keep old releases for recovery.
+
+### Local published reads (phase 5)
+
+Set `RADAR_DATASET_ROOT=/data/radar/published` (API mount read-only). Leave
+`RADAR_STORE_PATH` unset; the retired setting fails startup validation. The API pins
+and validates one complete release for each radar request, including comparison
+and coverage. `RADAR_STALE_DAYS=8`, `RADAR_MAXIMUM_DAYS=30` control active-season
+freshness and are checked on reads, so a failed scheduler cannot serve indefinitely.
+
+### Scheduling and operations (phase 7)
+
+For the active local LaLiga 2026/27 scope, use
+`bash scripts/radar-weekly-local.sh` from the repository root (`--check` is offline).
+The `fantasy-radar-sync weekly` command enforces Wednesday in Europe/Madrid and
+one persisted attempt per ISO week, including failures, while fetching only the
+current-season club IDs from the eligibility policy. Publication now requires
+La Liga observations for 2026-27 with verified minutes and active
+roster membership; the policy is bound to release provenance. `discover` produces a review queue from
+observed URLs without automatically approving identities. See the
+[league discovery runbook](../../docs/scraping/radar-laliga-2026-27.md) for
+inputs, local recurrence, results and outstanding cases.
+
+Local and VM Compose provide an opt-in `radar-jobs` profile. Run the API-image
+`radar-job` with `--rm --no-deps -T`; its data mount is writable and its reviewed
+inputs are read-only. The API sees only the read-only data mount. Optional host
+timers are installed by Terraform but disabled until a real-data pilot passes.
+See the [ingestion, monitoring and rollback runbook](../../docs/scraping/radar-operations.md).
+
+Bulk DataMB tasks cannot assert a verified cohort: the current private adapter
+has no authoritative population revision field. Keep their cohort null; use an
+authorized frozen import for verified comparisons. Source schema errors quarantine
+a task; blocking/rate-limit categories are recorded safely without provider bodies.

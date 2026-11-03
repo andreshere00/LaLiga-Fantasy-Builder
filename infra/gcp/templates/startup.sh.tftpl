@@ -20,6 +20,7 @@ fi
 
 install -d -m 0700 /etc/fantasybuilder
 install -d -m 0755 /opt/fantasybuilder
+install -d -m 0755 /opt/fantasybuilder/radar-config
 install -d -m 0755 /etc/systemd/system/docker.service.d
 %{ for path, asset in assets ~}
 asset_tmp=$(mktemp '${path}.XXXXXX')
@@ -39,6 +40,17 @@ systemctl enable --now docker
 /usr/local/sbin/fantasybuilder-metadata-guard
 systemctl enable fantasybuilder.service
 systemctl enable --now fantasybuilder-backup.timer
+# Terraform owns recurrence. Disable the legacy daily inventory schedule.
+if test -f /etc/systemd/system/fantasybuilder-radar-inventory.timer; then
+  systemctl disable --now fantasybuilder-radar-inventory.timer
+  rm /etc/systemd/system/fantasybuilder-radar-inventory.timer
+  systemctl daemon-reload
+fi
+%{ if radar_discovery_enabled ~}
+systemctl enable --now fantasybuilder-radar-refresh.timer
+%{ else ~}
+systemctl disable --now fantasybuilder-radar-refresh.timer
+%{ endif ~}
 # A new host waits for explicit activation after images, secrets, and DNS exist.
 if test -f /etc/fantasybuilder/enabled; then
   systemctl start fantasybuilder.service

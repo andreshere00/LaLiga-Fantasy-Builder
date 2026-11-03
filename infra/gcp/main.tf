@@ -1,5 +1,16 @@
 locals {
-  labels = { application = var.name_prefix, managed_by = "terraform" }
+  radar_policy = jsondecode(file("${path.module}/../../backend/api/data/radar-laliga-2026-27-eligibility.json"))
+  radar_config = <<-ENV
+    RADAR_JOB_ENABLED=${var.radar_discovery_enabled}
+    RADAR_SEASON=${local.radar_policy.season}
+    RADAR_MINIMUM_CATALOG_COUNT=750
+    RADAR_DATA_DIR=/var/lib/fantasybuilder/radar
+    RADAR_REVIEW_DIR=/var/lib/fantasybuilder/radar-review
+    RADAR_TEAM_IDS="${join(" ", sort(keys(local.radar_policy.clubs)))}"
+    RADAR_STALE_DAYS=8
+    RADAR_MAXIMUM_DAYS=30
+  ENV
+  labels       = { application = var.name_prefix, managed_by = "terraform" }
   services = toset(concat([
     "compute.googleapis.com", "iam.googleapis.com", "iap.googleapis.com",
     "oslogin.googleapis.com", "storage.googleapis.com",
@@ -20,16 +31,27 @@ locals {
   ENV
   # Only public configuration and script contents enter VM metadata/state.
   assets = merge({
+    "/etc/fantasybuilder/radar.env" = { mode = "0600", content = local.radar_config }
+    "/opt/fantasybuilder/radar-config/eligibility.json" = {
+      mode = "0644", content = jsonencode(local.radar_policy)
+    }
+    "/opt/fantasybuilder/radar-config/observations.json" = {
+      mode = "0644", content = jsonencode(jsondecode(file("${path.module}/../../backend/api/data/radar-discovery-laliga-2026-27.json")))
+    }
     "/etc/fantasybuilder/host.env"                             = { mode = "0600", content = local.host_config }
     "/opt/fantasybuilder/compose.yml"                          = { mode = "0644", content = file("${path.module}/templates/compose.yml") }
     "/opt/fantasybuilder/Caddyfile"                            = { mode = "0644", content = file("${path.module}/../../docker/Caddyfile") }
     "/opt/fantasybuilder/identity.sh"                          = { mode = "0644", content = file("${path.module}/../../docker/postgres/identity.sh") }
     "/etc/systemd/system/docker.service.d/fantasybuilder.conf" = { mode = "0644", content = file("${path.module}/templates/docker-metadata-guard.conf") }
     }, {
-    for name in ["fetch-secrets", "release", "start", "backup", "deploy", "metadata-guard"] :
+    for name in ["fetch-secrets", "release", "start", "backup", "deploy", "metadata-guard", "radar-sync"] :
     "/usr/local/sbin/fantasybuilder-${name}" => { mode = "0700", content = file("${path.module}/templates/${name}.sh") }
     }, {
-    for name in ["fantasybuilder.service", "fantasybuilder-backup.service", "fantasybuilder-backup.timer"] :
+    for name in [
+      "fantasybuilder.service", "fantasybuilder-backup.service", "fantasybuilder-backup.timer",
+      "fantasybuilder-radar@.service",
+      "fantasybuilder-radar-refresh.timer"
+    ] :
     "/etc/systemd/system/${name}" => { mode = "0644", content = file("${path.module}/templates/${name}") }
   })
 }
@@ -213,7 +235,9 @@ resource "google_compute_instance" "app" {
     enable-oslogin         = "TRUE"
     block-project-ssh-keys = "TRUE"
     # Metadata updates do not force replacement of the stateful host.
-    startup-script = templatefile("${path.module}/templates/startup.sh.tftpl", { assets = local.assets })
+    startup-script = templatefile("${path.module}/templates/startup.sh.tftpl", {
+      assets = local.assets, radar_discovery_enabled = var.radar_discovery_enabled
+    })
   }
   depends_on = [
     google_secret_manager_secret_iam_member.vm_reader,

@@ -58,8 +58,8 @@ or application server secrets are needed on the Mac.
 After successful pairing, the wrapper opens the fixed website connection page.
 That page checks the signed-in website account when it regains focus and enters
 the application only when that account is linked. An installed background
-helper requires the distribution and handoff work in the
-[production helper plan](../../docs/authentication/laliga-production-helper-rollout-plan.md).
+helper is not implemented; distribution and account-bound handoff requirements
+are recorded in the [release checks](../../docs/authentication/release-checks.md).
 
 `GET /laliga/link-options` requires an application JWT and reports enabled
 browser/manual/helper methods and the verified application account. The helper flag

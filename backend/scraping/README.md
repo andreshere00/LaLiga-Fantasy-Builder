@@ -123,3 +123,18 @@ remain candidates alongside generated surname aliases. A surname shared with
 another player's full name therefore requires club disambiguation instead of
 silently selecting that other player. Reviewed master-ID aliases retain priority;
 ambiguous or mismatched clubs still fail closed.
+
+### Optional DataMB player percentiles
+
+Observed profile keys may include a numeric suffix after `_stats` (for example
+`J_Bellingham_Midfielder_stats1`). The optional suffix is limited to three digits;
+arbitrary URLs, queries and bulk-file routes remain blocked. See the
+[LaLiga 2026/27 discovery runbook](../../docs/scraping/radar-laliga-2026-27.md)
+for the weekly acquisition scope and local scheduling.
+
+`DATAMB_ENABLED` defaults to `false`. When explicitly enabled,
+`GET /internal/radar/datamb` is service-token protected and downloads only
+canonical HTML player profiles using an isolated polite client. It does not
+fetch bulk datasets or run JavaScript. Cache is in memory (256 profiles, 24h).
+See [adapter operation](../../docs/scraping/README.md#optional-datamb-radar-adapter)
+and the [API mapping configuration](../../docs/api/players/README.md#role-specific-performance-radar).

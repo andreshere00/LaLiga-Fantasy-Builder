@@ -4,6 +4,61 @@ Notable changes to LaLiga Fantasy Builder are recorded here. Version 0.1.0
 summarizes the application through 27 October 2026; it is the first changelog
 entry, not a claim that every optional provider or deployment gate is complete.
 
+## [Unreleased]
+
+### Player performance profiles
+
+- Added seven-axis performance radars for goalkeepers, centre-backs, full-backs,
+  midfielders, wingers, and strikers, with an accessible metric table and
+  responsive light and dark layouts.
+- Place Performance profile inside Overview, below Fantasy outlook. Remove
+  repeated player identity details and group provenance, dates, reference-sample
+  limitations, and percentile guidance under Source and methodology.
+- Pin radar requests and comparisons to 2026/27 and remove the season selector.
+  Hide the subsection when no published profile exists, load profiles near the
+  viewport, and preserve displayed data when a refresh fails.
+- Validate comparison compatibility on the server and offer comparisons only
+  when metric definitions and reference populations are verified.
+
+### Radar simplification
+
+- Serve only pinned local publications; retire request-time mappings and reject
+  legacy store configuration explicitly. Keep reviewed ingestion imports.
+- Share derived publication views and extract weekly orchestration into a typed
+  application service. Separate frontend queries, comparison UI and methodology.
+
+### Radar data and operations
+
+- Added authenticated radar API and CLI reads, validated response contracts,
+  and a private, opt-in DataMB adapter with robots checks, rate limits, and
+  restricted profile URLs.
+- Added master-ID catalog inventory, versioned identity review, observed profile
+  discovery, six-role metric audits, and explicit coverage and absence reasons.
+- Added checkpointed ingestion, validation, immutable publication, provenance
+  checks, reporting, and rollback. API reads use local publications without
+  starting provider ingestion from the browser.
+- Expanded discovery to all 20 LaLiga clubs for 2026/27. Removed the initial
+  300-minute cutoff, restoring the 26 previously excluded players. The local
+  publication verified on 3 November contains 267 players and 282 role snapshots;
+  304 active-roster players remain unresolved.
+- Added Terraform-managed weekly discovery on the existing VM for Wednesday
+  at 07:10 Europe/Madrid, with read-only policy inputs, a durable attempt guard,
+  and opt-in activation. Removed the recurring LLM task; local checks remain available.
+
+- Removed the superseded two-club manifest, retired daily timer template,
+  duplicate job environment example, and product preview route. Keep shared radar
+  fixtures outside production source for contract and browser regression tests.
+
+### Documentation and availability
+
+- Updated API schemas, frontend guidance, deployment configuration, and radar
+  runbooks. Removed superseded plans, temporary research, and pilot reports,
+  consolidating current operational and release requirements.
+- Published datasets and reviewed captures remain outside Git and require durable
+  storage configuration. Production timers remain disabled. Native DataMB
+  comparisons remain unavailable until their reference population is verified;
+  missing data is never replaced with invented values.
+
 ## [0.1.1] - 2026-11-01
 
 ### Lineup and planning

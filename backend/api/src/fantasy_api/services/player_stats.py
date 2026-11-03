@@ -938,6 +938,7 @@ class PlayerStatsService:
                 injury = injury.model_copy(update={"since": open_row.start, "active": True})
         segment_warnings = _wire_warnings(wire.warnings)
         return PlayerProfileResponse(
+            birth_date=(profile.personal or {}).get("birthDate"),
             player_id=player_id,
             player=self._player_ref(player, wire),
             season=season.label,

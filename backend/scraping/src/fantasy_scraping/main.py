@@ -13,10 +13,12 @@ from fastapi.responses import JSONResponse
 from pydantic import BaseModel
 
 from fantasy_scraping.api.players import router as players_router
+from fantasy_scraping.api.radar import router as radar_router
 from fantasy_scraping.api.schemas import ErrorResponse
 from fantasy_scraping.api.standings import router as standings_router
 from fantasy_scraping.config import Settings, get_settings
 from fantasy_scraping.parser.errors import ParserError
+from fantasy_scraping.providers.datamb.service import DataMBScraper, build_datamb_scraper
 from fantasy_scraping.scraper.cache import MemoryCache
 from fantasy_scraping.scraper.clock import SystemClock
 from fantasy_scraping.scraper.errors import AmbiguousPlayerError, ScrapingError
@@ -56,6 +58,7 @@ def create_app(
     settings: Settings | None = None,
     service: ScraperService | None = None,
     standings_service: OfficialStandingsScraper | None = None,
+    datamb_service: DataMBScraper | None = None,
 ) -> FastAPI:
     """Build the scraping process.
 
@@ -63,6 +66,7 @@ def create_app(
         settings: Optional settings. When omitted, values come from the environment.
         service: Optional scraper service, used by tests. Built lazily when omitted.
         standings_service: Optional official standings scraper for tests.
+        datamb_service: Optional isolated DataMB scraper for tests.
 
     Returns:
         The FastAPI application.
@@ -79,6 +83,16 @@ def create_app(
         holder["service"] = service
     official_service = standings_service
     official_client: ScrapingHttpClient | None = None
+
+    radar_service = datamb_service
+    radar_client: ScrapingHttpClient | None = None
+
+    def get_datamb_service() -> DataMBScraper:
+        """Create the opt-in provider with its own host budget."""
+        nonlocal radar_service, radar_client
+        if radar_service is None:
+            radar_service, radar_client = build_datamb_scraper(get_scraper_settings())
+        return radar_service
 
     def get_standings_service() -> OfficialStandingsScraper:
         """Lazily create the separate official-page scraper."""
@@ -101,6 +115,8 @@ def create_app(
         yield
         if client := holder.get("client"):
             await client.aclose()  # type: ignore[union-attr]
+        if radar_client is not None:
+            await radar_client.aclose()
         if official_client is not None:
             await official_client.aclose()
 
@@ -115,10 +131,12 @@ def create_app(
     )
     app.state.settings = cfg
     app.state.get_service = get_service
+    app.state.get_datamb_service = get_datamb_service
     app.state.get_standings_service = get_standings_service
     app.include_router(scrape_router)
     app.include_router(players_router)
     app.include_router(standings_router)
+    app.include_router(radar_router)
     app.include_router(health_router)
 
     @app.exception_handler(ParserError)

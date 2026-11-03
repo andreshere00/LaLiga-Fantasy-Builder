@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 
 import {
+  playerAge,
   formatChartAxisDate,
   formatInjuryHistoryEntry,
   formatMarketChartTick,
@@ -17,6 +18,20 @@ import {
 // ---- Mocks, fixtures & helpers ---- #
 
 // ---- Happy path ---- #
+
+describe("playerAge", () => {
+  it.each([
+    ["1996-12-14", "2026-12-13T12:00:00Z", 29],
+    ["1996-12-14", "2026-12-13T23:00:00Z", 30],
+    ["1996-12-14", "2026-12-15T12:00:00Z", 30],
+    [null, "2026-11-03T12:00:00Z", null],
+    ["invalid", "2026-11-03T12:00:00Z", null],
+    ["2026-02-30", "2026-11-03T12:00:00Z", null],
+    ["2027-01-01", "2026-11-03T12:00:00Z", null],
+  ])("calculates age for %s at %s", (birthDate, now, expected) => {
+    expect(playerAge(birthDate, Date.parse(now))).toBe(expected);
+  });
+});
 
 describe("windKmhFromMs_validMs_converts", () => {
   it("multiplies by 3.6", () => {

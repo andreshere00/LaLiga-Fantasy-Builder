@@ -70,6 +70,7 @@ tmp/
 # Frontend
 frontend/node_modules/
 frontend/dist/
+*.tsbuildinfo
 frontend/coverage/
 frontend/test-results/
 frontend/playwright-report/
@@ -77,3 +78,7 @@ frontend/playwright-report/
 # GitHub release references and temporary OIDC credentials
 release-images.env
 gha-creds-*.json
+
+# Local radar datasets and reviewed supply manifests
+/data/radar/
+/data/radar-review/

@@ -9,6 +9,7 @@ from fastapi import APIRouter, Header, Path, Query, Response
 from fantasy_api.api.deps import get_container, get_current_user
 from fantasy_api.domain.errors import UpstreamError
 from fantasy_api.openapi import PLAYER_STATS_ERROR_RESPONSES
+from fantasy_api.schemas.player_radar import RadarQuery, RadarResponse
 from fantasy_api.schemas.player_stats import (
     FixturesQuery,
     MarketQuery,
@@ -192,5 +193,29 @@ async def get_profile_stats(
     await _enforce_rate_limit(user.user_id, response)
     payload = await get_container().player_stats_service.profile(player_id)
     response.headers["Cache-Control"] = "private, max-age=900"
+    response.headers["Vary"] = "Authorization"
+    return payload
+
+
+@router.get(
+    "/players/{player_id}/stats/radar",
+    response_model=RadarResponse,
+    responses=PLAYER_STATS_ERROR_RESPONSES,
+    summary="Get independent role-specific player percentiles",
+)
+async def get_player_radar(
+    player_id: PlayerIdPath,
+    query: Annotated[RadarQuery, Query()],
+    response: Response,
+    authorization: Annotated[str | None, Header()] = None,
+) -> RadarResponse:
+    """Read configured snapshots with JWT only and server-validated comparison."""
+    user, _jwt = await get_current_user(authorization)
+    await _enforce_rate_limit(user.user_id, response)
+    service = get_container().player_radar_service
+    if service is None:
+        raise UpstreamError("Radar is unavailable", status_code=503, category="radar_disabled")
+    payload = await service.get_radar(player_id, query)
+    response.headers["Cache-Control"] = "private, max-age=300"
     response.headers["Vary"] = "Authorization"
     return payload

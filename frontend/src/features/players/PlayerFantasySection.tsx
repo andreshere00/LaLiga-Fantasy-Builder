@@ -371,7 +371,7 @@ export function PlayerFantasySection({ profile }: FantasySectionProps) {
   return (
     <section className="player-detail-panel player-fantasy-section" aria-labelledby="player-fantasy-title">
       <header className="player-updates-heading">
-        <h2 id="player-fantasy-title" tabIndex={-1}>News &amp; injuries</h2>
+        <h2 className="player-section-title" id="player-fantasy-title" tabIndex={-1}>News &amp; injuries</h2>
         <p>Recent reports and recorded absences.</p>
       </header>
       {profile ? (

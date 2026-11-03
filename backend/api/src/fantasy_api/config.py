@@ -38,6 +38,22 @@ class Settings(BaseSettings):
     standings_ttl_seconds: int = Field(default=3600, ge=3600, le=86400)
     standings_club_ids: dict[PositiveInt, PositiveInt] = Field(default_factory=dict)
 
+    radar_store_path: str = ""
+    radar_dataset_root: str = ""
+    radar_stale_days: int = Field(default=8, ge=1, le=30)
+    radar_maximum_days: int = Field(default=30, ge=2, le=365)
+
+    @model_validator(mode="after")
+    def _radar_configuration(self) -> Settings:
+        """Keep source modes explicit and require ordered freshness thresholds."""
+        if self.radar_store_path:
+            raise ValueError(
+                "RADAR_STORE_PATH is retired; ingest reviewed snapshots and set RADAR_DATASET_ROOT"
+            )
+        if self.radar_stale_days >= self.radar_maximum_days:
+            raise ValueError("radar stale threshold must precede maximum age")
+        return self
+
     scraping_base_url: str = ""
     scraping_service_token: SecretStr = SecretStr("")
     scraping_timeout_seconds: float = 30.0

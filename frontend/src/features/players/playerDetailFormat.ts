@@ -4,6 +4,20 @@ import { asFiniteNumber, asRecord, text } from "../../api/mappers";
 export const MISSING_STAT = "-";
 export const NO_DATA_YET = "No data yet";
 
+/** Completed years on the current calendar date in Madrid. */
+export function playerAge(birthDate: unknown, now: number): number | null {
+  if (typeof birthDate !== "string" || !/^\d{4}-\d{2}-\d{2}$/.test(birthDate)) return null;
+  const parsed = new Date(`${birthDate}T00:00:00Z`);
+  if (!Number.isFinite(parsed.getTime()) || parsed.toISOString().slice(0, 10) !== birthDate) return null;
+  const parts = new Intl.DateTimeFormat("en-GB", {
+    timeZone: "Europe/Madrid", year: "numeric", month: "2-digit", day: "2-digit",
+  }).formatToParts(now);
+  const part = (type: Intl.DateTimeFormatPartTypes) => Number(parts.find((p) => p.type === type)?.value);
+  const [year, month, day] = birthDate.split("-").map(Number);
+  const age = part("year") - year - (part("month") < month || part("month") === month && part("day") < day ? 1 : 0);
+  return age >= 0 ? age : null;
+}
+
 /** Formats wind speed from m/s to km/h for display. */
 export function windKmhFromMs(speedMs: number | null | undefined): number | null {
   if (speedMs == null || !Number.isFinite(speedMs)) return null;

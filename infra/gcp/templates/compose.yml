@@ -109,12 +109,35 @@ services:
       SCRAPING_BASE_URL: http://scraping:8002
       SCRAPING_SERVICE_TOKEN: ${SCRAPING_SERVICE_TOKEN:?Set SCRAPING_SERVICE_TOKEN}
       CORS_ORIGINS: '["https://${APP_DOMAIN}"]'
+    volumes:
+      - "${RADAR_DATA_DIR:-/var/lib/fantasybuilder/radar}:/data/radar:ro"
     depends_on:
       auth:
         condition: service_healthy
       scraping:
         condition: service_healthy
     networks: [internal, egress]
+
+  radar-job:
+    image: ${API_IMAGE:?Set API_IMAGE}
+    entrypoint: ["fantasy-radar-sync"]
+    command: ["--help"]
+    restart: "no"
+    read_only: true
+    tmpfs: [/tmp]
+    environment:
+      SCRAPING_BASE_URL: http://scraping:8002
+      SCRAPING_SERVICE_TOKEN: ${SCRAPING_SERVICE_TOKEN:?Set SCRAPING_SERVICE_TOKEN}
+      RADAR_DATASET_ROOT: ""
+    volumes:
+      - "${RADAR_DATA_DIR:-/var/lib/fantasybuilder/radar}:/data/radar"
+      - "${RADAR_REVIEW_DIR:-/var/lib/fantasybuilder/radar-review}:/data/radar-review:ro"
+      - "/opt/fantasybuilder/radar-config:/data/radar-config:ro"
+    profiles: [radar-jobs]
+    networks: [internal, egress]
+    logging:
+      driver: json-file
+      options: {max-size: "10m", max-file: "3"}
 
   scraping:
     <<: *runtime

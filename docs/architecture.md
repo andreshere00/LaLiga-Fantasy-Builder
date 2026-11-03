@@ -117,6 +117,15 @@ adapters/     HTTP, JWKS, JWT, Postgres, Redis, and AES-GCM implementations
 - maps auth and upstream failures into stable API errors;
 - exposes OpenAPI/Swagger from committed `backend/api/openapi.json`.
 
+Player performance radars use an independent JWT-only endpoint. Published mode
+(`RADAR_DATASET_ROOT`) pins a local immutable release containing catalog coverage,
+reviewed snapshots and a persistent comparison index; GET never downloads sources.
+The operational `fantasy-radar-sync` job owns ingestion and atomic publication,
+with a writable durable volume; the API mount is read-only. The retired `RADAR_STORE_PATH` setting is rejected at startup. Auth/identity and their databases do not own radar storage.
+Role templates, metric definitions and comparison populations remain separate
+from Fantasy scoring; optional source failure cannot block the detail aggregate.
+See the [operations runbook](scraping/radar-operations.md).
+
 Player stats are aggregated by `PlayerStatsService`: catalog data and recent
 Fantasy matchweek statistics come from LaLiga Fantasy, while profile and
 fixture segments can use the private FutbolFantasy scraping service. Partial

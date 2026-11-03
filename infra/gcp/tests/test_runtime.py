@@ -270,6 +270,8 @@ class RuntimeTests(unittest.TestCase):
                 str(runtime),
                 "-f",
                 str(ROOT / "templates/compose.yml"),
+                "--profile",
+                "radar-jobs",
                 "config",
                 "--no-env-resolution",
                 "--format",
@@ -295,6 +297,20 @@ class RuntimeTests(unittest.TestCase):
         )
         self.assertEqual(services["identity-migrate"]["restart"], "no")
         self.assertNotIn("env_file", services["identity-migrate"])
+        job = services["radar-job"]
+        self.assertTrue(job["read_only"])
+        self.assertEqual(job["profiles"], ["radar-jobs"])
+        self.assertEqual(job["restart"], "no")
+        self.assertNotIn("env_file", job)
+        job_mounts = {v["target"]: v for v in job["volumes"]}
+        api_mounts = {v["target"]: v for v in services["api"]["volumes"]}
+        self.assertTrue(api_mounts["/data/radar"]["read_only"])
+        self.assertFalse(job_mounts["/data/radar"].get("read_only", False))
+        self.assertTrue(job_mounts["/data/radar-review"]["read_only"])
+        self.assertTrue(job_mounts["/data/radar-config"]["read_only"])
+        self.assertEqual(api_mounts["/data/radar"]["source"], job_mounts["/data/radar"]["source"])
+        for secret in ["DATABASE_URL", "INTERNAL_SERVICE_TOKEN", "OPENAI_API_KEY"]:
+            self.assertNotIn(secret, job.get("environment", {}))
 
 
 if __name__ == "__main__":

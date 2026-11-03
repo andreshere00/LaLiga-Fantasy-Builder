@@ -1415,6 +1415,7 @@ Global player profile from FutbolFantasy
 | `generated_at` | string | yes |  |  |
 | `sources` | array[SourceStatus] | no |  |  |
 | `warnings` | array[SegmentWarning] | no |  |  |
+| `birth_date` | string | no |  |  |
 | `availability` | object | no |  |  |
 | `injury_history_coverage` | string | no |  |  |
 | `fantasy_season_total` | number | no |  |  |
@@ -1430,6 +1431,42 @@ Global player profile from FutbolFantasy
 | `averages` | array[AveragePerMatch] | no |  |  |
 
 Full nested fields: [`PlayerProfileResponse`](#playerprofileresponse).
+
+
+### `GET` `/players/{player_id}/stats/radar`
+
+Get independent role-specific player percentiles
+
+**Security:** HTTP Bearer (internal JWT)
+
+#### Inputs
+
+| Source | Name | Type | Required | Constraints | Description |
+|--------|------|------|----------|-------------|-------------|
+| path | `player_id` | string | yes |  | Master footballer id (`CatalogPlayer.id`). |
+| query | `season` | string | yes |  |  |
+| query | `profile` | string | no |  |  |
+| query | `compare_player_id` | string | no |  |  |
+
+#### Outputs
+
+**HTTP 200:** `RadarResponse`
+
+| Field | Type | Required | Constraints | Description |
+|-------|------|----------|-------------|-------------|
+| `player_id` | string | yes |  |  |
+| `season` | string | yes |  |  |
+| `available_seasons` | array[string] | yes |  |  |
+| `status` | string | yes |  |  |
+| `reason` | string | yes |  |  |
+| `radars` | array[PlayerRadar] | yes |  |  |
+| `coverage` | RadarCoverage | no |  | One accounted master ID in a published season, with safe product reason codes. |
+| `default_profile` | string | no |  |  |
+| `compatible_players` | array[RadarCandidate] | no |  |  |
+| `comparison` | PlayerRadar | no |  | Ready-to-render radar; compatibility is assigned by the application service. |
+| `comparison_reason` | string | no |  |  |
+
+Full nested fields: [`RadarResponse`](#radarresponse).
 
 
 ## Tag: `players`
@@ -2437,6 +2474,7 @@ Type: `string`
 | `generated_at` | string | yes |  |  |
 | `sources` | array[SourceStatus] | no |  |  |
 | `warnings` | array[SegmentWarning] | no |  |  |
+| `birth_date` | string | no |  |  |
 | `availability` | object | no |  |  |
 | `injury_history_coverage` | string | no |  |  |
 | `fantasy_season_total` | number | no |  |  |
@@ -2450,6 +2488,34 @@ Type: `string`
 | `hierarchy` | Hierarchy | yes |  |  |
 | `news` | array[NewsItem] | no |  |  |
 | `averages` | array[AveragePerMatch] | no |  |  |
+
+### `PlayerRadar`
+
+| Field | Type | Required | Constraints | Description |
+|-------|------|----------|-------------|-------------|
+| `player_id` | string | yes |  |  |
+| `player` | string | yes |  |  |
+| `club` | string | yes |  |  |
+| `age` | integer | yes |  |  |
+| `season` | string | yes |  |  |
+| `competition` | string | yes |  |  |
+| `period` | string | yes |  |  |
+| `minutes` | integer | yes |  |  |
+| `profile` | string | yes |  |  |
+| `profile_label` | string | yes |  |  |
+| `position` | string | yes |  |  |
+| `source` | string | yes |  |  |
+| `method` | string | yes |  |  |
+| `recipe_version` | string | yes |  |  |
+| `snapshot_id` | string | yes |  |  |
+| `fetched_at` | string | yes |  |  |
+| `data_as_of` | string | yes |  |  |
+| `cohort` | RadarCohort | yes |  | Published or documented population; unknown fields remain explicitly absent. |
+| `axes` | array[RadarAxis] | yes |  |  |
+| `comparison_key` | string | yes |  |  |
+| `comparison_reason` | string | yes |  |  |
+| `stale` | boolean | yes |  |  |
+| `warnings` | array[string] | yes |  |  |
 
 ### `PlayerRef`
 
@@ -2512,6 +2578,73 @@ Type: `string`
 |-------|------|----------|-------------|-------------|
 | `title` | string | no |  |  |
 | `description` | string | no |  |  |
+
+### `RadarAxis`
+
+| Field | Type | Required | Constraints | Description |
+|-------|------|----------|-------------|-------------|
+| `key` | string | yes |  |  |
+| `label` | string | yes |  |  |
+| `definition` | string | yes |  |  |
+| `percentile` | number | yes |  |  |
+| `source` | string | yes |  |  |
+| `source_metric` | string | yes |  |  |
+| `status` | string | yes |  |  |
+
+### `RadarCandidate`
+
+| Field | Type | Required | Constraints | Description |
+|-------|------|----------|-------------|-------------|
+| `player_id` | string | yes |  |  |
+| `player` | string | yes |  |  |
+| `club` | string | no |  |  |
+| `profile` | string | yes |  |  |
+
+### `RadarCohort`
+
+| Field | Type | Required | Constraints | Description |
+|-------|------|----------|-------------|-------------|
+| `id` | string | yes | minLength=1 |  |
+| `label` | string | yes | minLength=1 |  |
+| `reference_snapshot` | string | yes | minLength=1 |  |
+| `eligibility` | string | yes | minLength=1 |  |
+| `size` | integer | no |  |  |
+| `minimum_minutes` | integer | no |  |  |
+
+### `RadarCoverage`
+
+| Field | Type | Required | Constraints | Description |
+|-------|------|----------|-------------|-------------|
+| `player_id` | string | yes |  |  |
+| `season` | string | yes |  |  |
+| `identity_status` | string | yes |  |  |
+| `data_status` | string | yes |  |  |
+| `reason_code` | string | yes |  |  |
+| `default_profile` | string | no |  |  |
+| `available_profiles` | array[string] | no |  |  |
+| `profile_errors` | object | no |  |  |
+| `last_success_at` | string | no |  |  |
+| `last_attempt_at` | string | no |  |  |
+| `last_error_code` | string | no |  |  |
+| `stale` | boolean | no |  |  |
+| `dataset_id` | string | yes |  |  |
+| `catalog_snapshot_id` | string | yes |  |  |
+
+### `RadarResponse`
+
+| Field | Type | Required | Constraints | Description |
+|-------|------|----------|-------------|-------------|
+| `player_id` | string | yes |  |  |
+| `season` | string | yes |  |  |
+| `available_seasons` | array[string] | yes |  |  |
+| `status` | string | yes |  |  |
+| `reason` | string | yes |  |  |
+| `radars` | array[PlayerRadar] | yes |  |  |
+| `coverage` | RadarCoverage | no |  | One accounted master ID in a published season, with safe product reason codes. |
+| `default_profile` | string | no |  |  |
+| `compatible_players` | array[RadarCandidate] | no |  |  |
+| `comparison` | PlayerRadar | no |  | Ready-to-render radar; compatibility is assigned by the application service. |
+| `comparison_reason` | string | no |  |  |
 
 ### `RecentMatch`
 

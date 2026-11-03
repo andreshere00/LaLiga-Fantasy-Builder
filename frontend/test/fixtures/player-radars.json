@@ -1,0 +1,549 @@
+[
+  {
+    "player_id": "1",
+    "player": "Pau Cubarsí",
+    "club": "Barcelona",
+    "age": 19,
+    "season": "2026-27",
+    "competition": "Unverified competition",
+    "period": "supplied season sample",
+    "minutes": 668,
+    "profile": "defense_progression_v1",
+    "profile_label": "Centre-back",
+    "position": "Defense",
+    "source": "imported",
+    "method": "user_supplied_percentile",
+    "recipe_version": "supplied-example-v1",
+    "snapshot_id": "preview-1",
+    "fetched_at": "2026-10-30T00:00:00Z",
+    "data_as_of": null,
+    "cohort": null,
+    "axes": [
+      {
+        "key": "passes_completed_p90",
+        "label": "Passes cmp",
+        "definition": "Completed passes per 90 minutes",
+        "percentile": 99.7,
+        "source": "imported",
+        "source_metric": "passes_completed_p90",
+        "status": "available"
+      },
+      {
+        "key": "forward_pass_completion_pct",
+        "label": "Fwd pass%",
+        "definition": "Forward pass completion percentage",
+        "percentile": 93.7,
+        "source": "imported",
+        "source_metric": "forward_pass_completion_pct",
+        "status": "available"
+      },
+      {
+        "key": "progressive_passes_p90",
+        "label": "Prog passes",
+        "definition": "Progressive passes per 90 minutes",
+        "percentile": 90.5,
+        "source": "imported",
+        "source_metric": "progressive_passes_p90",
+        "status": "available"
+      },
+      {
+        "key": "possessions_won_p90",
+        "label": "Poss won",
+        "definition": "Possessions won per 90; source definition applies",
+        "percentile": 27.0,
+        "source": "imported",
+        "source_metric": "possessions_won_p90",
+        "status": "available"
+      },
+      {
+        "key": "defensive_duel_win_pct",
+        "label": "Def duel%",
+        "definition": "Defensive duels won as a percentage",
+        "percentile": 34.6,
+        "source": "imported",
+        "source_metric": "defensive_duel_win_pct",
+        "status": "available"
+      },
+      {
+        "key": "aerial_duel_win_pct",
+        "label": "Aerial duel%",
+        "definition": "Aerial duels won as a percentage",
+        "percentile": 95.9,
+        "source": "imported",
+        "source_metric": "aerial_duel_win_pct",
+        "status": "available"
+      },
+      {
+        "key": "progressive_carries_p90",
+        "label": "Prog carries",
+        "definition": "Progressive carries per 90 minutes",
+        "percentile": 92.4,
+        "source": "imported",
+        "source_metric": "progressive_carries_p90",
+        "status": "available"
+      }
+    ],
+    "comparison_key": null,
+    "comparison_reason": "Reference population is unverified; comparison is unavailable.",
+    "stale": false,
+    "warnings": [
+      "Imported example. Identity and reference population are unverified."
+    ]
+  },
+  {
+    "player_id": "2",
+    "player": "Xavi Espart",
+    "club": "Barcelona",
+    "age": 19,
+    "season": "2026-27",
+    "competition": "Unverified competition",
+    "period": "supplied season sample",
+    "minutes": 712,
+    "profile": "defense_fullback_v1",
+    "profile_label": "Fullback",
+    "position": "Defense",
+    "source": "imported",
+    "method": "user_supplied_percentile",
+    "recipe_version": "supplied-example-v1",
+    "snapshot_id": "preview-2",
+    "fetched_at": "2026-10-30T00:00:00Z",
+    "data_as_of": null,
+    "cohort": null,
+    "axes": [
+      {
+        "key": "crosses_completed_p90",
+        "label": "Crosses cmp",
+        "definition": "Completed crosses per 90 minutes",
+        "percentile": 16.1,
+        "source": "imported",
+        "source_metric": "crosses_completed_p90",
+        "status": "available"
+      },
+      {
+        "key": "expected_assists_p90",
+        "label": "xA",
+        "definition": "Expected assists per 90; source model applies",
+        "percentile": 61.9,
+        "source": "imported",
+        "source_metric": "expected_assists_p90",
+        "status": "available"
+      },
+      {
+        "key": "progressive_passes_p90",
+        "label": "Prog passes",
+        "definition": "Progressive passes per 90 minutes",
+        "percentile": 11.8,
+        "source": "imported",
+        "source_metric": "progressive_passes_p90",
+        "status": "available"
+      },
+      {
+        "key": "possessions_won_p90",
+        "label": "Poss won",
+        "definition": "Possessions won per 90; source definition applies",
+        "percentile": 44.6,
+        "source": "imported",
+        "source_metric": "possessions_won_p90",
+        "status": "available"
+      },
+      {
+        "key": "defensive_duel_win_pct",
+        "label": "Def duel%",
+        "definition": "Defensive duels won as a percentage",
+        "percentile": 67.8,
+        "source": "imported",
+        "source_metric": "defensive_duel_win_pct",
+        "status": "available"
+      },
+      {
+        "key": "aerial_duel_win_pct",
+        "label": "Aerial duel%",
+        "definition": "Aerial duels won as a percentage",
+        "percentile": 75.9,
+        "source": "imported",
+        "source_metric": "aerial_duel_win_pct",
+        "status": "available"
+      },
+      {
+        "key": "progressive_carries_p90",
+        "label": "Prog carries",
+        "definition": "Progressive carries per 90 minutes",
+        "percentile": 67.2,
+        "source": "imported",
+        "source_metric": "progressive_carries_p90",
+        "status": "available"
+      }
+    ],
+    "comparison_key": null,
+    "comparison_reason": "Reference population is unverified; comparison is unavailable.",
+    "stale": false,
+    "warnings": [
+      "Imported example. Identity and reference population are unverified."
+    ]
+  },
+  {
+    "player_id": "3",
+    "player": "Joan García",
+    "club": "Barcelona",
+    "age": 25,
+    "season": "2026-27",
+    "competition": "Unverified competition",
+    "period": "supplied season sample",
+    "minutes": 849,
+    "profile": "goalkeeper_v1",
+    "profile_label": "Goalkeeper",
+    "position": "Goalkeeper",
+    "source": "imported",
+    "method": "user_supplied_percentile",
+    "recipe_version": "supplied-example-v1",
+    "snapshot_id": "preview-3",
+    "fetched_at": "2026-10-30T00:00:00Z",
+    "data_as_of": null,
+    "cohort": null,
+    "axes": [
+      {
+        "key": "save_pct",
+        "label": "Parada%",
+        "definition": "Shots on target saved as a percentage",
+        "percentile": 58.0,
+        "source": "imported",
+        "source_metric": "save_pct",
+        "status": "available"
+      },
+      {
+        "key": "aerial_duels_won_p90",
+        "label": "Aéreos ganados",
+        "definition": "Aerial duels won per 90 minutes",
+        "percentile": 81.2,
+        "source": "imported",
+        "source_metric": "aerial_duels_won_p90",
+        "status": "available"
+      },
+      {
+        "key": "interceptions_padj",
+        "label": "Int (PAdj)",
+        "definition": "Possession-adjusted interceptions",
+        "percentile": 100.0,
+        "source": "imported",
+        "source_metric": "interceptions_padj",
+        "status": "available"
+      },
+      {
+        "key": "passes_completed_p90",
+        "label": "Pases cmp",
+        "definition": "Completed passes per 90 minutes",
+        "percentile": 42.8,
+        "source": "imported",
+        "source_metric": "passes_completed_p90",
+        "status": "available"
+      },
+      {
+        "key": "long_pass_completion_pct",
+        "label": "Largo%",
+        "definition": "Long pass completion percentage",
+        "percentile": 1.4,
+        "source": "imported",
+        "source_metric": "long_pass_completion_pct",
+        "status": "available"
+      },
+      {
+        "key": "short_pass_completion_pct",
+        "label": "Corto%",
+        "definition": "Short/medium pass completion percentage",
+        "percentile": 36.2,
+        "source": "imported",
+        "source_metric": "short_pass_completion_pct",
+        "status": "available"
+      },
+      {
+        "key": "psxg_minus_ga_p90",
+        "label": "PSxG-GA",
+        "definition": "Post-shot expected goals minus conceded per 90",
+        "percentile": 58.0,
+        "source": "imported",
+        "source_metric": "psxg_minus_ga_p90",
+        "status": "available"
+      }
+    ],
+    "comparison_key": null,
+    "comparison_reason": "Reference population is unverified; comparison is unavailable.",
+    "stale": false,
+    "warnings": [
+      "Imported example. Identity and reference population are unverified.",
+      "Save% and PSxG-GA are both 58.0 in the supplied data; source check pending."
+    ]
+  },
+  {
+    "player_id": "4",
+    "player": "Raphinha",
+    "club": "Barcelona",
+    "age": 29,
+    "season": "2026-27",
+    "competition": "Unverified competition",
+    "period": "supplied season sample",
+    "minutes": 712,
+    "profile": "attacker_finishing_v1",
+    "profile_label": "Striker",
+    "position": "Attacker",
+    "source": "imported",
+    "method": "user_supplied_percentile",
+    "recipe_version": "supplied-example-v1",
+    "snapshot_id": "preview-4",
+    "fetched_at": "2026-10-30T00:00:00Z",
+    "data_as_of": null,
+    "cohort": null,
+    "axes": [
+      {
+        "key": "non_penalty_goals_p90",
+        "label": "NPG",
+        "definition": "Non-penalty goals per 90 minutes",
+        "percentile": 100.0,
+        "source": "imported",
+        "source_metric": "non_penalty_goals_p90",
+        "status": "available"
+      },
+      {
+        "key": "non_penalty_xg_p90",
+        "label": "npxG",
+        "definition": "Non-penalty expected goals per 90; source model applies",
+        "percentile": 90.7,
+        "source": "imported",
+        "source_metric": "non_penalty_xg_p90",
+        "status": "available"
+      },
+      {
+        "key": "goal_conversion_pct",
+        "label": "Goal conv%",
+        "definition": "Goal conversion percentage",
+        "percentile": 96.9,
+        "source": "imported",
+        "source_metric": "goal_conversion_pct",
+        "status": "available"
+      },
+      {
+        "key": "aerial_duel_win_pct",
+        "label": "Aerial%",
+        "definition": "Aerial duels won as a percentage",
+        "percentile": 33.0,
+        "source": "imported",
+        "source_metric": "aerial_duel_win_pct",
+        "status": "available"
+      },
+      {
+        "key": "touches_in_box_p90",
+        "label": "Touches in box",
+        "definition": "Touches in opposition box per 90 minutes",
+        "percentile": 76.3,
+        "source": "imported",
+        "source_metric": "touches_in_box_p90",
+        "status": "available"
+      },
+      {
+        "key": "expected_assists_p90",
+        "label": "xA",
+        "definition": "Expected assists per 90; source model applies",
+        "percentile": 98.5,
+        "source": "imported",
+        "source_metric": "expected_assists_p90",
+        "status": "available"
+      },
+      {
+        "key": "offensive_duels_won_p90",
+        "label": "Off duels won",
+        "definition": "Offensive duels won per 90 minutes",
+        "percentile": 27.3,
+        "source": "imported",
+        "source_metric": "offensive_duels_won_p90",
+        "status": "available"
+      }
+    ],
+    "comparison_key": null,
+    "comparison_reason": "Reference population is unverified; comparison is unavailable.",
+    "stale": false,
+    "warnings": [
+      "Imported example. Identity and reference population are unverified."
+    ]
+  },
+  {
+    "player_id": "5",
+    "player": "Lamine Yamal",
+    "club": "Barcelona",
+    "age": 19,
+    "season": "2026-27",
+    "competition": "Unverified competition",
+    "period": "supplied season sample",
+    "minutes": 915,
+    "profile": "attacker_winger_v1",
+    "profile_label": "Winger",
+    "position": "Attacker",
+    "source": "imported",
+    "method": "user_supplied_percentile",
+    "recipe_version": "supplied-example-v1",
+    "snapshot_id": "preview-5",
+    "fetched_at": "2026-10-30T00:00:00Z",
+    "data_as_of": null,
+    "cohort": null,
+    "axes": [
+      {
+        "key": "progressive_carries_p90",
+        "label": "Prog carries",
+        "definition": "Progressive carries per 90 minutes",
+        "percentile": 88.8,
+        "source": "imported",
+        "source_metric": "progressive_carries_p90",
+        "status": "available"
+      },
+      {
+        "key": "dribbles_completed_p90",
+        "label": "Dribbles cmp",
+        "definition": "Successful dribbles per 90 minutes",
+        "percentile": 96.2,
+        "source": "imported",
+        "source_metric": "dribbles_completed_p90",
+        "status": "available"
+      },
+      {
+        "key": "non_penalty_goals_p90",
+        "label": "NPG",
+        "definition": "Non-penalty goals per 90 minutes",
+        "percentile": 97.3,
+        "source": "imported",
+        "source_metric": "non_penalty_goals_p90",
+        "status": "available"
+      },
+      {
+        "key": "npxg_plus_xa_p90",
+        "label": "npxG +xA",
+        "definition": "Non-penalty xG plus xA per 90; source models apply",
+        "percentile": 98.6,
+        "source": "imported",
+        "source_metric": "npxg_plus_xa_p90",
+        "status": "available"
+      },
+      {
+        "key": "assists_p90",
+        "label": "Assists",
+        "definition": "Assists per 90 minutes",
+        "percentile": 97.0,
+        "source": "imported",
+        "source_metric": "assists_p90",
+        "status": "available"
+      },
+      {
+        "key": "key_passes_p90",
+        "label": "Key passes",
+        "definition": "Key passes per 90; source definition applies",
+        "percentile": 98.4,
+        "source": "imported",
+        "source_metric": "key_passes_p90",
+        "status": "available"
+      },
+      {
+        "key": "crosses_completed_p90",
+        "label": "Crosses cmp",
+        "definition": "Completed crosses per 90 minutes",
+        "percentile": 68.4,
+        "source": "imported",
+        "source_metric": "crosses_completed_p90",
+        "status": "available"
+      }
+    ],
+    "comparison_key": null,
+    "comparison_reason": "Reference population is unverified; comparison is unavailable.",
+    "stale": false,
+    "warnings": [
+      "Imported example. Identity and reference population are unverified."
+    ]
+  },
+  {
+    "player_id": "6",
+    "player": "Pedri",
+    "club": "Barcelona",
+    "age": 23,
+    "season": "2026-27",
+    "competition": "Unverified competition",
+    "period": "supplied season sample",
+    "minutes": 769,
+    "profile": "midfielder_v1",
+    "profile_label": "Midfielder",
+    "position": "Midfielder",
+    "source": "imported",
+    "method": "user_supplied_percentile",
+    "recipe_version": "supplied-example-v1",
+    "snapshot_id": "preview-6",
+    "fetched_at": "2026-10-30T00:00:00Z",
+    "data_as_of": null,
+    "cohort": null,
+    "axes": [
+      {
+        "key": "duel_win_pct",
+        "label": "Duel%",
+        "definition": "All duels won as a percentage",
+        "percentile": 44.3,
+        "source": "imported",
+        "source_metric": "duel_win_pct",
+        "status": "available"
+      },
+      {
+        "key": "possessions_won_p90",
+        "label": "Poss won",
+        "definition": "Possessions won per 90; source definition applies",
+        "percentile": 55.7,
+        "source": "imported",
+        "source_metric": "possessions_won_p90",
+        "status": "available"
+      },
+      {
+        "key": "progressive_carries_p90",
+        "label": "Prog carries",
+        "definition": "Progressive carries per 90 minutes",
+        "percentile": 63.9,
+        "source": "imported",
+        "source_metric": "progressive_carries_p90",
+        "status": "available"
+      },
+      {
+        "key": "forward_passes_completed_p90",
+        "label": "Fwd passes",
+        "definition": "Completed forward passes per 90",
+        "percentile": 87.9,
+        "source": "imported",
+        "source_metric": "forward_passes_completed_p90",
+        "status": "available"
+      },
+      {
+        "key": "forward_pass_completion_pct",
+        "label": "Fwd pass%",
+        "definition": "Forward pass completion percentage",
+        "percentile": 59.4,
+        "source": "imported",
+        "source_metric": "forward_pass_completion_pct",
+        "status": "available"
+      },
+      {
+        "key": "key_passes_p90",
+        "label": "Key passes",
+        "definition": "Key passes per 90; source definition applies",
+        "percentile": 84.8,
+        "source": "imported",
+        "source_metric": "key_passes_p90",
+        "status": "available"
+      },
+      {
+        "key": "progressive_passes_p90",
+        "label": "Prog passes",
+        "definition": "Progressive passes per 90 minutes",
+        "percentile": 97.1,
+        "source": "imported",
+        "source_metric": "progressive_passes_p90",
+        "status": "available"
+      }
+    ],
+    "comparison_key": null,
+    "comparison_reason": "Reference population is unverified; comparison is unavailable.",
+    "stale": false,
+    "warnings": [
+      "Imported example. Identity and reference population are unverified."
+    ]
+  }
+]

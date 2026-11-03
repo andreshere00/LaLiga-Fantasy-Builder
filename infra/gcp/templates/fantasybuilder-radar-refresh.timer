@@ -1,0 +1,12 @@
+[Unit]
+Description=Discover and refresh LaLiga player radars weekly (Terraform managed)
+
+[Timer]
+OnCalendar=Wed *-*-* 07:10:00 Europe/Madrid
+RandomizedDelaySec=600
+# Do not catch up on another day; the CLI also enforces the Madrid weekday.
+Persistent=false
+Unit=fantasybuilder-radar@refresh.service
+
+[Install]
+WantedBy=timers.target

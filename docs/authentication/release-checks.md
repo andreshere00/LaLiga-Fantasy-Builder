@@ -34,8 +34,10 @@ and provider configuration.
   account's connection. Verify native CLI pairing separately.
 - Keep callback query strings, bearer tokens, vault secrets, session cookies,
   reset material, and service tokens out of logs and telemetry.
-- The guided helper and proposed [LaLiga SSO](laliga-sso-implementation-plan.md)
-  have separate release gates. Do not treat either as released until its gates pass.
+- The guided helper and browser SSO have separate release gates. Browser SSO
+  requires a registered HTTPS callback, server-held PKCE and verified
+  issuer/audience/subject before account binding. See the
+  [capability record](laliga-sso-capability.md).
 - For helper mode, first verify a consented macOS pairing against the normal
   HTTPS origin, native handler ownership, cloud vault persistence, read-only
   lookup and refresh. Check two application users independently before setting
@@ -44,8 +46,13 @@ and provider configuration.
   clearing the flag; retain existing sealed connections and vault keys.
 - Verify that the helper opens the fixed connection page after success and that
   a waiting tab navigates only after its own account-scoped connection check.
-  The installed background app and automatic website launch have additional
-  gates in the [production helper plan](laliga-production-helper-rollout-plan.md).
+  An installed background helper is not implemented. Distribution requires a
+  signed and notarized app, verified callback rights without replacing another
+  handler, and a product-owned launch protocol with a short-lived, one-time
+  handoff bound to the initiating account and helper proof. Keep tokens out of
+  launch URLs and persistent daemon storage. Test clean-Mac installation, upgrade,
+  uninstall, callback validation, account mismatch, cancellation and rollback
+  before advertising that experience.
 - Before enabling the helper, confirm its destination is the fixed HTTPS
   application origin, TLS checks remain enabled, and redirects cannot move a
   credentialed request to another origin. Confirm the current native scheme

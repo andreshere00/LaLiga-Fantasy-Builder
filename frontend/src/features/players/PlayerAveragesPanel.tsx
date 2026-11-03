@@ -36,7 +36,7 @@ export function PlayerAveragesPanel({ rows, positionId, playerName = "Player" }:
     <section className="player-detail-header-averages" aria-labelledby="player-averages-title">
       <div className="player-averages-heading">
         <div>
-          <h2 id="player-averages-title">Averages per match</h2>
+          <h2 className="player-section-title" id="player-averages-title">Averages per match</h2>
           {hasValues && highlighted.some((row) => row.source === "futbolfantasy") ? (
             <p className="player-detail-averages-source-note">Season averages from FutbolFantasy.</p>
           ) : null}

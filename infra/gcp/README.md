@@ -256,8 +256,8 @@ helper. Keep it disabled until the
 [manual pairing release gate](../../docs/authentication/release-checks.md)
 passes; enable it with a new Auth secret version and roll back by clearing the
 flag. No HTTPS browser callback registration is implied.
-The requested installed background experience needs the separate
-[production helper rollout](../../docs/authentication/laliga-production-helper-rollout-plan.md)
+The installed background experience is not implemented and must pass the
+[distribution and handoff gates](../../docs/authentication/release-checks.md#laliga-linking)
 before this flag can advertise it. Deploying the cloud images alone does not
 install a process on users' Macs.
 
@@ -354,3 +354,30 @@ Provider and platform references:
 [backup bucket](https://registry.terraform.io/providers/hashicorp/google/latest/docs/resources/storage_bucket),
 [Artifact Registry](https://registry.terraform.io/providers/hashicorp/google/latest/docs/resources/artifact_registry_repository),
 [Terraform provider mocks](https://developer.hashicorp.com/terraform/language/tests/mocking).
+
+### Optional player radar jobs
+
+The `radar-jobs` Compose profile uses a disposable API-image container. API mounts
+`RADAR_DATA_DIR` read-only; the job has write access to that data and read-only
+access to `RADAR_REVIEW_DIR`. No auth database, LaLiga bearer or additional paid
+provider credentials are passed to this job.
+
+Terraform owns the weekly discovery schedule on the existing VM: Wednesday
+07:10 Europe/Madrid (up to ten minutes of jitter). No LLM task or additional
+Cloud Scheduler service is required. `radar_discovery_enabled` defaults to false;
+set it to true after provisioning durable data, a seeded 2026/27 catalog and the
+reviewed registry/audits/captures. Terraform generates `radar.env`, installs the
+20-club eligibility and observed-candidate manifests, and enables/disables the
+refresh timer during bootstrap. The legacy daily inventory timer is disabled.
+
+The refresh service runs the guarded `weekly` CLI, including catalog refresh,
+discovery accounting, approved-profile acquisition, validation and publication.
+Unknown candidates still require identity review. The API reads the resulting
+release locally. Missed runs are skipped rather than downloaded on another day;
+failed attempts consume the weekly slot. See the
+[runbook](../../docs/scraping/radar-operations.md) for setup and monitoring.
+Changing VM metadata with Terraform does not immediately rerun bootstrap on an
+existing host; follow the documented bootstrap/deployment procedure before
+expecting the timer state to change. Source activation (`DATAMB_ENABLED=true` in
+the scraping service), application deployment and Terraform apply are separate
+operations. No live deployment is performed by editing these files.

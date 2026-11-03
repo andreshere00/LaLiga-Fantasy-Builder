@@ -1,4 +1,6 @@
 import { z } from "zod";
+import { radarResponseShape, radarQuerySchema, type PlayerRadarResponseDto } from "./radar";
+export { radarQuerySchema } from "./radar";
 
 const idValueSchema = z.union([z.string(), z.number()]);
 const jsonValueSchema: z.ZodType<unknown> = z.lazy(() =>
@@ -658,6 +660,7 @@ export const upcomingMatchesSchema = responseSchema(
 export const playerProfileSchema = responseSchema(
   readObject({
     ...segmentEnvelopeShape,
+    birthDate: z.iso.date().nullable().optional(),
     injury: readObject({
       active: z.boolean().nullable().optional(),
       diagnosis: nullableString.optional(),
@@ -967,7 +970,10 @@ export const lineupBuildStreamEventSchema = z.discriminatedUnion("type", [
   }),
 ]);
 
+export const playerRadarResponseSchema = responseSchema(radarResponseShape);
+
 export type ApiResponseDto =
+  | PlayerRadarResponseDto
   | z.infer<typeof lineupBuildStreamEventSchema>
   | LineupBuildDto
   | CompetitionStandingsDto
@@ -1032,6 +1038,7 @@ const endpointContracts: Array<{
   { method: "GET", path: /^\/api\/players\/[^/]+\/market-value$/, response: marketValuesResponseSchema },
   { method: "GET", path: /^\/api\/players\/[^/]+\/league\/[^/]+$/, response: leaguePlayerSchema },
   { method: "GET", path: /^\/api\/players\/[^/]+\/stats$/, response: playerStatsIndexSchema },
+  { method: "GET", path: /^\/api\/players\/[^/]+\/stats\/radar$/, response: playerRadarResponseSchema, query: radarQuerySchema },
   { method: "GET", path: /^\/api\/players\/[^/]+\/stats\/detail$/, response: playerDetailSchema, query: playerStatsDetailQuerySchema },
   { method: "GET", path: /^\/api\/players\/[^/]+\/stats\/fixtures$/, response: playerFixtureStatsSchema, query: fixturesQuerySchema },
   { method: "GET", path: /^\/api\/players\/[^/]+\/stats\/market$/, response: playerMarketStatsSchema, query: marketQuerySchema },
@@ -1118,6 +1125,8 @@ export function validateEndpointInput(method: string, path: string): void {
   const url = new URL(path, "http://localhost");
   const contract = endpointContracts.find((item) => item.method === method && item.path.test(url.pathname));
   if (!contract) throw new Error("Unregistered API endpoint");
+  const radarPlayer = url.pathname.match(/^\/api\/players\/([^/]+)\/stats\/radar$/);
+  if (radarPlayer) z.string().regex(/^[0-9]{1,10}$/).parse(radarPlayer[1]);
   const week = url.pathname.match(/\/(?:standing|weeks|week)\/(\d+)(?:\/stats)?$/);
   if (week) positivePathNumberSchema.parse(Number(week[1]));
   const competition = url.pathname.match(/^\/api\/competitions\/(\d+)\/standings$/);
@@ -1133,7 +1142,8 @@ export function validateEndpointInput(method: string, path: string): void {
       query[key] = [...(query[key] as string[] | undefined ?? []), value];
     } else {
       if (key in query) throw new Error("Duplicate query parameter");
-      query[key] = ["last", "limit", "season"].includes(key) ? Number(value)
+      query[key] = key === "season" && url.pathname.endsWith("/stats/radar") ? value
+        : ["last", "limit", "season"].includes(key) ? Number(value)
         : ["includeStats", "includeWeather"].includes(key)
           ? wireBooleanSchema.parse(value)
           : value;

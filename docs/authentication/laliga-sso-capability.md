@@ -19,13 +19,11 @@ application therefore exposes `laligaSso: false` in
 username/email credentials. Existing authenticated LaLiga pairing remains
 available after application sign-in.
 
-The [SSO implementation plan](laliga-sso-implementation-plan.md) requires a
-consented browser proof, sanitized token/profile findings and verified framework
-integration before enabling anonymous LaLiga SSO. No production browser SSO
-support is claimed by this record.
-The [browser-only feasibility assessment](browser-only-laliga-feasibility.md)
-records why adding a cloud service does not receive the existing native
-callback and compares the publicly documented alternatives.
+Automatic browser linking requires a provider-supported flow and exact registered
+HTTPS callback. The native callback is delivered to the user's device, not the
+cloud VM; DNS, proxies and CORS cannot change that registration. Before enabling
+SSO, verify code exchange with server-held PKCE, issuer/audience/subject, account
+binding and sealed vault completion. See the [release checks](release-checks.md).
 
 ## Native helper to cloud
 

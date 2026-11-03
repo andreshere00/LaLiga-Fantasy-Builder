@@ -7,6 +7,16 @@
   border-top: 3px solid var(--fb-primary);
 }
 
+/* The radar is a full-width Overview subsection, alongside averages and outlook. */
+.player-profile-header > .player-radar-section {
+  grid-column: 1 / -1;
+  min-width: 0;
+  margin: 0;
+  padding: 24px 0 0;
+  border: 0;
+  border-top: 1px solid var(--fb-line);
+}
+
 .player-profile-header .player-detail-header-identity {
   grid-column: 1;
   grid-row: 1;
@@ -116,22 +126,7 @@
   gap: 12px 20px;
   margin-bottom: 16px;
 }
-.player-averages-heading h2 {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  margin: 0 0 6px;
-  color: var(--fb-tertiary);
-  font: 400 22px/1.3 Anton, sans-serif;
-  letter-spacing: .03em;
-}
-.player-averages-heading h2::before {
-  content: "";
-  flex: 0 0 4px;
-  width: 4px;
-  height: 22px;
-  background: var(--fb-primary);
-}
+
 .player-profile-header .player-detail-averages-source-note { margin: 0; color: var(--fb-muted); }
 .player-profile-header .fb-metric-grid { grid-template-columns: repeat(6, minmax(0, 1fr)); }
 .player-profile-header .fb-metric-grid > div {
@@ -205,7 +200,7 @@
   .player-profile-header .fb-metric-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .player-profile-header .fb-metric-grid > div { min-height: 96px; padding: 14px; gap: 12px; }
   .player-averages-heading { align-items: flex-start; }
-  .player-averages-heading h2 { font-size: 20px; }
+
   .player-averages-heading .fb-button { padding-inline: 12px; }
   .player-detail-page .player-detail-sections a { padding-inline: 8px; gap: 6px; }
   .player-detail-page .player-detail-sections {

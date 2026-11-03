@@ -1,3 +1,4 @@
+import { radarQuerySchema, type RadarProfileId, type PlayerRadarResponseDto } from "./radar";
 import { ApiContractError, errorForStatus } from "./errors";
 import {
   endpointRequestSchema,
@@ -34,6 +35,11 @@ function weekNumber(value: number): number {
   return positivePathNumberSchema.parse(value);
 }
 
+function zPlayerId(value: string): string {
+  if (!/^[0-9]{1,10}$/.test(value)) throw new Error("Invalid master player id");
+  return segment(value);
+}
+
 export const paths = {
   lineupBuild: (leagueId: string) => `/api/lineup-builder/leagues/${segment(leagueId)}/build`,
   lineupBuildStream: (leagueId: string) => `/api/lineup-builder/leagues/${segment(leagueId)}/build/stream`,
@@ -66,6 +72,13 @@ export const paths = {
   ) => `/api/market/leagues/${segment(leagueId)}/${segment(marketId)}/offers/${segment(offerId)}/${action}`,
   playerMarketValue: (playerId: string) =>
     `/api/players/${segment(playerId)}/market-value`,
+  playerRadar: (playerId: string, season: string, profile?: RadarProfileId, comparePlayerId?: string): `/api/players/${string}/stats/radar?${string}` => {
+    const query = radarQuerySchema.parse({ season, profile, comparePlayerId });
+    const params = new URLSearchParams({ season: query.season });
+    if (query.profile) params.set("profile", query.profile);
+    if (query.comparePlayerId) params.set("compare_player_id", query.comparePlayerId);
+    return `/api/players/${zPlayerId(playerId)}/stats/radar?${params}`;
+  },
   playerStatsProfile: (playerId: string) =>
     `/api/players/${segment(playerId)}/stats/profile`,
   playerStatsFixtures: (playerId: string) =>
@@ -150,6 +163,9 @@ async function sendJson(
   return parseResponse(response, responseSchema);
 }
 
+export function getJson(
+  path: ReturnType<typeof paths.playerRadar>, token: string, options?: GetJsonOptions,
+): Promise<PlayerRadarResponseDto>;
 export function getJson(
   path: ReturnType<typeof paths.currentWeek>, token: string, options?: GetJsonOptions,
 ): Promise<CurrentWeekDto>;

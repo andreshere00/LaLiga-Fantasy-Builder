@@ -250,7 +250,7 @@ export function PlayerMatchesSection({
 
   return (
     <section className="player-detail-panel player-match-section" aria-labelledby="player-matches-title">
-      <h2 id="player-matches-title" tabIndex={-1}>Previous &amp; Upcoming matches</h2>
+      <h2 className="player-section-title" id="player-matches-title" tabIndex={-1}>Previous &amp; Upcoming matches</h2>
       <MatchGroup
         title="Previous 5 matches"
         matches={recentMatches}

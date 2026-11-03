@@ -53,6 +53,7 @@ import {
   marketChartDomain,
   withMarketTrend,
   MISSING_STAT,
+  playerAge,
   deltaRelPercent,
 } from "./playerDetailFormat";
 import { PlayerBookmarkButton } from "./PlayerBookmarkButton";
@@ -62,6 +63,7 @@ import { rosterPhotoByMasterId, teamIdsFromLeagueTeams } from "./model/playerRow
 import { PlayerMatchesSection } from "./PlayerMatchesSection";
 import { PlayerFantasySection, PlayerFantasySummary } from "./PlayerFantasySection";
 import { PlayerAveragesPanel } from "./PlayerAveragesPanel";
+import { PlayerRadarSection } from "./radar/PlayerRadarSection";
 import { PlayerSectionNavigation } from "./PlayerSectionNavigation";
 import { PlayerFormHistory } from "./PlayerFormHistory";
 import { playerAverages } from "./playerAverages";
@@ -246,6 +248,7 @@ function PlayerDetailBody({ masterId }: PlayerDetailBodyProps) {
   const recentBlock = asRecord(detail?.recent);
   const upcomingBlock = asRecord(detail?.upcoming);
   const profileBlock = asRecord(detail?.profile);
+  const age = playerAge(profileBlock?.birthDate, now);
 
   const name =
     text(catalogMaster?.nickname) ??
@@ -314,14 +317,20 @@ function PlayerDetailBody({ masterId }: PlayerDetailBodyProps) {
   };
   const showMarketMenu = marketRow != null && ownSquadCard == null;
 
+  const radarSection = positionId !== 5 && (catalogMaster || detailReady)
+    ? <PlayerRadarSection key={`radar-${masterId}`} playerId={masterId} embedded={detailReady} /> : null;
   if (detailQuery.error instanceof ApiError && detailQuery.error.status === 404) {
     return <PlayerDetailUnavailable notFound />;
   }
   if (!detailReady && detailQuery.isError) {
-    return <PlayerDetailUnavailable pending={detailQuery.isFetching}
-      onRetry={() => void detailQuery.refetch()} />;
+    return <section className="player-detail-page player-detail-independent-radar">
+      <PlayerDetailUnavailable pending={detailQuery.isFetching}
+        onRetry={() => void detailQuery.refetch()} />{radarSection}
+    </section>;
   }
-  if (!detailReady && !detailQuery.isError) return <PlayerDetailScreenLoading />;
+  if (!detailReady && !detailQuery.isError) return <section className="player-detail-page player-detail-independent-radar">
+    <PlayerDetailScreenLoading />{radarSection}
+  </section>;
 
   return (
     <section className="player-detail-page">
@@ -363,7 +372,7 @@ function PlayerDetailBody({ masterId }: PlayerDetailBodyProps) {
         </div>
       ) : null}
 
-      <header className="player-detail-panel player-detail-header player-profile-header">
+      <section className="player-detail-panel player-detail-header player-profile-header" aria-labelledby="player-overview">
         <div className="player-detail-header-identity">
           <PlayerTile
             name={name}
@@ -396,6 +405,7 @@ function PlayerDetailBody({ masterId }: PlayerDetailBodyProps) {
             <div className="player-detail-header-facts">
               <span>{teamName ?? MISSING_STAT}</span>
               <span className="player-profile-position">{positionLabel(positionId) ?? MISSING_STAT}</span>
+              {age != null ? <span>{age} years old</span> : null}
             </div>
             <div className="player-detail-title-row"><h1 id="player-overview" tabIndex={-1}>{name}</h1>
               {text(catalogMaster?.playerStatus) ? <AvailabilityCell availability={availability} />
@@ -436,20 +446,21 @@ function PlayerDetailBody({ masterId }: PlayerDetailBodyProps) {
         <section className="player-detail-fantasy-overview" aria-labelledby="player-summary-fantasy-title">
           <div className="player-outlook-heading">
             <div>
-              <h2 id="player-summary-fantasy-title">Fantasy outlook</h2>
+              <h2 className="player-section-title" id="player-summary-fantasy-title">Fantasy outlook</h2>
               <p className="player-detail-context">Team role, starting estimates and recent form.</p>
             </div>
             <span className="player-outlook-source">FutbolFantasy</span>
           </div>
           <PlayerFantasySummary profile={profileBlock} />
         </section>
-      </header>
+        {radarSection}
+      </section>
 
       <section className="player-detail-panel player-detail-section player-form-section" aria-labelledby="player-form-title"
         aria-busy={updatingPreviousDetail || undefined}>
         <div className="player-form-heading">
           <div>
-            <h2 id="player-form-title" tabIndex={-1}>Form — fixture stats</h2>
+            <h2 className="player-section-title" id="player-form-title" tabIndex={-1}>Form — fixture stats</h2>
             <p>A closer look at recent performances.</p>
           </div>
           <div className="player-detail-fixture-actions" role="group" aria-label="Fixture history length">
@@ -481,7 +492,7 @@ function PlayerDetailBody({ masterId }: PlayerDetailBodyProps) {
 
       <section className="player-detail-panel player-detail-section player-market-value-section" aria-labelledby="player-market-title"
         aria-busy={updatingPreviousDetail || undefined}>
-        <h2 id="player-market-title" tabIndex={-1}>Market value</h2>
+        <h2 className="player-section-title" id="player-market-title" tabIndex={-1}>Market value</h2>
         <div className="player-detail-market-presets" role="group" aria-label="Market value period">
           {MARKET_PRESETS.map((value) => (
             <button
