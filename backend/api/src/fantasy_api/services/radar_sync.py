@@ -221,7 +221,7 @@ async def fetch_tasks(
                     )
                     snapshot = _source_snapshot(task, payload)
                 error = "cached_stale" if snapshot.stale else None
-                counts["success"] += 1
+                counts[error or "success"] += 1
             except UpstreamError as exc:
                 invalid = exc.category == "radar_source_invalid"
                 error = "source_invalid" if invalid else "source_unavailable"

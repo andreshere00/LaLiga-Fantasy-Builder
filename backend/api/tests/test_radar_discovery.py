@@ -2,7 +2,7 @@
 
 # ---- Mocks, fixtures & helpers ---- #
 
-from datetime import UTC, datetime
+from datetime import UTC, datetime, timedelta
 from unittest.mock import AsyncMock
 
 import pytest
@@ -11,6 +11,7 @@ from fantasy_api.radar.catalog import build_inventory
 from fantasy_api.radar.discovery import DiscoveryManifest, discovery_report, weekly_slot
 from fantasy_api.radar.files import atomic_json, read_json
 from fantasy_api.radar.registry import IdentityRegistry
+from fantasy_api.radar.releases import load_release
 
 
 def weekly_args(tmp_path, **changes):
@@ -132,6 +133,43 @@ def test_discovery_manifest_untrusted_urls_rejects(url):
         DiscoveryManifest.model_validate(
             {"profiles": [{"player_id": "1", "url": url, "evidence": [url]}]}
         )
+
+
+def test_weekly_stale_fallback_publishes_saved_data_and_reports_partial(tmp_path, monkeypatch):
+    from test_radar_sync import NOW, inputs
+
+    _, registry, audits, _, value = inputs(tmp_path)
+    raw = [
+        {"id": i, "nickname": f"Player {i}", "teamId": team, "positionId": 3}
+        for i, team in [(1, 4), (2, 15)]
+    ]
+    catalog = build_inventory(raw, "2026-27")
+    for name, model in [("catalog", catalog), ("registry", registry), ("audits", audits)]:
+        atomic_json(tmp_path / f"{name}.json", model.model_dump(mode="json"))
+    atomic_json(tmp_path / "observations.json", {"profiles": []})
+    fetched_at = NOW - timedelta(days=2)
+    scraper = AsyncMock()
+    scraper.get_json.return_value = value | {"fetched_at": fetched_at.isoformat(), "stale": True}
+    public = AsyncMock(return_value=raw)
+    monkeypatch.setattr(radar_sync, "weekly_slot", lambda day: ("2026-W45", True))
+    monkeypatch.setattr(radar_sync, "_public_catalog", public)
+    monkeypatch.setattr(radar_sync, "ScrapingClient", lambda **kwargs: scraper)
+    args = weekly_args(tmp_path)
+
+    with pytest.raises(ValueError, match="refresh incomplete"):
+        radar_sync._weekly(args)
+
+    state = read_json(tmp_path / "weekly-attempt.json")
+    assert state["status"] == "partial"
+    assert state["fetch"] == {"cached_stale": 1}
+    published = load_release(args.root)
+    assert published.store.snapshots[0].fetched_at == fetched_at
+    assert published.store.snapshots[0].stale
+    assert published.coverage[0].last_error_code == "cached_stale"
+    assert radar_sync._weekly(args)["due"] is False
+    public.assert_awaited_once()
+    scraper.get_json.assert_awaited_once()
+    scraper.aclose.assert_awaited_once()
 
 
 def test_weekly_failed_attempt_cannot_repeat_network_same_week(tmp_path, monkeypatch):

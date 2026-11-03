@@ -148,7 +148,8 @@ async def test_compile_dataset_cohort_index_persists_compatible_candidates(tmp_p
 
 
 @pytest.mark.parametrize(
-    "failure", ["source_unavailable", "source_invalid", "quarantined", "missing_import"]
+    "failure",
+    ["source_unavailable", "source_invalid", "quarantined", "missing_import", "cached_stale"],
 )
 async def test_main_fetch_incomplete_refresh_returns_failure_and_preserves_checkpoint(
     tmp_path, monkeypatch, capsys, failure
@@ -160,7 +161,7 @@ async def test_main_fetch_incomplete_refresh_returns_failure_and_preserves_check
     tasks = plan_tasks(catalog, registry, audits, tmp_path)
     for name, model in [("catalog", catalog), ("registry", registry), ("audits", audits)]:
         atomic_json(tmp_path / f"{name}.json", model.model_dump(mode="json"))
-    previous = NOW - timedelta(days=9)
+    previous = NOW - timedelta(days=2 if failure == "cached_stale" else 9)
     scraper = AsyncMock()
     scraper.get_json.return_value = value | {"fetched_at": previous.isoformat()}
     await fetch_tasks(
@@ -179,13 +180,18 @@ async def test_main_fetch_incomplete_refresh_returns_failure_and_preserves_check
     if failure == "quarantined":
         atomic_json(path, saved | {"error_code": "source_invalid"})
     scraper.reset_mock()
-    scraper.get_json.side_effect = UpstreamError(
-        "Private provider detail",
-        category=(
-            "radar_source_invalid" if failure == "source_invalid" else "radar_source_unavailable"
-        ),
-        provider_status=403,
-    )
+    if failure == "cached_stale":
+        scraper.get_json.return_value = value | {"fetched_at": previous.isoformat(), "stale": True}
+    else:
+        scraper.get_json.side_effect = UpstreamError(
+            "Private provider detail",
+            category=(
+                "radar_source_invalid"
+                if failure == "source_invalid"
+                else "radar_source_unavailable"
+            ),
+            provider_status=403,
+        )
     monkeypatch.setattr(radar_sync, "ScrapingClient", lambda **kwargs: scraper)
     flags = [
         "fetch",
@@ -197,6 +203,8 @@ async def test_main_fetch_incomplete_refresh_returns_failure_and_preserves_check
         str(tmp_path / "audits.json"),
         "--captures",
         str(tmp_path),
+        "--refresh-days",
+        "1",
     ]
 
     result = await asyncio.to_thread(radar_sync.main, flags)
@@ -206,9 +214,14 @@ async def test_main_fetch_incomplete_refresh_returns_failure_and_preserves_check
     assert json.loads(output.out)[failure] == 1
     assert "Radar job failed" in output.err
     assert "Private provider detail" not in output.err
-    assert read_json(path)["snapshot"] == saved["snapshot"]
+    expected = saved["snapshot"]
+    if failure == "cached_stale":
+        expected = expected | {"stale": True}
+    assert read_json(path)["snapshot"] == expected
     scraper.aclose.assert_awaited_once()
-    assert scraper.get_json.await_count == int(failure in {"source_unavailable", "source_invalid"})
+    assert scraper.get_json.await_count == int(
+        failure in {"source_unavailable", "source_invalid", "cached_stale"}
+    )
 
 
 @pytest.mark.parametrize("change", ["name", "season", "metric_labels"])

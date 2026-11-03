@@ -165,8 +165,11 @@ Checkpoints are keyed by reviewed inputs and preserve valid observations after
 failures. Fresh records are skipped (default seven days); schema/identity failures
 are quarantined until the review changes. Blocking/unavailable responses stop
 the batch. Source timestamps are retained, including stale adapter cache hits.
-`fetch` prints its counts and exits nonzero for source errors, quarantined tasks
-or missing imports, so scheduled refresh scripts stop before publication.
+`fetch` prints its counts and exits nonzero for source errors, quarantined tasks,
+missing imports or stale cache fallbacks, so scheduled refresh scripts stop before
+publication. Stale fallbacks count as `cached_stale`, never `success`. The weekly
+command may publish retained valid data but records `partial` and exits nonzero
+when any refresh is incomplete; the once-per-week attempt guard still applies.
 The semantic observation ID excludes retrieval timestamps and operational flags.
 
 `validate` writes `validated.json`; it includes every catalog footballer in its

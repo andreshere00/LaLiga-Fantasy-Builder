@@ -253,7 +253,13 @@ def _fetch_failed(counts: dict[str, int]) -> bool:
     """Use the same incomplete-acquisition status for standalone and weekly jobs."""
     return any(
         counts.get(key)
-        for key in ("source_invalid", "source_unavailable", "quarantined", "missing_import")
+        for key in (
+            "source_invalid",
+            "source_unavailable",
+            "quarantined",
+            "missing_import",
+            "cached_stale",
+        )
     )
 
 

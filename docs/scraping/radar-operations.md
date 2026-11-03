@@ -106,9 +106,13 @@ original timestamps. Schema/identity failures are quarantined until review chang
 the task. Correct a review with a new identity version; do not relabel a failed
 capture as another player. No browser retry starts a source fetch.
 `fetch` preserves checkpoints and prints its counts before exiting nonzero for
-source errors, quarantined tasks or missing imports. The VM refresh script then
-stops before validation/publication and reports failure to systemd; the current
-published release remains active.
+source errors, quarantined tasks, missing imports or stale cache fallbacks. The VM
+refresh script then stops before validation/publication and reports failure to
+systemd; the current published release remains active.
+Stale adapter fallbacks are counted as `cached_stale` rather than successful
+refreshes and retain the original source timestamp. The local `weekly` command
+can publish these retained valid observations, but persists `status: partial` and
+exits nonzero. Its weekly attempt guard remains in force after partial refreshes.
 
 ## Pilot and API cutover
 
