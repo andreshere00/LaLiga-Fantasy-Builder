@@ -95,14 +95,14 @@ function RadarContent({ playerId, embedded }: { playerId: string; embedded: bool
   if (query.data && !displayed) return null;
   return <section ref={section} className="player-detail-panel player-detail-section player-radar-section" aria-labelledby="player-radar-title" onFocusCapture={() => setActive(true)}>
     <div className="player-radar-section-header"><h2 className="player-section-title" id="player-radar-title" tabIndex={-1}>Performance profile</h2>
-      {query.data?.status === "available" ? <Button variant="outline" loading={query.isFetching} onClick={refresh}>Refresh performance data</Button> : null}
-    </div>
     <div className="player-radar-controls"><label>Radar season<NativeSelect value={season} onChange={(e) => { setSeason(e.target.value); setProfile(undefined); resetComparison(); }}>
       {seasons.map((s) => <option key={s} value={s}>{s.replace("-", "/")}</option>)}
     </NativeSelect></label>
     {radars.length > 1 ? <label>Radar profile<NativeSelect value={selected?.profile} onChange={(e) => { setProfile(e.target.value as RadarProfileId); resetComparison(); }}>
       {radars.map((r) => <option key={r.profile} value={r.profile}>{r.profileLabel}</option>)}
-    </NativeSelect></label> : null}</div>
+    </NativeSelect></label> : null}
+    {query.data?.status === "available" ? <Button variant="outline" loading={query.isFetching} onClick={refresh}>Refresh performance data</Button> : null}
+    </div></div>
     {notice ? <p role="status" className="player-radar-context">{notice}</p> : null}
     {!active ? <p>Performance data loads when you reach this section.</p> : null}
     {active && query.isPending ? <p role="status">Loading performance radar…</p> : null}

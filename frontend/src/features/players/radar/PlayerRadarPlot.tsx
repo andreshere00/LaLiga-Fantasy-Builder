@@ -59,7 +59,7 @@ export function PlayerRadarPlot({ radar, comparison, embedded = false }: { radar
         <p className="player-radar-scale">Percentile scale · 0 at centre · 100 at edge</p>
         <div className="player-radar-chart" role="img" aria-label={`Percentile radar for ${radar.player}${other ? ` and ${other.player}` : ""}. Scale 0 to 100. Exact values in the metric table.`}>
           <ResponsiveContainer width="100%" height="100%" minWidth={0}>
-            <RadarChart data={points} outerRadius="58%" startAngle={90} endAngle={-270} accessibilityLayer={false}>
+            <RadarChart data={points} outerRadius="62%" startAngle={90} endAngle={-270} accessibilityLayer={false}>
               <PolarGrid stroke="var(--fb-muted)" strokeOpacity={0.3} />
               <PolarAngleAxis dataKey="label" tickSize={20} tick={<AxisTick />} />
               <PolarRadiusAxis domain={[0, 100]} ticks={[25, 50, 75, 100]} tick={{ fontSize: 10, fill: "var(--fb-muted)" }} axisLine={false} />
@@ -108,9 +108,9 @@ export function PlayerRadarPlot({ radar, comparison, embedded = false }: { radar
         <section className="player-radar-reading-guide" aria-labelledby={`${titleId}-reading`}>
           <h4 id={`${titleId}-reading`}>Reading this radar</h4>
           <ul>
-            <li><strong>P80</strong> means the published 80th percentile, not an 80% success rate.</li>
-            <li><strong>Minutes</strong> describe the sample and are not a radar metric.</li>
-            <li><strong>Raw statistics</strong> are not included and cannot be reconstructed from percentiles.</li>
+            <li><strong>P80</strong><span>The published 80th percentile, not an 80% success rate.</span></li>
+            <li><strong>Minutes</strong><span>Describe the sample; they are not a radar metric.</span></li>
+            <li><strong>Raw statistics</strong><span>Not included and cannot be reconstructed from percentiles.</span></li>
           </ul>
         </section>
       </div>

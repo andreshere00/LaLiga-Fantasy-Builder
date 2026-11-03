@@ -826,8 +826,12 @@ embedded radar shows the performance role, league, age and sample minutes; it
 omits a single-player legend and keeps its table caption available to assistive
 technology. Standalone previews and independent fallback radars retain identity.
 
+The performance toolbar places season, optional role and refresh alongside the
+section title on desktop, stacking on mobile. A quiet chart surface balances the
+metric table; population status stays visible in a compact information label.
 Source and methodology groups provenance, dates and a reading guide in a native
-keyboard-accessible disclosure. Provider methods use product labels rather than
+keyboard-accessible disclosure with three separated columns on desktop and
+stacked groups on mobile. Provider methods use product labels rather than
 recipe IDs. Retrieval and provider-update dates are distinct; an unknown update
 is explicitly marked as not provided. Population uncertainty remains visible
 beside the graph, and raw values are never inferred from percentiles.

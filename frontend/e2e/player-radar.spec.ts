@@ -267,7 +267,10 @@ for (const theme of ["light", "dark"]) {
       await expect(radar.getByText("Not provided by the source", { exact: true })).toBeVisible();
       await expect(radar.getByText(/datamb-defense_progression_v1/)).toHaveCount(0);
       expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
+      await summary.evaluate((element) => (element as HTMLElement).blur());
       await radar.locator(".player-radar-methodology").screenshot({ path: info.outputPath(`methodology-${theme}-${width}.png`) });
+      await radar.screenshot({ path: info.outputPath(`performance-${theme}-${width}.png`),
+        style: ".app-header, .player-detail-sections { visibility: hidden; }" });
     });
   }
 }
