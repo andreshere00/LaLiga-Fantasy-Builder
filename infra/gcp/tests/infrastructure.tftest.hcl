@@ -5,11 +5,10 @@ mock_provider "google" {
 }
 
 variables {
-  project_id              = "fantasybuilder-test"
-  admin_members           = []
-  github_actions          = null
-  billing_account_id      = null
-  radar_discovery_enabled = false
+  project_id         = "fantasybuilder-test"
+  admin_members      = []
+  github_actions     = null
+  billing_account_id = null
 }
 
 run "private_backends_and_protected_storage" {
@@ -69,9 +68,8 @@ run "budget_and_operator_access" {
   }
 }
 
-run "weekly_discovery_is_explicit_and_scoped" {
+run "weekly_discovery_is_enabled_by_default_and_scoped" {
   command = plan
-  variables { radar_discovery_enabled = true }
   assert {
     condition = (
       strcontains(local.assets["/etc/fantasybuilder/radar.env"].content, "RADAR_JOB_ENABLED=true") &&
@@ -81,7 +79,7 @@ run "weekly_discovery_is_explicit_and_scoped" {
       strcontains(google_compute_instance.app.metadata["startup-script"], "systemctl enable --now fantasybuilder-radar-refresh.timer") &&
       !strcontains(google_compute_instance.app.metadata["startup-script"], "systemctl disable --now fantasybuilder-radar-refresh.timer")
     )
-    error_message = "Explicit activation must enable the weekly job with the reviewed 20-club season policy."
+    error_message = "Default activation must enable the weekly job with the reviewed 20-club season policy."
   }
   assert {
     condition = (
@@ -96,13 +94,14 @@ run "weekly_discovery_is_explicit_and_scoped" {
 
 run "discovery_disabled_stops_the_timer" {
   command = plan
+  variables { radar_discovery_enabled = false }
   assert {
     condition = (
       strcontains(local.assets["/etc/fantasybuilder/radar.env"].content, "RADAR_JOB_ENABLED=false") &&
       strcontains(google_compute_instance.app.metadata["startup-script"], "systemctl disable --now fantasybuilder-radar-refresh.timer") &&
       !strcontains(google_compute_instance.app.metadata["startup-script"], "systemctl enable --now fantasybuilder-radar-refresh.timer")
     )
-    error_message = "Default/disabled discovery must stop recurrence, including on previously enabled hosts."
+    error_message = "Explicitly disabled discovery must stop recurrence, including on previously enabled hosts."
   }
 }
 

@@ -135,9 +135,9 @@ variable "budget_currency" {
 }
 
 variable "radar_discovery_enabled" {
-  description = "Enable weekly LaLiga 2026/27 discovery on the VM after seeding reviewed inputs and catalog."
+  description = "Schedule weekly LaLiga 2026/27 refresh; requires seeded reviewed inputs and catalog."
   type        = bool
-  default     = false
+  default     = true
 }
 
 variable "github_actions" {

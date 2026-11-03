@@ -21,5 +21,6 @@ admin_members = [
 # }
 
 # Weekly discovery, Wednesday 07:10 Europe/Madrid, on the existing VM.
-# Seed reviewed inputs, catalog/checkpoints and publication before enabling.
-# radar_discovery_enabled = true
+# Enabled by default. Seed reviewed inputs, catalog/checkpoints and publication
+# before deploying; set false to opt out on an unprepared installation.
+# radar_discovery_enabled = false

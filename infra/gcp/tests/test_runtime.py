@@ -1,5 +1,6 @@
 """Exercise deployment boundaries without credentials, cloud calls, or a Docker daemon."""
 
+import configparser
 import json
 import os
 import shutil
@@ -254,7 +255,15 @@ class RuntimeTests(unittest.TestCase):
                 "SCRAPING_SERVICE_TOKEN",
             ]
         }
-        values["APP_DOMAIN"] = "example.com"
+        # systemd supplies public host settings; runtime.env contains no APP_DOMAIN.
+        unit = configparser.ConfigParser(interpolation=None, strict=False)
+        unit.read(ROOT / "templates/fantasybuilder-radar@.service")
+        host_path = unit["Service"]["EnvironmentFile"].replace(
+            "/etc/fantasybuilder", str(self.config)
+        )
+        host_environment = dict(
+            line.split("=", 1) for line in Path(host_path).read_text().splitlines()
+        )
         values.update(
             {
                 f"{name}_IMAGE": f"example.invalid/{name.lower()}:fixture"
@@ -277,7 +286,7 @@ class RuntimeTests(unittest.TestCase):
                 "--format",
                 "json",
             ],
-            env=self.env,
+            env={**self.env, **host_environment},
             capture_output=True,
             text=True,
             check=True,

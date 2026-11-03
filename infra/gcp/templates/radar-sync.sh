@@ -24,6 +24,20 @@ if [[ ! -d "$RADAR_DATA_DIR" || ! -d "$RADAR_REVIEW_DIR" ]]; then
   echo 'Radar data and review directories must exist before running the job.' >&2
   exit 1
 fi
+# Fail before weekly claims its durable slot when deployment inputs are absent.
+if [[ "$mode" == refresh ]]; then
+  for required in "$RADAR_DATA_DIR/staging/catalog.json" \
+    "$RADAR_REVIEW_DIR/registry.json" "$RADAR_REVIEW_DIR/audits.json"; do
+    if [[ ! -s "$required" ]]; then
+      echo "Missing radar input: $required. Seed reviewed data before refreshing." >&2
+      exit 1
+    fi
+  done
+  if [[ ! -d "$RADAR_REVIEW_DIR/captures" ]]; then
+    echo 'Missing radar captures directory. Seed reviewed data before refreshing.' >&2
+    exit 1
+  fi
+fi
 exec 9>"${RADAR_JOB_LOCK:-/run/lock/fantasybuilder-operation.lock}"
 flock -n 9 || { echo 'Another application operation is running.' >&2; exit 1; }
 export CONFIG_DIR=${CONFIG_DIR:-/etc/fantasybuilder/current}
