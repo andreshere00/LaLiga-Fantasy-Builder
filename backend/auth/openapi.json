@@ -3,7 +3,7 @@
   "info": {
     "title": "LaLiga Fantasy Builder Auth",
     "description": "LaLiga Fantasy Builder **auth** service.\n\nApplication authentication is owned by Better Auth at ``/auth`` on the identity\nservice. LaLiga connection and pairing creation require its Ed25519 Bearer JWT.\nThe registered HTTPS browser callback and native helper completion use single-use\nserver challenges, not browser cookies. Browser linking is unavailable until its\nexact HTTPS redirect URI is configured and registered with LaLiga.\n\n``/internal/*`` routes require the internal JWT **and** ``X-Service-Token`` on\na private network. They must not be exposed on the public internet.",
-    "version": "0.1.0"
+    "version": "0.1.2"
   },
   "paths": {
     "/internal/laliga/bearer": {

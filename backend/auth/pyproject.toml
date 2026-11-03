@@ -1,6 +1,6 @@
 [project]
 name = "laliga-fantasy-builder-auth"
-version = "0.1.0"
+version = "0.1.2"
 description = "Auth service for LaLiga Fantasy Builder (LaLiga delegation with Better Auth JWT verification)"
 readme = "README.md"
 authors = [

@@ -6,7 +6,7 @@ data and user-confirmed writes with your linked account.
 
 | Topic | Doc |
 |-------|-----|
-| Changes in v0.1.1 | [CHANGELOG.md](CHANGELOG.md) |
+| Changes in v0.1.2 | [CHANGELOG.md](CHANGELOG.md#012---2026-11-03) |
 | Backend, frontend, and cloud architecture | [ARCHITECTURE.md](ARCHITECTURE.md) |
 | Detailed service trust boundaries | [docs/architecture.md](docs/architecture.md) |
 | Google Cloud Terraform deployment | [infra/gcp/README.md](infra/gcp/README.md) |
@@ -50,8 +50,20 @@ data and user-confirmed writes with your linked account.
   for quick identification.
 - Open a profile for recent and upcoming fixtures, match conditions and
   countdowns, Fantasy indicators, per-match averages, news, and injury history.
+- See current age when a birth date is available and a seven-axis performance
+  radar below Fantasy outlook when a reviewed 2026/27 publication exists.
+  Six performance roles have accessible metric tables and source methodology.
 - On narrow screens the table keeps the player photo, name, team, and details
   actions visible.
+
+Radar reads require an application login and a configured local publication.
+The local dataset verified on 3 November 2026 covers 333 players and 348 role
+snapshots across all 20 clubs; 238 active-roster players remain unresolved.
+Published data stays outside Git and requires durable storage. Native DataMB
+comparisons remain disabled until their reference population is verified, and
+the weekly production timer is opt-in and disabled by default. See
+[coverage](docs/scraping/radar-laliga-2026-27.md) and the
+[operations runbook](docs/scraping/radar-operations.md).
 
 ### Platform
 

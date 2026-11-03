@@ -3,7 +3,11 @@
 Start with the [project README](../README.md) for features and quick start.
 This folder is the detailed map.
 
-See the [v0.1.1 changelog](../CHANGELOG.md) for the main changes shipped so far.
+See the [v0.1.2 changelog](../CHANGELOG.md#012---2026-11-03) for the main changes
+shipped so far, including published 2026/27 player performance radars and current age.
+The [coverage report](scraping/radar-laliga-2026-27.md#current-result) records the
+dated local publication; [operations](scraping/radar-operations.md) covers durable
+storage, opt-in weekly discovery and rollback.
 
 The [product gallery](frontend.md#product-captures) contains ten captures from
 the signed-in application, covering lineup, market, players, player details,

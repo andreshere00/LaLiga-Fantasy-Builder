@@ -1,6 +1,6 @@
 [project]
 name = "laliga-fantasy-builder-scraping"
-version = "0.1.0"
+version = "0.1.2"
 description = "Private FutbolFantasy scraper and offline parser for LaLiga Fantasy Builder"
 readme = "README.md"
 authors = [

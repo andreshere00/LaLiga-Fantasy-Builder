@@ -56,10 +56,18 @@ uv run poe generate-openapi
 
 ### Pre-commit
 
-The local hook `generate-openapi` runs when Fantasy **API or auth** route/schema
-sources (or either committed `openapi.json`) are staged. It regenerates both
+The local hook `generate-openapi` runs when **API, auth or scraping** route/schema
+sources, package metadata or committed `openapi.json` files are staged. It regenerates all three
 schemas via `scripts/check-openapi-alignment.sh` and **fails the commit if a
 file changed**, so you can review and stage updates before committing again.
+
+For a version bump, align the root and service Python package versions and
+lockfiles, the FastAPI application versions, Auth's `__version__`, and the
+scraper User-Agent prefix. Regenerate all three OpenAPI files and the endpoint
+reference with the root `generate-openapi`, `generate-auth-openapi`,
+`generate-scraping-openapi`, and `generate-endpoint-schemas` Poe tasks, then run
+`uv run poe check-openapi`. Date the changelog release and update the README links
+before tagging the release commit.
 
 Install hooks once:
 

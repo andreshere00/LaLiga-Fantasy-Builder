@@ -30,7 +30,7 @@ the dark profile shows Lamine Yamal.
 | `GET` | `/players/{player_id}/stats/matches/recent` | Scraping, calendar | Internal JWT | `RecentMatchesResponse` |
 | `GET` | `/players/{player_id}/stats/matches/upcoming` | Scraping, calendar, OpenWeather | Internal JWT | `UpcomingMatchesResponse` |
 | `GET` | `/players/{player_id}/stats/profile` | Scraping, catalog | Internal JWT | `PlayerProfileResponse` |
-| `GET` | `/players/{player_id}/stats/radar` | Configured snapshots; optional private DataMB adapter | Internal JWT, no LaLiga bearer | `RadarResponse` |
+| `GET` | `/players/{player_id}/stats/radar` | Pinned local publication; no source calls | Internal JWT, no LaLiga bearer | `RadarResponse` |
 | `GET` | `/players/{player_id}/stats/detail` | Aggregate of stats segments | Internal JWT | `PlayerDetailResponse` |
 
 The detail route returns fixtures, market, recent and upcoming matches, and

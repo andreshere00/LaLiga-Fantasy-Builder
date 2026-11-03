@@ -6,6 +6,8 @@ entry, not a claim that every optional provider or deployment gate is complete.
 
 ## [Unreleased]
 
+## [0.1.2] - 2026-11-03
+
 ### Player performance profiles
 
 - Added seven-axis performance radars for goalkeepers, centre-backs, full-backs,
@@ -19,6 +21,8 @@ entry, not a claim that every optional provider or deployment gate is complete.
   viewport, and preserve displayed data when a refresh fails.
 - Validate comparison compatibility on the server and offer comparisons only
   when metric definitions and reference populations are verified.
+- Show the player's current age in Overview when a birth date is available,
+  calculating completed years using the current date in Europe/Madrid.
 
 ### Radar simplification
 
@@ -39,8 +43,9 @@ entry, not a claim that every optional provider or deployment gate is complete.
   starting provider ingestion from the browser.
 - Expanded discovery to all 20 LaLiga clubs for 2026/27. Removed the initial
   300-minute cutoff, restoring the 26 previously excluded players. The local
-  publication verified on 3 November contains 267 players and 282 role snapshots;
-  304 active-roster players remain unresolved.
+  publication verified on 3 November contains 333 players and 348 role snapshots;
+  238 active-roster players remain unresolved. The latest review added 66 players;
+  two observed profile links remain pending after returning HTTP 404.
 - Added Terraform-managed weekly discovery on the existing VM for Wednesday
   at 07:10 Europe/Madrid, with read-only policy inputs, a durable attempt guard,
   and opt-in activation. Removed the recurring LLM task; local checks remain available.
@@ -54,6 +59,8 @@ entry, not a claim that every optional provider or deployment gate is complete.
 - Updated API schemas, frontend guidance, deployment configuration, and radar
   runbooks. Removed superseded plans, temporary research, and pilot reports,
   consolidating current operational and release requirements.
+- Aligned Python package metadata, runtime service versions, and generated
+  OpenAPI documents with v0.1.2.
 - Published datasets and reviewed captures remain outside Git and require durable
   storage configuration. Production timers remain disabled. Native DataMB
   comparisons remain unavailable until their reference population is verified;
