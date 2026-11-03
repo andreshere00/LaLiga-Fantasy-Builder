@@ -92,6 +92,7 @@ function RadarContent({ playerId }: { playerId: string }) {
     if (activeComparison) void compareQuery.refetch();
   };
   const reason = query.data?.coverage?.reasonCode;
+  if (query.data && !displayed) return null;
   return <section ref={section} className="player-detail-panel player-detail-section player-radar-section" aria-labelledby="player-radar-title" onFocusCapture={() => setActive(true)}>
     <div className="player-radar-section-header"><div><h2 className="player-section-title" id="player-radar-title" tabIndex={-1}>Performance profile</h2>
       <p>Seven role-specific percentiles, with their reference sample.</p></div>

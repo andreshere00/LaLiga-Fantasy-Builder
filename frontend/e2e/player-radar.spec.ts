@@ -55,14 +55,14 @@ test("radar loads independently, missing metrics hide its polygon, and failures 
   await page.getByRole("heading", { name: "Performance profile", exact: true }).scrollIntoViewIfNeeded();
   await expect(page.getByRole("table", { name: "Percentiles for Pau Cubarsí" })).toBeVisible();
   expect(calls).toBeGreaterThan(0);
-  await page.getByLabel("Radar season").selectOption("2025-26");
-  await expect(page.getByText("No performance data has been published for this player in this season.", { exact: true })).toBeVisible();
-  await expect(page.getByRole("table", { name: "Percentiles for Pau Cubarsí" })).toHaveCount(0);
   fail = true;
-  await page.getByLabel("Radar season").selectOption("2026-27");
   await page.getByRole("button", { name: "Refresh performance data" }).click();
   await expect(page.getByRole("alert")).toContainText("Performance data could not be loaded");
+  await expect(page.getByRole("table", { name: "Percentiles for Pau Cubarsí" })).toBeVisible();
   await expect(page.getByRole("heading", { name: "Form — fixture stats" })).toBeAttached();
+  fail = false;
+  await page.getByLabel("Radar season").selectOption("2025-26");
+  await expect(page.locator(".player-radar-section")).toHaveCount(0);
 });
 
 test("a missing spoke is never drawn as zero", async ({ page }) => {
@@ -151,7 +151,7 @@ for (const { theme, width } of [{ theme: "light", width: 375 }, { theme: "dark",
     await page.getByRole("heading", { name: "Performance profile", exact: true }).scrollIntoViewIfNeeded();
     await page.getByRole("region", { name: "Performance profile", exact: true }).screenshot({ path: info.outputPath(`published-radar-${theme}-${width}.png`) });
     await page.getByLabel("Radar season").selectOption("2025-26");
-    await expect(page.getByText("Comparison cleared because the season or role changed.")).toBeVisible();
+    await expect(page.locator(".player-radar-section")).toHaveCount(0);
   });
 }
 
@@ -172,7 +172,7 @@ test("approved default role is selected, and definitive absence has no retry or 
   await page.getByLabel("Radar profile").selectOption(first.profile);
   await expect(page.getByLabel("Radar profile")).toHaveValue(first.profile);
   await page.getByLabel("Radar season").selectOption("2025-26");
-  await expect(page.getByText(/No performance data is available for this season/)).toBeVisible();
+  await expect(page.locator(".player-radar-section")).toHaveCount(0);
   await expect(page.getByRole("button", { name: /Retry performance|Refresh performance/ })).toHaveCount(0);
 });
 
@@ -213,5 +213,28 @@ for (const theme of ["light", "dark"]) {
         .map((el) => ({ tag: el.tagName, class: el.getAttribute("class"), right: el.getBoundingClientRect().right })).slice(0, 20) }));
     await expect.poll(() => page.evaluate(() => document.documentElement.scrollWidth), { message: JSON.stringify(overflow.elements) }).toBeLessThanOrEqual(320);
     await page.getByRole("region", { name: "Performance profile", exact: true }).screenshot({ path: info.outputPath(`published-reflow-${theme}.png`) });
+  });
+}
+
+for (const { theme, width, reason } of [
+  { theme: "light", width: 375, reason: "not_published" },
+  { theme: "dark", width: 1440, reason: "identity_pending" },
+  { theme: "dark", width: 375, reason: "expired" },
+  { theme: "light", width: 1440, reason: "out_of_scope" },
+]) {
+  test(`unavailable radar subsection is absent: ${reason} ${theme} ${width}`, async ({ page }) => {
+    await mockApplication(page);
+    await page.setViewportSize({ width, height: 1000 });
+    await page.addInitScript((value) => localStorage.setItem("lfb-theme", value), theme);
+    await page.route("**/api/players/1/stats/radar?*", (route) => route.fulfill({
+      json: response([], { coverage: coverage(reason) }),
+    }));
+    await page.goto("/players/1");
+    await expect(page.locator(".player-profile-header")).toBeVisible();
+    await page.evaluate(() => document.querySelector(".player-radar-section")?.scrollIntoView());
+    await expect(page.locator(".player-radar-section")).toHaveCount(0);
+    await expect(page.getByRole("heading", { name: "Performance profile", exact: true })).toHaveCount(0);
+    await expect(page.getByLabel("Radar season")).toHaveCount(0);
+    await expect(page.getByRole("heading", { name: "Form — fixture stats" })).toBeAttached();
   });
 }

@@ -822,8 +822,9 @@ aggregate is loading or temporarily fails; confirmed missing players and coaches
 retain their own appropriate flow. Player/account changes reset selections.
 The reviewed default role is selected; multiple published roles remain selectable.
 
-Coverage reason codes map to concrete English product messages. Definitive
-absence has no retry control; errors retry the local API only. Available data
+When the API confirms no published radar for the selection, the entire subsection
+is omitted, including its heading, controls and absence message. Partial profiles
+with available data remain visible. Errors retry the local API only. Available data
 stays visible on refresh failure. The data date and retrieval date appear beside
 the sample context. Examples remain at `/players/radar-preview`, outside real
 player panels. No overall score or invented values are derived from the polygon.
