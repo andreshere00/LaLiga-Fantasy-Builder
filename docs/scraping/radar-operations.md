@@ -105,6 +105,10 @@ recipe. Source errors stop a network batch; successful records survive with thei
 original timestamps. Schema/identity failures are quarantined until review changes
 the task. Correct a review with a new identity version; do not relabel a failed
 capture as another player. No browser retry starts a source fetch.
+`fetch` preserves checkpoints and prints its counts before exiting nonzero for
+source errors, quarantined tasks or missing imports. The VM refresh script then
+stops before validation/publication and reports failure to systemd; the current
+published release remains active.
 
 ## Pilot and API cutover
 

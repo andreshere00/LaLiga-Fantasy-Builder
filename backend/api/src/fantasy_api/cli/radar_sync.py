@@ -249,6 +249,14 @@ def _run(args: argparse.Namespace) -> dict:
     return dataset.report
 
 
+def _fetch_failed(counts: dict[str, int]) -> bool:
+    """Use the same incomplete-acquisition status for standalone and weekly jobs."""
+    return any(
+        counts.get(key)
+        for key in ("source_invalid", "source_unavailable", "quarantined", "missing_import")
+    )
+
+
 def _weekly(args: argparse.Namespace) -> dict:
     """Attempt one scoped refresh per Madrid week, only on the configured weekday."""
     if args.stale_days >= args.maximum_days:
@@ -310,10 +318,7 @@ def _weekly(args: argparse.Namespace) -> dict:
         if policy is not None:
             dataset = filter_publication(dataset, policy)
         release = publish_release(args.root, dataset)
-        failed = any(
-            counts.get(k)
-            for k in ("source_invalid", "source_unavailable", "quarantined", "missing_import")
-        )
+        failed = _fetch_failed(counts)
         result = {
             "week": week,
             "status": "partial" if failed else "complete",
@@ -331,7 +336,10 @@ def main(argv: list[str] | None = None) -> int:
     """Run an explicit job and print a safe machine-readable result or sanitized failure."""
     args = _parser().parse_args(argv)
     try:
-        print(json.dumps(_run(args), ensure_ascii=False))
+        result = _run(args)
+        print(json.dumps(result, ensure_ascii=False))
+        if args.command == "fetch" and _fetch_failed(result):
+            raise ValueError("source refresh incomplete; inspect checkpoints")
         return 0
     except (OSError, ValueError, KeyError, TypeError, httpx.HTTPError, UpstreamError):
         print(
