@@ -23,9 +23,9 @@ const reasons: Record<RadarCoverageDto["reasonCode"], string> = {
   identity_not_found: "No verified source profile is linked to this player.",
   role_unresolved: "This player's team role is awaiting review.",
   not_published: "No performance data has been published for this player in this season.",
-  insufficient_minutes: "The published sample is below the required minutes for this reference population.",
+  insufficient_minutes: "The verified league minutes are below the minimum required for this season’s radar.",
   incomplete_metrics: "Some of the seven metrics have not been published.",
-  out_of_scope: "Performance profiles are available for footballers in the published Fantasy catalog.",
+  out_of_scope: "This player is outside the season and competition covered by the current radar dataset.",
   season_unavailable: "No performance data is available for this season. Choose a published season when available.",
   expired: "The saved performance data is too old to show. A new validated dataset is needed.",
 };

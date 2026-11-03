@@ -78,11 +78,13 @@ class PublishedDataset(BaseModel):
         if self.provenance is not None:
             provenance = self.provenance
             if (
-                provenance.get("format") != "radar-provenance-v1"
+                provenance.get("format") not in {"radar-provenance-v1", "radar-provenance-v2"}
                 or provenance.get("catalog_snapshot_id") != self.catalog.snapshot_id
                 or provenance.get("season") != self.catalog.season
             ):
                 raise ValueError("provenance does not match its published catalog")
+            if (provenance["format"] == "radar-provenance-v2") != ("eligibility" in provenance):
+                raise ValueError("provenance version does not match eligibility contract")
             registry = IdentityRegistry.model_validate({"records": provenance.get("identities")})
             audits = SupplyAudits.model_validate({"audits": provenance.get("audits")})
             audit_by_id = {audit.audit_id: audit for audit in audits.audits}
@@ -109,14 +111,23 @@ class PublishedDataset(BaseModel):
                 raise ValueError("provenance tasks do not match reviewed inputs")
             if any(s.snapshot_id != semantic_snapshot_id(s) for s in self.store.snapshots):
                 raise ValueError("observation content hash differs from stored identity")
-            expected_id = content_id(
-                {
-                    "catalog": self.catalog.snapshot_id,
-                    "season": self.catalog.season,
-                    "tasks": sorted(task_hashes),
-                    "observations": sorted(s.snapshot_id for s in self.store.snapshots),
-                }
-            )
+            identity_payload = {
+                "catalog": self.catalog.snapshot_id,
+                "season": self.catalog.season,
+                "tasks": sorted(task_hashes),
+                "observations": sorted(s.snapshot_id for s in self.store.snapshots),
+            }
+            if "eligibility" in provenance:
+                from fantasy_api.radar.eligibility import RadarEligibility
+
+                policy = RadarEligibility.model_validate(provenance["eligibility"])
+                if policy.season != self.catalog.season:
+                    raise ValueError("eligibility season mismatch")
+                teams = {p.player_id: p.team_id for p in self.catalog.players}
+                if any(policy.exclusion(s, teams[s.player_id]) for s in self.store.snapshots):
+                    raise ValueError("published observation violates eligibility policy")
+                identity_payload["eligibility"] = policy.model_dump(mode="json")
+            expected_id = content_id(identity_payload)
             if expected_id != self.report["dataset_id"]:
                 raise ValueError("published observations do not match provenance")
         # Import locally to keep service -> repository -> releases imports acyclic.

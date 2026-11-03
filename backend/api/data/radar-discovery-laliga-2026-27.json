@@ -1,0 +1,2401 @@
+{
+  "profiles": [
+    {
+      "evidence": [
+        "https://datamb.football/Alejandro_Balde_Full-back_stats/",
+        "https://www.futbolfantasy.com/jugadores/alejandro-balde"
+      ],
+      "player_id": "1218",
+      "url": "https://datamb.football/Alejandro_Balde_Full-back_stats/"
+    },
+    {
+      "evidence": [
+        "https://datamb.football/Fermin_Lopez_Midfielder_stats/",
+        "https://www.futbolfantasy.com/jugadores/fermin-lopez"
+      ],
+      "player_id": "1715",
+      "url": "https://datamb.football/Fermin_Lopez_Midfielder_stats/"
+    },
+    {
+      "evidence": [
+        "https://datamb.football/R_Araujo_Centre-back_stats/",
+        "https://www.futbolfantasy.com/jugadores/ronald-araujo"
+      ],
+      "player_id": "2356",
+      "url": "https://datamb.football/R_Araujo_Centre-back_stats/"
+    },
+    {
+      "evidence": [
+        "https://datamb.football/F_de_Jong_Midfielder_stats/",
+        "https://www.futbolfantasy.com/jugadores/frenkie-de-jong"
+      ],
+      "player_id": "2358",
+      "url": "https://datamb.football/F_de_Jong_Midfielder_stats/"
+    },
+    {
+      "evidence": [
+        "https://datamb.football/Ferran_Torres_Striker_stats/",
+        "https://www.futbolfantasy.com/jugadores/ferran-torres"
+      ],
+      "player_id": "2359",
+      "url": "https://datamb.football/Ferran_Torres_Striker_stats/"
+    },
+    {
+      "evidence": [
+        "https://datamb.football/Raphinha_Winger_stats/",
+        "https://www.futbolfantasy.com/jugadores/raphinha"
+      ],
+      "player_id": "2522",
+      "url": "https://datamb.football/Raphinha_Winger_stats/"
+    },
+    {
+      "evidence": [
+        "https://datamb.football/Joan_Garcia_Goalkeeper_stats/",
+        "https://www.futbolfantasy.com/jugadores/joan-garcia"
+      ],
+      "player_id": "2634",
+      "url": "https://datamb.football/Joan_Garcia_Goalkeeper_stats/"
+    },
+    {
+      "evidence": [
+        "https://datamb.football/M_Rashford_Winger_stats/",
+        "https://www.futbolfantasy.com/jugadores/marcus-rashford"
+      ],
+      "player_id": "2635",
+      "url": "https://datamb.football/M_Rashford_Winger_stats/"
+    },
+    {
+      "evidence": [
+        "https://datamb.football/Gerard_Martin_Centre-back_stats/",
+        "https://www.futbolfantasy.com/jugadores/gerard-martin"
+      ],
+      "player_id": "2757",
+      "url": "https://datamb.football/Gerard_Martin_Centre-back_stats/"
+    },
+    {
+      "evidence": [
+        "https://datamb.football/Xavi_Espart_Full-back_stats/",
+        "https://www.futbolfantasy.com/jugadores/xavi-espart"
+      ],
+      "player_id": "2843",
+      "url": "https://datamb.football/Xavi_Espart_Full-back_stats/"
+    },
+    {
+      "evidence": [
+        "https://datamb.football/Jo_o_Cancelo_Full-back_stats/",
+        "https://www.futbolfantasy.com/jugadores/joao-cancelo"
+      ],
+      "player_id": "2906",
+      "url": "https://datamb.football/Jo_o_Cancelo_Full-back_stats/"
+    },
+    {
+      "evidence": [
+        "https://datamb.football/Dani_Olmo_Midfielder_stats/",
+        "https://www.futbolfantasy.com/jugadores/dani-olmo"
+      ],
+      "player_id": "3092",
+      "url": "https://datamb.football/Dani_Olmo_Midfielder_stats/"
+    },
+    {
+      "evidence": [
+        "https://datamb.football/Rodri_Midfielder_stats/",
+        "https://www.futbolfantasy.com/jugadores/rodri-hernandez"
+      ],
+      "player_id": "3208",
+      "url": "https://datamb.football/Rodri_Midfielder_stats/"
+    },
+    {
+      "evidence": [
+        "https://datamb.football/K_Adeyemi_Winger_stats/",
+        "https://www.futbolfantasy.com/jugadores/karim-adeyemi"
+      ],
+      "player_id": "3209",
+      "url": "https://datamb.football/K_Adeyemi_Winger_stats/"
+    },
+    {
+      "evidence": [
+        "https://datamb.football/A_Gordon_Winger_stats/",
+        "https://www.futbolfantasy.com/jugadores/anthony-gordon"
+      ],
+      "player_id": "3210",
+      "url": "https://datamb.football/A_Gordon_Winger_stats/"
+    },
+    {
+      "evidence": [
+        "https://datamb.football/T_Courtois_Goalkeeper_stats/",
+        "https://www.futbolfantasy.com/jugadores/thibaut-courtois"
+      ],
+      "player_id": "230",
+      "url": "https://datamb.football/T_Courtois_Goalkeeper_stats/"
+    },
+    {
+      "evidence": [
+        "https://datamb.football/E_Camavinga_Midfielder_stats/",
+        "https://www.futbolfantasy.com/jugadores/eduardo-camavinga"
+      ],
+      "player_id": "1300",
+      "url": "https://datamb.football/E_Camavinga_Midfielder_stats/"
+    },
+    {
+      "evidence": [
+        "https://datamb.football/A_Tchouameni_Midfielder_stats/",
+        "https://www.futbolfantasy.com/jugadores/aurelien-tchouameni"
+      ],
+      "player_id": "1480",
+      "url": "https://datamb.football/A_Tchouameni_Midfielder_stats/"
+    },
+    {
+      "evidence": [
+        "https://datamb.football/A_Guler_Midfielder_stats/",
+        "https://www.futbolfantasy.com/jugadores/arda-gler"
+      ],
+      "player_id": "1674",
+      "url": "https://datamb.football/A_Guler_Midfielder_stats/"
+    },
+    {
+      "evidence": [
+        "https://datamb.football/Raul_Asencio_Centre-back_stats/",
+        "https://www.futbolfantasy.com/jugadores/raul-asencio-1"
+      ],
+      "player_id": "2146",
+      "url": "https://datamb.football/Raul_Asencio_Centre-back_stats/"
+    },
+    {
+      "evidence": [
+        "https://datamb.football/_der_Milit_o_Centre-back_stats/",
+        "https://www.futbolfantasy.com/jugadores/der-milito"
+      ],
+      "player_id": "2426",
+      "url": "https://datamb.football/_der_Milit_o_Centre-back_stats/"
+    },
+    {
+      "evidence": [
+        "https://datamb.football/A_Rudiger_Centre-back_stats/",
+        "https://www.futbolfantasy.com/jugadores/antonio-rudiger"
+      ],
+      "player_id": "2428",
+      "url": "https://datamb.football/A_Rudiger_Centre-back_stats/"
+    },
+    {
+      "evidence": [
+        "https://datamb.football/F_Valverde_Midfielder_stats/",
+        "https://www.futbolfantasy.com/jugadores/federico-valverde"
+      ],
+      "player_id": "2430",
+      "url": "https://datamb.football/F_Valverde_Midfielder_stats/"
+    },
+    {
+      "evidence": [
+        "https://datamb.football/Brahim_Diaz_Winger_stats/",
+        "https://www.futbolfantasy.com/jugadores/brahim-diaz"
+      ],
+      "player_id": "2431",
+      "url": "https://datamb.football/Brahim_Diaz_Winger_stats/"
+    },
+    {
+      "evidence": [
+        "https://datamb.football/Rodrygo_Winger_stats/",
+        "https://www.futbolfantasy.com/jugadores/rodrygo-goes"
+      ],
+      "player_id": "2434",
+      "url": "https://datamb.football/Rodrygo_Winger_stats/"
+    },
+    {
+      "evidence": [
+        "https://datamb.football/Dean_Huijsen_Centre-back_stats/",
+        "https://www.futbolfantasy.com/jugadores/dean-huijsen"
+      ],
+      "player_id": "2530",
+      "url": "https://datamb.football/Dean_Huijsen_Centre-back_stats/"
+    },
+    {
+      "evidence": [
+        "https://datamb.football/T_Alexander_Arnold_Full-back_stats/",
+        "https://www.futbolfantasy.com/jugadores/trent-alexander-arnold"
+      ],
+      "player_id": "2531",
+      "url": "https://datamb.football/T_Alexander_Arnold_Full-back_stats/"
+    },
+    {
+      "evidence": [
+        "https://datamb.football/_lvaro_Carreras_Full-back_stats/",
+        "https://www.futbolfantasy.com/jugadores/lvaro-fernandez-1"
+      ],
+      "player_id": "2533",
+      "url": "https://datamb.football/_lvaro_Carreras_Full-back_stats/"
+    },
+    {
+      "evidence": [
+        "https://datamb.football/Gonzalo_Garcia_Striker_stats/",
+        "https://www.futbolfantasy.com/jugadores/gonzalo-garcia"
+      ],
+      "player_id": "2574",
+      "url": "https://datamb.football/Gonzalo_Garcia_Striker_stats/"
+    },
+    {
+      "evidence": [
+        "https://datamb.football/F_Mastantuono_Winger_stats/",
+        "https://www.futbolfantasy.com/jugadores/franco-mastantuono"
+      ],
+      "player_id": "2718",
+      "url": "https://datamb.football/F_Mastantuono_Winger_stats/"
+    },
+    {
+      "evidence": [
+        "https://datamb.football/Victor_Valdepenas_Full-back_stats/",
+        "https://www.futbolfantasy.com/jugadores/victor-valdepenas"
+      ],
+      "player_id": "2867",
+      "url": "https://datamb.football/Victor_Valdepenas_Full-back_stats/"
+    },
+    {
+      "evidence": [
+        "https://datamb.football/Cesar_Palacios_Winger_stats/",
+        "https://www.futbolfantasy.com/jugadores/cesar-palacios"
+      ],
+      "player_id": "2908",
+      "url": "https://datamb.football/Cesar_Palacios_Winger_stats/"
+    },
+    {
+      "evidence": [
+        "https://datamb.football/D_Dumfries_Full-back_stats/",
+        "https://www.futbolfantasy.com/jugadores/denzel-dumfries"
+      ],
+      "player_id": "3080",
+      "url": "https://datamb.football/D_Dumfries_Full-back_stats/"
+    },
+    {
+      "evidence": [
+        "https://datamb.football/J_Bellingham_Midfielder_stats1/",
+        "https://www.futbolfantasy.com/jugadores/jude-bellingham"
+      ],
+      "player_id": "3101",
+      "url": "https://datamb.football/J_Bellingham_Midfielder_stats1/"
+    },
+    {
+      "evidence": [
+        "https://datamb.football/Vinicius_Junior_Winger_stats/",
+        "https://www.futbolfantasy.com/jugadores/vinicius-junior"
+      ],
+      "player_id": "3102",
+      "url": "https://datamb.football/Vinicius_Junior_Winger_stats/"
+    },
+    {
+      "evidence": [
+        "https://datamb.football/Marc_Cucurella_Full-back_stats/",
+        "https://www.futbolfantasy.com/jugadores/marc-cucurella"
+      ],
+      "player_id": "3106",
+      "url": "https://datamb.football/Marc_Cucurella_Full-back_stats/"
+    },
+    {
+      "evidence": [
+        "https://datamb.football/I_Konate_Centre-back_stats/",
+        "https://www.futbolfantasy.com/jugadores/ibrahima-konate"
+      ],
+      "player_id": "3107",
+      "url": "https://datamb.football/I_Konate_Centre-back_stats/"
+    },
+    {
+      "evidence": [
+        "https://datamb.football/Endrick_Striker_stats/",
+        "https://www.futbolfantasy.com/jugadores/endrick"
+      ],
+      "player_id": "3112",
+      "url": "https://datamb.football/Endrick_Striker_stats/"
+    },
+    {
+      "evidence": [
+        "https://datamb.football/Bernardo_Silva_Midfielder_stats/",
+        "https://www.futbolfantasy.com/jugadores/bernardo-silva"
+      ],
+      "player_id": "3116",
+      "url": "https://datamb.football/Bernardo_Silva_Midfielder_stats/"
+    },
+    {
+      "evidence": [
+        "https://datamb.football/Carlos_Espi_Striker_stats/",
+        "https://www.futbolfantasy.com/jugadores/carlos-espi"
+      ],
+      "player_id": "3129",
+      "url": "https://datamb.football/Carlos_Espi_Striker_stats/"
+    },
+    {
+      "evidence": [
+        "https://datamb.football/Yan_Diomande_Winger_stats/",
+        "https://www.futbolfantasy.com/jugadores/yan-diomande"
+      ],
+      "player_id": "3143",
+      "url": "https://datamb.football/Yan_Diomande_Winger_stats/"
+    },
+    {
+      "evidence": [
+        "https://datamb.football/Pedri_Midfielder_stats/",
+        "https://datamb.football/guide/",
+        "https://www.fcbarcelona.com/en/football/first-team/players/70486/pedro-gonzalez-lopez"
+      ],
+      "player_id": "3100",
+      "url": "https://datamb.football/Pedri_Midfielder_stats/"
+    },
+    {
+      "evidence": [
+        "https://datamb.football/Pau_Cubarsi_Centre-back_stats/",
+        "https://www.fcbarcelona.com/en/football/first-team/players/129400/pau-cubarsi",
+        "https://datamb.football/guide/"
+      ],
+      "player_id": "1775",
+      "url": "https://datamb.football/Pau_Cubarsi_Centre-back_stats/"
+    },
+    {
+      "evidence": [
+        "https://datamb.football/J_Kounde_Full-back_stats/",
+        "https://www.fcbarcelona.com/en/football/first-team/news/4576643/kounde-overtakes-abidal-to-become-the-frenchman-with-the-most-appearances-for-fc-barcelona",
+        "https://datamb.football/guide/"
+      ],
+      "player_id": "2355",
+      "url": "https://datamb.football/J_Kounde_Full-back_stats/"
+    },
+    {
+      "evidence": [
+        "https://datamb.football/Lamine_Yamal_Winger_stats/",
+        "https://www.fcbarcelona.com/en/football/first-team/news/4054567/pau-cubars-and-lamine-yamal-now-official-firstteamers",
+        "https://datamb.football/guide/"
+      ],
+      "player_id": "3104",
+      "url": "https://datamb.football/Lamine_Yamal_Winger_stats/"
+    },
+    {
+      "evidence": [
+        "https://datamb.football/K_Mbappe_Striker_stats/",
+        "https://www.realmadrid.com/en-US/football/squad/kylian-mbappe",
+        "https://datamb.football/guide/"
+      ],
+      "player_id": "3103",
+      "url": "https://datamb.football/K_Mbappe_Striker_stats/"
+    },
+    {
+      "evidence": [
+        "https://datamb.football/Antonio_Blanco_Midfielder_stats/",
+        "https://www.futbolfantasy.com/jugadores/antonio-blanco"
+      ],
+      "player_id": "3069",
+      "url": "https://datamb.football/Antonio_Blanco_Midfielder_stats/"
+    },
+    {
+      "evidence": [
+        "https://datamb.football/_lex_Grimaldo_Full-back_stats/",
+        "https://www.futbolfantasy.com/jugadores/alex-grimaldo"
+      ],
+      "player_id": "3155",
+      "url": "https://datamb.football/_lex_Grimaldo_Full-back_stats/"
+    },
+    {
+      "evidence": [
+        "https://datamb.football/_lvaro_Valles_Goalkeeper_stats/",
+        "https://www.futbolfantasy.com/jugadores/alvaro-valles"
+      ],
+      "player_id": "2541",
+      "url": "https://datamb.football/_lvaro_Valles_Goalkeeper_stats/"
+    },
+    {
+      "evidence": [
+        "https://datamb.football/David_Larrubia_Winger_stats/",
+        "https://www.futbolfantasy.com/jugadores/david-larrubia"
+      ],
+      "player_id": "3072",
+      "url": "https://datamb.football/David_Larrubia_Winger_stats/"
+    },
+    {
+      "evidence": [
+        "https://datamb.football/Cesar_Tarrega_Centre-back_stats/",
+        "https://www.futbolfantasy.com/jugadores/cesar-tarrega"
+      ],
+      "player_id": "1991",
+      "url": "https://datamb.football/Cesar_Tarrega_Centre-back_stats/"
+    },
+    {
+      "evidence": [
+        "https://datamb.football/Pablo_Maffeo_Full-back_stats/",
+        "https://www.futbolfantasy.com/jugadores/pablo-maffeo"
+      ],
+      "player_id": "3206",
+      "url": "https://datamb.football/Pablo_Maffeo_Full-back_stats/"
+    },
+    {
+      "evidence": [
+        "https://datamb.football/Riki_Rodriguez_Winger_stats/",
+        "https://www.futbolfantasy.com/jugadores/riki-rodriguez"
+      ],
+      "player_id": "2977",
+      "url": "https://datamb.football/Riki_Rodriguez_Winger_stats/"
+    },
+    {
+      "evidence": [
+        "https://datamb.football/Dani_Olmo_Winger_stats/",
+        "https://www.futbolfantasy.com/jugadores/dani-olmo"
+      ],
+      "player_id": "3092",
+      "url": "https://datamb.football/Dani_Olmo_Winger_stats/"
+    },
+    {
+      "evidence": [
+        "https://datamb.football/Ilaix_Moriba_Midfielder_stats/",
+        "https://www.futbolfantasy.com/jugadores/ilaix-moriba"
+      ],
+      "player_id": "2607",
+      "url": "https://datamb.football/Ilaix_Moriba_Midfielder_stats/"
+    },
+    {
+      "evidence": [
+        "https://datamb.football/Luiz_Junior_Goalkeeper_stats/",
+        "https://www.futbolfantasy.com/jugadores/luiz-junior"
+      ],
+      "player_id": "2467",
+      "url": "https://datamb.football/Luiz_Junior_Goalkeeper_stats/"
+    },
+    {
+      "evidence": [
+        "https://datamb.football/Manu_Sanchez_Full-back_stats/",
+        "https://www.futbolfantasy.com/jugadores/manu-sanchez"
+      ],
+      "player_id": "2624",
+      "url": "https://datamb.football/Manu_Sanchez_Full-back_stats/"
+    },
+    {
+      "evidence": [
+        "https://datamb.football/Arnau_Martinez_Centre-back_stats/",
+        "https://www.futbolfantasy.com/jugadores/arnau-martinez"
+      ],
+      "player_id": "3236",
+      "url": "https://datamb.football/Arnau_Martinez_Centre-back_stats/"
+    },
+    {
+      "evidence": [
+        "https://datamb.football/Arnau_Martinez_Full-back_stats/",
+        "https://www.futbolfantasy.com/jugadores/arnau-martinez"
+      ],
+      "player_id": "3236",
+      "url": "https://datamb.football/Arnau_Martinez_Full-back_stats/"
+    },
+    {
+      "evidence": [
+        "https://datamb.football/Marc_Roca_Midfielder_stats/",
+        "https://www.futbolfantasy.com/jugadores/marc-roca"
+      ],
+      "player_id": "2418",
+      "url": "https://datamb.football/Marc_Roca_Midfielder_stats/"
+    },
+    {
+      "evidence": [
+        "https://datamb.football/Marcos_Llorente_Full-back_stats/",
+        "https://www.futbolfantasy.com/jugadores/marcos-llorente"
+      ],
+      "player_id": "67",
+      "url": "https://datamb.football/Marcos_Llorente_Full-back_stats/"
+    },
+    {
+      "evidence": [
+        "https://datamb.football/Jon_Gorrotxategi_Midfielder_stats/",
+        "https://www.futbolfantasy.com/jugadores/jon-gorrotxategi"
+      ],
+      "player_id": "2621",
+      "url": "https://datamb.football/Jon_Gorrotxategi_Midfielder_stats/"
+    },
+    {
+      "evidence": [
+        "https://datamb.football/Edu_Exposito_Midfielder_stats/",
+        "https://www.futbolfantasy.com/jugadores/edu-exposito"
+      ],
+      "player_id": "3077",
+      "url": "https://datamb.football/Edu_Exposito_Midfielder_stats/"
+    },
+    {
+      "evidence": [
+        "https://datamb.football/Jorge_Herrando_Centre-back_stats/",
+        "https://www.futbolfantasy.com/jugadores/jorge-herrando"
+      ],
+      "player_id": "2336",
+      "url": "https://datamb.football/Jorge_Herrando_Centre-back_stats/"
+    },
+    {
+      "evidence": [
+        "https://datamb.football/Javi_Guerra_Winger_stats/",
+        "https://www.futbolfantasy.com/jugadores/javi-guerra-1"
+      ],
+      "player_id": "3075",
+      "url": "https://datamb.football/Javi_Guerra_Winger_stats/"
+    },
+    {
+      "evidence": [
+        "https://datamb.football/Javi_Guerra_Midfielder_stats/",
+        "https://www.futbolfantasy.com/jugadores/javi-guerra-1"
+      ],
+      "player_id": "3075",
+      "url": "https://datamb.football/Javi_Guerra_Midfielder_stats/"
+    },
+    {
+      "evidence": [
+        "https://datamb.football/Hugo_lvarez_Winger_stats/",
+        "https://www.futbolfantasy.com/jugadores/hugo-lvarez-"
+      ],
+      "player_id": "2078",
+      "url": "https://datamb.football/Hugo_lvarez_Winger_stats/"
+    },
+    {
+      "evidence": [
+        "https://datamb.football/Mikel_Rodriguez_Midfielder_stats/",
+        "https://www.futbolfantasy.com/jugadores/mikel-rodriguez"
+      ],
+      "player_id": "3144",
+      "url": "https://datamb.football/Mikel_Rodriguez_Midfielder_stats/"
+    },
+    {
+      "evidence": [
+        "https://datamb.football/Einar_Galilea_Centre-back_stats/",
+        "https://www.futbolfantasy.com/jugadores/einar-galilea"
+      ],
+      "player_id": "3042",
+      "url": "https://datamb.football/Einar_Galilea_Centre-back_stats/"
+    },
+    {
+      "evidence": [
+        "https://datamb.football/Robert_Navarro_Winger_stats/",
+        "https://www.futbolfantasy.com/jugadores/robert-navarro"
+      ],
+      "player_id": "2549",
+      "url": "https://datamb.football/Robert_Navarro_Winger_stats/"
+    },
+    {
+      "evidence": [
+        "https://datamb.football/_lex_Remiro_Goalkeeper_stats/",
+        "https://www.futbolfantasy.com/jugadores/alex-remiro"
+      ],
+      "player_id": "274",
+      "url": "https://datamb.football/_lex_Remiro_Goalkeeper_stats/"
+    },
+    {
+      "evidence": [
+        "https://datamb.football/Jose_Salinas_Full-back_stats/",
+        "https://www.futbolfantasy.com/jugadores/jose-salinas"
+      ],
+      "player_id": "2525",
+      "url": "https://datamb.football/Jose_Salinas_Full-back_stats/"
+    },
+    {
+      "evidence": [
+        "https://datamb.football/Rodrigo_Riquelme_Winger_stats/",
+        "https://www.futbolfantasy.com/jugadores/rodrigo-riquelme"
+      ],
+      "player_id": "2548",
+      "url": "https://datamb.football/Rodrigo_Riquelme_Winger_stats/"
+    },
+    {
+      "evidence": [
+        "https://datamb.football/Renato_Veiga_Centre-back_stats/",
+        "https://www.futbolfantasy.com/jugadores/renato-veiga"
+      ],
+      "player_id": "2728",
+      "url": "https://datamb.football/Renato_Veiga_Centre-back_stats/"
+    },
+    {
+      "evidence": [
+        "https://datamb.football/Pablo_Ramon_Centre-back_stats/",
+        "https://www.futbolfantasy.com/jugadores/pablo-ramon"
+      ],
+      "player_id": "3026",
+      "url": "https://datamb.football/Pablo_Ramon_Centre-back_stats/"
+    },
+    {
+      "evidence": [
+        "https://datamb.football/Oriol_Rey_Midfielder_stats/",
+        "https://www.futbolfantasy.com/jugadores/oriol-rey"
+      ],
+      "player_id": "2628",
+      "url": "https://datamb.football/Oriol_Rey_Midfielder_stats/"
+    },
+    {
+      "evidence": [
+        "https://datamb.football/Unai_Nunez_Centre-back_stats/",
+        "https://www.futbolfantasy.com/jugadores/unai-nunez"
+      ],
+      "player_id": "2930",
+      "url": "https://datamb.football/Unai_Nunez_Centre-back_stats/"
+    },
+    {
+      "evidence": [
+        "https://datamb.football/Aymeric_Laporte_Centre-back_stats/",
+        "https://www.futbolfantasy.com/jugadores/aymeric-laporte"
+      ],
+      "player_id": "3065",
+      "url": "https://datamb.football/Aymeric_Laporte_Centre-back_stats/"
+    },
+    {
+      "evidence": [
+        "https://datamb.football/_nigo_Arguibide_Full-back_stats/",
+        "https://www.futbolfantasy.com/jugadores/inigo-arguibide"
+      ],
+      "player_id": "2846",
+      "url": "https://datamb.football/_nigo_Arguibide_Full-back_stats/"
+    },
+    {
+      "evidence": [
+        "https://datamb.football/Pedro_Diaz_Winger_stats/",
+        "https://www.futbolfantasy.com/jugadores/pedro-diaz"
+      ],
+      "player_id": "2385",
+      "url": "https://datamb.football/Pedro_Diaz_Winger_stats/"
+    },
+    {
+      "evidence": [
+        "https://datamb.football/Pedro_Diaz_Midfielder_stats/",
+        "https://www.futbolfantasy.com/jugadores/pedro-diaz"
+      ],
+      "player_id": "2385",
+      "url": "https://datamb.football/Pedro_Diaz_Midfielder_stats/"
+    },
+    {
+      "evidence": [
+        "https://datamb.football/_lex_Baena_Striker_stats/",
+        "https://www.futbolfantasy.com/jugadores/lex-baena"
+      ],
+      "player_id": "2534",
+      "url": "https://datamb.football/_lex_Baena_Striker_stats/"
+    },
+    {
+      "evidence": [
+        "https://datamb.football/_lex_Baena_Winger_stats/",
+        "https://www.futbolfantasy.com/jugadores/lex-baena"
+      ],
+      "player_id": "2534",
+      "url": "https://datamb.football/_lex_Baena_Winger_stats/"
+    },
+    {
+      "evidence": [
+        "https://datamb.football/Asier_Osambela_Centre-back_stats/",
+        "https://www.futbolfantasy.com/jugadores/asier-osambela"
+      ],
+      "player_id": "2721",
+      "url": "https://datamb.football/Asier_Osambela_Centre-back_stats/"
+    },
+    {
+      "evidence": [
+        "https://datamb.football/Andres_Castrin_Centre-back_stats/",
+        "https://www.futbolfantasy.com/jugadores/andres-castrin"
+      ],
+      "player_id": "2680",
+      "url": "https://datamb.football/Andres_Castrin_Centre-back_stats/"
+    },
+    {
+      "evidence": [
+        "https://datamb.football/Oihan_Sancet_Midfielder_stats/",
+        "https://www.futbolfantasy.com/jugadores/oihan-sancet"
+      ],
+      "player_id": "2318",
+      "url": "https://datamb.football/Oihan_Sancet_Midfielder_stats/"
+    },
+    {
+      "evidence": [
+        "https://datamb.football/Oihan_Sancet_Winger_stats/",
+        "https://www.futbolfantasy.com/jugadores/oihan-sancet"
+      ],
+      "player_id": "2318",
+      "url": "https://datamb.football/Oihan_Sancet_Winger_stats/"
+    },
+    {
+      "evidence": [
+        "https://datamb.football/Ander_Barrenetxea_Winger_stats/",
+        "https://www.futbolfantasy.com/jugadores/ander-barrenetxea"
+      ],
+      "player_id": "701",
+      "url": "https://datamb.football/Ander_Barrenetxea_Winger_stats/"
+    },
+    {
+      "evidence": [
+        "https://datamb.football/Ximo_Navarro_Full-back_stats/",
+        "https://www.futbolfantasy.com/jugadores/ximo-navarro"
+      ],
+      "player_id": "2990",
+      "url": "https://datamb.football/Ximo_Navarro_Full-back_stats/"
+    },
+    {
+      "evidence": [
+        "https://datamb.football/Mujaid_Sadick_Centre-back_stats/",
+        "https://www.futbolfantasy.com/jugadores/mujaid-sadick"
+      ],
+      "player_id": "3260",
+      "url": "https://datamb.football/Mujaid_Sadick_Centre-back_stats/"
+    },
+    {
+      "evidence": [
+        "https://datamb.football/David_Soria_Goalkeeper_stats/",
+        "https://www.futbolfantasy.com/jugadores/david-soria"
+      ],
+      "player_id": "184",
+      "url": "https://datamb.football/David_Soria_Goalkeeper_stats/"
+    },
+    {
+      "evidence": [
+        "https://datamb.football/Iker_Munoz_Midfielder_stats/",
+        "https://www.futbolfantasy.com/jugadores/iker-munoz"
+      ],
+      "player_id": "1730",
+      "url": "https://datamb.football/Iker_Munoz_Midfielder_stats/"
+    },
+    {
+      "evidence": [
+        "https://datamb.football/Yeray_lvarez_Centre-back_stats/",
+        "https://www.futbolfantasy.com/jugadores/yeray-alvarez"
+      ],
+      "player_id": "77",
+      "url": "https://datamb.football/Yeray_lvarez_Centre-back_stats/"
+    },
+    {
+      "evidence": [
+        "https://datamb.football/Hector_Bellerin_Full-back_stats/",
+        "https://www.futbolfantasy.com/jugadores/hector-bellerin"
+      ],
+      "player_id": "2414",
+      "url": "https://datamb.football/Hector_Bellerin_Full-back_stats/"
+    },
+    {
+      "evidence": [
+        "https://datamb.football/Marcos_Alonso_Centre-back_stats/",
+        "https://www.futbolfantasy.com/jugadores/marcos-alonso"
+      ],
+      "player_id": "3123",
+      "url": "https://datamb.football/Marcos_Alonso_Centre-back_stats/"
+    },
+    {
+      "evidence": [
+        "https://datamb.football/Benat_Turrientes_Midfielder_stats/",
+        "https://www.futbolfantasy.com/jugadores/benat-turrientes"
+      ],
+      "player_id": "1215",
+      "url": "https://datamb.football/Benat_Turrientes_Midfielder_stats/"
+    },
+    {
+      "evidence": [
+        "https://datamb.football/Aimar_Oroz_Midfielder_stats/",
+        "https://www.futbolfantasy.com/jugadores/aimar-oroz"
+      ],
+      "player_id": "2338",
+      "url": "https://datamb.football/Aimar_Oroz_Midfielder_stats/"
+    },
+    {
+      "evidence": [
+        "https://datamb.football/Aimar_Oroz_Winger_stats/",
+        "https://www.futbolfantasy.com/jugadores/aimar-oroz"
+      ],
+      "player_id": "2338",
+      "url": "https://datamb.football/Aimar_Oroz_Winger_stats/"
+    },
+    {
+      "evidence": [
+        "https://datamb.football/Igor_Zubeldia_Centre-back_stats/",
+        "https://www.futbolfantasy.com/jugadores/igor-zubeldia"
+      ],
+      "player_id": "265",
+      "url": "https://datamb.football/Igor_Zubeldia_Centre-back_stats/"
+    },
+    {
+      "evidence": [
+        "https://datamb.football/Rafa_Rodriguez_Midfielder_stats/",
+        "https://www.futbolfantasy.com/jugadores/rafa-rodriguez"
+      ],
+      "player_id": "3038",
+      "url": "https://datamb.football/Rafa_Rodriguez_Midfielder_stats/"
+    },
+    {
+      "evidence": [
+        "https://datamb.football/Marc_Pubill_Full-back_stats/",
+        "https://www.futbolfantasy.com/jugadores/marc-pubill"
+      ],
+      "player_id": "2562",
+      "url": "https://datamb.football/Marc_Pubill_Full-back_stats/"
+    },
+    {
+      "evidence": [
+        "https://datamb.football/Marc_Pubill_Centre-back_stats/",
+        "https://www.futbolfantasy.com/jugadores/marc-pubill"
+      ],
+      "player_id": "2562",
+      "url": "https://datamb.football/Marc_Pubill_Centre-back_stats/"
+    },
+    {
+      "evidence": [
+        "https://datamb.football/Robin_Le_Normand_Centre-back_stats/",
+        "https://www.futbolfantasy.com/jugadores/robin-le-normand"
+      ],
+      "player_id": "255",
+      "url": "https://datamb.football/Robin_Le_Normand_Centre-back_stats/"
+    },
+    {
+      "evidence": [
+        "https://datamb.football/Mario_Soriano_Midfielder_stats/",
+        "https://www.futbolfantasy.com/jugadores/mario-soriano"
+      ],
+      "player_id": "2995",
+      "url": "https://datamb.football/Mario_Soriano_Midfielder_stats/"
+    },
+    {
+      "evidence": [
+        "https://datamb.football/Adria_Pedrosa_Full-back_stats/",
+        "https://www.futbolfantasy.com/jugadores/adria-pedrosa"
+      ],
+      "player_id": "1056",
+      "url": "https://datamb.football/Adria_Pedrosa_Full-back_stats/"
+    },
+    {
+      "evidence": [
+        "https://datamb.football/Victor_Chust_Centre-back_stats/",
+        "https://www.futbolfantasy.com/jugadores/victor-chust"
+      ],
+      "player_id": "2596",
+      "url": "https://datamb.football/Victor_Chust_Centre-back_stats/"
+    },
+    {
+      "evidence": [
+        "https://datamb.football/Moi_Gomez_Winger_stats/",
+        "https://www.futbolfantasy.com/jugadores/moi-gomez"
+      ],
+      "player_id": "680",
+      "url": "https://datamb.football/Moi_Gomez_Winger_stats/"
+    },
+    {
+      "evidence": [
+        "https://datamb.football/Dani_Cardenas_Goalkeeper_stats/",
+        "https://www.futbolfantasy.com/jugadores/dani-cardenas"
+      ],
+      "player_id": "2378",
+      "url": "https://datamb.football/Dani_Cardenas_Goalkeeper_stats/"
+    },
+    {
+      "evidence": [
+        "https://datamb.football/Mikel_Jauregizar_Midfielder_stats/",
+        "https://www.futbolfantasy.com/jugadores/mikel-jauregizar"
+      ],
+      "player_id": "2040",
+      "url": "https://datamb.football/Mikel_Jauregizar_Midfielder_stats/"
+    },
+    {
+      "evidence": [
+        "https://datamb.football/Andres_Garcia_Full-back_stats/",
+        "https://www.futbolfantasy.com/jugadores/andres-garcia"
+      ],
+      "player_id": "3135",
+      "url": "https://datamb.football/Andres_Garcia_Full-back_stats/"
+    },
+    {
+      "evidence": [
+        "https://datamb.football/J_Oblak_Goalkeeper_stats/",
+        "https://www.futbolfantasy.com/jugadores/jan-oblak"
+      ],
+      "player_id": "2322",
+      "url": "https://datamb.football/J_Oblak_Goalkeeper_stats/"
+    },
+    {
+      "evidence": [
+        "https://datamb.football/Sergio_Carreira_Full-back_stats/",
+        "https://www.futbolfantasy.com/jugadores/sergio-carreira"
+      ],
+      "player_id": "2604",
+      "url": "https://datamb.football/Sergio_Carreira_Full-back_stats/"
+    },
+    {
+      "evidence": [
+        "https://datamb.football/Ruben_Garcia_Winger_stats/",
+        "https://www.futbolfantasy.com/jugadores/ruben-garcia"
+      ],
+      "player_id": "652",
+      "url": "https://datamb.football/Ruben_Garcia_Winger_stats/"
+    },
+    {
+      "evidence": [
+        "https://datamb.football/Jon_Martin_Centre-back_stats/",
+        "https://www.futbolfantasy.com/jugadores/jon-martin"
+      ],
+      "player_id": "2656",
+      "url": "https://datamb.football/Jon_Martin_Centre-back_stats/"
+    },
+    {
+      "evidence": [
+        "https://datamb.football/_scar_Valentin_Midfielder_stats/",
+        "https://www.futbolfantasy.com/jugadores/scar-valentin"
+      ],
+      "player_id": "1103",
+      "url": "https://datamb.football/_scar_Valentin_Midfielder_stats/"
+    },
+    {
+      "evidence": [
+        "https://datamb.football/Javi_Galan_Full-back_stats/",
+        "https://www.futbolfantasy.com/jugadores/javi-galan"
+      ],
+      "player_id": "2329",
+      "url": "https://datamb.football/Javi_Galan_Full-back_stats/"
+    },
+    {
+      "evidence": [
+        "https://datamb.football/Javi_Rodriguez_Centre-back_stats/",
+        "https://www.futbolfantasy.com/jugadores/javi-rodriguez"
+      ],
+      "player_id": "2074",
+      "url": "https://datamb.football/Javi_Rodriguez_Centre-back_stats/"
+    },
+    {
+      "evidence": [
+        "https://datamb.football/Mario_Martin_Midfielder_stats/",
+        "https://www.futbolfantasy.com/jugadores/mario-martin"
+      ],
+      "player_id": "2640",
+      "url": "https://datamb.football/Mario_Martin_Midfielder_stats/"
+    },
+    {
+      "evidence": [
+        "https://datamb.football/Jesus_Vazquez_Full-back_stats/",
+        "https://www.futbolfantasy.com/jugadores/jesus-vazquez-1"
+      ],
+      "player_id": "2461",
+      "url": "https://datamb.football/Jesus_Vazquez_Full-back_stats/"
+    },
+    {
+      "evidence": [
+        "https://datamb.football/Yoel_Lago_Centre-back_stats/",
+        "https://www.futbolfantasy.com/jugadores/yoel-lago"
+      ],
+      "player_id": "2206",
+      "url": "https://datamb.football/Yoel_Lago_Centre-back_stats/"
+    },
+    {
+      "evidence": [
+        "https://datamb.football/Jon_Guridi_Midfielder_stats/",
+        "https://www.futbolfantasy.com/jugadores/jon-guridi"
+      ],
+      "player_id": "856",
+      "url": "https://datamb.football/Jon_Guridi_Midfielder_stats/"
+    },
+    {
+      "evidence": [
+        "https://datamb.football/Carlos_Puga_Full-back_stats/",
+        "https://www.futbolfantasy.com/jugadores/carlos-puga"
+      ],
+      "player_id": "3037",
+      "url": "https://datamb.football/Carlos_Puga_Full-back_stats/"
+    },
+    {
+      "evidence": [
+        "https://datamb.football/Pablo_Barrios_Midfielder_stats/",
+        "https://www.futbolfantasy.com/jugadores/pablo-barrios"
+      ],
+      "player_id": "1565",
+      "url": "https://datamb.football/Pablo_Barrios_Midfielder_stats/"
+    },
+    {
+      "evidence": [
+        "https://datamb.football/Jesus_Areso_Full-back_stats/",
+        "https://www.futbolfantasy.com/jugadores/jesus-areso"
+      ],
+      "player_id": "2335",
+      "url": "https://datamb.football/Jesus_Areso_Full-back_stats/"
+    },
+    {
+      "evidence": [
+        "https://datamb.football/Carlos_Soler_Midfielder_stats/",
+        "https://www.futbolfantasy.com/jugadores/carlos-soler"
+      ],
+      "player_id": "2772",
+      "url": "https://datamb.football/Carlos_Soler_Midfielder_stats/"
+    },
+    {
+      "evidence": [
+        "https://datamb.football/Pablo_Fornals_Winger_stats/",
+        "https://www.futbolfantasy.com/jugadores/pablo-fornals"
+      ],
+      "player_id": "3099",
+      "url": "https://datamb.football/Pablo_Fornals_Winger_stats/"
+    },
+    {
+      "evidence": [
+        "https://datamb.football/Dani_Lorenzo_Midfielder_stats/",
+        "https://www.futbolfantasy.com/jugadores/dani-lorenzo-1"
+      ],
+      "player_id": "3036",
+      "url": "https://datamb.football/Dani_Lorenzo_Midfielder_stats/"
+    },
+    {
+      "evidence": [
+        "https://datamb.football/Yuri_Berchiche_Full-back_stats/",
+        "https://www.futbolfantasy.com/jugadores/yuri-berchiche"
+      ],
+      "player_id": "74",
+      "url": "https://datamb.football/Yuri_Berchiche_Full-back_stats/"
+    },
+    {
+      "evidence": [
+        "https://datamb.football/Jon_Ander_Olasagasti_Midfielder_stats/",
+        "https://www.futbolfantasy.com/jugadores/jon-ander-olasagasti"
+      ],
+      "player_id": "2445",
+      "url": "https://datamb.football/Jon_Ander_Olasagasti_Midfielder_stats/"
+    },
+    {
+      "evidence": [
+        "https://datamb.football/Miguel_Roman_Midfielder_stats/",
+        "https://www.futbolfantasy.com/jugadores/miguel-roman"
+      ],
+      "player_id": "2639",
+      "url": "https://datamb.football/Miguel_Roman_Midfielder_stats/"
+    },
+    {
+      "evidence": [
+        "https://datamb.football/Unai_Lopez_Midfielder_stats/",
+        "https://www.futbolfantasy.com/jugadores/unai-lopez"
+      ],
+      "player_id": "2384",
+      "url": "https://datamb.football/Unai_Lopez_Midfielder_stats/"
+    },
+    {
+      "evidence": [
+        "https://datamb.football/Natan_Centre-back_stats/",
+        "https://www.futbolfantasy.com/jugadores/natan"
+      ],
+      "player_id": "2543",
+      "url": "https://datamb.football/Natan_Centre-back_stats/"
+    },
+    {
+      "evidence": [
+        "https://datamb.football/Pepelu_Centre-back_stats/",
+        "https://www.futbolfantasy.com/jugadores/pepelu"
+      ],
+      "player_id": "2464",
+      "url": "https://datamb.football/Pepelu_Centre-back_stats/"
+    },
+    {
+      "evidence": [
+        "https://datamb.football/Jon_Aramburu_Full-back_stats/",
+        "https://www.futbolfantasy.com/jugadores/jon-aramburu"
+      ],
+      "player_id": "2443",
+      "url": "https://datamb.football/Jon_Aramburu_Full-back_stats/"
+    },
+    {
+      "evidence": [
+        "https://datamb.football/_lvaro_Nunez_Centre-back_stats/",
+        "https://www.futbolfantasy.com/jugadores/lvaro-nunez"
+      ],
+      "player_id": "2346",
+      "url": "https://datamb.football/_lvaro_Nunez_Centre-back_stats/"
+    },
+    {
+      "evidence": [
+        "https://datamb.football/Javi_Rueda_Full-back_stats/",
+        "https://www.futbolfantasy.com/jugadores/javi-rueda"
+      ],
+      "player_id": "2714",
+      "url": "https://datamb.football/Javi_Rueda_Full-back_stats/"
+    },
+    {
+      "evidence": [
+        "https://datamb.football/Adria_Altimira_Centre-back_stats/",
+        "https://www.futbolfantasy.com/jugadores/adria-altimira"
+      ],
+      "player_id": "2976",
+      "url": "https://datamb.football/Adria_Altimira_Centre-back_stats/"
+    },
+    {
+      "evidence": [
+        "https://datamb.football/Carlos_Romero_Full-back_stats/",
+        "https://www.futbolfantasy.com/jugadores/carlos-romero"
+      ],
+      "player_id": "2614",
+      "url": "https://datamb.football/Carlos_Romero_Full-back_stats/"
+    },
+    {
+      "evidence": [
+        "https://datamb.football/Pol_Lozano_Midfielder_stats/",
+        "https://www.futbolfantasy.com/jugadores/pol-lozano"
+      ],
+      "player_id": "1938",
+      "url": "https://datamb.football/Pol_Lozano_Midfielder_stats/"
+    },
+    {
+      "evidence": [
+        "https://datamb.football/Santi_Comesana_Midfielder_stats/",
+        "https://www.futbolfantasy.com/jugadores/santi-comesana"
+      ],
+      "player_id": "1031",
+      "url": "https://datamb.football/Santi_Comesana_Midfielder_stats/"
+    },
+    {
+      "evidence": [
+        "https://datamb.football/Aitor_Paredes_Centre-back_stats/",
+        "https://www.futbolfantasy.com/jugadores/aitor-paredes"
+      ],
+      "player_id": "2315",
+      "url": "https://datamb.football/Aitor_Paredes_Centre-back_stats/"
+    },
+    {
+      "evidence": [
+        "https://datamb.football/German_Valera_Full-back_stats/",
+        "https://www.futbolfantasy.com/jugadores/german-valera"
+      ],
+      "player_id": "3074",
+      "url": "https://datamb.football/German_Valera_Full-back_stats/"
+    },
+    {
+      "evidence": [
+        "https://datamb.football/Juan_Iglesias_Full-back_stats/",
+        "https://www.futbolfantasy.com/jugadores/juan-iglesias"
+      ],
+      "player_id": "1147",
+      "url": "https://datamb.football/Juan_Iglesias_Full-back_stats/"
+    },
+    {
+      "evidence": [
+        "https://datamb.football/Aleix_Febas_Midfielder_stats/",
+        "https://www.futbolfantasy.com/jugadores/aleix-febas"
+      ],
+      "player_id": "2295",
+      "url": "https://datamb.football/Aleix_Febas_Midfielder_stats/"
+    },
+    {
+      "evidence": [
+        "https://datamb.football/Antonio_Sivera_Goalkeeper_stats/",
+        "https://www.futbolfantasy.com/jugadores/antonio-sivera"
+      ],
+      "player_id": "988",
+      "url": "https://datamb.football/Antonio_Sivera_Goalkeeper_stats/"
+    },
+    {
+      "evidence": [
+        "https://datamb.football/Buba_Sangare_Full-back_stats/",
+        "https://www.futbolfantasy.com/jugadores/buba-sangare"
+      ],
+      "player_id": "2949",
+      "url": "https://datamb.football/Buba_Sangare_Full-back_stats/"
+    },
+    {
+      "evidence": [
+        "https://datamb.football/Izan_Merino_Midfielder_stats/",
+        "https://www.futbolfantasy.com/jugadores/izan-merino"
+      ],
+      "player_id": "3035",
+      "url": "https://datamb.football/Izan_Merino_Midfielder_stats/"
+    },
+    {
+      "evidence": [
+        "https://datamb.football/Victor_Garcia_Winger_stats/",
+        "https://www.futbolfantasy.com/jugadores/victor-garcia-1"
+      ],
+      "player_id": "2670",
+      "url": "https://datamb.football/Victor_Garcia_Winger_stats/"
+    },
+    {
+      "evidence": [
+        "https://datamb.football/Pablo_Ibanez_Midfielder_stats/",
+        "https://www.futbolfantasy.com/jugadores/pablo-ibanez"
+      ],
+      "player_id": "2569",
+      "url": "https://datamb.football/Pablo_Ibanez_Midfielder_stats/"
+    },
+    {
+      "evidence": [
+        "https://datamb.football/Pablo_Martinez_Winger_stats/",
+        "https://www.futbolfantasy.com/jugadores/pablo-martinez"
+      ],
+      "player_id": "3207",
+      "url": "https://datamb.football/Pablo_Martinez_Winger_stats/"
+    },
+    {
+      "evidence": [
+        "https://datamb.football/_lvaro_Garcia_Winger_stats/",
+        "https://www.futbolfantasy.com/jugadores/alvaro-garcia"
+      ],
+      "player_id": "1029",
+      "url": "https://datamb.football/_lvaro_Garcia_Winger_stats/"
+    },
+    {
+      "evidence": [
+        "https://datamb.football/Hugo_Rincon_Full-back_stats/",
+        "https://www.futbolfantasy.com/jugadores/hugo-rincon"
+      ],
+      "player_id": "3184",
+      "url": "https://datamb.football/Hugo_Rincon_Full-back_stats/"
+    },
+    {
+      "evidence": [
+        "https://datamb.football/Pedro_Bigas_Centre-back_stats/",
+        "https://www.futbolfantasy.com/jugadores/pedro-bigas"
+      ],
+      "player_id": "2294",
+      "url": "https://datamb.football/Pedro_Bigas_Centre-back_stats/"
+    },
+    {
+      "evidence": [
+        "https://datamb.football/Lucas_Torro_Midfielder_stats/",
+        "https://www.futbolfantasy.com/jugadores/lucas-torro"
+      ],
+      "player_id": "873",
+      "url": "https://datamb.football/Lucas_Torro_Midfielder_stats/"
+    },
+    {
+      "evidence": [
+        "https://datamb.football/Sergio_Herrera_Goalkeeper_stats/",
+        "https://www.futbolfantasy.com/jugadores/sergio-herrera"
+      ],
+      "player_id": "644",
+      "url": "https://datamb.football/Sergio_Herrera_Goalkeeper_stats/"
+    },
+    {
+      "evidence": [
+        "https://datamb.football/Sergi_Cardona_Full-back_stats/",
+        "https://www.futbolfantasy.com/jugadores/sergi-cardona"
+      ],
+      "player_id": "1614",
+      "url": "https://datamb.football/Sergi_Cardona_Full-back_stats/"
+    },
+    {
+      "evidence": [
+        "https://datamb.football/Peio_Canales_Winger_stats/",
+        "https://www.futbolfantasy.com/jugadores/peio-canales"
+      ],
+      "player_id": "3023",
+      "url": "https://datamb.football/Peio_Canales_Winger_stats/"
+    },
+    {
+      "evidence": [
+        "https://datamb.football/Sergio_Gomez_Full-back_stats/",
+        "https://www.futbolfantasy.com/jugadores/sergio-gomez"
+      ],
+      "player_id": "1989",
+      "url": "https://datamb.football/Sergio_Gomez_Full-back_stats/"
+    },
+    {
+      "evidence": [
+        "https://datamb.football/E_Boyomo_Centre-back_stats/",
+        "https://www.futbolfantasy.com/jugadores/boyomo"
+      ],
+      "player_id": "1890",
+      "url": "https://datamb.football/E_Boyomo_Centre-back_stats/"
+    },
+    {
+      "evidence": [
+        "https://datamb.football/Ramon_Terrats_Midfielder_stats/",
+        "https://www.futbolfantasy.com/jugadores/terrats"
+      ],
+      "player_id": "2511",
+      "url": "https://datamb.football/Ramon_Terrats_Midfielder_stats/"
+    },
+    {
+      "evidence": [
+        "https://datamb.football/Ruben_Sanchez_Full-back_stats/",
+        "https://www.futbolfantasy.com/jugadores/ruben-sanchez-1"
+      ],
+      "player_id": "2529",
+      "url": "https://datamb.football/Ruben_Sanchez_Full-back_stats/"
+    },
+    {
+      "evidence": [
+        "https://datamb.football/Alfonso_Herrero_Goalkeeper_stats/",
+        "https://www.futbolfantasy.com/jugadores/alfonso-herrero"
+      ],
+      "player_id": "3040",
+      "url": "https://datamb.football/Alfonso_Herrero_Goalkeeper_stats/"
+    },
+    {
+      "evidence": [
+        "https://datamb.football/Johaneko_Louis_Jean_Full-back_stats/",
+        "https://www.futbolfantasy.com/jugadores/johaneko-louis-jean"
+      ],
+      "player_id": "3213",
+      "url": "https://datamb.football/Johaneko_Louis_Jean_Full-back_stats/"
+    },
+    {
+      "evidence": [
+        "https://datamb.football/Denis_Suarez_Midfielder_stats/",
+        "https://www.futbolfantasy.com/jugadores/denis-suarez"
+      ],
+      "player_id": "2474",
+      "url": "https://datamb.football/Denis_Suarez_Midfielder_stats/"
+    },
+    {
+      "evidence": [
+        "https://datamb.football/Inigo_Ruiz_de_Galarreta_Midfielder_stats/",
+        "https://www.futbolfantasy.com/jugadores/inigo-ruiz-de-galarreta"
+      ],
+      "player_id": "1070",
+      "url": "https://datamb.football/Inigo_Ruiz_de_Galarreta_Midfielder_stats/"
+    },
+    {
+      "evidence": [
+        "https://datamb.football/Alejandro_Catena_Centre-back_stats/",
+        "https://www.futbolfantasy.com/jugadores/alejandro-catena"
+      ],
+      "player_id": "1033",
+      "url": "https://datamb.football/Alejandro_Catena_Centre-back_stats/"
+    },
+    {
+      "evidence": [
+        "https://datamb.football/Marc_Bartra_Centre-back_stats/",
+        "https://www.futbolfantasy.com/jugadores/marc-bartra"
+      ],
+      "player_id": "121",
+      "url": "https://datamb.football/Marc_Bartra_Centre-back_stats/"
+    },
+    {
+      "evidence": [
+        "https://datamb.football/Kike_Salas_Centre-back_stats/",
+        "https://www.futbolfantasy.com/jugadores/kike-salas"
+      ],
+      "player_id": "2479",
+      "url": "https://datamb.football/Kike_Salas_Centre-back_stats/"
+    },
+    {
+      "evidence": [
+        "https://datamb.football/Aitor_Fernandez_Goalkeeper_stats/",
+        "https://www.futbolfantasy.com/jugadores/aitor-fernandez"
+      ],
+      "player_id": "204",
+      "url": "https://datamb.football/Aitor_Fernandez_Goalkeeper_stats/"
+    },
+    {
+      "evidence": [
+        "https://datamb.football/Unai_Simon_Goalkeeper_stats/",
+        "https://www.futbolfantasy.com/jugadores/unai-simon"
+      ],
+      "player_id": "68",
+      "url": "https://datamb.football/Unai_Simon_Goalkeeper_stats/"
+    },
+    {
+      "evidence": [
+        "https://datamb.football/Roger_Hinojo_Full-back_stats/",
+        "https://www.futbolfantasy.com/jugadores/roger-hinojo"
+      ],
+      "player_id": "3162",
+      "url": "https://datamb.football/Roger_Hinojo_Full-back_stats/"
+    },
+    {
+      "evidence": [
+        "https://datamb.football/T_Fernandez_Winger_stats/",
+        "https://www.futbolfantasy.com/jugadores/thiago-fernandez"
+      ],
+      "player_id": "3230",
+      "url": "https://datamb.football/T_Fernandez_Winger_stats/"
+    },
+    {
+      "evidence": [
+        "https://datamb.football/Carlos_Dotor_Midfielder_stats/",
+        "https://www.futbolfantasy.com/jugadores/carlos-dotor"
+      ],
+      "player_id": "3044",
+      "url": "https://datamb.football/Carlos_Dotor_Midfielder_stats/"
+    },
+    {
+      "evidence": [
+        "https://datamb.football/Miguel_Loureiro_Centre-back_stats/",
+        "https://www.futbolfantasy.com/jugadores/miguel-loureiro"
+      ],
+      "player_id": "2965",
+      "url": "https://datamb.football/Miguel_Loureiro_Centre-back_stats/"
+    },
+    {
+      "evidence": [
+        "https://datamb.football/Alberto_Moleiro_Winger_stats/",
+        "https://www.futbolfantasy.com/jugadores/alberto-moleiro"
+      ],
+      "player_id": "3086",
+      "url": "https://datamb.football/Alberto_Moleiro_Winger_stats/"
+    },
+    {
+      "evidence": [
+        "https://datamb.football/Luken_Beitia_Centre-back_stats/",
+        "https://www.futbolfantasy.com/jugadores/luken-beitia"
+      ],
+      "player_id": "2834",
+      "url": "https://datamb.football/Luken_Beitia_Centre-back_stats/"
+    },
+    {
+      "evidence": [
+        "https://datamb.football/Jon_Moncayola_Midfielder_stats/",
+        "https://www.futbolfantasy.com/jugadores/jon-moncayola"
+      ],
+      "player_id": "637",
+      "url": "https://datamb.football/Jon_Moncayola_Midfielder_stats/"
+    },
+    {
+      "evidence": [
+        "https://datamb.football/Pau_Navarro_Centre-back_stats/",
+        "https://www.futbolfantasy.com/jugadores/pau-navarro"
+      ],
+      "player_id": "2698",
+      "url": "https://datamb.football/Pau_Navarro_Centre-back_stats/"
+    },
+    {
+      "evidence": [
+        "https://datamb.football/L_Cabrera_Centre-back_stats/",
+        "https://www.futbolfantasy.com/jugadores/leandro-cabrera"
+      ],
+      "player_id": "3068",
+      "url": "https://datamb.football/L_Cabrera_Centre-back_stats/"
+    },
+    {
+      "evidence": [
+        "https://datamb.football/U_Sadiq_Striker_stats/",
+        "https://www.futbolfantasy.com/jugadores/umar-sadiq"
+      ],
+      "player_id": "2617",
+      "url": "https://datamb.football/U_Sadiq_Striker_stats/"
+    },
+    {
+      "evidence": [
+        "https://datamb.football/Felix_Correia_Winger_stats/",
+        "https://www.futbolfantasy.com/jugadores/felix-correia"
+      ],
+      "player_id": "3262",
+      "url": "https://datamb.football/Felix_Correia_Winger_stats/"
+    },
+    {
+      "evidence": [
+        "https://datamb.football/Isaac_Romero_Winger_stats/",
+        "https://www.futbolfantasy.com/jugadores/isaac-romero"
+      ],
+      "player_id": "2456",
+      "url": "https://datamb.football/Isaac_Romero_Winger_stats/"
+    },
+    {
+      "evidence": [
+        "https://datamb.football/Isaac_Romero_Midfielder_stats/",
+        "https://www.futbolfantasy.com/jugadores/isaac-romero"
+      ],
+      "player_id": "2456",
+      "url": "https://datamb.football/Isaac_Romero_Midfielder_stats/"
+    },
+    {
+      "evidence": [
+        "https://datamb.football/Raul_Garcia_Striker_stats/",
+        "https://www.futbolfantasy.com/jugadores/raul-garcia-1"
+      ],
+      "player_id": "2339",
+      "url": "https://datamb.football/Raul_Garcia_Striker_stats/"
+    },
+    {
+      "evidence": [
+        "https://datamb.football/D_Hancko_Centre-back_stats/",
+        "https://www.futbolfantasy.com/jugadores/david-hancko"
+      ],
+      "player_id": "2561",
+      "url": "https://datamb.football/D_Hancko_Centre-back_stats/"
+    },
+    {
+      "evidence": [
+        "https://datamb.football/Toni_Martinez_Striker_stats/",
+        "https://www.futbolfantasy.com/jugadores/antonio-martinez"
+      ],
+      "player_id": "3078",
+      "url": "https://datamb.football/Toni_Martinez_Striker_stats/"
+    },
+    {
+      "evidence": [
+        "https://datamb.football/O_Vlachodimos_Goalkeeper_stats/",
+        "https://www.futbolfantasy.com/jugadores/odysseas-vlachodimos"
+      ],
+      "player_id": "2759",
+      "url": "https://datamb.football/O_Vlachodimos_Goalkeeper_stats/"
+    },
+    {
+      "evidence": [
+        "https://datamb.football/M_Diakhaby_Centre-back_stats/",
+        "https://www.futbolfantasy.com/jugadores/mouctar-diakhaby"
+      ],
+      "player_id": "2458",
+      "url": "https://datamb.football/M_Diakhaby_Centre-back_stats/"
+    },
+    {
+      "evidence": [
+        "https://datamb.football/L_Su_i__Winger_stats/",
+        "https://www.futbolfantasy.com/jugadores/luka-sucic"
+      ],
+      "player_id": "2444",
+      "url": "https://datamb.football/L_Su_i__Winger_stats/"
+    },
+    {
+      "evidence": [
+        "https://datamb.football/L_Su_i__Midfielder_stats/",
+        "https://www.futbolfantasy.com/jugadores/luka-sucic"
+      ],
+      "player_id": "2444",
+      "url": "https://datamb.football/L_Su_i__Midfielder_stats/"
+    },
+    {
+      "evidence": [
+        "https://datamb.football/L_Noubi_Centre-back_stats/",
+        "https://www.futbolfantasy.com/jugadores/lucas-noubi"
+      ],
+      "player_id": "2985",
+      "url": "https://datamb.football/L_Noubi_Centre-back_stats/"
+    },
+    {
+      "evidence": [
+        "https://datamb.football/L_Boye_Striker_stats/",
+        "https://www.futbolfantasy.com/jugadores/lucas-boye"
+      ],
+      "player_id": "2768",
+      "url": "https://datamb.football/L_Boye_Striker_stats/"
+    },
+    {
+      "evidence": [
+        "https://datamb.football/L_Agoume_Midfielder_stats/",
+        "https://www.futbolfantasy.com/jugadores/lucien-agoume"
+      ],
+      "player_id": "2453",
+      "url": "https://datamb.football/L_Agoume_Midfielder_stats/"
+    },
+    {
+      "evidence": [
+        "https://datamb.football/R_Garrido_Hierro_Full-back_stats/",
+        "https://www.futbolfantasy.com/jugadores/rafa-garrido"
+      ],
+      "player_id": "3041",
+      "url": "https://datamb.football/R_Garrido_Hierro_Full-back_stats/"
+    },
+    {
+      "evidence": [
+        "https://datamb.football/Javi_Hernandez_Midfielder_stats/",
+        "https://www.futbolfantasy.com/jugadores/javier-hernandez"
+      ],
+      "player_id": "3161",
+      "url": "https://datamb.football/Javi_Hernandez_Midfielder_stats/"
+    },
+    {
+      "evidence": [
+        "https://datamb.football/Javi_Hernandez_Winger_stats/",
+        "https://www.futbolfantasy.com/jugadores/javier-hernandez"
+      ],
+      "player_id": "3161",
+      "url": "https://datamb.football/Javi_Hernandez_Winger_stats/"
+    },
+    {
+      "evidence": [
+        "https://datamb.football/Sergio_Camello_Striker_stats/",
+        "https://www.futbolfantasy.com/jugadores/sergio-camello"
+      ],
+      "player_id": "2387",
+      "url": "https://datamb.football/Sergio_Camello_Striker_stats/"
+    },
+    {
+      "evidence": [
+        "https://datamb.football/C_Hernandez_Striker_stats/",
+        "https://www.futbolfantasy.com/jugadores/cucho-hernandez"
+      ],
+      "player_id": "2217",
+      "url": "https://datamb.football/C_Hernandez_Striker_stats/"
+    },
+    {
+      "evidence": [
+        "https://datamb.football/A_Mandi_Centre-back_stats/",
+        "https://www.futbolfantasy.com/jugadores/aissa-mandi"
+      ],
+      "player_id": "3174",
+      "url": "https://datamb.football/A_Mandi_Centre-back_stats/"
+    },
+    {
+      "evidence": [
+        "https://datamb.football/B_Ede_Centre-back_stats/",
+        "https://www.futbolfantasy.com/jugadores/bright-ede"
+      ],
+      "player_id": "3149",
+      "url": "https://datamb.football/B_Ede_Centre-back_stats/"
+    },
+    {
+      "evidence": [
+        "https://datamb.football/Pablo_Martinez_Midfielder_stats/",
+        "https://www.futbolfantasy.com/jugadores/pablo-martinez"
+      ],
+      "player_id": "3207",
+      "url": "https://datamb.football/Pablo_Martinez_Midfielder_stats/"
+    },
+    {
+      "evidence": [
+        "https://datamb.football/A_Budimir_Striker_stats/",
+        "https://www.futbolfantasy.com/jugadores/ante-budimir"
+      ],
+      "player_id": "3084",
+      "url": "https://datamb.football/A_Budimir_Striker_stats/"
+    },
+    {
+      "evidence": [
+        "https://datamb.football/_lex_Berenguer_Winger_stats/",
+        "https://www.futbolfantasy.com/jugadores/alex-berenguer"
+      ],
+      "player_id": "927",
+      "url": "https://datamb.football/_lex_Berenguer_Winger_stats/"
+    },
+    {
+      "evidence": [
+        "https://datamb.football/F_Redondo_Centre-back_stats/",
+        "https://www.futbolfantasy.com/jugadores/federico-redondo"
+      ],
+      "player_id": "2703",
+      "url": "https://datamb.football/F_Redondo_Centre-back_stats/"
+    },
+    {
+      "evidence": [
+        "https://datamb.football/E_Audero_Goalkeeper_stats/",
+        "https://www.futbolfantasy.com/jugadores/emil-audero"
+      ],
+      "player_id": "3267",
+      "url": "https://datamb.football/E_Audero_Goalkeeper_stats/"
+    },
+    {
+      "evidence": [
+        "https://datamb.football/Jorge_de_Frutos_Winger_stats/",
+        "https://www.futbolfantasy.com/jugadores/jorge-de-frutos"
+      ],
+      "player_id": "886",
+      "url": "https://datamb.football/Jorge_de_Frutos_Winger_stats/"
+    },
+    {
+      "evidence": [
+        "https://datamb.football/Y_Fofana_Midfielder_stats/",
+        "https://www.futbolfantasy.com/jugadores/youssouf-fofana"
+      ],
+      "player_id": "3265",
+      "url": "https://datamb.football/Y_Fofana_Midfielder_stats/"
+    },
+    {
+      "evidence": [
+        "https://datamb.football/Y_Fofana_Winger_stats/",
+        "https://www.futbolfantasy.com/jugadores/youssouf-fofana"
+      ],
+      "player_id": "3265",
+      "url": "https://datamb.football/Y_Fofana_Winger_stats/"
+    },
+    {
+      "evidence": [
+        "https://datamb.football/Ayoze_Perez_Striker_stats/",
+        "https://www.futbolfantasy.com/jugadores/ayoze-perez"
+      ],
+      "player_id": "2504",
+      "url": "https://datamb.football/Ayoze_Perez_Striker_stats/"
+    },
+    {
+      "evidence": [
+        "https://datamb.football/G_Rodriguez_Midfielder_stats/",
+        "https://www.futbolfantasy.com/jugadores/guido-rodriguez"
+      ],
+      "player_id": "3128",
+      "url": "https://datamb.football/G_Rodriguez_Midfielder_stats/"
+    },
+    {
+      "evidence": [
+        "https://datamb.football/G_Bouare_Samake_Midfielder_stats/",
+        "https://www.futbolfantasy.com/jugadores/gnangoro-bouare"
+      ],
+      "player_id": "3244",
+      "url": "https://datamb.football/G_Bouare_Samake_Midfielder_stats/"
+    },
+    {
+      "evidence": [
+        "https://datamb.football/Ferran_Jutgla_Striker_stats/",
+        "https://www.futbolfantasy.com/jugadores/ferran-jutgla"
+      ],
+      "player_id": "2603",
+      "url": "https://datamb.football/Ferran_Jutgla_Striker_stats/"
+    },
+    {
+      "evidence": [
+        "https://datamb.football/C_Romero_Centre-back_stats/",
+        "https://www.futbolfantasy.com/jugadores/cristian-romero"
+      ],
+      "player_id": "3197",
+      "url": "https://datamb.football/C_Romero_Centre-back_stats/"
+    },
+    {
+      "evidence": [
+        "https://datamb.football/Urko_Gonzalez_Midfielder_stats/",
+        "https://www.futbolfantasy.com/jugadores/urko-gonzalez-de-zarate"
+      ],
+      "player_id": "2622",
+      "url": "https://datamb.football/Urko_Gonzalez_Midfielder_stats/"
+    },
+    {
+      "evidence": [
+        "https://datamb.football/David_Otorbi_Winger_stats/",
+        "https://www.futbolfantasy.com/jugadores/david-otorbi"
+      ],
+      "player_id": "2693",
+      "url": "https://datamb.football/David_Otorbi_Winger_stats/"
+    },
+    {
+      "evidence": [
+        "https://datamb.football/J_Ochieng_Winger_stats/",
+        "https://www.futbolfantasy.com/jugadores/job-ochieng"
+      ],
+      "player_id": "2955",
+      "url": "https://datamb.football/J_Ochieng_Winger_stats/"
+    },
+    {
+      "evidence": [
+        "https://datamb.football/F_Gonzalez_Centre-back_stats/",
+        "https://www.futbolfantasy.com/jugadores/facundo-gonzalez"
+      ],
+      "player_id": "3027",
+      "url": "https://datamb.football/F_Gonzalez_Centre-back_stats/"
+    },
+    {
+      "evidence": [
+        "https://datamb.football/J_Belocian_Centre-back_stats/",
+        "https://www.futbolfantasy.com/jugadores/jeanul-belocian"
+      ],
+      "player_id": "3261",
+      "url": "https://datamb.football/J_Belocian_Centre-back_stats/"
+    },
+    {
+      "evidence": [
+        "https://datamb.football/Dani_Requena_Midfielder_stats/",
+        "https://www.futbolfantasy.com/jugadores/dani-requena"
+      ],
+      "player_id": "3228",
+      "url": "https://datamb.football/Dani_Requena_Midfielder_stats/"
+    },
+    {
+      "evidence": [
+        "https://datamb.football/T_Kubo_Winger_stats/",
+        "https://www.futbolfantasy.com/jugadores/takefusa-kubo"
+      ],
+      "player_id": "1197",
+      "url": "https://datamb.football/T_Kubo_Winger_stats/"
+    },
+    {
+      "evidence": [
+        "https://datamb.football/F_Buonanotte_Winger_stats/",
+        "https://www.futbolfantasy.com/jugadores/facundo-buonanotte"
+      ],
+      "player_id": "3151",
+      "url": "https://datamb.football/F_Buonanotte_Winger_stats/"
+    },
+    {
+      "evidence": [
+        "https://datamb.football/F_Buonanotte_Midfielder_stats/",
+        "https://www.futbolfantasy.com/jugadores/facundo-buonanotte"
+      ],
+      "player_id": "3151",
+      "url": "https://datamb.football/F_Buonanotte_Midfielder_stats/"
+    },
+    {
+      "evidence": [
+        "https://datamb.football/T_Dolan_Winger_stats/",
+        "https://www.futbolfantasy.com/jugadores/tyrhys-dolan"
+      ],
+      "player_id": "2623",
+      "url": "https://datamb.football/T_Dolan_Winger_stats/"
+    },
+    {
+      "evidence": [
+        "https://datamb.football/I_Ndukwe_Centre-back_stats/",
+        "https://www.futbolfantasy.com/jugadores/ifeanyi-ndukwe"
+      ],
+      "player_id": "3227",
+      "url": "https://datamb.football/I_Ndukwe_Centre-back_stats/"
+    },
+    {
+      "evidence": [
+        "https://datamb.football/A_Guler_Winger_stats/",
+        "https://www.futbolfantasy.com/jugadores/arda-gler"
+      ],
+      "player_id": "1674",
+      "url": "https://datamb.football/A_Guler_Winger_stats/"
+    },
+    {
+      "evidence": [
+        "https://datamb.football/Ivan_Azon_Striker_stats/",
+        "https://www.futbolfantasy.com/jugadores/ivan-azon"
+      ],
+      "player_id": "3254",
+      "url": "https://datamb.football/Ivan_Azon_Striker_stats/"
+    },
+    {
+      "evidence": [
+        "https://datamb.football/F_Lejeune_Centre-back_stats/",
+        "https://www.futbolfantasy.com/jugadores/florian-lejeune"
+      ],
+      "player_id": "3082",
+      "url": "https://datamb.football/F_Lejeune_Centre-back_stats/"
+    },
+    {
+      "evidence": [
+        "https://datamb.football/Djene_Centre-back_stats/",
+        "https://www.futbolfantasy.com/jugadores/dakonam-djene"
+      ],
+      "player_id": "2661",
+      "url": "https://datamb.football/Djene_Centre-back_stats/"
+    },
+    {
+      "evidence": [
+        "https://datamb.football/T_Buchanan_Winger_stats/",
+        "https://www.futbolfantasy.com/jugadores/tajon-buchanan"
+      ],
+      "player_id": "2556",
+      "url": "https://datamb.football/T_Buchanan_Winger_stats/"
+    },
+    {
+      "evidence": [
+        "https://datamb.football/Y_Herrera_Midfielder_stats/",
+        "https://www.futbolfantasy.com/jugadores/yangel-herrera"
+      ],
+      "player_id": "2372",
+      "url": "https://datamb.football/Y_Herrera_Midfielder_stats/"
+    },
+    {
+      "evidence": [
+        "https://datamb.football/S_Mourino_Full-back_stats/",
+        "https://www.futbolfantasy.com/jugadores/santiago-mourino"
+      ],
+      "player_id": "1959",
+      "url": "https://datamb.football/S_Mourino_Full-back_stats/"
+    },
+    {
+      "evidence": [
+        "https://datamb.football/Asier_Villalibre_Striker_stats/",
+        "https://www.futbolfantasy.com/jugadores/asier-villalibre"
+      ],
+      "player_id": "3022",
+      "url": "https://datamb.football/Asier_Villalibre_Striker_stats/"
+    },
+    {
+      "evidence": [
+        "https://datamb.football/Roger_Brugue_Winger_stats/",
+        "https://www.futbolfantasy.com/jugadores/roger-brugue"
+      ],
+      "player_id": "2302",
+      "url": "https://datamb.football/Roger_Brugue_Winger_stats/"
+    },
+    {
+      "evidence": [
+        "https://datamb.football/_lex_Calatrava_Winger_stats/",
+        "https://www.futbolfantasy.com/jugadores/lex-calatrava"
+      ],
+      "player_id": "3105",
+      "url": "https://datamb.football/_lex_Calatrava_Winger_stats/"
+    },
+    {
+      "evidence": [
+        "https://datamb.football/Kike_Barja_Winger_stats/",
+        "https://www.futbolfantasy.com/jugadores/kike-barja"
+      ],
+      "player_id": "2337",
+      "url": "https://datamb.football/Kike_Barja_Winger_stats/"
+    },
+    {
+      "evidence": [
+        "https://datamb.football/Tete_Morente_Full-back_stats/",
+        "https://www.futbolfantasy.com/jugadores/tete-morente"
+      ],
+      "player_id": "2941",
+      "url": "https://datamb.football/Tete_Morente_Full-back_stats/"
+    },
+    {
+      "evidence": [
+        "https://datamb.football/Antony_Winger_stats/",
+        "https://www.futbolfantasy.com/jugadores/antony"
+      ],
+      "player_id": "2770",
+      "url": "https://datamb.football/Antony_Winger_stats/"
+    },
+    {
+      "evidence": [
+        "https://datamb.football/Yeremay_Hernandez_Striker_stats/",
+        "https://www.futbolfantasy.com/jugadores/yeremay-hernandez"
+      ],
+      "player_id": "3076",
+      "url": "https://datamb.football/Yeremay_Hernandez_Striker_stats/"
+    },
+    {
+      "evidence": [
+        "https://datamb.football/Yeremay_Hernandez_Winger_stats/",
+        "https://www.futbolfantasy.com/jugadores/yeremay-hernandez"
+      ],
+      "player_id": "3076",
+      "url": "https://datamb.football/Yeremay_Hernandez_Winger_stats/"
+    },
+    {
+      "evidence": [
+        "https://datamb.football/M_Hjulmand_Midfielder_stats/",
+        "https://www.futbolfantasy.com/jugadores/morten-hjulmand"
+      ],
+      "player_id": "3114",
+      "url": "https://datamb.football/M_Hjulmand_Midfielder_stats/"
+    },
+    {
+      "evidence": [
+        "https://datamb.football/Goncalo_Guedes_Winger_stats/",
+        "https://www.futbolfantasy.com/jugadores/goncalo-guedes"
+      ],
+      "player_id": "3085",
+      "url": "https://datamb.football/Goncalo_Guedes_Winger_stats/"
+    },
+    {
+      "evidence": [
+        "https://datamb.football/B_Nsongo_Tonfack_Striker_stats/",
+        "https://www.futbolfantasy.com/jugadores/bil-nsongo"
+      ],
+      "player_id": "2973",
+      "url": "https://datamb.football/B_Nsongo_Tonfack_Striker_stats/"
+    },
+    {
+      "evidence": [
+        "https://datamb.football/P_Gueye_Midfielder_stats/",
+        "https://www.futbolfantasy.com/jugadores/pape-gueye"
+      ],
+      "player_id": "2473",
+      "url": "https://datamb.football/P_Gueye_Midfielder_stats/"
+    },
+    {
+      "evidence": [
+        "https://datamb.football/N_Saliba_Midfielder_stats/",
+        "https://www.futbolfantasy.com/jugadores/nathan-dylan-saliba"
+      ],
+      "player_id": "3242",
+      "url": "https://datamb.football/N_Saliba_Midfielder_stats/"
+    },
+    {
+      "evidence": [
+        "https://datamb.football/Ivan_Romero_Striker_stats/",
+        "https://www.futbolfantasy.com/jugadores/ivan-romero"
+      ],
+      "player_id": "2303",
+      "url": "https://datamb.football/Ivan_Romero_Striker_stats/"
+    },
+    {
+      "evidence": [
+        "https://datamb.football/N_Gudelj_Centre-back_stats/",
+        "https://www.futbolfantasy.com/jugadores/nemanja-gudelj"
+      ],
+      "player_id": "2452",
+      "url": "https://datamb.football/N_Gudelj_Centre-back_stats/"
+    },
+    {
+      "evidence": [
+        "https://datamb.football/Hugo_Duro_Striker_stats/",
+        "https://www.futbolfantasy.com/jugadores/hugo-duro"
+      ],
+      "player_id": "1191",
+      "url": "https://datamb.football/Hugo_Duro_Striker_stats/"
+    },
+    {
+      "evidence": [
+        "https://datamb.football/A_Batalla_Goalkeeper_stats/",
+        "https://www.futbolfantasy.com/jugadores/augusto-batalla"
+      ],
+      "player_id": "2519",
+      "url": "https://datamb.football/A_Batalla_Goalkeeper_stats/"
+    },
+    {
+      "evidence": [
+        "https://datamb.football/S_Caceres_Centre-back_stats/",
+        "https://www.futbolfantasy.com/jugadores/sebastian-caceres"
+      ],
+      "player_id": "3259",
+      "url": "https://datamb.football/S_Caceres_Centre-back_stats/"
+    },
+    {
+      "evidence": [
+        "https://datamb.football/J_de_Haas_Centre-back_stats/",
+        "https://www.futbolfantasy.com/jugadores/justin-de-haas"
+      ],
+      "player_id": "3120",
+      "url": "https://datamb.football/J_de_Haas_Centre-back_stats/"
+    },
+    {
+      "evidence": [
+        "https://datamb.football/A_Sangante_Centre-back_stats/",
+        "https://www.futbolfantasy.com/jugadores/arouna-sangante"
+      ],
+      "player_id": "3138",
+      "url": "https://datamb.football/A_Sangante_Centre-back_stats/"
+    },
+    {
+      "evidence": [
+        "https://datamb.football/G_Kochorashvili_Midfielder_stats/",
+        "https://www.futbolfantasy.com/jugadores/giorgi-kochorashvili-1"
+      ],
+      "player_id": "3211",
+      "url": "https://datamb.football/G_Kochorashvili_Midfielder_stats/"
+    },
+    {
+      "evidence": [
+        "https://datamb.football/Gerard_Moreno_Striker_stats/",
+        "https://www.futbolfantasy.com/jugadores/gerard-moreno"
+      ],
+      "player_id": "356",
+      "url": "https://datamb.football/Gerard_Moreno_Striker_stats/"
+    },
+    {
+      "evidence": [
+        "https://datamb.football/G_Mikautadze_Striker_stats/",
+        "https://www.futbolfantasy.com/jugadores/georges-mikautadze"
+      ],
+      "player_id": "2771",
+      "url": "https://datamb.football/G_Mikautadze_Striker_stats/"
+    },
+    {
+      "evidence": [
+        "https://datamb.football/Pablo_Duran_Striker_stats/",
+        "https://www.futbolfantasy.com/jugadores/pablo-duran"
+      ],
+      "player_id": "2397",
+      "url": "https://datamb.football/Pablo_Duran_Striker_stats/"
+    },
+    {
+      "evidence": [
+        "https://datamb.football/Ali_Houary_Winger_stats/",
+        "https://www.futbolfantasy.com/jugadores/-ali-houary"
+      ],
+      "player_id": "3190",
+      "url": "https://datamb.football/Ali_Houary_Winger_stats/"
+    },
+    {
+      "evidence": [
+        "https://datamb.football/Nico_Williams_Winger_stats/",
+        "https://www.futbolfantasy.com/jugadores/nico-williams"
+      ],
+      "player_id": "3083",
+      "url": "https://datamb.football/Nico_Williams_Winger_stats/"
+    },
+    {
+      "evidence": [
+        "https://datamb.football/Mikel_Oyarzabal_Striker_stats/",
+        "https://www.futbolfantasy.com/jugadores/mikel-oyarzabal"
+      ],
+      "player_id": "3091",
+      "url": "https://datamb.football/Mikel_Oyarzabal_Striker_stats/"
+    },
+    {
+      "evidence": [
+        "https://datamb.football/J_Gimenez_Centre-back_stats/",
+        "https://www.futbolfantasy.com/jugadores/jose-maria-gimenez"
+      ],
+      "player_id": "2324",
+      "url": "https://datamb.football/J_Gimenez_Centre-back_stats/"
+    },
+    {
+      "evidence": [
+        "https://datamb.football/N_Tenaglia_Centre-back_stats/",
+        "https://www.futbolfantasy.com/jugadores/nahuel-tenaglia"
+      ],
+      "player_id": "1337",
+      "url": "https://datamb.football/N_Tenaglia_Centre-back_stats/"
+    },
+    {
+      "evidence": [
+        "https://datamb.football/V_Koski_Centre-back_stats/",
+        "https://www.futbolfantasy.com/jugadores/ville-koski"
+      ],
+      "player_id": "2938",
+      "url": "https://datamb.football/V_Koski_Centre-back_stats/"
+    },
+    {
+      "evidence": [
+        "https://datamb.football/R_Nteka_Striker_stats/",
+        "https://www.futbolfantasy.com/jugadores/randy-nteka"
+      ],
+      "player_id": "2386",
+      "url": "https://datamb.football/R_Nteka_Striker_stats/"
+    },
+    {
+      "evidence": [
+        "https://datamb.football/Roberto_Fernandez_Striker_stats/",
+        "https://www.futbolfantasy.com/jugadores/roberto-fernandez-1"
+      ],
+      "player_id": "2520",
+      "url": "https://datamb.football/Roberto_Fernandez_Striker_stats/"
+    },
+    {
+      "evidence": [
+        "https://datamb.football/A_Rebbach_Full-back_stats/",
+        "https://www.futbolfantasy.com/jugadores/abde-rebbach"
+      ],
+      "player_id": "2577",
+      "url": "https://datamb.football/A_Rebbach_Full-back_stats/"
+    },
+    {
+      "evidence": [
+        "https://datamb.football/A_Osorio_Striker_stats/",
+        "https://www.futbolfantasy.com/jugadores/abiel-osorio"
+      ],
+      "player_id": "2922",
+      "url": "https://datamb.football/A_Osorio_Striker_stats/"
+    },
+    {
+      "evidence": [
+        "https://datamb.football/O_skarsson_Striker_stats/",
+        "https://www.futbolfantasy.com/jugadores/orri-steinn-skarsson"
+      ],
+      "player_id": "2448",
+      "url": "https://datamb.football/O_skarsson_Striker_stats/"
+    },
+    {
+      "evidence": [
+        "https://datamb.football/Adrian_Nino_Striker_stats/",
+        "https://www.futbolfantasy.com/jugadores/adrian-nino"
+      ],
+      "player_id": "3045",
+      "url": "https://datamb.football/Adrian_Nino_Striker_stats/"
+    },
+    {
+      "evidence": [
+        "https://datamb.football/Lee_Kang_In_Striker_stats/",
+        "https://www.futbolfantasy.com/jugadores/lee-kang-in"
+      ],
+      "player_id": "3193",
+      "url": "https://datamb.football/Lee_Kang_In_Striker_stats/"
+    },
+    {
+      "evidence": [
+        "https://datamb.football/J_Foyth_Centre-back_stats/",
+        "https://www.futbolfantasy.com/jugadores/juan-foyth"
+      ],
+      "player_id": "2470",
+      "url": "https://datamb.football/J_Foyth_Centre-back_stats/"
+    },
+    {
+      "evidence": [
+        "https://datamb.football/Gorka_Guruzeta_Striker_stats/",
+        "https://www.futbolfantasy.com/jugadores/gorka-guruzeta"
+      ],
+      "player_id": "1484",
+      "url": "https://datamb.football/Gorka_Guruzeta_Striker_stats/"
+    },
+    {
+      "evidence": [
+        "https://datamb.football/I_Balliu_Full-back_stats/",
+        "https://www.futbolfantasy.com/jugadores/ivan-balliu"
+      ],
+      "player_id": "1121",
+      "url": "https://datamb.football/I_Balliu_Full-back_stats/"
+    },
+    {
+      "evidence": [
+        "https://datamb.football/A_Freeman_Full-back_stats/",
+        "https://www.futbolfantasy.com/jugadores/alex-freeman"
+      ],
+      "player_id": "2934",
+      "url": "https://datamb.football/A_Freeman_Full-back_stats/"
+    },
+    {
+      "evidence": [
+        "https://datamb.football/Ivan_Martin_Midfielder_stats/",
+        "https://www.futbolfantasy.com/jugadores/ivan-martin"
+      ],
+      "player_id": "3205",
+      "url": "https://datamb.football/Ivan_Martin_Midfielder_stats/"
+    },
+    {
+      "evidence": [
+        "https://datamb.football/R_Yeboah_Centre-back_stats/",
+        "https://www.futbolfantasy.com/jugadores/rockson-yeboah"
+      ],
+      "player_id": "3243",
+      "url": "https://datamb.football/R_Yeboah_Centre-back_stats/"
+    },
+    {
+      "evidence": [
+        "https://datamb.football/Iago_Aspas_Winger_stats/",
+        "https://www.futbolfantasy.com/jugadores/iago-aspas"
+      ],
+      "player_id": "2492",
+      "url": "https://datamb.football/Iago_Aspas_Winger_stats/"
+    },
+    {
+      "evidence": [
+        "https://datamb.football/R_Revivo_Full-back_stats/",
+        "https://www.futbolfantasy.com/jugadores/roy-revivo"
+      ],
+      "player_id": "3263",
+      "url": "https://datamb.football/R_Revivo_Full-back_stats/"
+    },
+    {
+      "evidence": [
+        "https://datamb.football/Lucas_Stassin_Striker_stats/",
+        "https://www.futbolfantasy.com/jugadores/lucas-stassin"
+      ],
+      "player_id": "3266",
+      "url": "https://datamb.football/Lucas_Stassin_Striker_stats/"
+    },
+    {
+      "evidence": [
+        "https://datamb.football/Bryan_Zaragoza_Winger_stats/",
+        "https://www.futbolfantasy.com/jugadores/bryan-zaragoza"
+      ],
+      "player_id": "3237",
+      "url": "https://datamb.football/Bryan_Zaragoza_Winger_stats/"
+    },
+    {
+      "evidence": [
+        "https://datamb.football/Diego_Llorente_Centre-back_stats/",
+        "https://www.futbolfantasy.com/jugadores/diego-javier-llorente"
+      ],
+      "player_id": "2415",
+      "url": "https://datamb.football/Diego_Llorente_Centre-back_stats/"
+    },
+    {
+      "evidence": [
+        "https://datamb.football/L_Cepeda_Midfielder_stats/",
+        "https://www.futbolfantasy.com/jugadores/lucas-cepeda"
+      ],
+      "player_id": "2933",
+      "url": "https://datamb.football/L_Cepeda_Midfielder_stats/"
+    },
+    {
+      "evidence": [
+        "https://datamb.football/N_Valentini_Centre-back_stats/",
+        "https://www.futbolfantasy.com/jugadores/nicolas-valentini"
+      ],
+      "player_id": "3156",
+      "url": "https://datamb.football/N_Valentini_Centre-back_stats/"
+    },
+    {
+      "evidence": [
+        "https://datamb.football/G_Simeone_Winger_stats/",
+        "https://www.futbolfantasy.com/jugadores/giuliano-simeone"
+      ],
+      "player_id": "1210",
+      "url": "https://datamb.football/G_Simeone_Winger_stats/"
+    },
+    {
+      "evidence": [
+        "https://datamb.football/Ilias_Akhomach_Winger_stats/",
+        "https://www.futbolfantasy.com/jugadores/ilias-akhomach"
+      ],
+      "player_id": "2477",
+      "url": "https://datamb.football/Ilias_Akhomach_Winger_stats/"
+    },
+    {
+      "evidence": [
+        "https://datamb.football/P_Ciss_Centre-back_stats/",
+        "https://www.futbolfantasy.com/jugadores/pathe-ciss"
+      ],
+      "player_id": "2383",
+      "url": "https://datamb.football/P_Ciss_Centre-back_stats/"
+    },
+    {
+      "evidence": [
+        "https://datamb.football/M_Prati_Midfielder_stats/",
+        "https://www.futbolfantasy.com/jugadores/matteo-prati"
+      ],
+      "player_id": "3234",
+      "url": "https://datamb.football/M_Prati_Midfielder_stats/"
+    },
+    {
+      "evidence": [
+        "https://datamb.football/J_lvarez_Striker_stats/",
+        "https://www.futbolfantasy.com/jugadores/julian-lvarez"
+      ],
+      "player_id": "3088",
+      "url": "https://datamb.football/J_lvarez_Striker_stats/"
+    },
+    {
+      "evidence": [
+        "https://datamb.football/Marcos_Fernandez_Winger_stats/",
+        "https://www.futbolfantasy.com/jugadores/marcos-fernandez-1"
+      ],
+      "player_id": "3131",
+      "url": "https://datamb.football/Marcos_Fernandez_Winger_stats/"
+    },
+    {
+      "evidence": [
+        "https://datamb.football/Z_Romero_Centre-back_stats/",
+        "https://www.futbolfantasy.com/jugadores/zaid-romero"
+      ],
+      "player_id": "2924",
+      "url": "https://datamb.football/Z_Romero_Centre-back_stats/"
+    },
+    {
+      "evidence": [
+        "https://datamb.football/A_Ra_iu_Full-back_stats/",
+        "https://www.futbolfantasy.com/jugadores/andrei-florin"
+      ],
+      "player_id": "3081",
+      "url": "https://datamb.football/A_Ra_iu_Full-back_stats/"
+    },
+    {
+      "evidence": [
+        "https://datamb.football/C_Starfelt_Centre-back_stats/",
+        "https://www.futbolfantasy.com/jugadores/carl-starfelt"
+      ],
+      "player_id": "2390",
+      "url": "https://datamb.football/C_Starfelt_Centre-back_stats/"
+    },
+    {
+      "evidence": [
+        "https://datamb.football/A_Aylola_Lookman_Striker_stats/",
+        "https://www.futbolfantasy.com/jugadores/ademola-lookman"
+      ],
+      "player_id": "3079",
+      "url": "https://datamb.football/A_Aylola_Lookman_Striker_stats/"
+    },
+    {
+      "evidence": [
+        "https://datamb.football/M_Sierra_Winger_stats/",
+        "https://www.futbolfantasy.com/jugadores/miguel-sierra"
+      ],
+      "player_id": "2746",
+      "url": "https://datamb.football/M_Sierra_Winger_stats/"
+    },
+    {
+      "evidence": [
+        "https://datamb.football/R_Sato_Winger_stats/",
+        "https://www.futbolfantasy.com/jugadores/ryunosuke-sato"
+      ],
+      "player_id": "3217",
+      "url": "https://datamb.football/R_Sato_Winger_stats/"
+    },
+    {
+      "evidence": [
+        "https://datamb.football/P_Aubameyang_Striker_stats/",
+        "https://www.futbolfantasy.com/jugadores/pierre-emerick-aubameyang"
+      ],
+      "player_id": "3108",
+      "url": "https://datamb.football/P_Aubameyang_Striker_stats/"
+    },
+    {
+      "evidence": [
+        "https://datamb.football/Y_Zabiri_Striker_stats/",
+        "https://www.futbolfantasy.com/jugadores/yassir-zabiri"
+      ],
+      "player_id": "3152",
+      "url": "https://datamb.football/Y_Zabiri_Striker_stats/"
+    },
+    {
+      "evidence": [
+        "https://datamb.football/J_Dubasin_Winger_stats/",
+        "https://www.futbolfantasy.com/jugadores/jonathan-dubasin"
+      ],
+      "player_id": "3183",
+      "url": "https://datamb.football/J_Dubasin_Winger_stats/"
+    },
+    {
+      "evidence": [
+        "https://datamb.football/M_Satriano_Striker_stats/",
+        "https://www.futbolfantasy.com/jugadores/martin-satriano"
+      ],
+      "player_id": "3137",
+      "url": "https://datamb.football/M_Satriano_Striker_stats/"
+    },
+    {
+      "evidence": [
+        "https://datamb.football/R_Ure_Striker_stats/",
+        "https://www.futbolfantasy.com/jugadores/robbie-ure"
+      ],
+      "player_id": "3145",
+      "url": "https://datamb.football/R_Ure_Striker_stats/"
+    },
+    {
+      "evidence": [
+        "https://datamb.football/T_Parrott_Striker_stats/",
+        "https://www.futbolfantasy.com/jugadores/troy-parrott"
+      ],
+      "player_id": "3231",
+      "url": "https://datamb.football/T_Parrott_Striker_stats/"
+    }
+  ]
+}

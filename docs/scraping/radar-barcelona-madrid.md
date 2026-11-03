@@ -4,6 +4,10 @@ Updated 2026-11-02. Scope is the full Fantasy catalog membership of team IDs **4
 (FC Barcelona) and **15** (Real Madrid), including reserves and entries marked
 out of league. Master IDs are never inferred from the player's name.
 
+Superseded 2026-11-03 by the [LaLiga 2026/27 selection](radar-laliga-2026-27.md):
+the same weekly recurrence now covers all current clubs and requires 300 league
+minutes. The results and two-club schedule below are historical rollout evidence.
+
 ## Initial execution
 
 Public search was applied to both complete Fantasy lists using observed profile

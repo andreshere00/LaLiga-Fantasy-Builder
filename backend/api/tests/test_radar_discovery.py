@@ -68,7 +68,10 @@ def test_discovery_report_two_teams_accounts_unmatched_players_without_approval(
     assert registry.records == []
 
 
-def test_weekly_success_claims_once_and_fetches_only_selected_teams(tmp_path, monkeypatch):
+@pytest.mark.parametrize("exclude_first", [False, True])
+def test_weekly_success_claims_once_and_fetches_only_selected_teams(
+    tmp_path, monkeypatch, exclude_first
+):
     from test_radar_sync import inputs
 
     _, registry, audits, _, _ = inputs(tmp_path)
@@ -76,6 +79,8 @@ def test_weekly_success_claims_once_and_fetches_only_selected_teams(tmp_path, mo
         {"id": i, "nickname": f"Player {i}", "teamId": team, "positionId": 3}
         for i, team in [(1, 4), (2, 15), (3, 2)]
     ]
+    if exclude_first:
+        raw[0]["playerStatus"] = "out_of_league"
     catalog = build_inventory(raw, "2026-27")
     for name, value in [("catalog", catalog), ("registry", registry), ("audits", audits)]:
         atomic_json(tmp_path / f"{name}.json", value.model_dump(mode="json"))
@@ -86,10 +91,24 @@ def test_weekly_success_claims_once_and_fetches_only_selected_teams(tmp_path, mo
     monkeypatch.setattr(radar_sync, "_public_catalog", public)
     monkeypatch.setattr(radar_sync, "_fetch", fetch)
     args = weekly_args(tmp_path)
+    if exclude_first:
+        from fantasy_api.radar.eligibility import RadarEligibility
+
+        policy = RadarEligibility(
+            season="2026-27",
+            competition="Test League",
+            minimum_minutes=300,
+            clubs={"4": ["Club"], "15": ["Club"]},
+            active_player_ids=["1", "2"],
+        )
+        atomic_json(tmp_path / "eligibility.json", policy.model_dump(mode="json"))
+        args.eligibility = tmp_path / "eligibility.json"
     result = radar_sync._weekly(args)
     assert result["status"] == "complete"
     assert args.refresh_days == 1
-    assert [t.identity.player_id for t in fetch.call_args.args[1]] == ["1"]
+    assert [t.identity.player_id for t in fetch.call_args.args[1]] == (
+        [] if exclude_first else ["1"]
+    )
     assert radar_sync._weekly(args)["due"] is False
     public.assert_awaited_once()
     fetch.assert_awaited_once()

@@ -142,6 +142,16 @@ introduced. See [badge sources](../../frontend-club-crest-sources.md).
 
 ## Role-specific performance radar
 
+The active local 2026/27 dataset covers all current LaLiga clubs and serves only
+reviewed La Liga observations with at least 300 league minutes. Inactive/historical
+catalog entries, other competitions and older seasons are excluded by a
+hash-bound publication policy; unknown minutes are not treated as zero.
+Below-threshold observations remain in history but return `insufficient_minutes`
+without an active radar. This selection does not establish a native percentile
+population or enable comparisons. See the
+[league-wide discovery and weekly runbook](../../scraping/radar-laliga-2026-27.md)
+for coverage, pending identities and the local Wednesday recurrence.
+
 `GET /players/{player_id}/stats/radar?season=2026-27` is an independent optional
 segment, authenticated with the application JWT **without LaLiga pairing**.
 It follows controller → radar service → radar repository. It is deliberately not

@@ -16,6 +16,7 @@ from fantasy_api.domain.errors import UpstreamError
 from fantasy_api.radar.audits import SupplyAudits
 from fantasy_api.radar.catalog import CatalogInventory, build_inventory, inventory_report
 from fantasy_api.radar.discovery import DiscoveryManifest, discovery_report, weekly_slot
+from fantasy_api.radar.eligibility import RadarEligibility, filter_publication
 from fantasy_api.radar.files import atomic_json, content_id, read_json
 from fantasy_api.radar.registry import IdentityRegistry, propose_identities
 from fantasy_api.radar.releases import (
@@ -78,6 +79,7 @@ def _parser() -> argparse.ArgumentParser:
         job.add_argument("--registry", type=Path, required=True)
         job.add_argument("--audits", type=Path, required=True)
         job.add_argument("--captures", type=Path, required=True)
+        job.add_argument("--eligibility", type=Path)
         if command == "weekly":
             job.add_argument("--root", type=Path, required=True)
             job.add_argument("--team-id", action="append", required=True)
@@ -239,6 +241,10 @@ def _run(args: argparse.Namespace) -> dict:
             stale_days=args.stale_days,
             maximum_days=args.maximum_days,
         )
+        if args.eligibility:
+            dataset = filter_publication(
+                dataset, RadarEligibility.model_validate(read_json(args.eligibility))
+            )
         atomic_json(args.work_dir / "validated.json", dataset.model_dump(mode="json"))
     return dataset.report
 
@@ -259,8 +265,9 @@ def _weekly(args: argparse.Namespace) -> dict:
             state_path, {"week": week, "status": "started", "team_ids": sorted(set(args.team_id))}
         )
         previous = CatalogInventory.model_validate(read_json(args.work_dir / "catalog.json"))
+        payload = asyncio.run(_public_catalog())
         catalog = build_inventory(
-            asyncio.run(_public_catalog()),
+            payload,
             previous.season,
             previous,
             minimum_count=max(1, len(previous.players) * 9 // 10),
@@ -277,6 +284,20 @@ def _weekly(args: argparse.Namespace) -> dict:
         atomic_json(args.work_dir / "discovery.json", discovery)
         tasks = plan_tasks(catalog, registry, audits, args.captures)
         scoped_ids = {p.player_id for p in catalog.players if p.team_id in args.team_id}
+        policy = None
+        if args.eligibility:
+            policy = RadarEligibility.model_validate(read_json(args.eligibility))
+            active_ids = [
+                str(p["id"])
+                for p in payload
+                if str(p.get("positionId")) != "5"
+                and p.get("playerStatus") != "out_of_league"
+                and str(p.get("teamId")) in policy.clubs
+            ]
+            policy = RadarEligibility.model_validate(
+                policy.model_dump() | {"active_player_ids": active_ids}
+            )
+            scoped_ids &= set(active_ids)
         counts = asyncio.run(_fetch(args, [t for t in tasks if t.identity.player_id in scoped_ids]))
         dataset = compile_dataset(
             catalog,
@@ -286,6 +307,8 @@ def _weekly(args: argparse.Namespace) -> dict:
             stale_days=args.stale_days,
             maximum_days=args.maximum_days,
         )
+        if policy is not None:
+            dataset = filter_publication(dataset, policy)
         release = publish_release(args.root, dataset)
         failed = any(
             counts.get(k)
