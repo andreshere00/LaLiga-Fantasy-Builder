@@ -1,6 +1,6 @@
 [project]
 name = "laliga-fantasy-builder-api"
-version = "0.1.2"
+version = "0.2.0"
 description = "Main Fantasy Builder API (consumes auth internal JWTs)"
 readme = "README.md"
 authors = [

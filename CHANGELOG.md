@@ -6,7 +6,7 @@ entry, not a claim that every optional provider or deployment gate is complete.
 
 ## [Unreleased]
 
-## [0.1.2] - 2026-11-03
+## [0.2.0] - 2026-11-03
 
 ### Player performance profiles
 
@@ -60,7 +60,7 @@ entry, not a claim that every optional provider or deployment gate is complete.
   runbooks. Removed superseded plans, temporary research, and pilot reports,
   consolidating current operational and release requirements.
 - Aligned Python package metadata, runtime service versions, and generated
-  OpenAPI documents with v0.1.2.
+  OpenAPI documents with v0.2.0.
 - Published datasets and reviewed captures remain outside Git and require durable
   storage configuration. Production timers remain disabled. Native DataMB
   comparisons remain unavailable until their reference population is verified;

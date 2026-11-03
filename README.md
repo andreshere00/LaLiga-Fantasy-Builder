@@ -6,7 +6,7 @@ data and user-confirmed writes with your linked account.
 
 | Topic | Doc |
 |-------|-----|
-| Changes in v0.1.2 | [CHANGELOG.md](CHANGELOG.md#012---2026-11-03) |
+| Changes in v0.2.0 | [CHANGELOG.md](CHANGELOG.md#020---2026-11-03) |
 | Backend, frontend, and cloud architecture | [ARCHITECTURE.md](ARCHITECTURE.md) |
 | Detailed service trust boundaries | [docs/architecture.md](docs/architecture.md) |
 | Google Cloud Terraform deployment | [infra/gcp/README.md](infra/gcp/README.md) |
