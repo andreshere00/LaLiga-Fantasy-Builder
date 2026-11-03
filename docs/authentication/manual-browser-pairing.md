@@ -64,5 +64,6 @@ read-only lookup, refresh, restart, two-account isolation and failure recovery.
 Then enable the flag for a limited audience and retain flag rollback. No live
 provider trial or production rollout was performed as part of this code change.
 
-See [browser-only feasibility](browser-only-laliga-feasibility.md) for why an
-automatic web callback requires a LaLiga-supported registration.
+An automatic web callback requires a LaLiga-supported registration; the native
+callback is delivered to the user's device. See the
+[capability record](laliga-sso-capability.md).

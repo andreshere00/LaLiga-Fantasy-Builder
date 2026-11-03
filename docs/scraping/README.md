@@ -17,6 +17,10 @@ Parser detail: [parser.md](parser.md). Selector contract (fixture + live):
 Player identity coverage, name variants, collisions and regeneration:
 [player-aliases.md](player-aliases.md).
 
+Radar ingestion and publication: [operations runbook](radar-operations.md).
+Current selection, coverage and weekly discovery:
+[LaLiga 2026/27](radar-laliga-2026-27.md).
+
 ## Compose networking
 
 | Network | Scraping |
@@ -155,10 +159,11 @@ It converts the documented 0–1 fractions once to 0–100. Cache is bounded to 
 profiles for 24 hours, coalesced by the provider lock, and remains in memory;
 restarts clear it. A failed refresh can return the last valid cached snapshot
 for up to seven days, explicitly marked `stale`; invalid data is never cached.
-Use reviewed imported snapshots for durable data. Automated
-historical ingestion and a complete population feed are not enabled.
+Use the reviewed ingestion pipeline and immutable releases for durable data;
+authorized imports are also supported. Historical ingestion and a complete
+population feed are not enabled.
 
 See [radar setup and API contract](../api/players/README.md#role-specific-performance-radar)
-and [radar design](player-radar-design.md). Enabling the adapter requires the
-compatible access/reuse and position coverage checks described in the feasibility
-plan; implementing a parser does not resolve those dependencies.
+and [operations runbook](radar-operations.md). Enabling acquisition requires
+reviewed access, observed profile URLs, identity evidence and exact metric audits.
+Native DataMB reference populations remain unverified, so comparisons stay disabled.

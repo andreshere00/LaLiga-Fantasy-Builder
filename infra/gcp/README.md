@@ -256,8 +256,8 @@ helper. Keep it disabled until the
 [manual pairing release gate](../../docs/authentication/release-checks.md)
 passes; enable it with a new Auth secret version and roll back by clearing the
 flag. No HTTPS browser callback registration is implied.
-The requested installed background experience needs the separate
-[production helper rollout](../../docs/authentication/laliga-production-helper-rollout-plan.md)
+The installed background experience is not implemented and must pass the
+[distribution and handoff gates](../../docs/authentication/release-checks.md#laliga-linking)
 before this flag can advertise it. Deploying the cloud images alone does not
 install a process on users' Macs.
 

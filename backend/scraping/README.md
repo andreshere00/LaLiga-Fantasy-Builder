@@ -129,7 +129,7 @@ ambiguous or mismatched clubs still fail closed.
 Observed profile keys may include a numeric suffix after `_stats` (for example
 `J_Bellingham_Midfielder_stats1`). The optional suffix is limited to three digits;
 arbitrary URLs, queries and bulk-file routes remain blocked. See the
-[Barcelona/Real Madrid discovery runbook](../../docs/scraping/radar-barcelona-madrid.md)
+[LaLiga 2026/27 discovery runbook](../../docs/scraping/radar-laliga-2026-27.md)
 for the weekly acquisition scope and local scheduling.
 
 `DATAMB_ENABLED` defaults to `false`. When explicitly enabled,

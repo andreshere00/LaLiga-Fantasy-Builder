@@ -1,6 +1,6 @@
 # LaLiga 2026/27 radar selection and weekly discovery
 
-Updated 2026-11-03. This supersedes the Barcelona/Real Madrid-only scope.
+Updated 2026-11-03. Scope: all 20 participating clubs in LaLiga 2026/27.
 
 ## Selection contract
 
@@ -76,9 +76,10 @@ verified observations below the cutoff and unknown minutes. It includes every
 current club with its own counts, without claiming that unknown players are
 ineligible or that DataMB covers the full eligible population.
 
-The UI keeps the radar inside Overview below Fantasy outlook. Absence messages
-refer to the selected season/competition and minimum minutes, without falsely
-claiming that the product cutoff establishes a percentile population.
+The UI keeps the radar inside Overview below Fantasy outlook and always requests
+2026/27. Players without published data have no radar subsection. Coverage reasons
+remain available in the API and operational report; missing data is never replaced
+with zeros.
 
 ## Recurrence
 
@@ -114,9 +115,9 @@ publication policy, not a caller-supplied player or identity filter.
 
 ## Current result
 
-The published run summary and per-club counts are recorded below after the
-acquisition/review/publication sequence completes. Unresolved profiles remain
-explicitly pending; no complete population coverage is implied by search results.
+The following counts describe the local publication verified on 2026-11-03,
+not a live coverage guarantee. Use `report` for the current release. Unresolved
+profiles remain pending; search results do not establish complete coverage.
 
 Release: `de0bf5af50843426145f62cb8689eb19839079480578f481cc6320f11d637922` (dataset `7013a45c1c8daa1dd894b16e3d7b80c7f5f951e024226a88613c24d67ccda41d`). The release serves **267 players / 282 role snapshots**, across all 20 clubs. All served observations pass the season, league and active-membership checks; no minimum-minute cutoff applies.
 

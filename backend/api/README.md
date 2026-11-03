@@ -110,7 +110,7 @@ Unconfigured players return an honest unavailable state. For the file format,
 reviewed DataMB mappings and comparison rules, see
 [Players API](../../docs/api/players/README.md#role-specific-performance-radar).
 
-### Radar coverage inventory (phase 1)
+### Radar coverage inventory
 
 `fantasy-radar-sync inventory --season 2026-27 --work-dir /data/radar/staging`
 reads the public catalog through `PlayersRepository`, without login or a LaLiga
@@ -120,9 +120,9 @@ of over 10% unless reviewed with `--allow-large-removal`. All numeric master IDs
 are retained; coaches are excluded explicitly, unknown positions need review.
 The command writes an inventory, coverage entries and a JSON change/count report.
 Departures remain archived; invalid input never replaces the previous inventory.
-See the [coverage plan](../../docs/scraping/player-radar-coverage-plan.md).
+See the [current coverage runbook](../../docs/scraping/radar-laliga-2026-27.md).
 
-### Reviewed radar identities (phase 2)
+### Reviewed radar identities
 
 `fantasy-radar-sync candidates --work-dir /data/radar/staging --aliases names.json`
 exports name evidence by exact Fantasy ID, without approving any external link.
@@ -136,23 +136,23 @@ state (`pending_review`, `matched`, `ambiguous`, `not_found`). Matches require a
 reviewer, date, observed source key, expected name, validity start and evidence.
 A changed club does not rewrite identity history. Never infer provider URLs.
 
-### Supply and role gates (phase 3)
+### Supply and role gates
 
 `fantasy-radar-sync capture --profile-key Pedri_Midfielder_stats --season 2026-27
 --output /path/to/captures/new-review.json` captures an observed profile through
 the enabled private adapter and prints the semantic hash for review. Existing
 paths are rejected. This operation does not approve supply or publish a radar.
-See the [local live pilot results](../../docs/scraping/radar-live-pilot-results.md)
-for the first six-role publication and remaining production gates.
+See the [operations runbook](../../docs/scraping/radar-operations.md)
+for capture review and production gates.
 
 `fantasy-radar-sync audit --audits audits.json --captures captures/` verifies
 reviewed permission/discovery/definition decisions and immutable seven-column
 captures. Roles are approved per identity/season with exactly one stable default.
 Six synthetic role tests establish contract behavior, not real supply approval.
-See [supply audit and remaining gates](../../docs/scraping/radar-supply-audit.md).
-DataMB remains disabled pending verified production evidence.
+All six roles have reviewed local captures. DataMB remains opt-in; production
+activation requires the [operational gates](../../docs/scraping/radar-operations.md#pilot-and-api-cutover).
 
-### Resumable radar publication (phase 4)
+### Resumable radar publication
 
 The operational CLI separates `plan`, `fetch`, `validate`, `publish`, `report`
 and `rollback`. For plan/fetch/validate, supply `--work-dir`, `--registry`,

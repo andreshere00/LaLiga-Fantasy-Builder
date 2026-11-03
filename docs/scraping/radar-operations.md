@@ -1,23 +1,15 @@
 # Player radar ingestion and publication
 
-Updated 2026-11-02.
-
-Update 2026-11-03: the active local recurrence now covers all 20 clubs in
-LaLiga 2026/27 and serves verified observations without a minimum-minute cutoff.
-See the [league-wide selection and discovery runbook](radar-laliga-2026-27.md).
-The two-club scope below describes the earlier rollout.
-
-For the current Barcelona/Real Madrid expansion and its active Wednesday local
-recurrence, see the [scoped runbook](radar-barcelona-madrid.md). That path uses
-`weekly` with a durable attempt marker and explicit team IDs. The VM timers below
-remain a separate production deployment and have not been enabled by that local
-recurrence.
+Updated 2026-11-03. The active local recurrence covers all 20 clubs in
+LaLiga 2026/27 without a minimum-minute cutoff. See the
+[league-wide selection and discovery runbook](radar-laliga-2026-27.md) for coverage
+and the Wednesday weekly gate. The VM timers below are a separate opt-in
+production deployment and remain disabled.
 
 The API serves a bounded immutable release. The browser does not start ingestion.
 All commands below are operational writes to radar storage; Fantasy account and
 market CLIs remain read-only. No provider or production timer is activated by
-installing this code. See [supply gates](radar-supply-audit.md) and the
-[implementation plan](player-radar-coverage-plan.md).
+installing this code. Acquisition requires the reviewed inputs described below.
 
 ## Storage and reviewed inputs
 
@@ -30,7 +22,7 @@ Use separate directories:
   `captures/<audit_id>.json`, and optional authorized `imports.json`; job read-only.
 
 In Compose, host `RADAR_DATA_DIR` mounts at `/data/radar`. `RADAR_REVIEW_DIR`
-mounts read-only in the job. On the VM, create both directories before the pilot;
+mounts read-only in the job. On the VM, create both directories before acquisition;
 the API image runs as UID/GID 999. Give that UID write access to the data directory
 and read access to reviewed inputs (group 999, files mode 0640). Keep these directories outside the repository
 and backups of secrets. Example host setup (adapt ownership for your environment):
@@ -42,18 +34,25 @@ sudo install -d -o root -g 999 -m 0750 /var/lib/fantasybuilder/radar-review
 
 Empty `{"records":[]}` and `{"audits":[]}` manifests support a coverage-only
 publication: every catalog footballer is explicitly pending review. They do not
-create statistics or authorize source access. For real observations, follow the
-Pydantic `IdentityRegistry`, `SupplyAudits` and `RadarSnapshot` contracts. Supply
+create statistics or authorize source access.
+
+`audit` binds each approved source role and seven ordered column labels to a
+semantic SHA-256 of its capture. Review access, discovery and metric definitions
+with dated evidence before approval. Each matched identity has exactly one stable
+default role; never select it by the largest percentile. Position conflicts need
+an explicit reviewed override. Native DataMB cohorts remain null because the
+adapter cannot establish a population revision; verified frozen imports may
+enable comparison. Expired review references require a new review.
+
+For real observations, follow the Pydantic `IdentityRegistry`, `SupplyAudits` and `RadarSnapshot` contracts. Supply
 review requires identity evidence, one default role, exact seven-column mapping
 and a hash-bound permitted capture. Never use example IDs as real identities.
 
 ## Explicit command sequence
 
-For a first isolated local radar, use the
-[activation plan](radar-first-live-plan.md). The
-[2026-11-02 local pilot results](radar-live-pilot-results.md) record six real
-captures and a local publication; they do not replace the wider acceptance gate
-or approve production scheduling.
+All six roles have been captured and audited locally. Current publication
+counts are recorded in the [coverage runbook](radar-laliga-2026-27.md#current-result).
+Local publication does not approve production scheduling or native comparisons.
 
 After reviewing access and explicitly enabling the private adapter, capture an
 already observed profile for semantic review (run from `backend/api`):
