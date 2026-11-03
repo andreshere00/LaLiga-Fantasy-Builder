@@ -83,25 +83,19 @@ with zeros.
 
 ## Recurrence
 
-The existing local automation was updated to **Radares LaLiga 2026/27**,
-still **Wednesday 07:10 Europe/Madrid**. It replaces the old two-club scope; no
-duplicate automation or production timer was created.
+Recurrence belongs to the Terraform-managed VM, replacing the removed LLM task.
+Enable `radar_discovery_enabled` after completing the
+[deployment prerequisites](radar-operations.md#scheduling-on-the-existing-vm).
+The weekly timer runs **Wednesday 07:10 Europe/Madrid** with up to ten minutes
+of jitter. It runs the guarded `weekly` CLI with all 20 policy club IDs,
+the eligibility policy and observed candidate manifest mounted read-only.
 
-```bash
-bash scripts/radar-weekly-local.sh --check
-bash scripts/radar-weekly-local.sh
-```
-
-The script reads the 20 club IDs from the policy, passes its eligibility file and
-the league candidate manifest, and uses the existing `weekly` gate. The check is
-offline. Outside Wednesday or after an attempt in the same Madrid ISO week, the
-job makes no catalog or provider calls. A failed/interrupted attempt consumes that
-week's slot too; do not remove the marker to cause same-week retries.
-
-Initial acquisition on November 2–3 was the explicitly requested manual expansion,
-separate from the scheduled entry point. Subsequent automatic work stays weekly.
-Services, reviewed inputs and durable storage must be available locally for the
-app recurrence. No VM deployment, extra credentials or public write route is added.
+For an offline local check, use `bash scripts/radar-weekly-local.sh --check`.
+Outside Wednesday or after an attempt in the same Madrid ISO week, the CLI makes
+no catalog or provider calls. A failed/interrupted attempt consumes that week's
+slot too; do not remove the marker to cause same-week retries. Initial acquisition
+on November 2–3 was the explicitly requested manual expansion; recurring work
+stays weekly. No new public write route or provider credentials are introduced.
 
 ## Validation
 

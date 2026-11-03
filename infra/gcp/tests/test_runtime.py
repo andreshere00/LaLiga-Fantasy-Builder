@@ -307,6 +307,7 @@ class RuntimeTests(unittest.TestCase):
         self.assertTrue(api_mounts["/data/radar"]["read_only"])
         self.assertFalse(job_mounts["/data/radar"].get("read_only", False))
         self.assertTrue(job_mounts["/data/radar-review"]["read_only"])
+        self.assertTrue(job_mounts["/data/radar-config"]["read_only"])
         self.assertEqual(api_mounts["/data/radar"]["source"], job_mounts["/data/radar"]["source"])
         for secret in ["DATABASE_URL", "INTERNAL_SERVICE_TOKEN", "OPENAI_API_KEY"]:
             self.assertNotIn(secret, job.get("environment", {}))

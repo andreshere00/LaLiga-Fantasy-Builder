@@ -134,6 +134,12 @@ variable "budget_currency" {
   }
 }
 
+variable "radar_discovery_enabled" {
+  description = "Enable weekly LaLiga 2026/27 discovery on the VM after seeding reviewed inputs and catalog."
+  type        = bool
+  default     = false
+}
+
 variable "github_actions" {
   description = "Optional main CI publisher. Pin both the owner/repository name and GitHub numeric repository ID."
   type = object({

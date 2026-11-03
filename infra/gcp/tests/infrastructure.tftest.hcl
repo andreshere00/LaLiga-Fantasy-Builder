@@ -5,7 +5,11 @@ mock_provider "google" {
 }
 
 variables {
-  project_id = "fantasybuilder-test"
+  project_id              = "fantasybuilder-test"
+  admin_members           = []
+  github_actions          = null
+  billing_account_id      = null
+  radar_discovery_enabled = false
 }
 
 run "private_backends_and_protected_storage" {
@@ -62,6 +66,43 @@ run "budget_and_operator_access" {
   assert {
     condition     = length(google_project_iam_member.operator) == 2 && length(google_iap_tunnel_instance_iam_member.operator) == 1 && length(google_service_account_iam_member.operator) == 1
     error_message = "Configured administrators need OS Login, discovery, IAP, and service-account attachment access."
+  }
+}
+
+run "weekly_discovery_is_explicit_and_scoped" {
+  command = plan
+  variables { radar_discovery_enabled = true }
+  assert {
+    condition = (
+      strcontains(local.assets["/etc/fantasybuilder/radar.env"].content, "RADAR_JOB_ENABLED=true") &&
+      length(local.radar_policy.clubs) == 20 &&
+      local.radar_policy.season == "2026-27" &&
+      local.radar_policy.minimum_minutes == 0 &&
+      strcontains(google_compute_instance.app.metadata["startup-script"], "systemctl enable --now fantasybuilder-radar-refresh.timer") &&
+      !strcontains(google_compute_instance.app.metadata["startup-script"], "systemctl disable --now fantasybuilder-radar-refresh.timer")
+    )
+    error_message = "Explicit activation must enable the weekly job with the reviewed 20-club season policy."
+  }
+  assert {
+    condition = (
+      strcontains(local.assets["/etc/systemd/system/fantasybuilder-radar-refresh.timer"].content, "OnCalendar=Wed *-*-* 07:10:00 Europe/Madrid") &&
+      strcontains(local.assets["/etc/systemd/system/fantasybuilder-radar-refresh.timer"].content, "Persistent=false") &&
+      strcontains(google_compute_instance.app.metadata["startup-script"], "systemctl disable --now fantasybuilder-radar-inventory.timer") &&
+      length(google_compute_instance.app.metadata["startup-script"]) < 262144
+    )
+    error_message = "Discovery must remain weekly, skip missed days, disable legacy daily runs, and fit VM metadata."
+  }
+}
+
+run "discovery_disabled_stops_the_timer" {
+  command = plan
+  assert {
+    condition = (
+      strcontains(local.assets["/etc/fantasybuilder/radar.env"].content, "RADAR_JOB_ENABLED=false") &&
+      strcontains(google_compute_instance.app.metadata["startup-script"], "systemctl disable --now fantasybuilder-radar-refresh.timer") &&
+      !strcontains(google_compute_instance.app.metadata["startup-script"], "systemctl enable --now fantasybuilder-radar-refresh.timer")
+    )
+    error_message = "Default/disabled discovery must stop recurrence, including on previously enabled hosts."
   }
 }
 

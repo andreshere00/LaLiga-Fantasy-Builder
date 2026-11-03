@@ -33,6 +33,7 @@ def job(tmp_path, *, enabled=True, fail="", lock=False):
         f"RADAR_JOB_ENABLED={'true' if enabled else 'false'}\n"
         f"RADAR_SEASON=2026-27\nRADAR_MINIMUM_CATALOG_COUNT=750\n"
         f"RADAR_DATA_DIR={data}\nRADAR_REVIEW_DIR={review}\n"
+        'RADAR_TEAM_IDS="4 15"\n'
         "RADAR_IMPORTS_FILE=/data/radar-review/imports.json\n"
     )
     env = dict(
@@ -50,19 +51,31 @@ def job(tmp_path, *, enabled=True, fail="", lock=False):
 # ---- Happy path ---- #
 
 
-def test_job_refresh_separates_review_fetch_validate_publish_and_reports(tmp_path):
+def test_job_refresh_uses_guarded_discovery_before_any_network_stage(tmp_path):
     env, log = job(tmp_path)
     result = subprocess.run(["bash", str(SCRIPT), "refresh"], env=env, capture_output=True)
     assert result.returncode == 0, result.stderr
     commands = log.read_text().splitlines()
-    assert len(commands) == 6
-    assert "inventory --season 2026-27" in commands[0]
-    assert " plan " in commands[1]
-    assert " fetch " in commands[2] and "--imports /data/radar-review/imports.json" in commands[2]
-    assert " validate " in commands[3]
-    assert " publish " in commands[4]
-    assert " report " in commands[5]
+    assert len(commands) == 2
+    assert " weekly " in commands[0]
+    assert "--team-id 4 --team-id 15 --weekday wed" in commands[0]
+    assert "--eligibility /data/radar-config/eligibility.json" in commands[0]
+    assert "--observations /data/radar-config/observations.json" in commands[0]
+    assert "--imports /data/radar-review/imports.json" in commands[0]
+    assert " report " in commands[1]
     assert all("--rm --no-deps -T radar-job" in line for line in commands)
+    assert not any(f" {stage} " in commands[0] for stage in ("inventory", "fetch", "publish"))
+
+
+def test_job_refresh_without_imports_uses_datamb_adapter(tmp_path):
+    env, log = job(tmp_path)
+    config = Path(env["RADAR_JOB_CONFIG"])
+    config.write_text(
+        config.read_text().replace("RADAR_IMPORTS_FILE=/data/radar-review/imports.json\n", "")
+    )
+    result = subprocess.run(["bash", str(SCRIPT), "refresh"], env=env, capture_output=True)
+    assert result.returncode == 0, result.stderr
+    assert "--imports" not in log.read_text()
 
 
 def test_job_daily_inventory_publishes_new_coverage_without_source_fetch(tmp_path):
@@ -77,11 +90,20 @@ def test_job_daily_inventory_publishes_new_coverage_without_source_fetch(tmp_pat
 # ---- Error paths ---- #
 
 
-@pytest.mark.parametrize("stage", ["inventory", "plan", "fetch", "validate"])
-def test_job_failed_stage_does_not_promote_release(tmp_path, stage):
+@pytest.mark.parametrize(
+    ("mode", "stage"),
+    [
+        ("refresh", "weekly"),
+        ("inventory", "inventory"),
+        ("inventory", "plan"),
+        ("inventory", "validate"),
+    ],
+)
+def test_job_failed_stage_stops_host_pipeline(tmp_path, mode, stage):
     env, log = job(tmp_path, fail=stage)
-    result = subprocess.run(["bash", str(SCRIPT), "refresh"], env=env, capture_output=True)
+    result = subprocess.run(["bash", str(SCRIPT), mode], env=env, capture_output=True)
     assert result.returncode == 17
+    assert " report " not in log.read_text()
     assert " publish " not in log.read_text()
 
 

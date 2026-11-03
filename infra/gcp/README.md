@@ -362,9 +362,22 @@ The `radar-jobs` Compose profile uses a disposable API-image container. API moun
 access to `RADAR_REVIEW_DIR`. No auth database, LaLiga bearer or additional paid
 provider credentials are passed to this job.
 
-Terraform installs `fantasybuilder-radar@.service`, daily inventory and weekly
-refresh timer files, but never enables them. Provision directories for UID/GID
-999 and complete the source/pilot gates before installing an enabled
-`radar.env`. See the [runbook](../../docs/scraping/radar-operations.md) and
-[configuration example](examples/radar.env.example). The default job flag is
-false. Source activation and live deployment are separate operational steps.
+Terraform owns the weekly discovery schedule on the existing VM: Wednesday
+07:10 Europe/Madrid (up to ten minutes of jitter). No LLM task or additional
+Cloud Scheduler service is required. `radar_discovery_enabled` defaults to false;
+set it to true after provisioning durable data, a seeded 2026/27 catalog and the
+reviewed registry/audits/captures. Terraform generates `radar.env`, installs the
+20-club eligibility and observed-candidate manifests, and enables/disables the
+refresh timer during bootstrap. The legacy daily inventory timer is disabled.
+
+The refresh service runs the guarded `weekly` CLI, including catalog refresh,
+discovery accounting, approved-profile acquisition, validation and publication.
+Unknown candidates still require identity review. The API reads the resulting
+release locally. Missed runs are skipped rather than downloaded on another day;
+failed attempts consume the weekly slot. See the
+[runbook](../../docs/scraping/radar-operations.md) for setup and monitoring.
+Changing VM metadata with Terraform does not immediately rerun bootstrap on an
+existing host; follow the documented bootstrap/deployment procedure before
+expecting the timer state to change. Source activation (`DATAMB_ENABLED=true` in
+the scraping service), application deployment and Terraform apply are separate
+operations. No live deployment is performed by editing these files.

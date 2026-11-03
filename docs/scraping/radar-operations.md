@@ -144,30 +144,40 @@ is a separate evolution when the product actually needs it.
 
 ## Scheduling on the existing VM
 
-Terraform installs the optional script and timer unit files, without enabling
-them. Do not enable production refresh before passing the supply and pilot gates.
-Copy/adapt `infra/gcp/examples/radar.env.example` to
-`/etc/fantasybuilder/radar.env` and protect it with mode 0600. The default
-`RADAR_JOB_ENABLED=false` makes manual/scheduled execution exit without work.
-If changing `RADAR_DATA_DIR` or `RADAR_REVIEW_DIR`, configure the same host paths
-in the Compose environment/runtime.env used when starting the API; changing only
-the job environment does not move an already-mounted API directory.
+Terraform manages recurrence on the existing VM; no LLM automation is required.
+The `radar_discovery_enabled` variable defaults to false. Before setting it true:
 
-After the pilot, configure `RADAR_JOB_ENABLED=true` and enable the two timers:
+1. Complete the supply/pilot gates and deploy images containing the weekly CLI.
+2. Provision the durable directories described above for UID/GID 999. Transfer
+   the reviewed registry, audits and captures, plus the existing `staging/catalog.json`,
+   checkpoints and published releases. The weekly CLI requires a seeded catalog;
+   it does not bootstrap an empty installation.
+3. Set API `RADAR_DATASET_ROOT=/data/radar/published` and scraping
+   `DATAMB_ENABLED=true` in the respective service configurations. Keep job/API
+   host paths aligned with the Terraform-generated `radar.env` defaults.
+4. Set `radar_discovery_enabled = true`, review/apply Terraform, and run bootstrap
+   on the existing VM using the deployment procedure (metadata changes alone do
+   not execute it immediately). Inspect `systemctl list-timers` and the journal.
 
-```bash
-sudo systemctl enable --now fantasybuilder-radar-inventory.timer
-sudo systemctl enable --now fantasybuilder-radar-refresh.timer
-```
+Terraform writes public job settings to `/etc/fantasybuilder/radar.env` (0600)
+and policy/candidate manifests to `/opt/fantasybuilder/radar-config` (read-only in
+the job). Edit Terraform inputs rather than the generated files. Secrets continue
+to come from the existing service configuration; none enter Terraform state.
+Setting the variable false and rerunning bootstrap disables the refresh timer.
+The old daily inventory timer is disabled by bootstrap; manual inventory remains
+available for initial setup.
 
-Daily inventory also publishes coverage against existing checkpoints, so newly
-added players enter review without waiting for the weekly source refresh. The
-weekly timer attempts approved observations. Schedules are in Europe/Madrid,
-configurable with systemd overrides. Explicit season configuration prevents an
-unreviewed automatic rollover. The host operation lock excludes simultaneous
-jobs/deployments; kernel locks inside storage protect manual publishers too.
-The job uses the API image in a disposable `radar-jobs` profile, with no permanent
-service and no publicly reachable write endpoint.
+The timer runs Wednesday 07:10 Europe/Madrid with up to ten minutes of jitter.
+It invokes `weekly` directly, before any network operation: refresh the catalog,
+account for observed candidates across all 20 clubs, fetch approved identities,
+validate and publish with the current eligibility policy (no minute cutoff).
+Discovery does not automatically approve identities or search blocked sources.
+A durable Madrid ISO-week marker prevents further downloads even after failure;
+do not remove it to retry the same week. Missed runs are not caught up on another
+day. The host operation lock excludes simultaneous jobs/deployments.
+The disposable API-image job has no public write endpoint. For an offline local
+readiness check, `bash scripts/radar-weekly-local.sh --check` remains available;
+it is not a scheduler.
 
 ## Monitoring and rollback
 

@@ -34,8 +34,9 @@ entry, not a claim that every optional provider or deployment gate is complete.
   300-minute cutoff, restoring the 26 previously excluded players. The local
   publication verified on 3 November contains 267 players and 282 role snapshots;
   304 active-roster players remain unresolved.
-- Added a weekly local refresh entry point with a durable attempt guard for
-  Wednesday at 07:10 Europe/Madrid, plus opt-in container and VM job configuration.
+- Added Terraform-managed weekly discovery on the existing VM for Wednesday
+  at 07:10 Europe/Madrid, with read-only policy inputs, a durable attempt guard,
+  and opt-in activation. Removed the recurring LLM task; local checks remain available.
 
 ### Documentation and availability
 

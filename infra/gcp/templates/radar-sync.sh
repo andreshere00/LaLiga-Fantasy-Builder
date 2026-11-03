@@ -29,16 +29,25 @@ flock -n 9 || { echo 'Another application operation is running.' >&2; exit 1; }
 export CONFIG_DIR=${CONFIG_DIR:-/etc/fantasybuilder/current}
 compose=(docker compose --env-file "$CONFIG_DIR/runtime.env" -f "${RADAR_COMPOSE_FILE:-/opt/fantasybuilder/compose.yml}" --profile radar-jobs)
 job=("${compose[@]}" run --rm --no-deps -T radar-job)
-"${job[@]}" inventory --season "$RADAR_SEASON" --work-dir /data/radar/staging --minimum-count "$RADAR_MINIMUM_CATALOG_COUNT"
 review=(--work-dir /data/radar/staging --registry /data/radar-review/registry.json --audits /data/radar-review/audits.json --captures /data/radar-review/captures)
-"${job[@]}" plan "${review[@]}"
 if [[ "$mode" == refresh ]]; then
-  imports=()
-  if [[ -n "${RADAR_IMPORTS_FILE:-}" ]]; then
-    imports=(--imports "$RADAR_IMPORTS_FILE")
-  fi
-  "${job[@]}" fetch "${review[@]}" "${imports[@]}"
+  : "${RADAR_TEAM_IDS:?Set the reviewed current-season club IDs}"
+  # weekly claims its durable slot before any catalog/provider access. Do not
+  # run inventory separately here or bypass that guard with a standalone fetch.
+  teams=()
+  read -r -a team_ids <<< "$RADAR_TEAM_IDS"
+  for team in "${team_ids[@]}"; do teams+=(--team-id "$team"); done
+  weekly=("${job[@]}" weekly "${review[@]}" --root /data/radar/published \
+    --observations /data/radar-config/observations.json \
+    --eligibility /data/radar-config/eligibility.json "${teams[@]}" --weekday wed \
+    --stale-days "${RADAR_STALE_DAYS:-8}" --maximum-days "${RADAR_MAXIMUM_DAYS:-30}")
+  if [[ -n "${RADAR_IMPORTS_FILE:-}" ]]; then weekly+=(--imports "$RADAR_IMPORTS_FILE"); fi
+  "${weekly[@]}"
+  "${job[@]}" report --root /data/radar/published
+  exit 0
 fi
+"${job[@]}" inventory --season "$RADAR_SEASON" --work-dir /data/radar/staging --minimum-count "$RADAR_MINIMUM_CATALOG_COUNT"
+"${job[@]}" plan "${review[@]}"
 "${job[@]}" validate "${review[@]}" --stale-days "${RADAR_STALE_DAYS:-8}" --maximum-days "${RADAR_MAXIMUM_DAYS:-30}"
 "${job[@]}" publish --validated /data/radar/staging/validated.json --root /data/radar/published
 "${job[@]}" report --root /data/radar/published

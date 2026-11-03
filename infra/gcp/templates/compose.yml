@@ -133,6 +133,7 @@ services:
     volumes:
       - "${RADAR_DATA_DIR:-/var/lib/fantasybuilder/radar}:/data/radar"
       - "${RADAR_REVIEW_DIR:-/var/lib/fantasybuilder/radar-review}:/data/radar-review:ro"
+      - "/opt/fantasybuilder/radar-config:/data/radar-config:ro"
     profiles: [radar-jobs]
     networks: [internal, egress]
     logging:

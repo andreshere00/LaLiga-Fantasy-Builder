@@ -19,3 +19,7 @@ admin_members = [
 #   repository    = "andreshere00/LaLiga-Fantasy-Builder"
 #   repository_id = "REPLACE_WITH_NUMERIC_ID"
 # }
+
+# Weekly discovery, Wednesday 07:10 Europe/Madrid, on the existing VM.
+# Seed reviewed inputs, catalog/checkpoints and publication before enabling.
+# radar_discovery_enabled = true
