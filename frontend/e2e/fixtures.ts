@@ -39,7 +39,7 @@ export const detail = {
   recent: { ...envelope, matches: [{ fixture: match, minutes: { minutes: 90 }, fantasyPointsTotal: 8 }] },
   upcoming: { ...envelope, matches: [{ fixture: { ...match, date: "2026-10-15T18:00:00Z", homeScore: null, awayScore: null, result: null },
     kickoff: "2026-10-15T18:00:00Z", weather: { reason: "beyond_forecast_horizon" }, travel: {} }] },
-  profile: { ...envelope, injury: { availabilityText: "Available" }, form: { rating: "good", value: 6 },
+  profile: { ...envelope, birthDate: "1996-12-14", injury: { availabilityText: "Available" }, form: { rating: "good", value: 6 },
     startProbability: { percent: 85, matchweek: 8 }, injuryRisk: { level: "low" }, maxProfitableBid: {},
     hierarchy: { label: "Key" }, averages: ["DE", "PI", "BR", "-Pos", "S", "GC"].map((code, index) => ({ code, label: ["Effective clearances", "Interceptions", "Balls recovered", "Possessions lost", "Saves", "Goals conceded"][index], value: index + 0.5 })),
     news: Array.from({ length: 21 }, (_, index) => ({ title: "Training report " + (index + 1) + ": a longer headline to check wrapping and source attribution",

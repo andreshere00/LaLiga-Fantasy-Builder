@@ -52,6 +52,10 @@ become 0°C; out-of-window or past kickoffs skip unnecessary forecast calls.
 
 ### Detail aggregate behaviour
 
+- **`profile.birth_date`** is the optional FutbolFantasy birth date. The player
+  overview calculates completed years using the current date in Europe/Madrid
+  and omits age when the birth date is unavailable.
+
 - **`segment_errors`**: only segments that failed upstream or were skipped
   because scraping is disabled (`SCRAPING_BASE_URL` unset). **`market` is never
   disabled.** **`upcoming` is not disabled** for a missing OpenWeather key.

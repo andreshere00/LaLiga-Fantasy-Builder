@@ -42,7 +42,7 @@ export function PlayerRadarPlot({ radar, comparison, embedded = false }: { radar
         <p className="player-radar-eyebrow">{radar.position} · {radar.profileLabel}</p>
         <h3 id={titleId}>{radar.player}</h3>
       </>}
-        <p>{embedded ? radar.competition : radar.club}{radar.age === null ? "" : ` · ${radar.age} years`}{embedded ? "" : ` · ${radar.season.replace("-", "/")}`}</p>
+        <p>{embedded ? radar.competition : radar.club}{embedded ? "" : ` · ${radar.season.replace("-", "/")}`}</p>
       </div>
       <p className="player-radar-minutes"><strong>{radar.minutes.toLocaleString("en")}</strong><span>minutes in sample</span></p>
     </header>

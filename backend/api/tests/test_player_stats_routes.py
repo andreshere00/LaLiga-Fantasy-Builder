@@ -148,6 +148,7 @@ def test_stats_profile_uses_single_scrape(rsa_pems: tuple[str, str]) -> None:
         )
         calls = client.scrape_calls  # type: ignore[attr-defined]
     assert first.status_code == 200
+    assert first.json()["birth_date"] == "1996-12-14"
     assert second.status_code == 200
     assert len(calls) == 1
 

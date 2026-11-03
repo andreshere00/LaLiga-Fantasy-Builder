@@ -819,8 +819,9 @@ when it enters the viewport or receives focus. It also remains reachable when th
 aggregate is loading or temporarily fails; confirmed missing players and coaches
 retain their own appropriate flow. Player/account changes reset selections.
 The reviewed default role is selected; multiple published roles remain selectable. Within
-Overview the main header owns the player's name, club and Fantasy position. The
-embedded radar shows the performance role, league, age and sample minutes; it
+Overview the main header owns the player's name, club, Fantasy position and age
+when a birth date is available. Age uses the current date in Europe/Madrid. The
+embedded radar shows the performance role, league and sample minutes; it
 omits a single-player legend and keeps its table caption available to assistive
 technology. Standalone previews and independent fallback radars retain identity.
 

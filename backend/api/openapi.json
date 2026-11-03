@@ -10453,6 +10453,18 @@
             "type": "array",
             "title": "Warnings"
           },
+          "birth_date": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Birth Date"
+          },
           "availability": {
             "anyOf": [
               {

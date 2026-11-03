@@ -53,6 +53,7 @@ import {
   marketChartDomain,
   withMarketTrend,
   MISSING_STAT,
+  playerAge,
   deltaRelPercent,
 } from "./playerDetailFormat";
 import { PlayerBookmarkButton } from "./PlayerBookmarkButton";
@@ -247,6 +248,7 @@ function PlayerDetailBody({ masterId }: PlayerDetailBodyProps) {
   const recentBlock = asRecord(detail?.recent);
   const upcomingBlock = asRecord(detail?.upcoming);
   const profileBlock = asRecord(detail?.profile);
+  const age = playerAge(profileBlock?.birthDate, now);
 
   const name =
     text(catalogMaster?.nickname) ??
@@ -403,6 +405,7 @@ function PlayerDetailBody({ masterId }: PlayerDetailBodyProps) {
             <div className="player-detail-header-facts">
               <span>{teamName ?? MISSING_STAT}</span>
               <span className="player-profile-position">{positionLabel(positionId) ?? MISSING_STAT}</span>
+              {age != null ? <span>{age} years old</span> : null}
             </div>
             <div className="player-detail-title-row"><h1 id="player-overview" tabIndex={-1}>{name}</h1>
               {text(catalogMaster?.playerStatus) ? <AvailabilityCell availability={availability} />

@@ -1415,6 +1415,7 @@ Global player profile from FutbolFantasy
 | `generated_at` | string | yes |  |  |
 | `sources` | array[SourceStatus] | no |  |  |
 | `warnings` | array[SegmentWarning] | no |  |  |
+| `birth_date` | string | no |  |  |
 | `availability` | object | no |  |  |
 | `injury_history_coverage` | string | no |  |  |
 | `fantasy_season_total` | number | no |  |  |
@@ -2473,6 +2474,7 @@ Type: `string`
 | `generated_at` | string | yes |  |  |
 | `sources` | array[SourceStatus] | no |  |  |
 | `warnings` | array[SegmentWarning] | no |  |  |
+| `birth_date` | string | no |  |  |
 | `availability` | object | no |  |  |
 | `injury_history_coverage` | string | no |  |  |
 | `fantasy_season_total` | number | no |  |  |

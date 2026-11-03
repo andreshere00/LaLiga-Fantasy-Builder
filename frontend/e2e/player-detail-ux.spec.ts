@@ -8,10 +8,12 @@ for (const { theme, width } of [{ theme: "light", width: 1440 }, { theme: "dark"
     await page.addInitScript((value) => localStorage.setItem("lfb-theme", value), theme);
     await page.goto("/players/1");
     await expect(page.getByRole("heading", { name: "Fantasy outlook", exact: true })).toBeVisible();
+    await expect(page.locator(".player-detail-header-facts")).toContainText("29 years old");
     await page.evaluate(() => document.fonts.ready);
-    // Every peer section communicates the same level in the page hierarchy.
-    const headings = page.locator(".player-detail-page h2");
-    await expect(headings).toHaveCount(7);
+    // The unavailable radar may disappear after its lazy query resolves.
+    // Every persistent peer section shares the same visual hierarchy.
+    const headings = page.locator(".player-detail-page h2").filter({ hasNotText: "Performance profile" });
+    await expect(headings).toHaveCount(6);
     const headingStyles = await headings.evaluateAll((elements) => elements.map((element) => {
       const style = getComputedStyle(element);
       return [style.font, style.color, style.letterSpacing, style.textTransform,

@@ -660,6 +660,7 @@ export const upcomingMatchesSchema = responseSchema(
 export const playerProfileSchema = responseSchema(
   readObject({
     ...segmentEnvelopeShape,
+    birthDate: z.iso.date().nullable().optional(),
     injury: readObject({
       active: z.boolean().nullable().optional(),
       diagnosis: nullableString.optional(),

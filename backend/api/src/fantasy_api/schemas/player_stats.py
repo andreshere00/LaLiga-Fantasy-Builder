@@ -394,6 +394,7 @@ class NewsItem(StatsModel):
 
 
 class PlayerProfileResponse(SegmentEnvelope):
+    birth_date: Date | None = None
     availability: dict[str, str | int | None] | None = None
     injury_history_coverage: Literal["complete", "partial", "unknown"] = "unknown"
     fantasy_season_total: float | None = None
