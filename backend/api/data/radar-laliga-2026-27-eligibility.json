@@ -1,7 +1,7 @@
 {
   "season": "2026-27",
   "competition": "La Liga",
-  "minimum_minutes": 300,
+  "minimum_minutes": 0,
   "clubs": {
     "2": [
       "Atlético Madrid",

@@ -5,8 +5,8 @@ Updated 2026-11-02. Scope is the full Fantasy catalog membership of team IDs **4
 out of league. Master IDs are never inferred from the player's name.
 
 Superseded 2026-11-03 by the [LaLiga 2026/27 selection](radar-laliga-2026-27.md):
-the same weekly recurrence now covers all current clubs and requires 300 league
-minutes. The results and two-club schedule below are historical rollout evidence.
+the same weekly recurrence now covers all current clubs without a minimum-minute
+cutoff. The results and two-club schedule below are historical rollout evidence.
 
 ## Initial execution
 

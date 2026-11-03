@@ -191,7 +191,7 @@ For the active local LaLiga 2026/27 scope, use
 The `fantasy-radar-sync weekly` command enforces Wednesday in Europe/Madrid and
 one persisted attempt per ISO week, including failures, while fetching only the
 current-season club IDs from the eligibility policy. Publication now requires
-La Liga observations for 2026-27 with at least 300 league minutes and active
+La Liga observations for 2026-27 with verified minutes and active
 roster membership; the policy is bound to release provenance. `discover` produces a review queue from
 observed URLs without automatically approving identities. See the
 [league discovery runbook](../../docs/scraping/radar-laliga-2026-27.md) for

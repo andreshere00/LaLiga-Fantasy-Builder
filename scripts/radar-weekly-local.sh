@@ -1,5 +1,5 @@
 #!/bin/bash
-# One Madrid-calendar extraction day per week, for current-season LaLiga clubs with at least 300 minutes.
+# One Madrid-calendar extraction day per week, for current-season LaLiga clubs without a minimum-minute cutoff.
 set -euo pipefail
 case "${1:-}" in ''|--check) ;; *) echo 'Use no arguments or --check.' >&2; exit 2 ;; esac
 repo_root=$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")/.." && pwd)

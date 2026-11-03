@@ -1,4 +1,4 @@
-"""Current LaLiga membership and 300-minute cutoff are enforced before publication."""
+"""Current LaLiga membership and configurable minute selection are enforced before publication."""
 
 # ---- Mocks, fixtures & helpers ---- #
 
@@ -53,6 +53,23 @@ async def test_filter_publication_minimum_inclusive_preserves_real_values(tmp_pa
     assert len(original.store.snapshots) == 1
     publish_release(tmp_path / "published", selected)
     assert load_release(tmp_path / "published").report["ready"] == int(ready)
+
+
+@pytest.mark.parametrize("minutes", [0, 1, 269, 285, 299, 300])
+async def test_filter_publication_no_cutoff_restores_low_minutes_without_resolving_unknowns(
+    tmp_path, minutes
+):
+    original = await dataset(tmp_path, minutes)
+    selected = filter_publication(original, policy(minimum_minutes=0))
+    assert selected.store.snapshots == original.store.snapshots
+    assert selected.coverage[0].reason_code == "ready"
+    assert selected.coverage[1].reason_code == "identity_pending"
+    assert selected.report["selection"]["known_below_minimum"] == 0
+    assert selected.report["selection"]["unknown_minutes"] == 1
+    publish_release(tmp_path / "published", selected)
+    restored = load_release(tmp_path / "published")
+    assert restored.store.snapshots[0].minutes == minutes
+    assert restored.provenance["eligibility"]["minimum_minutes"] == 0
 
 
 # ---- Error paths ---- #

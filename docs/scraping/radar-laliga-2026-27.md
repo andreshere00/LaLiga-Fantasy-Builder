@@ -10,8 +10,9 @@ Only publish a current player radar when all of these are established:
   Fantasy roster, excluding records explicitly marked `out_of_league` and coaches.
 - The source observation explicitly says **2026-27**, **La Liga**, and a reviewed
   club name matching that Fantasy club for the period.
-- That observation records **at least 300 league minutes**, inclusive: 299 fails,
-  300 passes. Do not sum cups, European matches, other leagues or older seasons.
+- That observation records verified league minutes, **without a minimum-minute cutoff**.
+  Do not sum cups, European matches, other leagues or older seasons. The prior
+  300-minute selection was removed on request; unknown minutes remain unknown.
 - Source role, all seven labels and values match an approved source audit.
 
 The 20 club IDs were verified against the public first-matchweek calendar, with
@@ -81,7 +82,7 @@ claiming that the product cutoff establishes a percentile population.
 
 ## Recurrence
 
-The existing local automation was updated to **Radares LaLiga 2026/27 · 300 minutos**,
+The existing local automation was updated to **Radares LaLiga 2026/27**,
 still **Wednesday 07:10 Europe/Madrid**. It replaces the old two-club scope; no
 duplicate automation or production timer was created.
 
@@ -103,7 +104,8 @@ app recurrence. No VM deployment, extra credentials or public write route is add
 
 ## Validation
 
-Focused tests cover the 299/300/301 boundary, wrong season/league/club, inactive
+Focused tests cover a configurable 299/300/301 boundary and publication without
+a minimum (including zero), wrong season/league/club, inactive
 IDs, original observation preservation, policy tampering, release reload, and
 filtering inactive players before a weekly fetch. Existing tests cover source
 failures, exact metrics, identity review, immutable releases and rollback.
@@ -116,33 +118,33 @@ The published run summary and per-club counts are recorded below after the
 acquisition/review/publication sequence completes. Unresolved profiles remain
 explicitly pending; no complete population coverage is implied by search results.
 
-Release: `37bbf210e0e3749eda86dfae088b7f1390a832b5bd327bc3c92d0188b76161ce`. The filtered release serves **241 players / 253 role snapshots**, across all 20 clubs. All served observations pass the season, league, active membership and inclusive 300-minute checks.
+Release: `de0bf5af50843426145f62cb8689eb19839079480578f481cc6320f11d637922` (dataset `7013a45c1c8daa1dd894b16e3d7b80c7f5f951e024226a88613c24d67ccda41d`). The release serves **267 players / 282 role snapshots**, across all 20 clubs. All served observations pass the season, league and active-membership checks; no minimum-minute cutoff applies.
 
-Of 571 active roster IDs, **26 have verified observations below 300 minutes** and **304 still have unknown minutes / unresolved source identity**. The other 270 historical/out-of-scope catalog entries are accounted for but not served. Unknown minutes do not prove ineligibility.
+Of 571 active roster IDs, **267 have verified published radars**, including the **26 previously excluded for fewer than 300 minutes**. The remaining **304 still have unknown minutes / unresolved source identity**. The other 270 historical/out-of-scope catalog entries are accounted for but not served. Unknown minutes do not prove ineligibility.
 
-| Club | Active roster IDs | Players with published qualifying radars |
+| Club | Active roster IDs | Players with published radars |
 | --- | --- | --- |
-| Athletic Club | 28 | 15 |
+| Athletic Club | 28 | 16 |
 | Atlético Madrid | 28 | 14 |
 | Barcelona | 28 | 13 |
-| Celta de Vigo | 27 | 13 |
-| Deportivo Alavés | 27 | 10 |
+| Celta de Vigo | 27 | 16 |
+| Deportivo Alavés | 27 | 11 |
 | Deportivo La Coruña | 28 | 11 |
-| Elche | 29 | 8 |
-| Espanyol | 29 | 11 |
+| Elche | 29 | 12 |
+| Espanyol | 29 | 12 |
 | Getafe | 30 | 9 |
 | Levante | 27 | 10 |
-| Málaga | 30 | 11 |
-| Osasuna | 27 | 14 |
-| Racing Santander | 27 | 5 |
-| Rayo Vallecano | 33 | 13 |
-| Real Betis | 26 | 10 |
-| Real Madrid | 32 | 15 |
-| Real Sociedad | 27 | 16 |
+| Málaga | 30 | 12 |
+| Osasuna | 27 | 18 |
+| Racing Santander | 27 | 7 |
+| Rayo Vallecano | 33 | 17 |
+| Real Betis | 26 | 11 |
+| Real Madrid | 32 | 17 |
+| Real Sociedad | 27 | 17 |
 | Sevilla | 30 | 14 |
-| Valencia | 32 | 12 |
+| Valencia | 32 | 13 |
 | Villarreal | 26 | 17 |
 
 Discovery recorded 329 distinct observed player profile URLs from the two search passes. Successful observations were acquired through the private DataMB adapter; review used master-ID full-name evidence and club/role context. No native comparison population was invented. The final ingestion reported 122 successful observations and 160 fresh checkpoints reused.
 
-Verification: all 241 real published players read successfully without source calls. Trent (`2531`, 285 minutes) and Álvaro Carreras (`2533`, 269 minutes) now return `unavailable` with `insufficient_minutes`. The original below-threshold observations remain in checkpoints/history.
+Verification: all 267 real published players read successfully without source calls. All 26 previously excluded IDs are now served; their archived snapshot values and retrieval dates are preserved. Trent (`2531`, 285 minutes) and Álvaro Carreras (`2533`, 269 minutes) return available radars. The prior 300-minute release remains available for rollback.

@@ -3,7 +3,7 @@
 Updated 2026-11-02.
 
 Update 2026-11-03: the active local recurrence now covers all 20 clubs in
-LaLiga 2026/27 and only serves observations with at least 300 league minutes.
+LaLiga 2026/27 and serves verified observations without a minimum-minute cutoff.
 See the [league-wide selection and discovery runbook](radar-laliga-2026-27.md).
 The two-club scope below describes the earlier rollout.
 
