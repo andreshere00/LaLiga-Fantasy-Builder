@@ -6,6 +6,28 @@ entry, not a claim that every optional provider or deployment gate is complete.
 
 ## [Unreleased]
 
+## [0.2.1] - 2026-11-03
+
+### Weekly radar refresh
+
+- Enable the Terraform-managed weekly refresh by default, keeping Wednesday
+  07:10 Europe/Madrid scheduling with up to ten minutes of randomized delay.
+  Installations can opt out with `radar_discovery_enabled = false`.
+- Load public host configuration in the radar systemd service so Docker Compose
+  receives the required `APP_DOMAIN`.
+- Check that catalog, registry and audit files are nonempty and the captures
+  directory exists before starting the weekly attempt, avoiding consumption of
+  the weekly slot when those deployment inputs are missing.
+- Update API and scraping configuration examples and document bootstrap,
+  deployment and timer verification on an existing VM. Production activation
+  still requires reviewed data, service configuration and Terraform/bootstrap;
+  this release does not perform a live deployment.
+
+### Release metadata
+
+- Align Python package versions, runtime service versions, the scraper User-Agent
+  and generated OpenAPI documents with v0.2.1.
+
 ## [0.2.0] - 2026-11-03
 
 ### Player performance profiles

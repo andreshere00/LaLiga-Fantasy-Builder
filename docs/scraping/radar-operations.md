@@ -3,8 +3,9 @@
 Updated 2026-11-03. The active local recurrence covers all 20 clubs in
 LaLiga 2026/27 without a minimum-minute cutoff. See the
 [league-wide selection and discovery runbook](radar-laliga-2026-27.md) for coverage
-and the Wednesday weekly gate. The VM timers below are a separate opt-in
-production deployment and remain disabled.
+and the Wednesday weekly gate. Production deployment is separate from local
+publication; current Terraform enables the weekly VM timer by default unless
+`radar_discovery_enabled` is explicitly set to false.
 
 The API serves a bounded immutable release. The browser does not start ingestion.
 All commands below are operational writes to radar storage; Fantasy account and
