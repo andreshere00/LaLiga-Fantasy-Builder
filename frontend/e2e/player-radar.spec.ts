@@ -126,7 +126,8 @@ for (const { theme, width } of [{ theme: "light", width: 375 }, { theme: "dark",
     await expect(overview).toHaveAttribute("aria-current", "location");
     await expect(page.getByRole("table", { name: "Percentiles for Pau Cubarsí", exact: true })).toBeVisible();
     await expect(page.getByRole("link", { name: "Preview the six supplied examples" })).toHaveCount(0);
-    await expect(page.getByText("Data updated:")).toContainText("2026-10-11");
+    await page.getByText("Source and methodology", { exact: true }).click();
+    await expect(page.locator(".player-radar-methodology time").last()).toHaveAttribute("datetime", "2026-10-11T12:00:00Z");
     const summary = page.getByText("Compare with a compatible player", { exact: true });
     await summary.focus(); await page.keyboard.press("Enter");
     const search = page.getByLabel("Find compatible player");
@@ -237,4 +238,36 @@ for (const { theme, width, reason } of [
     await expect(page.getByLabel("Radar season")).toHaveCount(0);
     await expect(page.getByRole("heading", { name: "Form — fixture stats" })).toBeAttached();
   });
+}
+
+for (const theme of ["light", "dark"]) {
+  for (const width of [375, 1440]) {
+    test(`player identity appears once and methodology is grouped: ${theme} ${width}`, async ({ page }, info) => {
+      await mockApplication(page);
+      await page.setViewportSize({ width, height: 1000 });
+      await page.addInitScript((value) => localStorage.setItem("lfb-theme", value), theme);
+      const sample = { ...structuredClone(examples[0]), player: "Player 01", club: "FC Barcelona",
+        source: "datamb", method: "provider_native_percentile", data_as_of: null };
+      await page.route("**/api/players/1/stats/radar?*", (route) => route.fulfill({ json: response([sample]) }));
+      await page.goto("/players/1");
+      await expect(page.locator(".player-profile-header")).toBeVisible();
+      await page.getByRole("heading", { name: "Performance profile", exact: true }).scrollIntoViewIfNeeded();
+      const radar = page.getByRole("region", { name: "Performance profile", exact: true });
+      await expect(radar.getByRole("heading", { name: "Centre-back", exact: true })).toBeVisible();
+      await expect(radar.getByRole("heading", { name: "Player 01", exact: true })).toHaveCount(0);
+      await expect(radar.getByText("FC Barcelona", { exact: true })).toHaveCount(0);
+      await expect(radar.locator(".player-radar-legend")).toHaveCount(0);
+      await expect(radar.locator("caption")).toHaveClass("visually-hidden");
+      const summary = radar.getByText("Source and methodology", { exact: true });
+      await summary.focus();
+      await page.keyboard.press("Enter");
+      await expect(radar.getByRole("heading", { name: "Data provenance" })).toBeVisible();
+      await expect(radar.getByRole("heading", { name: "Dates", exact: true })).toBeVisible();
+      await expect(radar.getByRole("heading", { name: "Reading this radar" })).toBeVisible();
+      await expect(radar.getByText("Not provided by the source", { exact: true })).toBeVisible();
+      await expect(radar.getByText(/datamb-defense_progression_v1/)).toHaveCount(0);
+      expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
+      await radar.locator(".player-radar-methodology").screenshot({ path: info.outputPath(`methodology-${theme}-${width}.png`) });
+    });
+  }
 }

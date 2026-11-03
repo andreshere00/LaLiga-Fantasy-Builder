@@ -820,13 +820,23 @@ of Overview, sharing its panel and navigation selection. It reads independently
 when it enters the viewport or receives focus. It also remains reachable when the detail
 aggregate is loading or temporarily fails; confirmed missing players and coaches
 retain their own appropriate flow. Player/account changes reset selections.
-The reviewed default role is selected; multiple published roles remain selectable.
+The reviewed default role is selected; multiple published roles remain selectable. Within
+Overview the main header owns the player's name, club and Fantasy position. The
+embedded radar shows the performance role, league, age and sample minutes; it
+omits a single-player legend and keeps its table caption available to assistive
+technology. Standalone previews and independent fallback radars retain identity.
+
+Source and methodology groups provenance, dates and a reading guide in a native
+keyboard-accessible disclosure. Provider methods use product labels rather than
+recipe IDs. Retrieval and provider-update dates are distinct; an unknown update
+is explicitly marked as not provided. Population uncertainty remains visible
+beside the graph, and raw values are never inferred from percentiles.
 
 When the API confirms no published radar for the selection, the entire subsection
 is omitted, including its heading, controls and absence message. Partial profiles
 with available data remain visible. Errors retry the local API only. Available data
-stays visible on refresh failure. The data date and retrieval date appear beside
-the sample context. Examples remain at `/players/radar-preview`, outside real
+stays visible on refresh failure. The data date and retrieval date appear in
+Source and methodology. Examples remain at `/players/radar-preview`, outside real
 player panels. No overall score or invented values are derived from the polygon.
 
 Comparison search is limited to compatible published candidates, with name,

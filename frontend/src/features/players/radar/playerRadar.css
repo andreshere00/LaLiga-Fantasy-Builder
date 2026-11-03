@@ -30,13 +30,12 @@
 .player-radar-meter { display: block; width: 3rem; max-width: 100%; height: 3px; margin: .35rem 0 0 auto; background: var(--fb-line); }
 .player-radar-meter > span { display: block; height: 100%; background: var(--fb-primary); }
 .player-radar-table th small { display: block; font-size: .75rem; font-weight: 400; color: var(--fb-muted); margin-top: .2rem; }
-.player-radar-explanation { font-size: .8rem; line-height: 1.6; color: var(--fb-muted); margin: 1rem 0 1.25rem; max-width: 70ch; }
 .player-radar-warnings, .player-radar-notice { padding: .75rem 1rem; border-left: 3px solid var(--fb-primary); font-size: .85rem; line-height: 1.6; background: color-mix(in srgb, var(--fb-primary) 5%, var(--fb-surface)); }
 .player-radar-warnings { padding-left: 2rem; }
 .player-radar-methodology { border-top: 1px solid color-mix(in srgb, var(--fb-secondary) 12%, transparent); font-size: .85rem; }
 .player-radar-methodology summary { padding: .85rem 0; min-height: 44px; cursor: pointer; }
-.player-radar-methodology dl { display: grid; gap: .7rem; }
-.player-radar-methodology dl div { display: grid; grid-template-columns: 150px minmax(0, 1fr); gap: .75rem; }
+.player-radar-methodology dl { display: grid; gap: .85rem; margin: 0; }
+.player-radar-methodology dl div { display: grid; grid-template-columns: minmax(0, 1fr); gap: .2rem; }
 .player-radar-methodology dd { margin: 0; overflow-wrap: anywhere; color: var(--fb-muted); }
 .player-radar-controls { display: flex; flex-wrap: wrap; align-items: end; gap: .75rem; margin: 1.25rem 0; padding-bottom: 1.25rem; border-bottom: 1px solid var(--fb-line); }
 .player-radar-controls label, .player-radar-preview-select { display: grid; gap: .4rem; font-size: .85rem; max-width: 100%; }
@@ -67,3 +66,16 @@
 .player-radar-search ul { max-width: 44rem; }
 .player-radar-controls label { min-width: 0; grid-template-columns: minmax(0, 1fr); }
 .player-radar-controls .fb-select-shell { width: 9rem; min-width: 0; max-width: 100%; }
+
+.player-radar-methodology-content { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 1.5rem 2rem; padding: .5rem 0 1rem; }
+.player-radar-methodology-content section { min-width: 0; }
+.player-radar-methodology h4 { margin: 0 0 1rem; font: 600 .9rem/1.5 var(--fb-font-body); color: var(--fb-tertiary); text-transform: none; letter-spacing: 0; }
+.player-radar-methodology dt { color: var(--fb-muted); font-size: .75rem; }
+.player-radar-methodology dd { color: var(--fb-secondary); line-height: 1.6; }
+.player-radar-methodology dd small { display: block; color: var(--fb-muted); font-size: .8rem; }
+.player-radar-methodology .player-radar-context { margin-top: 1rem; line-height: 1.6; }
+.player-radar-reading-guide { grid-column: 1 / -1; border-top: 1px solid var(--fb-line); padding-top: 1rem; }
+.player-radar-reading-guide ul { margin: 0; padding-left: 1.2rem; display: grid; gap: .5rem; line-height: 1.6; }
+@media (max-width: 760px) {
+  .player-radar-methodology-content { grid-template-columns: minmax(0, 1fr); gap: 1.25rem; }
+}

@@ -316,7 +316,7 @@ function PlayerDetailBody({ masterId }: PlayerDetailBodyProps) {
   const showMarketMenu = marketRow != null && ownSquadCard == null;
 
   const radarSection = positionId !== 5 && (catalogMaster || detailReady)
-    ? <PlayerRadarSection key={`radar-${masterId}`} playerId={masterId} /> : null;
+    ? <PlayerRadarSection key={`radar-${masterId}`} playerId={masterId} embedded={detailReady} /> : null;
   if (detailQuery.error instanceof ApiError && detailQuery.error.status === 404) {
     return <PlayerDetailUnavailable notFound />;
   }

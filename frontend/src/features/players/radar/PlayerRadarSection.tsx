@@ -32,13 +32,13 @@ const reasons: Record<RadarCoverageDto["reasonCode"], string> = {
 const searchText = (text: string) => text.normalize("NFD").replace(/\p{M}/gu, "").toLocaleLowerCase("en");
 
 /** Keep identity and account changes as deliberate selection boundaries. */
-export function PlayerRadarSection({ playerId }: { playerId: string }) {
+export function PlayerRadarSection({ playerId, embedded = false }: { playerId: string; embedded?: boolean }) {
   const { user } = useAuth();
-  return <RadarContent key={`${user?.userId}:${playerId}`} playerId={playerId} />;
+  return <RadarContent key={`${user?.userId}:${playerId}`} playerId={playerId} embedded={embedded} />;
 }
 
 /** Read a local publication on arrival, independently of other player segments. */
-function RadarContent({ playerId }: { playerId: string }) {
+function RadarContent({ playerId, embedded }: { playerId: string; embedded: boolean }) {
   const { accessToken, user } = useAuth();
   const section = useRef<HTMLElement>(null);
   const comparisonSummary = useRef<HTMLElement>(null);
@@ -94,8 +94,7 @@ function RadarContent({ playerId }: { playerId: string }) {
   const reason = query.data?.coverage?.reasonCode;
   if (query.data && !displayed) return null;
   return <section ref={section} className="player-detail-panel player-detail-section player-radar-section" aria-labelledby="player-radar-title" onFocusCapture={() => setActive(true)}>
-    <div className="player-radar-section-header"><div><h2 className="player-section-title" id="player-radar-title" tabIndex={-1}>Performance profile</h2>
-      <p>Seven role-specific percentiles, with their reference sample.</p></div>
+    <div className="player-radar-section-header"><h2 className="player-section-title" id="player-radar-title" tabIndex={-1}>Performance profile</h2>
       {query.data?.status === "available" ? <Button variant="outline" loading={query.isFetching} onClick={refresh}>Refresh performance data</Button> : null}
     </div>
     <div className="player-radar-controls"><label>Radar season<NativeSelect value={season} onChange={(e) => { setSeason(e.target.value); setProfile(undefined); resetComparison(); }}>
@@ -114,7 +113,7 @@ function RadarContent({ playerId }: { playerId: string }) {
     {query.data?.coverage && Object.keys(query.data.coverage.profileErrors).length ? <p className="player-radar-notice">Some role profiles could not be updated. Available profiles remain shown.</p> : null}
     {profile && selected && selected.profile !== profile ? <p role="status">The selected role is no longer published. Showing {selected.profileLabel}.</p> : null}
     {displayed ? <>
-      <PlayerRadarPlot radar={displayed} comparison={paired?.comparison} />
+      <PlayerRadarPlot radar={displayed} comparison={paired?.comparison} embedded={embedded} />
       {selected?.comparisonKey && candidates.length ? <details className="player-radar-search">
         <summary ref={comparisonSummary}>Compare with a compatible player</summary>
         <p className="player-radar-context">Same role, season and reference population. Choose one player.</p>
@@ -124,7 +123,7 @@ function RadarContent({ playerId }: { playerId: string }) {
           <Button variant="outline" aria-pressed={activeComparison === candidate.playerId} onClick={() => { setComparison(candidate.playerId); setNotice(""); }}>
             {candidate.player} · {candidate.club ?? "Club not published"} · {selected.profileLabel}
           </Button></li>)}</ul>
-      </details> : <p className="player-radar-context">{displayed.comparisonReason ?? "No compatible players are published for this dataset."}</p>}
+      </details> : selected?.comparisonKey ? <p className="player-radar-context">No compatible players are published for this dataset.</p> : null}
       {activeComparison ? <Button variant="outline" onClick={() => { setComparison(undefined); setNotice("Comparison removed."); comparisonSummary.current?.focus(); }}>Remove comparison</Button> : null}
       {comparison && !activeComparison ? <p role="status">The previous comparison is no longer available in this dataset. Choose another player.</p> : null}
       {activeComparison && compareQuery.isFetching ? <p role="status">Loading comparison…</p> : null}

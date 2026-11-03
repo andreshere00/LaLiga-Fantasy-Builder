@@ -119,3 +119,30 @@ describe("published coverage", () => {
     expect(playerRadarResponseSchema.safeParse({ ...response, coverage: { ...coverage, player_id: "1" } }).success).toBe(true);
   });
 });
+
+describe("embedded radar information hierarchy", () => {
+  it("uses the role instead of repeating the player identity and retains accessible values", () => {
+    const radar = clone();
+    render(<PlayerRadarPlot radar={radar} embedded />);
+    expect(screen.queryByRole("heading", { name: radar.player })).toBeNull();
+    expect(screen.getByRole("heading", { name: radar.profileLabel })).toBeTruthy();
+    expect(screen.queryByText(radar.club, { exact: true })).toBeNull();
+    expect(screen.getByRole("table", { name: `Percentiles for ${radar.player}` })).toBeTruthy();
+    expect(screen.getAllByRole("row")).toHaveLength(8);
+  });
+
+  it("groups understandable provenance, honest dates and interpretation without raw recipe IDs", () => {
+    const radar = { ...clone(), source: "datamb", method: "provider_native_percentile", dataAsOf: null };
+    render(<PlayerRadarPlot radar={radar} embedded />);
+    screen.getByText("Source and methodology").click();
+    expect(screen.getByRole("heading", { name: "Data provenance" })).toBeTruthy();
+    expect(screen.getByRole("heading", { name: "Dates" })).toBeTruthy();
+    expect(screen.getByRole("heading", { name: "Reading this radar" })).toBeTruthy();
+    expect(screen.getByText("DataMB", { exact: true })).toBeTruthy();
+    expect(screen.getByText("Percentiles published by the provider")).toBeTruthy();
+    expect(screen.getByText("Not provided by the source")).toBeTruthy();
+    expect(screen.getByText(/Player comparisons are unavailable/)).toBeTruthy();
+    expect(screen.queryByText(new RegExp(radar.recipeVersion))).toBeNull();
+    expect(screen.queryByText(/provider_native_percentile/)).toBeNull();
+  });
+});
