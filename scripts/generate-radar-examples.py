@@ -1,4 +1,4 @@
-"""Generate explicit preview fixtures from the user's six records, without network access.
+"""Generate shared contract-test fixtures from the user's six records, without network access.
 
 Run with backend/api/.venv/bin/python. Numeric ids and the import timestamp are
 synthetic preview context, never mappings to Fantasy master ids.
@@ -14,7 +14,7 @@ from fantasy_api.schemas.player_radar import RadarSnapshot
 from fantasy_api.services.player_radar import build_radar
 
 ROOT = Path(__file__).resolve().parents[1]
-TARGET = ROOT / "frontend/src/features/players/radar/examples.json"
+TARGET = ROOT / "frontend/test/fixtures/player-radars.json"
 SAMPLES = [
     ("Pau Cubarsí", 19, 668, "defense_progression_v1", [99.7, 93.7, 90.5, 27, 34.6, 95.9, 92.4]),
     ("Xavi Espart", 19, 712, "defense_fullback_v1", [16.1, 61.9, 11.8, 44.6, 67.8, 75.9, 67.2]),

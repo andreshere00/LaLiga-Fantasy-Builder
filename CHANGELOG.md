@@ -38,6 +38,10 @@ entry, not a claim that every optional provider or deployment gate is complete.
   at 07:10 Europe/Madrid, with read-only policy inputs, a durable attempt guard,
   and opt-in activation. Removed the recurring LLM task; local checks remain available.
 
+- Removed the superseded two-club manifest, retired daily timer template,
+  duplicate job environment example, and product preview route. Keep shared radar
+  fixtures outside production source for contract and browser regression tests.
+
 ### Documentation and availability
 
 - Updated API schemas, frontend guidance, deployment configuration, and radar

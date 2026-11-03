@@ -794,12 +794,10 @@ accompanied by an accessible table and source/population details. Minutes are ra
 sample context. Missing spokes retain their table row and hide the polygon;
 zero is valid. Source failure does not block the rest of the player profile.
 
-`/players/radar-preview` is a separate, explicitly imported preview of the six
-user-supplied Barcelona examples. It never fetches or assigns those sample IDs
-to live Fantasy profiles. All populations/identities are marked unverified;
-comparison is unavailable, and Joan García retains both supplied 58.0 values
-with a source-check notice. The preview uses a fixed illustrative import date,
-not a claimed measurement time. The samples contain no compatible profile pair.
+The six supplied role examples live in `frontend/test/fixtures/player-radars.json`
+for shared Python/frontend contract tests and mocked browser tests of real player
+pages. These synthetic test records are never bundled as a product preview or
+assigned to live Fantasy profiles. Their populations remain unverified.
 
 To regenerate/check the exact 42 supplied percentiles from the repository root:
 
@@ -840,8 +838,7 @@ When the API confirms no published radar for the selection, the entire subsectio
 is omitted, including its heading, controls and absence message. Partial profiles
 with available data remain visible. Errors retry the local API only. Available data
 stays visible on refresh failure. The data date and retrieval date appear in
-Source and methodology. Examples remain at `/players/radar-preview`, outside real
-player panels. No overall score or invented values are derived from the polygon.
+Source and methodology. No overall score or invented values are derived from the polygon.
 
 Comparison search is limited to compatible published candidates, with name,
 club and role. Native input/buttons support keyboard and touch, show empty search

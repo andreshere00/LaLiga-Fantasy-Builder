@@ -1,5 +1,5 @@
 import { expect, test } from "@playwright/test";
-import examples from "../src/features/players/radar/examples.json" with { type: "json" };
+import examples from "../test/fixtures/player-radars.json" with { type: "json" };
 import { catalog, detail, mockApplication } from "./fixtures";
 
 const response = (radars: unknown[], extra = {}) => ({
@@ -14,11 +14,12 @@ for (const theme of ["light", "dark"]) {
       await mockApplication(page);
       await page.setViewportSize({ width, height: 1000 });
       await page.addInitScript((value) => localStorage.setItem("lfb-theme", value), theme);
-      await page.goto("/players/radar-preview");
-      await expect(page.getByRole("heading", { name: "Player performance radars" })).toBeVisible();
-      const select = page.getByLabel("Example player");
-      for (const sample of examples) {
-        await select.selectOption(sample.player_id);
+      let sample = examples[0];
+      await page.route("**/api/players/1/stats/radar?*", (route) => route.fulfill({ json: response([{ ...sample, player_id: "1" }]) }));
+      for (sample of examples) {
+        await page.goto("/players/1");
+        await expect(page.locator(".player-profile-header")).toBeVisible();
+        await page.getByRole("heading", { name: "Performance profile", exact: true }).scrollIntoViewIfNeeded();
         const table = page.getByRole("table", { name: `Percentiles for ${sample.player}` });
         await expect(table).toBeVisible();
         await expect(table.getByRole("row")).toHaveCount(8);
@@ -26,7 +27,6 @@ for (const theme of ["light", "dark"]) {
         await expect(page.getByText("Reference population unverified", { exact: true })).toBeVisible();
         expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
       }
-      await select.selectOption("6");
       await page.getByText("Source and methodology", { exact: true }).focus();
       await page.keyboard.press("Enter");
       await expect(page.getByText("User-supplied import", { exact: true })).toBeVisible();

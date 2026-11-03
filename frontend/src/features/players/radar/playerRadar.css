@@ -46,13 +46,9 @@
 .player-radar-methodology dl div { display: grid; grid-template-columns: minmax(0, 1fr); gap: .2rem; }
 .player-radar-methodology dd { margin: 0; overflow-wrap: anywhere; color: var(--fb-muted); }
 .player-radar-controls { display: flex; flex-wrap: wrap; align-items: center; gap: .75rem; min-width: 0; }
-.player-radar-controls label, .player-radar-preview-select { display: grid; gap: .4rem; font-size: .75rem; max-width: 100%; color: var(--fb-muted); }
+.player-radar-controls label { display: grid; gap: .4rem; font-size: .75rem; max-width: 100%; color: var(--fb-muted); }
 .player-radar-controls > button { align-self: end; min-height: 44px; }
-.player-radar-controls select, .player-radar-controls input, .player-radar-preview-select select { min-height: 44px; max-width: 100%; padding: .5rem .75rem; color: var(--fb-secondary); background: var(--fb-surface); border: 1px solid var(--fb-muted); border-radius: 0; font: inherit; }
-.player-radar-preview-link { display: flex; flex-wrap: wrap; gap: .5rem 1rem; font-size: .8rem; margin: 1rem 0 0; }
-.player-radar-preview-link span { color: var(--fb-muted); }
-.player-radar-preview h1 { margin: .5rem 0; }
-.player-radar-preview header { margin-top: 1rem; }
+.player-radar-controls select, .player-radar-controls input { min-height: 44px; max-width: 100%; padding: .5rem .75rem; color: var(--fb-secondary); background: var(--fb-surface); border: 1px solid var(--fb-muted); border-radius: 0; font: inherit; }
 @media (max-width: 760px) {
   .player-radar-content { grid-template-columns: minmax(0, 1fr); gap: 1rem; }
   .player-radar-chart { height: 340px; }

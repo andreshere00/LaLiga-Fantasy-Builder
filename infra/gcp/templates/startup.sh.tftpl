@@ -41,7 +41,11 @@ systemctl enable --now docker
 systemctl enable fantasybuilder.service
 systemctl enable --now fantasybuilder-backup.timer
 # Terraform owns recurrence. Disable the legacy daily inventory schedule.
-systemctl disable --now fantasybuilder-radar-inventory.timer
+if test -f /etc/systemd/system/fantasybuilder-radar-inventory.timer; then
+  systemctl disable --now fantasybuilder-radar-inventory.timer
+  rm /etc/systemd/system/fantasybuilder-radar-inventory.timer
+  systemctl daemon-reload
+fi
 %{ if radar_discovery_enabled ~}
 systemctl enable --now fantasybuilder-radar-refresh.timer
 %{ else ~}

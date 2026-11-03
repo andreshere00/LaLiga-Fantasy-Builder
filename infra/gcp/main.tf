@@ -49,7 +49,7 @@ locals {
     }, {
     for name in [
       "fantasybuilder.service", "fantasybuilder-backup.service", "fantasybuilder-backup.timer",
-      "fantasybuilder-radar@.service", "fantasybuilder-radar-inventory.timer",
+      "fantasybuilder-radar@.service",
       "fantasybuilder-radar-refresh.timer"
     ] :
     "/etc/systemd/system/${name}" => { mode = "0644", content = file("${path.module}/templates/${name}") }

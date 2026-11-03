@@ -4,8 +4,13 @@ import { getJson, paths } from "../../../api/client";
 import { playerRadarResponseSchema } from "../../../api/schemas";
 import { type PlayerRadarDto } from "../../../api/radar";
 import { canCompareRadars, PlayerRadarPlot } from "./PlayerRadarPlot";
-import { suppliedRadars } from "./PlayerRadarPreviewPage";
-import examples from "./examples.json";
+import examples from "../../../../test/fixtures/player-radars.json";
+
+const suppliedRadars = examples.map((radar) => playerRadarResponseSchema.parse({
+  player_id: radar.player_id, season: radar.season, available_seasons: [radar.season],
+  status: "available", reason: null, radars: [radar], comparison: null,
+  comparison_reason: null, compatible_players: [],
+}).radars[0]);
 
 vi.mock("recharts", () => ({
   ResponsiveContainer: ({ children }: { children: React.ReactNode }) => <div>{children}</div>,

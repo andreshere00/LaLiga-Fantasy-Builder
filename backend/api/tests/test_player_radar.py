@@ -351,8 +351,8 @@ def test_radar_cli_invalid_season_fails_before_login(monkeypatch):
     assert player_stats.main(["--player-id", "1", "--segment", "radar", "--season", "2026-28"]) == 2
 
 
-def test_profiles_shared_preview_matches_server_registry():
-    path = Path(__file__).resolve().parents[3] / "frontend/src/features/players/radar/examples.json"
+def test_profiles_shared_fixture_matches_server_registry():
+    path = Path(__file__).resolve().parents[3] / "frontend/test/fixtures/player-radars.json"
     examples = json.loads(path.read_text())
     assert [row["profile"] for row in examples] == list(PROFILES)
     for row in examples:
