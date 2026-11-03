@@ -85,6 +85,12 @@ export function PlayerRadarPlot({ radar, comparison, embedded = false }: { radar
         </table>
       </div>
     </div>
+    <RadarMethodology radar={radar} titleId={titleId} />
+  </article>;
+}
+
+function RadarMethodology({ radar, titleId }: { radar: PlayerRadarDto; titleId: string }) {
+  return (
     <details className="player-radar-methodology">
       <summary>Source and methodology</summary>
       <div className="player-radar-methodology-content">
@@ -115,5 +121,5 @@ export function PlayerRadarPlot({ radar, comparison, embedded = false }: { radar
         </section>
       </div>
     </details>
-  </article>;
+  );
 }

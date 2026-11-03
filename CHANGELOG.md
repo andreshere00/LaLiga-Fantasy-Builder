@@ -20,6 +20,13 @@ entry, not a claim that every optional provider or deployment gate is complete.
 - Validate comparison compatibility on the server and offer comparisons only
   when metric definitions and reference populations are verified.
 
+### Radar simplification
+
+- Serve only pinned local publications; retire request-time mappings and reject
+  legacy store configuration explicitly. Keep reviewed ingestion imports.
+- Share derived publication views and extract weekly orchestration into a typed
+  application service. Separate frontend queries, comparison UI and methodology.
+
 ### Radar data and operations
 
 - Added authenticated radar API and CLI reads, validated response contracts,

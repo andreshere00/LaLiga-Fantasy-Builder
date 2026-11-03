@@ -1,14 +1,10 @@
-import { useEffect, useRef, useState } from "react";
-import { useQuery } from "@tanstack/react-query";
+import { usePlayerRadar } from "./usePlayerRadar";
 import { useAuth } from "../../../auth/AuthProvider";
-import { getJson, paths } from "../../../api/client";
-import { ApiError } from "../../../api/errors";
 import type { RadarCoverageDto, RadarProfileId } from "../../../api/radar";
 import { Button } from "../../../components/ui/Button";
 import { Input, NativeSelect } from "../../../components/ui/Fields";
 import { PlayerRadarPlot } from "./PlayerRadarPlot";
 
-const RADAR_SEASON = "2026-27";
 
 const reasons: Record<RadarCoverageDto["reasonCode"], string> = {
   ready: "",
@@ -23,8 +19,6 @@ const reasons: Record<RadarCoverageDto["reasonCode"], string> = {
   season_unavailable: "No performance data is available for the 2026/27 season.",
   expired: "The saved performance data is too old to show. A new validated dataset is needed.",
 };
-const searchText = (text: string) => text.normalize("NFD").replace(/\p{M}/gu, "").toLocaleLowerCase("en");
-
 /** Keep identity and account changes as deliberate selection boundaries. */
 export function PlayerRadarSection({ playerId, embedded = false }: { playerId: string; embedded?: boolean }) {
   const { user } = useAuth();
@@ -33,57 +27,8 @@ export function PlayerRadarSection({ playerId, embedded = false }: { playerId: s
 
 /** Read a local publication on arrival, independently of other player segments. */
 function RadarContent({ playerId, embedded }: { playerId: string; embedded: boolean }) {
-  const { accessToken, user } = useAuth();
-  const section = useRef<HTMLElement>(null);
-  const comparisonSummary = useRef<HTMLElement>(null);
-  const [active, setActive] = useState(() => typeof IntersectionObserver === "undefined");
-  const [profile, setProfile] = useState<RadarProfileId | undefined>();
-  const [comparison, setComparison] = useState<string | undefined>();
-  const [search, setSearch] = useState("");
-  const [notice, setNotice] = useState("");
-  useEffect(() => {
-    if (active || !section.current) return;
-    const observer = new IntersectionObserver((entries) => {
-      if (entries.some((entry) => entry.isIntersecting)) {
-        setActive(true);
-        observer.disconnect();
-      }
-    }, { rootMargin: "200px 0px" });
-    observer.observe(section.current);
-    return () => observer.disconnect();
-  }, [active]);
-  const query = useQuery({
-    queryKey: ["players", "radar", user?.userId, playerId, RADAR_SEASON],
-    enabled: active && !!accessToken && !!user,
-    staleTime: 15 * 60_000,
-    retry: (count, error) => !(error instanceof ApiError && error.status < 500) && count < 1,
-    queryFn: ({ signal }) => getJson(paths.playerRadar(playerId, RADAR_SEASON), accessToken ?? "", { signal }),
-  });
-  const radars = query.data?.radars ?? [];
-  const selected = radars.find((r) => r.profile === profile) ??
-    radars.find((r) => r.profile === query.data?.defaultProfile) ?? radars[0];
-  const candidates = (query.data?.compatiblePlayers ?? []).filter((candidate) => candidate.profile === selected?.profile);
-  const activeComparison = candidates.some((candidate) => candidate.playerId === comparison) ? comparison : undefined;
-  const compareQuery = useQuery({
-    queryKey: ["players", "radar-comparison", user?.userId, playerId, RADAR_SEASON, selected?.profile, activeComparison, query.data?.coverage?.datasetId, selected?.snapshotId],
-    enabled: active && !!accessToken && !!user && !!activeComparison && !!selected?.comparisonKey,
-    staleTime: 15 * 60_000,
-    retry: false,
-    queryFn: ({ signal }) => getJson(paths.playerRadar(playerId, RADAR_SEASON, selected?.profile, activeComparison), accessToken ?? "", { signal }),
-  });
-  // An overlay and its primary must come from the same pinned server response.
-  const paired = activeComparison ? compareQuery.data : undefined;
-  const displayed = paired?.radars.find((r) => r.profile === selected?.profile) ?? selected;
-  const filtered = candidates.filter((candidate) => searchText(`${candidate.player} ${candidate.club ?? ""}`).includes(searchText(search.trim())));
-  const resetComparison = () => {
-    if (comparison) setNotice("Comparison cleared because the role changed.");
-    setComparison(undefined); setSearch("");
-  };
-  const refresh = () => {
-    void query.refetch();
-    if (activeComparison) void compareQuery.refetch();
-  };
-  const reason = query.data?.coverage?.reasonCode;
+  const state = usePlayerRadar(playerId);
+  const { section, active, setActive, profile, setProfile, notice, query, selected, displayed, paired, resetComparison, refresh, reason, radars } = state;
   if (query.data && !displayed) return null;
   return <section ref={section} className="player-detail-panel player-detail-section player-radar-section" aria-labelledby="player-radar-title" onFocusCapture={() => setActive(true)}>
     <div className="player-radar-section-header"><h2 className="player-section-title" id="player-radar-title" tabIndex={-1}>Performance profile</h2>
@@ -104,6 +49,15 @@ function RadarContent({ playerId, embedded }: { playerId: string; embedded: bool
     {profile && selected && selected.profile !== profile ? <p role="status">The selected role is no longer published. Showing {selected.profileLabel}.</p> : null}
     {displayed ? <>
       <PlayerRadarPlot radar={displayed} comparison={paired?.comparison} embedded={embedded} />
+      <RadarComparison state={state} />
+    </> : null}
+  </section>;
+}
+
+function RadarComparison({ state }: { state: ReturnType<typeof usePlayerRadar> }) {
+  const { selected, candidates, comparisonSummary, search, setSearch, filtered, activeComparison, setComparison, setNotice, comparison, compareQuery, paired } = state;
+  if (!selected) return null;
+  return <>
       {selected?.comparisonKey && candidates.length ? <details className="player-radar-search">
         <summary ref={comparisonSummary}>Compare with a compatible player</summary>
         <p className="player-radar-context">Same role, season and reference population. Choose one player.</p>
@@ -120,6 +74,5 @@ function RadarContent({ playerId, embedded }: { playerId: string; embedded: bool
       {activeComparison && paired?.comparisonReason ? <p role="status">{paired.comparisonReason}</p> : null}
       {activeComparison && compareQuery.isError ? <div><p role="alert">{paired?.comparison ? "Comparison could not be updated. The saved pair is still shown." : "Comparison is unavailable. The selected player's radar is still shown."}</p>
         <Button variant="outline" onClick={() => void compareQuery.refetch()}>Retry comparison</Button></div> : null}
-    </> : null}
-  </section>;
+  </>;
 }
