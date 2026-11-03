@@ -130,15 +130,9 @@ class PublishedDataset(BaseModel):
             expected_id = content_id(identity_payload)
             if expected_id != self.report["dataset_id"]:
                 raise ValueError("published observations do not match provenance")
-        # Import locally to keep service -> repository -> releases imports acyclic.
-        from fantasy_api.services.player_radar import build_radar
+        from fantasy_api.radar.views import comparison_index
 
-        expected: dict[str, list[str]] = {}
-        for row in self.store.snapshots:
-            key = build_radar(row).comparison_key
-            if key:
-                expected.setdefault(key, []).append(f"{row.player_id}:{row.profile}")
-        expected = {key: sorted(values) for key, values in expected.items()}
+        expected = comparison_index(self.store.snapshots)
         if self.index != expected:
             raise ValueError("comparison index does not match published snapshots")
         return self

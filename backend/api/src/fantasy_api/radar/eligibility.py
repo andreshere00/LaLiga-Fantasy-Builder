@@ -3,12 +3,11 @@
 from __future__ import annotations
 
 import re
-from collections import Counter
 from typing import TYPE_CHECKING
 
 from pydantic import BaseModel, ConfigDict, Field, model_validator
 
-from fantasy_api.radar.files import content_id
+from fantasy_api.radar.views import comparison_index, coverage_summary, publication_id
 from fantasy_api.schemas.player_radar import RadarQuery, RadarSnapshot
 
 if TYPE_CHECKING:
@@ -60,7 +59,6 @@ class RadarEligibility(BaseModel):
 def filter_publication(dataset: PublishedDataset, policy: RadarEligibility) -> PublishedDataset:
     """Filter served snapshots and rebuild coverage/index with hash-bound eligibility."""
     from fantasy_api.radar.releases import PublishedDataset
-    from fantasy_api.services.player_radar import build_radar
 
     if dataset.catalog.season != policy.season:
         raise ValueError("publication policy belongs to a different season")
@@ -77,14 +75,12 @@ def filter_publication(dataset: PublishedDataset, policy: RadarEligibility) -> P
     provenance = dict(dataset.provenance)
     provenance["format"] = "radar-provenance-v2"
     provenance["eligibility"] = policy.model_dump(mode="json")
-    dataset_id = content_id(
-        {
-            "catalog": dataset.catalog.snapshot_id,
-            "season": policy.season,
-            "tasks": provenance["task_hashes"],
-            "observations": sorted(s.snapshot_id for s in kept),
-            "eligibility": provenance["eligibility"],
-        }
+    dataset_id = publication_id(
+        dataset.catalog.snapshot_id,
+        policy.season,
+        provenance["task_hashes"],
+        kept,
+        provenance["eligibility"],
     )
     coverage = []
     for row in dataset.coverage:
@@ -103,11 +99,7 @@ def filter_publication(dataset: PublishedDataset, policy: RadarEligibility) -> P
             )
             changes.update(data_status=reason, reason_code=reason)
         coverage.append(row.model_copy(update=changes))
-    index = {}
-    for snapshot in kept:
-        key = build_radar(snapshot).comparison_key
-        if key:
-            index.setdefault(key, []).append(f"{snapshot.player_id}:{snapshot.profile}")
+    index = comparison_index(kept)
     ready = sum(r.data_status == "ready" for r in coverage)
     club_report = {}
     for team in policy.clubs:
@@ -142,8 +134,7 @@ def filter_publication(dataset: PublishedDataset, policy: RadarEligibility) -> P
         "dataset_id": dataset_id,
         "ready": ready,
         "complete_radar_pct": round(100 * ready / len(coverage), 2),
-        "reasons": dict(Counter(r.reason_code for r in coverage)),
-        "by_role": dict(Counter(s.profile for s in kept)),
+        **coverage_summary(coverage, kept),
         "scope_by_team": club_report,
         "eligibility_policy": provenance["eligibility"],
         "by_club_coverage": {

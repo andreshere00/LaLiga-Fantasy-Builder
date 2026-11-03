@@ -18,8 +18,8 @@ from fantasy_api.radar.files import atomic_json, content_id, read_json, semantic
 from fantasy_api.radar.profiles import PROFILES
 from fantasy_api.radar.registry import IdentityDecision, IdentityRegistry
 from fantasy_api.radar.releases import PublishedDataset, publisher_lock
+from fantasy_api.radar.views import comparison_index, coverage_summary, publication_id
 from fantasy_api.schemas.player_radar import DataMBPlayer, RadarSnapshot, RadarStore
-from fantasy_api.services.player_radar import build_radar
 
 
 class IngestionTask(BaseModel):
@@ -306,13 +306,8 @@ def compile_dataset(
                 )
                 snapshots.append(snapshot)
         by_player.setdefault(task.identity.player_id, []).append((task, checkpoint, snapshot))
-    dataset_id = content_id(
-        {
-            "catalog": catalog.snapshot_id,
-            "season": catalog.season,
-            "tasks": sorted(t.key for t in tasks),
-            "observations": sorted(s.snapshot_id for s in snapshots),
-        }
+    dataset_id = publication_id(
+        catalog.snapshot_id, catalog.season, [task.key for task in tasks], snapshots
     )
     current_identities = registry.current()
     coverage = []
@@ -378,12 +373,7 @@ def compile_dataset(
                 catalog_snapshot_id=catalog.snapshot_id,
             )
         )
-    index: dict[str, list[str]] = {}
-    for snapshot in snapshots:
-        key = build_radar(snapshot).comparison_key
-        if key:
-            index.setdefault(key, []).append(f"{snapshot.player_id}:{snapshot.profile}")
-    ready = sum(c.data_status == "ready" for c in coverage)
+    index = comparison_index(snapshots)
     matched = sum(c.identity_status == "matched" for c in coverage)
     known_eligibility = {
         s.player_id for s in snapshots if s.cohort and s.cohort.minimum_minutes is not None
@@ -404,7 +394,7 @@ def compile_dataset(
         counts["ready"] += int(coverage_by_id[player.player_id].data_status == "ready")
     report = inventory_report(catalog) | {
         "by_club_coverage": club_report,
-        "by_role": dict(Counter(s.profile for s in snapshots)),
+        **coverage_summary(coverage, snapshots),
         "eligible_known": len(eligible_ids),
         "eligible_coverage_pct": (
             round(100 * len(ready_ids & eligible_ids) / len(eligible_ids), 2)
@@ -414,7 +404,6 @@ def compile_dataset(
         "dataset_id": dataset_id,
         "accounted": len(coverage),
         "matched": matched,
-        "ready": ready,
         "association_pct": round(100 * matched / len(coverage), 2),
         "complete_radar_pct": round(
             100
@@ -429,7 +418,6 @@ def compile_dataset(
             2,
         ),
         "eligible_unknown": len(coverage) - len(known_eligibility),
-        "reasons": dict(Counter(c.reason_code for c in coverage)),
         "profile_errors": dict(
             Counter(error for c in coverage for error in c.profile_errors.values())
         ),
