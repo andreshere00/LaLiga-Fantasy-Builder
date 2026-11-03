@@ -364,9 +364,9 @@ provider credentials are passed to this job.
 
 Terraform owns the weekly discovery schedule on the existing VM: Wednesday
 07:10 Europe/Madrid (up to ten minutes of jitter). No LLM task or additional
-Cloud Scheduler service is required. `radar_discovery_enabled` defaults to false;
-set it to true after provisioning durable data, a seeded 2026/27 catalog and the
-reviewed registry/audits/captures. Terraform generates `radar.env`, installs the
+Cloud Scheduler service is required. `radar_discovery_enabled` defaults to true;
+provision durable data, a seeded 2026/27 catalog and reviewed registry/audits/captures
+before deployment. Set it to false to opt out on an unprepared installation. Terraform generates `radar.env`, installs the
 20-club eligibility and observed-candidate manifests, and enables/disables the
 refresh timer during bootstrap. The legacy daily inventory timer is disabled.
 

@@ -145,7 +145,8 @@ is a separate evolution when the product actually needs it.
 ## Scheduling on the existing VM
 
 Terraform manages recurrence on the existing VM; no LLM automation is required.
-The `radar_discovery_enabled` variable defaults to false. Before setting it true:
+The `radar_discovery_enabled` variable defaults to true. Set it to false on an
+unprepared installation. Before deploying with it enabled:
 
 1. Complete the supply/pilot gates and deploy images containing the weekly CLI.
 2. Provision the durable directories described above for UID/GID 999. Transfer
@@ -155,7 +156,8 @@ The `radar_discovery_enabled` variable defaults to false. Before setting it true
 3. Set API `RADAR_DATASET_ROOT=/data/radar/published` and scraping
    `DATAMB_ENABLED=true` in the respective service configurations. Keep job/API
    host paths aligned with the Terraform-generated `radar.env` defaults.
-4. Set `radar_discovery_enabled = true`, review/apply Terraform, and run bootstrap
+4. Keep `radar_discovery_enabled = true` (remove any previous false override),
+   review/apply Terraform, and run bootstrap
    on the existing VM using the deployment procedure (metadata changes alone do
    not execute it immediately). Inspect `systemctl list-timers` and the journal.
 
@@ -164,6 +166,9 @@ and policy/candidate manifests to `/opt/fantasybuilder/radar-config` (read-only 
 the job). Edit Terraform inputs rather than the generated files. Secrets continue
 to come from the existing service configuration; none enter Terraform state.
 Setting the variable false and rerunning bootstrap disables the refresh timer.
+Missing or empty catalog/registry/audit files or a missing captures directory fail
+the host script before `weekly` can consume the weekly attempt. This presence
+check does not replace semantic validation of the reviewed inputs.
 The old daily inventory timer is disabled by bootstrap; manual inventory remains
 available for initial setup.
 
@@ -178,6 +183,26 @@ day. The host operation lock excludes simultaneous jobs/deployments.
 The disposable API-image job has no public write endpoint. For an offline local
 readiness check, `bash scripts/radar-weekly-local.sh --check` remains available;
 it is not a scheduler.
+
+### Verify activation on an existing VM
+
+After preparing the data, updating the API/scraping secrets and applying Terraform,
+rerun the guest startup script on the VM, then deploy the updated application
+configuration using the existing helper:
+
+```bash
+sudo google_metadata_script_runner startup
+sudo /usr/local/sbin/fantasybuilder-deploy
+systemctl is-enabled fantasybuilder-radar-refresh.timer
+systemctl list-timers --all fantasybuilder-radar-refresh.timer
+sudo journalctl -u fantasybuilder-radar@refresh.service -n 100 --no-pager
+```
+
+The radar service loads `host.env` so Compose receives the required `APP_DOMAIN`.
+Bootstrap installs the timer; the deploy helper loads the current service secrets
+and images. Verify the next trigger is Wednesday in Europe/Madrid. Do not start
+`fantasybuilder-radar@refresh.service` merely as a smoke check: on Wednesday it
+can consume the weekly slot and perform acquisition.
 
 ## Monitoring and rollback
 

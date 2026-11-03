@@ -8,5 +8,6 @@ ConditionPathExists=/etc/fantasybuilder/radar.env
 [Service]
 Type=oneshot
 UMask=0027
+EnvironmentFile=/etc/fantasybuilder/host.env
 ExecStart=/usr/local/sbin/fantasybuilder-radar-sync %i
 TimeoutStartSec=10800

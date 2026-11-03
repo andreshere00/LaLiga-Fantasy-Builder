@@ -87,8 +87,9 @@ with zeros.
 ## Recurrence
 
 Recurrence belongs to the Terraform-managed VM, replacing the removed LLM task.
-Enable `radar_discovery_enabled` after completing the
-[deployment prerequisites](radar-operations.md#scheduling-on-the-existing-vm).
+`radar_discovery_enabled` is enabled by default. Complete the
+[deployment prerequisites](radar-operations.md#scheduling-on-the-existing-vm)
+before deploying; set the variable to false on an unprepared installation.
 The weekly timer runs **Wednesday 07:10 Europe/Madrid** with up to ten minutes
 of jitter. It runs the guarded `weekly` CLI with all 20 policy club IDs,
 the eligibility policy and observed candidate manifest mounted read-only.

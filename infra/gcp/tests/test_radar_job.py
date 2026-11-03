@@ -28,6 +28,11 @@ def job(tmp_path, *, enabled=True, fail="", lock=False):
     data, review = tmp_path / "data", tmp_path / "review"
     data.mkdir()
     review.mkdir()
+    (data / "staging").mkdir()
+    (data / "staging/catalog.json").write_text("{}")
+    (review / "registry.json").write_text("{}")
+    (review / "audits.json").write_text("{}")
+    (review / "captures").mkdir()
     config = tmp_path / "radar.env"
     config.write_text(
         f"RADAR_JOB_ENABLED={'true' if enabled else 'false'}\n"
@@ -132,3 +137,34 @@ def test_job_disabled_or_missing_config_performs_no_work(tmp_path):
     assert (
         subprocess.run(["bash", str(SCRIPT), "wrong"], env=env, capture_output=True).returncode == 2
     )
+
+
+@pytest.mark.parametrize("missing", ["catalog", "registry", "audits", "captures"])
+def test_job_missing_seed_prevents_weekly_attempt(tmp_path, missing):
+    env, log = job(tmp_path)
+    paths = {
+        "catalog": tmp_path / "data/staging/catalog.json",
+        "registry": tmp_path / "review/registry.json",
+        "audits": tmp_path / "review/audits.json",
+        "captures": tmp_path / "review/captures",
+    }
+    path = paths[missing]
+    if path.is_dir():
+        path.rmdir()
+    else:
+        path.unlink()
+    result = subprocess.run(["bash", str(SCRIPT), "refresh"], env=env, capture_output=True)
+    assert result.returncode == 1
+    assert b"Missing radar" in result.stderr
+    assert not log.exists()
+
+
+@pytest.mark.parametrize(
+    "relative", ["data/staging/catalog.json", "review/registry.json", "review/audits.json"]
+)
+def test_job_empty_seed_prevents_weekly_attempt(tmp_path, relative):
+    env, log = job(tmp_path)
+    (tmp_path / relative).write_text("")
+    result = subprocess.run(["bash", str(SCRIPT), "refresh"], env=env, capture_output=True)
+    assert result.returncode == 1
+    assert not log.exists()
