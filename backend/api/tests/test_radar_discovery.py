@@ -12,6 +12,7 @@ from fantasy_api.radar.discovery import DiscoveryManifest, discovery_report, wee
 from fantasy_api.radar.files import atomic_json, read_json
 from fantasy_api.radar.registry import IdentityRegistry
 from fantasy_api.radar.releases import load_release
+from fantasy_api.services import radar_jobs
 
 
 def weekly_args(tmp_path, **changes):
@@ -86,7 +87,7 @@ def test_weekly_success_claims_once_and_fetches_only_selected_teams(
     for name, value in [("catalog", catalog), ("registry", registry), ("audits", audits)]:
         atomic_json(tmp_path / f"{name}.json", value.model_dump(mode="json"))
     atomic_json(tmp_path / "observations.json", {"profiles": []})
-    monkeypatch.setattr(radar_sync, "weekly_slot", lambda day: ("2026-W45", True))
+    monkeypatch.setattr(radar_jobs, "weekly_slot", lambda day: ("2026-W45", True))
     public = AsyncMock(return_value=raw)
     fetch = AsyncMock(return_value={"skipped_fresh": 1})
     monkeypatch.setattr(radar_sync, "_public_catalog", public)
@@ -151,7 +152,7 @@ def test_weekly_stale_fallback_publishes_saved_data_and_reports_partial(tmp_path
     scraper = AsyncMock()
     scraper.get_json.return_value = value | {"fetched_at": fetched_at.isoformat(), "stale": True}
     public = AsyncMock(return_value=raw)
-    monkeypatch.setattr(radar_sync, "weekly_slot", lambda day: ("2026-W45", True))
+    monkeypatch.setattr(radar_jobs, "weekly_slot", lambda day: ("2026-W45", True))
     monkeypatch.setattr(radar_sync, "_public_catalog", public)
     monkeypatch.setattr(radar_sync, "ScrapingClient", lambda **kwargs: scraper)
     args = weekly_args(tmp_path)
@@ -173,7 +174,7 @@ def test_weekly_stale_fallback_publishes_saved_data_and_reports_partial(tmp_path
 
 
 def test_weekly_failed_attempt_cannot_repeat_network_same_week(tmp_path, monkeypatch):
-    monkeypatch.setattr(radar_sync, "weekly_slot", lambda day: ("2026-W45", True))
+    monkeypatch.setattr(radar_jobs, "weekly_slot", lambda day: ("2026-W45", True))
     catalog = build_inventory([{"id": 1, "nickname": "Player", "positionId": 3}], "2026-27")
     atomic_json(tmp_path / "catalog.json", catalog.model_dump(mode="json"))
     public = AsyncMock(side_effect=ValueError("source unavailable"))
@@ -202,9 +203,9 @@ def test_weekly_slot_madrid_day_boundary_controls_extraction(when, expected):
 def test_weekly_wrong_day_and_check_never_access_network(tmp_path, monkeypatch):
     public = AsyncMock(side_effect=AssertionError("network forbidden"))
     monkeypatch.setattr(radar_sync, "_public_catalog", public)
-    monkeypatch.setattr(radar_sync, "weekly_slot", lambda day: ("2026-W45", False))
+    monkeypatch.setattr(radar_jobs, "weekly_slot", lambda day: ("2026-W45", False))
     assert radar_sync._weekly(weekly_args(tmp_path))["due"] is False
-    monkeypatch.setattr(radar_sync, "weekly_slot", lambda day: ("2026-W45", True))
+    monkeypatch.setattr(radar_jobs, "weekly_slot", lambda day: ("2026-W45", True))
     assert radar_sync._weekly(weekly_args(tmp_path, check=True))["due"] is True
     assert not (tmp_path / "weekly-attempt.json").exists()
     public.assert_not_called()
