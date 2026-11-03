@@ -784,8 +784,8 @@ the visible page from the full matching set.
 
 Player profiles include an optional **Performance profile** subsection in Overview.
 It loads a separate authenticated query on arrival, with identity/season/profile/dataset
-compatibility independent of the existing detail aggregate. Season changes never
-relabel old values as the newly selected season; same-selection refreshes can
+compatibility independent of the existing detail aggregate. Player panels are
+pinned to 2026/27 and have no season selector; same-selection refreshes can
 retain saved content and display failures. Comparison choices are server-validated
 known compatible snapshots, with a maximum of two outlines.
 
@@ -826,7 +826,7 @@ embedded radar shows the performance role, league, age and sample minutes; it
 omits a single-player legend and keeps its table caption available to assistive
 technology. Standalone previews and independent fallback radars retain identity.
 
-The performance toolbar places season, optional role and refresh alongside the
+The performance toolbar places optional role and refresh alongside the
 section title on desktop, stacking on mobile. A quiet chart surface balances the
 metric table; population status stays visible in a compact information label.
 Source and methodology groups provenance, dates and a reading guide in a native
@@ -846,7 +846,7 @@ player panels. No overall score or invented values are derived from the polygon.
 Comparison search is limited to compatible published candidates, with name,
 club and role. Native input/buttons support keyboard and touch, show empty search
 results and retain input during refresh. An overlay uses its primary from the
-same pinned server response. Changing role/season clears comparison explicitly;
+same pinned server response. Changing role clears comparison explicitly;
 removing a comparison returns focus to its disclosure. Exact values remain in
 the table; missing axes hide the polygon, and a real zero remains visible.
 

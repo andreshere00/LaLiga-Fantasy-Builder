@@ -60,9 +60,7 @@ test("radar loads independently, missing metrics hide its polygon, and failures 
   await expect(page.getByRole("alert")).toContainText("Performance data could not be loaded");
   await expect(page.getByRole("table", { name: "Percentiles for Pau Cubarsí" })).toBeVisible();
   await expect(page.getByRole("heading", { name: "Form — fixture stats" })).toBeAttached();
-  fail = false;
-  await page.getByLabel("Radar season").selectOption("2025-26");
-  await expect(page.locator(".player-radar-section")).toHaveCount(0);
+  await expect(page.getByLabel("Radar season")).toHaveCount(0);
 });
 
 test("a missing spoke is never drawn as zero", async ({ page }) => {
@@ -151,20 +149,18 @@ for (const { theme, width } of [{ theme: "light", width: 375 }, { theme: "dark",
     expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
     await page.getByRole("heading", { name: "Performance profile", exact: true }).scrollIntoViewIfNeeded();
     await page.getByRole("region", { name: "Performance profile", exact: true }).screenshot({ path: info.outputPath(`published-radar-${theme}-${width}.png`) });
-    await page.getByLabel("Radar season").selectOption("2025-26");
-    await expect(page.locator(".player-radar-section")).toHaveCount(0);
+    await expect(page.getByLabel("Radar season")).toHaveCount(0);
   });
 }
 
-test("approved default role is selected, and definitive absence has no retry or examples", async ({ page }) => {
+test("approved default role is selected and season stays pinned despite older available seasons", async ({ page }) => {
   await mockApplication(page);
   const first = structuredClone(examples[0]);
   const second = { ...structuredClone(examples[1]), player_id: "1", player: first.player };
+  const requestedSeasons: (string | null)[] = [];
   await page.route("**/api/players/1/stats/radar?*", (route) => {
-    const season = new URL(route.request().url()).searchParams.get("season");
-    return route.fulfill({ json: season === "2025-26" ? {
-      ...response([], { coverage: { ...coverage("season_unavailable"), season: "2025-26" } }), season,
-    } : response([first, second], { coverage: { ...coverage(), default_profile: second.profile, available_profiles: [first.profile, second.profile] }, default_profile: second.profile }) });
+    requestedSeasons.push(new URL(route.request().url()).searchParams.get("season"));
+    return route.fulfill({ json: response([first, second], { coverage: { ...coverage(), default_profile: second.profile, available_profiles: [first.profile, second.profile] }, default_profile: second.profile }) });
   });
   await page.goto("/players/1");
   await expect(page.locator(".player-profile-header")).toBeVisible();
@@ -172,9 +168,9 @@ test("approved default role is selected, and definitive absence has no retry or 
   await expect(page.getByLabel("Radar profile")).toHaveValue(second.profile);
   await page.getByLabel("Radar profile").selectOption(first.profile);
   await expect(page.getByLabel("Radar profile")).toHaveValue(first.profile);
-  await page.getByLabel("Radar season").selectOption("2025-26");
-  await expect(page.locator(".player-radar-section")).toHaveCount(0);
-  await expect(page.getByRole("button", { name: /Retry performance|Refresh performance/ })).toHaveCount(0);
+  await expect(page.getByLabel("Radar season")).toHaveCount(0);
+  expect(requestedSeasons.length).toBeGreaterThan(0);
+  expect(requestedSeasons.every((season) => season === "2026-27")).toBe(true);
 });
 
 test("radar is usable while other player details fail", async ({ page }) => {
