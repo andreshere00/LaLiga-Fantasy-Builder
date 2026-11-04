@@ -1,3 +1,4 @@
+import { copy as localizeCopy, useLanguage } from "../../i18n";
 import { Toast } from "@base-ui/react/toast";
 import type { ReactNode } from "react";
 import { Button } from "./Button";
@@ -11,6 +12,7 @@ export function notify(title: string, type: "success" | "error" = "success") {
 }
 
 function NotificationList() {
+  useLanguage();
   const { toasts } = Toast.useToastManager();
   return (
     <Toast.Portal>
@@ -22,7 +24,7 @@ function NotificationList() {
               <Toast.Description />
             </Toast.Content>
             <Toast.Close render={<Button variant="ghost" shape="square" size="icon"
-              aria-label="Dismiss notification" />}>×</Toast.Close>
+              aria-label={localizeCopy("Dismiss notification")} />}>×</Toast.Close>
           </Toast.Root>
         ))}
       </Toast.Viewport>
@@ -31,5 +33,6 @@ function NotificationList() {
 }
 
 export function Notifications({ children }: { children: ReactNode }) {
-  return <Toast.Provider toastManager={manager}>{children}<NotificationList /></Toast.Provider>;
+  useLanguage();
+  return <Toast.Provider toastManager={manager}>{localizeCopy(children)}<NotificationList /></Toast.Provider>;
 }

@@ -1,3 +1,4 @@
+import { copy as localizeCopy, useLanguage } from "../../i18n";
 import { useRef, type ReactNode } from "react";
 
 type NumberPaginationProps = {
@@ -13,6 +14,7 @@ type NumberPaginationProps = {
 export function NumberPagination({
   page, totalPages, onPageChange, label = "Player result pages", caption, showArrows = false,
 }: NumberPaginationProps) {
+  useLanguage();
   const buttons = useRef<Array<HTMLButtonElement | null>>([]);
   if (!Number.isInteger(totalPages) || totalPages <= 1) return null;
   const current = Math.min(Math.max(1, page), totalPages);
@@ -20,15 +22,15 @@ export function NumberPagination({
   const start = Math.max(1, Math.min(current - 1, totalPages - count + 1));
   const pages = Array.from({ length: count }, (_, index) => start + index);
   return (
-    <nav aria-label={label} className="fb-pagination">
+    <nav aria-label={localizeCopy(label)} className="fb-pagination">
       {showArrows ? <button type="button" className="fb-page-button fb-page-arrow"
-        aria-label="Previous page" disabled={current === 1}
+        aria-label={localizeCopy("Previous page")} disabled={current === 1}
         onClick={() => onPageChange(current - 1)}>←</button> : null}
       {pages.map((number, index) => (
         <button key={index} ref={(node) => { buttons.current[index] = node; }}
           type="button" className="fb-page-button"
           aria-current={number === current ? "page" : undefined}
-          aria-label={"Page " + number}
+          aria-label={localizeCopy("Page " + number)}
           onClick={() => {
             onPageChange(number);
             // Stable window slots keep keyboard focus when numbers slide.
@@ -36,10 +38,10 @@ export function NumberPagination({
           }}>{number}</button>
       ))}
       {showArrows ? <button type="button" className="fb-page-button fb-page-arrow"
-        aria-label="Next page" disabled={current === totalPages}
+        aria-label={localizeCopy("Next page")} disabled={current === totalPages}
         onClick={() => onPageChange(current + 1)}>→</button> : null}
       <span className="fb-helper" aria-live="polite">
-        {caption ?? ("Page " + current + " of " + totalPages)}
+        {localizeCopy(caption ?? ("Page " + current + " of " + totalPages))}
       </span>
     </nav>
   );

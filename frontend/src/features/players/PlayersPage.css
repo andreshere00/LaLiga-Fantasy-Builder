@@ -25,16 +25,16 @@
 .players-row.is-favorite { background:var(--fb-surface); }
 @media(max-width:1280px) {
  .players-page { --players-table-columns:84px minmax(100px,1fr) minmax(80px,.8fr) 60px 72px 148px minmax(115px,1.2fr) 108px; }
- .players-page :is(.market-head-cell-availability,.market-head-cell-owner,[data-label="Availability"],[data-label="Owned by"]) { display:none; }
+ .players-page :is(.market-head-cell-availability,.market-head-cell-owner,[data-column="availability"],[data-column="owner"]) { display:none; }
 }
 @media(max-width:1000px) {
  .players-page { --players-table-columns:84px minmax(100px,1fr) minmax(80px,.8fr) 72px minmax(115px,1.2fr) 108px; }
- .players-page :is(.market-head-cell-position,.market-head-cell-form,[data-label="Position"],[data-label="Form"]) { display:none; }
+ .players-page :is(.market-head-cell-position,.market-head-cell-form,[data-column="position"],[data-column="form"]) { display:none; }
 }
 @media(max-width:800px) {
  .players-page { --players-table-columns:84px minmax(78px,1fr) minmax(65px,.7fr) 80px; }
  .players-page .players-list { overflow-x:auto; }
- .players-page :is(.market-head-cell-fsyp,.market-head-cell-marketValue,[data-label="FSYP"],[data-label="Market value"]) { display:none; }
+ .players-page :is(.market-head-cell-fsyp,.market-head-cell-marketValue,[data-column="fsyp"],[data-column="marketValue"]) { display:none; }
  .players-mobile-value-details { display:block; width:100%; }
  .players-mobile-value-details .market-release-clause { margin-top:0; }
  .players-mobile-value-details .market-clause-detail { display:block; }

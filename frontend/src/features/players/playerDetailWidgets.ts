@@ -1,3 +1,4 @@
+import { locale } from "../../i18n";
 import { clubMediaFromFixture } from "../../api/clubMedia";
 import { asFiniteNumber, asRecord, text } from "../../api/mappers";
 
@@ -117,7 +118,7 @@ export function newsDate(value: unknown): string | null {
   const dateOnly = raw.slice(0, 10);
   const date = new Date(`${dateOnly}T00:00:00Z`);
   if (!Number.isFinite(date.getTime())) return dateOnly;
-  return new Intl.DateTimeFormat("en-GB", {
+  return new Intl.DateTimeFormat(locale(), {
     day: "2-digit",
     month: "2-digit",
     year: "numeric",

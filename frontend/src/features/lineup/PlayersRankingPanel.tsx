@@ -1,3 +1,4 @@
+import { copy as localizeCopy, useLanguage } from "../../i18n";
 import { useId } from "react";
 import { pointsLabel, type RankingEntry } from "../../api/mappers";
 import { Card, CardContent, CardHeader, CardTitle } from "../../components/ui/Card";
@@ -41,16 +42,17 @@ export function PlayersRankingPanel({
   lastFixturePoints = null,
   lastFixtureUnavailable = false,
 }: PlayersRankingPanelProps) {
+  useLanguage();
   const headingId = useId();
   const showFixture = fixtureWeek >= 1;
   const loadingFixture = showFixture && lastFixturePoints == null && !lastFixtureUnavailable;
   return (
     <Card className="ranking-panel" role="region" aria-labelledby={headingId}>
       <CardHeader>
-        <CardTitle id={headingId}>Players Ranking</CardTitle>
+        <CardTitle id={headingId}>{localizeCopy("Players Ranking")}</CardTitle>
         {showFixture && lastFixtureUnavailable ? (
           <p className="ranking-fixture-notice" role="alert">
-            {fixtureNotice(fixtureWeek, lastFixturePoints != null)}
+            {localizeCopy(fixtureNotice(fixtureWeek, lastFixturePoints != null))}
           </p>
         ) : null}
       </CardHeader>
@@ -71,7 +73,7 @@ export function PlayersRankingPanel({
                     disabled={!row.selectable}
                     onClick={() => onSelectTeam(row.teamId)}
                   >
-                    <span className="rank-position">{row.position ?? "—"}</span>
+                    <span className="rank-position">{localizeCopy(row.position ?? "—")}</span>
                     <span className="avatar" aria-hidden="true">
                       <ProfilePhoto url={row.avatarUrl} fallback={<PersonIcon />} />
                     </span>
@@ -80,20 +82,20 @@ export function PlayersRankingPanel({
                       {fixture ? (
                         <>
                           <span className="standings-sr-only">
-                            {`Fixture ${fixtureWeek} ${fixture.spoken}`}
+                            {localizeCopy(`Fixture ${fixtureWeek} ${fixture.spoken}`)}
                           </span>
                           <Help
-                            content={`Fixture ${fixtureWeek}`}
+                            content={localizeCopy(`Fixture ${fixtureWeek}`)}
                             trigger={<span className="rank-fixture" />}
                           >
-                            <span aria-hidden="true">{fixture.visual}</span>
+                            <span aria-hidden="true">{localizeCopy(fixture.visual)}</span>
                           </Help>
                         </>
                       ) : null}
                     </span>
                     <span className="rank-points">
-                      {showFixture ? <span className="standings-sr-only">Season </span> : null}
-                      {pointsLabel(row.points)}
+                      {showFixture ? <span className="standings-sr-only">{localizeCopy("Season ")}</span> : null}
+                      {localizeCopy(pointsLabel(row.points))}
                     </span>
                   </button>
                 </li>

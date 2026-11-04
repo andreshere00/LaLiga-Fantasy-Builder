@@ -1,3 +1,4 @@
+import { copy as localizeCopy, useLanguage } from "../../i18n";
 import { useMemo, useState, type ReactNode } from "react";
 import { clubMediaFromFixture } from "../../api/clubMedia";
 import { BadgeImage } from "../../components/BadgeImage";
@@ -46,6 +47,7 @@ const FORM_OPTIONS: readonly Option[] = SQUAD_FORM_OPTIONS.map((form) => ({
 export function SquadFilterDialog({
   open, filters, players, pending, onClose, onApply, finalFocus,
 }: SquadFilterDialogProps) {
+  useLanguage();
   const [draft, setDraft] = useState<SquadFilters>(() => cloneSquadFilters(filters));
   const [session, setSession] = useState(0);
   const [wasOpen, setWasOpen] = useState(open);
@@ -65,49 +67,48 @@ export function SquadFilterDialog({
       open={open}
       layout="sheet"
       className="squad-filter-dialog"
-      title="Filter squad"
-      description="Show players that match every condition you select."
+      title={localizeCopy("Filter squad")}
+      description={localizeCopy("Show players that match every condition you select.")}
       onClose={onClose}
       finalFocus={finalFocus}
       footer={<>
         <Button shape="square" variant="outline" className="squad-filter-reset"
           disabled={activeSquadFilterCount(draft) === 0}
           onClick={() => setDraft(createEmptySquadFilters())}>
-          Clear filters
-        </Button>
-        <Button shape="square" variant="outline" onClick={onClose}>Cancel</Button>
+          {localizeCopy("Clear filters")}</Button>
+        <Button shape="square" variant="outline" onClick={onClose}>{localizeCopy("Cancel")}</Button>
         <Button shape="square" onClick={() => onApply(cloneSquadFilters(draft))}>
-          {`Show ${matches} ${matches === 1 ? "player" : "players"}`}
+          {localizeCopy(`Show ${matches} ${matches === 1 ? "player" : "players"}`)}
         </Button>
       </>}
     >
       <div className="squad-filter-fields" key={session}>
-        <FilterGroup label="Position" defaultOpen
+        <FilterGroup label={localizeCopy("Position")} defaultOpen
           summary={selectionSummary(POSITION_OPTIONS, new Set([...draft.positions].map(String)))}>
           <OptionToggles options={POSITION_OPTIONS}
             selected={[...draft.positions].map(String)}
             onChange={(values) => setDraft({ ...draft, positions: new Set(values.map(Number)) })} />
         </FilterGroup>
-        <FilterGroup label="FSYP" summary={pointsSummary(draft.points)}>
+        <FilterGroup label={localizeCopy("FSYP")} summary={pointsSummary(draft.points)}>
           <PointsRange bounds={bounds} range={draft.points}
             onChange={(points) => setDraft({ ...draft, points })} />
         </FilterGroup>
-        <FilterGroup label="Club" summary={selectionSummary(
+        <FilterGroup label={localizeCopy("Club")} summary={selectionSummary(
           clubs.map((club) => ({ value: club, label: club })), draft.clubs,
         )}>
           <ClubChecklist clubs={clubs} selected={draft.clubs}
             onChange={(next) => setDraft({ ...draft, clubs: next })} />
         </FilterGroup>
-        <FilterGroup label="Start probability" summary={draft.minStarterProbability > 0
+        <FilterGroup label={localizeCopy("Start probability")} summary={draft.minStarterProbability > 0
           ? `At least ${draft.minStarterProbability}%` : "Any"}>
           <StarterProbabilityField players={players} value={draft.minStarterProbability}
             onChange={(minStarterProbability) => setDraft({ ...draft, minStarterProbability })} />
         </FilterGroup>
-        <FilterGroup label="Form" summary={selectionSummary(FORM_OPTIONS, draft.forms)}>
+        <FilterGroup label={localizeCopy("Form")} summary={selectionSummary(FORM_OPTIONS, draft.forms)}>
           <FormScale selected={draft.forms}
             onChange={(forms) => setDraft({ ...draft, forms })} />
         </FilterGroup>
-        <FilterGroup label="Availability"
+        <FilterGroup label={localizeCopy("Availability")}
           summary={selectionSummary(AVAILABILITY_FILTER_OPTIONS, draft.availability)}>
           <AvailabilityScale selected={[...draft.availability]}
             onChange={(values) => setDraft({
@@ -128,18 +129,19 @@ function FilterGroup({ label, summary, children, defaultOpen = false }: {
   children: ReactNode;
   defaultOpen?: boolean;
 }) {
+  useLanguage();
   const [expanded, setExpanded] = useState(defaultOpen);
   return (
     <details className="squad-filter-disclosure" open={expanded}
       onToggle={(event) => setExpanded(event.currentTarget.open)}>
       <summary>
-        <span>{label}</span>
-        <span className="squad-filter-disclosure-value">{summary}</span>
+        <span>{localizeCopy(label)}</span>
+        <span className="squad-filter-disclosure-value">{localizeCopy(summary)}</span>
         <span className="squad-filter-disclosure-chevron" aria-hidden="true">⌄</span>
       </summary>
       <fieldset className="squad-filter-group">
-        <legend className="squad-filter-sr-only">{label}</legend>
-        {children}
+        <legend className="squad-filter-sr-only">{localizeCopy(label)}</legend>
+        {localizeCopy(children)}
       </fieldset>
     </details>
   );
@@ -155,12 +157,13 @@ function FormScale({ selected, onChange }: {
   selected: ReadonlySet<string>;
   onChange: (forms: Set<string>) => void;
 }) {
+  useLanguage();
   return (
     <div className="squad-form-scale">
       {FORM_BANDS.map((band) => (
         <div key={band.label} className="squad-form-band" data-tone={band.tone}
           data-options={band.options.length}>
-          <span className="squad-form-band-label" id={`squad-form-${band.tone}`}>{band.label}</span>
+          <span className="squad-form-band-label" id={`squad-form-${band.tone}`}>{localizeCopy(band.label)}</span>
           <ToggleGroup multiple aria-labelledby={`squad-form-${band.tone}`}
             value={band.options.filter((option) => selected.has(option))}
             onValueChange={(values) => {
@@ -170,7 +173,7 @@ function FormScale({ selected, onChange }: {
               onChange(next);
             }}>
             {band.options.map((option) => (
-              <ToggleGroupItem key={option} value={option}>{option}</ToggleGroupItem>
+              <ToggleGroupItem key={option} value={option}>{localizeCopy(option)}</ToggleGroupItem>
             ))}
           </ToggleGroup>
         </div>
@@ -183,12 +186,13 @@ function AvailabilityScale({ selected, onChange }: {
   selected: readonly string[];
   onChange: (values: string[]) => void;
 }) {
+  useLanguage();
   return (
     <ToggleGroup multiple className="squad-availability" value={selected}
       onValueChange={(values) => onChange(values.map(String))}>
       {AVAILABILITY_FILTER_OPTIONS.map((option) => (
         <ToggleGroupItem key={option.value} value={option.value} data-tone={option.value}>
-          {option.label}
+          {localizeCopy(option.label)}
         </ToggleGroupItem>
       ))}
     </ToggleGroup>
@@ -200,11 +204,12 @@ function OptionToggles({ options, selected, onChange }: {
   selected: readonly string[];
   onChange: (values: string[]) => void;
 }) {
+  useLanguage();
   return (
     <ToggleGroup multiple value={selected}
       onValueChange={(values) => onChange(values.map(String))}>
       {options.map((option) => (
-        <ToggleGroupItem key={option.value} value={option.value}>{option.label}</ToggleGroupItem>
+        <ToggleGroupItem key={option.value} value={option.value}>{localizeCopy(option.label)}</ToggleGroupItem>
       ))}
     </ToggleGroup>
   );
@@ -215,15 +220,16 @@ function PointsRange({ bounds, range, onChange }: {
   range: SquadNumericRange;
   onChange: (range: SquadNumericRange) => void;
 }) {
+  useLanguage();
   if (bounds?.min == null || bounds.max == null || bounds.min === bounds.max) {
-    return <p className="squad-filter-note">Season points are not available for a range yet.</p>;
+    return <p className="squad-filter-note">{localizeCopy("Season points are not available for a range yet.")}</p>;
   }
   const { min, max } = bounds;
   const low = clamp(range.min ?? min, min, max);
   const high = clamp(range.max ?? max, low, max);
   return (
     <div className="squad-filter-slider">
-      <p className="squad-filter-slider-value" aria-live="polite">{`${low} – ${high} pts`}</p>
+      <p className="squad-filter-slider-value" aria-live="polite">{localizeCopy(`${low} – ${high} pts`)}</p>
       <Slider thumbLabels={["Minimum FSYP", "Maximum FSYP"]} min={min} max={max} step={1}
         value={[low, high]}
         onValueChange={(value) => {
@@ -246,8 +252,9 @@ function ClubChecklist({ clubs, selected, onChange }: {
   selected: ReadonlySet<string>;
   onChange: (clubs: Set<string>) => void;
 }) {
+  useLanguage();
   if (clubs.length === 0) {
-    return <p className="squad-filter-note">No club names are available yet.</p>;
+    return <p className="squad-filter-note">{localizeCopy("No club names are available yet.")}</p>;
   }
   return (
     <div className="squad-filter-clubs">
@@ -262,7 +269,7 @@ function ClubChecklist({ clubs, selected, onChange }: {
           <span className="squad-filter-club-crest">
             <BadgeImage media={clubMediaFromFixture(club)} fallback={clubInitials(club)} />
           </span>
-          <span className="squad-filter-club-name">{club}</span>
+          <span className="squad-filter-club-name">{localizeCopy(club)}</span>
         </label>
       ))}
     </div>
@@ -274,13 +281,14 @@ function StarterProbabilityField({ players, value, onChange }: {
   value: number;
   onChange: (value: number) => void;
 }) {
+  useLanguage();
   const known = players.filter((player) => player.starterProbability != null);
   const qualifying = known.filter((player) => (player.starterProbability ?? 0) >= value).length;
   return (
     <div className="squad-filter-slider">
       <p className="squad-filter-probability">
-        <span className="squad-filter-probability-label">Minimum start probability</span>
-        <span className="squad-filter-slider-value">{value > 0 ? `${value}%+` : "Any"}</span>
+        <span className="squad-filter-probability-label">{localizeCopy("Minimum start probability")}</span>
+        <span className="squad-filter-slider-value">{localizeCopy(value > 0 ? `${value}%+` : "Any")}</span>
       </p>
       <Slider thumbLabels={["Minimum start probability"]} min={0} max={100}
         step={STARTER_PROBABILITY_STEP} largeStep={25} value={value}
@@ -289,8 +297,8 @@ function StarterProbabilityField({ players, value, onChange }: {
         <span>0%</span><span>50%</span><span>100%</span>
       </div>
       <p className="squad-filter-note" aria-live="polite">
-        {known.length === 0 ? "Start probabilities are still loading."
-          : `${qualifying} of ${known.length} squad players have at least ${value}%.`}
+        {localizeCopy(known.length === 0 ? "Start probabilities are still loading."
+          : `${qualifying} of ${known.length} squad players have at least ${value}%.`)}
       </p>
     </div>
   );

@@ -1,3 +1,4 @@
+import { copy as localizeCopy, useLanguage } from "../../i18n";
 import { BadgeImage } from "../../components/BadgeImage";
 import { clubMediaFromBadge } from "../../api/clubMedia";
 import { useState } from "react";
@@ -44,24 +45,25 @@ type PlayerTileProps = {
 };
 
 function FixtureScoreBreakdown({ lines }: { lines: readonly FixtureScoreLine[] }) {
+  useLanguage();
   return (
     <table className="player-score-breakdown">
-      <caption>Fixture points</caption>
+      <caption>{localizeCopy("Fixture points")}</caption>
       <thead>
         <tr>
-          <th scope="col">Event</th>
-          <th scope="col">Count</th>
-          <th scope="col">Points</th>
+          <th scope="col">{localizeCopy("Event")}</th>
+          <th scope="col">{localizeCopy("Count")}</th>
+          <th scope="col">{localizeCopy("Points")}</th>
         </tr>
       </thead>
       <tbody>
         {lines.map((line) => (
           <tr key={line.key}>
-            <th scope="row">{line.label}</th>
-            <td className="player-score-count">{line.count ?? "—"}</td>
+            <th scope="row">{localizeCopy(line.label)}</th>
+            <td className="player-score-count">{localizeCopy(line.count ?? "—")}</td>
             <td className="player-score-points">
-              <span className="player-score-figure">{signedFixturePoints(line.points)}</span>
-              <span className="player-score-unit">p</span>
+              <span className="player-score-figure">{localizeCopy(signedFixturePoints(line.points))}</span>
+              <span className="player-score-unit">{localizeCopy("p")}</span>
             </td>
           </tr>
         ))}
@@ -77,6 +79,7 @@ export function PlayerScoreBadge({
   points: number;
   isMvp?: boolean;
 }) {
+  useLanguage();
   const tone = scoreTone(points, isMvp);
   return (
     <span className={`player-score-badge is-${tone}`} aria-hidden="true">
@@ -86,6 +89,7 @@ export function PlayerScoreBadge({
 }
 
 function TeamBadge({ url }: { url: string | null | undefined }) {
+  useLanguage();
   const media = clubMediaFromBadge(url);
   if (!media) return null;
   return <span className="player-badge" aria-hidden="true">
@@ -94,6 +98,7 @@ function TeamBadge({ url }: { url: string | null | undefined }) {
 }
 
 function PlayerPhoto({ candidates }: { candidates: readonly string[] }) {
+  useLanguage();
   const [candidateIndex, setCandidateIndex] = useState(0);
   const url = candidates[candidateIndex];
   return (
@@ -141,6 +146,7 @@ export function PlayerTile({
   interactive = false,
   onSelect,
 }: PlayerTileProps) {
+  useLanguage();
   const shownHighlight = empty ? null : fixtureHighlight;
   const highlightText = fixtureHighlightLabel(shownHighlight);
   const scoreLineTexts = (empty ? [] : fixtureScoreLines ?? []).map(fixtureScoreLineLabel);
@@ -204,7 +210,7 @@ export function PlayerTile({
       </div>
       <div className="player-card-gap" aria-hidden="true" />
       <span className="player-name player-name-empty">
-        <span className="player-name-label">{NOT_SELECTED_PLAYER_LABEL}</span>
+        <span className="player-name-label">{localizeCopy(NOT_SELECTED_PLAYER_LABEL)}</span>
       </span>
     </>
   ) : (
@@ -212,14 +218,14 @@ export function PlayerTile({
       <div className="player-card-spacer" aria-hidden="true" />
       <PlayerPhoto key={`${name}|${photoCandidates.join("|")}`} candidates={photoCandidates} />
       {squadStats ? <span className="player-total-points" aria-hidden="true">
-        {squadStats.totalPoints ?? "—"}<span>p</span>
+        {localizeCopy(squadStats.totalPoints ?? "—")}<span>{localizeCopy("p")}</span>
       </span> : fixturePoints != null ? (
         <PlayerScoreBadge points={fixturePoints} isMvp={isMvp} />
       ) : null}
       <TeamBadge key={teamBadgeUrl ?? "no-badge"} url={teamBadgeUrl} />
       {form ? <span className="player-starter-probability"
         data-tone={starterProbabilityTone(form.starterProbability) ?? undefined} aria-hidden="true">
-        {form.starterProbability == null ? "—" : `${form.starterProbability}%`}
+        {localizeCopy(form.starterProbability == null ? "—" : `${form.starterProbability}%`)}
       </span> : null}
       {form ? <span className="player-form-badge" aria-hidden="true">
         {formRating ? <>
@@ -249,7 +255,7 @@ export function PlayerTile({
     <>
       {helpLines.map((line) => (
         <span key={line}>
-          {line}
+          {localizeCopy(line)}
           <br />
         </span>
       ))}
@@ -258,14 +264,12 @@ export function PlayerTile({
       ) : null}
       {formLabel ? (
         <>
-          {formLabel}.
+          {localizeCopy(formLabel)}.
           <br />
-          Current{" "}
+          {localizeCopy("Current")}{" "}
           <a href="https://www.futbolfantasy.com/" target="_blank" rel="noreferrer">
-            FutbolFantasy
-          </a>{" "}
-          rating.
-        </>
+            {localizeCopy("FutbolFantasy")}</a>{" "}
+          {localizeCopy("rating.")}</>
       ) : null}
     </>
   );
@@ -275,7 +279,7 @@ export function PlayerTile({
     : captain ? `${name}, captain` : undefined;
   if (interactive && onSelect) {
     return <Help content={help} trigger={<button type="button" className={className}
-      aria-label={label} aria-pressed={selected} onClick={onSelect} />}>{body}</Help>;
+      aria-label={localizeCopy(label)} aria-pressed={selected} onClick={onSelect} />}>{body}</Help>;
   }
   return <Help content={help} trigger={<div className={className}
     aria-label={empty || !showName ? label : visibleLabel} />}>

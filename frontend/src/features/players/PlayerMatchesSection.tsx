@@ -1,3 +1,4 @@
+import { copy as localizeCopy, useLanguage } from "../../i18n";
 import { BadgeImage } from "../../components/BadgeImage";
 import { fixtureClubMedia, competitionMedia } from "../../api/clubMedia";
 import { WEATHER_CONDITIONS, weatherIcon, weatherReason } from "../../components/weather";
@@ -36,6 +37,7 @@ function competitionHeading(fixture: Record<string, unknown> | null): string {
 }
 
 function MatchWeather({ match }: { match: Record<string, unknown> | null }) {
+  useLanguage();
   const weather = asRecord(match?.weather);
   const snapshot = asRecord(weather?.snapshot);
   const condition = weatherConditionFromSnapshot(snapshot);
@@ -46,7 +48,7 @@ function MatchWeather({ match }: { match: Record<string, unknown> | null }) {
 
   return (
     <div className="player-match-weather">
-      <h4>Weather</h4>
+      <h4>{localizeCopy("Weather")}</h4>
       {snapshot ? (
         <>
           {condition ? (
@@ -59,19 +61,19 @@ function MatchWeather({ match }: { match: Record<string, unknown> | null }) {
             </span>
           )}
           <p className="player-match-weather-condition">
-            {condition ? WEATHER_CONDITIONS[condition] : "Condition unavailable"}
+            {localizeCopy(condition ? WEATHER_CONDITIONS[condition] : "Condition unavailable")}
           </p>
           <ul className="player-match-weather-metrics">
             <li>
-              Temperature: {temperature != null ? `${temperature}°C` : "–"}
-              {feelsLike != null ? ` (${feelsLike}°C)` : ""}
+              {localizeCopy("Temperature: ")}{localizeCopy(temperature != null ? `${temperature}°C` : "–")}
+              {localizeCopy(feelsLike != null ? ` (${feelsLike}°C)` : "")}
             </li>
-            <li>Humidity: {humidity != null ? `${humidity}%` : "–"}</li>
-            <li>Wind: {wind != null ? `${wind} km/h` : "–"}</li>
+            <li>{localizeCopy("Humidity: ")}{localizeCopy(humidity != null ? `${humidity}%` : "–")}</li>
+            <li>{localizeCopy("Wind: ")}{localizeCopy(wind != null ? `${wind} km/h` : "–")}</li>
           </ul>
         </>
       ) : (
-        <p className="player-match-weather-unavailable">{weatherReason(weather?.reason)}</p>
+        <p className="player-match-weather-unavailable">{localizeCopy(weatherReason(weather?.reason))}</p>
       )}
     </div>
   );
@@ -79,6 +81,7 @@ function MatchWeather({ match }: { match: Record<string, unknown> | null }) {
 
 
 function MatchTimer({ kickoff }: { kickoff: string | null }) {
+  useLanguage();
   const now = useNow();
   const kickoffMs = kickoff ? Date.parse(kickoff) : NaN;
   const remaining = kickoffMs - now;
@@ -103,10 +106,10 @@ function MatchTimer({ kickoff }: { kickoff: string | null }) {
 
   return (
     <details className="player-match-timer">
-      <summary>View match timer</summary>
+      <summary>{localizeCopy("View match timer")}</summary>
       <p>
-        <span>Time remaining</span>
-        <strong>{countdown}</strong>
+        <span>{localizeCopy("Time remaining")}</span>
+        <strong>{localizeCopy(countdown)}</strong>
       </p>
     </details>
   );
@@ -121,6 +124,7 @@ function MatchCard({
   upcoming: boolean;
   playerTeamName: string | null;
 }) {
+  useLanguage();
   const matchRecord = asRecord(match);
   const fixture = asRecord(matchRecord?.fixture) ?? matchRecord;
   const home = fixtureClubMedia(fixture, "home");
@@ -148,28 +152,28 @@ function MatchCard({
     <li className={`player-match-card is-${upcoming ? "upcoming" : teamOutcome}`}>
       <p className="player-match-competition">
         <span className="player-match-competition-badge"><BadgeImage media={competitionMedia(fixture)} fallback="" /></span>
-        {competition}
+        {localizeCopy(competition)}
       </p>
       <div className="player-match-teams">
         <div className="player-match-team">
           <div className="player-match-crest-tile">
             <BadgeImage media={home} />
           </div>
-          <span className="player-match-team-name">{home?.name ?? text(fixture?.homeTeam) ?? "Home"}</span>
+          <span className="player-match-team-name">{home?.name ?? text(fixture?.homeTeam) ?? localizeCopy("Home")}</span>
         </div>
         <div className="player-match-team">
           <div className="player-match-crest-tile">
             <BadgeImage media={away} />
           </div>
-          <span className="player-match-team-name">{away?.name ?? text(fixture?.awayTeam) ?? "Away"}</span>
+          <span className="player-match-team-name">{away?.name ?? text(fixture?.awayTeam) ?? localizeCopy("Away")}</span>
         </div>
       </div>
       {!upcoming ? <p className="player-match-result">
-        <strong>{homeScore ?? "—"} – {awayScore ?? "—"}</strong>
-        {fixture?.result ? <span>{fixture.result === "W" ? "Won" : fixture.result === "L" ? "Lost" : "Draw"}</span> : null}
+        <strong>{localizeCopy(homeScore ?? "—")} – {localizeCopy(awayScore ?? "—")}</strong>
+        {fixture?.result ? <span>{localizeCopy(fixture.result === "W" ? "Won" : fixture.result === "L" ? "Lost" : "Draw")}</span> : null}
       </p> : null}
       <time className="player-match-date" dateTime={matchDate ?? undefined}>
-        {date}
+        {localizeCopy(date)}
       </time>
       {upcoming ? (
         <>
@@ -178,9 +182,9 @@ function MatchCard({
         </>
       ) : points != null || minutes != null ? (
         <p className="player-match-player-stats">
-          {minutes != null ? `${minutes} min` : ""}
-          {minutes != null && points != null ? " · " : ""}
-          {points != null ? `${points} Fantasy points` : ""}
+          {localizeCopy(minutes != null ? `${minutes} min` : "")}
+          {localizeCopy(minutes != null && points != null ? " · " : "")}
+          {localizeCopy(points != null ? `${points} Fantasy points` : "")}
         </p>
       ) : null}
     </li>
@@ -200,6 +204,7 @@ function MatchGroup({
   playerTeamName: string | null;
   unavailable?: boolean;
 }) {
+  useLanguage();
   return (
     <div className={`player-match-group${upcoming ? " is-upcoming" : ""}`}>
       <h3>
@@ -207,9 +212,9 @@ function MatchGroup({
         {title}
       </h3>
       {unavailable ? (
-        <p className="player-match-empty">{upcoming ? "Upcoming" : "Recent"} matches are temporarily unavailable.</p>
+        <p className="player-match-empty">{localizeCopy(upcoming ? "Upcoming" : "Recent")} {localizeCopy(" matches are temporarily unavailable.")}</p>
       ) : matches.length === 0 ? (
-        <p className="player-match-empty">No {upcoming ? "upcoming" : "recent"} matches available.</p>
+        <p className="player-match-empty">{localizeCopy("No ")}{localizeCopy(upcoming ? "upcoming" : "recent")} {localizeCopy(" matches available.")}</p>
       ) : (
         <ul className="player-match-grid">
           {matches.slice(0, 5).map((match, index) => {
@@ -241,6 +246,7 @@ export function PlayerMatchesSection({
   upcoming: Record<string, unknown> | null;
   playerTeamName: string | null;
 }) {
+  useLanguage();
   const recentMatches = Array.isArray(recent?.matches)
     ? sortMatchesByDate(recent.matches, "desc")
     : [];
@@ -250,16 +256,16 @@ export function PlayerMatchesSection({
 
   return (
     <section className="player-detail-panel player-match-section" aria-labelledby="player-matches-title">
-      <h2 className="player-section-title" id="player-matches-title" tabIndex={-1}>Previous &amp; Upcoming matches</h2>
+      <h2 className="player-section-title" id="player-matches-title" tabIndex={-1}>{localizeCopy("Previous & Upcoming matches")}</h2>
       <MatchGroup
-        title="Previous 5 matches"
+        title={localizeCopy("Previous 5 matches")}
         matches={recentMatches}
         upcoming={false}
         playerTeamName={playerTeamName}
         unavailable={recent == null}
       />
       <MatchGroup
-        title="Upcoming 5 matches"
+        title={localizeCopy("Upcoming 5 matches")}
         matches={upcomingMatches}
         upcoming
         playerTeamName={playerTeamName}

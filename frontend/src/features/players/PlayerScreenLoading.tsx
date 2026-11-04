@@ -1,19 +1,22 @@
+import { copy as localizeCopy, useLanguage } from "../../i18n";
 import { PulseRing } from "../../components/ui/PulseRing";
 import "./PlayerScreenLoading.css";
 
 function LoadingBlock({ className = "" }: { className?: string }) {
+  useLanguage();
   return <span className={["player-loading-block", className].filter(Boolean).join(" ")} />;
 }
 
 export function PlayersScreenLoading() {
+  useLanguage();
   return (
     <div
       className="players-loading-state"
       role="status"
-      aria-label="Loading players"
+      aria-label={localizeCopy("Loading players")}
       aria-busy="true"
     >
-      <span className="visually-hidden">Loading players…</span>
+      <span className="visually-hidden">{localizeCopy("Loading players…")}</span>
       <div className="players-loading-toolbar">
         <LoadingBlock className="players-loading-title" />
         <LoadingBlock className="players-loading-search" />
@@ -38,5 +41,6 @@ export function PlayersScreenLoading() {
 }
 
 export function PlayerDetailScreenLoading() {
-  return <section className="player-detail-page" aria-busy="true"><PulseRing label="Loading player details…" /></section>;
+  useLanguage();
+  return <section className="player-detail-page" aria-busy="true"><PulseRing label={localizeCopy("Loading player details…")} /></section>;
 }

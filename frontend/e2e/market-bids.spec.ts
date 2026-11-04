@@ -12,11 +12,11 @@ const bidTrigger = (page: Page, count = 3) => page.getByRole("button", { name: `
 test("filtering preserves all commitments; modifying and cancelling reconcile every view", async ({ page }) => {
   const fixture = await mockMarketBids(page);
   await page.goto("/market");
-  await expect(await summaryValue(page, "Projected spending")).toHaveText("11.000.000 €");
-  await expect(await summaryValue(page, "Estimated available")).toHaveText("39.000.000 €");
+  await expect(await summaryValue(page, "Projected spending")).toHaveText("11,000,000 €");
+  await expect(await summaryValue(page, "Estimated available")).toHaveText("39,000,000 €");
   await page.getByRole("combobox", { name: "Search market" }).fill("No match");
   await expect(page.locator(".market-data-row")).toHaveCount(0);
-  await expect(await summaryValue(page, "Projected spending")).toHaveText("11.000.000 €");
+  await expect(await summaryValue(page, "Projected spending")).toHaveText("11,000,000 €");
   await bidTrigger(page).click();
   const panel = page.getByRole("dialog", { name: "My bids", exact: true });
   await expect(panel.getByRole("listitem")).toHaveCount(3);
@@ -30,10 +30,10 @@ test("filtering preserves all commitments; modifying and cancelling reconcile ev
   await dialog.getByRole("button", { name: "Update bid", exact: true }).click();
   await expect(dialog).toHaveCount(0);
   await expect(bidTrigger(page)).toBeFocused();
-  await expect(await summaryValue(page, "Projected spending")).toHaveText("13.000.000 €");
+  await expect(await summaryValue(page, "Projected spending")).toHaveText("13,000,000 €");
   await expect(page.getByText(/Refreshing balance and bids/).first()).toBeVisible();
   await page.getByRole("combobox", { name: "Search market" }).fill("");
-  await expect(page.locator(".market-data-row .market-value").getByText("Your bid: 6.000.000 €", { exact: true })).toBeVisible();
+  await expect(page.locator(".market-data-row .market-value").getByText("Your bid: 6,000,000 €", { exact: true })).toBeVisible();
   await bidTrigger(page).click();
   await expect(panel.getByRole("button", { name: "Cancel bid for Player 14", exact: true })).toBeEnabled();
   await panel.getByRole("button", { name: "Cancel bid for Player 14", exact: true }).click();
@@ -42,7 +42,7 @@ test("filtering preserves all commitments; modifying and cancelling reconcile ev
   await expect(panel.getByRole("button", { name: "Refresh bids", exact: true })).toBeEnabled();
   await page.keyboard.press("Escape");
   await expect(bidTrigger(page, 2)).toBeFocused();
-  await expect(await summaryValue(page, "Projected spending")).toHaveText("7.000.000 €");
+  await expect(await summaryValue(page, "Projected spending")).toHaveText("7,000,000 €");
   await page.keyboard.press("Escape");
   await page.getByRole("combobox", { name: "Search market" }).fill("");
   await expect(page.getByRole("combobox", { name: "Search market" })).toHaveValue("");
@@ -62,7 +62,7 @@ test("failed cancellation restores rows, count and spending; failed refresh reta
   const panel = page.getByRole("dialog", { name: "My bids", exact: true });
   await panel.getByRole("button", { name: "Cancel bid for Player 14", exact: true }).click();
   await expect(panel.getByRole("heading", { name: "Player 14", exact: true })).toBeVisible();
-  await expect(panel.locator(".market-bids-total strong")).toHaveText("11.000.000 €");
+  await expect(panel.locator(".market-bids-total strong")).toHaveText("11,000,000 €");
   await expect(bidTrigger(page)).toBeVisible();
   fixture.failRead(true);
   await panel.getByRole("button", { name: "Refresh bids", exact: true }).click();
@@ -130,7 +130,7 @@ test("first load and incomplete bids stay visible without authorizing unavailabl
   release();
   await expect(panel.getByRole("listitem")).toHaveCount(3);
   await expect(panel.getByText(/Bid details are incomplete/)).toBeVisible();
-  await expect(panel.getByText("2.000.000 €", { exact: true })).toBeVisible();
+  await expect(panel.getByText("2,000,000 €", { exact: true })).toBeVisible();
   await expect(panel.getByText("Unavailable", { exact: true })).toBeVisible();
   for (const button of await panel.getByRole("button", { name: /^(Modify|Cancel) bid for/ }).all()) {
     await expect(button).toBeDisabled();
@@ -163,8 +163,8 @@ test("modify waits for catalog metadata while cancellation stays available", asy
   await expect(modify).toBeEnabled();
   await modify.click();
   const dialog = page.getByRole("dialog", { name: "Modify bid", exact: true });
-  await expect(dialog.getByText(/Amount must be at least 3.300.000 €/)).toBeVisible();
-  await expect(dialog.getByRole("textbox", { name: "Bid amount" })).toHaveValue("4.000.000");
+  await expect(dialog.getByText(/Amount must be at least 3,300,000 €/)).toBeVisible();
+  await expect(dialog.getByRole("textbox", { name: "Bid amount" })).toHaveValue("4,000,000");
   await expect(dialog.getByRole("button", { name: "Update bid", exact: true })).toBeEnabled();
 });
 
@@ -265,10 +265,10 @@ for (const theme of ["light", "dark"]) {
         await expect(form.getByRole("button", { name: "Later matchweeks" })).toBeDisabled();
       }
       await expect(protectedRow.getByText("Bids: 2", { exact: true })).toBeVisible();
-      await expect(protectedRow.locator(".market-value .market-bid-value")).toHaveText("Your bid: 4.000.000 €");
+      await expect(protectedRow.locator(".market-value .market-bid-value")).toHaveText("Your bid: 4,000,000 €");
       const unbidRow = page.locator(".market-data-row").filter({ has: page.getByRole("link", { name: "Player 16", exact: true }) });
       await expect(unbidRow.locator(".market-bid-value")).toHaveCount(0);
-      const clause = protectedRow.locator(".market-value").getByText("Release clause: 12.000.000 €", { exact: true });
+      const clause = protectedRow.locator(".market-value").getByText("Release clause: 12,000,000 €", { exact: true });
       await clause.scrollIntoViewIfNeeded();
       await expect(clause).toBeInViewport();
       await page.locator(".market-list").evaluate((element) => { element.scrollLeft = 0; });

@@ -1,3 +1,4 @@
+import { copy as localizeCopy, useLanguage } from "../i18n";
 import { LinkedInIcon, MailIcon } from "../features/shell/icons";
 import {
   AUTHOR_NAME,
@@ -8,22 +9,22 @@ import {
 import "./ContactPage.css";
 
 export function ContactPage() {
+  useLanguage();
   return (
     <section className="gate contact-page">
-      <h1>Contact</h1>
-      <p>{AUTHOR_NAME}</p>
+      <h1>{localizeCopy("Contact")}</h1>
+      <p>{localizeCopy(AUTHOR_NAME)}</p>
       <ul className="contact-links">
         <li>
           <a href={CONTACT_MAILTO}>
             <MailIcon />
-            {CONTACT_EMAIL}
+            {localizeCopy(CONTACT_EMAIL)}
           </a>
         </li>
         <li>
           <a href={LINKEDIN_URL} target="_blank" rel="noopener noreferrer">
             <LinkedInIcon />
-            LinkedIn
-          </a>
+            {localizeCopy("LinkedIn")}</a>
         </li>
       </ul>
     </section>

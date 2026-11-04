@@ -1,3 +1,4 @@
+import { copy as localizeCopy, useLanguage } from "../../../i18n";
 import { Help } from "../../../components/ui/Help";
 import { Link } from "react-router-dom";
 
@@ -20,6 +21,7 @@ type PlayerCellProps = {
 };
 
 export function PlayerCell({ row, now, columnLabel = "Player" }: PlayerCellProps) {
+  useLanguage();
   const offersMenu = useMarketOffersMenu();
   const { selected } = useLeague();
   const hasOffers = row.sellerKind === "self" && row.playerTeamId != null && selected != null
@@ -49,16 +51,16 @@ export function PlayerCell({ row, now, columnLabel = "Player" }: PlayerCellProps
           teamBadgeUrl={row.teamBadgeUrl}
         />
       </div>
-      <span className="market-name-wrap" data-label={columnLabel}>
-        {hasOffers ? <Help content="This player has offers."
+      <span className="market-name-wrap" data-label={localizeCopy(columnLabel)}>
+        {hasOffers ? <Help content={localizeCopy("This player has offers.")}
           trigger={<button type="button" className="market-player-offers-flag"
-            aria-label={`View offers for ${row.name}`}
+            aria-label={localizeCopy(`View offers for ${row.name}`)}
             onClick={() => {
               if (row.playerTeamId) offersMenu?.openForPlayer(row.playerTeamId, row.name);
             }} />}>
           <img src={notificationRedIconUrl} alt="" aria-hidden="true" />
         </Help> : null}
-        <Help className="market-name-line" content={bidded && bidMoney != null ? bidAmountTooltipLabel(bidMoney) : null}>
+        <Help className="market-name-line" content={localizeCopy(bidded && bidMoney != null ? bidAmountTooltipLabel(bidMoney) : null)}>
           {bidded ? (
             <img className="market-bid-icon" src={bidIconUrl} alt="" aria-hidden />
           ) : null}
@@ -73,7 +75,7 @@ export function PlayerCell({ row, now, columnLabel = "Player" }: PlayerCellProps
           </span>
         </Help>
         {clauseTooltip ? (
-          <Help content={clauseTooltip} className="market-clause-flag">
+          <Help content={localizeCopy(clauseTooltip)} className="market-clause-flag">
             <img className="market-clause-flag-icon" src={shieldRedIconUrl} alt="" aria-hidden />
           </Help>
         ) : null}

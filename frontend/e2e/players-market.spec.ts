@@ -49,7 +49,7 @@ for (const theme of ["light", "dark"]) {
       await name.hover();
       await expect(name).toHaveCSS("color", "rgb(255, 75, 68)");
       const details = ".players-value-details";
-      await expect(shielded.locator(details).getByText("Release clause: 10.000.000 €", { exact: true })).toBeVisible();
+      await expect(shielded.locator(details).getByText("Release clause: 10,000,000 €", { exact: true })).toBeVisible();
       await expect(shielded.locator(details + " .market-clause-shield")).toHaveCSS("filter",
         theme === "dark" ? "brightness(0) invert(1)" : "none");
       await expect(shielded.locator(".market-clause-flag-icon")).toHaveCSS("filter", "none");
@@ -76,7 +76,7 @@ for (const theme of ["light", "dark"]) {
       await expect(playerRow(page, "Player 03").locator(details).getByText("Release clause: Unavailable", { exact: true })).toBeVisible();
       await expect(playerRow(page, "Player 04").locator(details).getByText("Release clause: Not applicable", { exact: true })).toBeVisible();
       const bid = playerRow(page, "Player 14");
-      await expect(bid.locator(details).getByText("Your bid: 4.000.000 €", { exact: true })).toHaveCSS("color", "rgb(255, 75, 68)");
+      await expect(bid.locator(details).getByText("Your bid: 4,000,000 €", { exact: true })).toHaveCSS("color", "rgb(255, 75, 68)");
       await expect(bid.getByText("Bids: 2", { exact: true })).toBeVisible();
       expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
       await page.screenshot({ path: info.outputPath(`players-${theme}-${width}.png`), fullPage: true });
@@ -108,14 +108,14 @@ test("catalog bid mutations reconcile amounts and counts, including stale reads 
   fixture.lag(2);
   await dialog.getByRole("button", { name: "Update bid", exact: true }).click();
   await expect(dialog).toHaveCount(0);
-  await expect(row.locator(".players-value-details .market-bid-value")).toHaveText("Your bid: 6.000.000 €");
+  await expect(row.locator(".players-value-details .market-bid-value")).toHaveText("Your bid: 6,000,000 €");
   await expect(row.getByText("Bids: 2", { exact: true })).toBeVisible();
   fixture.rejectCancellation(true);
   await row.getByRole("button", { name: "Bidded", exact: true }).click();
   await page.getByRole("menuitem", { name: "Cancel bid", exact: true }).click();
   await expect(page.locator(".players-page").getByRole("alert")).toBeVisible();
   await expect(row.getByText("Bids: 2", { exact: true })).toBeVisible();
-  await expect(row.locator(".players-value-details .market-bid-value")).toHaveText("Your bid: 6.000.000 €");
+  await expect(row.locator(".players-value-details .market-bid-value")).toHaveText("Your bid: 6,000,000 €");
   fixture.rejectCancellation(false);
   await row.getByRole("button", { name: "Bidded", exact: true }).click();
   await page.getByRole("menuitem", { name: "Cancel bid", exact: true }).click();
@@ -127,7 +127,7 @@ test("catalog bid mutations reconcile amounts and counts, including stale reads 
   await page.getByRole("menuitem", { name: "Hire", exact: true }).click();
   await page.getByRole("dialog").getByRole("button", { name: "Place bid", exact: true }).click();
   await expect(unbid.getByText("Bids: 1", { exact: true })).toBeVisible();
-  await expect(unbid.locator(".players-value-details .market-bid-value")).toHaveText("Your bid: 3.500.000 €");
+  await expect(unbid.locator(".players-value-details .market-bid-value")).toHaveText("Your bid: 3,500,000 €");
   expect(fixture.writes.map(({ method }) => method)).toEqual(["PUT", "DELETE", "DELETE", "POST"]);
 });
 
@@ -158,7 +158,7 @@ test("catalog keeps roster clauses when market fails and displays missing bid co
   const fixture = await mockPlayers(page);
   fixture.failRead(true);
   await page.goto("/players?q=Player+01");
-  await expect(playerRow(page, "Player 01").getByText("Release clause: 10.000.000 €", { exact: true }).first()).toBeVisible();
+  await expect(playerRow(page, "Player 01").getByText("Release clause: 10,000,000 €", { exact: true }).first()).toBeVisible();
   await expect(playerRow(page, "Player 01").locator(".market-bid-count")).toHaveCount(0);
   await page.route("**/api/market/leagues/l1", (route) => route.fulfill({ json: marketFixture }));
   await page.goto("/players?q=Player+16");
@@ -182,7 +182,7 @@ test("catalog resets clause ownership and dialog state when switching leagues", 
   await expect(row.getByRole("link", { name: "Player 01", exact: true })).toHaveCSS("color", "rgb(255, 75, 68)");
   await page.getByRole("combobox", { name: "League", exact: true }).click();
   await page.getByRole("option", { name: "Other League", exact: true }).click();
-  await expect(row.locator(".players-value-details").getByText("Release clause: 3.000.000 €", { exact: true })).toBeVisible();
+  await expect(row.locator(".players-value-details").getByText("Release clause: 3,000,000 €", { exact: true })).toBeVisible();
   await expect(row.getByRole("link", { name: "Player 01", exact: true })).not.toHaveCSS("color", "rgb(255, 75, 68)");
   await expect(page.getByRole("dialog")).toHaveCount(0);
 });

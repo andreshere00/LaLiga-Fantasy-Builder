@@ -1,3 +1,5 @@
+import { locale } from "../../i18n";
+import { copy as localizeCopy, useLanguage } from "../../i18n";
 import { Popover } from "@base-ui/react/popover";
 import { useId } from "react";
 import { ApiContractError, ApiError } from "../../api/errors";
@@ -27,29 +29,30 @@ const columns = [
 ] as const;
 
 function dateLabel(value: string): string {
-  return new Date(value).toLocaleString(undefined, {
+  return new Date(value).toLocaleString(locale(), {
     day: "numeric", month: "short", year: "numeric", hour: "2-digit", minute: "2-digit",
   });
 }
 
 function MatchResult({ match, teamName }: { match: StandingMatch; teamName: string }) {
+  useLanguage();
   const outcome = outcomes[match.result];
   const description = `${outcome.label} against ${match.opponent.name}, ${match.venue}, ` +
     `${match.goalsFor}–${match.goalsAgainst}, ${dateLabel(match.kickoffAt)}`;
   return (
     <Popover.Root>
-      <Popover.Trigger className="standing-form-trigger" aria-label={description}>
-        <Badge variant={outcome.variant}>{match.result}</Badge>
+      <Popover.Trigger className="standing-form-trigger" aria-label={localizeCopy(description)}>
+        <Badge variant={outcome.variant}>{localizeCopy(match.result)}</Badge>
       </Popover.Trigger>
       <Popover.Portal>
         <Popover.Positioner sideOffset={8} className="standing-match-positioner">
           <Popover.Popup className="standing-match-popup">
-            <Popover.Title>{outcome.label} · {match.venue}</Popover.Title>
+            <Popover.Title>{localizeCopy(outcome.label)} · {localizeCopy(match.venue)}</Popover.Title>
             <Popover.Description>
               {teamName} {match.goalsFor}–{match.goalsAgainst} {match.opponent.name}
-              <time dateTime={match.kickoffAt}>{dateLabel(match.kickoffAt)}</time>
+              <time dateTime={match.kickoffAt}>{localizeCopy(dateLabel(match.kickoffAt))}</time>
             </Popover.Description>
-            <Popover.Close render={<Button variant="ghost" size="sm" />}>Close</Popover.Close>
+            <Popover.Close render={<Button variant="ghost" size="sm" />}>{localizeCopy("Close")}</Popover.Close>
           </Popover.Popup>
         </Popover.Positioner>
       </Popover.Portal>
@@ -71,6 +74,7 @@ function errorCopy(error: unknown): string {
 }
 
 export function LaligaStandingsPanel() {
+  useLanguage();
   const headingId = useId();
   const query = useCompetitionStandingsQuery();
   const data = query.data;
@@ -79,8 +83,8 @@ export function LaligaStandingsPanel() {
     <Card className="standings-panel" role="region" aria-labelledby={headingId}>
       <CardHeader>
         <div className="standings-heading">
-          <CardTitle id={headingId}>LALIGA standings</CardTitle>
-          <Button variant="ghost" size="sm" shape="square" aria-label="Refresh LALIGA standings"
+          <CardTitle id={headingId}>{localizeCopy("LALIGA standings")}</CardTitle>
+          <Button variant="ghost" size="sm" shape="square" aria-label={localizeCopy("Refresh LALIGA standings")}
             aria-disabled={query.isFetching} aria-busy={query.isFetching || undefined}
             onClick={() => { if (!query.isFetching) void query.refetch(); }}>
             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor"
@@ -91,16 +95,15 @@ export function LaligaStandingsPanel() {
           </Button>
         </div>
         <p className="standings-meta">
-          {data ? `${data.season}/${String(data.season + 1).slice(-2)} · ` : ""}Completed matches
-        </p>
+          {localizeCopy(data ? `${data.season}/${String(data.season + 1).slice(-2)} · ` : "")}{localizeCopy("Completed matches")}</p>
         {updatedAt ? <p className="standings-meta">
-          {data?.sourceUpdatedAt ? "Source updated " : "Retrieved "}
-          <time dateTime={updatedAt}>{dateLabel(updatedAt)}</time>
+          {localizeCopy(data?.sourceUpdatedAt ? "Source updated " : "Retrieved ")}
+          <time dateTime={updatedAt}>{localizeCopy(dateLabel(updatedAt))}</time>
         </p> : null}
-        <p className="standings-legend">W Win · D Draw · L Loss · Latest on the right</p>
+        <p className="standings-legend">{localizeCopy("W Win · D Draw · L Loss · Latest on the right")}</p>
         {query.isError ? <p className="standings-error" role="alert">
-          {data ? "Refresh failed. Showing previously retrieved standings. " : ""}
-          {errorCopy(query.error)}
+          {localizeCopy(data ? "Refresh failed. Showing previously retrieved standings. " : "")}
+          {localizeCopy(errorCopy(query.error))}
         </p> : null}
       </CardHeader>
       <CardContent>
@@ -108,12 +111,10 @@ export function LaligaStandingsPanel() {
           {data ? (
             <Table className="standings-table">
               <TableCaption className="standings-sr-only">
-                LALIGA {data.season}/{String(data.season + 1).slice(-2)} standings from completed matches.
-                Last five results run from oldest to newest.
-              </TableCaption>
+                {localizeCopy("LALIGA ")}{data.season}/{localizeCopy(String(data.season + 1).slice(-2))} {localizeCopy(" standings from completed matches. Last five results run from oldest to newest.")}</TableCaption>
               <TableHeader><TableRow>
                 {columns.map(([short, label]) => (
-                  <TableHead key={label} aria-label={label}>{short}</TableHead>
+                  <TableHead key={label} aria-label={localizeCopy(label)}>{localizeCopy(short)}</TableHead>
                 ))}
               </TableRow></TableHeader>
               <TableBody>
@@ -132,11 +133,11 @@ export function LaligaStandingsPanel() {
                     <TableCell>{row.won}</TableCell><TableCell>{row.drawn}</TableCell>
                     <TableCell>{row.lost}</TableCell><TableCell>{row.goalsFor}</TableCell>
                     <TableCell>{row.goalsAgainst}</TableCell>
-                    <TableCell>{row.goalDifference > 0 ? "+" : ""}{row.goalDifference}</TableCell>
+                    <TableCell>{localizeCopy(row.goalDifference > 0 ? "+" : "")}{row.goalDifference}</TableCell>
                     <TableCell><div className="standing-form">
                       {row.last5Matches.length ? row.last5Matches.map((match) => (
                         <MatchResult key={match.matchId} match={match} teamName={row.team.name} />
-                      )) : <span className="standings-meta">No completed matches</span>}
+                      )) : <span className="standings-meta">{localizeCopy("No completed matches")}</span>}
                     </div></TableCell>
                   </TableRow>
                 ))}
@@ -144,11 +145,11 @@ export function LaligaStandingsPanel() {
             </Table>
           ) : query.isError ? (
             <div className="standings-placeholder">
-              <Button variant="outline" size="sm" loading={query.isFetching} loadingLabel="Retrying…"
-                onClick={() => { void query.refetch(); }}>Retry standings</Button>
+              <Button variant="outline" size="sm" loading={query.isFetching} loadingLabel={localizeCopy("Retrying…")}
+                onClick={() => { void query.refetch(); }}>{localizeCopy("Retry standings")}</Button>
             </div>
-          ) : <div className="standings-loading" role="status" aria-label="Loading LALIGA standings">
-            <span className="standings-loading-label">Loading standings…</span>
+          ) : <div className="standings-loading" role="status" aria-label={localizeCopy("Loading LALIGA standings")}>
+            <span className="standings-loading-label">{localizeCopy("Loading standings…")}</span>
             <div className="standings-skeleton" aria-hidden="true">
               {Array.from({ length: 8 }, (_, index) => (
                 <div className="standings-skeleton-row" key={index}>

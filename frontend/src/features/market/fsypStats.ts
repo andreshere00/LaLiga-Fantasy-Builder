@@ -1,3 +1,4 @@
+import { decimal } from "../../i18n/format";
 /** Mean score across the newest ``count`` form entries (empty → null). */
 export function averageLastPerformances(
   recent: readonly number[],
@@ -11,5 +12,5 @@ export function averageLastPerformances(
 
 export function formatScoreAverage(value: number | null | undefined): string {
   if (value == null || !Number.isFinite(value)) return "—";
-  return value.toFixed(2);
+  return decimal(value, 2);
 }

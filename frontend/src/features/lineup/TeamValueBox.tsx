@@ -1,3 +1,4 @@
+import { copy as localizeCopy, useLanguage } from "../../i18n";
 import { Help } from "../../components/ui/Help";
 
 import { formatTeamValue } from "../../api/format";
@@ -27,6 +28,7 @@ export function TeamValueBox({
   historyLoading = false,
   onRequestHistory,
 }: TeamValueBoxProps) {
+  useLanguage();
   const display = formatTeamValue(evolution?.today ?? null);
   const requestHistory = () => onRequestHistory?.();
 
@@ -34,28 +36,28 @@ export function TeamValueBox({
     <div className="value-box">
       <Help content={evolution ? <>
             <span className="team-value-tooltip-line">
-              Today team value: {formatMarketValueStat(evolution.today)}
+              {localizeCopy("Today team value: ")}{localizeCopy(formatMarketValueStat(evolution.today))}
             </span>
             <span className="team-value-tooltip-line">
-              Yesterday team value:{" "}
-              {lookbackLine(evolution.yesterday, evolution.today, historyLoading)}
+              {localizeCopy("Yesterday team value:")}{" "}
+              {localizeCopy(lookbackLine(evolution.yesterday, evolution.today, historyLoading))}
             </span>
             <span className="team-value-tooltip-line">
-              Last 5 days team value:{" "}
-              {lookbackLine(evolution.fiveDaysAgo, evolution.today, historyLoading)}
+              {localizeCopy("Last 5 days team value:")}{" "}
+              {localizeCopy(lookbackLine(evolution.fiveDaysAgo, evolution.today, historyLoading))}
             </span>
             <span className="team-value-tooltip-line">
-              Last 14 days team value:{" "}
-              {lookbackLine(evolution.fourteenDaysAgo, evolution.today, historyLoading)}
+              {localizeCopy("Last 14 days team value:")}{" "}
+              {localizeCopy(lookbackLine(evolution.fourteenDaysAgo, evolution.today, historyLoading))}
             </span>
             <span className="team-value-tooltip-line">
-              Last 30 days team value:{" "}
-              {lookbackLine(evolution.thirtyDaysAgo, evolution.today, historyLoading)}
+              {localizeCopy("Last 30 days team value:")}{" "}
+              {localizeCopy(lookbackLine(evolution.thirtyDaysAgo, evolution.today, historyLoading))}
             </span>
       </> : null} trigger={<span className="value-box-tooltip-wrap"
         tabIndex={evolution ? 0 : undefined}
         onPointerEnter={requestHistory} onFocus={requestHistory} />}>
-        <span className="value-box-text">{display}</span>
+        <span className="value-box-text">{localizeCopy(display)}</span>
       </Help>
     </div>
   );

@@ -1,3 +1,5 @@
+import { dateFormatter } from "../../i18n/format";
+import { copy as localizeCopy, useLanguage } from "../../i18n";
 import { useEffect, useId, useRef, useState, type CSSProperties } from "react";
 import type { FixtureWeatherDto } from "../../api/schemas";
 import { useAuth } from "../../auth/AuthProvider";
@@ -17,13 +19,14 @@ import {
 import { useFixturePanel } from "./useFixturePanel";
 import "./FixtureMatchesPanel.css";
 
-const dayFormat = new Intl.DateTimeFormat("en-GB", { timeZone: FIXTURE_TIME_ZONE, weekday: "short", day: "numeric", month: "short" });
-const timeFormat = new Intl.DateTimeFormat("en-GB", { timeZone: FIXTURE_TIME_ZONE, hour: "2-digit", minute: "2-digit", hourCycle: "h23" });
-const updatedFormat = new Intl.DateTimeFormat("en-GB", { timeZone: FIXTURE_TIME_ZONE, day: "numeric", month: "short", hour: "2-digit", minute: "2-digit", timeZoneName: "short" });
+const dayFormat = dateFormatter({ timeZone: FIXTURE_TIME_ZONE, weekday: "short", day: "numeric", month: "short" });
+const timeFormat = dateFormatter({ timeZone: FIXTURE_TIME_ZONE, hour: "2-digit", minute: "2-digit", hourCycle: "h23" });
+const updatedFormat = dateFormatter({ timeZone: FIXTURE_TIME_ZONE, day: "numeric", month: "short", hour: "2-digit", minute: "2-digit", timeZoneName: "short" });
 
 function MatchForecast({ match, row, loading, failed, now }: {
   match: PanelMatch; row: FixtureWeatherDto | undefined; loading: boolean; failed: boolean; now: number;
 }) {
+  useLanguage();
   if (match.status === "finished") return null;
   const snapshot = row?.weather.snapshot;
   const updateFailed = failed || row?.weather.reason === "provider_unavailable";
@@ -35,21 +38,21 @@ function MatchForecast({ match, row, loading, failed, now }: {
   const message = loading && !row ? "Loading forecast…" : row?.weather.reason === "beyond_forecast_horizon"
     ? "Forecast closer to kickoff" : past && !snapshot ? "Kickoff forecast unavailable"
       : failed && !row ? "Forecast unavailable" : weatherReason(row?.weather.reason);
-  if (!snapshot) return <div className="fixture-match-weather"><p className="fixture-weather-meta">{message}</p></div>;
+  if (!snapshot) return <div className="fixture-match-weather"><p className="fixture-weather-meta">{localizeCopy(message)}</p></div>;
   return (
     <details className="fixture-match-weather">
       <summary className="fixture-weather-summary">
         {condition ? <span className="fixture-weather-icon" aria-hidden="true"
           style={{ "--weather-icon": `url("${weatherIcon(condition)}")` } as CSSProperties} /> : null}
-        <span>Forecast {Math.round(snapshot.temperatureC)}°C · {condition ? WEATHER_CONDITIONS[condition] : "Condition unavailable"}</span>
+        <span>{localizeCopy("Forecast ")}{Math.round(snapshot.temperatureC)}{localizeCopy("°C · ")}{localizeCopy(condition ? WEATHER_CONDITIONS[condition] : "Condition unavailable")}</span>
         <span className="fixture-weather-chevron" aria-hidden="true">⌄</span>
       </summary>
-      <div className="fixture-forecast-content" role="region" aria-label={`Forecast for ${match.home.name} vs ${match.away.name}`}>
-        <p className="fixture-weather-meta">Rain {rain == null ? "—" : `${rain}%`} · Wind {wind == null ? "—" : `${wind} km/h`}</p>
-        {past ? <p className="fixture-weather-meta">Saved kickoff forecast</p> : null}
+      <div className="fixture-forecast-content" role="region" aria-label={localizeCopy(`Forecast for ${match.home.name} vs ${match.away.name}`)}>
+        <p className="fixture-weather-meta">{localizeCopy("Rain ")}{localizeCopy(rain == null ? "—" : `${rain}%`)} {localizeCopy(" · Wind ")}{localizeCopy(wind == null ? "—" : `${wind} km/h`)}</p>
+        {past ? <p className="fixture-weather-meta">{localizeCopy("Saved kickoff forecast")}</p> : null}
         {row?.fetchedAt ? <p className="fixture-weather-meta">
-          {updateFailed ? "Update unavailable · " : "Retrieved "}
-          <time dateTime={row.fetchedAt}>{updatedFormat.format(new Date(row.fetchedAt))}</time>
+          {localizeCopy(updateFailed ? "Update unavailable · " : "Retrieved ")}
+          <time dateTime={row.fetchedAt}>{localizeCopy(updatedFormat.format(new Date(row.fetchedAt)))}</time>
         </p> : null}
       </div>
     </details>
@@ -60,20 +63,21 @@ function FixtureMatch({ match, forecast, weatherLoading, weatherFailed, now }: {
   match: PanelMatch; forecast: FixtureWeatherDto | undefined; weatherLoading: boolean; weatherFailed: boolean;
   now: number;
 }) {
+  useLanguage();
   const status = match.status === "finished" ? "Finished" : match.status === "unconfirmed"
     ? "Status unconfirmed" : match.kickoffMs != null ? timeFormat.format(match.kickoffMs) : "Time TBC";
   return (
     <li className={`fixture-match${match.status === "unconfirmed" ? " is-updating" : ""}`}>
       <div className="fixture-match-date">
-        {match.kickoff ? <time dateTime={match.kickoff}>{dayFormat.format(new Date(match.kickoff))}</time> : <span>Date TBC</span>}
-        <span>{status}</span>
+        {match.kickoff ? <time dateTime={match.kickoff}>{localizeCopy(dayFormat.format(new Date(match.kickoff)))}</time> : <span>{localizeCopy("Date TBC")}</span>}
+        <span>{localizeCopy(status)}</span>
       </div>
       {([match.home, match.away] as const).map((team, index) => (
         <div className="fixture-match-team" key={index}>
           <span className="fixture-match-crest" aria-hidden="true"><BadgeImage media={clubMediaFromFixture(team)} fallback="—" /></span>
           <span>{team.name}</span>
-          <span className="fixture-match-score" aria-label={`${index === 0 ? "Home" : "Away"} goals: ${(index === 0 ? match.homeScore : match.awayScore) ?? "no result"}`}>
-            {(index === 0 ? match.homeScore : match.awayScore) ?? "—"}
+          <span className="fixture-match-score" aria-label={localizeCopy(`${index === 0 ? "Home" : "Away"} goals: ${(index === 0 ? match.homeScore : match.awayScore) ?? "no result"}`)}>
+            {localizeCopy((index === 0 ? match.homeScore : match.awayScore) ?? "—")}
           </span>
         </div>
       ))}
@@ -84,11 +88,13 @@ function FixtureMatch({ match, forecast, weatherLoading, weatherFailed, now }: {
 
 /** Reset panel-owned view state when the authenticated account changes. */
 export function FixtureMatchesPanel() {
+  useLanguage();
   const { user } = useAuth();
   return <FixtureMatchesPanelContent key={user?.userId ?? "signed-out"} />;
 }
 
 function FixtureMatchesPanelContent() {
+  useLanguage();
   const panel = useFixturePanel();
   const heading = useId();
   const viewport = useRef<HTMLDivElement>(null);
@@ -131,30 +137,30 @@ function FixtureMatchesPanelContent() {
       <CardHeader>
         <div className="fixture-panel-heading">
           <div>
-            <div className="fixture-panel-title"><CardTitle id={heading}>LALIGA{week ? ` · Fixture ${week}` : " matches"}</CardTitle>
-              <Badge className={mode === "active" ? "fixture-panel-active" : ""}>{label}</Badge>
+            <div className="fixture-panel-title"><CardTitle id={heading}>{localizeCopy("LALIGA")}{localizeCopy(week ? ` · Fixture ${week}` : " matches")}</CardTitle>
+              <Badge className={mode === "active" ? "fixture-panel-active" : ""}>{localizeCopy(label)}</Badge>
             </div>
             <p className="fixture-panel-meta">
-              {mode === "active" ? `${matches.filter((match) => match.status === "finished").length} of 10 matches finished` : `${matches.length} matches`} · {FIXTURE_TIME_ZONE}
+              {localizeCopy(mode === "active" ? `${matches.filter((match) => match.status === "finished").length} of 10 matches finished` : `${matches.length} matches`)} · {localizeCopy(FIXTURE_TIME_ZONE)}
             </p>
-            {nextKickoffText ? <p className="fixture-next-kickoff">{nextKickoffText}</p> : null}
+            {nextKickoffText ? <p className="fixture-next-kickoff">{localizeCopy(nextKickoffText)}</p> : null}
           </div>
-          <nav className="fixture-week-pagination" aria-label="Fixture navigation">
-            <Button variant="outline" shape="square" size="icon" aria-label="Previous matchweek"
+          <nav className="fixture-week-pagination" aria-label={localizeCopy("Fixture navigation")}>
+            <Button variant="outline" shape="square" size="icon" aria-label={localizeCopy("Previous matchweek")}
               disabled={week == null || week <= 1} onClick={() => panel.navigate(-1)}>‹</Button>
-            <span className="fixture-week-label">Fixture {week ?? "—"}</span>
-            <Button variant="outline" shape="square" size="icon" aria-label="Next matchweek"
+            <span className="fixture-week-label">{localizeCopy("Fixture ")}{localizeCopy(week ?? "—")}</span>
+            <Button variant="outline" shape="square" size="icon" aria-label={localizeCopy("Next matchweek")}
               disabled={week == null || week >= 38} onClick={() => panel.navigate(1)}>›</Button>
           </nav>
         </div>
         {panel.error ? <p className="fixture-panel-error" role="alert">
-          {panel.stale ? "Update unavailable. Showing previously retrieved matches." : "Fixture matches unavailable."}
-          {!hasMatches ? <Button variant="ghost" size="sm" shape="square" onClick={() => void panel.refresh()}>Retry fixture matches</Button> : null}
+          {localizeCopy(panel.stale ? "Update unavailable. Showing previously retrieved matches." : "Fixture matches unavailable.")}
+          {!hasMatches ? <Button variant="ghost" size="sm" shape="square" onClick={() => void panel.refresh()}>{localizeCopy("Retry fixture matches")}</Button> : null}
         </p> : null}
         {panel.pendingNext ? <p className="fixture-panel-meta" role="status">
-          {panel.nextUnavailable ? <>Next fixture unavailable. Retrying automatically. <Button variant="ghost" size="sm" shape="square" onClick={() => void panel.refresh()}>Retry fixture matches</Button></> : "Loading next fixture…"}
+          {localizeCopy(panel.nextUnavailable ? <>{localizeCopy("Next fixture unavailable. Retrying automatically. ")}<Button variant="ghost" size="sm" shape="square" onClick={() => void panel.refresh()}>{localizeCopy("Retry fixture matches")}</Button></> : "Loading next fixture…")}
         </p> : null}
-        {hasMatches && !panel.round?.consistent ? <p className="fixture-panel-meta">Round data incomplete. Awaiting verified final results.</p> : null}
+        {hasMatches && !panel.round?.consistent ? <p className="fixture-panel-meta">{localizeCopy("Round data incomplete. Awaiting verified final results.")}</p> : null}
       </CardHeader>
       <CardContent>
         {hasMatches ? <ScrollArea horizontal className="fixture-matches-scroll" viewportProps={{
@@ -170,14 +176,14 @@ function FixtureMatchesPanelContent() {
               forecast={weatherRows.find((row) => weatherMatchesFixture(row, match))}
               weatherLoading={panel.weather.isFetching} weatherFailed={panel.weather.isError} />)}
           </ol>
-        </ScrollArea> : panel.loading ? <PulseRing label="Loading fixture matches…" /> : !panel.error ?
-          <p className="fixture-panel-empty">{mode === "unavailable" ? "Fixture status unavailable." : "No matches available for this fixture."}</p> : null}
+        </ScrollArea> : panel.loading ? <PulseRing label={localizeCopy("Loading fixture matches…")} /> : !panel.error ?
+          <p className="fixture-panel-empty">{localizeCopy(mode === "unavailable" ? "Fixture status unavailable." : "No matches available for this fixture.")}</p> : null}
       </CardContent>
       <div className="fixture-panel-footer">
-        <span>{panel.updatedAt > 0 ? <>Matches retrieved <time dateTime={new Date(panel.updatedAt).toISOString()}>{updatedFormat.format(panel.updatedAt)}</time></> : "Results refresh every 30 seconds"}</span>
-        <span>Forecasts: <a href="https://openweathermap.org/" target="_blank" rel="noreferrer">OpenWeather</a> · Kickoff forecast</span>
+        <span>{localizeCopy(panel.updatedAt > 0 ? <>{localizeCopy("Matches retrieved ")}<time dateTime={new Date(panel.updatedAt).toISOString()}>{localizeCopy(updatedFormat.format(panel.updatedAt))}</time></> : "Results refresh every 30 seconds")}</span>
+        <span>{localizeCopy("Forecasts: ")}<a href="https://openweathermap.org/" target="_blank" rel="noreferrer">{localizeCopy("OpenWeather")}</a> {localizeCopy(" · Kickoff forecast")}</span>
       </div>
-      <p className="fixture-panel-sr-only" aria-live="polite" aria-atomic="true">{announcement}</p>
+      <p className="fixture-panel-sr-only" aria-live="polite" aria-atomic="true">{localizeCopy(announcement)}</p>
     </Card>
   );
 }

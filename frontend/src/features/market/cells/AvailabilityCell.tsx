@@ -1,3 +1,4 @@
+import { copy as localizeCopy, useLanguage } from "../../../i18n";
 import { Help } from "../../../components/ui/Help";
 import availableIcon from "../../../assets/button_available.svg";
 import notAvailableIcon from "../../../assets/button_not_available.svg";
@@ -11,13 +12,14 @@ const META: Record<Availability, { label: string; icon: string }> = {
 };
 
 export function AvailabilityCell({ availability }: { availability: Availability }) {
+  useLanguage();
   const { label, icon } = META[availability];
   const tooltip = AVAILABILITY_TOOLTIPS[availability];
 
   return (
-    <Help className="market-availability" content={tooltip}>
+    <Help className="market-availability" content={localizeCopy(tooltip)}>
       <img className="market-availability-icon" src={icon} alt="" aria-hidden="true" />
-      <span className="market-availability-label">{label}</span>
+      <span className="market-availability-label">{localizeCopy(label)}</span>
     </Help>
   );
 }

@@ -1,3 +1,4 @@
+import { copy as localizeCopy, useLanguage } from "../../i18n";
 import { Dialog } from "../../components/ui/Dialog";
 
 type OpponentLineupNoticeProps = {
@@ -11,9 +12,10 @@ export function OpponentLineupNotice({
   message,
   onClose,
 }: OpponentLineupNoticeProps) {
+  useLanguage();
   return (
-    <Dialog open={open} title="Lineup unavailable" onClose={onClose}>
-      <p className="modal-body-plain">{message}</p>
+    <Dialog open={open} title={localizeCopy("Lineup unavailable")} onClose={onClose}>
+      <p className="modal-body-plain">{localizeCopy(message)}</p>
     </Dialog>
   );
 }

@@ -1,3 +1,4 @@
+import { copy as localizeCopy, useLanguage } from "../../i18n";
 import { Menu } from "@base-ui/react/menu";
 import { Help } from "../../components/ui/Help";
 import { Children, useEffect, useId, useRef, useState, type ReactNode } from "react";
@@ -30,13 +31,14 @@ function ChoiceGroup({ label, children }: {
   label: string;
   children: ReactNode;
 }) {
+  useLanguage();
   const titleId = useId();
   const items = Children.toArray(children);
   if (items.length === 0) return null;
   return (
     <section className="squad-sale-choice-group" aria-labelledby={titleId}>
-      <h3 id={titleId} className="squad-sale-choice-group-label">{label}</h3>
-      <div className="squad-sale-choices">{items}</div>
+      <h3 id={titleId} className="squad-sale-choice-group-label">{localizeCopy(label)}</h3>
+      <div className="squad-sale-choices">{localizeCopy(items)}</div>
     </section>
   );
 }
@@ -62,6 +64,7 @@ export function SquadPlayerActions({
   triggerText?: string;
   detailsReturnTo?: "/market" | "/players";
 }) {
+  useLanguage();
   const offersMenu = useMarketOffersMenu();
   const [open, setOpen] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
@@ -121,43 +124,42 @@ export function SquadPlayerActions({
   return (
     <>
       <div className="squad-tile-slot squad-player-hit-area">
-        {typeof children === "function" ? children(() => {
+        {localizeCopy(typeof children === "function" ? children(() => {
           setView("options");
           setOpen(true);
-        }) : children}
+        }) : children)}
         {!cardMenu ? <div className="squad-tile-controls">
           <Menu.Root open={menuOpen} onOpenChange={setMenuOpen}>
-            <Help content={triggerText ? null : PLAYER_OPTIONS_HINT}>
+            <Help content={localizeCopy(triggerText ? null : PLAYER_OPTIONS_HINT)}>
               <Menu.Trigger ref={menuTrigger}
                 className={"player-details-link squad-details-link" + (triggerText ? " is-text-trigger" : "")}
                 aria-label={player.name + ", options"}>
-                {triggerText ?? <img src={menuOpen ? infoRedIcon : infoIcon} alt="" aria-hidden />}
+                {localizeCopy(triggerText ?? <img src={menuOpen ? infoRedIcon : infoIcon} alt="" aria-hidden />)}
               </Menu.Trigger>
             </Help>
             <Menu.Portal><Menu.Positioner sideOffset={4} className="fb-menu-positioner">
               <Menu.Popup className="fb-menu-popup" aria-label={player.name + " options"}>
                 <Menu.Item className="market-actions-item" onClick={() => {
                   menuTrigger.current?.focus(); setView("choose"); setOpen(true);
-                }}>Market options</Menu.Item>
+                }}>{localizeCopy("Market options")}</Menu.Item>
                 {ownPlayer && offersMenu && !/^player-\d+$/.test(player.id) ? (
                   <Menu.Item className="market-actions-item" onClick={() => {
                     menuTrigger.current?.focus();
                     offersMenu.openForPlayer(player.id, player.name);
-                  }}>View offers for this player</Menu.Item>
+                  }}>{localizeCopy("View offers for this player")}</Menu.Item>
                 ) : null}
                 {player.masterPlayerId && player.positionId !== 5 ? (
                   <Menu.Item className="market-actions-item" render={<Link
                     to={"/players/" + encodeURIComponent(player.masterPlayerId)}
                     state={detailsReturnTo ? { returnTo: detailsReturnTo } : undefined} />}>
-                    Player details
-                  </Menu.Item>
+                    {localizeCopy("Player details")}</Menu.Item>
                 ) : null}
               </Menu.Popup>
             </Menu.Positioner></Menu.Portal>
           </Menu.Root>
         </div> : null}
       </div>
-      {opponentMarketOptions?.(open && view === "choose" && !ownPlayer, close)}
+      {localizeCopy(opponentMarketOptions?.(open && view === "choose" && !ownPlayer, close))}
       <Dialog
         open={open && (ownPlayer || view !== "choose")}
         className={`squad-player-actions-dialog squad-player-actions-dialog--${view}`}
@@ -177,8 +179,7 @@ export function SquadPlayerActions({
         footer={
           (view === "choose" || view === "options") ? (
             <button type="button" className="squad-sale-secondary" onClick={close}>
-              Close
-            </button>
+              {localizeCopy("Close")}</button>
           ) : (
             <>
               <button
@@ -187,8 +188,7 @@ export function SquadPlayerActions({
                 disabled={pending}
                 onClick={() => setView("choose")}
               >
-                Back
-              </button>
+                {localizeCopy("Back")}</button>
               <button
                 type="button"
                 className="squad-sale-primary"
@@ -228,8 +228,8 @@ export function SquadPlayerActions({
                   sales.sellImmediately.mutate(player.id, { onSuccess: () => close() });
                 }}
               >
-                {pending ? "Sending…" : view === "list" ? "List player" : view === "modify"
-                  ? "Update listing" : view === "cancel" ? "Withdraw listing" : "Sell player now"}
+                {localizeCopy(pending ? "Sending…" : view === "list" ? "List player" : view === "modify"
+                  ? "Update listing" : view === "cancel" ? "Withdraw listing" : "Sell player now")}
               </button>
             </>
           )
@@ -237,38 +237,34 @@ export function SquadPlayerActions({
       >
         {view === "options" ? (
           <div className="squad-sale-choice-groups">
-            <ChoiceGroup label="Market">
+            <ChoiceGroup label={localizeCopy("Market")}>
               <button type="button" className="squad-sale-choice" onClick={() => setView("choose")}>
-                Market options
-              </button>
+                {localizeCopy("Market options")}</button>
               {ownPlayer && offersMenu && !/^player-\d+$/.test(player.id) ? (
                 <button type="button" className="squad-sale-choice" onClick={() => {
                   offersMenu.openForPlayer(player.id, player.name);
                   close();
                 }}>
-                  View offers for this player
-                </button>
+                  {localizeCopy("View offers for this player")}</button>
               ) : null}
             </ChoiceGroup>
-            <ChoiceGroup label="Details">
+            <ChoiceGroup label={localizeCopy("Details")}>
               {player.masterPlayerId && player.positionId !== 5 ? (
                 <Link
                   className="squad-sale-choice"
                   to={`/players/${encodeURIComponent(player.masterPlayerId)}`}
                   onClick={close}
                 >
-                  Player details
-                </Link>
+                  {localizeCopy("Player details")}</Link>
               ) : null}
             </ChoiceGroup>
-            <ChoiceGroup label="Lineup">
+            <ChoiceGroup label={localizeCopy("Lineup")}>
               {onSwap ? (
                 <button type="button" className="squad-sale-choice" onClick={() => {
                   close();
                   onSwap();
                 }}>
-                  Swap player
-                </button>
+                  {localizeCopy("Swap player")}</button>
               ) : null}
             </ChoiceGroup>
           </div>
@@ -283,16 +279,14 @@ export function SquadPlayerActions({
                   disabled={cancelBlocked != null}
                   onClick={() => setView("cancel")}
                 >
-                  Cancel bid
-                </button>
+                  {localizeCopy("Cancel bid")}</button>
                 <button
                   type="button"
                   className="squad-sale-choice"
                   disabled={priceBlocked != null || cancelBlocked != null}
                   onClick={() => setView("modify")}
                 >
-                  Modify bid
-                </button>
+                  {localizeCopy("Modify bid")}</button>
               </>
             ) : (
               <button
@@ -301,8 +295,7 @@ export function SquadPlayerActions({
                 disabled={priceBlocked != null}
                 onClick={() => setView("list")}
               >
-                Bring to market
-              </button>
+                {localizeCopy("Bring to market")}</button>
             )}
             <button
               type="button"
@@ -310,21 +303,18 @@ export function SquadPlayerActions({
               disabled={half == null || listed}
               onClick={() => setView("immediate")}
             >
-              Send immediately to market
-            </button>
-            {priceBlocked && !listed ? <p className="squad-sale-note">{priceBlocked}</p> : null}
-            {listed && cancelBlocked ? <p className="squad-sale-note">{cancelBlocked}</p> : null}
+              {localizeCopy("Send immediately to market")}</button>
+            {priceBlocked && !listed ? <p className="squad-sale-note">{localizeCopy(priceBlocked)}</p> : null}
+            {listed && cancelBlocked ? <p className="squad-sale-note">{localizeCopy(cancelBlocked)}</p> : null}
           </div>
         ) : null}
         {view === "cancel" ? (
           <>
             <p className="squad-sale-copy">
-              Cancel the sale of <strong>{player.name}</strong>? The player stays in your squad
-              and offers on this listing are dropped.
-            </p>
+              {localizeCopy("Cancel the sale of ")}<strong>{player.name}</strong>{localizeCopy("? The player stays in your squad and offers on this listing are dropped.")}</p>
             {cancelError ? (
               <p className="squad-sale-error" role="alert">
-                {cancelError}
+                {localizeCopy(cancelError)}
               </p>
             ) : null}
           </>
@@ -332,16 +322,14 @@ export function SquadPlayerActions({
         {(view === "list" || view === "modify") && minimum != null ? (
           <>
             <p className="squad-sale-copy">
-              {view === "modify" ? "Change" : "List"} <strong>{player.name}</strong> for a
-              whole-euro offer of at least {formatEuro(minimum)}, and no more than{" "}
-              {formatEuro(MAX_LISTING_PRICE)}.
-              {view === "modify"
+              {localizeCopy(view === "modify" ? "Change" : "List")} <strong>{player.name}</strong> {localizeCopy(" for a whole-euro offer of at least ")}{localizeCopy(formatEuro(minimum))}{localizeCopy(", and no more than")}{" "}
+              {localizeCopy(formatEuro(MAX_LISTING_PRICE))}.
+              {localizeCopy(view === "modify"
                 ? " The current listing and its offers are replaced by this amount."
-                : null}
+                : null)}
             </p>
             <label className="squad-sale-label" htmlFor={inputId}>
-              Offer
-            </label>
+              {localizeCopy("Offer")}</label>
             <NumericCounterField
               id={inputId}
               value={rawPrice}
@@ -362,7 +350,7 @@ export function SquadPlayerActions({
             />
             {listError || modifyError ? (
               <p className="squad-sale-error" role="alert">
-                {view === "modify" ? modifyError : listError}
+                {localizeCopy(view === "modify" ? modifyError : listError)}
               </p>
             ) : null}
           </>
@@ -370,13 +358,11 @@ export function SquadPlayerActions({
         {view === "immediate" && half != null ? (
           <>
             <p className="squad-sale-copy">
-              Sell <strong>{player.name}</strong> now for {formatEuro(half)}, half of{" "}
-              {formatEuro(minimum)}. The money is added to your balance and the player leaves
-              your squad.
-            </p>
+              {localizeCopy("Sell ")}<strong>{player.name}</strong> {localizeCopy(" now for ")}{localizeCopy(formatEuro(half))}{localizeCopy(", half of")}{" "}
+              {localizeCopy(formatEuro(minimum))}{localizeCopy(". The money is added to your balance and the player leaves your squad.")}</p>
             {immediateError ? (
               <p className="squad-sale-error" role="alert">
-                {immediateError}
+                {localizeCopy(immediateError)}
               </p>
             ) : null}
           </>

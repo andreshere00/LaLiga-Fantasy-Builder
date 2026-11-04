@@ -1,3 +1,4 @@
+import { copy as localizeCopy, useLanguage } from "../i18n";
 import { Notifications } from "../components/ui/Notifications";
 import { PulseRing } from "../components/ui/PulseRing";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
@@ -38,12 +39,14 @@ const queryClient = new QueryClient({
 });
 
 function LineupRoute() {
+  useLanguage();
   const { status } = useAuth();
   if (status !== "ready") return <GatePanel status={status} />;
   return <LineupPage />;
 }
 
 export function App() {
+  useLanguage();
   return (
     <QueryClientProvider client={queryClient}>
       <Notifications>
@@ -64,7 +67,7 @@ export function App() {
                     <Route
                       path="/players/:playerId"
                       element={
-                        <Suspense fallback={<PulseRing label="Loading player…" />}>
+                        <Suspense fallback={<PulseRing label={localizeCopy("Loading player…")} />}>
                           <PlayerDetailPage />
                         </Suspense>
                       }

@@ -1,3 +1,4 @@
+import { copy as localizeCopy, useLanguage } from "../../i18n";
 import { Button } from "../../components/ui/Button";
 import { PulseRing } from "../../components/ui/PulseRing";
 import type { AuthStatus } from "../../auth/types";
@@ -42,30 +43,28 @@ const COPY: Record<Exclude<AuthStatus, "ready">, GateCopy> = {
 };
 
 export function GatePanel({ status }: { status: Exclude<AuthStatus, "ready"> }) {
+  useLanguage();
   const { login, connectLaliga, reload } = useAuth();
   const copy = COPY[status];
 
   return (
     <section className="gate">
       {status === "loading" ? (
-        <PulseRing label="Checking your session…" />
+        <PulseRing label={localizeCopy("Checking your session…")} />
       ) : null}
       <h1>{copy.title}</h1>
-      <p>{copy.body}</p>
+      <p>{localizeCopy(copy.body)}</p>
       {copy.action === "login" ? (
         <Button type="button" shape="square" onClick={login}>
-          Log in
-        </Button>
+          {localizeCopy("Log in")}</Button>
       ) : null}
       {copy.action === "laliga" ? (
         <Button type="button" onClick={connectLaliga}>
-          Connect LaLiga
-        </Button>
+          {localizeCopy("Connect LaLiga")}</Button>
       ) : null}
       {copy.action === "retry" ? (
         <Button type="button" onClick={() => void reload()}>
-          Retry
-        </Button>
+          {localizeCopy("Retry")}</Button>
       ) : null}
     </section>
   );

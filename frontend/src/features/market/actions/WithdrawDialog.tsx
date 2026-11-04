@@ -1,3 +1,4 @@
+import { copy as localizeCopy, useLanguage } from "../../../i18n";
 import { Dialog } from "../../../components/ui/Dialog";
 import { useRef } from "react";
 import { Button } from "../../../components/ui/Button";
@@ -20,15 +21,15 @@ export function WithdrawDialog({
   onClose,
   onConfirm,
 }: WithdrawDialogProps) {
+  useLanguage();
   const cancelRef = useRef<HTMLButtonElement>(null);
   if (!row) return null;
 
   return (
     <Dialog
       open={open}
-      title="Withdraw from market"
-      description={<>Withdraw <strong>{row.name}</strong> from the market? The player will stay in
-        your squad and all the offers will be cancelled.</>}
+      title={localizeCopy("Withdraw from market")}
+      description={<>{localizeCopy("Withdraw ")}<strong>{row.name}</strong> {localizeCopy(" from the market? The player will stay in your squad and all the offers will be cancelled.")}</>}
       initialFocus={cancelRef}
       busy={pending}
       onClose={onClose}
@@ -36,21 +37,19 @@ export function WithdrawDialog({
       footer={
         <>
           <Button variant="outline" ref={cancelRef} onClick={onClose} disabled={pending}>
-            Cancel
-          </Button>
+            {localizeCopy("Cancel")}</Button>
           <Button
             loading={pending}
-            loadingLabel="Withdrawing…"
+            loadingLabel={localizeCopy("Withdrawing…")}
             onClick={onConfirm}
           >
-            Withdraw player
-          </Button>
+            {localizeCopy("Withdraw player")}</Button>
         </>
       }
     >
       {error ? (
         <p className="market-dialog-error" role="alert">
-          {error}
+          {localizeCopy(error)}
         </p>
       ) : null}
     </Dialog>

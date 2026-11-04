@@ -1,3 +1,4 @@
+import { copy as localizeCopy, useLanguage } from "../../../i18n";
 import { formatEuro } from "../../../api/format";
 import { useRef } from "react";
 import { Dialog } from "../../../components/ui/Dialog";
@@ -23,14 +24,15 @@ export function ClauseDialog({
   onClose,
   onConfirm,
 }: ClauseDialogProps) {
+  useLanguage();
   const cancelRef = useRef<HTMLButtonElement>(null);
   if (!row) return null;
 
   return (
     <Dialog
       open={open}
-      title="Pay release clause"
-      description={<>Pay {formatEuro(amount)} to trigger the release clause for <strong>{row.name}</strong>?</>}
+      title={localizeCopy("Pay release clause")}
+      description={<>{localizeCopy("Pay ")}{localizeCopy(formatEuro(amount))} {localizeCopy(" to trigger the release clause for ")}<strong>{row.name}</strong>?</>}
       initialFocus={cancelRef}
       busy={pending}
       onClose={onClose}
@@ -38,21 +40,19 @@ export function ClauseDialog({
       footer={
         <>
           <Button variant="outline" ref={cancelRef} onClick={onClose} disabled={pending}>
-            Cancel
-          </Button>
+            {localizeCopy("Cancel")}</Button>
           <Button
             loading={pending}
-            loadingLabel="Paying…"
+            loadingLabel={localizeCopy("Paying…")}
             onClick={onConfirm}
           >
-            Pay release clause
-          </Button>
+            {localizeCopy("Pay release clause")}</Button>
         </>
       }
     >
       {error ? (
         <p className="market-dialog-error" role="alert">
-          {error}
+          {localizeCopy(error)}
         </p>
       ) : null}
     </Dialog>

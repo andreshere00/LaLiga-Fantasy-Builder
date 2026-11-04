@@ -1,3 +1,4 @@
+import { copy as localizeCopy, useLanguage } from "../../i18n";
 import type { MarketColumnKey } from "./marketColumnHeadings";
 import {
   FilterAvailabilityChips,
@@ -26,14 +27,15 @@ export function MarketColumnFilterFields({
   onChange,
   onClearColumn,
 }: MarketColumnFilterFieldsProps) {
+  useLanguage();
   return (
     <div className="market-column-filter-fields">
       {column === "player" ? (
         <FilterTextInput
-          label="Player name"
+          label={localizeCopy("Player name")}
           value={filters.player}
           onChange={(player) => onChange({ ...filters, player })}
-          placeholder="Search by name"
+          placeholder={localizeCopy("Search by name")}
           suggestions={names}
         />
       ) : null}
@@ -73,10 +75,10 @@ export function MarketColumnFilterFields({
       {column === "sellOptions" ? (
         <>
           <FilterTextInput
-            label="Seller"
+            label={localizeCopy("Seller")}
             value={filters.seller}
             onChange={(seller) => onChange({ ...filters, seller })}
-            placeholder="LaLiga or manager"
+            placeholder={localizeCopy("LaLiga or manager")}
             suggestions={sellers}
           />
           {sellers.length > 0 ? (
@@ -90,13 +92,12 @@ export function MarketColumnFilterFields({
       ) : null}
 
       {column === "sealEnd" ? (
-        <p className="market-column-filter-empty">This column cannot be filtered.</p>
+        <p className="market-column-filter-empty">{localizeCopy("This column cannot be filtered.")}</p>
       ) : null}
 
       {column !== "sealEnd" ? (
         <button type="button" className="market-column-filter-clear" onClick={onClearColumn}>
-          Clear column filter
-        </button>
+          {localizeCopy("Clear column filter")}</button>
       ) : null}
     </div>
   );

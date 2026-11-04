@@ -23,6 +23,7 @@ and the lineup builder in light and dark themes.
 | [Terraform deployment](../infra/gcp/README.md) | Provision the GCP VM, network, private backups, registry, secrets, and runtime |
 | [Google Cloud deployment assessment](deployment/google-cloud-cost-architecture.md) | Cost comparison and architecture for four concurrent users; trial, sizing, and production preparation |
 | [Frontend](frontend.md) | Lineup, market, and players UI, data loading, actions, details, and product screenshot gallery |
+| [Spanish and English implementation plan](frontend-localization-plan.md) | Deterministic UI/data translations, selective GTranslate for scraped injury/news prose, and header language control |
 | [Lineup builder](api/lineup-builder.md) | Read-only recommendations, scoring, and source contracts |
 | [LALIGA standings](api/standings/README.md) | Completed-match table and provider limitations |
 | [Authentication](authentication/authentication.md) | Sessions, internal JWT, LaLiga vault, CSRF |

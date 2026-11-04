@@ -1,3 +1,4 @@
+import { copy as localizeCopy, useLanguage } from "../../i18n";
 import { useQueries, useQuery } from "@tanstack/react-query";
 import { useMemo, useState } from "react";
 
@@ -76,6 +77,7 @@ function squadOptions(players: readonly SquadCard[], source: string): PlayerOpti
 }
 
 export function LineupBuilderDialog(props: Props) {
+  useLanguage();
   const { user } = useAuth();
   const { selected } = useLeague();
   return props.open && user && selected ? <BuilderDialogSession key={`${user.userId}:${leagueId(selected)}`} {...props} /> : null;
@@ -84,6 +86,7 @@ export function LineupBuilderDialog(props: Props) {
 function BuilderDialogSession({
   open, onClose, ranking, squad, selectedTeamId, formations, canApply, onApply, isDraftDirty,
 }: Props) {
+  useLanguage();
   const { accessToken, user } = useAuth();
   const { selected } = useLeague();
   const id = selected ? leagueId(selected) : "";
@@ -199,10 +202,10 @@ function BuilderDialogSession({
   }
 
   return (
-    <Dialog open={open} onClose={onClose} title="Build lineup" className="lineup-builder-dialog"
-      description="Choose your player pool, then fine-tune your starting XI."
+    <Dialog open={open} onClose={onClose} title={localizeCopy("Build lineup")} className="lineup-builder-dialog"
+      description={localizeCopy("Choose your player pool, then fine-tune your starting XI.")}
       footer={<>
-        <Button shape="square" variant="secondary" className="lineup-builder-close" onClick={onClose}>Close</Button>
+        <Button shape="square" variant="secondary" className="lineup-builder-close" onClick={onClose}>{localizeCopy("Close")}</Button>
         {builder.pending && <div className="lineup-builder-loading" role="status">
           <span className="lineup-builder-bounce" aria-hidden="true">
             <span className="lineup-builder-bounce-ball" />
@@ -211,15 +214,15 @@ function BuilderDialogSession({
           <Progress value={builder.progress?.percent ?? null} className="lineup-builder-loading-details"
             aria-valuetext={builder.progress ? `Estimated progress: ${builder.progress.percent}%` : undefined}>
             <ProgressLabel className="lineup-builder-loading-text">
-              {progressLabel(builder.progress)}
+              {localizeCopy(progressLabel(builder.progress))}
               {builder.progress && <span className="lineup-builder-loading-percent"
-                title="Estimated overall progress">
+                title={localizeCopy("Estimated overall progress")}>
                 {builder.progress.percent}%
               </span>}
             </ProgressLabel>
           </Progress>
         </div>}
-        {builder.pending ? <Button shape="square" variant="destructive" onClick={builder.cancel}>Cancel build</Button> : <Button shape="square"
+        {builder.pending ? <Button shape="square" variant="destructive" onClick={builder.cancel}>{localizeCopy("Cancel build")}</Button> : <Button shape="square"
           disabled={scope.length === 0 || !token} onClick={() => {
             setReplacement(null);
             void builder.build({
@@ -228,13 +231,13 @@ function BuilderDialogSession({
               includeTradingPurchases: allowBuying && includeTradingPurchases,
               maxCandidates: LINEUP_RECOMMENDATION_LIMIT, explanation: { enabled: false },
             });
-          }}>Build</Button>}
+          }}>{localizeCopy("Build")}</Button>}
       </>}>
       <div className="lineup-builder">
         <section className="lineup-builder-section lineup-builder-pool" aria-labelledby="builder-scope-title">
           <div className="lineup-builder-section-heading">
-            <h3 id="builder-scope-title">Player pool</h3>
-            <span>Choose at least one source</span>
+            <h3 id="builder-scope-title">{localizeCopy("Player pool")}</h3>
+            <span>{localizeCopy("Choose at least one source")}</span>
           </div>
           <fieldset className="lineup-builder-checks" aria-labelledby="builder-scope-title">
             {[
@@ -243,46 +246,45 @@ function BuilderDialogSession({
               ["opponents", "Opponents", "Players from rival squads", "Consider opponent players"],
             ].map(([value, label, hint, accessibleLabel]) => (
               <label key={value} className="lineup-builder-source" data-selected={scope.includes(value)}>
-                <input type="checkbox" aria-label={`${label}: ${accessibleLabel}`} checked={scope.includes(value)}
+                <input type="checkbox" aria-label={localizeCopy(`${label}: ${accessibleLabel}`)} checked={scope.includes(value)}
                   onChange={() => toggleChoice(value)} />
-                <span><strong>{label}</strong><small>{hint}</small></span>
+                <span><strong>{localizeCopy(label)}</strong><small>{localizeCopy(hint)}</small></span>
               </label>
             ))}
           </fieldset>
-          {scope.length === 0 && <p role="status" className="lineup-builder-scope-hint">Select a player source to enable Build.</p>}
+          {scope.length === 0 && <p role="status" className="lineup-builder-scope-hint">{localizeCopy("Select a player source to enable Build.")}</p>}
         </section>
 
         <section className="lineup-builder-section" aria-labelledby="builder-trades-title">
           <div className="lineup-builder-section-heading">
-            <h3 id="builder-trades-title">Trade recommendations</h3>
-            <span>Optional</span>
+            <h3 id="builder-trades-title">{localizeCopy("Trade recommendations")}</h3>
+            <span>{localizeCopy("Optional")}</span>
           </div>
           <div className="lineup-builder-trade-options">
-            <label><input type="checkbox" checked={allowBuying} onChange={(e) => setAllowBuying(e.target.checked)} /> Allow purchase recommendations</label>
-            <label><input type="checkbox" checked={allowSelling} onChange={(e) => setAllowSelling(e.target.checked)} /> Allow sale recommendations</label>
+            <label><input type="checkbox" checked={allowBuying} onChange={(e) => setAllowBuying(e.target.checked)} /> {localizeCopy(" Allow purchase recommendations")}</label>
+            <label><input type="checkbox" checked={allowSelling} onChange={(e) => setAllowSelling(e.target.checked)} /> {localizeCopy(" Allow sale recommendations")}</label>
           </div>
-          {allowBuying && <label className="lineup-builder-trading-option"><input type="checkbox" checked={includeTradingPurchases} onChange={(e) => setIncludeTradingPurchases(e.target.checked)} /> Include trading-only purchases</label>}
+          {allowBuying && <label className="lineup-builder-trading-option"><input type="checkbox" checked={includeTradingPurchases} onChange={(e) => setIncludeTradingPurchases(e.target.checked)} /> {localizeCopy(" Include trading-only purchases")}</label>}
           {!allowBuying && scope.some((source) => source !== "owned") && <p role="status" className="lineup-builder-scope-hint">
-            Enable purchase recommendations to include market or opponent players in proposed lineups.
-          </p>}
-          <p className="lineup-builder-preview-note">Preview only. Building never buys, sells or saves players.</p>
+            {localizeCopy("Enable purchase recommendations to include market or opponent players in proposed lineups.")}</p>}
+          <p className="lineup-builder-preview-note">{localizeCopy("Preview only. Building never buys, sells or saves players.")}</p>
         </section>
 
         <section className="lineup-builder-section" aria-labelledby="builder-player-title">
-          <div className="lineup-builder-section-heading"><h3 id="builder-player-title">Mandatory players</h3><span>{chosen.length} / 11 selected</span></div>
-          <p className="lineup-builder-section-help">Lock players into the starting XI. Leave empty for the best available combination.</p>
+          <div className="lineup-builder-section-heading"><h3 id="builder-player-title">{localizeCopy("Mandatory players")}</h3><span>{chosen.length} {localizeCopy(" / 11 selected")}</span></div>
+          <p className="lineup-builder-section-help">{localizeCopy("Lock players into the starting XI. Leave empty for the best available combination.")}</p>
           <details className="lineup-builder-locks">
-            <summary>Choose mandatory players <span aria-hidden="true">＋</span></summary>
+            <summary>{localizeCopy("Choose mandatory players ")}<span aria-hidden="true">＋</span></summary>
             <div className="lineup-builder-player-picker">
               <div className="lineup-builder-player-search">
                 <label className="lineup-builder-field">
-                  <span>Search available players</span>
+                  <span>{localizeCopy("Search available players")}</span>
                   <span className="fb-input-group">
                     <Input value={search} onChange={(event) => setSearch(event.target.value)}
-                      placeholder="Search players" aria-label="Search available players" />
+                      placeholder={localizeCopy("Search players")} aria-label={localizeCopy("Search available players")} />
                   </span>
                 </label>
-                <div className="lineup-builder-options" aria-label="Available players">
+                <div className="lineup-builder-options" aria-label={localizeCopy("Available players")}>
                   {filteredOptions.map((option) => (
                     <button type="button" key={option.id}
                       disabled={chosen.length >= 11} onClick={() => setChosen((current) => [...current, option.id])}>
@@ -293,52 +295,52 @@ function BuilderDialogSession({
                     </button>
                   ))}
                   {filteredOptions.length === 0 ? <p className="fb-helper">
-                    {open && (ownTeamQuery.isLoading || marketQuery?.isLoading ||
+                    {localizeCopy(open && (ownTeamQuery.isLoading || marketQuery?.isLoading ||
                       rosterQueries.some((query) => query.isLoading))
                       ? "Loading available players…"
                       : ownTeamQuery.isError || marketQuery?.isError || rosterQueries.some((query) => query.isError)
                         ? "Some player sources could not be loaded."
-                        : "No players found."}
+                        : "No players found.")}
                   </p> : null}
                 </div>
               </div>
               <div className="lineup-builder-chosen">
-                <h4>Starting XI locks</h4>
+                <h4>{localizeCopy("Starting XI locks")}</h4>
                 {chosenOptions.length ? chosenOptions.map((option) => (
-                  <button type="button" key={option.id} aria-label={`Remove ${option.name}`} onClick={() => setChosen((current) =>
+                  <button type="button" key={option.id} aria-label={localizeCopy(`Remove ${option.name}`)} onClick={() => setChosen((current) =>
                     current.filter((id) => id !== option.id))}>
                     <ProfilePhoto key={playersById.get(option.id)?.photoUrl ?? "no-photo"}
                       className="lineup-builder-option-photo" url={playersById.get(option.id)?.photoUrl ?? null}
                       fallback={<PersonIcon />} />
                     {option.name} <span aria-hidden="true">×</span>
                   </button>
-                )) : <p className="fb-helper">No players locked. Add a player from the list.</p>}
+                )) : <p className="fb-helper">{localizeCopy("No players locked. Add a player from the list.")}</p>}
               </div>
             </div>
           </details>
         </section>
 
         <section className="lineup-builder-section" aria-labelledby="builder-formations-title">
-          <div className="lineup-builder-section-heading"><h3 id="builder-formations-title">Formations</h3><span>{lineupPreferences.length ? `${lineupPreferences.length} selected` : "All supported"}</span></div>
-          <p className="lineup-builder-section-help">Choose preferred formations, or leave empty to consider all.</p>
-          <div className="lineup-builder-formations" aria-label="Available formations">
+          <div className="lineup-builder-section-heading"><h3 id="builder-formations-title">{localizeCopy("Formations")}</h3><span>{localizeCopy(lineupPreferences.length ? `${lineupPreferences.length} selected` : "All supported")}</span></div>
+          <p className="lineup-builder-section-help">{localizeCopy("Choose preferred formations, or leave empty to consider all.")}</p>
+          <div className="lineup-builder-formations" aria-label={localizeCopy("Available formations")}>
             {formationOptions.map((formation) => (
               <label key={formation.value}>
                 <input type="checkbox" checked={lineupPreferences.includes(formation.value)}
-                  onChange={() => toggleFormation(formation.value)} />{formation.label}
+                  onChange={() => toggleFormation(formation.value)} />{localizeCopy(formation.label)}
               </label>
             ))}
           </div>
         </section>
 
         {builder.error && <div className="lineup-builder-error" role="alert">
-          <h3>Could not build a lineup</h3>
-          <p>{builder.errorSummary}</p>
-          {builder.errorDetails.length > 0 && <ul>{builder.errorDetails.map((detail, index) => <li key={index}>{detail}</li>)}</ul>}
-          {builder.errorRecovery && <p className="lineup-builder-error-recovery">{builder.errorRecovery}</p>}
-          {builder.result && <p>Previous results are stale. Rebuild before applying a draft.</p>}
+          <h3>{localizeCopy("Could not build a lineup")}</h3>
+          <p>{localizeCopy(builder.errorSummary)}</p>
+          {builder.errorDetails.length > 0 && <ul>{builder.errorDetails.map((detail, index) => <li key={index}>{localizeCopy(detail)}</li>)}</ul>}
+          {builder.errorRecovery && <p className="lineup-builder-error-recovery">{localizeCopy(builder.errorRecovery)}</p>}
+          {builder.result && <p>{localizeCopy("Previous results are stale. Rebuild before applying a draft.")}</p>}
         </div>}
-        {builder.result && changedResult === builder.result && <p role="status">Your acquisition activity changed. Rebuild the recommendations before using a draft.</p>}
+        {builder.result && changedResult === builder.result && <p role="status">{localizeCopy("Your acquisition activity changed. Rebuild the recommendations before using a draft.")}</p>}
         {builder.result && <LineupBuilderResults key={builder.result.buildId} result={builder.result} playersById={playersById}
           ownedPlayerIds={new Set(ownSquad.flatMap((player) => player.masterPlayerId ? [player.masterPlayerId] : []))}
           onAcquire={setAcquiring}
@@ -351,14 +353,14 @@ function BuilderDialogSession({
           player={acquiring} opponentTeamIds={opponents.map((team) => team.teamId)}
           clausesDeadline={builder.result.target.clausesDeadline} onClose={() => setAcquiring(null)}
           onSuccess={() => { builder.cancel(); setChangedResult(builder.result); }} />}
-        {replacement && replacement.build === builder.result && <section aria-label="Replace draft confirmation">
-          <p>Replace your unsaved lineup draft?</p>
+        {replacement && replacement.build === builder.result && <section aria-label={localizeCopy("Replace draft confirmation")}>
+          <p>{localizeCopy("Replace your unsaved lineup draft?")}</p>
           <Button shape="square" onClick={() => {
             const { candidate, build } = replacement;
             if (changedResult !== build && !builder.pending && !builder.error && canApply(candidate, build.target.week)) onApply(candidate, build.target.week);
             setReplacement(null);
-          }}>Replace draft</Button>
-          <Button shape="square" variant="secondary" onClick={() => setReplacement(null)}>Keep my draft</Button>
+          }}>{localizeCopy("Replace draft")}</Button>
+          <Button shape="square" variant="secondary" onClick={() => setReplacement(null)}>{localizeCopy("Keep my draft")}</Button>
         </section>}
       </div>
     </Dialog>

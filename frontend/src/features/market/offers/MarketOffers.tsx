@@ -1,3 +1,5 @@
+import { locale } from "../../../i18n";
+import { copy as localizeCopy, useLanguage } from "../../../i18n";
 import { useMutation, useQueries, useQueryClient } from "@tanstack/react-query";
 import { useEffect, useRef, useState } from "react";
 
@@ -27,6 +29,7 @@ type Props = { cards: SquadCard[]; squadAvailable: boolean; showTrigger?: boolea
 
 /** Remounts local confirmation state when the selected league changes. */
 export function MarketOffers({ cards, squadAvailable, showTrigger = true }: Props) {
+  useLanguage();
   const { selected } = useLeague();
   const id = selected ? leagueId(selected) : "";
   const teamId = selected ? callerTeamId(selected) : null;
@@ -37,6 +40,7 @@ export function MarketOffers({ cards, squadAvailable, showTrigger = true }: Prop
 function OffersPanel({ cards, squadAvailable, showTrigger, leagueKey, teamId }: Props & {
   leagueKey: string; teamId: string | null;
 }) {
+  useLanguage();
   const { accessToken, markNeedsReauth } = useAuth();
   const queryClient = useQueryClient();
   const offersMenu = useMarketOffersMenu();
@@ -182,7 +186,7 @@ function OffersPanel({ cards, squadAvailable, showTrigger, leagueKey, teamId }: 
     <>
       {showTrigger ? <Button variant="outline" shape="square"
         className={`market-offers-trigger${hasOffers ? " has-offers" : ""}`}
-        aria-label={`Market offers${pendingCount ? `, ${pendingCount} pending` : ""}${degraded ? ", incomplete" : ""}`}
+        aria-label={localizeCopy(`Market offers${pendingCount ? `, ${pendingCount} pending` : ""}${degraded ? ", incomplete" : ""}`)}
         aria-haspopup="dialog" aria-expanded={open} disabled={!enabled}
         onClick={() => {
           offersMenu?.openAll();
@@ -192,7 +196,7 @@ function OffersPanel({ cards, squadAvailable, showTrigger, leagueKey, teamId }: 
           src={hasOffers ? blackIcon : !enabled || loading ? grayIcon : blackIcon} alt="" />
         <img className="market-offers-icon-dark"
           src={hasOffers ? whiteIcon : !enabled || loading ? grayIcon : whiteIcon} alt="" />
-        <span className="market-offers-label">Offers</span>
+        <span className="market-offers-label">{localizeCopy("Offers")}</span>
         {pendingCount > 0 ? <span className="market-offers-count">{pendingCount}</span> : null}
       </Button> : null}
       <Dialog open={open} title={target ? `${target.playerName} offers` : "Market offers"}
@@ -200,7 +204,7 @@ function OffersPanel({ cards, squadAvailable, showTrigger, leagueKey, teamId }: 
         finalFocus={offersMenu?.finalFocus}
         className="market-offers-panel" closeOnBackdrop={!response.isPending}
         footer={<Button variant="outline" shape="square" onClick={close}
-          disabled={response.isPending}>Close</Button>}>
+          disabled={response.isPending}>{localizeCopy("Close")}</Button>}>
         <p className="market-offers-intro">{target
           ? `Received offers for ${target.playerName} in this league.`
           : "Received offers for your squad in this league."}</p>
@@ -209,20 +213,19 @@ function OffersPanel({ cards, squadAvailable, showTrigger, leagueKey, teamId }: 
             void queryClient.invalidateQueries({ queryKey: ["market-offers", leagueKey] });
             if (!squadAvailable) void queryClient.invalidateQueries({ queryKey: ["team", leagueKey, teamId] });
           }}>
-          Refresh offers
-        </Button>
-        {panelLoading ? <p role="status">Loading offers…</p> : null}
-        {panelDegraded ? <p role="alert">Some offers could not be loaded. The list and count may be incomplete.</p> : null}
-        {error ? <p className="market-offers-error" role="alert">{error}</p> : null}
+          {localizeCopy("Refresh offers")}</Button>
+        {panelLoading ? <p role="status">{localizeCopy("Loading offers…")}</p> : null}
+        {panelDegraded ? <p role="alert">{localizeCopy("Some offers could not be loaded. The list and count may be incomplete.")}</p> : null}
+        {error ? <p className="market-offers-error" role="alert">{localizeCopy(error)}</p> : null}
         {confirmation && !offers.some((offer) => offer.key === confirmation.key) ? <div role="alert">
-          <p>This offer is no longer available.</p>
+          <p>{localizeCopy("This offer is no longer available.")}</p>
           <Button autoFocus variant="outline" shape="square" disabled={response.isPending}
-            onClick={() => setConfirmation(null)}>Cancel confirmation</Button>
+            onClick={() => setConfirmation(null)}>{localizeCopy("Cancel confirmation")}</Button>
         </div> : null}
         {!panelLoading && !panelDegraded && visibleOffers.length === 0 ? <div className="market-offers-empty">
           <img src={grayIcon} alt="" />
           <p>{target ? `No pending offers for ${target.playerName}.` : "No pending offers."}</p>
-          <p>Offers from LaLiga and other managers will appear here.</p>
+          <p>{localizeCopy("Offers from LaLiga and other managers will appear here.")}</p>
         </div> : null}
         <ul className="market-offers-list">
           {visibleOffers.map((offer) => <li key={offer.key} className="market-offer"
@@ -231,44 +234,44 @@ function OffersPanel({ cards, squadAvailable, showTrigger, leagueKey, teamId }: 
               {offer.player.photoUrl ? <img src={offer.player.photoUrl} alt="" /> : null}
               <div><h3>{offer.player.name}</h3><p>{offer.sender}</p></div>
             </div>
-            <strong className="market-offer-money">{formatEuro(offer.money)}</strong>
+            <strong className="market-offer-money">{localizeCopy(formatEuro(offer.money))}</strong>
             <p className={`market-offer-expiry${offer.expiresAt == null ? " is-unknown"
               : offer.expiresAt - now <= ONE_HOUR_MS ? " is-urgent" : ""}`}>
               <img src={offer.expiresAt == null ? clockGrayIcon
                 : offer.expiresAt - now <= ONE_HOUR_MS ? clockRedIcon : clockBlackIcon} alt="" />
-              {offer.expiresAt == null ? <span>Time left unavailable</span> : <span>
-                Time left: <time dateTime={`PT${Math.max(0, Math.ceil((offer.expiresAt - now) / 1000))}S`}>
-                  {offer.expiresAt - now < 60_000 ? "<1m" : remainingLabel(offer.expiresAt, now)}
+              {offer.expiresAt == null ? <span>{localizeCopy("Time left unavailable")}</span> : <span>
+                {localizeCopy("Time left: ")}<time dateTime={`PT${Math.max(0, Math.ceil((offer.expiresAt - now) / 1000))}S`}>
+                  {localizeCopy(offer.expiresAt - now < 60_000 ? "<1m" : remainingLabel(offer.expiresAt, now))}
                 </time>
               </span>}
             </p>
-            {offer.expiresAt != null ? <p>Expires <time dateTime={new Date(offer.expiresAt).toISOString()}>
-              {new Date(offer.expiresAt).toLocaleString()}
+            {offer.expiresAt != null ? <p>{localizeCopy("Expires ")}<time dateTime={new Date(offer.expiresAt).toISOString()}>
+              {localizeCopy(new Date(offer.expiresAt).toLocaleString(locale(), { timeZone: "Europe/Madrid" }))}
             </time></p> : null}
-            {offer.unavailableReason ? <p className="market-offer-unavailable">{offer.unavailableReason}</p> : null}
+            {offer.unavailableReason ? <p className="market-offer-unavailable">{localizeCopy(offer.unavailableReason)}</p> : null}
             {response.isPending && response.variables?.offer.key === offer.key
-              ? <p role="status">Sending response…</p> : null}
-            {confirmation?.key === offer.key ? <div className="market-offer-confirmation" role="group" aria-label="Confirm acceptance">
-              <p>Sell <strong>{offer.player.name}</strong> to {offer.sender} for <strong>{formatEuro(confirmation.money)}</strong>?</p>
-              {!freshConfirmation ? <p role="alert">The offer changed. Cancel and review it again.</p> : null}
+              ? <p role="status">{localizeCopy("Sending response…")}</p> : null}
+            {confirmation?.key === offer.key ? <div className="market-offer-confirmation" role="group" aria-label={localizeCopy("Confirm acceptance")}>
+              <p>{localizeCopy("Sell ")}<strong>{offer.player.name}</strong> {localizeCopy(" to ")}{offer.sender} {localizeCopy(" for ")}<strong>{localizeCopy(formatEuro(confirmation.money))}</strong>?</p>
+              {!freshConfirmation ? <p role="alert">{localizeCopy("The offer changed. Cancel and review it again.")}</p> : null}
               <div className="market-offer-actions">
                 <Button autoFocus variant="outline" shape="square" disabled={response.isPending}
-                  onClick={() => setConfirmation(null)}>Cancel</Button>
-                <Button shape="square" loading={response.isPending} loadingLabel="Sending…"
+                  onClick={() => setConfirmation(null)}>{localizeCopy("Cancel")}</Button>
+                <Button shape="square" loading={response.isPending} loadingLabel={localizeCopy("Sending…")}
                   disabled={!freshConfirmation || !!freshConfirmation.unavailableReason}
-                  onClick={() => { if (freshConfirmation) answer(freshConfirmation, "accept"); }}>Confirm sale</Button>
+                  onClick={() => { if (freshConfirmation) answer(freshConfirmation, "accept"); }}>{localizeCopy("Confirm sale")}</Button>
               </div>
             </div> : null}
             <div className="market-offer-actions">
               <Button variant="outline" shape="square" disabled={response.isPending || confirmation != null || !!offer.unavailableReason}
-                onClick={() => answer(offer, "reject")} aria-label={`Reject offer for ${offer.player.name} from ${offer.sender}`}>Reject</Button>
+                onClick={() => answer(offer, "reject")} aria-label={localizeCopy(`Reject offer for ${offer.player.name} from ${offer.sender}`)}>{localizeCopy("Reject")}</Button>
               <Button shape="square" disabled={response.isPending || confirmation != null || !!offer.unavailableReason}
                 onClick={(event) => {
                   acceptanceTrigger.current = event.currentTarget;
                   setError(null);
                   setConfirmation(offer);
                 }}
-                aria-label={`Accept offer for ${offer.player.name} from ${offer.sender}`}>Accept</Button>
+                aria-label={localizeCopy(`Accept offer for ${offer.player.name} from ${offer.sender}`)}>{localizeCopy("Accept")}</Button>
             </div>
           </li>)}
         </ul>

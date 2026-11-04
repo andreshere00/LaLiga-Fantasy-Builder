@@ -79,3 +79,4 @@
   .player-injury-duration strong { font: 600 12px/1.4 var(--fb-font-body); }
   .player-injury-duration > span { font-size: 11px; }
 }
+.player-news-article > a { display:inline-flex; align-items:center; min-height:44px; grid-column:1; justify-self:start; }

@@ -1,3 +1,4 @@
+import { copy as localizeCopy, useLanguage } from "../../../i18n";
 import { useEffect, useId, useState } from "react";
 
 import { formatEuro, formatIntegerAmount, parseIntegerAmount } from "../../../api/format";
@@ -46,6 +47,7 @@ export function BidDialog({
   onClose,
   onConfirm,
 }: BidDialogProps) {
+  useLanguage();
   const inputId = useId();
   const [raw, setRaw] = useState("");
 
@@ -93,9 +95,9 @@ export function BidDialog({
     <Dialog
       className="market-bid-dialog"
       open={open}
-      title={directOffer ? "Make offer" : TITLES[kind]}
-      description={<>{directOffer ? "Offer for" : "Bid for"} <strong>{row.name}</strong>.
-        {directOffer && " The owner must accept your offer before the player joins your squad."}</>}
+      title={localizeCopy(directOffer ? "Make offer" : TITLES[kind])}
+      description={<>{localizeCopy(directOffer ? "Offer for" : "Bid for")} <strong>{row.name}</strong>.
+        {localizeCopy(directOffer && " The owner must accept your offer before the player joins your squad.")}</>}
       initialFocus={() => document.getElementById(inputId)}
       busy={pending}
       onClose={() => { if (!pending) onClose(); }}
@@ -103,27 +105,26 @@ export function BidDialog({
       footer={
         <>
           <Button variant="outline" shape="square" onClick={onClose} disabled={pending}>
-            Cancel
-          </Button>
+            {localizeCopy("Cancel")}</Button>
           <Button
             shape="square"
             disabled={!valid}
             loading={pending}
-            loadingLabel="Sending…"
+            loadingLabel={localizeCopy("Sending…")}
             onClick={() => {
               if (parsed == null) return;
               onConfirm(parsed);
             }}
           >
-            {actionLabel}
+            {localizeCopy(actionLabel)}
           </Button>
         </>
       }
     >
       <Field data-invalid={amountError ? "" : undefined}>
-        <FieldLabel htmlFor={inputId}>{directOffer ? "Offer amount (€)" : "Bid amount (€)"}</FieldLabel>
+        <FieldLabel htmlFor={inputId}>{localizeCopy(directOffer ? "Offer amount (€)" : "Bid amount (€)")}</FieldLabel>
         <FieldDescription id={hintId}>
-          Amount must be at least {formatEuro(row.marketValue)} and {balanceHint}.
+          {localizeCopy("Amount must be at least ")}{localizeCopy(formatEuro(row.marketValue))} {localizeCopy(" and ")}{localizeCopy(balanceHint)}.
         </FieldDescription>
         <NumericCounterField
           id={inputId}
@@ -142,11 +143,11 @@ export function BidDialog({
             setRaw(clampAndFormat(raw, bidFloor));
           }}
         />
-        {amountError ? <FieldError id={errorId}>{amountError}</FieldError> : null}
+        {amountError ? <FieldError id={errorId}>{localizeCopy(amountError)}</FieldError> : null}
       </Field>
       {error ? (
         <p className="market-dialog-error" role="alert">
-          {error}
+          {localizeCopy(error)}
         </p>
       ) : null}
     </Dialog>

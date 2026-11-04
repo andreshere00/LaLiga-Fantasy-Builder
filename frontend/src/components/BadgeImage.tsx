@@ -1,3 +1,4 @@
+import { copy as localizeCopy, useLanguage } from "../i18n";
 import { useState, type ReactNode } from "react";
 import { badgeSources, type ClubMedia } from "../api/clubMedia";
 
@@ -7,13 +8,15 @@ export function BadgeImage({ media, fallback = "–", className }: {
   fallback?: ReactNode;
   className?: string;
 }) {
+  useLanguage();
   const sources = badgeSources(media?.badge, ...(media?.fallbackBadges ?? []));
   return <BadgeSources key={JSON.stringify(sources)} sources={sources} fallback={fallback} className={className} />;
 }
 
 function BadgeSources({ sources, fallback, className }: { sources: string[]; fallback: ReactNode; className?: string }) {
+  useLanguage();
   const [index, setIndex] = useState(0);
   const source = sources[index];
   return source ? <img className={className} key={source} src={source} alt="" aria-hidden="true" decoding="async"
-    onError={() => setIndex((current) => current + 1)} /> : <span aria-hidden="true">{fallback}</span>;
+    onError={() => setIndex((current) => current + 1)} /> : <span aria-hidden="true">{localizeCopy(fallback)}</span>;
 }

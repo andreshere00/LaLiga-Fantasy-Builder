@@ -1,3 +1,5 @@
+import { numberFormatter, dateFormatter } from "../../i18n/format";
+import { copy as localizeCopy, useLanguage } from "../../i18n";
 import { useId, useLayoutEffect, useRef, useState } from "react";
 import { asFiniteNumber, asRecord, text } from "../../api/mappers";
 import { fixtureClubMedia, type ClubMedia } from "../../api/clubMedia";
@@ -19,9 +21,9 @@ const STAT_SPECS = [
   ["recoveries", "Recoveries"], ["ballsLost", "Balls lost"], ["daznPoints", "DAZN"],
 ] as const;
 
-const numberFormat = new Intl.NumberFormat("en-GB", { maximumFractionDigits: 1 });
-const dateFormat = new Intl.DateTimeFormat("en-GB", { day: "numeric", month: "short", timeZone: "UTC" });
-const compactDateFormat = new Intl.DateTimeFormat("en-GB", { day: "2-digit", month: "2-digit", timeZone: "UTC" });
+const numberFormat = numberFormatter({ maximumFractionDigits: 1 });
+const dateFormat = dateFormatter({ day: "numeric", month: "short", timeZone: "UTC" });
+const compactDateFormat = dateFormatter({ day: "2-digit", month: "2-digit", timeZone: "UTC" });
 
 function formFixture(row: unknown, index: number) {
   const record = asRecord(row);
@@ -48,6 +50,7 @@ function formFixture(row: unknown, index: number) {
 }
 
 function FormClubBadge({ media, name }: { media: ClubMedia | null; name: string | null }) {
+  useLanguage();
   const initials = name?.split(/\s+/).slice(0, 2).map((word) => word[0]).join("").toUpperCase() ?? "?";
   return <span className="player-form-club-badge" title={name ?? "Club unavailable"}>
     <BadgeImage media={media} fallback={initials} />
@@ -56,6 +59,7 @@ function FormClubBadge({ media, name }: { media: ClubMedia | null; name: string 
 
 /** A shared score scale with native radio selection for per-fixture details. */
 export function PlayerFormHistory({ rows }: { rows: readonly unknown[] }) {
+  useLanguage();
   const fixtures = rows.map(formFixture);
   const [selectedKey, setSelectedKey] = useState<string | null>(null);
   const [showAdvancedStats, setShowAdvancedStats] = useState(false);
@@ -102,49 +106,48 @@ export function PlayerFormHistory({ rows }: { rows: readonly unknown[] }) {
 
   return (
     <div className="player-form-history">
-      <div className="player-form-metrics" aria-label="Shown fixture summary">
+      <div className="player-form-metrics" aria-label={localizeCopy("Shown fixture summary")}>
         <div className="player-form-total">
-          <span>{missing > 0 ? "Known fantasy points" : "Total fantasy points"}</span>
-          <strong>{known.length > 0 ? numberFormat.format(total) : "Unavailable"}</strong>
-          {missing > 0 ? <small>Points unavailable for {missing} of {fixtures.length} fixtures.</small>
-            : <small>Across {fixtures.length} fixtures</small>}
+          <span>{localizeCopy(missing > 0 ? "Known fantasy points" : "Total fantasy points")}</span>
+          <strong>{localizeCopy(known.length > 0 ? numberFormat.format(total) : "Unavailable")}</strong>
+          {missing > 0 ? <small>{localizeCopy("Points unavailable for ")}{missing} {localizeCopy(" of ")}{fixtures.length} {localizeCopy(" fixtures.")}</small>
+            : <small>{localizeCopy("Across ")}{fixtures.length} {localizeCopy(" fixtures")}</small>}
         </div>
         <div>
-          <span>{missing > 0 ? "Average · known scores" : "Average per fixture"}</span>
-          <strong>{average == null ? MISSING_STAT : numberFormat.format(average)}</strong>
-          <small>Fantasy points</small>
+          <span>{localizeCopy(missing > 0 ? "Average · known scores" : "Average per fixture")}</span>
+          <strong>{localizeCopy(average == null ? MISSING_STAT : numberFormat.format(average))}</strong>
+          <small>{localizeCopy("Fantasy points")}</small>
         </div>
         <div>
-          <span>Best performance</span>
-          <strong>{best == null ? MISSING_STAT : numberFormat.format(best)}</strong>
-          <small>Fantasy points</small>
+          <span>{localizeCopy("Best performance")}</span>
+          <strong>{localizeCopy(best == null ? MISSING_STAT : numberFormat.format(best))}</strong>
+          <small>{localizeCopy("Fantasy points")}</small>
         </div>
       </div>
 
       <div className="player-form-chart-heading">
         <div>
-          <h3>Points by fixture</h3>
-          <p>{fixtures.length} LaLiga fixtures shown · Oldest to newest</p>
+          <h3>{localizeCopy("Points by fixture")}</h3>
+          <p>{fixtures.length} {localizeCopy(" LaLiga fixtures shown · Oldest to newest")}</p>
         </div>
         {average != null ? <span className="player-form-average-key">
-          <i aria-hidden="true" /> Average {numberFormat.format(average)}
+          <i aria-hidden="true" /> {localizeCopy(" Average ")}{localizeCopy(numberFormat.format(average))}
         </span> : null}
       </div>
       <p className="player-form-chart-help" id={helpId}>
-        Select a fixture to see match details. {fixtures.length > 5 ? "Scroll for more fixtures. " : ""}
-        Use arrow keys when focused.
-      </p>
+        {localizeCopy("Select a fixture to see match details. ")}{localizeCopy(fixtures.length > 5 ? "Scroll for more fixtures. " : "")}
+        {localizeCopy("Use arrow keys when focused.")}</p>
 
       <div className="player-form-chart">
         <div className="player-form-axis" aria-hidden="true">
           {known.length > 0 ? <>
-            {high !== 0 ? <span style={{ top: `${position(high)}%` }}>{numberFormat.format(high)}</span> : null}
+            {high !== 0 ? <span style={{ top: `${position(high)}%` }}>{localizeCopy(numberFormat.format(high))}</span> : null}
             <span style={{ top: `${zero}%` }}>0</span>
-            {low < 0 && low !== high ? <span style={{ top: `${position(low)}%` }}>{numberFormat.format(low)}</span> : null}
+            {low < 0 && low !== high ? <span style={{ top: `${position(low)}%` }}>{localizeCopy(numberFormat.format(low))}</span> : null}
           </> : null}
         </div>
         <div className="player-form-chart-scroll" ref={scrollArea}>
-          <div className="player-form-timeline" role="radiogroup" aria-label="Fixture performance"
+          <div className="player-form-timeline" role="radiogroup" aria-label={localizeCopy("Fixture performance")}
             aria-describedby={helpId} style={{ gridTemplateColumns: `repeat(${fixtures.length}, minmax(${columnWidth}px, 1fr))`, minWidth: `${fixtures.length * columnWidth}px` }}>
             <div className="player-form-chart-guides" aria-hidden="true">
               <span className="player-form-zero-line" style={{ top: `${zero}%` }} />
@@ -160,7 +163,7 @@ export function PlayerFormHistory({ rows }: { rows: readonly unknown[] }) {
                 <label className={`player-form-fixture${isSelected ? " is-selected" : ""}`}
                   key={fixture.key} ref={isSelected ? selectedColumn : undefined}>
                   <input type="radio" name={radioName} checked={isSelected}
-                    aria-label={`${fixture.dateLabel}, ${fixture.label}: ${valueLabel}, ${fixture.minutes ?? "unavailable"} minutes${latest ? ". Latest fixture" : ""}`}
+                    aria-label={localizeCopy(`${fixture.dateLabel}, ${fixture.label}: ${valueLabel}, ${fixture.minutes ?? "unavailable"} minutes${latest ? ". Latest fixture" : ""}`)}
                     aria-controls={detailsId} onChange={() => setSelectedKey(fixture.key)} />
                   <span className="player-form-plot" aria-hidden="true">
                     {value != null && value !== 0 ? <span className={`player-form-bar${value < 0 ? " is-negative" : ""}`}
@@ -168,26 +171,26 @@ export function PlayerFormHistory({ rows }: { rows: readonly unknown[] }) {
                     {value === 0 ? <span className="player-form-zero" style={{ top: `${zero}%` }} /> : null}
                     <strong className={`player-form-score${value == null ? " is-missing" : ""}`}
                       style={{ top: `${pointPosition}%`, transform: value != null && value < 0 ? "translateY(4px)" : "translateY(calc(-100% - 6px))" }}>
-                      {value ?? "—"}
+                      {localizeCopy(value ?? "—")}
                     </strong>
                   </span>
                   <span className="player-form-fixture-meta" aria-hidden="true">
                     <span className="player-form-fixture-clubs">
                       <span className="player-form-fixture-club">
                         <FormClubBadge media={fixture.homeMedia} name={fixture.home} />
-                        <span className="player-form-club-name">{fixture.home ?? "Unknown club"}</span>
+                        <span className="player-form-club-name">{localizeCopy(fixture.home ?? "Unknown club")}</span>
                       </span>
-                      <small className="player-form-clubs-versus">vs</small>
+                      <small className="player-form-clubs-versus">{localizeCopy("vs")}</small>
                       <span className="player-form-fixture-club">
                         <FormClubBadge media={fixture.awayMedia} name={fixture.away} />
-                        <span className="player-form-club-name">{fixture.away ?? "Unknown club"}</span>
+                        <span className="player-form-club-name">{localizeCopy(fixture.away ?? "Unknown club")}</span>
                       </span>
                     </span>
                     <time dateTime={fixture.date ?? undefined}>
-                      <span className="player-form-date-full">{fixture.dateLabel}</span>
-                      <span className="player-form-date-compact">{fixture.compactDateLabel}</span>
+                      <span className="player-form-date-full">{localizeCopy(fixture.dateLabel)}</span>
+                      <span className="player-form-date-compact">{localizeCopy(fixture.compactDateLabel)}</span>
                     </time>
-                    <span className="player-form-fixture-latest">{latest ? "Latest" : "\u00a0"}</span>
+                    <span className="player-form-fixture-latest">{localizeCopy(latest ? "Latest" : "\u00a0")}</span>
                   </span>
                 </label>
               );
@@ -196,34 +199,34 @@ export function PlayerFormHistory({ rows }: { rows: readonly unknown[] }) {
         </div>
       </div>
 
-      <section className="player-form-selected" id={detailsId} aria-label="Selected fixture details">
+      <section className="player-form-selected" id={detailsId} aria-label={localizeCopy("Selected fixture details")}>
         <div className="player-form-selected-heading" aria-live="polite" aria-atomic="true">
           <div className="player-form-selected-identity">
-            <p className="player-form-eyebrow">{selected.key === fixtures.at(-1)?.key ? "Latest fixture" : "Selected fixture"}</p>
+            <p className="player-form-eyebrow">{localizeCopy(selected.key === fixtures.at(-1)?.key ? "Latest fixture" : "Selected fixture")}</p>
             <div className="player-form-selected-match">
               <span className="player-form-selected-badges" aria-hidden="true">
                 <FormClubBadge media={selected.homeMedia} name={selected.home} />
                 <FormClubBadge media={selected.awayMedia} name={selected.away} />
               </span>
-              <h3>{selected.label}</h3>
+              <h3>{localizeCopy(selected.label)}</h3>
             </div>
-            <time dateTime={selected.date ?? undefined}>{selected.date?.slice(0, 10) ?? selected.dateLabel}</time>
+            <time dateTime={selected.date ?? undefined}>{localizeCopy(selected.date?.slice(0, 10) ?? selected.dateLabel)}</time>
           </div>
           <dl className="player-form-selected-scores">
-            <div><dt>Fantasy points</dt><dd>{selected.points ?? "Unavailable"}</dd></div>
-            <div><dt>Minutes played</dt><dd>{selected.minutes ?? "Unavailable"}</dd></div>
+            <div><dt>{localizeCopy("Fantasy points")}</dt><dd>{localizeCopy(selected.points ?? "Unavailable")}</dd></div>
+            <div><dt>{localizeCopy("Minutes played")}</dt><dd>{localizeCopy(selected.minutes ?? "Unavailable")}</dd></div>
           </dl>
         </div>
         <Button variant="outline" aria-expanded={showAdvancedStats} aria-controls={showAdvancedStats ? `${detailsId}-stats` : undefined}
           onClick={() => setShowAdvancedStats((value) => !value)}>
-          {showAdvancedStats ? "Hide match statistics" : "Show match statistics"}
+          {localizeCopy(showAdvancedStats ? "Hide match statistics" : "Show match statistics")}
         </Button>
         {showAdvancedStats ? <div className="player-form-statistics" id={`${detailsId}-stats`}>
-          <p>Event counts · Fantasy points in parentheses. A dash means unavailable.</p>
+          <p>{localizeCopy("Event counts · Fantasy points in parentheses. A dash means unavailable.")}</p>
           <dl className="player-form-details">
             {STAT_SPECS.map(([key, label]) => <div key={key}>
-              <dt>{key === "daznPoints" ? <><img src={daznIcon} alt="" aria-hidden="true" /> DAZN</> : label}</dt>
-              <dd>{statDisplay(selected.stats?.[key], key)}</dd>
+              <dt>{localizeCopy(key === "daznPoints" ? <><img src={daznIcon} alt="" aria-hidden="true" /> {localizeCopy(" DAZN")}</> : label)}</dt>
+              <dd>{localizeCopy(statDisplay(selected.stats?.[key], key))}</dd>
             </div>)}
           </dl>
         </div> : null}

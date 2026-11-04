@@ -1,3 +1,4 @@
+import { copy as localizeCopy, useLanguage } from "../../i18n";
 import type { MarketActionsApi } from "./actions/useMarketActions";
 import { formatEuro } from "../../api/format";
 import type { MarketActionContext } from "./actions/marketActions";
@@ -21,6 +22,7 @@ import {
 
 /** Listing countdown. The final minute uses a warning icon instead of the coral rail. */
 export function SealEnd({ expiresAt, now }: { expiresAt: number | null; now: number }) {
+  useLanguage();
   const imminent = isSealEndUnderOneMinute(expiresAt, now);
   const urgent = !imminent && isSealEndUnderOneHour(expiresAt, now);
   const label = remainingLabel(expiresAt, now);
@@ -29,13 +31,13 @@ export function SealEnd({ expiresAt, now }: { expiresAt: number | null; now: num
     : urgent
       ? "market-seal-end is-urgent"
       : "market-seal-end";
-  const time = <span aria-hidden={imminent || undefined}>{label}</span>;
+  const time = <span aria-hidden={imminent || undefined}>{localizeCopy(label)}</span>;
   if (!imminent) return <span className={className}>{time}</span>;
   return (
     <Help
-      content="This listing expires in less than one minute."
+      content={localizeCopy("This listing expires in less than one minute.")}
       trigger={
-        <span className={className} tabIndex={0} aria-label="Less than 1 minute remaining" />
+        <span className={className} tabIndex={0} aria-label={localizeCopy("Less than 1 minute remaining")} />
       }
     >
       <img src={warningIconUrl} alt="" />
@@ -59,13 +61,14 @@ export function MarketRowCells({
   actions,
   columnHeadings,
 }: MarketRowCellsProps) {
+  useLanguage();
   return (
     <>
       <PlayerCell row={row} now={now} columnLabel={columnHeadings.player.label} />
-      <span className="market-cell" data-label={columnHeadings.position.label}>
+      <span className="market-cell" data-label={localizeCopy(columnHeadings.position.label)}>
         <PositionCell positionId={row.positionId} />
       </span>
-      <span className="market-cell market-fsyp-cell" data-label={columnHeadings.fsyp.label}>
+      <span className="market-cell market-fsyp-cell" data-label={localizeCopy(columnHeadings.fsyp.label)}>
         <FsypCell
           labelAverage
           points={row.points}
@@ -73,10 +76,10 @@ export function MarketRowCells({
           formRecent={row.formRecent}
         />
       </span>
-      <span className="market-cell market-form" data-label={columnHeadings.form.label}>
+      <span className="market-cell market-form" data-label={localizeCopy(columnHeadings.form.label)}>
         <FormCell row={row} windowSize={5} />
       </span>
-      <span className="market-cell market-value" data-label={columnHeadings.marketValue.label}>
+      <span className="market-cell market-value" data-label={localizeCopy(columnHeadings.marketValue.label)}>
         <ValueCell
           marketValue={row.marketValue}
           variation={row.variation}
@@ -84,22 +87,22 @@ export function MarketRowCells({
           valueHistory={row.valueHistory}
         />
         {row.myBid ? <span className="market-bid-value">
-          Your bid: {formatEuro(row.myBid.money)}
+          {localizeCopy("Your bid: ")}{localizeCopy(formatEuro(row.myBid.money))}
         </span> : null}
         {row.sellerKind !== "laliga" ? <ReleaseClauseDetail row={row} now={now} /> : null}
       </span>
       <span
         className="market-cell market-cell-availability"
-        data-label={columnHeadings.availability.label}
+        data-label={localizeCopy(columnHeadings.availability.label)}
       >
         <AvailabilityCell availability={row.availability} />
       </span>
-      <span className="market-cell" data-label={columnHeadings.sealEnd.label}>
+      <span className="market-cell" data-label={localizeCopy(columnHeadings.sealEnd.label)}>
         <SealEnd expiresAt={row.expiresAt} now={now} />
       </span>
       <span
         className="market-cell market-cell-seller"
-        data-label={columnHeadings.sellOptions.label}
+        data-label={localizeCopy(columnHeadings.sellOptions.label)}
       >
         <SellerCell row={row} actionContext={actionContext} actions={actions} />
       </span>

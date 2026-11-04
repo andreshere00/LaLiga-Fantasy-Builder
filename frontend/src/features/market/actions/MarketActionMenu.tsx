@@ -1,3 +1,4 @@
+import { copy as localizeCopy, useLanguage } from "../../../i18n";
 import { Menu } from "@base-ui/react/menu";
 import { useRef } from "react";
 import { Link } from "react-router-dom";
@@ -49,6 +50,7 @@ function menuItemTooltip(
 }
 
 export function MarketActionMenu({ row, context, actions, detailsPlayer, detailsReturnTo }: MarketActionMenuProps) {
+  useLanguage();
   const trigger = useRef<HTMLButtonElement>(null);
   const offersMenu = useMarketOffersMenu();
   const offers = resolveMarketActionOffers(row, context);
@@ -62,9 +64,9 @@ export function MarketActionMenu({ row, context, actions, detailsPlayer, details
   return (
     <div className="market-actions">
       <Menu.Root>
-        <Help content={row.myBid ? bidAmountTooltipLabel(row.myBid.money) : null}>
+        <Help content={localizeCopy(row.myBid ? bidAmountTooltipLabel(row.myBid.money) : null)}>
           <Menu.Trigger ref={trigger} className={"market-actions-trigger" + (bidded ? " is-bidded" : "")}>
-            {bidded ? <><img className="market-actions-bid-icon" src={bidIconUrl} alt="" aria-hidden /><span>Bidded</span></> : "Options"}
+            {bidded ? <><img className="market-actions-bid-icon" src={bidIconUrl} alt="" aria-hidden /><span>{localizeCopy("Bidded")}</span></> : "Options"}
           </Menu.Trigger>
         </Help>
         <Menu.Portal><Menu.Positioner sideOffset={4} align="end" className="fb-menu-positioner">
@@ -81,8 +83,8 @@ export function MarketActionMenu({ row, context, actions, detailsPlayer, details
                     else if (offer.type === "withdraw") actions.openWithdraw(row);
                     else if (offer.type === "pay-clause") actions.openClause(row, offer.amount);
                   }}>
-                  <span>{offer.label}</span>
-                  {tooltip ? <span className="fb-helper">{tooltip}</span> : null}
+                  <span>{localizeCopy(offer.label)}</span>
+                  {tooltip ? <span className="fb-helper">{localizeCopy(tooltip)}</span> : null}
                 </Menu.Item>
               );
             })}
@@ -90,12 +92,12 @@ export function MarketActionMenu({ row, context, actions, detailsPlayer, details
               <Menu.Item className="market-actions-item" onClick={() => {
                 trigger.current?.focus();
                 offersMenu.openForPlayer(row.playerTeamId!, row.name);
-              }}>View offers for this player</Menu.Item>
+              }}>{localizeCopy("View offers for this player")}</Menu.Item>
             ) : null}
             {showPlayerDetails && detailsPlayer ? (
               <Menu.Item render={<Link to={"/players/" + encodeURIComponent(detailsPlayer.id)}
                 state={detailsReturnTo ? { returnTo: detailsReturnTo } : undefined} />}
-                className="market-actions-item">Player details</Menu.Item>
+                className="market-actions-item">{localizeCopy("Player details")}</Menu.Item>
             ) : null}
           </Menu.Popup>
         </Menu.Positioner></Menu.Portal>

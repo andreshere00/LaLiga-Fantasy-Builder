@@ -8,6 +8,42 @@ directly and keeps the internal JWT in memory only.
 - System map: [Architecture](architecture.md)
 - HTTP routes the UI calls: [API overview](api/README.md)
 
+## Spanish and English
+
+The header's language selector sits immediately left of the theme control and
+supports Español and English. Both remain together in the mobile header;
+league/account options retain their menu. The explicit choice is saved under
+`lfb-language`; otherwise a supported browser language is used, then English.
+Switching updates labels without recreating feature providers or clearing drafts.
+
+Application copy and structured Weather/LALIGA labels use bundled i18next
+catalogs. Dates and numbers use the selected locale; currency remains EUR and
+fixture times remain Europe/Madrid. Whole-euro fields accept validated English
+or Spanish thousands grouping, preserving edits through language changes.
+
+Only FutbolFantasy injury diagnoses, free-form injury availability notes, and
+news headlines request machine translation. Spanish shows the original. English
+uses GTranslate Free in a separate opaque sandbox document for each visible
+text block; no application credentials or whole API responses are passed in.
+Results are ephemeral presentation state. Show original and Retry translation
+remain available; blocked or failed translation leaves Spanish text visible.
+The browser must reach `cdn.gtranslate.net` and the vendor's translation service
+(currently `translate-pa.googleapis.com`). This public prose is processed by a
+third party. No translated content is added to backend/query storage, and the
+scraper continues its existing cache/robots/rate-limit behavior.
+
+News links open the publisher's original article. The current API supplies
+headlines, not full article bodies. Optional generated builder explanations
+retain their original English text under a separate disclosure. GTranslate
+Free is intended here for this noncommercial app and has no translated SEO or
+manual translation editing. See the [implementation record](frontend-localization-plan.md)
+for scope and validation. Run the opt-in real-service smoke check with:
+
+```bash
+cd frontend
+LFB_LIVE_TRANSLATION=1 bun run test:browser -- localization.spec.ts -g 'live free'
+```
+
 ## Visual system and screenshots
 
 The app uses Anton display headings, LALIGA Text body/actions, neutral square

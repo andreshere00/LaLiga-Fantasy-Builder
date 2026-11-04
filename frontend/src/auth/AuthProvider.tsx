@@ -1,3 +1,4 @@
+import { copy as localizeCopy, useLanguage } from "../i18n";
 import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import { authClient } from "./auth-client";
@@ -20,6 +21,7 @@ const empty = { accessToken: null, managerName: null, managerAvatar: null, notic
 type State = Pick<AuthContextValue, "status" | "accessToken" | "managerName" | "managerAvatar" | "notice" | "linkOptions" | "linkOptionsError">;
 
 export function AuthProvider({ children }: { children: ReactNode }) {
+  useLanguage();
   const session = authClient.useSession();
   const queryClient = useQueryClient();
   const [client] = useState(() => new AuthClient(fetch.bind(globalThis), new MemoryTokenStore()));
@@ -161,7 +163,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     markNeedsReauth: () => setState(previous => ({ ...previous, status: "needs-reauth" })),
   }), [state, activeSessionId, sessionId, pending, userId, session.data, connectLaliga,
     startManualLink, completeManualLink, cancelManualLink, logout, reload, forgetDeletedAccount]);
-  return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
+  return <AuthContext.Provider value={value}>{localizeCopy(children)}</AuthContext.Provider>;
 }
 export function useAuth(): AuthContextValue {
   const value = useContext(AuthContext);

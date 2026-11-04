@@ -1,3 +1,4 @@
+import { language } from "./i18n";
 import { readTheme } from "./styles/theme";
 import { StrictMode } from "react";
 import { createRoot } from "react-dom/client";
@@ -7,6 +8,7 @@ import "./styles/fonts.css";
 import "./styles/tokens.css";
 import "./styles/global.css";
 
+document.documentElement.lang = language();
 document.documentElement.dataset.theme = readTheme();
 
 const root = document.getElementById("root");

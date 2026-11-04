@@ -1,30 +1,37 @@
+import { copy as localizeCopy, useLanguage } from "../../i18n";
 import type { ComponentProps } from "react";
 
 /** Compose labels, descriptions and errors beside their control using stable IDs. */
 export function Field({ className = "", ...props }: ComponentProps<"div">) {
+  useLanguage();
   return <div data-slot="field" className={"fb-field " + className} {...props} />;
 }
 
 export function FieldLabel({ className = "", ...props }: ComponentProps<"label">) {
+  useLanguage();
   return <label data-slot="field-label" className={"fb-field-label " + className} {...props} />;
 }
 
 export function FieldDescription({ className = "", ...props }: ComponentProps<"p">) {
+  useLanguage();
   return <p data-slot="field-description" className={"fb-field-description " + className} {...props} />;
 }
 
 export function FieldError({ className = "", ...props }: ComponentProps<"p">) {
+  useLanguage();
   return <p data-slot="field-error" role="alert" className={"fb-field-error " + className} {...props} />;
 }
 
 export function Input({ className = "", ...props }: ComponentProps<"input">) {
+  useLanguage();
   return <input {...props} className={"fb-input " + className} />;
 }
 
 export function NativeSelect({ className = "", children, ...props }: ComponentProps<"select">) {
+  useLanguage();
   return (
     <span className="fb-select-shell">
-      <select {...props} className={"fb-native-select " + className}>{children}</select>
+      <select {...props} className={"fb-native-select " + className}>{localizeCopy(children)}</select>
       <svg className="fb-select-chevron" viewBox="0 0 18 18" aria-hidden="true">
         <path d="m4 7 5 5 5-5" fill="none" stroke="currentColor" strokeWidth="1.5" />
       </svg>

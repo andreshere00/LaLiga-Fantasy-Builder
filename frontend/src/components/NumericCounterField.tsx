@@ -1,3 +1,4 @@
+import { copy as localizeCopy, useLanguage } from "../i18n";
 import type { KeyboardEvent } from "react";
 
 import { formatIntegerAmount } from "../api/format";
@@ -39,6 +40,7 @@ export function NumericCounterField({
   onStepped,
   onBlur,
 }: NumericCounterFieldProps) {
+  useLanguage();
   const applyStep = (deltaSteps: number) => {
     if (disabled) return;
     const next = stepValue(parseValue(value), deltaSteps);
@@ -62,7 +64,7 @@ export function NumericCounterField({
       <button
         type="button"
         className="numeric-counter-btn"
-        aria-label={`Decrease ${ariaLabel}`}
+        aria-label={localizeCopy(`Decrease ${ariaLabel}`)}
         disabled={disabled}
         onClick={() => applyStep(-1)}
       >
@@ -75,8 +77,8 @@ export function NumericCounterField({
         inputMode="numeric"
         autoComplete="off"
         value={value}
-        placeholder={placeholder}
-        aria-label={ariaLabel}
+        placeholder={localizeCopy(placeholder)}
+        aria-label={localizeCopy(ariaLabel)}
         aria-describedby={ariaDescribedBy}
         aria-invalid={ariaInvalid || undefined}
         disabled={disabled}
@@ -87,7 +89,7 @@ export function NumericCounterField({
       <button
         type="button"
         className="numeric-counter-btn"
-        aria-label={`Increase ${ariaLabel}`}
+        aria-label={localizeCopy(`Increase ${ariaLabel}`)}
         disabled={disabled}
         onClick={() => applyStep(1)}
       >

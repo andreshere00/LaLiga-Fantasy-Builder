@@ -1,3 +1,4 @@
+import { copy as localizeCopy, useLanguage } from "../../i18n";
 import { SearchIcon } from "../shell/icons";
 
 type MarketPlayerSearchProps = {
@@ -21,10 +22,11 @@ export function MarketPlayerSearch({
   inputId = "market-player-search",
   suggestions = [],
 }: MarketPlayerSearchProps) {
+  useLanguage();
   return (
     <div className="market-search">
       <label className="market-search-label" htmlFor={inputId}>
-        {label}
+        {localizeCopy(label)}
       </label>
       <div className="market-search-controls">
         <div className="market-search-field">
@@ -37,7 +39,7 @@ export function MarketPlayerSearch({
             type="search"
             value={value}
             onChange={(event) => onChange(event.target.value)}
-            placeholder={placeholder}
+            placeholder={localizeCopy(placeholder)}
             list={suggestions.length ? `${inputId}-suggestions` : undefined}
           />
           <datalist id={`${inputId}-suggestions`}>
@@ -48,8 +50,7 @@ export function MarketPlayerSearch({
         </div>
         {activeFilterCount > 0 ? (
           <button type="button" className="market-filter-clear" onClick={onClearFilters}>
-            Clear filters
-          </button>
+            {localizeCopy("Clear filters")}</button>
         ) : null}
       </div>
     </div>

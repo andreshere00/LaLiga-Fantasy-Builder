@@ -44,7 +44,7 @@ for (const { theme, width } of [{ theme: "light", width: 1440 }, { theme: "dark"
     await expect(dialog).toHaveAccessibleDescription("Bid for Player 14.");
     const amount = dialog.getByRole("textbox", { name: "Bid amount", exact: true });
     await expect(amount).toBeFocused();
-    await expect(amount).toHaveAccessibleDescription(/Amount must be at least 3.300.000 €/);
+    await expect(amount).toHaveAccessibleDescription(/Amount must be at least 3,300,000 €/);
     await amount.fill("invalid");
     await expect(amount).toHaveAttribute("aria-invalid", "true");
     await expect(amount).toHaveAccessibleDescription(/Enter a whole euro amount/);

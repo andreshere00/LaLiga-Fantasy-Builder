@@ -1,3 +1,4 @@
+import { vi } from "vitest";
 import { cleanup, render, screen } from "@testing-library/react";
 import { afterEach, expect, it } from "vitest";
 import { PlayerFantasySummary } from "./PlayerFantasySection";
@@ -26,3 +27,5 @@ it("keeps a provider's unknown risk and untranslated hierarchy visible", () => {
   expect(screen.getByText("Unknown")).toBeTruthy();
   expect(screen.getByText("6.5")).toBeTruthy();
 });
+
+vi.mock("../translation/ScrapedText", () => ({ ScrapedText: ({ text, textId }: { text: string; textId?: string }) => <span id={textId}>{text}</span> }));
