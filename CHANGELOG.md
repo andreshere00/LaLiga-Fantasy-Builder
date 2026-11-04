@@ -6,6 +6,20 @@ entry, not a claim that every optional provider or deployment gate is complete.
 
 ## [Unreleased]
 
+### Spanish and English
+
+- Add Spanish and English application copy, structured football and Fantasy
+  labels, and locale-aware dates, numbers and countdowns. Save the language
+  preference and preserve open dialogs, drafts and pagination when switching.
+- Add a globe-only language selector beside the theme control, with a localized
+  accessible name, keyboard selection and a 44 × 44px target in both themes.
+- Translate FutbolFantasy news headlines and injury prose into English through
+  isolated browser readers. Keep source text available when translation fails.
+- Complete market action, bid-limit, offer and release-clause messages; refine
+  football terminology and use «pronóstico» for match weather forecasts.
+- Consolidate equivalent dictionary entries while preserving fragment spacing,
+  and resize value/form tooltips to contain translated content on narrow screens.
+
 ## [0.2.1] - 2026-11-03
 
 ### Weekly radar refresh

@@ -10,9 +10,12 @@ directly and keeps the internal JWT in memory only.
 
 ## Spanish and English
 
-The header's language selector sits immediately left of the theme control and
-supports Español and English. Both remain together in the mobile header;
-league/account options retain their menu. The explicit choice is saved under
+The header's language selector is a 44 × 44px globe-only button immediately left
+of the theme control. Its accessible name and hover title follow the current
+language (Idioma/Language). The popup lists Español and English with the selected
+option marked; keyboard selection restores focus to the globe. Both controls
+remain together in the mobile header; league/account options retain their menu.
+The explicit choice is saved under
 `lfb-language`; otherwise a supported browser language is used, then English.
 Switching updates labels without recreating feature providers or clearing drafts.
 
@@ -24,10 +27,9 @@ Explicit variants with different wording take precedence. Spanish copy uses
 football/Fantasy terms such as plantilla, jornada, puja, titularidad and cláusula
 de rescisión; bids and seller offers remain distinct. OpenWeather forecasts use
 «pronóstico», including upcoming-match headings and unavailable states.
-Dates and numbers use the
-selected locale; currency remains EUR and fixture times remain Europe/Madrid.
-Whole-euro fields accept validated English
-or Spanish thousands grouping, preserving edits through language changes.
+Dates and numbers use the selected locale; currency remains EUR and fixture
+times remain Europe/Madrid. Whole-euro fields accept validated English or
+Spanish thousands grouping, preserving edits through language changes.
 
 Value and form tooltips grow to fit their content and wrap within the viewport
 on narrow screens. Their translated lines stay inside the tooltip border.
