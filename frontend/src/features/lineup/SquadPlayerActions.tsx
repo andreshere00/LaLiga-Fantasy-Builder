@@ -1,3 +1,4 @@
+import { t, useTranslation } from "../../i18n";
 import { Menu } from "@base-ui/react/menu";
 import { Help } from "../../components/ui/Help";
 import { Children, useEffect, useId, useRef, useState, type ReactNode } from "react";
@@ -62,6 +63,7 @@ export function SquadPlayerActions({
   triggerText?: string;
   detailsReturnTo?: "/market" | "/players";
 }) {
+  useTranslation();
   const offersMenu = useMarketOffersMenu();
   const [open, setOpen] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
@@ -127,30 +129,29 @@ export function SquadPlayerActions({
         }) : children}
         {!cardMenu ? <div className="squad-tile-controls">
           <Menu.Root open={menuOpen} onOpenChange={setMenuOpen}>
-            <Help content={triggerText ? null : PLAYER_OPTIONS_HINT}>
+            <Help content={triggerText ? null : t(PLAYER_OPTIONS_HINT)}>
               <Menu.Trigger ref={menuTrigger}
                 className={"player-details-link squad-details-link" + (triggerText ? " is-text-trigger" : "")}
-                aria-label={player.name + ", options"}>
-                {triggerText ?? <img src={menuOpen ? infoRedIcon : infoIcon} alt="" aria-hidden />}
+                aria-label={t("{{0}}, options", { 0: player.name })}>
+                {(triggerText ?? <img src={menuOpen ? infoRedIcon : infoIcon} alt="" aria-hidden />)}
               </Menu.Trigger>
             </Help>
             <Menu.Portal><Menu.Positioner sideOffset={4} className="fb-menu-positioner">
-              <Menu.Popup className="fb-menu-popup" aria-label={player.name + " options"}>
+              <Menu.Popup className="fb-menu-popup" aria-label={t("{{0}} options", { 0: player.name })}>
                 <Menu.Item className="market-actions-item" onClick={() => {
                   menuTrigger.current?.focus(); setView("choose"); setOpen(true);
-                }}>Market options</Menu.Item>
+                }}>{t("Market options")}</Menu.Item>
                 {ownPlayer && offersMenu && !/^player-\d+$/.test(player.id) ? (
                   <Menu.Item className="market-actions-item" onClick={() => {
                     menuTrigger.current?.focus();
                     offersMenu.openForPlayer(player.id, player.name);
-                  }}>View offers for this player</Menu.Item>
+                  }}>{t("View offers for this player")}</Menu.Item>
                 ) : null}
                 {player.masterPlayerId && player.positionId !== 5 ? (
                   <Menu.Item className="market-actions-item" render={<Link
                     to={"/players/" + encodeURIComponent(player.masterPlayerId)}
                     state={detailsReturnTo ? { returnTo: detailsReturnTo } : undefined} />}>
-                    Player details
-                  </Menu.Item>
+                    {t("Player details")}</Menu.Item>
                 ) : null}
               </Menu.Popup>
             </Menu.Positioner></Menu.Portal>
@@ -161,24 +162,13 @@ export function SquadPlayerActions({
       <Dialog
         open={open && (ownPlayer || view !== "choose")}
         className={`squad-player-actions-dialog squad-player-actions-dialog--${view}`}
-        title={
-          (view === "choose" || view === "options")
-            ? player.name
-            : view === "list"
-              ? "Bring to market"
-              : view === "modify"
-                ? "Modify bid"
-                : view === "cancel"
-                  ? "Cancel bid"
-                  : "Send immediately to market"
-        }
+        title={(view === "choose" || view === "options") ? player.name : view === "list" ? t("Bring to market") : view === "modify" ? t("Modify bid") : view === "cancel" ? t("Cancel bid") : t("Send immediately to market")}
         onClose={close}
         closeOnBackdrop={!pending}
         footer={
           (view === "choose" || view === "options") ? (
             <button type="button" className="squad-sale-secondary" onClick={close}>
-              Close
-            </button>
+              {t("Close")}</button>
           ) : (
             <>
               <button
@@ -187,8 +177,7 @@ export function SquadPlayerActions({
                 disabled={pending}
                 onClick={() => setView("choose")}
               >
-                Back
-              </button>
+                {t("Back")}</button>
               <button
                 type="button"
                 className="squad-sale-primary"
@@ -228,8 +217,7 @@ export function SquadPlayerActions({
                   sales.sellImmediately.mutate(player.id, { onSuccess: () => close() });
                 }}
               >
-                {pending ? "Sending…" : view === "list" ? "List player" : view === "modify"
-                  ? "Update listing" : view === "cancel" ? "Withdraw listing" : "Sell player now"}
+                {pending ? t("Sending…") : view === "list" ? t("List player") : view === "modify" ? t("Update listing") : view === "cancel" ? t("Withdraw listing") : t("Sell player now")}
               </button>
             </>
           )
@@ -237,38 +225,34 @@ export function SquadPlayerActions({
       >
         {view === "options" ? (
           <div className="squad-sale-choice-groups">
-            <ChoiceGroup label="Market">
+            <ChoiceGroup label={t("Market")}>
               <button type="button" className="squad-sale-choice" onClick={() => setView("choose")}>
-                Market options
-              </button>
+                {t("Market options")}</button>
               {ownPlayer && offersMenu && !/^player-\d+$/.test(player.id) ? (
                 <button type="button" className="squad-sale-choice" onClick={() => {
                   offersMenu.openForPlayer(player.id, player.name);
                   close();
                 }}>
-                  View offers for this player
-                </button>
+                  {t("View offers for this player")}</button>
               ) : null}
             </ChoiceGroup>
-            <ChoiceGroup label="Details">
+            <ChoiceGroup label={t("Details")}>
               {player.masterPlayerId && player.positionId !== 5 ? (
                 <Link
                   className="squad-sale-choice"
                   to={`/players/${encodeURIComponent(player.masterPlayerId)}`}
                   onClick={close}
                 >
-                  Player details
-                </Link>
+                  {t("Player details")}</Link>
               ) : null}
             </ChoiceGroup>
-            <ChoiceGroup label="Lineup">
+            <ChoiceGroup label={t("Lineup")}>
               {onSwap ? (
                 <button type="button" className="squad-sale-choice" onClick={() => {
                   close();
                   onSwap();
                 }}>
-                  Swap player
-                </button>
+                  {t("Swap player")}</button>
               ) : null}
             </ChoiceGroup>
           </div>
@@ -283,16 +267,14 @@ export function SquadPlayerActions({
                   disabled={cancelBlocked != null}
                   onClick={() => setView("cancel")}
                 >
-                  Cancel bid
-                </button>
+                  {t("Cancel bid")}</button>
                 <button
                   type="button"
                   className="squad-sale-choice"
                   disabled={priceBlocked != null || cancelBlocked != null}
                   onClick={() => setView("modify")}
                 >
-                  Modify bid
-                </button>
+                  {t("Modify bid")}</button>
               </>
             ) : (
               <button
@@ -301,8 +283,7 @@ export function SquadPlayerActions({
                 disabled={priceBlocked != null}
                 onClick={() => setView("list")}
               >
-                Bring to market
-              </button>
+                {t("Bring to market")}</button>
             )}
             <button
               type="button"
@@ -310,21 +291,18 @@ export function SquadPlayerActions({
               disabled={half == null || listed}
               onClick={() => setView("immediate")}
             >
-              Send immediately to market
-            </button>
-            {priceBlocked && !listed ? <p className="squad-sale-note">{priceBlocked}</p> : null}
-            {listed && cancelBlocked ? <p className="squad-sale-note">{cancelBlocked}</p> : null}
+              {t("Send immediately to market")}</button>
+            {priceBlocked && !listed ? <p className="squad-sale-note">{t(priceBlocked)}</p> : null}
+            {listed && cancelBlocked ? <p className="squad-sale-note">{t(cancelBlocked)}</p> : null}
           </div>
         ) : null}
         {view === "cancel" ? (
           <>
             <p className="squad-sale-copy">
-              Cancel the sale of <strong>{player.name}</strong>? The player stays in your squad
-              and offers on this listing are dropped.
-            </p>
+              {t("Cancel the sale of ")}<strong>{player.name}</strong>{t("? The player stays in your squad and offers on this listing are dropped.")}</p>
             {cancelError ? (
               <p className="squad-sale-error" role="alert">
-                {cancelError}
+                {t(cancelError)}
               </p>
             ) : null}
           </>
@@ -332,20 +310,16 @@ export function SquadPlayerActions({
         {(view === "list" || view === "modify") && minimum != null ? (
           <>
             <p className="squad-sale-copy">
-              {view === "modify" ? "Change" : "List"} <strong>{player.name}</strong> for a
-              whole-euro offer of at least {formatEuro(minimum)}, and no more than{" "}
+              {view === "modify" ? t("Change") : t("List")} <strong>{player.name}</strong> {t(" for a whole-euro offer of at least ")}{formatEuro(minimum)}{t(", and no more than")}{" "}
               {formatEuro(MAX_LISTING_PRICE)}.
-              {view === "modify"
-                ? " The current listing and its offers are replaced by this amount."
-                : null}
+              {view === "modify" ? t(" The current listing and its offers are replaced by this amount.") : null}
             </p>
             <label className="squad-sale-label" htmlFor={inputId}>
-              Offer
-            </label>
+              {t("Offer")}</label>
             <NumericCounterField
               id={inputId}
               value={rawPrice}
-              ariaLabel="Listing offer in euros"
+              ariaLabel={t("Listing offer in euros")}
               disabled={pending}
               formatInput={(raw) => {
                 const amount = parseIntegerAmount(raw);
@@ -370,13 +344,11 @@ export function SquadPlayerActions({
         {view === "immediate" && half != null ? (
           <>
             <p className="squad-sale-copy">
-              Sell <strong>{player.name}</strong> now for {formatEuro(half)}, half of{" "}
-              {formatEuro(minimum)}. The money is added to your balance and the player leaves
-              your squad.
-            </p>
+              {t("Sell ")}<strong>{player.name}</strong> {t(" now for ")}{formatEuro(half)}{t(", half of")}{" "}
+              {formatEuro(minimum)}{t(". The money is added to your balance and the player leaves your squad.")}</p>
             {immediateError ? (
               <p className="squad-sale-error" role="alert">
-                {immediateError}
+                {t(immediateError)}
               </p>
             ) : null}
           </>

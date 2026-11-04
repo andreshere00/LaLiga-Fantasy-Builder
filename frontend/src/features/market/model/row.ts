@@ -1,3 +1,4 @@
+import { t } from "../../../i18n";
 import {
   asFiniteNumber,
   asRecord,
@@ -130,7 +131,7 @@ function bidCountOf(value: unknown): number | null {
  *   The count, or "Unavailable" when the count is unknown.
  */
 export function bidCountLabel(count: number | null | undefined): string {
-  return count == null ? "Unavailable" : String(count);
+  return count == null ? t("Unavailable") : String(count);
 }
 
 function sellerKindOf(

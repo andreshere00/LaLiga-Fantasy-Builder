@@ -1,3 +1,5 @@
+import { t } from "../../i18n";
+
 export const COACH_POSITION_ID = 5;
 
 export const POSITION_FILTER_OPTIONS: readonly {
@@ -22,12 +24,13 @@ const POSITIONS: Record<number, { abbrev: string; label: string; tone: string }>
 
 export function positionAbbrev(positionId: number | null): string {
   if (positionId == null) return "—";
-  return POSITIONS[positionId]?.abbrev ?? "—";
+  return t(POSITIONS[positionId]?.abbrev ?? "—");
 }
 
 export function positionLabel(positionId: number | null): string | null {
   if (positionId == null) return null;
-  return POSITIONS[positionId]?.label ?? null;
+  const label = POSITIONS[positionId]?.label;
+  return label ? t(label) : null;
 }
 
 export function positionTone(positionId: number | null): string {

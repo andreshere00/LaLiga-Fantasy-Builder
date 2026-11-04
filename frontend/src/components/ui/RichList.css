@@ -726,7 +726,7 @@
 
 .market-value-tooltip-line {
   display: block;
-  white-space: nowrap;
+  white-space: normal;
 }
 
 .market-value-primary {
@@ -835,7 +835,7 @@
 
 .market-fsyp-tooltip-line {
   display: block;
-  white-space: nowrap;
+  white-space: normal;
 }
 
 .market-fsyp-cell {

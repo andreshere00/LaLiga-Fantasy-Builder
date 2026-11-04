@@ -32,7 +32,7 @@ for (const theme of ["light", "dark"]) {
       await expect(dialog.getByText("0 / 11 selected", { exact: true })).toBeVisible();
       await dialog.getByRole("textbox", { name: "Search available players" }).fill("");
       await dialog.getByLabel("4-3-3", { exact: true }).check();
-      await expect(dialog.getByText("1 selected", { exact: true })).toBeVisible();
+      await expect(dialog.getByText("1 formation selected", { exact: true })).toBeVisible();
       await expect(build).toBeVisible();
       expect(await dialog.evaluate((el) => el.scrollWidth <= el.clientWidth)).toBe(true);
       await dialog.getByText("Choose mandatory players", { exact: false }).click();

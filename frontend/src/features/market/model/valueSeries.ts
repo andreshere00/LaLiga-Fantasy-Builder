@@ -1,3 +1,5 @@
+import { t } from "../../../i18n";
+import { durationLabel } from "../../../i18n/format";
 import { asFiniteNumber, asRecord } from "../../../api/mappers";
 
 export type ValuePoint = { time: number; value: number };
@@ -60,8 +62,8 @@ export function isSealEndUnderOneMinute(expiresAt: number | null, now: number): 
 export function remainingLabel(expiresAt: number | null, now: number): string {
   const left = remainingMs(expiresAt, now);
   if (left == null) return "—";
-  if (left === 0) return "Expired";
-  if (left < ONE_MINUTE_MS) return "<1m";
+  if (left === 0) return t("Expired");
+  if (left < ONE_MINUTE_MS) return t("<1m");
   const minutes = Math.floor(left / 60_000);
   const days = Math.floor(minutes / 1_440);
   const hours = Math.floor((minutes % 1_440) / 60);
@@ -69,16 +71,10 @@ export function remainingLabel(expiresAt: number | null, now: number): string {
   return hours > 0 ? `${hours}h ${minutes % 60}m` : `${minutes}m`;
 }
 
-function plural(count: number, unit: string): string {
-  return `${count} ${unit}${count === 1 ? "" : "s"}`;
-}
-
 /** ``X days Y hours Z minutes`` until the clause unlocks, or null when already unlocked. */
 export function clauseUnlockCountdown(unlockAt: number | null, now: number): string | null {
   const left = remainingMs(unlockAt, now);
   if (left == null || left === 0) return null;
   const minutes = Math.max(1, Math.ceil(left / 60_000));
-  const days = Math.floor(minutes / 1_440);
-  const hours = Math.floor((minutes % 1_440) / 60);
-  return [plural(days, "day"), plural(hours, "hour"), plural(minutes % 60, "minute")].join(" ");
+  return durationLabel(minutes);
 }

@@ -1,3 +1,4 @@
+import { vi } from "vitest";
 // ---- Mocks, fixtures & helpers ---- //
 
 import { cleanup, fireEvent, render, screen, within } from "@testing-library/react";
@@ -95,3 +96,5 @@ describe("PlayerFantasySection history pagination", () => {
     expect(screen.queryByText("No injury history available.")).toBeNull();
   });
 });
+
+vi.mock("../translation/ScrapedText", () => ({ ScrapedText: ({ text, textId }: { text: string; textId?: string }) => <span id={textId}>{text}</span> }));

@@ -1,3 +1,4 @@
+import { t, useTranslation } from "../../i18n";
 import type { SquadCard } from "../../api/mappers";
 import { Dialog } from "../../components/ui/Dialog";
 import { useNow } from "../../hooks/useNow";
@@ -15,6 +16,7 @@ export function LineupMarketOptions({ player, open, onClose }: Props) {
 }
 
 function OpponentMarketOptions({ player, onClose }: Omit<Props, "open">) {
+  useTranslation();
   const board = useMarketBoard();
   const actions = useMarketActions();
   const now = useNow();
@@ -34,12 +36,12 @@ function OpponentMarketOptions({ player, onClose }: Omit<Props, "open">) {
 
   return (
     <>
-      <Dialog open={!confirming} title={`${player.name} — Market options`} onClose={onClose}
+      <Dialog open={!confirming} title={t("{{0}} — Market options", { 0: player.name })} onClose={onClose}
         closeOnBackdrop={!actions.actionPending}>
-        {board.isLoading ? <p role="status">Loading market options…</p> : board.hasError ? (
-          <p role="alert">Market options could not be loaded.</p>
+        {board.isLoading ? <p role="status">{t("Loading market options…")}</p> : board.hasError ? (
+          <p role="alert">{t("Market options could not be loaded.")}</p>
         ) : offers.length === 0 ? (
-          <p>No market actions are currently available for this player.</p>
+          <p>{t("No market actions are currently available for this player.")}</p>
         ) : (
           <div className="squad-sale-choices">
             {offers.map((offer) => (
@@ -53,14 +55,14 @@ function OpponentMarketOptions({ player, onClose }: Omit<Props, "open">) {
                     else if (offer.type === "withdraw") actions.openWithdraw(row);
                     else if (offer.type === "pay-clause") actions.openClause(row, offer.amount);
                   }}>
-                  {offer.label}
+                  {t(offer.label)}
                 </button>
-                {offer.disabledReason ? <p className="squad-sale-note">{offer.disabledReason}</p> : null}
+                {offer.disabledReason ? <p className="squad-sale-note">{t(offer.disabledReason)}</p> : null}
               </div>
             ))}
           </div>
         )}
-        {actions.message ? <p role="alert">{actions.message}</p> : null}
+        {actions.message ? <p role="alert">{t(actions.message)}</p> : null}
       </Dialog>
       <MarketActionDialogs
         actions={actions}

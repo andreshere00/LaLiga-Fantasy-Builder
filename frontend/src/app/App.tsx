@@ -1,3 +1,4 @@
+import { t, useTranslation } from "../i18n";
 import { Notifications } from "../components/ui/Notifications";
 import { PulseRing } from "../components/ui/PulseRing";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
@@ -44,6 +45,7 @@ function LineupRoute() {
 }
 
 export function App() {
+  useTranslation();
   return (
     <QueryClientProvider client={queryClient}>
       <Notifications>
@@ -64,7 +66,7 @@ export function App() {
                     <Route
                       path="/players/:playerId"
                       element={
-                        <Suspense fallback={<PulseRing label="Loading player…" />}>
+                        <Suspense fallback={<PulseRing label={t("Loading player…")} />}>
                           <PlayerDetailPage />
                         </Suspense>
                       }

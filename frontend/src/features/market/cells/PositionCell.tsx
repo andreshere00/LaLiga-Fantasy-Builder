@@ -1,3 +1,4 @@
+import { useTranslation } from "../../../i18n";
 import { Help } from "../../../components/ui/Help";
 import { positionAbbrev, positionLabel, positionTone } from "../positions";
 
@@ -6,6 +7,7 @@ type PositionCellProps = {
 };
 
 export function PositionCell({ positionId }: PositionCellProps) {
+  useTranslation();
   const abbrev = positionAbbrev(positionId);
   const label = positionLabel(positionId);
   const tone = positionTone(positionId);

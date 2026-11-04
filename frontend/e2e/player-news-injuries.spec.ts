@@ -34,7 +34,7 @@ for (const { theme, width } of [{ theme: "light", width: 1440 }, { theme: "dark"
     await expect(article).toHaveCSS("text-decoration-line", "none");
     await expect(article).toHaveAttribute("target", "_blank");
     await expect(article).toHaveAccessibleDescription("Opens in a new tab.");
-    await expect(news.getByRole("heading", { name: headline, exact: true })).toHaveText(headline);
+    await expect(news.getByRole("heading", { name: headline, exact: true })).toHaveAccessibleName(headline);
     expect(await article.evaluate((element) => element.clientHeight)).toBeGreaterThanOrEqual(44);
     const clippedHeadlines = await news.locator("h4").evaluateAll((elements) => elements.some((element) =>
       element.scrollHeight > element.clientHeight || element.scrollWidth > element.clientWidth));

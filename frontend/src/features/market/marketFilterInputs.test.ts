@@ -1,3 +1,6 @@
+import { i18n } from "../../i18n";
+import { beforeEach } from "vitest";
+beforeEach(() => { void i18n.changeLanguage("es"); });
 // ---- Mocks, fixtures & helpers ---- //
 
 import { describe, expect, it } from "vitest";

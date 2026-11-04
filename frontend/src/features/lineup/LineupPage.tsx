@@ -1,9 +1,10 @@
+import { t, useTranslation } from "../../i18n";
 import { Help } from "../../components/ui/Help";
 import { Select } from "@base-ui/react/select";
 import { Fragment, useEffect, useMemo, useRef, useState, type CSSProperties } from "react";
 import { useSearchParams } from "react-router-dom";
 
-import { possessiveName, scoreWeekLabel } from "../../api/mappers";
+import { scoreWeekLabel } from "../../api/mappers";
 import { SearchIcon, WarningIcon } from "../shell/icons";
 import builderIconUrl from "../../assets/icon_builder_white.svg";
 import saveCartridgeIconUrl from "../../assets/save_cartridge.svg";
@@ -83,6 +84,7 @@ export function LineupPage() {
 }
 
 function LineupPageContent() {
+  useTranslation();
   const [searchParams] = useSearchParams();
   const board = useLineupBoard({ initialTeamId: searchParams.get("team") });
   const squadOffers = useOwnSquadOffers();
@@ -141,7 +143,7 @@ function LineupPageContent() {
   const startingIds = new Set(board.groups.flatMap((group) => group.players
     .filter((player) => player.isEmpty !== true).map((player) => player.id)));
   const currentFixtureTooltip = board.unplayedFixtureScoreTooltip;
-  const owner = possessiveName(board.titleName);
+
   const { pitchSelection, selectPitchPlayer } = board;
   useEffect(() => {
     if (!pitchSelection) return;
@@ -157,7 +159,7 @@ function LineupPageContent() {
   if (board.isLoading) {
     return (
       <section className="lineup-page" data-layout-profile={LINEUP_LAYOUT_PROFILE}>
-        <PulseRing label="Loading lineup…" />
+        <PulseRing label={t("Loading lineup…")} />
       </section>
     );
   }
@@ -165,7 +167,7 @@ function LineupPageContent() {
   if (board.emptyLeague) {
     return (
       <section className="lineup-page" data-layout-profile={LINEUP_LAYOUT_PROFILE}>
-        <p className="status-copy">No leagues found for this account.</p>
+        <p className="status-copy">{t("No leagues found for this account.")}</p>
       </section>
     );
   }
@@ -179,23 +181,23 @@ function LineupPageContent() {
         squadAvailable={squadOffers.squadAvailable} />
       {board.errorMessage ? (
         <p className="status-copy" role="alert">
-          {board.errorMessage}
+          {t(board.errorMessage)}
         </p>
       ) : null}
       <div className="board">
         <div className="board-controls-bar side-panel">
           <h1 className="board-controls-title">
-            {owner} <span>lineup</span>
+            {board.titleName ? t("{{0}}’s lineup", { 0: board.titleName }) : t("Your lineup")}
           </h1>
           <div className="board-controls">
             <div className="controls-zone controls-zone-start">
             <div className="control-block">
-              <span className="field-label">Fixture</span>
+              <span className="field-label">{t("Fixture")}</span>
               <CurrentFixtureTooltip message={currentFixtureTooltip}>
                 <div className="pager current-fixture-pager">
                   <button
                     type="button"
-                    aria-label="Previous fixture"
+                    aria-label={t("Previous fixture")}
                     disabled={board.week <= 1}
                     onClick={() => board.goToWeek(board.week - 1)}
                   >
@@ -204,7 +206,7 @@ function LineupPageContent() {
                   <span>{board.week}</span>
                   <button
                     type="button"
-                    aria-label="Next fixture"
+                    aria-label={t("Next fixture")}
                     disabled={board.week >= board.maxWeek}
                     onClick={() => board.goToWeek(board.week + 1)}
                   >
@@ -214,7 +216,7 @@ function LineupPageContent() {
               </CurrentFixtureTooltip>
             </div>
             <div className="control-block" aria-live="polite">
-              <span className="field-label">Score</span>
+              <span className="field-label">{t("Score")}</span>
               <CurrentFixtureTooltip message={currentFixtureTooltip}>
                 <div className="score-pill">
                   <span className="score-week">{scoreWeekLabel(board.week)}</span>
@@ -227,11 +229,11 @@ function LineupPageContent() {
             </div>
             <div className="controls-zone controls-zone-center">
             <div className="control-block formation-field">
-              <span className="field-label">Formation</span>
+              <span className="field-label">{t("Formation")}</span>
               {board.editable ? (
                 <Select.Root items={board.formationOptions} value={board.formationCode}
                   onValueChange={(value) => { if (value) board.setFormationCode(value); }}>
-                  <Select.Trigger className="fb-select-trigger lineup-formation-trigger" aria-label="Formation">
+                  <Select.Trigger className="fb-select-trigger lineup-formation-trigger" aria-label={t("Formation")}>
                     <Select.Value />
                     <Select.Icon className="lineup-formation-icon" aria-hidden="true">
                       <svg viewBox="0 0 18 18">
@@ -245,7 +247,7 @@ function LineupPageContent() {
                         <Select.List>
                           {board.formationOptions.map((option) => (
                             <Select.Item key={option.value} value={option.value} className="fb-item">
-                              <Select.ItemText>{option.label}</Select.ItemText>
+                              <Select.ItemText>{t(option.label)}</Select.ItemText>
                               <Select.ItemIndicator aria-hidden="true">✓</Select.ItemIndicator>
                             </Select.Item>
                           ))}
@@ -259,10 +261,10 @@ function LineupPageContent() {
               )}
             </div>
             <div className="control-block recommend">
-              <span className="field-label">Build lineup</span>
+              <span className="field-label">{t("Build lineup")}</span>
               <div className="accent-control-shell">
                 <button type="button" className="recommend-button" onClick={() => setBuilderOpen(true)}>
-                  <span className="recommend-button-text">{RECOMMEND_COPY}</span>
+                  <span className="recommend-button-text">{t(RECOMMEND_COPY)}</span>
                   <img
                     className="recommend-button-icon"
                     src={builderIconUrl}
@@ -273,8 +275,8 @@ function LineupPageContent() {
               </div>
             </div>
             <div className="control-block save-lineup">
-              <span className="field-label">Save lineup</span>
-              <Help content={board.saveNoChangesTooltip}
+              <span className="field-label">{t("Save lineup")}</span>
+              <Help content={board.saveNoChangesTooltip ? t(board.saveNoChangesTooltip) : null}
                 trigger={<div className="accent-control-shell save-lineup-shell" />}>
                 <button
                   type="button"
@@ -288,7 +290,7 @@ function LineupPageContent() {
                   }}
                 >
                   <span className="save-lineup-button-text">
-                    {board.savePending ? "Saving…" : "Save"}
+                    {board.savePending ? t("Saving…") : t("Save")}
                   </span>
                   <img
                     className="save-lineup-button-icon"
@@ -302,7 +304,7 @@ function LineupPageContent() {
             </div>
             <div className="controls-zone controls-zone-end">
             <div className="control-block team-value">
-              <span className="field-label">Team value</span>
+              <span className="field-label">{t("Team value")}</span>
               <TeamValueBox
                 evolution={board.teamValueEvolution}
                 historyLoading={board.teamValueHistoryLoading}
@@ -332,7 +334,7 @@ function LineupPageContent() {
                 <details className="pitch-lineup-load-menu">
                   <summary
                     className="pitch-original-lineup-button pitch-lineup-load-trigger"
-                    aria-label="Load previous lineups"
+                    aria-label={t("Load previous lineups")}
                   >
                     <span className="pitch-original-lineup-icons" aria-hidden="true">
                       <img className="pitch-original-lineup-icon is-default" src={originalFixtureBlackUrl} alt="" />
@@ -340,7 +342,7 @@ function LineupPageContent() {
                     </span>
                   </summary>
                   <div className="pitch-lineup-load-options">
-                    <Help content={board.originalLineupMessage}
+                    <Help content={board.originalLineupMessage ? t(board.originalLineupMessage) : null}
                       trigger={<span className="pitch-scoring-lineup-control" />}>
                       <button
                         type="button"
@@ -357,7 +359,7 @@ function LineupPageContent() {
                           <img className="pitch-original-lineup-icon is-hover" src={originalFixtureWhiteUrl} alt="" />
                           <img className="pitch-original-lineup-icon is-disabled" src={originalFixtureGrayUrl} alt="" />
                         </span>
-                        <span>Load original lineup for {scoreWeekLabel(board.week)}</span>
+                        <span>{t("Load original lineup for ")}{scoreWeekLabel(board.week)}</span>
                       </button>
                     </Help>
                     <button
@@ -375,7 +377,7 @@ function LineupPageContent() {
                         <img className="pitch-original-lineup-icon is-hover" src={originalFixtureWhiteUrl} alt="" />
                         <img className="pitch-original-lineup-icon is-disabled" src={originalFixtureGrayUrl} alt="" />
                       </span>
-                      <span>Load last saved lineup</span>
+                      <span>{t("Load last saved lineup")}</span>
                     </button>
                   </div>
                 </details>
@@ -385,23 +387,23 @@ function LineupPageContent() {
               <button
                 type="button"
                 className="pitch-opponent-lock"
-                aria-label={board.opponentLineupUnavailableMessage ?? "Lineup unavailable"}
+                aria-label={(board.opponentLineupUnavailableMessage ?? t("Lineup unavailable"))}
                 onClick={() => board.openOpponentLineupNotice()}
               >
-                <span className="pitch-opponent-lock-label">Lineup unavailable</span>
+                <span className="pitch-opponent-lock-label">{t("Lineup unavailable")}</span>
               </button>
             ) : null}
-            {board.lineupLoading ? <p className="pitch-note">Loading lineup…</p> : null}
+            {board.lineupLoading ? <p className="pitch-note">{t("Loading lineup…")}</p> : null}
             {board.lineupMessage ? (
               <p className="pitch-note" role="alert">
-                {board.lineupMessage}
+                {t(board.lineupMessage)}
               </p>
             ) : null}
-            {board.pitchEmpty ? <p className="pitch-note">Lineup unavailable</p> : null}
+            {board.pitchEmpty ? <p className="pitch-note">{t("Lineup unavailable")}</p> : null}
             {activeSwap ? (
               <div className="lineup-swap-notice" role="status">
-                Select a player on the pitch in the same position to swap with {activeSwap.name}.
-                <button type="button" className="squad-sale-secondary" onClick={() => setSwapCandidate(null)}>Cancel</button>
+                {t("Select a player on the pitch in the same position to swap with ")}{activeSwap.name}.
+                <button type="button" className="squad-sale-secondary" onClick={() => setSwapCandidate(null)}>{t("Cancel")}</button>
               </div>
             ) : null}
             <Fragment key={`${board.selectedTeamId}-${board.week}`}>
@@ -533,39 +535,35 @@ function LineupPageContent() {
             }
           >
             <h2 className="column-title">
-              {owner} squad
-              <span className="squad-count">{squadCountLabel(board.squad.length)}</span>
+              {board.titleName ? t("{{0}}’s squad", { 0: board.titleName }) : t("Your squad")}<span className="squad-count">{squadCountLabel(board.squad.length)}</span>
             </h2>
             <div className="squad-filter-bar">
               <button ref={filterButton} type="button"
                 className={filterCount > 0 ? "squad-filter-open is-active" : "squad-filter-open"}
                 aria-haspopup="dialog" aria-expanded={filterOpen}
                 onClick={() => setFilterOpen(true)}>
-                {filterCount > 0 ? `Filter squad, ${filterCount} active` : "Filter squad"}
+                {filterCount > 0 ? t("Filter squad, {{0}} active", { 0: filterCount }) : t("Filter squad")}
               </button>
               {filterCount > 0 ? (
                 <button type="button" className="squad-filter-clear"
                   onClick={() => setSquadFilters(createEmptySquadFilters())}>
-                  Clear filters
-                </button>
+                  {t("Clear filters")}</button>
               ) : null}
             </div>
             {filterCount > 0 ? (
               <p className="squad-filter-status" role="status">
-                Showing {visibleSquad.length} of {squadSource.length} players
-              </p>
+                {t("Showing ")}{visibleSquad.length} {t(" of ")}{squadSource.length} {t(" players")}</p>
             ) : null}
-            {board.squadLoading ? <p className="status-copy">Loading squad…</p> : null}
+            {board.squadLoading ? <p className="status-copy">{t("Loading squad…")}</p> : null}
             {board.squadMessage ? (
               <p className="status-copy" role="alert">
-                {board.squadMessage}
+                {t(board.squadMessage)}
               </p>
             ) : null}
             {picking ? (
               <div className="squad-picker">
                 <label className="squad-picker-label" htmlFor="squad-picker-search">
-                  Replace player
-                </label>
+                  {t("Replace player")}</label>
                 <div className="squad-picker-search">
                   <span className="squad-picker-search-icon" aria-hidden="true">
                     <SearchIcon />
@@ -576,7 +574,7 @@ function LineupPageContent() {
                     type="search"
                     value={board.squadSearch}
                     onChange={(event) => board.setSquadSearch(event.target.value)}
-                    placeholder="Search by name"
+                    placeholder={t("Search by name")}
                   />
                 </div>
               </div>
@@ -585,22 +583,21 @@ function LineupPageContent() {
               <div className="side-panel-scroll squad-panel-scroll" aria-busy={squadStats.isLoading}>
                 {filterCount > 0 && visibleSquad.length === 0 && !squadStats.isLoading ? (
                   <div className="squad-filter-empty" role="status">
-                    <p>No squad players match these filters.</p>
+                    <p>{t("No squad players match these filters.")}</p>
                     <button type="button" className="squad-filter-clear"
                       onClick={() => setSquadFilters(createEmptySquadFilters())}>
-                      Clear filters
-                    </button>
+                      {t("Clear filters")}</button>
                   </div>
                 ) : picking && board.squadPicker.length === 0 ? (
                   <div className="squad-picker-empty" role="status">
                     <span className="squad-picker-empty-icon" aria-hidden="true">
                       <WarningIcon />
                     </span>
-                    <p className="squad-picker-empty-text">{SQUAD_PICKER_EMPTY_MESSAGE}</p>
+                    <p className="squad-picker-empty-text">{t(SQUAD_PICKER_EMPTY_MESSAGE)}</p>
                   </div>
                 ) : squadStats.isLoading ? (
                   <div className="squad-loading">
-                    <PulseRing size="sm" label="Loading squad stats…" />
+                    <PulseRing size="sm" label={t("Loading squad stats…")} />
                     <div className="squad-grid squad-grid--loading" aria-hidden="true">
                       {board.squadPanelPlayers.map((player) => (
                         <div className="squad-tile-slot" key={player.id}>
@@ -674,7 +671,7 @@ function LineupPageContent() {
                 <div className="pager">
                   <button
                     type="button"
-                    aria-label="Previous squad page"
+                    aria-label={t("Previous squad page")}
                     disabled={squadPageData.page <= 0}
                     onClick={() => setFilteredPage((current) => Math.max(0, current - 1))}
                   >
@@ -683,7 +680,7 @@ function LineupPageContent() {
                   <span>{squadPageData.page + 1}</span>
                   <button
                     type="button"
-                    aria-label="Next squad page"
+                    aria-label={t("Next squad page")}
                     disabled={squadPageData.page >= squadPageData.pageCount - 1}
                     onClick={() => setFilteredPage((current) => current + 1)}
                   >

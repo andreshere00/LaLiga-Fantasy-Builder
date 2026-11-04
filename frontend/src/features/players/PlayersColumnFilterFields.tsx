@@ -1,3 +1,4 @@
+import { t, useTranslation } from "../../i18n";
 import {
   FilterAvailabilityChips,
   FilterPositionChips,
@@ -29,14 +30,15 @@ export function PlayersColumnFilterFields({
   onChange,
   onClearColumn,
 }: PlayersColumnFilterFieldsProps) {
+  useTranslation();
   return (
     <div className="market-column-filter-fields">
       {column === "name" ? (
         <FilterTextInput
-          label="Player name"
+          label={t("Player name")}
           value={filters.player}
           onChange={(player) => onChange({ ...filters, player })}
-          placeholder="Search by name"
+          placeholder={t("Search by name")}
           suggestions={names}
         />
       ) : null}
@@ -44,21 +46,20 @@ export function PlayersColumnFilterFields({
       {column === "team" ? (
         <>
           <FilterTextInput
-            label="Team"
+            label={t("Team")}
             value={filters.team}
             onChange={(team) => onChange({ ...filters, team })}
-            placeholder="Club name"
+            placeholder={t("Club name")}
             suggestions={teams}
           />
           {teams.length > 0 ? (
             <label className="market-column-filter-text">
-              Pick a team
-              <NativeSelect
+              {t("Pick a team")}<NativeSelect
                 className="market-filter-select"
                 value={teams.includes(filters.team) ? filters.team : ""}
                 onChange={(event) => onChange({ ...filters, team: event.target.value })}
               >
-                <option value="">Choose…</option>
+                <option value="">{t("Choose…")}</option>
                 {teams.map((team) => <option key={team} value={team}>{team}</option>)}
               </NativeSelect>
             </label>
@@ -69,10 +70,10 @@ export function PlayersColumnFilterFields({
       {column === "owner" ? (
         <>
           <FilterTextInput
-            label="Owned by"
+            label={t("Owned by")}
             value={filters.owner}
             onChange={(owner) => onChange({ ...filters, owner })}
-            placeholder="Manager or Free Agent"
+            placeholder={t("Manager or Free Agent")}
             suggestions={owners}
           />
           {owners.length > 0 ? (
@@ -118,8 +119,7 @@ export function PlayersColumnFilterFields({
       ) : null}
 
       <button type="button" className="market-column-filter-clear" onClick={onClearColumn}>
-        Clear column filter
-      </button>
+        {t("Clear column filter")}</button>
     </div>
   );
 }

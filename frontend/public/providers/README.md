@@ -14,3 +14,16 @@ and never fetched from a provider during a page visit.
 
 Preserve each mark's aspect ratio, colors and built-in padding. Provider marks
 remain the property of their respective owners.
+
+## Browser translation provider
+
+GTranslate Free processes only public FutbolFantasy injury/news prose in
+`translation-reader.html`, sandboxed without `allow-same-origin`. Its current
+library is loaded from `https://cdn.gtranslate.net/widgets/latest/lib.min.js`;
+translation currently uses `https://translate-pa.googleapis.com`. The library's
+ready/result/reset interface was inspected and tested on 4 November 2026.
+The mutable `latest` URL is vendor-controlled, so retain the opt-in live browser
+compatibility test when updating this integration. Attribution is shown beside
+the prose. Translation is optional; blocked/failed requests show the original.
+No JWT, LaLiga bearer, account fields, or full API payload is sent to the reader.
+See [frontend localization](../../../docs/frontend.md#spanish-and-english).

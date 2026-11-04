@@ -1,3 +1,4 @@
+import { t, useTranslation } from "../../i18n";
 import { useQueries, useQuery } from "@tanstack/react-query";
 import { useMemo, useState } from "react";
 
@@ -28,7 +29,14 @@ import { ProfilePhoto } from "../shell/ProfilePhoto";
 import { PersonIcon } from "../shell/icons";
 import "./LineupBuilderDialog.css";
 
-type PlayerOption = { id: string; name: string; source: string; photoUrl: string | null };
+type PlayerOption = {
+  id: string;
+  name: string;
+  source: string;
+  sourceKind: "owned" | "market" | "opponents";
+  sourceKey?: string;
+  photoUrl: string | null;
+};
 
 type Props = {
   open: boolean;
@@ -46,32 +54,35 @@ const EMPTY: PlayerOption[] = [];
 const EMPTY_SQUAD: SquadCard[] = [];
 
 function progressLabel(progress: LineupBuildProgress | null): string {
-  if (!progress) return "Building recommendations…";
+  if (!progress) return t("Building recommendations…");
   switch (progress.stage) {
     case "players":
-      return `Evaluating players: ${progress.completedPlayers}/${progress.totalPlayers}`;
+      return t("Evaluating players: {{0}}/{{1}}", { 0: progress.completedPlayers, 1: progress.totalPlayers });
     case "trades":
-      return "Checking trade options…";
+      return t("Checking trade options…");
     case "search":
-      return "Finding the best lineups…";
+      return t("Finding the best lineups…");
     case "explanation":
-      return "Writing explanations…";
+      return t("Writing explanations…");
     case "complete":
-      return "Recommendations ready";
+      return t("Recommendations ready");
     case "sources":
-      return "Building recommendations…";
+      return t("Building recommendations…");
     default:
       return assertNever(progress.stage);
   }
 }
 
 function assertNever(value: never): never {
-  throw new Error(`Unsupported lineup build progress stage: ${value}`);
+  throw new Error(t("Unsupported lineup build progress stage: {{0}}", { 0: value }));
 }
 
-function squadOptions(players: readonly SquadCard[], source: string): PlayerOption[] {
+function squadOptions(
+  players: readonly SquadCard[], source: string,
+  sourceKind: PlayerOption["sourceKind"], sourceKey?: string,
+): PlayerOption[] {
   return players.flatMap((player) => player.masterPlayerId ? [{
-    id: player.masterPlayerId, name: player.name, source, photoUrl: player.photoUrl,
+    id: player.masterPlayerId, name: player.name, source, sourceKind, sourceKey, photoUrl: player.photoUrl,
   }] : []);
 }
 
@@ -84,6 +95,7 @@ export function LineupBuilderDialog(props: Props) {
 function BuilderDialogSession({
   open, onClose, ranking, squad, selectedTeamId, formations, canApply, onApply, isDraftDirty,
 }: Props) {
+  useTranslation();
   const { accessToken, user } = useAuth();
   const { selected } = useLeague();
   const id = selected ? leagueId(selected) : "";
@@ -134,16 +146,16 @@ function BuilderDialogSession({
   const opponentOptions = useMemo(() => rosterQueries.flatMap((query, index) => {
     if (!query.data) return EMPTY;
     const team = opponents[index];
-    return squadOptions(squadCards(playersOf(query.data), null), team?.name ?? "Opponent");
+    return squadOptions(squadCards(playersOf(query.data), null), team?.name ?? "Opponent", "opponents", team?.name ? undefined : "Opponent");
   }), [opponents, rosterQueries]);
   const marketOptions = useMemo(() => marketItems(marketQuery?.data).flatMap((item) => {
     const master = masterOf(item);
     const playerId = masterIdOf(item);
     const name = text(master?.nickname) ?? text(master?.name);
-    return playerId && name ? [{ id: playerId, name, source: "Market", photoUrl: mediaFromPlayerMaster(master).photoUrl }] : [];
+    return playerId && name ? [{ id: playerId, name, source: "Market", sourceKind: "market" as const, sourceKey: "Market", photoUrl: mediaFromPlayerMaster(master).photoUrl }] : [];
   }), [marketQuery?.data]);
   const allOptions = useMemo(() => [
-    ...squadOptions(ownSquad, "My squad"),
+    ...squadOptions(ownSquad, "My squad", "owned", "My squad"),
     ...opponentOptions,
     ...marketOptions,
   ], [marketOptions, opponentOptions, ownSquad]);
@@ -165,7 +177,7 @@ function BuilderDialogSession({
   }, [allOptions, catalogQuery.data]);
   const builder = useLineupBuilder(id, token, playersById);
   const scopeOptions = [...new Map(allOptions.filter((option) =>
-    scope.includes(option.source === "My squad" ? "owned" : option.source === "Market" ? "market" : "opponents"))
+    scope.includes(option.sourceKind))
     .map((option) => [option.id, option])).values()];
   const formationOptions = useMemo(() => {
     const premiumFormations = new Set<string>(DEFAULT_LINEUPS_AVAILABLE.premium);
@@ -199,27 +211,27 @@ function BuilderDialogSession({
   }
 
   return (
-    <Dialog open={open} onClose={onClose} title="Build lineup" className="lineup-builder-dialog"
-      description="Choose your player pool, then fine-tune your starting XI."
+    <Dialog open={open} onClose={onClose} title={t("Build lineup")} className="lineup-builder-dialog"
+      description={t("Choose your player pool, then fine-tune your starting XI.")}
       footer={<>
-        <Button shape="square" variant="secondary" className="lineup-builder-close" onClick={onClose}>Close</Button>
+        <Button shape="square" variant="secondary" className="lineup-builder-close" onClick={onClose}>{t("Close")}</Button>
         {builder.pending && <div className="lineup-builder-loading" role="status">
           <span className="lineup-builder-bounce" aria-hidden="true">
             <span className="lineup-builder-bounce-ball" />
             <span className="lineup-builder-bounce-ground" />
           </span>
           <Progress value={builder.progress?.percent ?? null} className="lineup-builder-loading-details"
-            aria-valuetext={builder.progress ? `Estimated progress: ${builder.progress.percent}%` : undefined}>
+            aria-valuetext={builder.progress ? t("Estimated progress: {{0}}%", { 0: builder.progress.percent }) : undefined}>
             <ProgressLabel className="lineup-builder-loading-text">
               {progressLabel(builder.progress)}
               {builder.progress && <span className="lineup-builder-loading-percent"
-                title="Estimated overall progress">
+                title={t("Estimated overall progress")}>
                 {builder.progress.percent}%
               </span>}
             </ProgressLabel>
           </Progress>
         </div>}
-        {builder.pending ? <Button shape="square" variant="destructive" onClick={builder.cancel}>Cancel build</Button> : <Button shape="square"
+        {builder.pending ? <Button shape="square" variant="destructive" onClick={builder.cancel}>{t("Cancel build")}</Button> : <Button shape="square"
           disabled={scope.length === 0 || !token} onClick={() => {
             setReplacement(null);
             void builder.build({
@@ -228,13 +240,13 @@ function BuilderDialogSession({
               includeTradingPurchases: allowBuying && includeTradingPurchases,
               maxCandidates: LINEUP_RECOMMENDATION_LIMIT, explanation: { enabled: false },
             });
-          }}>Build</Button>}
+          }}>{t("Build")}</Button>}
       </>}>
       <div className="lineup-builder">
         <section className="lineup-builder-section lineup-builder-pool" aria-labelledby="builder-scope-title">
           <div className="lineup-builder-section-heading">
-            <h3 id="builder-scope-title">Player pool</h3>
-            <span>Choose at least one source</span>
+            <h3 id="builder-scope-title">{t("Player pool")}</h3>
+            <span>{t("Choose at least one source")}</span>
           </div>
           <fieldset className="lineup-builder-checks" aria-labelledby="builder-scope-title">
             {[
@@ -243,85 +255,80 @@ function BuilderDialogSession({
               ["opponents", "Opponents", "Players from rival squads", "Consider opponent players"],
             ].map(([value, label, hint, accessibleLabel]) => (
               <label key={value} className="lineup-builder-source" data-selected={scope.includes(value)}>
-                <input type="checkbox" aria-label={`${label}: ${accessibleLabel}`} checked={scope.includes(value)}
+                <input type="checkbox" aria-label={t("{{0}}: {{1}}", { 0: t(label), 1: t(accessibleLabel) })} checked={scope.includes(value)}
                   onChange={() => toggleChoice(value)} />
-                <span><strong>{label}</strong><small>{hint}</small></span>
+                <span><strong>{t(label)}</strong><small>{t(hint)}</small></span>
               </label>
             ))}
           </fieldset>
-          {scope.length === 0 && <p role="status" className="lineup-builder-scope-hint">Select a player source to enable Build.</p>}
+          {scope.length === 0 && <p role="status" className="lineup-builder-scope-hint">{t("Select a player source to enable Build.")}</p>}
         </section>
 
         <section className="lineup-builder-section" aria-labelledby="builder-trades-title">
           <div className="lineup-builder-section-heading">
-            <h3 id="builder-trades-title">Trade recommendations</h3>
-            <span>Optional</span>
+            <h3 id="builder-trades-title">{t("Trade recommendations")}</h3>
+            <span>{t("Optional")}</span>
           </div>
           <div className="lineup-builder-trade-options">
-            <label><input type="checkbox" checked={allowBuying} onChange={(e) => setAllowBuying(e.target.checked)} /> Allow purchase recommendations</label>
-            <label><input type="checkbox" checked={allowSelling} onChange={(e) => setAllowSelling(e.target.checked)} /> Allow sale recommendations</label>
+            <label><input type="checkbox" checked={allowBuying} onChange={(e) => setAllowBuying(e.target.checked)} /> {t(" Allow purchase recommendations")}</label>
+            <label><input type="checkbox" checked={allowSelling} onChange={(e) => setAllowSelling(e.target.checked)} /> {t(" Allow sale recommendations")}</label>
           </div>
-          {allowBuying && <label className="lineup-builder-trading-option"><input type="checkbox" checked={includeTradingPurchases} onChange={(e) => setIncludeTradingPurchases(e.target.checked)} /> Include trading-only purchases</label>}
+          {allowBuying && <label className="lineup-builder-trading-option"><input type="checkbox" checked={includeTradingPurchases} onChange={(e) => setIncludeTradingPurchases(e.target.checked)} /> {t(" Include trading-only purchases")}</label>}
           {!allowBuying && scope.some((source) => source !== "owned") && <p role="status" className="lineup-builder-scope-hint">
-            Enable purchase recommendations to include market or opponent players in proposed lineups.
-          </p>}
-          <p className="lineup-builder-preview-note">Preview only. Building never buys, sells or saves players.</p>
+            {t("Enable purchase recommendations to include market or opponent players in proposed lineups.")}</p>}
+          <p className="lineup-builder-preview-note">{t("Preview only. Building never buys, sells or saves players.")}</p>
         </section>
 
         <section className="lineup-builder-section" aria-labelledby="builder-player-title">
-          <div className="lineup-builder-section-heading"><h3 id="builder-player-title">Mandatory players</h3><span>{chosen.length} / 11 selected</span></div>
-          <p className="lineup-builder-section-help">Lock players into the starting XI. Leave empty for the best available combination.</p>
+          <div className="lineup-builder-section-heading"><h3 id="builder-player-title">{t("Mandatory players")}</h3><span>{t("{{0}} / 11 selected", { 0: chosen.length })}</span></div>
+          <p className="lineup-builder-section-help">{t("Lock players into the starting XI. Leave empty for the best available combination.")}</p>
           <details className="lineup-builder-locks">
-            <summary>Choose mandatory players <span aria-hidden="true">＋</span></summary>
+            <summary>{t("Choose mandatory players ")}<span aria-hidden="true">＋</span></summary>
             <div className="lineup-builder-player-picker">
               <div className="lineup-builder-player-search">
                 <label className="lineup-builder-field">
-                  <span>Search available players</span>
+                  <span>{t("Search available players")}</span>
                   <span className="fb-input-group">
                     <Input value={search} onChange={(event) => setSearch(event.target.value)}
-                      placeholder="Search players" aria-label="Search available players" />
+                      placeholder={t("Search players")} aria-label={t("Search available players")} />
                   </span>
                 </label>
-                <div className="lineup-builder-options" aria-label="Available players">
+                <div className="lineup-builder-options" aria-label={t("Available players")}>
                   {filteredOptions.map((option) => (
                     <button type="button" key={option.id}
                       disabled={chosen.length >= 11} onClick={() => setChosen((current) => [...current, option.id])}>
                       <ProfilePhoto key={playersById.get(option.id)?.photoUrl ?? "no-photo"}
                         className="lineup-builder-option-photo" url={playersById.get(option.id)?.photoUrl ?? null}
                         fallback={<PersonIcon />} />
-                      <span>{option.name}</span><small>{option.source}</small>
+                      <span>{option.name}</span><small>{option.sourceKey ? t(option.sourceKey) : option.source}</small>
                     </button>
                   ))}
                   {filteredOptions.length === 0 ? <p className="fb-helper">
                     {open && (ownTeamQuery.isLoading || marketQuery?.isLoading ||
-                      rosterQueries.some((query) => query.isLoading))
-                      ? "Loading available players…"
-                      : ownTeamQuery.isError || marketQuery?.isError || rosterQueries.some((query) => query.isError)
-                        ? "Some player sources could not be loaded."
-                        : "No players found."}
+                      rosterQueries.some((query) => query.isLoading)) ? t("Loading available players…") : ownTeamQuery.isError || marketQuery?.isError || rosterQueries.some((query) => query.isError) ? t("Some player sources could not be loaded.") : t("No players found.")}
                   </p> : null}
                 </div>
               </div>
               <div className="lineup-builder-chosen">
-                <h4>Starting XI locks</h4>
+                <h4>{t("Starting XI locks")}</h4>
                 {chosenOptions.length ? chosenOptions.map((option) => (
-                  <button type="button" key={option.id} aria-label={`Remove ${option.name}`} onClick={() => setChosen((current) =>
+                  <button type="button" key={option.id} aria-label={t("Remove {{0}}", { 0: option.name })} onClick={() => setChosen((current) =>
                     current.filter((id) => id !== option.id))}>
                     <ProfilePhoto key={playersById.get(option.id)?.photoUrl ?? "no-photo"}
                       className="lineup-builder-option-photo" url={playersById.get(option.id)?.photoUrl ?? null}
                       fallback={<PersonIcon />} />
                     {option.name} <span aria-hidden="true">×</span>
                   </button>
-                )) : <p className="fb-helper">No players locked. Add a player from the list.</p>}
+                )) : <p className="fb-helper">{t("No players locked. Add a player from the list.")}</p>}
               </div>
             </div>
           </details>
         </section>
 
         <section className="lineup-builder-section" aria-labelledby="builder-formations-title">
-          <div className="lineup-builder-section-heading"><h3 id="builder-formations-title">Formations</h3><span>{lineupPreferences.length ? `${lineupPreferences.length} selected` : "All supported"}</span></div>
-          <p className="lineup-builder-section-help">Choose preferred formations, or leave empty to consider all.</p>
-          <div className="lineup-builder-formations" aria-label="Available formations">
+          <div className="lineup-builder-section-heading"><h3 id="builder-formations-title">{t("Formations")}</h3><span>{lineupPreferences.length ? t(lineupPreferences.length === 1 ? "{{0}} formation selected" : "{{0}} formations selected", { 0: lineupPreferences.length }) : t("All supported")}</span></div>
+          <p className="lineup-builder-section-help">{t("Choose preferred formations, or leave empty to consider all.")}</p>
+          <div className="lineup-builder-formations" aria-label={t("Available formations")}>
             {formationOptions.map((formation) => (
               <label key={formation.value}>
                 <input type="checkbox" checked={lineupPreferences.includes(formation.value)}
@@ -332,13 +339,13 @@ function BuilderDialogSession({
         </section>
 
         {builder.error && <div className="lineup-builder-error" role="alert">
-          <h3>Could not build a lineup</h3>
+          <h3>{t("Could not build a lineup")}</h3>
           <p>{builder.errorSummary}</p>
           {builder.errorDetails.length > 0 && <ul>{builder.errorDetails.map((detail, index) => <li key={index}>{detail}</li>)}</ul>}
-          {builder.errorRecovery && <p className="lineup-builder-error-recovery">{builder.errorRecovery}</p>}
-          {builder.result && <p>Previous results are stale. Rebuild before applying a draft.</p>}
+          {builder.errorRecovery && <p className="lineup-builder-error-recovery">{t(builder.errorRecovery)}</p>}
+          {builder.result && <p>{t("Previous results are stale. Rebuild before applying a draft.")}</p>}
         </div>}
-        {builder.result && changedResult === builder.result && <p role="status">Your acquisition activity changed. Rebuild the recommendations before using a draft.</p>}
+        {builder.result && changedResult === builder.result && <p role="status">{t("Your acquisition activity changed. Rebuild the recommendations before using a draft.")}</p>}
         {builder.result && <LineupBuilderResults key={builder.result.buildId} result={builder.result} playersById={playersById}
           ownedPlayerIds={new Set(ownSquad.flatMap((player) => player.masterPlayerId ? [player.masterPlayerId] : []))}
           onAcquire={setAcquiring}
@@ -351,14 +358,14 @@ function BuilderDialogSession({
           player={acquiring} opponentTeamIds={opponents.map((team) => team.teamId)}
           clausesDeadline={builder.result.target.clausesDeadline} onClose={() => setAcquiring(null)}
           onSuccess={() => { builder.cancel(); setChangedResult(builder.result); }} />}
-        {replacement && replacement.build === builder.result && <section aria-label="Replace draft confirmation">
-          <p>Replace your unsaved lineup draft?</p>
+        {replacement && replacement.build === builder.result && <section aria-label={t("Replace draft confirmation")}>
+          <p>{t("Replace your unsaved lineup draft?")}</p>
           <Button shape="square" onClick={() => {
             const { candidate, build } = replacement;
             if (changedResult !== build && !builder.pending && !builder.error && canApply(candidate, build.target.week)) onApply(candidate, build.target.week);
             setReplacement(null);
-          }}>Replace draft</Button>
-          <Button shape="square" variant="secondary" onClick={() => setReplacement(null)}>Keep my draft</Button>
+          }}>{t("Replace draft")}</Button>
+          <Button shape="square" variant="secondary" onClick={() => setReplacement(null)}>{t("Keep my draft")}</Button>
         </section>}
       </div>
     </Dialog>

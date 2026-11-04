@@ -1,3 +1,6 @@
+import { dateFormatter } from "../../i18n/format";
+import { ScrapedText } from "../translation/ScrapedText";
+import { t, useTranslation } from "../../i18n";
 import { NumberPagination } from "../../components/ui/NumberPagination";
 import { Help } from "../../components/ui/Help";
 import hierarchyGod from "../../assets/button_hierarchy_god.svg";
@@ -74,13 +77,14 @@ function HistoryNavigator({
   label: string;
   onPageChange: (page: number) => void;
 }) {
+  useTranslation();
   if (pageCount < 2) return null;
   const first = page * HISTORY_PAGE_SIZE + 1;
   const last = Math.min((page + 1) * HISTORY_PAGE_SIZE, total);
 
   return <NumberPagination page={page + 1} totalPages={pageCount}
-    onPageChange={(next) => onPageChange(next - 1)} label={label + " history pages"}
-    caption={first + "–" + last + " of " + total} showArrows />;
+    onPageChange={(next) => onPageChange(next - 1)} label={t(label === "News" ? "News history pages" : "Injury records history pages")}
+    caption={t("{{0}}–{{1}} of {{2}}", { 0: first, 1: last, 2: total })} showArrows />;
 }
 
 function displayDate(value: unknown): string | null {
@@ -92,11 +96,11 @@ function durationLabel(row: Record<string, unknown>, fallback: string | null): s
   if (row.ongoing === true) return null;
   const days = asFiniteNumber(row.durationDays);
   if (days != null && days > 0) return `${days} ${days === 1 ? "day" : "days"}`;
-  const localized = fallback?.match(/^(\d+) día(?:s)?$/);
+  const localized = fallback?.match(/^(\d+) (?:día(?:s)?|days?)$/);
   return localized ? `${localized[1]} ${localized[1] === "1" ? "day" : "days"}` : null;
 }
 
-const reportDateFormat = new Intl.DateTimeFormat("en-GB", {
+const reportDateFormat = dateFormatter({
   day: "numeric", month: "short", year: "numeric", timeZone: "UTC",
 });
 
@@ -113,6 +117,7 @@ function ArticleArrow() {
 }
 
 export function PlayerFantasySummary({ profile }: FantasySectionProps) {
+  useTranslation();
   const hierarchy = asRecord(profile?.hierarchy);
   const startProbability = asRecord(profile?.startProbability);
   const form = asRecord(profile?.form);
@@ -120,7 +125,7 @@ export function PlayerFantasySummary({ profile }: FantasySectionProps) {
   const hierarchyRaw = text(hierarchy?.label);
   const hierarchyKeyValue = hierarchyRaw ? normalizedFantasyValue(hierarchyRaw) : "";
   const hierarchyLabel = hierarchyRaw
-    ? HIERARCHY_LABELS[hierarchyKeyValue] ?? hierarchyRaw
+    ? HIERARCHY_LABELS[hierarchyKeyValue] ?? "Unknown"
     : "Unavailable";
   const reportedStartPercent = asFiniteNumber(startProbability?.percent);
   const startPercent = reportedStartPercent != null && reportedStartPercent >= 0 &&
@@ -130,9 +135,9 @@ export function PlayerFantasySummary({ profile }: FantasySectionProps) {
   const formRatingRaw = text(form?.rating);
   const formRating = playerFormPresentation(formRatingRaw);
   const formIcons = formRating?.icons;
-  const injuryRaw = text(injuryRisk?.raw) ?? text(injuryRisk?.level);
+  const injuryRaw = text(injuryRisk?.level) ?? text(injuryRisk?.raw);
   const injuryLabel = injuryRaw
-    ? INJURY_RISK_LABELS[normalizedFantasyValue(injuryRaw)] ?? injuryRaw
+    ? INJURY_RISK_LABELS[normalizedFantasyValue(injuryRaw)] ?? "Unknown"
     : "Unavailable";
   const hierarchyKeyText = hierarchyKeyValue;
   const hierarchyIcon = hierarchyKeyText.includes("dios") || hierarchyKeyText === "god"
@@ -157,43 +162,44 @@ export function PlayerFantasySummary({ profile }: FantasySectionProps) {
 
   return (
     <dl className="player-fantasy-profile-list player-detail-fantasy-summary"
-      aria-label="Fantasy profile">
-      <Help content="Probability that the player starts the game from the first minute."
+      aria-label={t("Fantasy profile")}>
+      <Help content={t("Probability that the player starts the game from the first minute.")}
         trigger={<div tabIndex={0} className="player-fantasy-summary-block player-fantasy-summary-block--starter"
           data-unavailable={startPercent == null || undefined} />}>
-        <dt>Starter likelihood<span className="player-outlook-help" aria-hidden="true" /></dt>
+        <dt>{t("Starter likelihood")}<span className="player-outlook-help" aria-hidden="true" /></dt>
         <dd>
           <span className="player-outlook-starter-readout">
             <span className="player-fantasy-summary-value player-outlook-probability">
-              <span>{startPercent != null ? `${startPercent}%` : "Unavailable"}</span>
+              <span>{startPercent != null ? `${startPercent}%` : t("Unavailable")}</span>
             </span>
             {startPercent != null ? <img className="player-outlook-starter-icon" src={starterIcon}
               alt="" aria-hidden="true" /> : null}
           </span>
           {startPercent != null ? <meter className="player-outlook-meter" min={0} max={100}
-            value={startPercent} aria-label="Estimated chance of starting" /> : null}
+            value={startPercent} aria-label={t("Estimated chance of starting")} /> : null}
           <span className="player-fantasy-matchday">
-            {startMatchweek != null ? `Matchday ${startMatchweek}` : "Matchday unavailable"}
+            {startMatchweek != null ? t("Matchday {{0}}", { 0: startMatchweek }) : t("Matchday unavailable")}
           </span>
         </dd>
       </Help>
-      <Help content="Indicates the player's role on the team. From highest to lowest importance: God, Key player, Important, Rotation, Impact substitute, Reserve."
+      <Help content={t("Indicates the player's role on the team. From highest to lowest importance: God, Key player, Important, Rotation, Impact substitute, Reserve.")}
         trigger={<div tabIndex={0} className="player-fantasy-summary-block player-fantasy-summary-block--hierarchy" />}>
-        <dt>Hierarchy<span className="player-outlook-help" aria-hidden="true" /></dt>
+        <dt>{t("Hierarchy")}<span className="player-outlook-help" aria-hidden="true" /></dt>
         <dd>
           <span className="player-fantasy-summary-value">
             <span className="player-outlook-icon" aria-hidden="true">
               {hierarchyRaw ? <img src={hierarchyIcon} alt=""
                 className={hierarchyIcon === hierarchyImportant ? "player-outlook-neutral-icon" : undefined} /> : "—"}
             </span>
-            <span>{hierarchyLabel}</span>
+            <span>{t(hierarchyLabel)}</span>
+            {hierarchyRaw && !HIERARCHY_LABELS[hierarchyKeyValue] ? <small>{t("Original source label: {{0}}", { 0: hierarchyRaw })}</small> : null}
           </span>
-          <span className="player-outlook-caption">Role in the squad</span>
+          <span className="player-outlook-caption">{t("Role in the squad")}</span>
         </dd>
       </Help>
-      <Help content="The player's form and performance in recent matches: poor, average, good, or very good."
+      <Help content={t("The player's form and performance in recent matches: poor, average, good, or very good.")}
         trigger={<div tabIndex={0} className="player-fantasy-summary-block" />}>
-        <dt>Form<span className="player-outlook-help" aria-hidden="true" /></dt>
+        <dt>{t("Form")}<span className="player-outlook-help" aria-hidden="true" /></dt>
         <dd>
           <span className="player-fantasy-summary-value">
             <span className="player-outlook-icon" aria-hidden="true">
@@ -202,23 +208,23 @@ export function PlayerFantasySummary({ profile }: FantasySectionProps) {
                 <img className="player-form-rating-icon is-dark" src={formIcons.dark} alt="" />
               </> : "—"}
             </span>
-            <span>{formRating?.label ?? (formValue != null ? String(formValue) : "Unavailable")}</span>
+            <span>{(formRating?.label ?? (formValue != null ? String(formValue) : t("Unavailable")))}</span>
           </span>
-          <span className="player-outlook-caption">Recent performances</span>
+          <span className="player-outlook-caption">{t("Recent performances")}</span>
         </dd>
       </Help>
-      <Help content="Indicates the player's injury risk based on recent injuries. For players new to the league, the risk may be Unknown."
+      <Help content={t("Indicates the player's injury risk based on recent injuries. For players new to the league, the risk may be Unknown.")}
         trigger={<div tabIndex={0} className="player-fantasy-summary-block" />}>
-        <dt>Injury risk<span className="player-outlook-help" aria-hidden="true" /></dt>
+        <dt>{t("Injury risk")}<span className="player-outlook-help" aria-hidden="true" /></dt>
         <dd>
           <span className="player-fantasy-summary-value">
             <span className="player-outlook-icon" aria-hidden="true">
               <img className={`player-fantasy-risk-icon${riskIcon === injuryGray ? " is-unknown" : ""}`}
                 src={riskIcon} alt="" />
             </span>
-            <span>{injuryLabel}</span>
+            <span>{t(injuryLabel)}</span>
           </span>
-          <span className="player-outlook-caption">Injury history</span>
+          <span className="player-outlook-caption">{t("Injury history")}</span>
         </dd>
       </Help>
     </dl>
@@ -226,6 +232,7 @@ export function PlayerFantasySummary({ profile }: FantasySectionProps) {
 }
 
 function PlayerNewsList({ profile }: FantasySectionProps) {
+  useTranslation();
   const news = Array.isArray(profile?.news)
     ? [...profile.news].sort((left, right) => {
         const leftDate = Date.parse(text(asRecord(left)?.publishedAt) ?? "");
@@ -247,12 +254,12 @@ function PlayerNewsList({ profile }: FantasySectionProps) {
   return (
     <section className="player-updates-news" aria-labelledby="player-fantasy-news-title">
       <header className="player-updates-column-heading">
-        <h3 id="player-fantasy-news-title">Latest news</h3>
-        {news.length > 0 ? <span>{news.length} {news.length === 1 ? "article" : "articles"}</span> : null}
+        <h3 id="player-fantasy-news-title">{t("Latest news")}</h3>
+        {news.length > 0 ? <span>{t(news.length === 1 ? "{{0}} article" : "{{0}} articles", { 0: news.length })}</span> : null}
       </header>
-      <span className="visually-hidden" id={externalHintId}>Opens in a new tab.</span>
+      <span className="visually-hidden" id={externalHintId}>{t("Opens in a new tab.")}</span>
       {news.length === 0 ? (
-        <p className="player-updates-empty">No recent news available.</p>
+        <p className="player-updates-empty">{t("No recent news available.")}</p>
       ) : (
         <>
           <ul className="player-news-list">
@@ -268,22 +275,22 @@ function PlayerNewsList({ profile }: FantasySectionProps) {
                   {source ? <span className="player-news-source">{source}</span> : null}
                   {published ? <time dateTime={published}>{reportDate(published)}</time> : null}
                 </span>
-                <h4>{title}</h4>
-                {href ? <span className="player-news-read">{lead ? "Read article" : null}<ArticleArrow /></span>
-                  : <span className="player-news-unavailable">Article link unavailable</span>}
+                <h4 aria-labelledby={`${externalHintId}-${index}`}><ScrapedText text={title} textId={`${externalHintId}-${index}`} /></h4>{href ? <a href={href} aria-labelledby={`${externalHintId}-${index}`} aria-describedby={externalHintId} target="_blank" rel="noopener noreferrer">{t("Read article")}</a> : null}
+                {href ? <span className="player-news-read" aria-hidden="true"><ArticleArrow /></span>
+                  : <span className="player-news-unavailable">{t("Article link unavailable")}</span>}
               </>;
               return <li key={`${title}|${href ?? index}`} className={lead ? "is-lead" : undefined}>
                 <article>
-                  {href ? <a className="player-news-article" href={href} aria-label={title}
-                    aria-describedby={externalHintId} target="_blank" rel="noopener noreferrer">
+                  {href ? <div className="player-news-article"
+                    >
                     {contents}
-                  </a> : <div className="player-news-article">{contents}</div>}
+                  </div> : <div className="player-news-article">{contents}</div>}
                 </article>
               </li>;
             })}
           </ul>
           <HistoryNavigator page={currentPage} pageCount={pageCount} total={news.length}
-            label="News" onPageChange={setPage} />
+            label={t("News")} onPageChange={setPage} />
         </>
       )}
     </section>
@@ -291,6 +298,8 @@ function PlayerNewsList({ profile }: FantasySectionProps) {
 }
 
 function PlayerInjuryHistory({ profile }: FantasySectionProps) {
+  const injuryTextId = useId();
+  useTranslation();
   const history = Array.isArray(profile?.injuryHistory)
     ? [...profile.injuryHistory].sort((left, right) => {
         const leftRow = asRecord(left);
@@ -315,15 +324,14 @@ function PlayerInjuryHistory({ profile }: FantasySectionProps) {
   return (
     <section className="player-updates-injuries" aria-labelledby="player-fantasy-injury-title">
       <header className="player-updates-column-heading">
-        <h3 id="player-fantasy-injury-title">Injury history</h3>
-        {history.length > 0 ? <span>{history.length} {history.length === 1 ? "record" : "records"}</span> : null}
+        <h3 id="player-fantasy-injury-title">{t("Injury history")}</h3>
+        {history.length > 0 ? <span>{t(history.length === 1 ? "{{0}} record" : "{{0}} records", { 0: history.length })}</span> : null}
       </header>
       {history.length === 0 ? (
-        <p className="player-updates-empty">No injury history available.</p>
+        <p className="player-updates-empty">{t("No injury history available.")}</p>
       ) : (
         <>
-          <p className="player-injury-order">{history.some((item) => asRecord(item)?.ongoing === true)
-            ? "Current records first · Newest to oldest" : "Newest to oldest"}</p>
+          <p className="player-injury-order">{history.some((item) => asRecord(item)?.ongoing === true) ? t("Current records first · Newest to oldest") : t("Newest to oldest")}</p>
           <ul className="player-injury-timeline">
             {visibleHistory.map((item, index) => {
               const row = asRecord(item);
@@ -340,27 +348,27 @@ function PlayerInjuryHistory({ profile }: FantasySectionProps) {
                 <article className="player-injury-record">
                   <div className="player-injury-record-content">
                     <span className={`player-injury-status${ongoing ? " is-current" : ""}`}>
-                      {ongoing ? "Current injury" : ended ? "Ended" : "End date unreported"}
+                      {ongoing ? t("Current injury") : ended ? t("Ended") : t("End date unreported")}
                     </span>
-                    <h4>{formatted.diagnosis}</h4>
+                    <h4 aria-labelledby={`${injuryTextId}-${index}`}><ScrapedText text={formatted.diagnosis} textId={`${injuryTextId}-${index}`} /></h4>
                     <p className="player-injury-period">
-                      {start ? <><span className="visually-hidden">Start date: </span>
-                        {ongoing ? "Since " : null}<time dateTime={start}>{reportDate(start)}</time>
-                      </> : <span>Start date unreported</span>}
+                      {start ? <><span className="visually-hidden">{t("Start date: ")}</span>
+                        {ongoing ? t("Since ") : null}<time dateTime={start}>{reportDate(start)}</time>
+                      </> : <span>{t("Start date unreported")}</span>}
                       {!ongoing && end ? <><span aria-hidden="true"> → </span>
-                        <span className="visually-hidden">End date: </span>
+                        <span className="visually-hidden">{t("End date: ")}</span>
                         <time dateTime={end}>{reportDate(end)}</time></> : null}
                     </p>
                   </div>
-                  {days ? <span className="player-injury-duration" aria-label={duration ?? undefined}>
-                    <strong>{days[1]}</strong><span>{days[2]}</span>
+                  {days ? <span className="player-injury-duration" aria-label={t(days[1] === "1" ? "{{0}} day" : "{{0}} days", { 0: days[1] })}>
+                    <strong>{days[1]}</strong><span>{t(days[2])}</span>
                   </span> : null}
                 </article>
               </li>;
             })}
           </ul>
           <HistoryNavigator page={currentPage} pageCount={pageCount} total={history.length}
-            label="Injury records" onPageChange={setPage} />
+            label={t("Injury records")} onPageChange={setPage} />
         </>
       )}
     </section>
@@ -368,11 +376,12 @@ function PlayerInjuryHistory({ profile }: FantasySectionProps) {
 }
 
 export function PlayerFantasySection({ profile }: FantasySectionProps) {
+  useTranslation();
   return (
     <section className="player-detail-panel player-fantasy-section" aria-labelledby="player-fantasy-title">
       <header className="player-updates-heading">
-        <h2 className="player-section-title" id="player-fantasy-title" tabIndex={-1}>News &amp; injuries</h2>
-        <p>Recent reports and recorded absences.</p>
+        <h2 className="player-section-title" id="player-fantasy-title" tabIndex={-1}>{t("News & injuries")}</h2>
+        <p>{t("Recent reports and recorded absences.")}</p>
       </header>
       {profile ? (
         <div className="player-updates-layout">
@@ -380,7 +389,7 @@ export function PlayerFantasySection({ profile }: FantasySectionProps) {
           <PlayerInjuryHistory profile={profile} />
         </div>
       ) : (
-        <p className="player-fantasy-empty">News & injuries data is temporarily unavailable.</p>
+        <p className="player-fantasy-empty">{t("News & injuries data is temporarily unavailable.")}</p>
       )}
     </section>
   );

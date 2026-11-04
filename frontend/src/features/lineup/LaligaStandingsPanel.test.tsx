@@ -35,7 +35,7 @@ describe("LaligaStandingsPanel", () => {
     const table = await screen.findByRole("table");
     expect(within(table).getAllByRole("columnheader").map((cell) => cell.getAttribute("aria-label")))
       .toEqual(["Ranking", "Team", "Score (league points)", "Matches won", "Matches tied",
-        "Matches lost", "Goals scored", "Goals against", "Goals difference", "Last 5 matches"]);
+        "Matches lost", "Goals scored", "Goals against", "Goal difference", "Last 5 matches"]);
     expect(within(table).getAllByRole("row")).toHaveLength(21);
     const first = within(table).getAllByRole("row")[1];
     expect(within(first).getAllByRole("cell").map((cell) => cell.textContent))

@@ -1,3 +1,4 @@
+import { t } from "../../../i18n";
 import { asFiniteNumber, asRecord, idText, text } from "../../../api/mappers";
 import {
   catalogById, expiryOf, marketIdFromUserBid, marketItems, userBidRecords,
@@ -112,7 +113,7 @@ export function normalizeActiveBids(snapshot: unknown, catalog: unknown, now: nu
       ? { ...row, marketId, myBid: { id: id!, money }, expiresAt } : null;
     bids.push({ key: id ?? `unknown-${marketId ?? groupIndex}`, id, marketId,
       playerId: row?.playerId ?? null, playerTeamId: row?.playerTeamId ?? null,
-      name: row && row.name !== "Player" ? row.name : `Player unavailable (${marketId ?? id ?? groupIndex + 1})`,
+      name: row && row.name !== "Player" ? row.name : t("Player unavailable ({{0}})", { 0: marketId ?? id ?? groupIndex + 1 }),
       photoUrl: row?.photoUrl ?? null,
       seller: item && (items.includes(item) || item.sellerTeam || item.seller || item.playerTeam)
         ? row?.seller ?? null : null,

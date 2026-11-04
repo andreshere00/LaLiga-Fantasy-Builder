@@ -1,3 +1,4 @@
+import { t } from "../../i18n";
 /** Usual roster size shown in the squad count. Pagination includes every player. */
 export const SQUAD_DISPLAY_CAP = 24;
 
@@ -6,8 +7,8 @@ export function squadCountLabel(
   count: number,
   cap: number = SQUAD_DISPLAY_CAP,
 ): string {
-  if (count > cap) return `${count} players`;
-  return `${count}/${cap} players`;
+  if (count > cap) return t(count === 1 ? "{{0}} player" : "{{0}} players", { 0: count });
+  return t(count === 1 ? "{{0}}/{{1}} player" : "{{0}}/{{1}} players", { 0: count, 1: cap });
 }
 
 /** Players visible on one squad panel page (2×4 grid). */

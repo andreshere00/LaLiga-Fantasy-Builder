@@ -1,3 +1,4 @@
+import { t, useTranslation } from "../../i18n";
 import { BadgeImage } from "../../components/BadgeImage";
 import { clubMediaFromBadge } from "../../api/clubMedia";
 import { useState } from "react";
@@ -44,24 +45,25 @@ type PlayerTileProps = {
 };
 
 function FixtureScoreBreakdown({ lines }: { lines: readonly FixtureScoreLine[] }) {
+  useTranslation();
   return (
     <table className="player-score-breakdown">
-      <caption>Fixture points</caption>
+      <caption>{t("Fixture points")}</caption>
       <thead>
         <tr>
-          <th scope="col">Event</th>
-          <th scope="col">Count</th>
-          <th scope="col">Points</th>
+          <th scope="col">{t("Event")}</th>
+          <th scope="col">{t("Count")}</th>
+          <th scope="col">{t("Points")}</th>
         </tr>
       </thead>
       <tbody>
         {lines.map((line) => (
           <tr key={line.key}>
-            <th scope="row">{line.label}</th>
-            <td className="player-score-count">{line.count ?? "—"}</td>
+            <th scope="row">{t(line.label)}</th>
+            <td className="player-score-count">{(line.count ?? t("—"))}</td>
             <td className="player-score-points">
               <span className="player-score-figure">{signedFixturePoints(line.points)}</span>
-              <span className="player-score-unit">p</span>
+              <span className="player-score-unit">{t("p")}</span>
             </td>
           </tr>
         ))}
@@ -141,11 +143,12 @@ export function PlayerTile({
   interactive = false,
   onSelect,
 }: PlayerTileProps) {
+  useTranslation();
   const shownHighlight = empty ? null : fixtureHighlight;
   const highlightText = fixtureHighlightLabel(shownHighlight);
   const scoreLineTexts = (empty ? [] : fixtureScoreLines ?? []).map(fixtureScoreLineLabel);
   const positionNeededText = positionNeeded && !shownHighlight
-    ? LINEUP_POSITION_NEEDED_LABEL : null;
+    ? t(LINEUP_POSITION_NEEDED_LABEL) : null;
   const className = [
     "player-tile",
     variant === "squad" ? "squad-tile" : "pitch-tile",
@@ -165,20 +168,21 @@ export function PlayerTile({
     fixturePoints == null
       ? ""
       : isMvp
-        ? `, ${fixturePoints} points, MVP`
-        : `, ${fixturePoints} points`;
+        ? `, ${fixturePoints} ${t("points")}, MVP`
+        : `, ${fixturePoints} ${t("points")}`;
   const form = squadStats?.outlook;
   const formRating = playerFormPresentation(form?.rating);
-  const formLabel = form ? `Current form: ${formRating?.label ?? "Unavailable"}` : null;
+  const formLabel = form ? t("Current form: {{0}}", { 0: t(formRating?.label ?? "Unavailable") }) : null;
   const totalLabel = squadStats
-    ? `Season total: ${squadStats.totalPoints ?? "Unavailable"} Fantasy points` : null;
-  const starterLabel = form ? `Starter probability: ${form.starterProbability == null
-    ? "Unavailable" : `${form.starterProbability}%`}${form.matchweek == null
-      ? "" : ` for ${scoreWeekLabel(form.matchweek)}`}` : null;
+    ? t("Season total: {{0}} Fantasy points", { 0: squadStats.totalPoints ?? t("Unavailable") }) : null;
+  const starterLabel = form ? t("Starter probability: {{0}}{{1}}", {
+    0: form.starterProbability == null ? t("Unavailable") : `${form.starterProbability}%`,
+    1: form.matchweek == null ? "" : t(" for matchday {{0}}", { 0: form.matchweek }),
+  }) : null;
   const playerLabel = empty
-    ? NOT_SELECTED_PLAYER_LABEL
+    ? t(NOT_SELECTED_PLAYER_LABEL)
     : captain
-      ? `${name}, captain${scoreLabel}`
+      ? `${name}, ${t("Captain")}${scoreLabel}`
       : `${name}${scoreLabel}`;
   const label = [
     playerLabel, highlightText, positionNeededText, ...scoreLineTexts,
@@ -204,7 +208,7 @@ export function PlayerTile({
       </div>
       <div className="player-card-gap" aria-hidden="true" />
       <span className="player-name player-name-empty">
-        <span className="player-name-label">{NOT_SELECTED_PLAYER_LABEL}</span>
+        <span className="player-name-label">{t(NOT_SELECTED_PLAYER_LABEL)}</span>
       </span>
     </>
   ) : (
@@ -212,7 +216,7 @@ export function PlayerTile({
       <div className="player-card-spacer" aria-hidden="true" />
       <PlayerPhoto key={`${name}|${photoCandidates.join("|")}`} candidates={photoCandidates} />
       {squadStats ? <span className="player-total-points" aria-hidden="true">
-        {squadStats.totalPoints ?? "—"}<span>p</span>
+        {(squadStats.totalPoints ?? t("—"))}<span>{t("p")}</span>
       </span> : fixturePoints != null ? (
         <PlayerScoreBadge points={fixturePoints} isMvp={isMvp} />
       ) : null}
@@ -239,8 +243,7 @@ export function PlayerTile({
   );
 
   const fixtureHelp = unplayedFixture
-    ? `Fixture ${fixtureWeek == null ? "" : scoreWeekLabel(fixtureWeek)}`
-      + " has not been played yet."
+    ? t("Fixture {{0}} has not been played yet.", { 0: fixtureWeek == null ? "" : scoreWeekLabel(fixtureWeek) })
     : null;
   const helpLines = [
     highlightText, positionNeededText, fixtureHelp, totalLabel, starterLabel,
@@ -260,19 +263,16 @@ export function PlayerTile({
         <>
           {formLabel}.
           <br />
-          Current{" "}
+          {t("Data obtained from ")}
           <a href="https://www.futbolfantasy.com/" target="_blank" rel="noreferrer">
-            FutbolFantasy
-          </a>{" "}
-          rating.
-        </>
+            {t("FutbolFantasy")}</a></>
       ) : null}
     </>
   );
-  const statusText = [highlightText, positionNeededText].filter(Boolean).join(", ");
+  const statusText = [highlightText, positionNeededText].filter(Boolean).map(fragment => fragment).join(", ");
   const visibleLabel = statusText
-    ? [captain ? `${name}, captain` : name, statusText].join(", ")
-    : captain ? `${name}, captain` : undefined;
+    ? [captain ? `${name}, ${t("Captain")}` : name, statusText].join(", ")
+    : captain ? `${name}, ${t("Captain")}` : undefined;
   if (interactive && onSelect) {
     return <Help content={help} trigger={<button type="button" className={className}
       aria-label={label} aria-pressed={selected} onClick={onSelect} />}>{body}</Help>;

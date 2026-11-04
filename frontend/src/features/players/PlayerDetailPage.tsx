@@ -1,3 +1,5 @@
+import { ScrapedText } from "../translation/ScrapedText";
+import { t, useTranslation } from "../../i18n";
 import { PulseRing } from "../../components/ui/PulseRing";
 import { Button, buttonVariants } from "../../components/ui/Button";
 import { lazy, Suspense, useEffect, useMemo, useRef, useState } from "react";
@@ -91,33 +93,29 @@ function PlayerDetailUnavailable({ notFound = false, invalidLink = false, pendin
   pending?: boolean;
   onRetry?: () => void;
 }) {
+  useTranslation();
   const location = useLocation();
   const heading = useRef<HTMLHeadingElement>(null);
   useEffect(() => heading.current?.focus(), []);
 
   return (
     <section className="player-detail-page">
-      <nav className="player-detail-back fb-breadcrumb" aria-label="Breadcrumb">
-        <Link to="/players">Players</Link><span aria-hidden="true">/</span>
-        <span aria-current="page">{notFound ? "Player not found" : "Details unavailable"}</span>
+      <nav className="player-detail-back fb-breadcrumb" aria-label={t("Breadcrumb")}>
+        <Link to="/players">{t("Players")}</Link><span aria-hidden="true">/</span>
+        <span aria-current="page">{notFound ? t("Player not found") : t("Details unavailable")}</span>
       </nav>
       <section className="player-detail-panel player-detail-unavailable" aria-labelledby="player-unavailable-title">
         <h1 id="player-unavailable-title" tabIndex={-1} ref={heading}>
-          {notFound ? "Player not found" : "Player details unavailable"}
+          {notFound ? t("Player not found") : t("Player details unavailable")}
         </h1>
-        <p role="alert">{notFound
-          ? invalidLink ? "This player link is invalid. Browse the catalog to find a player."
-            : "We couldn’t find a player with this ID. The link may be incorrect or the player may no longer be in the catalog."
-          : "Player details could not be loaded. Try again to load the statistics."}</p>
+        <p role="alert">{notFound ? invalidLink ? t("This player link is invalid. Browse the catalog to find a player.") : t("We couldn’t find a player with this ID. The link may be incorrect or the player may no longer be in the catalog.") : t("Player details could not be loaded. Try again to load the statistics.")}</p>
         <div className="player-detail-unavailable-actions">
-          {onRetry ? <Button loading={pending} loadingLabel="Retrying…" onClick={onRetry}>
-            Retry player data
-          </Button> : null}
+          {onRetry ? <Button loading={pending} loadingLabel={t("Retrying…")} onClick={onRetry}>
+            {t("Retry player data")}</Button> : null}
           <Link to="/players" className={buttonVariants({ variant: notFound ? "default" : "outline" })}>
-            Browse players
-          </Link>
+            {t("Browse players")}</Link>
           {location.state?.returnTo === "/market" ? (
-            <Link to="/market" className={buttonVariants({ variant: "outline" })}>Back to market</Link>
+            <Link to="/market" className={buttonVariants({ variant: "outline" })}>{t("Back to market")}</Link>
           ) : null}
         </div>
       </section>
@@ -126,6 +124,7 @@ function PlayerDetailUnavailable({ notFound = false, invalidLink = false, pendin
 }
 
 function PlayerDetailBody({ masterId }: PlayerDetailBodyProps) {
+  useTranslation();
   const location = useLocation();
   const returnTo = location.state?.returnTo === "/market" ? "/market" : "/players";
   const { user, accessToken } = useAuth();
@@ -255,7 +254,7 @@ function PlayerDetailBody({ masterId }: PlayerDetailBodyProps) {
     text(catalogMaster?.name) ??
     text(asRecord(detail?.player)?.nickname) ??
     text(asRecord(detail?.player)?.name) ??
-    "Player";
+    t("Player");
   const points = asFiniteNumber(catalogMaster?.points);
   const positionId =
     asFiniteNumber(catalogMaster?.positionId) ??
@@ -334,41 +333,40 @@ function PlayerDetailBody({ masterId }: PlayerDetailBodyProps) {
 
   return (
     <section className="player-detail-page">
-      <nav className="player-detail-back fb-breadcrumb" aria-label="Breadcrumb">
-        <Link to={returnTo}>{returnTo === "/market" ? "Market" : "Players"}</Link>
+      <nav className="player-detail-back fb-breadcrumb" aria-label={t("Breadcrumb")}>
+        <Link to={returnTo}>{returnTo === "/market" ? t("Market") : t("Players")}</Link>
         <span aria-hidden="true">/</span><span aria-current="page">{name}</span>
       </nav>
       <PlayerSectionNavigation detailReady={detailReady} />
       {detailQuery.isError ? (
         <div className="player-detail-panel player-detail-recovery">
-          <p role="alert">Player data could not be updated. Previous results are still shown.</p>
-          <Button variant="outline" loading={detailQuery.isFetching} loadingLabel="Retrying…"
-            onClick={() => void detailQuery.refetch()}>Retry player data</Button>
+          <p role="alert">{t("Player data could not be updated. Previous results are still shown.")}</p>
+          <Button variant="outline" loading={detailQuery.isFetching} loadingLabel={t("Retrying…")}
+            onClick={() => void detailQuery.refetch()}>{t("Retry player data")}</Button>
         </div>
       ) : null}
       {updatingPreviousDetail ? (
         <p className="status-copy" role="status">
-          Updating player data… Previous results remain visible until the update completes.
-        </p>
+          {t("Updating player data… Previous results remain visible until the update completes.")}</p>
       ) : null}
       {detailReady && !detailQuery.isError && segmentErrors.length > 0 ? (
         <div className="player-detail-panel player-detail-segment-errors player-detail-recovery">
           <div role="status">
-            <p>Some player data is unavailable. You can still use the available sections.</p>
+            <p>{t("Some player data is unavailable. You can still use the available sections.")}</p>
             <ul>
               {segmentErrors.map((entry, index) => {
                 const row = asRecord(entry);
                 const segment = text(row?.segment) ?? "";
                 return (
                   <li key={`${segment}-${index}`}>
-                    {SEGMENT_LABELS[segment] ?? "Player data"}: {text(row?.detail) ?? "temporarily unavailable"}
+                    {t(SEGMENT_LABELS[segment] ?? "Player data")}: {row?.code === "disabled" ? t("Segment disabled") : t("Temporarily unavailable")}
                   </li>
                 );
               })}
             </ul>
           </div>
-          <Button variant="outline" loading={detailQuery.isFetching} loadingLabel="Retrying…"
-            onClick={() => void detailQuery.refetch()}>Retry player data</Button>
+          <Button variant="outline" loading={detailQuery.isFetching} loadingLabel={t("Retrying…")}
+            onClick={() => void detailQuery.refetch()}>{t("Retry player data")}</Button>
         </div>
       ) : null}
 
@@ -404,22 +402,22 @@ function PlayerDetailBody({ masterId }: PlayerDetailBodyProps) {
           <div className="player-detail-header-text">
             <div className="player-detail-header-facts">
               <span>{teamName ?? MISSING_STAT}</span>
-              <span className="player-profile-position">{positionLabel(positionId) ?? MISSING_STAT}</span>
-              {age != null ? <span>{age} years old</span> : null}
+              <span className="player-profile-position">{(positionLabel(positionId) ?? MISSING_STAT)}</span>
+              {age != null ? <span>{age} {t(" years old")}</span> : null}
             </div>
             <div className="player-detail-title-row"><h1 id="player-overview" tabIndex={-1}>{name}</h1>
               {text(catalogMaster?.playerStatus) ? <AvailabilityCell availability={availability} />
-                : <span className="player-detail-context">Availability unknown</span>}</div>
+                : <span className="player-detail-context">{t("Availability unknown")}</span>}</div>
             <dl className="player-profile-points">
-              <div><dt>Fantasy points</dt><dd>{points ?? MISSING_STAT}</dd></div>
+              <div><dt>{t("Fantasy points")}</dt><dd>{(points ?? MISSING_STAT)}</dd></div>
             </dl>
             {showAvailabilityNote ? (
               <p className="player-detail-availability-reason">
                 {hasActiveInjury ? (
                   <img className="player-detail-injury-icon" src={injuryIcon}
-                    alt="Active injury" />
+                    alt={t("Active injury")} />
                 ) : null}
-                {[availabilityNote, text(injury?.diagnosis)].filter(Boolean).join(" — ")}
+                {<ScrapedText text={[availabilityNote, text(injury?.diagnosis)].filter(Boolean).join(" — ")} />}
               </p>
             ) : null}
           </div>
@@ -429,7 +427,7 @@ function PlayerDetailBody({ masterId }: PlayerDetailBodyProps) {
         ) : null}
         <div className="player-detail-header-actions">
           {ownSquadCard ? (
-            <SquadPlayerActions player={ownSquadCard} sales={squadSales} triggerText="Player options">
+            <SquadPlayerActions player={ownSquadCard} sales={squadSales} triggerText={t("Player options")}>
               <span className="player-detail-squad-hit">{name}</span>
             </SquadPlayerActions>
           ) : null}
@@ -446,10 +444,10 @@ function PlayerDetailBody({ masterId }: PlayerDetailBodyProps) {
         <section className="player-detail-fantasy-overview" aria-labelledby="player-summary-fantasy-title">
           <div className="player-outlook-heading">
             <div>
-              <h2 className="player-section-title" id="player-summary-fantasy-title">Fantasy outlook</h2>
-              <p className="player-detail-context">Team role, starting estimates and recent form.</p>
+              <h2 className="player-section-title" id="player-summary-fantasy-title">{t("Fantasy outlook")}</h2>
+              <p className="player-detail-context">{t("Team role, starting estimates and recent form.")}</p>
             </div>
-            <span className="player-outlook-source">FutbolFantasy</span>
+            <span className="player-outlook-source">{t("FutbolFantasy")}</span>
           </div>
           <PlayerFantasySummary profile={profileBlock} />
         </section>
@@ -460,31 +458,31 @@ function PlayerDetailBody({ masterId }: PlayerDetailBodyProps) {
         aria-busy={updatingPreviousDetail || undefined}>
         <div className="player-form-heading">
           <div>
-            <h2 className="player-section-title" id="player-form-title" tabIndex={-1}>Form — fixture stats</h2>
-            <p>A closer look at recent performances.</p>
+            <h2 className="player-section-title" id="player-form-title" tabIndex={-1}>{t("Form — fixture stats")}</h2>
+            <p>{t("A closer look at recent performances.")}</p>
           </div>
-          <div className="player-detail-fixture-actions" role="group" aria-label="Fixture history length">
+          <div className="player-detail-fixture-actions" role="group" aria-label={t("Fixture history length")}>
             {FIXTURE_LAST_STEPS.map((step) => (
               <button key={step} type="button" className={last === step ? "is-active" : undefined}
                 aria-pressed={last === step} onClick={() => setLast(step)}>
-                Last {step}
+                {t("Last ")}{step}
               </button>
             ))}
           </div>
         </div>
         {updatingPreviousDetail ? (
-          <p className="player-detail-context">Updating fixture statistics… Previous results shown below.</p>
+          <p className="player-detail-context">{t("Updating fixture statistics… Previous results shown below.")}</p>
         ) : detailQuery.isError && detailReady ? (
-          <p className="player-detail-context">Update failed. Previous fixture results shown below.</p>
+          <p className="player-detail-context">{t("Update failed. Previous fixture results shown below.")}</p>
         ) : null}
         {detailReady && (detailQuery.isError || fixturesBlock == null) ? (
-          <Button variant="outline" loading={detailQuery.isFetching} loadingLabel="Retrying…"
-            onClick={() => void detailQuery.refetch()}>Retry fixture statistics</Button>
+          <Button variant="outline" loading={detailQuery.isFetching} loadingLabel={t("Retrying…")}
+            onClick={() => void detailQuery.refetch()}>{t("Retry fixture statistics")}</Button>
         ) : null}
         {!detailReady ? null : fixturesBlock == null ? (
-          <p className="status-copy">Fixture statistics are unavailable.</p>
+          <p className="status-copy">{t("Fixture statistics are unavailable.")}</p>
         ) : fixtureRows.length === 0 ? (
-          <p className="status-copy">No LaLiga fixture stats available.</p>
+          <p className="status-copy">{t("No LaLiga fixture stats available.")}</p>
         ) : (
           <PlayerFormHistory rows={fixtureRows} />
         )}
@@ -492,8 +490,8 @@ function PlayerDetailBody({ masterId }: PlayerDetailBodyProps) {
 
       <section className="player-detail-panel player-detail-section player-market-value-section" aria-labelledby="player-market-title"
         aria-busy={updatingPreviousDetail || undefined}>
-        <h2 className="player-section-title" id="player-market-title" tabIndex={-1}>Market value</h2>
-        <div className="player-detail-market-presets" role="group" aria-label="Market value period">
+        <h2 className="player-section-title" id="player-market-title" tabIndex={-1}>{t("Market value")}</h2>
+        <div className="player-detail-market-presets" role="group" aria-label={t("Market value period")}>
           {MARKET_PRESETS.map((value) => (
             <button
               key={value}
@@ -505,7 +503,7 @@ function PlayerDetailBody({ masterId }: PlayerDetailBodyProps) {
                 setMarketPreset(value);
               }}
             >
-              {value === "season" ? "Season" : value}
+              {value === "season" ? t("Season") : t(value)}
             </button>
           ))}
           <button
@@ -516,46 +514,43 @@ function PlayerDetailBody({ masterId }: PlayerDetailBodyProps) {
               setDateEditorOpen(true);
             }}
           >
-            Custom
-          </button>
+            {t("Custom")}</button>
         </div>
-        {dateEditorOpen ? <Suspense fallback={<PulseRing label="Loading calendar…" />}><DateRangeDialog from={marketCustomFrom} to={marketCustomTo}
+        {dateEditorOpen ? <Suspense fallback={<PulseRing label={t("Loading calendar…")} />}><DateRangeDialog from={marketCustomFrom} to={marketCustomTo}
           onClose={() => setDateEditorOpen(false)} onApply={(from, to) => {
             setMarketCustomFrom(from); setMarketCustomTo(to);
             setMarketUseCustomRange(true); setDateEditorOpen(false);
           }} /></Suspense> : null}
         {updatingPreviousDetail ? (
-          <p className="player-detail-context">Updating market history… Previous period shown below.</p>
+          <p className="player-detail-context">{t("Updating market history… Previous period shown below.")}</p>
         ) : detailQuery.isError && detailReady ? (
-          <p className="player-detail-context">Update failed. Previous market period shown below.</p>
+          <p className="player-detail-context">{t("Update failed. Previous market period shown below.")}</p>
         ) : null}
         {detailReady && (detailQuery.isError || marketBlock == null) ? (
-          <Button variant="outline" loading={detailQuery.isFetching} loadingLabel="Retrying…"
-            onClick={() => void detailQuery.refetch()}>Retry market history</Button>
+          <Button variant="outline" loading={detailQuery.isFetching} loadingLabel={t("Retrying…")}
+            onClick={() => void detailQuery.refetch()}>{t("Retry market history")}</Button>
         ) : null}
         {!detailReady ? null : marketBlock == null ? (
-          <p className="status-copy">Market data is unavailable.</p>
+          <p className="status-copy">{t("Market data is unavailable.")}</p>
         ) : (
           <>
             <p className="player-detail-context player-detail-market-period">
-              Shown period: {marketFrom && marketTo ? <>
+              {t("Shown period: ")}{marketFrom && marketTo ? <>
                 <time dateTime={marketFrom}>{marketFrom}</time> – <time dateTime={marketTo}>{marketTo}</time>
-              </> : "Unavailable"}
+              </> : t("Unavailable")}
             </p>
             <dl className="player-detail-deltas">
-              <div><dt>Current market value</dt>
-                <dd><strong>{currentValue != null ? formatEuro(currentValue) : "Unavailable"}</strong></dd>
+              <div><dt>{t("Current market value")}</dt>
+                <dd><strong>{currentValue != null ? formatEuro(currentValue) : t("Unavailable")}</strong></dd>
               </div>
-              <div><dt>Change in shown period</dt><dd>
+              <div><dt>{t("Change in shown period")}</dt><dd>
               <span className={`player-detail-market-delta ${changeTone}`}>
                 {deltaAbs != null && deltaAbs > 0 ? (
                   <svg viewBox="0 0 24 24" aria-hidden="true">
                     <path d="M12 19V5m0 0-7 7m7-7 7 7" />
                   </svg>
                 ) : null}
-                {deltaAbs != null
-                  ? `${deltaAbs > 0 ? "+" : ""}${formatEuro(deltaAbs)}`
-                  : MISSING_STAT}
+                {deltaAbs != null ? `${deltaAbs > 0 ? "+" : ""}${formatEuro(deltaAbs)}` : MISSING_STAT}
               </span>
               {" · "}
               <span className={`player-detail-market-delta ${changeTone}`}>
@@ -564,12 +559,12 @@ function PlayerDetailBody({ masterId }: PlayerDetailBodyProps) {
                     <path d="M12 19V5m0 0-7 7m7-7 7 7" />
                   </svg>
                 ) : null}
-                {deltaRelPercent(deltaRel) ?? MISSING_STAT}
+                {(deltaRelPercent(deltaRel) ?? MISSING_STAT)}
               </span>
               </dd></div>
             </dl>
-            {marketSeries.length === 0 ? <p className="status-copy">No market history in this period. Choose a different period.</p> : <>
-            <div className="player-detail-chart" role="group" aria-label="Market value history chart">
+            {marketSeries.length === 0 ? <p className="status-copy">{t("No market history in this period. Choose a different period.")}</p> : <>
+            <div className="player-detail-chart" role="group" aria-label={t("Market value history chart")}>
               <ResponsiveContainer width="100%" height={260}>
                 <LineChart
                   data={marketSeries}
@@ -604,13 +599,13 @@ function PlayerDetailBody({ masterId }: PlayerDetailBodyProps) {
                     labelFormatter={(label) => formatChartAxisDate(String(label ?? ""))}
                     formatter={(value, name) => [
                       formatEuro(Number(value)),
-                      name === "Trend" ? "Trend" : "Value",
+                      String(name),
                     ]}
                   />
                   <Line
                     type="monotone"
                     dataKey="trend"
-                    name="Trend"
+                    name={t("Trend")}
                     stroke="var(--fb-muted)"
                     strokeDasharray="5 4"
                     strokeWidth={2}
@@ -620,7 +615,7 @@ function PlayerDetailBody({ masterId }: PlayerDetailBodyProps) {
                   <Line
                     type="monotone"
                     dataKey="value"
-                    name="Value"
+                    name={t("Value")}
                     stroke="#FF4B44"
                     strokeWidth={2.5}
                     dot={false}
@@ -630,11 +625,11 @@ function PlayerDetailBody({ masterId }: PlayerDetailBodyProps) {
               </ResponsiveContainer>
             </div>
             <details className="player-market-history">
-              <summary>View daily market values</summary>
-              <div className="player-detail-table-wrap" tabIndex={0} role="region" aria-label="Daily market values">
+              <summary>{t("View daily market values")}</summary>
+              <div className="player-detail-table-wrap" tabIndex={0} role="region" aria-label={t("Daily market values")}>
                 <table className="player-detail-table">
-                  <caption className="visually-hidden">Market values for the shown period</caption>
-                  <thead><tr><th scope="col">Date</th><th scope="col">Market value</th></tr></thead>
+                  <caption className="visually-hidden">{t("Market values for the shown period")}</caption>
+                  <thead><tr><th scope="col">{t("Date")}</th><th scope="col">{t("Market value")}</th></tr></thead>
                   <tbody>{marketSeries.map((point, index) => <tr key={`${point.date}-${index}`}>
                     <th scope="row"><time dateTime={point.date}>{point.date}</time></th>
                     <td>{formatEuro(point.value)}</td>

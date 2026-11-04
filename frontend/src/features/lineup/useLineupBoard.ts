@@ -1,3 +1,5 @@
+import { useTranslation } from "../../i18n";
+import { durationLabel } from "../../i18n/format";
 import { builderDraft } from "./builderDraft";
 import type { BuilderCandidate } from "../../api/schemas";
 import { notify } from "../../components/ui/Notifications";
@@ -22,7 +24,6 @@ import {
 import {
   asCurrentWeek,
   asStanding,
-  formatFixtureCountdown,
   masterPlayerIdsFromTeam,
   nextFixtureKickoffMs,
   parseIsoTimestampMs,
@@ -217,6 +218,7 @@ export type UseLineupBoardOptions = {
 };
 
 export function useLineupBoard(options: UseLineupBoardOptions = {}): LineupBoard {
+  useTranslation();
   const initialTeamId = options.initialTeamId?.trim() || null;
   const queryClient = useQueryClient();
   const { accessToken, managerName, managerAvatar, markNeedsReauth } = useAuth();
@@ -768,31 +770,31 @@ export function useLineupBoard(options: UseLineupBoardOptions = {}): LineupBoard
     setTeamValueRequested(true);
   }, []);
 
-  const currentFixtureCountdown = useMemo((): string | null => {
+  const currentFixtureCountdown = ((): string | null => {
     if (!lineupUsesCurrent) return null;
     const kickoffMs =
       nextFixtureKickoffMs(fixturesQuery.data, nowMs) ??
       parseIsoTimestampMs(current.openingWeekDate);
     if (kickoffMs == null || kickoffMs <= nowMs) return null;
-    return formatFixtureCountdown(kickoffMs, nowMs);
-  }, [current.openingWeekDate, fixturesQuery.data, lineupUsesCurrent, nowMs]);
+    return durationLabel(Math.floor((kickoffMs - nowMs) / 60_000));
+  })();
 
-  const unplayedFixtureScoreTooltipLabel = useMemo((): string | null => {
+  const unplayedFixtureScoreTooltipLabel = ((): string | null => {
     if (!lineupUsesCurrent || currentFixtureStarted) return null;
     if (currentFixtureCountdown != null) {
       return unplayedFixtureScoreTooltip(currentFixtureCountdown);
     }
     return unplayedFixtureScoreTooltipFallback();
-  }, [currentFixtureCountdown, lineupUsesCurrent, currentFixtureStarted]);
+  })();
 
   const opponentLineupLocked = lineupUsesCurrent && !editable && !currentFixtureStarted;
-  const opponentLineupUnavailableMessageLabel = useMemo((): string | null => {
+  const opponentLineupUnavailableMessageLabel = ((): string | null => {
     if (!opponentLineupLocked) return null;
     if (currentFixtureCountdown != null) {
       return opponentLineupUnavailableMessage(currentFixtureCountdown);
     }
     return opponentLineupUnavailableMessageFallback();
-  }, [currentFixtureCountdown, opponentLineupLocked]);
+  })();
 
   const openOpponentLineupNotice = useCallback(() => {
     if (!opponentLineupLocked) return;

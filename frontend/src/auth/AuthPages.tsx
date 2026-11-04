@@ -1,10 +1,11 @@
+import { t, useTranslation } from "../i18n";
 import { useEffect, useRef, useState, type FormEvent } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { z } from "zod";
 import { Button, buttonVariants } from "../components/ui/Button";
 import { authClient } from "./auth-client";
 import { useAuth } from "./AuthProvider";
-import { passwordIssues } from "./passwordPolicy";
+import { passwordIssueMessages, type PasswordIssue } from "./passwordPolicy";
 import { ProviderLogo, type SocialProvider } from "./ProviderLogo";
 import "./AuthPages.css";
 
@@ -91,6 +92,7 @@ function checked(result: { error: { message?: string; code?: string } | null }) 
 }
 
 export function AuthPage() {
+  useTranslation();
   const { pathname, search, state: navigationState } = useLocation();
   const navigate = useNavigate();
   const auth = useAuth();
@@ -98,7 +100,7 @@ export function AuthPage() {
   const [rememberedEmail, setRememberedEmail] = useState(readVerificationEmail);
   const [busyProvider, setBusyProvider] = useState<SocialProvider | null>(null);
   const [showPassword, setShowPassword] = useState(false);
-  const [passwordProblems, setPasswordProblems] = useState<string[]>([]);
+  const [passwordProblems, setPasswordProblems] = useState<PasswordIssue[]>([]);
   const [message, setMessage] = useState<string | null>(null);
   const [failure, setFailure] = useState(false);
   const [signInOptions, setSignInOptions] = useState<z.infer<typeof signInOptionsSchema> | null>(null);
@@ -138,12 +140,12 @@ export function AuthPage() {
       setFailure(true); setMessage(error instanceof Error ? error.message : "Request failed. Try again.");
     } finally { setBusy(false); }
   }
-  function problemsFor(data: FormData): string[] {
+  function problemsFor(data: FormData): PasswordIssue[] {
     if (pathname !== "/register" && pathname !== "/reset-password") return [];
     const personal = pathname === "/reset-password"
       ? [readSignInIdentifier(), readVerificationEmail()]
       : [data.get("username"), data.get("email")].map(value => String(value ?? ""));
-    return passwordIssues(String(data.get("password") ?? ""), personal);
+    return passwordIssueMessages(String(data.get("password") ?? ""), personal);
   }
   async function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -153,7 +155,7 @@ export function AuthPage() {
       const problems = problemsFor(data);
       if (problems.length) {
         setPasswordProblems(problems);
-        throw new Error(`Choose a stronger password. ${problems[0]}`);
+        throw new Error(t("Choose a stronger password. {{0}}", { 0: t(problems[0].key, problems[0].parameters) }));
       }
       if (pathname === "/sign-in") {
         const identifier = field("identifier").trim();
@@ -204,57 +206,57 @@ export function AuthPage() {
   const email = ["/register", "/forgot-password", "/verify-email"].includes(pathname);
   return <section className="auth-page" aria-labelledby="auth-title">
     <header className="auth-heading">
-      <p className="auth-eyebrow">LALIGA Fantasy Builder</p>
-      <h1 id="auth-title" tabIndex={-1} ref={heading}>{titles[pathname]}</h1>
-      <p className="auth-description">{descriptions[pathname]}</p>
+      <p className="auth-eyebrow">{t("LALIGA Fantasy Builder")}</p>
+      <h1 id="auth-title" tabIndex={-1} ref={heading}>{t(titles[pathname])}</h1>
+      <p className="auth-description">{t(descriptions[pathname])}</p>
       {pathname === "/verify-email" &&
-        <p className="auth-description">Check your inbox for the code. If it is missing, check your spam folder.</p>}
+        <p className="auth-description">{t("Check your inbox for the code. If it is missing, check your spam folder.")}</p>}
     </header>
     {handoff?.verified && !message && !errorMessage && <div className="auth-feedback" role="status">
-      <p>{VERIFIED_NOTICE}</p>
+      <p>{t(VERIFIED_NOTICE)}</p>
     </div>}
     {(message || errorMessage || deleted) && <div className={`auth-feedback ${failure || errorMessage ? "auth-feedback--error" : ""}`} role={failure || errorMessage ? "alert" : "status"}>
-      <p>{message || errorMessage || "Your Fantasy Builder account was deleted."}</p>
+      <p>{t(message || errorMessage || "Your Fantasy Builder account was deleted.")}</p>
       {message === errors.EMAIL_NOT_VERIFIED && <Link to="/verify-email"
-        state={rememberedEmail ? { email: rememberedEmail } : undefined}>Verify your email</Link>}
+        state={rememberedEmail ? { email: rememberedEmail } : undefined}>{t("Verify your email")}</Link>}
     </div>}
-    {social && optionsUnavailable && <p className="auth-field-hint" role="status">Other sign-in options could not be checked. You can still use your username or email.</p>}
+    {social && optionsUnavailable && <p className="auth-field-hint" role="status">{t("Other sign-in options could not be checked. You can still use your username or email.")}</p>}
     {social && availableProviders.length > 0 && <>
-      <div className="auth-social" role="group" aria-label="Sign in with a provider">
+      <div className="auth-social" role="group" aria-label={t("Sign in with a provider")}>
         {availableProviders.map(provider => <Button key={provider} disabled={busy} loading={busyProvider === provider}
-          loadingLabel={`Connecting to ${names[provider]}…`} variant="outline" className={`auth-provider auth-provider--${provider}`}
+          loadingLabel={t("Connecting to {{0}}…", { 0: names[provider] })} variant="outline" className={`auth-provider auth-provider--${provider}`}
           icon={<ProviderLogo provider={provider} />} onClick={() => {
             setBusyProvider(provider);
             void run(async () => {
               checked(await authClient.signIn.social({ provider, callbackURL: "/connect-laliga", errorCallbackURL: "/sign-in" }));
             }).finally(() => setBusyProvider(null));
-          }}>Continue with {names[provider]}</Button>)}
+          }}>{t("Continue with ")}{names[provider]}</Button>)}
       </div>
-      <p className="auth-social-hint">{pathname === "/register" ? "No new password needed with a provider." : "Use the account you already know."}</p>
-      <div className="auth-divider"><span>or continue with {pathname === "/sign-in" ? "your password" : "email"}</span></div>
+      <p className="auth-social-hint">{pathname === "/register" ? t("No new password needed with a provider.") : t("Use the account you already know.")}</p>
+      <div className="auth-divider"><span>{t("or continue with ")}{pathname === "/sign-in" ? t("your password") : t("email")}</span></div>
     </>}
     <form key={pathname} className="auth-form" onSubmit={submit}
       onInput={event => setPasswordProblems(problemsFor(new FormData(event.currentTarget)))}>
         <fieldset disabled={busy}>
-        <legend className="visually-hidden">{titles[pathname]} with {social ? "email or username" : "your account"}</legend>
+        <legend className="visually-hidden">{t(titles[pathname])} {t(" with ")}{social ? t("email or username") : t("your account")}</legend>
         {pathname === "/register" && <>
-          <div className="auth-field"><label htmlFor="name">Name</label><input id="name" name="name" required autoComplete="name" maxLength={100} /></div>
-          <div className="auth-field"><label htmlFor="username">Username</label><input id="username" name="username" required autoComplete="username" minLength={3} maxLength={30} pattern="[A-Za-z0-9_]{3,30}" aria-describedby="username-hint" /><p id="username-hint" className="auth-field-hint">3–30 letters, digits or underscores.</p></div>
+          <div className="auth-field"><label htmlFor="name">{t("Name")}</label><input id="name" name="name" required autoComplete="name" maxLength={100} /></div>
+          <div className="auth-field"><label htmlFor="username">{t("Username")}</label><input id="username" name="username" required autoComplete="username" minLength={3} maxLength={30} pattern="[A-Za-z0-9_]{3,30}" aria-describedby="username-hint" /><p id="username-hint" className="auth-field-hint">{t("3–30 letters, digits or underscores.")}</p></div>
         </>}
-        {pathname === "/sign-in" && <div className="auth-field"><label htmlFor="identifier">Username or email</label><input id="identifier" name="identifier" required autoComplete="username" autoCapitalize="none" spellCheck={false} defaultValue={handoff?.identifier} /></div>}
-        {email && <div className="auth-field"><label htmlFor="email">Email</label>
+        {pathname === "/sign-in" && <div className="auth-field"><label htmlFor="identifier">{t("Username or email")}</label><input id="identifier" name="identifier" required autoComplete="username" autoCapitalize="none" spellCheck={false} defaultValue={handoff?.identifier} /></div>}
+        {email && <div className="auth-field"><label htmlFor="email">{t("Email")}</label>
           <input id="email" name="email" type="email" required autoComplete="email"
             defaultValue={pendingVerificationEmail} /></div>}
-        {pathname === "/verify-email" && <div className="auth-field"><label htmlFor="otp">Verification code</label><input id="otp" name="otp" inputMode="numeric" autoComplete="one-time-code" pattern="[0-9]{8}" required minLength={8} maxLength={8} /></div>}
+        {pathname === "/verify-email" && <div className="auth-field"><label htmlFor="otp">{t("Verification code")}</label><input id="otp" name="otp" inputMode="numeric" autoComplete="one-time-code" pattern="[0-9]{8}" required minLength={8} maxLength={8} /></div>}
         {password && <div className="auth-field">
-          <div className="auth-label-row"><label htmlFor="password">{pathname === "/sign-in" ? "Password" : "New password (at least 12 characters)"}</label>{pathname === "/sign-in" && <Link to="/forgot-password">Forgot password?</Link>}</div>
+          <div className="auth-label-row"><label htmlFor="password">{pathname === "/sign-in" ? t("Password") : t("New password (at least 12 characters)")}</label>{pathname === "/sign-in" && <Link to="/forgot-password">{t("Forgot password?")}</Link>}</div>
           <div className="auth-password"><input id="password" name="password" type={showPassword ? "text" : "password"} required minLength={pathname === "/sign-in" ? 1 : 12} maxLength={128} autoComplete={pathname === "/sign-in" ? "current-password" : "new-password"} aria-describedby={pathname === "/sign-in" ? undefined : "password-hint"} aria-invalid={passwordProblems.length > 0 || undefined} />
-            <button type="button" className="auth-password-toggle" aria-label={showPassword ? "Hide password" : "Show password"} aria-pressed={showPassword} aria-controls="password" onClick={() => setShowPassword(value => !value)}>{showPassword ? "Hide" : "Show"}</button>
+            <button type="button" className="auth-password-toggle" aria-label={showPassword ? t("Hide password") : t("Show password")} aria-pressed={showPassword} aria-controls="password" onClick={() => setShowPassword(value => !value)}>{showPassword ? t("Hide") : t("Show")}</button>
           </div>
           {pathname !== "/sign-in" && <p id="password-hint" className="auth-field-hint" aria-live="polite">
-            {passwordProblems[0] ?? "Longer is better. A few random words work well."}</p>}
+            {passwordProblems[0] ? t(passwordProblems[0].key, passwordProblems[0].parameters) : t("Longer is better. A few random words work well.")}</p>}
         </div>}
-        <Button type="submit" className="auth-submit" loading={busy && !busyProvider}>{pathname === "/verify-email" ? "Verify email" : titles[pathname]}</Button>
+        <Button type="submit" className="auth-submit" loading={busy && !busyProvider}>{pathname === "/verify-email" ? t("Verify email") : t(titles[pathname])}</Button>
         {pathname === "/verify-email" && <Button variant="outline" disabled={busy} onClick={(event) => {
           const form = event.currentTarget.closest("form");
           const email = String(new FormData(form!).get("email") ?? "");
@@ -263,14 +265,14 @@ export function AuthPage() {
             checked(await authClient.sendVerificationEmail({ email }));
             setMessage("If verification is needed, a new code will arrive shortly.");
           });
-        }}>Send a new code</Button>}
+        }}>{t("Send a new code")}</Button>}
         </fieldset>
       </form>
-    <nav className="auth-help" aria-label="Account help">
-      {pathname === "/sign-in" ? <p>New to Fantasy Builder? <Link to="/register">Create account</Link></p>
-        : pathname === "/register" ? <><p>Already have an account?</p><Link to="/sign-in" className={buttonVariants({ variant: "outline", className: "auth-sign-in-link" })}>Sign in</Link></>
-          : <><Link to="/sign-in">Back to sign in</Link>{pathname !== "/forgot-password" && <Link to="/forgot-password">Forgot password?</Link>}</>}
+    <nav className="auth-help" aria-label={t("Account help")}>
+      {pathname === "/sign-in" ? <p>{t("New to Fantasy Builder? ")}<Link to="/register">{t("Create account")}</Link></p>
+        : pathname === "/register" ? <><p>{t("Already have an account?")}</p><Link to="/sign-in" className={buttonVariants({ variant: "outline", className: "auth-sign-in-link" })}>{t("Sign in")}</Link></>
+          : <><Link to="/sign-in">{t("Back to sign in")}</Link>{pathname !== "/forgot-password" && <Link to="/forgot-password">{t("Forgot password?")}</Link>}</>}
     </nav>
-    {social && <aside className="auth-connection-note"><span className="auth-note-mark" aria-hidden="true">↗</span><p><strong>Next: connect your LaLiga account</strong><br />After sign-in, we’ll take you to LaLiga to authorize access to your Fantasy team.</p></aside>}
+    {social && <aside className="auth-connection-note"><span className="auth-note-mark" aria-hidden="true">↗</span><p><strong>{t("Next: connect your LaLiga account")}</strong><br />{t("After sign-in, we’ll take you to LaLiga to authorize access to your Fantasy team.")}</p></aside>}
   </section>;
 }

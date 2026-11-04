@@ -1,3 +1,4 @@
+import { t, useTranslation } from "../../../i18n";
 import { Help } from "../../../components/ui/Help";
 import { Link } from "react-router-dom";
 
@@ -19,7 +20,8 @@ type PlayerCellProps = {
   columnLabel?: string;
 };
 
-export function PlayerCell({ row, now, columnLabel = "Player" }: PlayerCellProps) {
+export function PlayerCell({ row, now, columnLabel = t("Player") }: PlayerCellProps) {
+  useTranslation();
   const offersMenu = useMarketOffersMenu();
   const { selected } = useLeague();
   const hasOffers = row.sellerKind === "self" && row.playerTeamId != null && selected != null
@@ -50,9 +52,9 @@ export function PlayerCell({ row, now, columnLabel = "Player" }: PlayerCellProps
         />
       </div>
       <span className="market-name-wrap" data-label={columnLabel}>
-        {hasOffers ? <Help content="This player has offers."
+        {hasOffers ? <Help content={t("This player has offers.")}
           trigger={<button type="button" className="market-player-offers-flag"
-            aria-label={`View offers for ${row.name}`}
+            aria-label={t("View offers for {{0}}", { 0: row.name })}
             onClick={() => {
               if (row.playerTeamId) offersMenu?.openForPlayer(row.playerTeamId, row.name);
             }} />}>

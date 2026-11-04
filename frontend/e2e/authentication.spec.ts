@@ -29,7 +29,7 @@ for (const theme of ["light", "dark"]) {
       await expect(page).toHaveURL(/\/sign-in$/);
       await expect(page.getByRole("heading", { name: "Sign in", exact: true })).toBeVisible();
       await page.goto("/");
-      if (width < 1000) await page.getByRole("button", { name: "Open settings and account options" }).click();
+      await page.getByRole("button", { name: "Open settings and account options" }).click();
       await page.locator("header").getByRole("button", { name: "Log in", exact: true }).click();
       await expect(page).toHaveURL(/\/sign-in$/);
       await expect(page.getByRole("heading", { name: "Sign in", exact: true })).toBeVisible();
@@ -301,6 +301,10 @@ for (const width of [390, 1440]) {
       if (url.pathname === "/auth/token") return route.fulfill({ json: { token } });
       if (url.pathname === "/laliga/connection") return route.fulfill({ json: { linked: false, needs_reauth: false, manager_id: null, manager_name: null, avatar: null } });
       if (url.pathname === "/auth/sign-in-options") return route.fulfill({ json: { credentials: true, laligaSso: false, directProviders: { google: false, facebook: false, apple: false } } });
+      if (url.pathname === "/laliga/link-options") return route.fulfill({ json: {
+        browser_available: false, manual_available: false, helper_available: false, helper_platforms: [],
+        user_id: "alice", email, name: "Alice Fixture",
+      } });
       if (url.pathname === "/auth/list-accounts") return route.fulfill({ json: [{ id: "credential-account", providerId: "credential", accountId: "alice" }] });
       if (url.pathname.startsWith("/auth/") && request.method() === "POST") {
         const body = request.postDataJSON() ?? {};

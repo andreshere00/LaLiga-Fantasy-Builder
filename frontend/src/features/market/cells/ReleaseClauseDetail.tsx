@@ -1,3 +1,4 @@
+import { t, useTranslation } from "../../../i18n";
 import { formatEuro } from "../../../api/format";
 import shieldIconUrl from "../../../assets/button_shield.svg";
 import { Help } from "../../../components/ui/Help";
@@ -6,6 +7,7 @@ import { protectionDescription, type ReleaseClauseData } from "../model/protecti
 import { clauseUnlockCountdown, remainingLabel } from "../model/valueSeries";
 
 export function ReleaseClauseDetail({ row, now }: { row: ReleaseClauseData; now: number }) {
+  useTranslation();
   const protection = protectionDescription(row, now);
   const countdown = row.sellerKind === "laliga" ? null : clauseUnlockCountdown(row.clauseUnlockAt, now);
   const value = row.buyoutClause != null && row.buyoutClause > 0
@@ -16,7 +18,7 @@ export function ReleaseClauseDetail({ row, now }: { row: ReleaseClauseData; now:
         {protection ? <Help content={protection} className="market-clause-protection">
           <img className="market-clause-shield" src={shieldIconUrl} alt={protection} />
         </Help> : null}
-        <span>Release clause: <span className={row.buyoutClause != null && row.buyoutClause > 0 ? "market-clause-amount" : undefined}>{value}</span></span>
+        <span>{t("Release clause: ")}<span className={row.buyoutClause != null && row.buyoutClause > 0 ? "market-clause-amount" : undefined}>{value}</span></span>
       </span>
       {countdown != null ? <Help content={clauseUnlockTooltip(countdown)} className="market-clause-timer">
         <span aria-hidden="true">{remainingLabel(row.clauseUnlockAt, now)}</span>

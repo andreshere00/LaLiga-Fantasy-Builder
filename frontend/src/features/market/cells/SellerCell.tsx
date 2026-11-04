@@ -1,3 +1,4 @@
+import { t, useTranslation } from "../../../i18n";
 import { Link } from "react-router-dom";
 
 import { MarketActionMenu } from "../actions/MarketActionMenu";
@@ -13,6 +14,7 @@ type SellerCellProps = {
 };
 
 function SellerName({ row }: { row: MarketRow }) {
+  useTranslation();
   const { seller, sellerTeamId, sellerAvatarUrl } = row;
   if (row.sellerKind === "laliga") {
     return <span className="market-seller">
@@ -22,7 +24,7 @@ function SellerName({ row }: { row: MarketRow }) {
           {/* Crop the existing logo to its symbol, above the embedded wordmark. */}
           <image href="/badges/football-logos/spain-la-liga.png" width={512} height={512} />
         </svg>
-        {seller}
+        {t(seller)}
       </span>
     </span>;
   }
@@ -39,11 +41,12 @@ function SellerName({ row }: { row: MarketRow }) {
 }
 
 export function SellerCell({ row, actionContext, actions }: SellerCellProps) {
+  useTranslation();
   return (
     <span className="market-seller-wrap">
       <MarketActionMenu row={row} context={actionContext} actions={actions} />
       <SellerName row={row} />
-      <span className="market-bid-count">Bids: {bidCountLabel(row.numberOfBids)}</span>
+      <span className="market-bid-count">{t("Bids: ")}{bidCountLabel(row.numberOfBids)}</span>
     </span>
   );
 }

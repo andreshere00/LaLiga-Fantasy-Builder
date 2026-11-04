@@ -8,6 +8,68 @@ directly and keeps the internal JWT in memory only.
 - System map: [Architecture](architecture.md)
 - HTTP routes the UI calls: [API overview](api/README.md)
 
+## Spanish and English
+
+The header's Options button opens the league/account panel on mobile and desktop.
+The panel contains the 44 × 44px globe-only language selector beside the theme
+control; both stay hidden when Options is collapsed. The language selector’s
+accessible name and hover title follow the current language (Idioma/Language). The popup lists Español and English with the selected
+option marked; keyboard selection restores focus to the globe. The controls
+share the existing league/account panel without adding a second header row.
+The explicit choice is saved under
+`lfb-language`; otherwise a supported browser language is used, then English.
+Switching updates labels without recreating feature providers or clearing drafts.
+
+Application copy and structured Weather/LALIGA labels use bundled i18next
+catalogs. Literal source messages remain stable keys; English display copy may
+correct their wording without renaming callers. Equivalent entries that differ
+only by surrounding whitespace use explicit catalog entries when spacing is needed.
+`t(key, parameters?)` translates exact string keys; `useTranslation()` subscribes
+components to language changes and returns `t`. Composed messages pass numeric
+parameters explicitly, including translated application labels. Club, player and
+manager identities remain verbatim. Shared primitives render their supplied
+children and labels; each producer owns its application copy. Notifications retain
+message keys and translate while rendering, including screen-reader announcements. Spanish copy uses
+football/Fantasy terms such as plantilla, jornada, puja, titularidad and cláusula
+de rescisión; bids and seller offers remain distinct. OpenWeather forecasts use
+«pronóstico», including upcoming-match headings and unavailable states.
+Dates and numbers use the selected locale; currency remains EUR and fixture
+times remain Europe/Madrid. Whole-euro fields accept validated English or
+Spanish thousands grouping, preserving edits through language changes.
+
+Value and form tooltips grow to fit their content and wrap within the viewport
+on narrow screens. Their translated lines stay inside the tooltip border.
+
+Radar profile and metric IDs select bundled labels and definitions before chart
+wrapping. Imported cohort descriptions without a bundled translation are marked
+as original-source labels in Spanish. Calendar chrome, chart series, countdown
+units, competition categories, partial-data errors, and accessible names also
+follow the selected language. Partial-data messages use stable error codes; raw
+provider details are not translation keys.
+
+Only FutbolFantasy injury diagnoses, free-form injury availability notes, and
+news headlines request machine translation. Spanish shows the original. English
+uses GTranslate Free in a separate opaque sandbox document for each visible
+text block; no application credentials or whole API responses are passed in.
+Results are ephemeral presentation state. Show original and Retry translation
+remain available; blocked or failed translation leaves Spanish text visible.
+The browser must reach `cdn.gtranslate.net` and the vendor's translation service
+(currently `translate-pa.googleapis.com`). This public prose is processed by a
+third party. No translated content is added to backend/query storage, and the
+scraper continues its existing cache/robots/rate-limit behavior.
+
+News links open the publisher's original article. The current API supplies
+headlines, not full article bodies. Optional generated builder explanations
+retain their original English text under a separate disclosure. GTranslate
+Free is intended here for this noncommercial app and has no translated SEO or
+manual translation editing. See the [implementation record](frontend-localization-plan.md)
+for scope and validation. Run the opt-in real-service smoke check with:
+
+```bash
+cd frontend
+LFB_LIVE_TRANSLATION=1 bun run test:browser -- localization.spec.ts -g 'live free'
+```
+
 ## Visual system and screenshots
 
 The app uses Anton display headings, LALIGA Text body/actions, neutral square

@@ -153,7 +153,7 @@ test("partial failures preserve useful sections and can be retried", async ({ pa
   recovered = true;
   await page.getByRole("button", { name: "Retry player data", exact: true }).click();
   await expect(page.getByText("Some player data is unavailable.", { exact: false })).toHaveCount(0);
-  await expect(page.locator(".player-detail-deltas")).toContainText("2.100.000 €");
+  await expect(page.locator(".player-detail-deltas")).toContainText("2,100,000 €");
   await expect(page.locator(".player-match-group").first().getByRole("listitem")).toHaveCount(1);
 });
 
@@ -163,7 +163,7 @@ test("an empty market period keeps the current price visible", async ({ page }) 
     ...detail, market: { ...detail.market, window: { ...detail.market.window, series: [] } },
   } }));
   await page.goto("/players/1");
-  await expect(page.locator(".player-detail-deltas")).toContainText("2.100.000 €");
+  await expect(page.locator(".player-detail-deltas")).toContainText("2,100,000 €");
   await expect(page.getByText("No market history in this period. Choose a different period.", { exact: true })).toBeVisible();
 });
 

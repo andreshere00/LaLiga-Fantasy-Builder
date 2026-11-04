@@ -1,3 +1,4 @@
+import { t, useTranslation } from "../../../i18n";
 import { useEffect, useId, useState } from "react";
 
 import { formatEuro, formatIntegerAmount, parseIntegerAmount } from "../../../api/format";
@@ -46,6 +47,7 @@ export function BidDialog({
   onClose,
   onConfirm,
 }: BidDialogProps) {
+  useTranslation();
   const inputId = useId();
   const [raw, setRaw] = useState("");
 
@@ -69,17 +71,16 @@ export function BidDialog({
   const maximum = maximumBidAmount(money, squadMarketValue, reservedBid);
   const balanceHint =
     maximum != null
-      ? `at most ${formatEuro(maximum)} (${squadMarketValue != null && Number.isFinite(squadMarketValue) && squadMarketValue > 0
-        ? "available cash plus up to 20% of squad value" : "available cash"})`
-      : "within your available bidding limit";
+      ? t("at most {{0}} ({{1}})", { 0: formatEuro(maximum), 1: squadMarketValue != null && Number.isFinite(squadMarketValue) && squadMarketValue > 0 ? t("available cash plus up to 20% of squad value") : t("available cash") })
+      : t("within your available bidding limit");
   const directOffer = usesDirectOfferBid(row, kind);
   const actionLabel = directOffer ? "Send offer" : kind === "modify" ? "Update bid" : "Place bid";
   const amountError = raw.trim().length === 0 || valid ? null
-    : parsed == null ? "Enter a whole euro amount."
-    : row.marketValue == null ? "The minimum amount is unavailable. Refresh the market before trying again."
-    : parsed < bidFloor ? `Enter at least ${formatEuro(bidFloor)}.`
-    : maximum != null ? `Enter no more than ${formatEuro(maximum)}.`
-    : "Your bidding limit is unavailable. Refresh the market before trying again.";
+    : parsed == null ? t("Enter a whole euro amount.")
+    : row.marketValue == null ? t("The minimum amount is unavailable. Refresh the market before trying again.")
+    : parsed < bidFloor ? t("Enter at least {{0}}.", { 0: formatEuro(bidFloor) })
+    : maximum != null ? t("Enter no more than {{0}}.", { 0: formatEuro(maximum) })
+    : t("Your bidding limit is unavailable. Refresh the market before trying again.");
   const hintId = `${inputId}-hint`;
   const errorId = `${inputId}-error`;
 
@@ -93,9 +94,9 @@ export function BidDialog({
     <Dialog
       className="market-bid-dialog"
       open={open}
-      title={directOffer ? "Make offer" : TITLES[kind]}
-      description={<>{directOffer ? "Offer for" : "Bid for"} <strong>{row.name}</strong>.
-        {directOffer && " The owner must accept your offer before the player joins your squad."}</>}
+      title={directOffer ? t("Make offer") : t(TITLES[kind])}
+      description={<>{directOffer ? t("Offer for") : t("Bid for")} <strong>{row.name}</strong>.
+        {(directOffer && t(" The owner must accept your offer before the player joins your squad."))}</>}
       initialFocus={() => document.getElementById(inputId)}
       busy={pending}
       onClose={() => { if (!pending) onClose(); }}
@@ -103,32 +104,31 @@ export function BidDialog({
       footer={
         <>
           <Button variant="outline" shape="square" onClick={onClose} disabled={pending}>
-            Cancel
-          </Button>
+            {t("Cancel")}</Button>
           <Button
             shape="square"
             disabled={!valid}
             loading={pending}
-            loadingLabel="Sending…"
+            loadingLabel={t("Sending…")}
             onClick={() => {
               if (parsed == null) return;
               onConfirm(parsed);
             }}
           >
-            {actionLabel}
+            {t(actionLabel)}
           </Button>
         </>
       }
     >
       <Field data-invalid={amountError ? "" : undefined}>
-        <FieldLabel htmlFor={inputId}>{directOffer ? "Offer amount (€)" : "Bid amount (€)"}</FieldLabel>
+        <FieldLabel htmlFor={inputId}>{directOffer ? t("Offer amount (€)") : t("Bid amount (€)")}</FieldLabel>
         <FieldDescription id={hintId}>
-          Amount must be at least {formatEuro(row.marketValue)} and {balanceHint}.
+          {t("Amount must be at least ")}{formatEuro(row.marketValue)} {t(" and ")}{balanceHint}.
         </FieldDescription>
         <NumericCounterField
           id={inputId}
           inputClassName="market-dialog-input"
-          ariaLabel={directOffer ? "Offer amount" : "Bid amount"}
+          ariaLabel={t(directOffer ? "Offer amount" : "Bid amount")}
           ariaDescribedBy={`${hintId}${amountError ? ` ${errorId}` : ""}`}
           ariaInvalid={!!amountError}
           value={raw}
@@ -146,7 +146,7 @@ export function BidDialog({
       </Field>
       {error ? (
         <p className="market-dialog-error" role="alert">
-          {error}
+          {t(error)}
         </p>
       ) : null}
     </Dialog>

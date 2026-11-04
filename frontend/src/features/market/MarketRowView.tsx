@@ -1,3 +1,4 @@
+import { t, useTranslation } from "../../i18n";
 import type { MarketActionsApi } from "./actions/useMarketActions";
 import { formatEuro } from "../../api/format";
 import type { MarketActionContext } from "./actions/marketActions";
@@ -21,6 +22,7 @@ import {
 
 /** Listing countdown. The final minute uses a warning icon instead of the coral rail. */
 export function SealEnd({ expiresAt, now }: { expiresAt: number | null; now: number }) {
+  useTranslation();
   const imminent = isSealEndUnderOneMinute(expiresAt, now);
   const urgent = !imminent && isSealEndUnderOneHour(expiresAt, now);
   const label = remainingLabel(expiresAt, now);
@@ -29,13 +31,13 @@ export function SealEnd({ expiresAt, now }: { expiresAt: number | null; now: num
     : urgent
       ? "market-seal-end is-urgent"
       : "market-seal-end";
-  const time = <span aria-hidden={imminent || undefined}>{label}</span>;
+  const time = <span aria-hidden={imminent || undefined}>{t(label)}</span>;
   if (!imminent) return <span className={className}>{time}</span>;
   return (
     <Help
-      content="This listing expires in less than one minute."
+      content={t("This listing expires in less than one minute.")}
       trigger={
-        <span className={className} tabIndex={0} aria-label="Less than 1 minute remaining" />
+        <span className={className} tabIndex={0} aria-label={t("Less than 1 minute remaining")} />
       }
     >
       <img src={warningIconUrl} alt="" />
@@ -59,6 +61,7 @@ export function MarketRowCells({
   actions,
   columnHeadings,
 }: MarketRowCellsProps) {
+  useTranslation();
   return (
     <>
       <PlayerCell row={row} now={now} columnLabel={columnHeadings.player.label} />
@@ -84,7 +87,7 @@ export function MarketRowCells({
           valueHistory={row.valueHistory}
         />
         {row.myBid ? <span className="market-bid-value">
-          Your bid: {formatEuro(row.myBid.money)}
+          {t("Your bid: ")}{formatEuro(row.myBid.money)}
         </span> : null}
         {row.sellerKind !== "laliga" ? <ReleaseClauseDetail row={row} now={now} /> : null}
       </span>

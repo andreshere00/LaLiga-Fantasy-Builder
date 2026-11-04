@@ -1,3 +1,4 @@
+import { t, useTranslation } from "../../../i18n";
 import { formatEuro } from "../../../api/format";
 import { useRef } from "react";
 import { Dialog } from "../../../components/ui/Dialog";
@@ -23,14 +24,15 @@ export function ClauseDialog({
   onClose,
   onConfirm,
 }: ClauseDialogProps) {
+  useTranslation();
   const cancelRef = useRef<HTMLButtonElement>(null);
   if (!row) return null;
 
   return (
     <Dialog
       open={open}
-      title="Pay release clause"
-      description={<>Pay {formatEuro(amount)} to trigger the release clause for <strong>{row.name}</strong>?</>}
+      title={t("Pay release clause")}
+      description={<>{t("Pay ")}{formatEuro(amount)} {t(" to trigger the release clause for ")}<strong>{row.name}</strong>?</>}
       initialFocus={cancelRef}
       busy={pending}
       onClose={onClose}
@@ -38,21 +40,19 @@ export function ClauseDialog({
       footer={
         <>
           <Button variant="outline" ref={cancelRef} onClick={onClose} disabled={pending}>
-            Cancel
-          </Button>
+            {t("Cancel")}</Button>
           <Button
             loading={pending}
-            loadingLabel="Paying…"
+            loadingLabel={t("Paying…")}
             onClick={onConfirm}
           >
-            Pay release clause
-          </Button>
+            {t("Pay release clause")}</Button>
         </>
       }
     >
       {error ? (
         <p className="market-dialog-error" role="alert">
-          {error}
+          {t(error)}
         </p>
       ) : null}
     </Dialog>

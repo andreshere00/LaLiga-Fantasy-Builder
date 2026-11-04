@@ -1,3 +1,5 @@
+import { numberFormatter } from "../../i18n/format";
+import { t, useTranslation } from "../../i18n";
 import { BadgeImage } from "../../components/BadgeImage";
 import { fixtureClubMedia, competitionMedia } from "../../api/clubMedia";
 import { WEATHER_CONDITIONS, weatherIcon, weatherReason } from "../../components/weather";
@@ -30,12 +32,14 @@ function competitionHeading(fixture: Record<string, unknown> | null): string {
     normalized.includes("PRIMERA DIVISION")
   ) competition = "LEAGUE";
 
-  if (!competition) return "OTHERS";
+  if (!competition) return t("Other competitions");
   const matchweek = asFiniteNumber(fixture?.matchweek);
-  return `${matchweek != null ? `F${matchweek}` : "F–"} · ${competition}`;
+  const labels: Record<string, string> = { LEAGUE: "LALIGA", CHAMPIONS: "UEFA Champions League", CONFERENCE: "UEFA Conference League", EUROPA: "UEFA Europa League", SUPERCOPA: "Supercopa de España", COPA: "Copa del Rey" };
+  return `${t("Matchweek {{0}}", { 0: matchweek ?? "–" })} · ${labels[competition]}`;
 }
 
 function MatchWeather({ match }: { match: Record<string, unknown> | null }) {
+  useTranslation();
   const weather = asRecord(match?.weather);
   const snapshot = asRecord(weather?.snapshot);
   const condition = weatherConditionFromSnapshot(snapshot);
@@ -46,7 +50,7 @@ function MatchWeather({ match }: { match: Record<string, unknown> | null }) {
 
   return (
     <div className="player-match-weather">
-      <h4>Weather</h4>
+      <h4>{t("Forecast")}</h4>
       {snapshot ? (
         <>
           {condition ? (
@@ -59,19 +63,19 @@ function MatchWeather({ match }: { match: Record<string, unknown> | null }) {
             </span>
           )}
           <p className="player-match-weather-condition">
-            {condition ? WEATHER_CONDITIONS[condition] : "Condition unavailable"}
+            {condition ? t(WEATHER_CONDITIONS[condition]) : t("Condition unavailable")}
           </p>
           <ul className="player-match-weather-metrics">
             <li>
-              Temperature: {temperature != null ? `${temperature}°C` : "–"}
-              {feelsLike != null ? ` (${feelsLike}°C)` : ""}
+              {t("Temperature: ")}{temperature != null ? t("{{0}}°C", { 0: numberFormatter({ maximumFractionDigits: 20 }).format(temperature) }) : "–"}
+              {feelsLike != null ? t(" ({{0}}°C)", { 0: numberFormatter({ maximumFractionDigits: 20 }).format(feelsLike) }) : ""}
             </li>
-            <li>Humidity: {humidity != null ? `${humidity}%` : "–"}</li>
-            <li>Wind: {wind != null ? `${wind} km/h` : "–"}</li>
+            <li>{t("Humidity: ")}{humidity != null ? `${numberFormatter({ maximumFractionDigits: 20 }).format(humidity)}%` : "–"}</li>
+            <li>{t("Wind: ")}{wind != null ? t("{{0}} km/h", { 0: numberFormatter({ maximumFractionDigits: 20 }).format(wind) }) : "–"}</li>
           </ul>
         </>
       ) : (
-        <p className="player-match-weather-unavailable">{weatherReason(weather?.reason)}</p>
+        <p className="player-match-weather-unavailable">{t(weatherReason(weather?.reason))}</p>
       )}
     </div>
   );
@@ -79,6 +83,7 @@ function MatchWeather({ match }: { match: Record<string, unknown> | null }) {
 
 
 function MatchTimer({ kickoff }: { kickoff: string | null }) {
+  useTranslation();
   const now = useNow();
   const kickoffMs = kickoff ? Date.parse(kickoff) : NaN;
   const remaining = kickoffMs - now;
@@ -103,9 +108,9 @@ function MatchTimer({ kickoff }: { kickoff: string | null }) {
 
   return (
     <details className="player-match-timer">
-      <summary>View match timer</summary>
+      <summary>{t("View match timer")}</summary>
       <p>
-        <span>Time remaining</span>
+        <span>{t("Time remaining")}</span>
         <strong>{countdown}</strong>
       </p>
     </details>
@@ -121,6 +126,7 @@ function MatchCard({
   upcoming: boolean;
   playerTeamName: string | null;
 }) {
+  useTranslation();
   const matchRecord = asRecord(match);
   const fixture = asRecord(matchRecord?.fixture) ?? matchRecord;
   const home = fixtureClubMedia(fixture, "home");
@@ -155,18 +161,18 @@ function MatchCard({
           <div className="player-match-crest-tile">
             <BadgeImage media={home} />
           </div>
-          <span className="player-match-team-name">{home?.name ?? text(fixture?.homeTeam) ?? "Home"}</span>
+          <span className="player-match-team-name">{home?.name ?? text(fixture?.homeTeam) ?? t("Home")}</span>
         </div>
         <div className="player-match-team">
           <div className="player-match-crest-tile">
             <BadgeImage media={away} />
           </div>
-          <span className="player-match-team-name">{away?.name ?? text(fixture?.awayTeam) ?? "Away"}</span>
+          <span className="player-match-team-name">{away?.name ?? text(fixture?.awayTeam) ?? t("Away")}</span>
         </div>
       </div>
       {!upcoming ? <p className="player-match-result">
-        <strong>{homeScore ?? "—"} – {awayScore ?? "—"}</strong>
-        {fixture?.result ? <span>{fixture.result === "W" ? "Won" : fixture.result === "L" ? "Lost" : "Draw"}</span> : null}
+        <strong>{(homeScore ?? t("—"))} – {(awayScore ?? t("—"))}</strong>
+        {fixture?.result ? <span>{fixture.result === "W" ? t("Won") : fixture.result === "L" ? t("Lost") : t("Draw")}</span> : null}
       </p> : null}
       <time className="player-match-date" dateTime={matchDate ?? undefined}>
         {date}
@@ -178,9 +184,9 @@ function MatchCard({
         </>
       ) : points != null || minutes != null ? (
         <p className="player-match-player-stats">
-          {minutes != null ? `${minutes} min` : ""}
+          {minutes != null ? t("{{0}} min", { 0: minutes }) : ""}
           {minutes != null && points != null ? " · " : ""}
-          {points != null ? `${points} Fantasy points` : ""}
+          {points != null ? t("{{0}} Fantasy points", { 0: points }) : ""}
         </p>
       ) : null}
     </li>
@@ -200,6 +206,7 @@ function MatchGroup({
   playerTeamName: string | null;
   unavailable?: boolean;
 }) {
+  useTranslation();
   return (
     <div className={`player-match-group${upcoming ? " is-upcoming" : ""}`}>
       <h3>
@@ -207,9 +214,9 @@ function MatchGroup({
         {title}
       </h3>
       {unavailable ? (
-        <p className="player-match-empty">{upcoming ? "Upcoming" : "Recent"} matches are temporarily unavailable.</p>
+        <p className="player-match-empty">{upcoming ? t("Upcoming matches are temporarily unavailable.") : t("Recent matches are temporarily unavailable.")}</p>
       ) : matches.length === 0 ? (
-        <p className="player-match-empty">No {upcoming ? "upcoming" : "recent"} matches available.</p>
+        <p className="player-match-empty">{upcoming ? t("No upcoming matches available.") : t("No recent matches available.")}</p>
       ) : (
         <ul className="player-match-grid">
           {matches.slice(0, 5).map((match, index) => {
@@ -241,6 +248,7 @@ export function PlayerMatchesSection({
   upcoming: Record<string, unknown> | null;
   playerTeamName: string | null;
 }) {
+  useTranslation();
   const recentMatches = Array.isArray(recent?.matches)
     ? sortMatchesByDate(recent.matches, "desc")
     : [];
@@ -250,16 +258,16 @@ export function PlayerMatchesSection({
 
   return (
     <section className="player-detail-panel player-match-section" aria-labelledby="player-matches-title">
-      <h2 className="player-section-title" id="player-matches-title" tabIndex={-1}>Previous &amp; Upcoming matches</h2>
+      <h2 className="player-section-title" id="player-matches-title" tabIndex={-1}>{t("Previous & Upcoming matches")}</h2>
       <MatchGroup
-        title="Previous 5 matches"
+        title={t("Previous 5 matches")}
         matches={recentMatches}
         upcoming={false}
         playerTeamName={playerTeamName}
         unavailable={recent == null}
       />
       <MatchGroup
-        title="Upcoming 5 matches"
+        title={t("Upcoming 5 matches")}
         matches={upcomingMatches}
         upcoming
         playerTeamName={playerTeamName}

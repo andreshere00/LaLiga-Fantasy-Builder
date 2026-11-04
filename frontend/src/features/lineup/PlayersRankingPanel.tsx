@@ -1,3 +1,4 @@
+import { t, useTranslation } from "../../i18n";
 import { useId } from "react";
 import { pointsLabel, type RankingEntry } from "../../api/mappers";
 import { Card, CardContent, CardHeader, CardTitle } from "../../components/ui/Card";
@@ -29,8 +30,8 @@ function fixtureFigure(points: number | null | undefined, loading: boolean): {
 
 function fixtureNotice(week: number, hasScores: boolean): string {
   return hasScores
-    ? `Fixture ${week} scores could not be refreshed.`
-    : `Fixture ${week} scores are unavailable.`;
+    ? t("Fixture {{0}} scores could not be refreshed.", { 0: week })
+    : t("Fixture {{0}} scores are unavailable.", { 0: week });
 }
 
 export function PlayersRankingPanel({
@@ -41,13 +42,14 @@ export function PlayersRankingPanel({
   lastFixturePoints = null,
   lastFixtureUnavailable = false,
 }: PlayersRankingPanelProps) {
+  useTranslation();
   const headingId = useId();
   const showFixture = fixtureWeek >= 1;
   const loadingFixture = showFixture && lastFixturePoints == null && !lastFixtureUnavailable;
   return (
     <Card className="ranking-panel" role="region" aria-labelledby={headingId}>
       <CardHeader>
-        <CardTitle id={headingId}>Players Ranking</CardTitle>
+        <CardTitle id={headingId}>{t("Players Ranking")}</CardTitle>
         {showFixture && lastFixtureUnavailable ? (
           <p className="ranking-fixture-notice" role="alert">
             {fixtureNotice(fixtureWeek, lastFixturePoints != null)}
@@ -55,7 +57,7 @@ export function PlayersRankingPanel({
         ) : null}
       </CardHeader>
       <CardContent>
-        <ScrollArea viewportProps={{ role: "region", "aria-label": "Fantasy manager rankings" }}>
+        <ScrollArea viewportProps={{ role: "region", "aria-label": t("Fantasy manager rankings") }}>
           <ul className="rank-list">
             {ranking.map((row) => {
               const active = row.teamId === selectedTeamId;
@@ -71,7 +73,7 @@ export function PlayersRankingPanel({
                     disabled={!row.selectable}
                     onClick={() => onSelectTeam(row.teamId)}
                   >
-                    <span className="rank-position">{row.position ?? "—"}</span>
+                    <span className="rank-position">{(row.position ?? t("—"))}</span>
                     <span className="avatar" aria-hidden="true">
                       <ProfilePhoto url={row.avatarUrl} fallback={<PersonIcon />} />
                     </span>
@@ -80,10 +82,10 @@ export function PlayersRankingPanel({
                       {fixture ? (
                         <>
                           <span className="standings-sr-only">
-                            {`Fixture ${fixtureWeek} ${fixture.spoken}`}
+                            {t("Fixture {{0}} {{1}}", { 0: fixtureWeek, 1: t(fixture.spoken) })}
                           </span>
                           <Help
-                            content={`Fixture ${fixtureWeek}`}
+                            content={t("Fixture {{0}}", { 0: fixtureWeek })}
                             trigger={<span className="rank-fixture" />}
                           >
                             <span aria-hidden="true">{fixture.visual}</span>
@@ -92,7 +94,7 @@ export function PlayersRankingPanel({
                       ) : null}
                     </span>
                     <span className="rank-points">
-                      {showFixture ? <span className="standings-sr-only">Season </span> : null}
+                      {showFixture ? <span className="standings-sr-only">{t("Season ")}</span> : null}
                       {pointsLabel(row.points)}
                     </span>
                   </button>

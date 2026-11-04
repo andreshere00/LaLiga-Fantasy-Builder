@@ -1,3 +1,5 @@
+import { decimal } from "../../i18n/format";
+import { locale, language } from "../../i18n";
 import { formatEuro } from "../../api/format";
 import { asFiniteNumber, asRecord, text } from "../../api/mappers";
 
@@ -107,7 +109,7 @@ export function formatMarketChartTick(value: number, range?: number): string {
     // Retain enough precision to distinguish ticks for small changes in a high price.
     const precision = range != null && Number.isFinite(range) && range > 0
       ? Math.min(6, Math.max(1, Math.ceil(Math.log10(unit / (range / 4))))) : 1;
-    const formatted = new Intl.NumberFormat("es-ES", { maximumFractionDigits: precision });
+    const formatted = new Intl.NumberFormat(locale(), { maximumFractionDigits: precision });
     return `${formatted.format(value / unit)} ${unit === 1_000_000 ? "M€" : "k€"}`;
   }
   return formatEuro(value);
@@ -151,9 +153,9 @@ export function formatInjuryHistoryEntry(
   else if (start) period = start;
 
   let duration: string | null = null;
-  if (ongoing) duration = "En curso";
+  if (ongoing) duration = language() === "es" ? "En curso" : "Ongoing";
   else if (durationDays != null && durationDays > 0) {
-    duration = durationDays === 1 ? "1 día" : `${durationDays} días`;
+    duration = language() === "es" ? `${durationDays} ${durationDays === 1 ? "día" : "días"}` : `${durationDays} ${durationDays === 1 ? "day" : "days"}`;
   }
 
   return { diagnosis, period, duration };
@@ -172,9 +174,10 @@ function inclusiveInjuryDays(startRaw: unknown, endRaw: unknown): number | null 
 function formatInjuryHistoryDate(raw: unknown): string | null {
   const value = text(raw);
   if (!value) return null;
-  const parsed = new Date(value);
+  const parsed = new Date(`${value.slice(0, 10)}T00:00:00Z`);
   if (Number.isNaN(parsed.getTime())) return value.slice(0, 10);
-  return parsed.toLocaleDateString("es-ES", {
+  return parsed.toLocaleDateString(locale(), {
+    timeZone: "UTC",
     day: "2-digit",
     month: "short",
     year: "numeric",
@@ -197,12 +200,12 @@ export function formatChartAxisDate(raw: string): string {
   if (!raw) return "";
   const parsed = new Date(raw);
   if (Number.isNaN(parsed.getTime())) return raw.slice(0, 10);
-  return parsed.toLocaleDateString("es-ES", { day: "2-digit", month: "short" });
+  return parsed.toLocaleDateString(locale(), { timeZone: "UTC", day: "2-digit", month: "short" });
 }
 
 export function deltaRelPercent(value: number | null | undefined): string | null {
   if (value == null || !Number.isFinite(value)) return null;
-  return `${value > 0 ? "+" : ""}${value.toFixed(2)}%`;
+  return `${value > 0 ? "+" : ""}${decimal(value, 2)}%`;
 }
 
 export type DetailSegmentBlocks = {

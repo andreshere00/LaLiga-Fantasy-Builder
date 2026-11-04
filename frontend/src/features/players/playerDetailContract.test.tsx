@@ -70,3 +70,5 @@ describe("validated player detail consumers", () => {
     expect(weatherConditionFromSnapshot({ conditionCode: 800 })).toBe("clear");
   });
 });
+
+vi.mock("../translation/ScrapedText", () => ({ ScrapedText: ({ text, textId }: { text: string; textId?: string }) => <span id={textId}>{text}</span> }));

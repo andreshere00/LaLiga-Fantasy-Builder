@@ -1,12 +1,14 @@
+import { t, useTranslation } from "../../i18n";
 import "./MarketScreenLoading.css";
 
 const ROWS = Array.from({ length: 6 }, (_, index) => index);
 const COLUMNS = Array.from({ length: 9 }, (_, index) => index);
 
 export function MarketScreenLoading({ tableOnly = false }: { tableOnly?: boolean }) {
+  useTranslation();
   return (
-    <section className="market-loading" role="status" aria-label="Loading market" aria-busy="true">
-      <span className="visually-hidden">Loading market…</span>
+    <section className="market-loading" role="status" aria-label={t("Loading market")} aria-busy="true">
+      <span className="visually-hidden">{t("Loading market…")}</span>
       {!tableOnly ? <div className="market-loading-toolbar" aria-hidden="true">
         <span className="market-loading-block market-loading-title" />
         <span className="market-loading-block market-loading-search" />

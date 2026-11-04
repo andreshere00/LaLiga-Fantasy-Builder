@@ -1,3 +1,4 @@
+import { t, useTranslation } from "../../../i18n";
 import type { ReactElement } from "react";
 import { Help } from "../../../components/ui/Help";
 
@@ -29,6 +30,7 @@ export function ValueCell({
   variationPercent: number | null;
   valueHistory: readonly ValuePoint[];
 }): ReactElement {
+  useTranslation();
   const absolute = formatSignedEuro(variation);
   const percent = formatPercent(variationPercent);
   const tone = variationPercentTone(variationPercent);
@@ -47,19 +49,19 @@ export function ValueCell({
   return (
     <Help className="market-value-line" content={<>
         <span className="market-value-tooltip-line">
-          Last market value: {formatMarketValueStat(stats.last)}
+          {t("Last market value: ")}{formatMarketValueStat(stats.last)}
         </span>
         <span className="market-value-tooltip-line">
-          Highest market value: {formatMarketValueWithChange(stats.best, stats.last)}
+          {t("Highest market value: ")}{formatMarketValueWithChange(stats.best, stats.last)}
         </span>
         <span className="market-value-tooltip-line">
-          Lowest market value: {formatMarketValueWithChange(stats.lowest, stats.last)}
+          {t("Lowest market value: ")}{formatMarketValueWithChange(stats.lowest, stats.last)}
         </span>
         <span className="market-value-tooltip-line">
-          Last 5 days market value: {formatMarketValueWithChange(stats.fiveDaysAgo, stats.last)}
+          {t("Last 5 days market value: ")}{formatMarketValueWithChange(stats.fiveDaysAgo, stats.last)}
         </span>
         <span className="market-value-tooltip-line">
-          Last 14 days market value:{" "}
+          {t("Last 14 days market value:")}{" "}
           {formatMarketValueWithChange(stats.fourteenDaysAgo, stats.last)}
         </span>
 

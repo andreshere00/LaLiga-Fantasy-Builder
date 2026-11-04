@@ -155,15 +155,17 @@ test("acceptance requires confirmation, sends exact offer amount once and refres
   let release: () => void = () => {};
   const gate = new Promise<void>((resolve) => { release = resolve; });
   let writes = 0;
+  const tokenResponse = page.waitForResponse("**/auth/token");
+  await page.goto("/market");
+  const { token } = await (await tokenResponse).json();
   await page.route("**/api/market/leagues/l1/own-listing/offers/league-offer/accept", async (route) => {
     writes += 1;
     expect(route.request().postDataJSON()).toEqual({ offerMoney: 3200000 });
-    expect(route.request().headers().authorization).toBe("Bearer fixture-token");
+    expect(route.request().headers().authorization).toBe(`Bearer ${token}`);
     await gate;
     fixture.remove("league-offer");
     await route.fulfill({ json: { ok: true } });
   });
-  await page.goto("/market");
   const trigger = page.getByRole("button", { name: "Market offers, 2 pending", exact: true });
   await trigger.click();
   const accept = page.getByRole("button", { name: "Accept offer for Player 13 from LaLiga", exact: true });
@@ -273,8 +275,10 @@ test("switching leagues resets the panel and never shows the previous league's o
   await page.getByRole("button", { name: "Market offers, 2 pending", exact: true }).click();
   await page.getByRole("button", { name: "Accept offer for Player 13 from LaLiga", exact: true }).click();
   await page.getByRole("button", { name: "Close", exact: true }).click();
+  await page.locator(".nav-options-trigger").click();
   await page.getByRole("combobox", { name: "League", exact: true }).click();
   await page.getByRole("option", { name: "Other League", exact: true }).click();
+  await page.locator(".nav-options-trigger").click();
   await page.getByRole("button", { name: "Market offers", exact: true }).click();
   await expect(page.getByText("No pending offers.", { exact: true })).toBeVisible();
   await expect(page.getByRole("group", { name: "Confirm acceptance" })).toHaveCount(0);

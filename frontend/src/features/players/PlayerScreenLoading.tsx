@@ -1,3 +1,4 @@
+import { t, useTranslation } from "../../i18n";
 import { PulseRing } from "../../components/ui/PulseRing";
 import "./PlayerScreenLoading.css";
 
@@ -6,14 +7,15 @@ function LoadingBlock({ className = "" }: { className?: string }) {
 }
 
 export function PlayersScreenLoading() {
+  useTranslation();
   return (
     <div
       className="players-loading-state"
       role="status"
-      aria-label="Loading players"
+      aria-label={t("Loading players")}
       aria-busy="true"
     >
-      <span className="visually-hidden">Loading players…</span>
+      <span className="visually-hidden">{t("Loading players…")}</span>
       <div className="players-loading-toolbar">
         <LoadingBlock className="players-loading-title" />
         <LoadingBlock className="players-loading-search" />
@@ -38,5 +40,6 @@ export function PlayersScreenLoading() {
 }
 
 export function PlayerDetailScreenLoading() {
-  return <section className="player-detail-page" aria-busy="true"><PulseRing label="Loading player details…" /></section>;
+  useTranslation();
+  return <section className="player-detail-page" aria-busy="true"><PulseRing label={t("Loading player details…")} /></section>;
 }

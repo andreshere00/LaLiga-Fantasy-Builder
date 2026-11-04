@@ -1,3 +1,4 @@
+import { t, useTranslation } from "../../i18n";
 import { useEffect, useRef, useState } from "react";
 import { materialIconPaths } from "../../assets/material-icons/paths";
 
@@ -11,6 +12,7 @@ const SECTIONS = [
 
 /** Native section links retain heading focus and track the current reading position. */
 export function PlayerSectionNavigation({ detailReady }: { detailReady: boolean }) {
+  useTranslation();
   const navigation = useRef<HTMLElement>(null);
   const [current, setCurrent] = useState<string>(SECTIONS[0].id);
   const sections = detailReady ? SECTIONS : SECTIONS.slice(0, 3);
@@ -76,13 +78,13 @@ export function PlayerSectionNavigation({ detailReady }: { detailReady: boolean 
   }, [current]);
 
   return (
-    <nav ref={navigation} className="player-detail-sections" aria-label="Player sections">
+    <nav ref={navigation} className="player-detail-sections" aria-label={t("Player sections")}>
       {sections.map(({ id, label, icon }) => (
         <a key={id} href={`#${id}`} aria-current={current === id ? "location" : undefined}>
           <svg className="player-section-icon" aria-hidden="true" focusable="false" viewBox="0 0 24 24">
             <path d={icon} />
           </svg>
-          {label}
+          {t(label)}
         </a>
       ))}
     </nav>

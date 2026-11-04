@@ -1,3 +1,4 @@
+import { t } from "../../../i18n";
 import { asFiniteNumber, asRecord, idText, text, type SquadCard } from "../../../api/mappers";
 
 export type ReceivedOffer = {
@@ -43,7 +44,7 @@ export function receivedOffers(card: SquadCard, payload: unknown, now: number): 
     const sender = text(offer.bidderName) ?? text(manager?.managerName)
       ?? text(bidder?.managerName) ?? text(bidder?.name)
       ?? (offer.isFromMarket === true ? "LaLiga"
-        : idText(offer.bidderId) ? `Manager #${idText(offer.bidderId)}`
+        : idText(offer.bidderId) ? t("Manager #{{0}}", { 0: idText(offer.bidderId) ?? "" })
         : offer.isFromMarket === false ? "Other manager" : "Sender unavailable");
     const marketId = idText(offer.marketId) ?? card.listingId;
     const money = asFiniteNumber(offer.money);

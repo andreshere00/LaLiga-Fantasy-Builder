@@ -1,3 +1,4 @@
+import { t } from "../../i18n";
 import { ApiError, NeedsReauthError } from "../../api/errors";
 
 export const LINEUP_NOT_SET_MESSAGE =
@@ -12,12 +13,12 @@ const UNPLAYED_FIXTURE_SCORE_PREFIX = "This fixture has not been played yet.";
 
 /** Hover copy for a player score badge on the open matchweek. */
 export function unplayedFixtureScoreTooltip(countdown: string): string {
-  return `${UNPLAYED_FIXTURE_SCORE_PREFIX} Next match starts in: ${countdown}.`;
+  return t("{{0}} Next match starts in: {{1}}.", { 0: t(UNPLAYED_FIXTURE_SCORE_PREFIX), 1: countdown });
 }
 
 /** Fallback when kickoff time is not available yet. */
 export function unplayedFixtureScoreTooltipFallback(): string {
-  return UNPLAYED_FIXTURE_SCORE_PREFIX;
+  return t(UNPLAYED_FIXTURE_SCORE_PREFIX);
 }
 
 const OPPONENT_LINEUP_UNAVAILABLE_PREFIX =
@@ -25,11 +26,11 @@ const OPPONENT_LINEUP_UNAVAILABLE_PREFIX =
 
 /** Modal copy when peeking an opponent lineup on the open matchweek. */
 export function opponentLineupUnavailableMessage(countdown: string): string {
-  return `${OPPONENT_LINEUP_UNAVAILABLE_PREFIX} Next match: ${countdown}.`;
+  return t("{{0}} Next match: {{1}}.", { 0: t(OPPONENT_LINEUP_UNAVAILABLE_PREFIX), 1: countdown });
 }
 
 export function opponentLineupUnavailableMessageFallback(): string {
-  return OPPONENT_LINEUP_UNAVAILABLE_PREFIX;
+  return t(OPPONENT_LINEUP_UNAVAILABLE_PREFIX);
 }
 
 const LINEUP_LOAD_FAILED_MESSAGE = "This lineup could not be loaded.";

@@ -37,7 +37,7 @@ for (const theme of ["light", "dark"]) {
           await expect(summary.locator(".player-fantasy-summary-block")).toHaveCount(4);
           const hierarchy = summary.locator(".player-fantasy-summary-block--hierarchy");
           await hierarchy.hover();
-          await expect(page.getByRole("tooltip")).toContainText("player's role on the team");
+          await expect(page.getByRole("tooltip")).toContainText("The player’s role in the team");
           await expect(hierarchy.locator("dd")).toHaveCSS("text-align", "left");
           const summaryFontSize = await hierarchy.locator("dd").evaluate((element) =>
             parseFloat(getComputedStyle(element).fontSize));
@@ -99,7 +99,9 @@ test("filters trap keyboard focus, cancel without applying, and restore focus", 
 test("custom calendar cancels edits, applies confirmed dates, and follows the dark theme", async ({ page }) => {
   await mockApplication(page);
   await page.goto("/players/1");
+  await page.locator(".nav-options-trigger").click();
   await page.getByRole("button", { name: "Switch to dark theme" }).click();
+  await page.locator(".nav-options-trigger").click();
   const custom = page.getByRole("button", { name: "Custom", exact: true });
   await custom.click();
   await expect(page.getByRole("dialog")).toBeVisible();

@@ -1,3 +1,4 @@
+import { vi } from "vitest";
 import { cleanup, render, screen } from "@testing-library/react";
 import { afterEach, expect, it } from "vitest";
 import { PlayerFantasySummary } from "./PlayerFantasySection";
@@ -22,7 +23,9 @@ it.each([null, -1, 101])("does not turn an unavailable or invalid estimate (%s) 
 it("keeps a provider's unknown risk and untranslated hierarchy visible", () => {
   render(<PlayerFantasySummary profile={{ hierarchy: { label: "Custom role" },
     injuryRisk: { level: "unknown" }, form: { value: 6.5 } }} />);
-  expect(screen.getByText("Custom role")).toBeTruthy();
-  expect(screen.getByText("Unknown")).toBeTruthy();
+  expect(screen.getByText("Original source label: Custom role")).toBeTruthy();
+  expect(screen.getAllByText("Unknown")[0]).toBeTruthy();
   expect(screen.getByText("6.5")).toBeTruthy();
 });
+
+vi.mock("../translation/ScrapedText", () => ({ ScrapedText: ({ text, textId }: { text: string; textId?: string }) => <span id={textId}>{text}</span> }));
