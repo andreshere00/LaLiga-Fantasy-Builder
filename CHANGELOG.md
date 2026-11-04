@@ -11,6 +11,8 @@ entry, not a claim that every optional provider or deployment gate is complete.
 - Add Spanish and English application copy, structured football and Fantasy
   labels, and locale-aware dates, numbers and countdowns. Save the language
   preference and preserve open dialogs, drafts and pagination when switching.
+- Keep language and light/dark controls inside the Options menu on mobile and
+  desktop, removing the extra row of controls from the compact header.
 - Add a globe-only language selector beside the theme control, with a localized
   accessible name, keyboard selection and a 44 × 44px target in both themes.
 - Translate FutbolFantasy news headlines and injury prose into English through

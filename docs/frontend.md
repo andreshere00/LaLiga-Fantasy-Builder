@@ -10,11 +10,12 @@ directly and keeps the internal JWT in memory only.
 
 ## Spanish and English
 
-The header's language selector is a 44 × 44px globe-only button immediately left
-of the theme control. Its accessible name and hover title follow the current
-language (Idioma/Language). The popup lists Español and English with the selected
-option marked; keyboard selection restores focus to the globe. Both controls
-remain together in the mobile header; league/account options retain their menu.
+The header's Options button opens the league/account panel on mobile and desktop.
+The panel contains the 44 × 44px globe-only language selector beside the theme
+control; both stay hidden when Options is collapsed. The language selector’s
+accessible name and hover title follow the current language (Idioma/Language). The popup lists Español and English with the selected
+option marked; keyboard selection restores focus to the globe. The controls
+share the existing league/account panel without adding a second header row.
 The explicit choice is saved under
 `lfb-language`; otherwise a supported browser language is used, then English.
 Switching updates labels without recreating feature providers or clearing drafts.

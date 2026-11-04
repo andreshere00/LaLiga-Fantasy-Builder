@@ -8,7 +8,7 @@ proposal; the delivered choices are recorded here where they differ:
   parity tests. The Spanish catalog was drafted offline using Argos Translate;
   navigation, football terms and interpolation templates received explicit
   corrections. Further editorial review of long help/error copy is welcome.
-- The header trigger displays only a globe in a 44 × 44px target, with a
+- The language trigger in the Options panel displays only a globe in a 44 × 44px target, with a
   localized accessible name and hover title. Native language names and the
   selected option remain visible in the popup. Keyboard selection restores
   focus to the trigger.
@@ -45,7 +45,7 @@ proposal; the delivered choices are recorded here where they differ:
 
 Support exactly two languages: Spanish (`es`, formatting locale `es-ES`) and
 English (`en`, formatting locale `en-GB`). Use one language selector immediately
-to the left of the dark/light control in the main header.
+to the left of the dark/light control inside the header’s Options panel.
 
 Use two translation paths:
 
@@ -289,7 +289,8 @@ changing translation provider would be a separate decision.
 Desktop order:
 
 ```text
-Brand | Lineup · Market · Players | [Globe] [Theme] [League] [Account]
+Brand | Lineup · Market · Players | [Options]
+Options panel: [Globe] [Theme] [League] [Account]
 ```
 
 Use a Base UI language select with native names Español and English in its
@@ -299,10 +300,10 @@ accessible name and hover title, a visually hidden selected value, keyboard
 selection, focus restoration, and a 44 × 44px target. Mark the selected language
 in the popup.
 
-At mobile widths, retain the language/theme pair together in the header outside
-the collapsible account menu. Allow a second header row when space is limited;
-league and account controls remain under Options, and screen tabs remain in the
-existing bottom navigation. Reuse the header height observer and theme tokens.
+On mobile and desktop, keep the language/theme pair inside the collapsible
+Options panel alongside league/account actions. Both controls remain hidden until
+Options opens, avoiding a second header row. Keep the pair above the existing
+bottom navigation and reuse the header height observer and theme tokens.
 
 Switch without navigation or a full reload. Preserve current route, league,
 fixture, filters, independent news/injury pages, scroll, focus, open dialogs,

@@ -81,6 +81,12 @@ for (const theme of ["light", "dark"]) for (const width of [375, 800, 1440]) {
     await expect(page.locator("html")).toHaveAttribute("lang", "es");
     await expect(page.getByRole("heading", { name: "Últimas noticias", exact: true })).toBeVisible();
     await expect(page.locator('iframe')).toHaveCount(0);
+    const options = page.locator('.nav-options-trigger');
+    await expect(page.locator('.appearance-controls')).toBeHidden();
+    const collapsedHeight = await page.locator('.app-header').evaluate(el => el.getBoundingClientRect().height);
+    await options.click();
+    await expect(options).toHaveAttribute('aria-expanded', 'true');
+    expect(await page.locator('.app-header').evaluate(el => el.getBoundingClientRect().height)).toBe(collapsedHeight);
     const select = page.getByRole("combobox", { name: "Idioma", exact: true });
     const themeButton = page.locator('.appearance-controls .theme-btn');
     await expect(select.locator("svg")).toBeVisible();
@@ -89,6 +95,14 @@ for (const theme of ["light", "dark"]) for (const width of [375, 800, 1440]) {
     expect(selectBounds?.height).toBe(44);
     expect(await select.evaluate((el, theme) => el.getBoundingClientRect().right <= (document.querySelector(theme)!.getBoundingClientRect().left), '.appearance-controls .theme-btn')).toBe(true);
     await expect(themeButton).toBeVisible();
+    const panelBounds = await page.locator('.nav-actions-panel').boundingBox();
+    expect(panelBounds!.x).toBeGreaterThanOrEqual(0);
+    expect(panelBounds!.x + panelBounds!.width).toBeLessThanOrEqual(width);
+    await page.screenshot({ path: `/tmp/lfb-options-${theme}-${width}.png` });
+    await themeButton.click();
+    await expect(page.locator('html')).toHaveAttribute('data-theme', theme === 'light' ? 'dark' : 'light');
+    await themeButton.click();
+    await expect(page.locator('html')).toHaveAttribute('data-theme', theme);
     await select.focus();
     await page.keyboard.press("Enter");
     await expect(page.getByRole("option", { name: "Español", exact: true })).toHaveAttribute("aria-selected", "true");
@@ -99,6 +113,8 @@ for (const theme of ["light", "dark"]) for (const width of [375, 800, 1440]) {
     await expect(page.getByRole("combobox", { name: "Language", exact: true })).toBeFocused();
     await expect(page.locator("html")).toHaveAttribute("lang", "en");
     await expect(page.getByRole("heading", { name: "Latest news", exact: true })).toBeVisible();
+    await options.click();
+    await expect(page.locator(".appearance-controls")).toBeHidden();
     await page.getByRole("link", { name: "Vuelve al entrenamiento", exact: true }).scrollIntoViewIfNeeded();
     await expect(page.getByRole("link", { name: "Translated: Vuelve al entrenamiento", exact: true })).toBeVisible();
 
@@ -106,8 +122,10 @@ for (const theme of ["light", "dark"]) for (const width of [375, 800, 1440]) {
     expect(await page.evaluate(() => localStorage.getItem('lfb-language'))).toBe('en');
     await page.reload();
     await expect(page.locator("html")).toHaveAttribute("lang", "en");
+    await options.click();
     await page.getByRole("combobox", { name: "Language", exact: true }).click();
     await page.getByRole("option", { name: "Español", exact: true }).click();
+    await options.click();
     await expect(page.getByRole("link", { name: "Vuelve al entrenamiento", exact: true })).toBeVisible();
     await expect(page.locator('iframe')).toHaveCount(0);
     expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
@@ -138,12 +156,14 @@ test("language changes retain independent history pages and blocked translation 
   await injuries.getByRole('button', { name: 'Page 2', exact: true }).click();
   await expect(news.getByRole('navigation')).toContainText('6–10 of 21');
   await expect(injuries.getByRole('navigation')).toContainText('6–8 of 8');
+  await page.locator('.nav-options-trigger').click();
   await page.getByRole('combobox', { name: 'Language', exact: true }).click();
   await page.getByRole('option', { name: 'Español', exact: true }).click();
   await expect(news.getByRole('navigation')).toContainText('6–10 de 21');
   await expect(injuries.getByRole('navigation')).toContainText('6–8 de 8');
   await page.getByRole('combobox', { name: 'Idioma', exact: true }).click();
   await page.getByRole('option', { name: 'English', exact: true }).click();
+  await page.locator('.nav-options-trigger').click();
   await news.scrollIntoViewIfNeeded();
   await expect(news.getByRole('navigation')).toContainText('6–10 of 21');
   await expect(news.getByText('Translation unavailable. Original Spanish shown.').first()).toBeVisible();
@@ -177,7 +197,10 @@ for (const { theme, width } of [{ theme: "light", width: 375 }, { theme: "dark",
       ],
     } }));
     await page.goto("/players/1");
-    await page.getByRole("heading", { name: "Perfil de rendimiento", exact: true }).scrollIntoViewIfNeeded();
+    // Segment updates may replace the loading section while it is scrolled into view.
+    await expect(async () => {
+      await page.getByRole("heading", { name: "Perfil de rendimiento", exact: true }).scrollIntoViewIfNeeded();
+    }).toPass();
     const plot = page.locator(".player-radar");
     await expect(plot.getByRole("heading", { name: "Defensa central", exact: true })).toBeVisible();
     await expect(plot.getByText("Pases completados por 90 minutos", { exact: true })).toBeVisible();
@@ -205,6 +228,7 @@ for (const { theme, width } of [{ theme: "light", width: 375 }, { theme: "dark",
     await dialog.getByRole("button", { name: "Cancelar", exact: true }).click();
     expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
     await page.screenshot({ path: info.outputPath(`structured-es-${theme}-${width}.png`), fullPage: true });
+    await page.locator(".nav-options-trigger").click();
     await page.getByRole("combobox", { name: "Idioma", exact: true }).click();
     await page.getByRole("option", { name: "English", exact: true }).click();
     await expect(plot.getByRole("heading", { name: "Centre-back", exact: true })).toBeVisible();

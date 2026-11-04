@@ -84,8 +84,10 @@ test("league switching isolates bids, totals and dialog state", async ({ page })
   await page.goto("/market");
   await bidTrigger(page).click();
   await page.keyboard.press("Escape");
+  await page.locator(".nav-options-trigger").click();
   await page.getByRole("combobox", { name: "League", exact: true }).click();
   await page.getByRole("option", { name: "Other League", exact: true }).click();
+  await page.locator(".nav-options-trigger").click();
   await expect(await summaryValue(page, "Projected spending")).toHaveText("0 €");
   await bidTrigger(page, 0).click();
   await expect(page.getByText("No active bids.", { exact: true })).toBeVisible();

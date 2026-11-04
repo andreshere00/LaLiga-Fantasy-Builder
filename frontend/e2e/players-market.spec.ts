@@ -180,8 +180,10 @@ test("catalog resets clause ownership and dialog state when switching leagues", 
   await page.goto("/players?q=Player+01");
   const row = playerRow(page, "Player 01");
   await expect(row.getByRole("link", { name: "Player 01", exact: true })).toHaveCSS("color", "rgb(255, 75, 68)");
+  await page.locator(".nav-options-trigger").click();
   await page.getByRole("combobox", { name: "League", exact: true }).click();
   await page.getByRole("option", { name: "Other League", exact: true }).click();
+  await page.locator(".nav-options-trigger").click();
   await expect(row.locator(".players-value-details").getByText("Release clause: 3,000,000 €", { exact: true })).toBeVisible();
   await expect(row.getByRole("link", { name: "Player 01", exact: true })).not.toHaveCSS("color", "rgb(255, 75, 68)");
   await expect(page.getByRole("dialog")).toHaveCount(0);

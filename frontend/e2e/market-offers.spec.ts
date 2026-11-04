@@ -275,8 +275,10 @@ test("switching leagues resets the panel and never shows the previous league's o
   await page.getByRole("button", { name: "Market offers, 2 pending", exact: true }).click();
   await page.getByRole("button", { name: "Accept offer for Player 13 from LaLiga", exact: true }).click();
   await page.getByRole("button", { name: "Close", exact: true }).click();
+  await page.locator(".nav-options-trigger").click();
   await page.getByRole("combobox", { name: "League", exact: true }).click();
   await page.getByRole("option", { name: "Other League", exact: true }).click();
+  await page.locator(".nav-options-trigger").click();
   await page.getByRole("button", { name: "Market offers", exact: true }).click();
   await expect(page.getByText("No pending offers.", { exact: true })).toBeVisible();
   await expect(page.getByRole("group", { name: "Confirm acceptance" })).toHaveCount(0);

@@ -50,7 +50,6 @@ export function Header() {
           <NavLink to="/market" className="nav-tab">{localizeCopy("Market")}</NavLink>
           <NavLink to="/players" className="nav-tab">{localizeCopy("Players")}</NavLink>
         </nav>
-        <div className="appearance-controls"><LanguageSelector /><ThemeToggle /></div>
         <div className={`nav-actions${optionsOpen ? " is-open" : ""}`}>
           <button
             type="button"
@@ -66,6 +65,7 @@ export function Header() {
             <span>{localizeCopy("Options")}</span>
           </button>
           <div className="nav-actions-panel" id="nav-actions-panel">
+            <div className="appearance-controls"><LanguageSelector /><ThemeToggle /></div>
             <Select.Root items={items} value={selected ? leagueId(selected) : null}
               onValueChange={(value) => { if (value) selectLeague(value); }}
               disabled={leagues.length === 0}>

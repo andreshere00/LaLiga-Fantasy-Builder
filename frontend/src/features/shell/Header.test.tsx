@@ -54,6 +54,7 @@ describe("Header", () => {
       </BrowserRouter>,
     );
 
+    fireEvent.click(screen.getByRole("button", { name: "Open settings and account options" }));
     const trigger = screen.getByRole("combobox", { name: "League" });
     expect(trigger.textContent).toContain("Alpha");
     fireEvent.keyDown(trigger, { key: "ArrowDown" });
