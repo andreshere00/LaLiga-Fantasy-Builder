@@ -70,13 +70,13 @@ export function PlayerPerformanceDialog({ rows, playerName, onClose }: {
           if (metrics.length === 0) return null;
           const sources = [...new Set(metrics.map(metricSource))];
           const commonSource = sources.length === 1 ? sources[0] : null;
-          return <section className="player-metric-group" key={group.title} aria-label={group.title}>
-            <header><h3>{group.title}</h3><p>{localizeCopy(group.description)}</p>
+          return <section className="player-metric-group" key={group.title} aria-label={localizeCopy(group.title)}>
+            <header><h3>{localizeCopy(group.title)}</h3><p>{localizeCopy(group.description)}</p>
               {commonSource ? <span className="player-metric-source">{localizeCopy(commonSource)}</span> : null}
             </header>
             <dl>{metrics.map((row) => <div className="player-metric-reading" key={row.code}>
               <dt><span className="player-metric-label">{localizeCopy(row.label)}</span>
-                <small>{METRIC_GUIDE[row.code]?.meaning ?? "An event count supplied by this data source."}</small>
+                <small>{localizeCopy(METRIC_GUIDE[row.code]?.meaning ?? "An event count supplied by this data source.")}</small>
                 {!commonSource ? <span className="player-metric-source">{localizeCopy(metricSource(row))}</span> : null}
               </dt>
               <dd><strong>{localizeCopy(decimal(row.value!, 2))}</strong><span>{localizeCopy("/ match")}</span></dd>

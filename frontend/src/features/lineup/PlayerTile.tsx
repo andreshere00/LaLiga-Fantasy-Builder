@@ -1,4 +1,4 @@
-import { copy as localizeCopy, useLanguage } from "../../i18n";
+import { copy as localizeCopy, useLanguage, i18n } from "../../i18n";
 import { BadgeImage } from "../../components/BadgeImage";
 import { clubMediaFromBadge } from "../../api/clubMedia";
 import { useState } from "react";
@@ -171,26 +171,28 @@ export function PlayerTile({
     fixturePoints == null
       ? ""
       : isMvp
-        ? `, ${fixturePoints} points, MVP`
-        : `, ${fixturePoints} points`;
+        ? `, ${fixturePoints} ${localizeCopy("points")}, MVP`
+        : `, ${fixturePoints} ${localizeCopy("points")}`;
   const form = squadStats?.outlook;
   const formRating = playerFormPresentation(form?.rating);
-  const formLabel = form ? `Current form: ${formRating?.label ?? "Unavailable"}` : null;
+  const formLabel = form ? `Current form: ${localizeCopy(formRating?.label ?? "Unavailable")}` : null;
   const totalLabel = squadStats
-    ? `Season total: ${squadStats.totalPoints ?? "Unavailable"} Fantasy points` : null;
-  const starterLabel = form ? `Starter probability: ${form.starterProbability == null
-    ? "Unavailable" : `${form.starterProbability}%`}${form.matchweek == null
-      ? "" : ` for ${scoreWeekLabel(form.matchweek)}`}` : null;
+    ? `Season total: ${squadStats.totalPoints ?? localizeCopy("Unavailable")} Fantasy points` : null;
+  const starterLabel = form ? i18n.t("Starter probability: {{0}}{{1}}", {
+    0: form.starterProbability == null ? localizeCopy("Unavailable") : `${form.starterProbability}%`,
+    1: form.matchweek == null ? "" : i18n.t(" for matchday {{0}}", { 0: form.matchweek }),
+  }) : null;
   const playerLabel = empty
     ? NOT_SELECTED_PLAYER_LABEL
     : captain
-      ? `${name}, captain${scoreLabel}`
+      ? `${name}, ${localizeCopy("Captain")}${scoreLabel}`
       : `${name}${scoreLabel}`;
   const label = [
     playerLabel, highlightText, positionNeededText, ...scoreLineTexts,
     totalLabel, starterLabel, formLabel,
   ]
     .filter(Boolean)
+    .map(fragment => localizeCopy(fragment))
     .join(", ");
   const photoCandidates = [
     ...new Set(
@@ -273,10 +275,10 @@ export function PlayerTile({
       ) : null}
     </>
   );
-  const statusText = [highlightText, positionNeededText].filter(Boolean).join(", ");
+  const statusText = [highlightText, positionNeededText].filter(Boolean).map(fragment => localizeCopy(fragment)).join(", ");
   const visibleLabel = statusText
-    ? [captain ? `${name}, captain` : name, statusText].join(", ")
-    : captain ? `${name}, captain` : undefined;
+    ? [captain ? `${name}, ${localizeCopy("Captain")}` : name, statusText].join(", ")
+    : captain ? `${name}, ${localizeCopy("Captain")}` : undefined;
   if (interactive && onSelect) {
     return <Help content={help} trigger={<button type="button" className={className}
       aria-label={localizeCopy(label)} aria-pressed={selected} onClick={onSelect} />}>{body}</Help>;

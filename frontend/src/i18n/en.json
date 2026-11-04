@@ -1510,5 +1510,18 @@
   "Your lineup": "Your lineup",
   "Your squad": "Your squad",
   "{{0}}’s lineup": "{{0}}’s lineup",
-  "{{0}}’s squad": "{{0}}’s squad"
+  "{{0}}’s squad": "{{0}}’s squad",
+  "Original source label: {{0}}": "Original source label: {{0}}",
+  "{{0}} day": "{{0}} day",
+  "{{0}} days": "{{0}} days",
+  "{{0}} against {{1}}, {{2}}, {{3}}, {{4}}": "{{0}} against {{1}}, {{2}}, {{3}}, {{4}}",
+  "GKP": "GKP",
+  "MDF": "MDF",
+  "ATK": "ATK",
+  "COA": "COA",
+  "Captain": "Captain",
+  "point": "point",
+  "points": "points",
+  "{{0}}, captain": "{{0}}, captain",
+  " for matchday {{0}}": " for matchday {{0}}"
 }

@@ -1,3 +1,5 @@
+import { copy } from "../../i18n";
+
 export const COACH_POSITION_ID = 5;
 
 export const POSITION_FILTER_OPTIONS: readonly {
@@ -22,7 +24,7 @@ const POSITIONS: Record<number, { abbrev: string; label: string; tone: string }>
 
 export function positionAbbrev(positionId: number | null): string {
   if (positionId == null) return "—";
-  return POSITIONS[positionId]?.abbrev ?? "—";
+  return copy(POSITIONS[positionId]?.abbrev ?? "—");
 }
 
 export function positionLabel(positionId: number | null): string | null {

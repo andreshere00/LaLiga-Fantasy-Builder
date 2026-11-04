@@ -1,5 +1,5 @@
 import { locale } from "../../i18n";
-import { copy as localizeCopy, useLanguage } from "../../i18n";
+import { copy as localizeCopy, useLanguage, language, i18n } from "../../i18n";
 import { Popover } from "@base-ui/react/popover";
 import { useId } from "react";
 import { ApiContractError, ApiError } from "../../api/errors";
@@ -21,6 +21,8 @@ const outcomes = {
   D: { label: "Draw", variant: "warning" },
   L: { label: "Loss", variant: "failure" },
 } as const;
+const shortLabel = (value: string) => language() === "es"
+  ? ({ W: "G", D: "E", L: "P", GA: "GC", GD: "DG" } as Record<string, string>)[value] ?? value : value;
 const columns = [
   ["#", "Ranking"], ["Team", "Team"], ["Pts", "Score (league points)"],
   ["W", "Matches won"], ["D", "Matches tied"], ["L", "Matches lost"],
@@ -37,17 +39,20 @@ function dateLabel(value: string): string {
 function MatchResult({ match, teamName }: { match: StandingMatch; teamName: string }) {
   useLanguage();
   const outcome = outcomes[match.result];
-  const description = `${outcome.label} against ${match.opponent.name}, ${match.venue}, ` +
-    `${match.goalsFor}–${match.goalsAgainst}, ${dateLabel(match.kickoffAt)}`;
+  const description = i18n.t("{{0}} against {{1}}, {{2}}, {{3}}, {{4}}", {
+    0: localizeCopy(outcome.label), 1: match.opponent.name,
+    2: localizeCopy(match.venue === "home" ? "Home" : "Away"),
+    3: `${match.goalsFor}–${match.goalsAgainst}`, 4: dateLabel(match.kickoffAt),
+  });
   return (
     <Popover.Root>
       <Popover.Trigger className="standing-form-trigger" aria-label={localizeCopy(description)}>
-        <Badge variant={outcome.variant}>{localizeCopy(match.result)}</Badge>
+        <Badge variant={outcome.variant}>{shortLabel(match.result)}</Badge>
       </Popover.Trigger>
       <Popover.Portal>
         <Popover.Positioner sideOffset={8} className="standing-match-positioner">
           <Popover.Popup className="standing-match-popup">
-            <Popover.Title>{localizeCopy(outcome.label)} · {localizeCopy(match.venue)}</Popover.Title>
+            <Popover.Title>{localizeCopy(outcome.label)} · {localizeCopy(match.venue === "home" ? "Home" : "Away")}</Popover.Title>
             <Popover.Description>
               {teamName} {match.goalsFor}–{match.goalsAgainst} {match.opponent.name}
               <time dateTime={match.kickoffAt}>{localizeCopy(dateLabel(match.kickoffAt))}</time>
@@ -107,14 +112,14 @@ export function LaligaStandingsPanel() {
         </p> : null}
       </CardHeader>
       <CardContent>
-        <ScrollArea horizontal viewportProps={{ role: "region", "aria-label": "LALIGA standings table" }}>
+        <ScrollArea horizontal viewportProps={{ role: "region", "aria-label": localizeCopy("LALIGA standings table") }}>
           {data ? (
             <Table className="standings-table">
               <TableCaption className="standings-sr-only">
                 {localizeCopy("LALIGA ")}{data.season}/{localizeCopy(String(data.season + 1).slice(-2))} {localizeCopy(" standings from completed matches. Last five results run from oldest to newest.")}</TableCaption>
               <TableHeader><TableRow>
                 {columns.map(([short, label]) => (
-                  <TableHead key={label} aria-label={localizeCopy(label)}>{localizeCopy(short)}</TableHead>
+                  <TableHead key={label} aria-label={localizeCopy(label)}>{shortLabel(short)}</TableHead>
                 ))}
               </TableRow></TableHeader>
               <TableBody>

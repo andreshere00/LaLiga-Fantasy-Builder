@@ -1,3 +1,4 @@
+import { copy } from "../../i18n";
 import { asFiniteNumber, asRecord, idText, text } from "../../api/mappers";
 
 export type FixtureScoreLine = {
@@ -207,9 +208,9 @@ export function readFixtureScoreLines(
  */
 export function fixtureScoreLineLabel(line: FixtureScoreLine): string {
   const amount = Math.abs(line.points) === 1 ? "point" : "points";
-  const points = `${signedFixturePoints(line.points)} ${amount}`;
-  if (line.count == null) return `${line.label}, ${points}`;
-  return `${line.label}, ${line.count}, ${points}`;
+  const points = `${signedFixturePoints(line.points)} ${copy(amount)}`;
+  if (line.count == null) return `${copy(line.label)}, ${points}`;
+  return `${copy(line.label)}, ${line.count}, ${points}`;
 }
 
 /**

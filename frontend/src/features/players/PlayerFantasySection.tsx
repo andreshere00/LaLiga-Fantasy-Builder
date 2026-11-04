@@ -1,6 +1,6 @@
 import { dateFormatter } from "../../i18n/format";
 import { ScrapedText } from "../translation/ScrapedText";
-import { copy as localizeCopy, useLanguage } from "../../i18n";
+import { copy as localizeCopy, useLanguage, i18n } from "../../i18n";
 import { NumberPagination } from "../../components/ui/NumberPagination";
 import { Help } from "../../components/ui/Help";
 import hierarchyGod from "../../assets/button_hierarchy_god.svg";
@@ -126,7 +126,7 @@ export function PlayerFantasySummary({ profile }: FantasySectionProps) {
   const hierarchyRaw = text(hierarchy?.label);
   const hierarchyKeyValue = hierarchyRaw ? normalizedFantasyValue(hierarchyRaw) : "";
   const hierarchyLabel = hierarchyRaw
-    ? HIERARCHY_LABELS[hierarchyKeyValue] ?? hierarchyRaw
+    ? HIERARCHY_LABELS[hierarchyKeyValue] ?? "Unknown"
     : "Unavailable";
   const reportedStartPercent = asFiniteNumber(startProbability?.percent);
   const startPercent = reportedStartPercent != null && reportedStartPercent >= 0 &&
@@ -136,9 +136,9 @@ export function PlayerFantasySummary({ profile }: FantasySectionProps) {
   const formRatingRaw = text(form?.rating);
   const formRating = playerFormPresentation(formRatingRaw);
   const formIcons = formRating?.icons;
-  const injuryRaw = text(injuryRisk?.raw) ?? text(injuryRisk?.level);
+  const injuryRaw = text(injuryRisk?.level) ?? text(injuryRisk?.raw);
   const injuryLabel = injuryRaw
-    ? INJURY_RISK_LABELS[normalizedFantasyValue(injuryRaw)] ?? injuryRaw
+    ? INJURY_RISK_LABELS[normalizedFantasyValue(injuryRaw)] ?? "Unknown"
     : "Unavailable";
   const hierarchyKeyText = hierarchyKeyValue;
   const hierarchyIcon = hierarchyKeyText.includes("dios") || hierarchyKeyText === "god"
@@ -193,6 +193,7 @@ export function PlayerFantasySummary({ profile }: FantasySectionProps) {
                 className={hierarchyIcon === hierarchyImportant ? "player-outlook-neutral-icon" : undefined} /> : "—"}
             </span>
             <span>{localizeCopy(hierarchyLabel)}</span>
+            {hierarchyRaw && !HIERARCHY_LABELS[hierarchyKeyValue] ? <small>{i18n.t("Original source label: {{0}}", { 0: hierarchyRaw })}</small> : null}
           </span>
           <span className="player-outlook-caption">{localizeCopy("Role in the squad")}</span>
         </dd>
@@ -361,7 +362,7 @@ function PlayerInjuryHistory({ profile }: FantasySectionProps) {
                         <time dateTime={end}>{localizeCopy(reportDate(end))}</time></> : null}
                     </p>
                   </div>
-                  {days ? <span className="player-injury-duration" aria-label={localizeCopy(duration ?? undefined)}>
+                  {days ? <span className="player-injury-duration" aria-label={i18n.t(days[1] === "1" ? "{{0}} day" : "{{0}} days", { 0: days[1] })}>
                     <strong>{localizeCopy(days[1])}</strong><span>{localizeCopy(days[2])}</span>
                   </span> : null}
                 </article>
