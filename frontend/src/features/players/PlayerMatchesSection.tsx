@@ -50,7 +50,7 @@ function MatchWeather({ match }: { match: Record<string, unknown> | null }) {
 
   return (
     <div className="player-match-weather">
-      <h4>{localizeCopy("Weather")}</h4>
+      <h4>{localizeCopy("Forecast")}</h4>
       {snapshot ? (
         <>
           {condition ? (

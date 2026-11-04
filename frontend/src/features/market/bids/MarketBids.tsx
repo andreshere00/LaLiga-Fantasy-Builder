@@ -30,7 +30,7 @@ export function MarketBids({ board, actions, now }: Props) {
   const close = () => { if (!actions.actionPending) setOpen(false); };
   return <>
     <Button ref={trigger} shape="square" variant="outline" className="market-bids-trigger"
-      aria-label={localizeCopy(`My bids, ${bids.length} active${!complete ? ", incomplete" : ""}`)}
+      aria-label={localizeCopy(`My bids, ${bids.length} active${!complete ? localizeCopy(", incomplete") : ""}`)}
       aria-haspopup="dialog" aria-expanded={open} onClick={() => setOpen(true)}>
       {localizeCopy("My bids ")}<span className="market-bids-count">{bids.length}</span>
     </Button>

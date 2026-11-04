@@ -1,5 +1,6 @@
-import { cleanup, fireEvent, render, screen } from "@testing-library/react";
+import { act, cleanup, fireEvent, render, screen } from "@testing-library/react";
 import { afterEach, expect, it, vi } from "vitest";
+import { i18n } from "../../../i18n";
 import type { MarketRow } from "../model/row";
 import { BidDialog } from "./BidDialog";
 
@@ -11,7 +12,7 @@ const row: MarketRow = {
   buyoutClause: null, clauseUnlockAt: null, isShielded: false, myBid: null, directOffer: false, valueHistory: [],
 };
 
-afterEach(cleanup);
+afterEach(() => { cleanup(); void i18n.changeLanguage("en"); });
 
 it("should confirm a bid that uses the allowed debt from a positive cash balance", () => {
   const confirm = vi.fn();
@@ -45,4 +46,28 @@ it("should include the released reservation when modifying a bid across zero cas
   expect(button.disabled).toBe(false);
   fireEvent.change(input, { target: { value: "351" } });
   expect(button.disabled).toBe(true);
+});
+
+it.each([
+  { money: 100, squadMarketValue: 1000, hint: "como máximo 300 € (saldo disponible más hasta el 20% del valor de la plantilla)" },
+  { money: 200, squadMarketValue: null, hint: "como máximo 200 € (saldo disponible)" },
+  { money: null, squadMarketValue: null, hint: "dentro de tu límite de puja" },
+])("localizes bid guidance after switching language without resetting the draft: $hint", async ({ money, squadMarketValue, hint }) => {
+  render(<BidDialog open row={row} kind="hire" money={money} squadMarketValue={squadMarketValue}
+    initialAmount={null} pending={false} onClose={() => {}} onConfirm={() => {}} />);
+  fireEvent.change(screen.getByRole("textbox", { name: "Bid amount" }), { target: { value: "175" } });
+  await act(() => i18n.changeLanguage("es"));
+  const input = screen.getByRole("textbox", { name: "Importe de la puja" }) as HTMLInputElement;
+  expect(input.value).toBe("175");
+  const description = document.getElementById(input.getAttribute("aria-describedby")!.split(" ")[0]);
+  expect(description?.textContent).toContain(hint);
+  expect(description?.textContent).not.toMatch(/available cash|squad value|bidding limit/);
+});
+
+it("localizes the seller acceptance requirement for a direct offer", () => {
+  void i18n.changeLanguage("es");
+  render(<BidDialog open row={{ ...row, directOffer: true, sellerKind: "opponent", playerTeamId: "s7" }}
+    kind="purchase" money={200} squadMarketValue={null} initialAmount={null} pending={false}
+    onClose={() => {}} onConfirm={() => {}} />);
+  expect(screen.getByText("El propietario debe aceptar tu oferta para que el jugador pase a tu plantilla.", { exact: false })).toBeTruthy();
 });

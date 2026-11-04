@@ -218,7 +218,7 @@ test("a successful direct offer never creates a synthetic market bid", async ({ 
   });
   await page.goto("/market");
   await page.getByRole("button", { name: "Options", exact: true }).click();
-  await page.getByRole("menuitem", { name: "Purchase bid", exact: true }).click();
+  await page.getByRole("menuitem", { name: "Place bid", exact: true }).click();
   const dialog = page.getByRole("dialog", { name: "Make offer", exact: true });
   for (const button of await dialog.getByRole("button").all()) {
     await expect(button).toHaveCSS("border-radius", "0px");

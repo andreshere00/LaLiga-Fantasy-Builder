@@ -1,9 +1,74 @@
 import { test, expect } from "@playwright/test";
-import { mockApplication, detail } from "./fixtures";
+import { mockApplication, mockMarketBids, detail, catalog } from "./fixtures";
 
 const fakeVendor = `window.__GT = { translator: { libReady: true, finished: true, error: false,
   translate() { const node = document.getElementById('report'); node.textContent = 'Translated: ' + node.textContent; setTimeout(() => this.resultCallback(), 0); return true; }
 } };`;
+
+test("locked release clause explains the restriction and countdown in Spanish", async ({ page }) => {
+  await mockApplication(page);
+  await page.addInitScript(() => localStorage.setItem("lfb-language", "es"));
+  await page.route("**/api/market/leagues/l1", route => route.fulfill({ json: {
+    marketPlayers: [{ id: "locked-listing", playerMaster: catalog[20],
+      playerTeam: { playerTeamId: "locked-entry", teamId: "t2", buyoutClause: 12_000_000,
+        buyoutClauseLockedEndTime: "2026-10-15T12:28:00Z" },
+      sellerTeam: { id: "t2", manager: { managerName: "Other Manager" } },
+    }], userBids: [],
+  } }));
+  await page.goto("/market");
+  await page.getByRole("button", { name: "Opciones", exact: true }).click();
+  const clause = page.getByRole("menuitem").filter({ hasText: "Pagar cláusula de rescisión" });
+  await expect(clause).toContainText("Aún no se puede pagar la cláusula de rescisión del jugador.");
+  await expect(clause).toContainText("Tiempo restante hasta el desbloqueo de la cláusula: 3 días 0 horas 28 minutos");
+  await expect(clause).not.toContainText("The player's release clause");
+  await expect(clause).not.toContainText("Time remaining");
+});
+
+for (const language of ["es", "en"]) for (const theme of ["light", "dark"]) for (const width of [375, 1440]) {
+  test(`market copy and value tooltip fit their content: ${language} ${theme} ${width}`, async ({ page }, info) => {
+    await page.setViewportSize({ width, height: 1000 });
+    const fixture = await mockMarketBids(page);
+    await page.addInitScript(({ language, theme }) => {
+      localStorage.setItem("lfb-language", language);
+      localStorage.setItem("lfb-theme", theme);
+    }, { language, theme });
+    await page.goto("/players");
+    await expect(page.getByText(language === "es" ? /Mejores por puntos/ : /Top by points/)).toBeVisible();
+    await expect(page.getByText(language === "es" ? "Forma: de antes → ahora" : "Form: oldest → latest", { exact: true })).toBeVisible();
+    await page.goto("/market");
+    const row = page.locator(".market-data-row").filter({ has: page.getByRole("link", { name: "Player 16", exact: true }) });
+    const value = row.locator(".market-value-line");
+    if (width === 1440) await value.hover();
+    else await value.focus();
+    const tooltip = page.getByRole("tooltip");
+    await expect(tooltip).toBeVisible();
+    await expect(tooltip).toContainText(language === "es" ? "Valor de mercado hace 14 días:" : "Last 14 days market value:");
+    const bounds = await tooltip.evaluate(element => {
+      const rect = element.getBoundingClientRect();
+      return { left: rect.left, right: rect.right, width: rect.width,
+        fits: element.scrollWidth <= element.clientWidth,
+        linesFit: [...element.querySelectorAll(".market-value-tooltip-line")].every(line => line.scrollWidth <= line.clientWidth) };
+    });
+    expect(bounds.fits).toBe(true);
+    expect(bounds.linesFit).toBe(true);
+    expect(bounds.left).toBeGreaterThanOrEqual(0);
+    expect(bounds.right).toBeLessThanOrEqual(width);
+    if (width === 1440) expect(bounds.width).toBeGreaterThan(260);
+    await page.screenshot({ path: info.outputPath("value-tooltip.png") });
+    await page.keyboard.press("Escape");
+    await row.getByRole("button", { name: language === "es" ? "Opciones" : "Options", exact: true }).click();
+    await page.getByRole("menuitem", { name: language === "es" ? "Contratar" : "Hire", exact: true }).click();
+    const dialog = page.getByRole("dialog", { name: language === "es" ? "Fichar jugador" : "Hire player", exact: true });
+    const guidance = language === "es" ? "saldo disponible más hasta el 20% del valor de la plantilla" : "available cash plus up to 20% of squad value";
+    await expect(dialog.getByText(guidance, { exact: false })).toBeVisible();
+    if (language === "es") await expect(dialog).not.toContainText("available cash");
+    await page.screenshot({ path: info.outputPath("bid-dialog.png") });
+    await dialog.getByRole("button", { name: language === "es" ? "Cancelar" : "Cancel", exact: true }).click();
+    expect(fixture.writes).toEqual([]);
+    expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
+  });
+}
+
 for (const theme of ["light", "dark"]) for (const width of [375, 800, 1440]) {
   test(`ES/EN reader isolation, persistence and header: ${theme} ${width}`, async ({ page }) => {
     await page.setViewportSize({ width, height: 1000 });
@@ -123,7 +188,7 @@ for (const { theme, width } of [{ theme: "light", width: 375 }, { theme: "dark",
     await expect(legend).toContainText("Tendencia");
     await expect(legend).toContainText("Valor");
     await page.getByRole("button", { name: "Personalizado", exact: true }).click();
-    const dialog = page.getByRole("dialog", { name: "Período de valor personalizado" });
+    const dialog = page.getByRole("dialog", { name: "Período personalizado" });
     await expect(dialog.getByText("octubre 2026", { exact: true })).toBeVisible();
     await expect(dialog.getByRole("button", { name: "Ir al mes siguiente" })).toBeVisible();
     await dialog.getByRole("button", { name: "Cancelar", exact: true }).click();

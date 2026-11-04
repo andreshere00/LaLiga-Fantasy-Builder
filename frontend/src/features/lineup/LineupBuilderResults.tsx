@@ -87,7 +87,7 @@ export function LineupBuilderResults({ result, playersById, canApply, onApply, o
             <th scope="row"><div className="lineup-builder-excluded-player">
               {item.playerId && <ProfilePhoto className="lineup-builder-option-photo"
                 url={playersById.get(item.playerId)?.photoUrl ?? null} fallback={<PersonIcon />} />}
-              <span>{item.playerId ? playerName(item.playerId) : "Source check"}</span>
+              <span>{item.playerId ? playerName(item.playerId) : localizeCopy("Source check")}</span>
             </div></th>
             <td>{localizeCopy(builderDiagnosticMessage(item.code))}</td>
           </tr>)}</tbody>

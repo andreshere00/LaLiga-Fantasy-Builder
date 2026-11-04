@@ -61,7 +61,7 @@ export function LineupBuilderTradeDetails({ plan, target, playerName, playersByI
               {photo(step.playerId)}
               <div><h6>{localizeCopy(step.action === "buy" ? "Buy" : "Sell")} {playerName(step.playerId)}</h6>
                 <span className="fb-helper">{localizeCopy(METHODS[step.method] ?? step.method.replaceAll("_", " "))}</span></div>
-              <div className="lineup-builder-transaction-estimate"><small>{localizeCopy("Estimated ")}{localizeCopy(step.action === "buy" ? "cost" : "proceeds")}</small><strong>{localizeCopy(euro(step.estimate))}</strong></div>
+              <div className="lineup-builder-transaction-estimate"><small>{localizeCopy(step.action === "buy" ? "Estimated cost" : "Estimated proceeds")}</small><strong>{localizeCopy(euro(step.estimate))}</strong></div>
             </div>
             <p className="lineup-builder-settlement">{localizeCopy("Expected settlement ")}<time dateTime={step.settlementAt}>{localizeCopy(date(step.settlementAt))}</time></p>
             <dl className="lineup-builder-transaction-balances">

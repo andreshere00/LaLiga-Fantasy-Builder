@@ -149,7 +149,15 @@
 .fb-toast[data-limited] { display:none; }
 
 .fb-help-positioner { z-index:140; }
-.fb-tooltip { white-space:pre-line; }
+.fb-tooltip {
+  max-width: min(260px, calc(100vw - 32px));
+  white-space: pre-line;
+  overflow-wrap: anywhere;
+}
+.fb-tooltip:has(.market-value-tooltip-line, .market-fsyp-tooltip-line) {
+  width: max-content;
+  max-width: calc(100vw - 32px);
+}
 
 :is(.market-dialog-error,.squad-sale-error) { color:var(--fb-secondary); border-left:3px solid var(--fb-failure); padding-left:12px; line-height:1.5; }
 .fb-dialog button:disabled { cursor:not-allowed; opacity:.5; }

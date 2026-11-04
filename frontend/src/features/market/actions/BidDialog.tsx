@@ -71,8 +71,8 @@ export function BidDialog({
   const maximum = maximumBidAmount(money, squadMarketValue, reservedBid);
   const balanceHint =
     maximum != null
-      ? `at most ${formatEuro(maximum)} (${squadMarketValue != null && Number.isFinite(squadMarketValue) && squadMarketValue > 0
-        ? "available cash plus up to 20% of squad value" : "available cash"})`
+      ? `at most ${formatEuro(maximum)} (${localizeCopy(squadMarketValue != null && Number.isFinite(squadMarketValue) && squadMarketValue > 0
+        ? "available cash plus up to 20% of squad value" : "available cash")})`
       : "within your available bidding limit";
   const directOffer = usesDirectOfferBid(row, kind);
   const actionLabel = directOffer ? "Send offer" : kind === "modify" ? "Update bid" : "Place bid";

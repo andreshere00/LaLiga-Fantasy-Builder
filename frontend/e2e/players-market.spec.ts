@@ -98,7 +98,7 @@ test("catalog bid mutations reconcile amounts and counts, including stale reads 
   const fixture = await mockPlayers(page);
   await page.goto("/players?q=Player+14");
   const row = playerRow(page, "Player 14");
-  await row.getByRole("button", { name: "Bidded", exact: true }).click();
+  await row.getByRole("button", { name: "Bid placed", exact: true }).click();
   await page.getByRole("menuitem", { name: "Modify bid", exact: true }).click();
   const dialog = page.getByRole("dialog", { name: "Modify bid", exact: true });
   for (const button of await dialog.getByRole("button").all()) {
@@ -111,13 +111,13 @@ test("catalog bid mutations reconcile amounts and counts, including stale reads 
   await expect(row.locator(".players-value-details .market-bid-value")).toHaveText("Your bid: 6,000,000 €");
   await expect(row.getByText("Bids: 2", { exact: true })).toBeVisible();
   fixture.rejectCancellation(true);
-  await row.getByRole("button", { name: "Bidded", exact: true }).click();
+  await row.getByRole("button", { name: "Bid placed", exact: true }).click();
   await page.getByRole("menuitem", { name: "Cancel bid", exact: true }).click();
   await expect(page.locator(".players-page").getByRole("alert")).toBeVisible();
   await expect(row.getByText("Bids: 2", { exact: true })).toBeVisible();
   await expect(row.locator(".players-value-details .market-bid-value")).toHaveText("Your bid: 6,000,000 €");
   fixture.rejectCancellation(false);
-  await row.getByRole("button", { name: "Bidded", exact: true }).click();
+  await row.getByRole("button", { name: "Bid placed", exact: true }).click();
   await page.getByRole("menuitem", { name: "Cancel bid", exact: true }).click();
   await expect(row.locator(".market-bid-value")).toHaveCount(0);
   await expect(row.getByText("Bids: 1", { exact: true })).toBeVisible();

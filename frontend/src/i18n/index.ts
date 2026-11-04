@@ -45,6 +45,13 @@ const patterns = Object.keys(english).filter(key => /\{\{\d+\}\}/.test(key)).map
 export function copy<T>(value: T): T {
   if (typeof value === "string") {
     if (Object.hasOwn(english, value)) return i18n.t(value) as T;
+    // Reuse catalog entries for padded UI fragments without losing their spacing.
+    const trimmed = value.trim();
+    if (trimmed !== value && Object.hasOwn(english, trimmed)) {
+      const start = value.length - value.trimStart().length;
+      const end = value.trimEnd().length;
+      return (value.slice(0, start) + i18n.t(trimmed) + value.slice(end)) as T;
+    }
     for (const { key, regex } of patterns) {
       const match = regex.exec(value);
       if (match) return i18n.t(key, Object.fromEntries(match.slice(1).map((part, index) => [index, part]))) as T;

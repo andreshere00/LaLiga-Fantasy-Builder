@@ -47,6 +47,7 @@ it("localizes competition headings and weather decimals", () => {
     weather: { snapshot: { conditionCode: 800, temperatureC: 12.5, feelsLikeC: 11.5, humidityPct: 60, windSpeedMs: 1 } },
   }] }} playerTeamName="Demo Home" />);
   expect(screen.getByText("Jornada 12 · LALIGA")).toBeTruthy();
+  expect(screen.getByRole("heading", { name: "Pronóstico" })).toBeTruthy();
   expect(screen.getByText(/12,5°C/)).toBeTruthy();
 });
 it("uses complete empty and failed match sentences", () => {

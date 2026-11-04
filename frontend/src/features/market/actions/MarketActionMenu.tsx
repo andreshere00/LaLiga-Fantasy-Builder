@@ -42,9 +42,10 @@ function menuItemTooltip(
   if (offer.type !== "pay-clause") return offer.disabledReason ?? null;
   if (clauseTimeLocked) {
     const countdown = unlockLabel
-      ? `Time remaining to expire the release clause: ${unlockLabel}`
+      ? localizeCopy(`Time remaining to expire the release clause: ${unlockLabel}`)
       : null;
-    return countdown ? `${CLAUSE_BLOCKED_MESSAGE}\n${countdown}` : CLAUSE_BLOCKED_MESSAGE;
+    const blocked = localizeCopy(CLAUSE_BLOCKED_MESSAGE);
+    return countdown ? `${blocked}\n${countdown}` : blocked;
   }
   return offer.disabledReason ?? CLAUSE_BLOCKED_MESSAGE;
 }
@@ -66,7 +67,7 @@ export function MarketActionMenu({ row, context, actions, detailsPlayer, details
       <Menu.Root>
         <Help content={localizeCopy(row.myBid ? bidAmountTooltipLabel(row.myBid.money) : null)}>
           <Menu.Trigger ref={trigger} className={"market-actions-trigger" + (bidded ? " is-bidded" : "")}>
-            {bidded ? <><img className="market-actions-bid-icon" src={bidIconUrl} alt="" aria-hidden /><span>{localizeCopy("Bidded")}</span></> : "Options"}
+            {bidded ? <><img className="market-actions-bid-icon" src={bidIconUrl} alt="" aria-hidden /><span>{localizeCopy("Bidded")}</span></> : localizeCopy("Options")}
           </Menu.Trigger>
         </Help>
         <Menu.Portal><Menu.Positioner sideOffset={4} align="end" className="fb-menu-positioner">

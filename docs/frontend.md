@@ -17,9 +17,20 @@ league/account options retain their menu. The explicit choice is saved under
 Switching updates labels without recreating feature providers or clearing drafts.
 
 Application copy and structured Weather/LALIGA labels use bundled i18next
-catalogs. Dates and numbers use the selected locale; currency remains EUR and
-fixture times remain Europe/Madrid. Whole-euro fields accept validated English
+catalogs. Literal source messages remain stable keys; English display copy may
+correct their wording without renaming callers. Equivalent entries that differ
+only by surrounding whitespace share one key: `copy` preserves that whitespace.
+Explicit variants with different wording take precedence. Spanish copy uses
+football/Fantasy terms such as plantilla, jornada, puja, titularidad and cláusula
+de rescisión; bids and seller offers remain distinct. OpenWeather forecasts use
+«pronóstico», including upcoming-match headings and unavailable states.
+Dates and numbers use the
+selected locale; currency remains EUR and fixture times remain Europe/Madrid.
+Whole-euro fields accept validated English
 or Spanish thousands grouping, preserving edits through language changes.
+
+Value and form tooltips grow to fit their content and wrap within the viewport
+on narrow screens. Their translated lines stay inside the tooltip border.
 
 Radar profile and metric IDs select bundled labels and definitions before chart
 wrapping. Imported cohort descriptions without a bundled translation are marked

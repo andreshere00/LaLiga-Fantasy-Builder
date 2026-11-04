@@ -186,7 +186,7 @@ function OffersPanel({ cards, squadAvailable, showTrigger, leagueKey, teamId }: 
     <>
       {showTrigger ? <Button variant="outline" shape="square"
         className={`market-offers-trigger${hasOffers ? " has-offers" : ""}`}
-        aria-label={localizeCopy(`Market offers${pendingCount ? `, ${pendingCount} pending` : ""}${degraded ? ", incomplete" : ""}`)}
+        aria-label={localizeCopy(`Market offers${pendingCount ? localizeCopy(`, ${pendingCount} pending`) : ""}${degraded ? localizeCopy(", incomplete") : ""}`)}
         aria-haspopup="dialog" aria-expanded={open} disabled={!enabled}
         onClick={() => {
           offersMenu?.openAll();
@@ -199,15 +199,15 @@ function OffersPanel({ cards, squadAvailable, showTrigger, leagueKey, teamId }: 
         <span className="market-offers-label">{localizeCopy("Offers")}</span>
         {pendingCount > 0 ? <span className="market-offers-count">{pendingCount}</span> : null}
       </Button> : null}
-      <Dialog open={open} title={target ? `${target.playerName} offers` : "Market offers"}
+      <Dialog open={open} title={localizeCopy(target ? `${target.playerName} offers` : "Market offers")}
         onClose={close} layout="sheet"
         finalFocus={offersMenu?.finalFocus}
         className="market-offers-panel" closeOnBackdrop={!response.isPending}
         footer={<Button variant="outline" shape="square" onClick={close}
           disabled={response.isPending}>{localizeCopy("Close")}</Button>}>
-        <p className="market-offers-intro">{target
+        <p className="market-offers-intro">{localizeCopy(target
           ? `Received offers for ${target.playerName} in this league.`
-          : "Received offers for your squad in this league."}</p>
+          : "Received offers for your squad in this league.")}</p>
         <Button ref={refreshButton} variant="outline" shape="square" disabled={response.isPending || fetching}
           onClick={() => {
             void queryClient.invalidateQueries({ queryKey: ["market-offers", leagueKey] });
@@ -224,7 +224,7 @@ function OffersPanel({ cards, squadAvailable, showTrigger, leagueKey, teamId }: 
         </div> : null}
         {!panelLoading && !panelDegraded && visibleOffers.length === 0 ? <div className="market-offers-empty">
           <img src={grayIcon} alt="" />
-          <p>{target ? `No pending offers for ${target.playerName}.` : "No pending offers."}</p>
+          <p>{localizeCopy(target ? `No pending offers for ${target.playerName}.` : "No pending offers.")}</p>
           <p>{localizeCopy("Offers from LaLiga and other managers will appear here.")}</p>
         </div> : null}
         <ul className="market-offers-list">
