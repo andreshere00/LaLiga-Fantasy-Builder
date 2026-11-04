@@ -1,4 +1,3 @@
-import { copy as localizeCopy, useLanguage } from "../../../i18n";
 import { createContext, useCallback, useContext, useMemo, useRef, useState, type ReactNode } from "react";
 
 type MarketOffersTarget = { playerTeamId: string; playerName: string } | null;
@@ -17,7 +16,6 @@ type MarketOffersContextValue = {
 const MarketOffersContext = createContext<MarketOffersContextValue | null>(null);
 
 export function MarketOffersProvider({ children }: { children: ReactNode }) {
-  useLanguage();
   const returnFocus = useRef<HTMLElement | null>(null);
   const [pendingOffers, setPendingOffers] = useState<MarketOffersContextValue["pendingOffers"]>(null);
   const reportPendingOffers = useCallback((leagueKey: string, playerTeamIds: readonly string[]) => {
@@ -43,7 +41,7 @@ export function MarketOffersProvider({ children }: { children: ReactNode }) {
   const value = useMemo(() => ({ ...view, pendingOffers, reportPendingOffers, openAll, openForPlayer, close, finalFocus }),
     [view, pendingOffers, reportPendingOffers, openAll, openForPlayer, close, finalFocus]);
 
-  return <MarketOffersContext.Provider value={value}>{localizeCopy(children)}</MarketOffersContext.Provider>;
+  return <MarketOffersContext.Provider value={value}>{children}</MarketOffersContext.Provider>;
 }
 
 export function useMarketOffersMenu() {

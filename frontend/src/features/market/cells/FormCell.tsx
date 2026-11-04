@@ -1,4 +1,4 @@
-import { copy as localizeCopy, useLanguage } from "../../../i18n";
+import { t, useTranslation } from "../../../i18n";
 import { useState } from "react";
 
 import { scoreWeekLabel } from "../../../api/mappers";
@@ -12,7 +12,7 @@ type FormCellRow = {
 };
 
 export function FormCell({ row, windowSize = FORM_DISPLAY_MATCHES }: { row: FormCellRow; windowSize?: number }) {
-  useLanguage();
+  useTranslation();
   const [startIndex, setStartIndex] = useState(0);
   const view = formWindowChronological(
     formRecentWindow(
@@ -35,7 +35,7 @@ export function FormCell({ row, windowSize = FORM_DISPLAY_MATCHES }: { row: Form
   const goFuture = () => setStartIndex(Math.max(0, view.offset - 1));
 
   return (
-    <span className="market-form-nav" role="group" aria-label={localizeCopy(`Last performances: ${ariaParts.join(", ")} points`)}>
+    <span className="market-form-nav" role="group" aria-label={t("Last performances: {{0}} points", { 0: ariaParts.join(", ") })}>
       <span className="market-form-badges">
         {view.points.map((points, index) => {
           const week = view.weeks[index];
@@ -44,7 +44,7 @@ export function FormCell({ row, windowSize = FORM_DISPLAY_MATCHES }: { row: Form
             <span key={key} className="market-form-badge-stack">
               <PlayerScoreBadge points={points} />
               <span className="market-form-week" aria-hidden="true">
-                {localizeCopy(scoreWeekLabel(week))}
+                {scoreWeekLabel(week)}
               </span>
             </span>
           );
@@ -54,7 +54,7 @@ export function FormCell({ row, windowSize = FORM_DISPLAY_MATCHES }: { row: Form
         <button
           type="button"
           className="market-form-nav-btn"
-          aria-label={localizeCopy("Earlier matchweeks")}
+          aria-label={t("Earlier matchweeks")}
           disabled={!view.canGoOlder}
           onClick={goPast}
         >
@@ -63,7 +63,7 @@ export function FormCell({ row, windowSize = FORM_DISPLAY_MATCHES }: { row: Form
         <button
           type="button"
           className="market-form-nav-btn"
-          aria-label={localizeCopy("Later matchweeks")}
+          aria-label={t("Later matchweeks")}
           disabled={!view.canGoNewer}
           onClick={goFuture}
         >

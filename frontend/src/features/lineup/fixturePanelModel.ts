@@ -1,3 +1,4 @@
+import { t } from "../../i18n";
 import type { CurrentWeekDto, FixtureDto, FixtureWeatherDto, FixturesDto, WeekWeatherDto } from "../../api/schemas";
 import { clubMediaFromId } from "../../api/clubMedia";
 import { formatFixtureCountdown } from "../../api/mappers";
@@ -40,7 +41,7 @@ export function kickoffTimestamp(value: unknown): number | null {
 
 function club(id: number | null) {
   const media = clubMediaFromId(id);
-  return { name: media?.name ?? (id == null ? "Club unavailable" : `Club ${id}`), badge: media?.badge ?? null };
+  return { name: media?.name ?? (id == null ? "Club unavailable" : t("Club {{0}}", { 0: id })), badge: media?.badge ?? null };
 }
 
 function positiveId(value: number | null | undefined): number | null {
@@ -109,7 +110,7 @@ export function nextKickoff(matches: readonly PanelMatch[], now: number): NextKi
     kickoffMs,
     remaining: conciseFixtureCountdown(kickoffMs, now),
     matchKeys: atKickoff.map((item) => item.key),
-    pairing: only ? `${only.home.name} vs ${only.away.name}` : null,
+    pairing: only ? t("{{0}} vs {{1}}", { 0: only.home.name, 1: only.away.name }) : null,
   };
 }
 

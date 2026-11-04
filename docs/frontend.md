@@ -23,8 +23,13 @@ Switching updates labels without recreating feature providers or clearing drafts
 Application copy and structured Weather/LALIGA labels use bundled i18next
 catalogs. Literal source messages remain stable keys; English display copy may
 correct their wording without renaming callers. Equivalent entries that differ
-only by surrounding whitespace share one key: `copy` preserves that whitespace.
-Explicit variants with different wording take precedence. Spanish copy uses
+only by surrounding whitespace use explicit catalog entries when spacing is needed.
+`t(key, parameters?)` translates exact string keys; `useTranslation()` subscribes
+components to language changes and returns `t`. Composed messages pass numeric
+parameters explicitly, including translated application labels. Club, player and
+manager identities remain verbatim. Shared primitives render their supplied
+children and labels; each producer owns its application copy. Notifications retain
+message keys and translate while rendering, including screen-reader announcements. Spanish copy uses
 football/Fantasy terms such as plantilla, jornada, puja, titularidad and cláusula
 de rescisión; bids and seller offers remain distinct. OpenWeather forecasts use
 «pronóstico», including upcoming-match headings and unavailable states.

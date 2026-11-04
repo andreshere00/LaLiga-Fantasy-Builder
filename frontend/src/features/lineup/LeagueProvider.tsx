@@ -1,4 +1,3 @@
-import { copy as localizeCopy, useLanguage } from "../../i18n";
 import {
   createContext,
   useContext,
@@ -27,7 +26,6 @@ type LeagueContextValue = {
 const LeagueContext = createContext<LeagueContextValue | null>(null);
 
 export function LeagueProvider({ children }: { children: ReactNode }) {
-  useLanguage();
   const { status, accessToken, markNeedsReauth } = useAuth();
   const [selectedId, setSelectedId] = useState<string | null>(null);
 
@@ -59,7 +57,7 @@ export function LeagueProvider({ children }: { children: ReactNode }) {
     [leagues, selected, query.isLoading, query.error],
   );
 
-  return <LeagueContext.Provider value={value}>{localizeCopy(children)}</LeagueContext.Provider>;
+  return <LeagueContext.Provider value={value}>{children}</LeagueContext.Provider>;
 }
 
 export function useLeague(): LeagueContextValue {

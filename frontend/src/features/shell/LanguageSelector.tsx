@@ -1,13 +1,13 @@
 import { Select } from "@base-ui/react/select";
-import { copy as localizeCopy, setLanguage, useLanguage } from "../../i18n";
+import { t, setLanguage, useLanguage } from "../../i18n";
 
 const items = [{ value: "es", label: "Español" }, { value: "en", label: "English" }];
 export function LanguageSelector() {
   const selected = useLanguage();
   return <Select.Root items={items} value={selected}
     onValueChange={value => { if (value === "es" || value === "en") setLanguage(value); }}>
-    <Select.Trigger className="language-select" aria-label={localizeCopy("Language")}
-      title={localizeCopy("Language")}>
+    <Select.Trigger className="language-select" aria-label={t("Language")}
+      title={t("Language")}>
       <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor"
         strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round"
         aria-hidden="true" focusable="false" style={{ flexShrink: 0 }}>

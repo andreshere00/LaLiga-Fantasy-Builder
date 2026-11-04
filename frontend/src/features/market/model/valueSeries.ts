@@ -1,3 +1,4 @@
+import { t } from "../../../i18n";
 import { durationLabel } from "../../../i18n/format";
 import { asFiniteNumber, asRecord } from "../../../api/mappers";
 
@@ -61,8 +62,8 @@ export function isSealEndUnderOneMinute(expiresAt: number | null, now: number): 
 export function remainingLabel(expiresAt: number | null, now: number): string {
   const left = remainingMs(expiresAt, now);
   if (left == null) return "—";
-  if (left === 0) return "Expired";
-  if (left < ONE_MINUTE_MS) return "<1m";
+  if (left === 0) return t("Expired");
+  if (left < ONE_MINUTE_MS) return t("<1m");
   const minutes = Math.floor(left / 60_000);
   const days = Math.floor(minutes / 1_440);
   const hours = Math.floor((minutes % 1_440) / 60);

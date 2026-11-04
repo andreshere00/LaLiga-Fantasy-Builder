@@ -1,5 +1,5 @@
 import { locale } from "../../../i18n";
-import { copy as localizeCopy, useLanguage } from "../../../i18n";
+import { t, useTranslation } from "../../../i18n";
 import { useMutation, useQueries, useQueryClient } from "@tanstack/react-query";
 import { useEffect, useRef, useState } from "react";
 
@@ -29,7 +29,6 @@ type Props = { cards: SquadCard[]; squadAvailable: boolean; showTrigger?: boolea
 
 /** Remounts local confirmation state when the selected league changes. */
 export function MarketOffers({ cards, squadAvailable, showTrigger = true }: Props) {
-  useLanguage();
   const { selected } = useLeague();
   const id = selected ? leagueId(selected) : "";
   const teamId = selected ? callerTeamId(selected) : null;
@@ -40,7 +39,7 @@ export function MarketOffers({ cards, squadAvailable, showTrigger = true }: Prop
 function OffersPanel({ cards, squadAvailable, showTrigger, leagueKey, teamId }: Props & {
   leagueKey: string; teamId: string | null;
 }) {
-  useLanguage();
+  useTranslation();
   const { accessToken, markNeedsReauth } = useAuth();
   const queryClient = useQueryClient();
   const offersMenu = useMarketOffersMenu();
@@ -186,7 +185,7 @@ function OffersPanel({ cards, squadAvailable, showTrigger, leagueKey, teamId }: 
     <>
       {showTrigger ? <Button variant="outline" shape="square"
         className={`market-offers-trigger${hasOffers ? " has-offers" : ""}`}
-        aria-label={localizeCopy(`Market offers${pendingCount ? localizeCopy(`, ${pendingCount} pending`) : ""}${degraded ? localizeCopy(", incomplete") : ""}`)}
+        aria-label={t("Market offers{{0}}{{1}}", { 0: pendingCount ? t(", {{0}} pending", { 0: pendingCount }) : "", 1: degraded ? t(", incomplete") : "" })}
         aria-haspopup="dialog" aria-expanded={open} disabled={!enabled}
         onClick={() => {
           offersMenu?.openAll();
@@ -196,36 +195,34 @@ function OffersPanel({ cards, squadAvailable, showTrigger, leagueKey, teamId }: 
           src={hasOffers ? blackIcon : !enabled || loading ? grayIcon : blackIcon} alt="" />
         <img className="market-offers-icon-dark"
           src={hasOffers ? whiteIcon : !enabled || loading ? grayIcon : whiteIcon} alt="" />
-        <span className="market-offers-label">{localizeCopy("Offers")}</span>
+        <span className="market-offers-label">{t("Offers")}</span>
         {pendingCount > 0 ? <span className="market-offers-count">{pendingCount}</span> : null}
       </Button> : null}
-      <Dialog open={open} title={localizeCopy(target ? `${target.playerName} offers` : "Market offers")}
+      <Dialog open={open} title={target ? t("{{0}} offers", { 0: target.playerName }) : t("Market offers")}
         onClose={close} layout="sheet"
         finalFocus={offersMenu?.finalFocus}
         className="market-offers-panel" closeOnBackdrop={!response.isPending}
         footer={<Button variant="outline" shape="square" onClick={close}
-          disabled={response.isPending}>{localizeCopy("Close")}</Button>}>
-        <p className="market-offers-intro">{localizeCopy(target
-          ? `Received offers for ${target.playerName} in this league.`
-          : "Received offers for your squad in this league.")}</p>
+          disabled={response.isPending}>{t("Close")}</Button>}>
+        <p className="market-offers-intro">{target ? t("Received offers for {{0}} in this league.", { 0: target.playerName }) : t("Received offers for your squad in this league.")}</p>
         <Button ref={refreshButton} variant="outline" shape="square" disabled={response.isPending || fetching}
           onClick={() => {
             void queryClient.invalidateQueries({ queryKey: ["market-offers", leagueKey] });
             if (!squadAvailable) void queryClient.invalidateQueries({ queryKey: ["team", leagueKey, teamId] });
           }}>
-          {localizeCopy("Refresh offers")}</Button>
-        {panelLoading ? <p role="status">{localizeCopy("Loading offers…")}</p> : null}
-        {panelDegraded ? <p role="alert">{localizeCopy("Some offers could not be loaded. The list and count may be incomplete.")}</p> : null}
-        {error ? <p className="market-offers-error" role="alert">{localizeCopy(error)}</p> : null}
+          {t("Refresh offers")}</Button>
+        {panelLoading ? <p role="status">{t("Loading offers…")}</p> : null}
+        {panelDegraded ? <p role="alert">{t("Some offers could not be loaded. The list and count may be incomplete.")}</p> : null}
+        {error ? <p className="market-offers-error" role="alert">{t(error)}</p> : null}
         {confirmation && !offers.some((offer) => offer.key === confirmation.key) ? <div role="alert">
-          <p>{localizeCopy("This offer is no longer available.")}</p>
+          <p>{t("This offer is no longer available.")}</p>
           <Button autoFocus variant="outline" shape="square" disabled={response.isPending}
-            onClick={() => setConfirmation(null)}>{localizeCopy("Cancel confirmation")}</Button>
+            onClick={() => setConfirmation(null)}>{t("Cancel confirmation")}</Button>
         </div> : null}
         {!panelLoading && !panelDegraded && visibleOffers.length === 0 ? <div className="market-offers-empty">
           <img src={grayIcon} alt="" />
-          <p>{localizeCopy(target ? `No pending offers for ${target.playerName}.` : "No pending offers.")}</p>
-          <p>{localizeCopy("Offers from LaLiga and other managers will appear here.")}</p>
+          <p>{target ? t("No pending offers for {{0}}.", { 0: target.playerName }) : t("No pending offers.")}</p>
+          <p>{t("Offers from LaLiga and other managers will appear here.")}</p>
         </div> : null}
         <ul className="market-offers-list">
           {visibleOffers.map((offer) => <li key={offer.key} className="market-offer"
@@ -234,44 +231,44 @@ function OffersPanel({ cards, squadAvailable, showTrigger, leagueKey, teamId }: 
               {offer.player.photoUrl ? <img src={offer.player.photoUrl} alt="" /> : null}
               <div><h3>{offer.player.name}</h3><p>{offer.sender}</p></div>
             </div>
-            <strong className="market-offer-money">{localizeCopy(formatEuro(offer.money))}</strong>
+            <strong className="market-offer-money">{formatEuro(offer.money)}</strong>
             <p className={`market-offer-expiry${offer.expiresAt == null ? " is-unknown"
               : offer.expiresAt - now <= ONE_HOUR_MS ? " is-urgent" : ""}`}>
               <img src={offer.expiresAt == null ? clockGrayIcon
                 : offer.expiresAt - now <= ONE_HOUR_MS ? clockRedIcon : clockBlackIcon} alt="" />
-              {offer.expiresAt == null ? <span>{localizeCopy("Time left unavailable")}</span> : <span>
-                {localizeCopy("Time left: ")}<time dateTime={`PT${Math.max(0, Math.ceil((offer.expiresAt - now) / 1000))}S`}>
-                  {localizeCopy(offer.expiresAt - now < 60_000 ? "<1m" : remainingLabel(offer.expiresAt, now))}
+              {offer.expiresAt == null ? <span>{t("Time left unavailable")}</span> : <span>
+                {t("Time left: ")}<time dateTime={`PT${Math.max(0, Math.ceil((offer.expiresAt - now) / 1000))}S`}>
+                  {offer.expiresAt - now < 60_000 ? t("<1m") : remainingLabel(offer.expiresAt, now)}
                 </time>
               </span>}
             </p>
-            {offer.expiresAt != null ? <p>{localizeCopy("Expires ")}<time dateTime={new Date(offer.expiresAt).toISOString()}>
-              {localizeCopy(new Date(offer.expiresAt).toLocaleString(locale(), { timeZone: "Europe/Madrid" }))}
+            {offer.expiresAt != null ? <p>{t("Expires ")}<time dateTime={new Date(offer.expiresAt).toISOString()}>
+              {new Date(offer.expiresAt).toLocaleString(locale(), { timeZone: "Europe/Madrid" })}
             </time></p> : null}
-            {offer.unavailableReason ? <p className="market-offer-unavailable">{localizeCopy(offer.unavailableReason)}</p> : null}
+            {offer.unavailableReason ? <p className="market-offer-unavailable">{t(offer.unavailableReason)}</p> : null}
             {response.isPending && response.variables?.offer.key === offer.key
-              ? <p role="status">{localizeCopy("Sending response…")}</p> : null}
-            {confirmation?.key === offer.key ? <div className="market-offer-confirmation" role="group" aria-label={localizeCopy("Confirm acceptance")}>
-              <p>{localizeCopy("Sell ")}<strong>{offer.player.name}</strong> {localizeCopy(" to ")}{offer.sender} {localizeCopy(" for ")}<strong>{localizeCopy(formatEuro(confirmation.money))}</strong>?</p>
-              {!freshConfirmation ? <p role="alert">{localizeCopy("The offer changed. Cancel and review it again.")}</p> : null}
+              ? <p role="status">{t("Sending response…")}</p> : null}
+            {confirmation?.key === offer.key ? <div className="market-offer-confirmation" role="group" aria-label={t("Confirm acceptance")}>
+              <p>{t("Sell ")}<strong>{offer.player.name}</strong> {t(" to ")}{offer.sender} {t(" for ")}<strong>{formatEuro(confirmation.money)}</strong>?</p>
+              {!freshConfirmation ? <p role="alert">{t("The offer changed. Cancel and review it again.")}</p> : null}
               <div className="market-offer-actions">
                 <Button autoFocus variant="outline" shape="square" disabled={response.isPending}
-                  onClick={() => setConfirmation(null)}>{localizeCopy("Cancel")}</Button>
-                <Button shape="square" loading={response.isPending} loadingLabel={localizeCopy("Sending…")}
+                  onClick={() => setConfirmation(null)}>{t("Cancel")}</Button>
+                <Button shape="square" loading={response.isPending} loadingLabel={t("Sending…")}
                   disabled={!freshConfirmation || !!freshConfirmation.unavailableReason}
-                  onClick={() => { if (freshConfirmation) answer(freshConfirmation, "accept"); }}>{localizeCopy("Confirm sale")}</Button>
+                  onClick={() => { if (freshConfirmation) answer(freshConfirmation, "accept"); }}>{t("Confirm sale")}</Button>
               </div>
             </div> : null}
             <div className="market-offer-actions">
               <Button variant="outline" shape="square" disabled={response.isPending || confirmation != null || !!offer.unavailableReason}
-                onClick={() => answer(offer, "reject")} aria-label={localizeCopy(`Reject offer for ${offer.player.name} from ${offer.sender}`)}>{localizeCopy("Reject")}</Button>
+                onClick={() => answer(offer, "reject")} aria-label={t("Reject offer for {{0}} from {{1}}", { 0: offer.player.name, 1: offer.sender })}>{t("Reject")}</Button>
               <Button shape="square" disabled={response.isPending || confirmation != null || !!offer.unavailableReason}
                 onClick={(event) => {
                   acceptanceTrigger.current = event.currentTarget;
                   setError(null);
                   setConfirmation(offer);
                 }}
-                aria-label={localizeCopy(`Accept offer for ${offer.player.name} from ${offer.sender}`)}>{localizeCopy("Accept")}</Button>
+                aria-label={t("Accept offer for {{0}} from {{1}}", { 0: offer.player.name, 1: offer.sender })}>{t("Accept")}</Button>
             </div>
           </li>)}
         </ul>

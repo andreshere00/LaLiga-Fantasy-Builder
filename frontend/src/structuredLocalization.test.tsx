@@ -1,7 +1,7 @@
 import { afterEach, expect, it, vi } from "vitest";
 import { act, cleanup, render, screen } from "@testing-library/react";
 import { MemoryRouter } from "react-router-dom";
-import { copy, i18n } from "./i18n";
+import { t, i18n, useTranslation } from "./i18n";
 import { NumericCounterField } from "./components/NumericCounterField";
 import { radarMetric, radarProfile, radarSourceText } from "./features/players/radar/radarLocalization";
 import { durationLabel } from "./i18n/format";
@@ -81,11 +81,11 @@ it("localizes radar metadata and methodology", () => {
 it("formats singular, plural and zero duration units before interpolation", () => {
   spanish();
   expect(durationLabel(1560, true)).toBe("1 día 2 horas");
-  expect(copy(`Next kickoff in ${durationLabel(1560, true)}`)).toBe("Próximo inicio en 1 día 2 horas");
+  expect(t("Next kickoff in {{0}}", { 0: durationLabel(1560, true) })).toBe("Próximo inicio en 1 día 2 horas");
   expect(durationLabel(0, true)).toBe("0 minutos");
   expect(clauseUnlockCountdown(61 * 60_000, 0)).toBe("0 días 1 hora 1 minuto");
-  expect(copy(`Fixture 12. ${copy("Finished")}.`)).toBe("Jornada 12. Finalizado.");
-  expect(copy(`Home goals: ${copy("no result")}`)).toBe("Goles del local: sin resultado");
+  expect(t("Fixture {{0}}. {{1}}.", { 0: 12, 1: t("Finished") })).toBe("Jornada 12. Finalizado.");
+  expect(t("Home goals: {{0}}", { 0: t("no result") })).toBe("Goles del local: sin resultado");
 });
 it.each([0, 1, 2])("uses a full sample message for %s appearances", count => {
   spanish();
@@ -95,8 +95,8 @@ it.each([0, 1, 2])("uses a full sample message for %s appearances", count => {
   expect(screen.getByText(`Las medias alternativas de la API de LaLiga Fantasy usan ${count} ${count === 1 ? "jornada disputada" : "jornadas disputadas"}.`)).toBeTruthy();
 });
 it("normalizes legacy goalkeeper labels in English", () => {
-  expect(copy("Aéreos ganados")).toBe("Aerial duels won");
-  expect(copy("Pases cmp")).toBe("Passes cmp");
+  expect(t("Aéreos ganados")).toBe("Aerial duels won");
+  expect(t("Pases cmp")).toBe("Passes cmp");
 });
 
 it("localizes every supported radar profile and definition using stable IDs", () => {
@@ -111,9 +111,49 @@ it("localizes every supported radar profile and definition using stable IDs", ()
   expect(radarSourceText("Custom population")).toBe("Etiqueta original de la fuente: Custom population");
 });
 it("localizes counter button arguments and updates already-mounted controls", async () => {
-  render(<NumericCounterField id="minimum" ariaLabel="Minimum" value="2"
-    formatInput={value => value} parseValue={Number} stepValue={value => value} onValueChange={() => {}} />);
+  function Counter() { const translate = useTranslation(); return <NumericCounterField id="minimum" ariaLabel={translate("Minimum")} value="2"
+    formatInput={value => value} parseValue={Number} stepValue={value => value} onValueChange={() => {}} />; }
+  render(<Counter />);
   expect(screen.getByRole("button", { name: "Increase Minimum" })).toBeTruthy();
   await act(() => i18n.changeLanguage("es"));
   expect(screen.getByRole("button", { name: "Aumentar Mínimo" })).toBeTruthy();
+});
+
+it.each([false, true])("translates the complete fixture error with saved scores: %s", async hasScores => {
+  const { PlayersRankingPanel } = await import("./features/lineup/PlayersRankingPanel");
+  spanish();
+  render(<PlayersRankingPanel ranking={[]} selectedTeamId={null} onSelectTeam={() => {}}
+    fixtureWeek={12} lastFixtureUnavailable lastFixturePoints={hasScores ? new Map() : null} />);
+  expect(screen.getByRole("alert").textContent).toBe(hasScores
+    ? "No se pudieron actualizar los puntos de la jornada 12."
+    : "Los puntos de la jornada 12 no están disponibles.");
+});
+
+it("keeps Athletic and delimiter-containing club identities in complete fixture names", async () => {
+  const { PlayerFormHistory } = await import("./features/players/PlayerFormHistory");
+  spanish();
+  render(<PlayerFormHistory rows={[{ fixture: { homeTeam: "Athletic Club", awayTeam: "Real Madrid",
+    date: "2026-10-01" }, fantasyPointsTotal: 8, minutesPlayed: 90 },
+  { fixture: { homeTeam: "Athletic", awayTeam: "Club from vs offers", date: "2026-10-02" },
+    fantasyPointsTotal: null, minutesPlayed: null }]} />);
+  expect(screen.getByRole("radio", { name: /Athletic Club contra Real Madrid: 8 puntos fantasy, 90 minutos$/ })).toBeTruthy();
+  expect(screen.getByRole("radio", { name: /Athletic contra Club from vs offers: Puntos no disponibles, Minutos no disponibles\. Última jornada$/ })).toBeTruthy();
+  expect(screen.queryByText("Club deportivo")).toBeNull();
+});
+
+it.each(["Athletic", "Athletic Club", "Player from A vs B offers C"])("preserves %s inside explicit interpolation", name => {
+  spanish();
+  expect(t("Reject offer for {{0}} from {{1}}", { 0: name, 1: "Manager from vs offers" }))
+    .toBe(`Rechazar oferta por ${name} de Manager from vs offers`);
+});
+
+it("translates existing notifications when language changes", async () => {
+  const { Notifications, notify } = await import("./components/ui/Notifications");
+  render(<Notifications><button>Identity</button></Notifications>);
+  act(() => notify("Bid submitted", "error"));
+  expect(await screen.findByRole("heading", { name: "Bid submitted", hidden: true })).toBeTruthy();
+  await act(() => i18n.changeLanguage("es"));
+  expect(screen.getByRole("heading", { name: "Puja enviada", hidden: true })).toBeTruthy();
+  await act(() => i18n.changeLanguage("en"));
+  expect(screen.getByRole("heading", { name: "Bid submitted", hidden: true })).toBeTruthy();
 });

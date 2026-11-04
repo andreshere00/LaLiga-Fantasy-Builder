@@ -224,14 +224,11 @@ export function useMarketBoard(): MarketBoard {
     [formWeekNumbers, playedThrough, currentWeek, weekStats.data],
   );
 
-  const activeBids = useMemo(
-    () => {
-      const active = normalizeActiveBids(market, catalogQuery.data, now);
-      return { ...active, bids: active.bids.map((bid) => bid.marketId && pendingBids.has(bid.marketId)
-        ? { ...bid, confirmed: false, actionRow: null } : bid) };
-    },
-    [market, catalogQuery.data, now, pendingBids],
-  );
+  const activeBids = (() => {
+    const active = normalizeActiveBids(market, catalogQuery.data, now);
+    return { ...active, bids: active.bids.map((bid) => bid.marketId && pendingBids.has(bid.marketId)
+      ? { ...bid, confirmed: false, actionRow: null } : bid) };
+  })();
 
   const sellerAvatars = useMemo(() => avatarsByTeamId([
     ...(Array.isArray(leagueTeamsQuery.data) ? leagueTeamsQuery.data : []),

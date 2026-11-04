@@ -4,7 +4,7 @@
   let channel;
   const report = document.getElementById('report');
   const send = (state) => parent.postMessage({ type: 'lfb-translation-result', channel, state,
-    text: report.textContent, height: Math.ceil(document.body.getBoundingClientRect().height) }, '*');
+    text: report.textContent }, '*');
   addEventListener('message', event => {
     const data = event.data;
     if (initialized || event.source !== parent || !data || data.type !== 'lfb-translate' ||
@@ -12,11 +12,6 @@
     initialized = true;
     channel = data.channel;
     report.textContent = data.text;
-    const style = data.style || {};
-    for (const key of ['fontFamily', 'fontSize', 'fontWeight', 'lineHeight', 'color', 'letterSpacing']) {
-      if (typeof style[key] === 'string') report.style[key] = style[key];
-    }
-    new ResizeObserver(() => send('size')).observe(document.body);
     const script = document.createElement('script');
     script.src = 'https://cdn.gtranslate.net/widgets/latest/lib.min.js';
     script.onerror = () => send('error');

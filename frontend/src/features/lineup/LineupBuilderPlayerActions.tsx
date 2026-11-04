@@ -1,4 +1,4 @@
-import { copy as localizeCopy, useLanguage } from "../../i18n";
+import { t, useTranslation } from "../../i18n";
 import { useQueries } from "@tanstack/react-query";
 import { getJson, paths } from "../../api/client";
 import { asRecord, idText, leagueId, playersOf } from "../../api/mappers";
@@ -24,7 +24,7 @@ export function LineupBuilderPlayerActions({ player, opponentTeamIds, clausesDea
   onClose: () => void;
   onSuccess: () => void;
 }) {
-  useLanguage();
+  useTranslation();
   const board = useMarketBoard();
   const actions = useMarketActions(onSuccess);
   const now = useNow();
@@ -84,20 +84,20 @@ export function LineupBuilderPlayerActions({ player, opponentTeamIds, clausesDea
   const confirming = actions.pendingBid != null || actions.pendingClause != null;
   const loading = board.isLoading || (player.source === "opponents" && rosters.some((query) => query.isFetching));
   return <>
-    <Dialog open={!confirming} title={localizeCopy(`${player.name} — Acquisition options`)} onClose={onClose}
+    <Dialog open={!confirming} title={t("{{0}} — Acquisition options", { 0: player.name })} onClose={onClose}
       closeOnBackdrop={!actions.actionPending}
-      className="lineup-builder-dialog" footer={<Button variant="secondary" shape="square" onClick={onClose}>{localizeCopy("Close")}</Button>}>
-      {loading ? <p role="status">{localizeCopy("Checking current acquisition options…")}</p> : owned ? <p>{localizeCopy("This player is already in your squad. Rebuild to update the recommendation.")}</p>
-        : offers.length === 0 ? <p role="status">{localizeCopy("No verified acquisition route is currently available. Refresh your league and try again.")}</p>
+      className="lineup-builder-dialog" footer={<Button variant="secondary" shape="square" onClick={onClose}>{t("Close")}</Button>}>
+      {loading ? <p role="status">{t("Checking current acquisition options…")}</p> : owned ? <p>{t("This player is already in your squad. Rebuild to update the recommendation.")}</p>
+        : offers.length === 0 ? <p role="status">{t("No verified acquisition route is currently available. Refresh your league and try again.")}</p>
           : <div className="lineup-builder-section">{offers.map((offer) => <div key={offer.type}>
             <Button shape="square" disabled={!offer.enabled || actions.actionPending} onClick={() => {
               if (!row || !offer.enabled) return;
               if (offer.type === "bid") actions.openBid(row, offer.kind);
               else actions.openClause(row, offer.amount);
-            }}>{localizeCopy(offer.label)}</Button>
-            {offer.disabledReason && <p className="fb-helper">{localizeCopy(offer.disabledReason)}</p>}
+            }}>{t(offer.label)}</Button>
+            {offer.disabledReason && <p className="fb-helper">{t(offer.disabledReason)}</p>}
           </div>)}</div>}
-      {localizeCopy(actions.message && <p role="alert">{localizeCopy(actions.message)}</p>)}
+      {(actions.message && <p role="alert">{t(actions.message)}</p>)}
     </Dialog>
     <MarketActionDialogs actions={actions} money={board.money} squadMarketValue={board.squadMarketValue} />
   </>;

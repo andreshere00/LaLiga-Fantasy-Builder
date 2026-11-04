@@ -1,4 +1,4 @@
-import { copy as localizeCopy, useLanguage } from "../../i18n";
+import { t, useTranslation } from "../../i18n";
 import { useEffect, useState } from "react";
 import { readTheme, THEME_STORAGE_KEY, type Theme } from "../../styles/theme";
 import configBlackUrl from "../../assets/button_config_black.svg";
@@ -7,13 +7,13 @@ import configRedUrl from "../../assets/button_config_red.svg";
 import configWhiteUrl from "../../assets/button_config_white.svg";
 
 export function ThemeToggle() {
-  useLanguage();
+  useTranslation();
   const [theme, setTheme] = useState<Theme>(readTheme);
   useEffect(() => {
     document.documentElement.dataset.theme = theme;
     try { localStorage.setItem(THEME_STORAGE_KEY, theme); } catch { /* Preference remains in memory. */ }
   }, [theme]);
-  return <button type="button" className="theme-btn" aria-label={localizeCopy(theme === "light" ? "Switch to dark theme" : "Switch to light theme")}
+  return <button type="button" className="theme-btn" aria-label={theme === "light" ? t("Switch to dark theme") : t("Switch to light theme")}
     onClick={() => setTheme(theme === "light" ? "dark" : "light")}>
     <img className="theme-config-icon theme-config-icon--black" src={configBlackUrl} alt="" />
     <img className="theme-config-icon theme-config-icon--white" src={configWhiteUrl} alt="" />

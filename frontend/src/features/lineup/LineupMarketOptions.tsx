@@ -1,4 +1,4 @@
-import { copy as localizeCopy, useLanguage } from "../../i18n";
+import { t, useTranslation } from "../../i18n";
 import type { SquadCard } from "../../api/mappers";
 import { Dialog } from "../../components/ui/Dialog";
 import { useNow } from "../../hooks/useNow";
@@ -12,12 +12,11 @@ type Props = { player: SquadCard; open: boolean; onClose: () => void };
 
 /** Load opponent market actions only when the player menu requests them. */
 export function LineupMarketOptions({ player, open, onClose }: Props) {
-  useLanguage();
   return open ? <OpponentMarketOptions player={player} onClose={onClose} /> : null;
 }
 
 function OpponentMarketOptions({ player, onClose }: Omit<Props, "open">) {
-  useLanguage();
+  useTranslation();
   const board = useMarketBoard();
   const actions = useMarketActions();
   const now = useNow();
@@ -37,12 +36,12 @@ function OpponentMarketOptions({ player, onClose }: Omit<Props, "open">) {
 
   return (
     <>
-      <Dialog open={!confirming} title={localizeCopy(`${player.name} — Market options`)} onClose={onClose}
+      <Dialog open={!confirming} title={t("{{0}} — Market options", { 0: player.name })} onClose={onClose}
         closeOnBackdrop={!actions.actionPending}>
-        {board.isLoading ? <p role="status">{localizeCopy("Loading market options…")}</p> : board.hasError ? (
-          <p role="alert">{localizeCopy("Market options could not be loaded.")}</p>
+        {board.isLoading ? <p role="status">{t("Loading market options…")}</p> : board.hasError ? (
+          <p role="alert">{t("Market options could not be loaded.")}</p>
         ) : offers.length === 0 ? (
-          <p>{localizeCopy("No market actions are currently available for this player.")}</p>
+          <p>{t("No market actions are currently available for this player.")}</p>
         ) : (
           <div className="squad-sale-choices">
             {offers.map((offer) => (
@@ -56,14 +55,14 @@ function OpponentMarketOptions({ player, onClose }: Omit<Props, "open">) {
                     else if (offer.type === "withdraw") actions.openWithdraw(row);
                     else if (offer.type === "pay-clause") actions.openClause(row, offer.amount);
                   }}>
-                  {localizeCopy(offer.label)}
+                  {t(offer.label)}
                 </button>
-                {offer.disabledReason ? <p className="squad-sale-note">{localizeCopy(offer.disabledReason)}</p> : null}
+                {offer.disabledReason ? <p className="squad-sale-note">{t(offer.disabledReason)}</p> : null}
               </div>
             ))}
           </div>
         )}
-        {actions.message ? <p role="alert">{localizeCopy(actions.message)}</p> : null}
+        {actions.message ? <p role="alert">{t(actions.message)}</p> : null}
       </Dialog>
       <MarketActionDialogs
         actions={actions}

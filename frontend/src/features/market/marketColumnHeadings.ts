@@ -1,3 +1,4 @@
+import { t } from "../../i18n";
 import { formatIntegerAmount } from "../../api/format";
 import { normalizeSearchText } from "../../searchText";
 import type { MarketFilters, NumericRange } from "./marketFilters";
@@ -59,40 +60,40 @@ export function marketColumnHeadings(
   return {
     player: {
       label: playerFiltered
-        ? `${MARKET_COLUMN_BASE_LABELS.player} · filtered`
-        : MARKET_COLUMN_BASE_LABELS.player,
+        ? t("{{0}} · filtered", { 0: t(MARKET_COLUMN_BASE_LABELS.player) })
+        : t(MARKET_COLUMN_BASE_LABELS.player),
       filtered: playerFiltered,
     },
     position: {
-      label: `${MARKET_COLUMN_BASE_LABELS.position}${positionSuffix}`,
+      label: `${t(MARKET_COLUMN_BASE_LABELS.position)}${positionSuffix}`,
       filtered: positionFiltered,
     },
     fsyp: {
-      label: `${MARKET_COLUMN_BASE_LABELS.fsyp}${fsypSuffix}`,
+      label: `${t(MARKET_COLUMN_BASE_LABELS.fsyp)}${fsypSuffix}`,
       filtered: fsypSuffix.length > 0,
     },
     form: {
-      label: `${MARKET_COLUMN_BASE_LABELS.form}${formSuffix}`,
+      label: `${t(MARKET_COLUMN_BASE_LABELS.form)}${formSuffix}`,
       filtered: formSuffix.length > 0,
     },
     marketValue: {
-      label: `${MARKET_COLUMN_BASE_LABELS.marketValue}${valueSuffix}`,
+      label: `${t(MARKET_COLUMN_BASE_LABELS.marketValue)}${valueSuffix}`,
       filtered: valueSuffix.length > 0,
     },
     availability: {
-      label: `${MARKET_COLUMN_BASE_LABELS.availability}${availabilitySuffix}`,
+      label: `${t(MARKET_COLUMN_BASE_LABELS.availability)}${availabilitySuffix}`,
       filtered: availabilityFiltered,
     },
-    sealEnd: { label: MARKET_COLUMN_BASE_LABELS.sealEnd, filtered: false },
+    sealEnd: { label: t(MARKET_COLUMN_BASE_LABELS.sealEnd), filtered: false },
     sellOptions: {
       label: sellFiltered
-        ? `${MARKET_COLUMN_BASE_LABELS.sellOptions} · seller`
-        : MARKET_COLUMN_BASE_LABELS.sellOptions,
+        ? t("{{0}} · seller", { 0: t(MARKET_COLUMN_BASE_LABELS.sellOptions) })
+        : t(MARKET_COLUMN_BASE_LABELS.sellOptions),
       filtered: sellFiltered,
     },
   };
 }
 
 export function marketColumnBaseLabel(column: MarketColumnKey): string {
-  return MARKET_COLUMN_BASE_LABELS[column];
+  return t(MARKET_COLUMN_BASE_LABELS[column]);
 }

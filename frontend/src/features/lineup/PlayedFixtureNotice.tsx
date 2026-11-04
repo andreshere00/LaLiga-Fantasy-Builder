@@ -1,4 +1,4 @@
-import { copy as localizeCopy, useLanguage } from "../../i18n";
+import { t, useTranslation } from "../../i18n";
 import { Dialog } from "../../components/ui/Dialog";
 import { PAST_FIXTURE_LOCKED_MESSAGE } from "./lineupMessages";
 
@@ -8,10 +8,10 @@ type PlayedFixtureNoticeProps = {
 };
 
 export function PlayedFixtureNotice({ open, onClose }: PlayedFixtureNoticeProps) {
-  useLanguage();
+  useTranslation();
   return (
-    <Dialog open={open} title={localizeCopy("Lineup locked")} onClose={onClose}>
-      <p className="modal-body-plain">{localizeCopy(PAST_FIXTURE_LOCKED_MESSAGE)}</p>
+    <Dialog open={open} title={t("Lineup locked")} onClose={onClose}>
+      <p className="modal-body-plain">{t(PAST_FIXTURE_LOCKED_MESSAGE)}</p>
     </Dialog>
   );
 }

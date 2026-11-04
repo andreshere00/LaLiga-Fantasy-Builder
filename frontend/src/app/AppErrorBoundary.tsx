@@ -1,4 +1,4 @@
-import { copy as localizeCopy } from "../i18n";
+import { t } from "../i18n";
 import { Button } from "../components/ui/Button";
 import { Component, type ErrorInfo, type ReactNode } from "react";
 
@@ -25,10 +25,10 @@ export class AppErrorBoundary extends Component<Props, State> {
     if (this.state.error) {
       return (
         <section className="gate">
-          <h1>{localizeCopy("Something went wrong")}</h1>
-          <p>{localizeCopy("This page could not be displayed.")}</p>
+          <h1>{t("Something went wrong")}</h1>
+          <p>{t("This page could not be displayed.")}</p>
           <Button type="button" onClick={() => window.location.reload()}>
-            {localizeCopy("Reload")}</Button>
+            {t("Reload")}</Button>
         </section>
       );
     }

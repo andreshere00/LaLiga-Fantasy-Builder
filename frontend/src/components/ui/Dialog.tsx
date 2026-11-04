@@ -1,4 +1,4 @@
-import { copy as localizeCopy, useLanguage } from "../../i18n";
+import { t, useTranslation } from "../../i18n";
 import { Dialog as Primitive } from "@base-ui/react/dialog";
 import type { ComponentProps, ReactNode } from "react";
 import { Button } from "./Button";
@@ -24,7 +24,7 @@ export function Dialog({
   open, title, onClose, children, footer, closeOnBackdrop = true, layout = "dialog", className = "",
   finalFocus, onOpenChangeComplete, description, initialFocus, busy = false,
 }: DialogProps) {
-  useLanguage();
+  useTranslation();
   return (
     <Primitive.Root open={open} disablePointerDismissal={busy || !closeOnBackdrop}
       onOpenChangeComplete={onOpenChangeComplete}
@@ -42,16 +42,16 @@ export function Dialog({
             <header className="fb-dialog-heading">
               <Primitive.Title className="fb-section-title">{title}</Primitive.Title>
               <Primitive.Close disabled={busy || !closeOnBackdrop} render={<Button variant="ghost" shape="square" size="icon"
-                aria-label={localizeCopy("Close dialog")} />}>×</Primitive.Close>
+                aria-label={t("Close dialog")} />}>×</Primitive.Close>
             </header>
             <div className="modal-body fb-dialog-body">
               {description ? <Primitive.Description className="fb-dialog-description">
-                {localizeCopy(description)}
+                {description}
               </Primitive.Description> : null}
-              {localizeCopy(children)}
+              {children}
             </div>
             <footer className="modal-footer fb-dialog-footer">
-              {localizeCopy(footer ?? <Primitive.Close disabled={busy} render={<Button />}>{localizeCopy("Close")}</Primitive.Close>)}
+              {(footer ?? <Primitive.Close disabled={busy} render={<Button />}>{t("Close")}</Primitive.Close>)}
             </footer>
           </Primitive.Popup>
         </Primitive.Viewport>

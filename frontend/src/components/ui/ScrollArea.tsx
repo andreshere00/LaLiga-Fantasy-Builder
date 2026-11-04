@@ -1,4 +1,3 @@
-import { copy as localizeCopy, useLanguage } from "../../i18n";
 // Adapted from shadcn/ui's Base UI Scroll Area (MIT). See shadcn-LICENSE.md.
 import { ScrollArea as Primitive } from "@base-ui/react/scroll-area";
 import type { ComponentProps } from "react";
@@ -12,12 +11,11 @@ type ScrollAreaProps = ComponentProps<typeof Primitive.Root> & {
 export function ScrollArea({
   className = "", children, viewportProps, horizontal = false, ...props
 }: ScrollAreaProps) {
-  useLanguage();
   return (
     <Primitive.Root data-slot="scroll-area" className={`fb-scroll-root ${className}`} {...props}>
       <Primitive.Viewport data-slot="scroll-area-viewport" className="fb-scroll-viewport"
         tabIndex={0} {...viewportProps}>
-        {localizeCopy(children)}
+        {children}
       </Primitive.Viewport>
       <ScrollBar />
       {horizontal ? <ScrollBar orientation="horizontal" /> : null}
@@ -29,7 +27,6 @@ export function ScrollArea({
 export function ScrollBar({
   className = "", orientation = "vertical", ...props
 }: ComponentProps<typeof Primitive.Scrollbar>) {
-  useLanguage();
   return (
     <Primitive.Scrollbar data-slot="scroll-area-scrollbar" orientation={orientation}
       className={`fb-scroll-bar ${className}`} {...props}>

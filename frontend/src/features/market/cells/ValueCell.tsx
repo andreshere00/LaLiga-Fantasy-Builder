@@ -1,4 +1,4 @@
-import { copy as localizeCopy, useLanguage } from "../../../i18n";
+import { t, useTranslation } from "../../../i18n";
 import type { ReactElement } from "react";
 import { Help } from "../../../components/ui/Help";
 
@@ -30,7 +30,7 @@ export function ValueCell({
   variationPercent: number | null;
   valueHistory: readonly ValuePoint[];
 }): ReactElement {
-  useLanguage();
+  useTranslation();
   const absolute = formatSignedEuro(variation);
   const percent = formatPercent(variationPercent);
   const tone = variationPercentTone(variationPercent);
@@ -39,8 +39,8 @@ export function ValueCell({
   const change =
     absolute || percent ? (
       <>
-        {localizeCopy(absolute)}
-        {localizeCopy(percent ? ` (${percent})` : null)}
+        {absolute}
+        {percent ? ` (${percent})` : null}
       </>
     ) : (
       "—"
@@ -49,25 +49,25 @@ export function ValueCell({
   return (
     <Help className="market-value-line" content={<>
         <span className="market-value-tooltip-line">
-          {localizeCopy("Last market value: ")}{localizeCopy(formatMarketValueStat(stats.last))}
+          {t("Last market value: ")}{formatMarketValueStat(stats.last)}
         </span>
         <span className="market-value-tooltip-line">
-          {localizeCopy("Highest market value: ")}{localizeCopy(formatMarketValueWithChange(stats.best, stats.last))}
+          {t("Highest market value: ")}{formatMarketValueWithChange(stats.best, stats.last)}
         </span>
         <span className="market-value-tooltip-line">
-          {localizeCopy("Lowest market value: ")}{localizeCopy(formatMarketValueWithChange(stats.lowest, stats.last))}
+          {t("Lowest market value: ")}{formatMarketValueWithChange(stats.lowest, stats.last)}
         </span>
         <span className="market-value-tooltip-line">
-          {localizeCopy("Last 5 days market value: ")}{localizeCopy(formatMarketValueWithChange(stats.fiveDaysAgo, stats.last))}
+          {t("Last 5 days market value: ")}{formatMarketValueWithChange(stats.fiveDaysAgo, stats.last)}
         </span>
         <span className="market-value-tooltip-line">
-          {localizeCopy("Last 14 days market value:")}{" "}
-          {localizeCopy(formatMarketValueWithChange(stats.fourteenDaysAgo, stats.last))}
+          {t("Last 14 days market value:")}{" "}
+          {formatMarketValueWithChange(stats.fourteenDaysAgo, stats.last)}
         </span>
 
     </>}>
-      <span className="market-value-primary">{localizeCopy(formatEuro(marketValue))}</span>
-      <span className={`market-value-change ${tone}`}>{localizeCopy(change)}</span>
+      <span className="market-value-primary">{formatEuro(marketValue)}</span>
+      <span className={`market-value-change ${tone}`}>{change}</span>
     </Help>
   );
 }

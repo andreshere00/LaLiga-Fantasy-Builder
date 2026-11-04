@@ -1,4 +1,4 @@
-import { copy as localizeCopy, useLanguage } from "../../i18n";
+import { t, useTranslation } from "../../i18n";
 import { useEffect, useId, useState } from "react";
 import { NativeSelect } from "../../components/ui/Fields";
 
@@ -42,11 +42,11 @@ export function FilterRangeField({
   formatInput,
   parseBound,
   stepBound,
-  minPlaceholder = "Min",
-  maxPlaceholder = "Max",
+  minPlaceholder = t("Min"),
+  maxPlaceholder = t("Max"),
   hint,
 }: FilterRangeFieldProps) {
-  useLanguage();
+  useTranslation();
   const [rawMin, setRawMin] = useState("");
   const [rawMax, setRawMax] = useState("");
 
@@ -66,14 +66,14 @@ export function FilterRangeField({
 
   return (
     <div className="market-column-filter-range">
-      {hint ? <p className="market-filter-range-hint">{localizeCopy(hint)}</p> : null}
+      {hint ? <p className="market-filter-range-hint">{hint}</p> : null}
       <div className="market-filter-range-inputs">
         <label className="market-filter-range-label">
-          {localizeCopy("Min")}<NumericCounterField
-            ariaLabel="Minimum"
+          {t("Min")}<NumericCounterField
+            ariaLabel={t("Minimum")}
             inputClassName="market-filter-range-input"
             value={rawMin}
-            placeholder={localizeCopy(minPlaceholder)}
+            placeholder={minPlaceholder}
             formatInput={formatInput}
             parseValue={parseBound}
             stepValue={stepBound}
@@ -83,11 +83,11 @@ export function FilterRangeField({
           />
         </label>
         <label className="market-filter-range-label">
-          {localizeCopy("Max")}<NumericCounterField
-            ariaLabel="Maximum"
+          {t("Max")}<NumericCounterField
+            ariaLabel={t("Maximum")}
             inputClassName="market-filter-range-input"
             value={rawMax}
-            placeholder={localizeCopy(maxPlaceholder)}
+            placeholder={maxPlaceholder}
             formatInput={formatInput}
             parseValue={parseBound}
             stepValue={stepBound}
@@ -108,7 +108,7 @@ export function FilterMarketValueRange({
   range: NumericRange;
   onChange: (next: NumericRange) => void;
 }) {
-  useLanguage();
+  useTranslation();
   return (
     <FilterRangeField
       range={range}
@@ -118,7 +118,7 @@ export function FilterMarketValueRange({
       stepBound={stepMarketValueFilterBound}
       minPlaceholder={formatIntegerAmount(MARKET_VALUE_FILTER_MIN)}
       maxPlaceholder={formatIntegerAmount(MARKET_VALUE_FILTER_MAX)}
-      hint={`Whole euros from ${formatIntegerAmount(MARKET_VALUE_FILTER_MIN)} to ${formatIntegerAmount(MARKET_VALUE_FILTER_MAX)}. Use ± to adjust by ${formatIntegerAmount(MARKET_VALUE_FILTER_STEP)}.`}
+      hint={t("Whole euros from {{0}} to {{1}}. Use ± to adjust by {{2}}.", { 0: formatIntegerAmount(MARKET_VALUE_FILTER_MIN), 1: formatIntegerAmount(MARKET_VALUE_FILTER_MAX), 2: formatIntegerAmount(MARKET_VALUE_FILTER_STEP) })}
     />
   );
 }
@@ -130,7 +130,6 @@ export function FilterStatRange({
   range: NumericRange;
   onChange: (next: NumericRange) => void;
 }) {
-  useLanguage();
   return (
     <FilterRangeField
       range={range}
@@ -149,7 +148,7 @@ export function FilterPositionChips({
   selected: ReadonlySet<number>;
   onChange: (next: ReadonlySet<number>) => void;
 }) {
-  useLanguage();
+  useTranslation();
   const toggle = (positionId: number) => {
     const next = new Set(selected);
     if (next.has(positionId)) next.delete(positionId);
@@ -167,10 +166,10 @@ export function FilterPositionChips({
             type="button"
             className={`market-filter-chip${active ? " is-active" : ""}`}
             aria-pressed={active}
-            title={localizeCopy(option.label)}
+            title={t(option.label)}
             onClick={() => toggle(option.id)}
           >
-            {localizeCopy(option.abbrev)}
+            {t(option.abbrev)}
           </button>
         );
       })}
@@ -185,7 +184,7 @@ export function FilterAvailabilityChips({
   selected: ReadonlySet<Availability>;
   onChange: (next: ReadonlySet<Availability>) => void;
 }) {
-  useLanguage();
+  useTranslation();
   const toggle = (value: Availability) => {
     const next = new Set(selected);
     if (next.has(value)) next.delete(value);
@@ -205,7 +204,7 @@ export function FilterAvailabilityChips({
             aria-pressed={active}
             onClick={() => toggle(option.value)}
           >
-            {localizeCopy(option.label)}
+            {t(option.label)}
           </button>
         );
       })}
@@ -226,17 +225,17 @@ export function FilterTextInput({
   placeholder: string;
   suggestions?: readonly string[];
 }) {
-  useLanguage();
+  useTranslation();
   const listId = useId();
   return (
     <label className="market-column-filter-text">
-      {localizeCopy(label)}
+      {t(label)}
       <input
         type="search"
         className="market-filter-range-input"
         value={value}
         onChange={(event) => onChange(event.target.value)}
-        placeholder={localizeCopy(placeholder)}
+        placeholder={t(placeholder)}
         list={suggestions.length ? listId : undefined}
       />
       <datalist id={listId}>
@@ -257,15 +256,15 @@ export function FilterSellerSelect({
   onPick: (seller: string) => void;
   value?: string;
 }) {
-  useLanguage();
+  useTranslation();
   return (
     <label className="market-column-filter-text">
-      {localizeCopy("Pick a seller")}<NativeSelect
+      {t("Pick a seller")}<NativeSelect
         className="market-filter-select"
         value={sellers.includes(value) ? value : ""}
         onChange={(event) => onPick(event.target.value)}
       >
-        <option value="">{localizeCopy("Choose…")}</option>
+        <option value="">{t("Choose…")}</option>
         {sellers.map((seller) => (
           <option key={seller} value={seller}>
             {seller}

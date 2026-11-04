@@ -1,4 +1,3 @@
-import { copy as localizeCopy, useLanguage } from "../../i18n";
 // Adapted from shadcn/ui's Base UI Progress (MIT). See shadcn-LICENSE.md.
 import { Progress as ProgressPrimitive } from "@base-ui/react/progress";
 import type { ComponentProps } from "react";
@@ -9,10 +8,9 @@ type ProgressProps = Omit<ComponentProps<typeof ProgressPrimitive.Root>, "classN
 };
 
 export function Progress({ className = "", children, ...props }: ProgressProps) {
-  useLanguage();
   return (
     <ProgressPrimitive.Root data-slot="progress" className={`fb-progress ${className}`} {...props}>
-      {localizeCopy(children)}
+      {children}
       <ProgressPrimitive.Track data-slot="progress-track" className="fb-progress-track">
         <ProgressPrimitive.Indicator data-slot="progress-indicator"
           className="fb-progress-indicator" />
@@ -26,7 +24,6 @@ type ProgressLabelProps = Omit<ComponentProps<typeof ProgressPrimitive.Label>, "
 };
 
 export function ProgressLabel({ className = "", ...props }: ProgressLabelProps) {
-  useLanguage();
   return <ProgressPrimitive.Label data-slot="progress-label"
     className={`fb-progress-label ${className}`} {...props} />;
 }

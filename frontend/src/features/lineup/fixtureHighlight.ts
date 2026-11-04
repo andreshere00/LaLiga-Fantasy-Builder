@@ -1,3 +1,4 @@
+import { t } from "../../i18n";
 import {
   asFiniteNumber,
   asRecord,
@@ -111,9 +112,9 @@ export function fixtureHighlightLabel(
   highlight: FixtureHighlight | null | undefined,
 ): string | null {
   if (!highlight) return null;
-  if (highlight.kind === "clean-sheet") return "No goals conceded";
-  if (highlight.goals === 1) return "Scored a goal";
-  return `Scored ${highlight.goals} goals`;
+  if (highlight.kind === "clean-sheet") return t("No goals conceded");
+  if (highlight.goals === 1) return t("Scored a goal");
+  return t("Scored {{0}} goals", { 0: highlight.goals });
 }
 
 /**

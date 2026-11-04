@@ -1,4 +1,4 @@
-import { copy as localizeCopy, useLanguage } from "../../i18n";
+import { t, useTranslation } from "../../i18n";
 import { ManagerIdentity } from "../shell/ManagerIdentity";
 import { Menu } from "@base-ui/react/menu";
 import { formatEuro } from "../../api/format";
@@ -94,14 +94,14 @@ function PlayersListRow({
   sales: ReturnType<typeof useSquadSales>;
   onToggleFavorite: () => void;
 }) {
-  useLanguage();
+  useTranslation();
   const clause = playerClauseDetails(row, marketRow);
   const listingForActions = marketRow ? { ...marketRow, ...clause, isShielded: clause.isShielded === true } : null;
   const protection = protectionDescription(clause, actionContext.now);
   const nameClass = "market-name" + (protection ? " is-protected" : "");
   const moneyDetails = <>
     {marketRow?.myBid ? <span className="market-bid-value">
-      {localizeCopy("Your bid: ")}{localizeCopy(formatEuro(marketRow.myBid.money))}
+      {t("Your bid: ")}{formatEuro(marketRow.myBid.money)}
     </span> : null}
     <ReleaseClauseDetail row={clause} now={actionContext.now} />
   </>;
@@ -117,7 +117,7 @@ function PlayersListRow({
   const ownerCell = row.ownedBy === "Free Agent" ? (
     <span className="players-free-agent">
       <img src={availableIcon} alt="" aria-hidden="true" />
-      {localizeCopy("Free Agent")}</span>
+      {t("Free Agent")}</span>
   ) : row.ownerTeamId ? (
     <Link className="players-owner-link" to={`/?team=${encodeURIComponent(row.ownerTeamId)}`}>
       <ManagerIdentity name={row.ownedBy} avatarUrl={row.ownerAvatarUrl} />
@@ -127,12 +127,12 @@ function PlayersListRow({
   );
   const detailsOptions = row.positionId === 5 ? null : (
     <Menu.Root>
-      <Menu.Trigger className="market-actions-trigger">{localizeCopy("Options")}</Menu.Trigger>
+      <Menu.Trigger className="market-actions-trigger">{t("Options")}</Menu.Trigger>
       <Menu.Portal><Menu.Positioner align="end" sideOffset={4} className="fb-menu-positioner">
         <Menu.Popup className="fb-menu-popup">
           <Menu.Item className="market-actions-item" render={<Link
             to={"/players/" + encodeURIComponent(row.playerId)} state={{ returnTo: "/players" }} />}>
-            {localizeCopy("Player details")}</Menu.Item>
+            {t("Player details")}</Menu.Item>
         </Menu.Popup>
       </Menu.Positioner></Menu.Portal>
     </Menu.Root>
@@ -152,19 +152,19 @@ function PlayersListRow({
           teamBadgeUrl={row.teamBadgeUrl}
         />
       </div>
-      <span className="market-name-wrap" data-column="player" data-label={localizeCopy("Player")}>
+      <span className="market-name-wrap" data-column="player" data-label={t("Player")}>
         {row.positionId === 5 ? <span className={nameClass}>{row.name}</span> : (
           <Link className={nameClass + " players-name-link"} to={"/players/" + encodeURIComponent(row.playerId)} state={{ returnTo: "/players" }}>{row.name}</Link>
         )}
-        {protection ? <Help content={localizeCopy(protection)} className="market-clause-flag">
-          <img className="market-clause-flag-icon" src={shieldRedIcon} alt={localizeCopy(protection)} />
+        {protection ? <Help content={protection} className="market-clause-flag">
+          <img className="market-clause-flag-icon" src={shieldRedIcon} alt={protection} />
         </Help> : null}
       </span>
-      <span className="market-cell players-team-cell" data-column="team" data-label={localizeCopy("Team")}>{row.teamName ?? "—"}</span>
-      <span className="market-cell" data-column="position" data-label={localizeCopy("Position")}>
+      <span className="market-cell players-team-cell" data-column="team" data-label={t("Team")}>{row.teamName ?? "—"}</span>
+      <span className="market-cell" data-column="position" data-label={t("Position")}>
         <PositionCell positionId={row.positionId} />
       </span>
-      <span className="market-cell market-fsyp-cell" data-column="fsyp" data-label={localizeCopy("FSYP")}>
+      <span className="market-cell market-fsyp-cell" data-column="fsyp" data-label={t("FSYP")}>
         <FsypCell
           labelAverage
           points={row.points}
@@ -172,10 +172,10 @@ function PlayersListRow({
           formRecent={row.formRecent}
         />
       </span>
-      <span className="market-cell market-form" data-column="form" data-label={localizeCopy("Form")}>
+      <span className="market-cell market-form" data-column="form" data-label={t("Form")}>
         <FormCell row={formRow} windowSize={5} />
       </span>
-      <span className="market-cell market-value players-value-cell" data-column="marketValue" data-label={localizeCopy("Market value")}>
+      <span className="market-cell market-value players-value-cell" data-column="marketValue" data-label={t("Market value")}>
         <ValueCell
           marketValue={row.marketValue}
           variation={valueVariation(valueHistory)}
@@ -184,19 +184,19 @@ function PlayersListRow({
         />
         <span className="players-value-details">{moneyDetails}</span>
       </span>
-      <span className="market-cell market-cell-availability" data-column="availability" data-label={localizeCopy("Availability")}>
+      <span className="market-cell market-cell-availability" data-column="availability" data-label={t("Availability")}>
         <AvailabilityCell availability={row.availability} />
       </span>
-      <span className="market-cell players-owner-cell" data-column="owner" data-label={localizeCopy("Owned by")} title={row.ownedBy}>
+      <span className="market-cell players-owner-cell" data-column="owner" data-label={t("Owned by")} title={row.ownedBy}>
         {ownerCell}
       </span>
-      <span className="market-cell players-actions-cell" data-column="actions" data-label={localizeCopy("Actions")}>
+      <span className="market-cell players-actions-cell" data-column="actions" data-label={t("Actions")}>
         <span className="players-action-controls">
           {ownSquadCard ? (
             <SquadPlayerActions
               player={ownSquadCard}
               sales={sales}
-              triggerText="Options"
+              triggerText={t("Options")}
               detailsReturnTo="/players"
             >
               <span className="players-squad-actions-target" aria-hidden="true" />
@@ -218,7 +218,7 @@ function PlayersListRow({
             onToggle={onToggleFavorite}
           />
         </span>
-        {marketRow ? <span className="market-bid-count">{localizeCopy("Bids: ")}{localizeCopy(bidCountLabel(marketRow.numberOfBids))}</span> : null}
+        {marketRow ? <span className="market-bid-count">{t("Bids: ")}{bidCountLabel(marketRow.numberOfBids)}</span> : null}
         <span className="players-mobile-value-details">{moneyDetails}</span>
       </span>
     </RichRow>
@@ -226,7 +226,6 @@ function PlayersListRow({
 }
 
 function PlayersList() {
-  useLanguage();
   const { selected } = useLeague();
   return <MarketOffersProvider key={selected ? leagueId(selected) : ""}>
     <PlayersListContent />
@@ -234,7 +233,7 @@ function PlayersList() {
 }
 
 function PlayersListContent() {
-  useLanguage();
+  useTranslation();
   const board = usePlayersBoard();
   const marketBoard = useMarketBoard();
   const actions = useMarketActions();
@@ -280,10 +279,7 @@ function PlayersListContent() {
     ]),
   );
   const filterCount = activePlayersFilterCount(urlState.filters);
-  const columnHeadings = useMemo(
-    () => playersColumnHeadings(urlState.filters),
-    [urlState.filters],
-  );
+  const columnHeadings = playersColumnHeadings(urlState.filters);
   const owners = useMemo(() => ownerOptions(board.rows), [board.rows]);
   const teams = useMemo(
     () => [...new Set(board.rows.map((row) => row.teamName).filter((name): name is string => name != null))]
@@ -339,18 +335,18 @@ function PlayersListContent() {
   };
 
   if (board.isLoading) return <PlayersScreenLoading />;
-  if (board.noLeague) return <p className="status-copy">{localizeCopy("No leagues found for this account.")}</p>;
+  if (board.noLeague) return <p className="status-copy">{t("No leagues found for this account.")}</p>;
   if (board.hasError) {
     return (
       <p className="status-copy" role="alert">
-        {localizeCopy("The player catalog could not be loaded.")}</p>
+        {t("The player catalog could not be loaded.")}</p>
     );
   }
 
   return (
     <>
       <div className="market-toolbar">
-        <h1>{localizeCopy("Players")}</h1>
+        <h1>{t("Players")}</h1>
       </div>
       <MarketOffers showTrigger={false} cards={marketBoard.ownSquadCards}
         squadAvailable={marketBoard.ownSquadAvailable} />
@@ -360,27 +356,27 @@ function PlayersListContent() {
           onChange={(query) => setFilters({ query })}
           activeFilterCount={filterCount}
           onClearFilters={clearFilters}
-          label={localizeCopy("Search players")}
-          placeholder={localizeCopy("Name, team or owner")}
+          label={t("Search players")}
+          placeholder={t("Name, team or owner")}
           inputId="players-search"
           suggestions={board.rows.map((row) => row.name)}
         />
       </div>
       <div className="market-results-summary">
-        <p role="status">{visibleRows.length} {localizeCopy(" of ")}{filtered.length} {localizeCopy(" players")}{localizeCopy(leaderboard ? " · Top by points" : "")}{localizeCopy(filterCount > 0 ? " · Filters active" : "")}</p>
-        <span>{localizeCopy("Form: oldest → latest")}</span>
+        <p role="status">{visibleRows.length} {t(" of ")}{filtered.length} {t(" players")}{leaderboard ? t(" · Top by points") : ""}{filterCount > 0 ? t(" · Filters active") : ""}</p>
+        <span>{t("Form: oldest → latest")}</span>
       </div>
       {board.isDegraded ? (
         <p className="market-notice status-copy" role="status">
-          {localizeCopy("Some league data could not be loaded. Ownership and form may be incomplete.")}</p>
+          {t("Some league data could not be loaded. Ownership and form may be incomplete.")}</p>
       ) : null}
       {actions.message && !dialogOpen ? (
         <p className="status-copy" role="alert">
-          {localizeCopy(actions.message)}
+          {t(actions.message)}
         </p>
       ) : null}
       {visibleRows.length === 0 ? (
-        <p className="status-copy">{localizeCopy("No players match your filters.")}</p>
+        <p className="status-copy">{t("No players match your filters.")}</p>
       ) : (
         <>
           <ul className="market-list players-list">
@@ -411,7 +407,7 @@ function PlayersListContent() {
       )}
       {!leaderboard && filtered.length > PLAYERS_PAGE_SIZE ? (
         <NumberPagination page={currentPage} totalPages={totalPages}
-          label={localizeCopy("Players pages")} onPageChange={(page) =>
+          label={t("Players pages")} onPageChange={(page) =>
             setSearchParams(withPlayersPage(searchParams, page), { replace: true })} />
       ) : null}
       <MarketActionDialogs
@@ -424,7 +420,6 @@ function PlayersListContent() {
 }
 
 export function PlayersPage() {
-  useLanguage();
   const { status } = useAuth();
   if (status !== "ready") return <GatePanel status={status} />;
   return (

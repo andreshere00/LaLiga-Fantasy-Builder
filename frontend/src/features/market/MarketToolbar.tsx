@@ -1,4 +1,4 @@
-import { copy as localizeCopy, useLanguage } from "../../i18n";
+import { t, useTranslation } from "../../i18n";
 import { formatEuro } from "../../api/format";
 import { Popover } from "@base-ui/react/popover";
 import { Button } from "../../components/ui/Button";
@@ -18,7 +18,7 @@ type MarketBalanceProps = {
 };
 
 export function MarketBalance({ money, projection, projectionRefreshing, projectionStale }: MarketBalanceProps) {
-  useLanguage();
+  useTranslation();
   const negative = money != null && money < 0;
   const help = projection ? [
     "Assuming all active bids succeed.",
@@ -30,12 +30,12 @@ export function MarketBalance({ money, projection, projectionRefreshing, project
       : "",
   ].filter(Boolean).join(" ") : "Your reported balance.";
   return (
-    <div className="market-money-summary" aria-label={localizeCopy("Market money summary")} aria-busy={projectionRefreshing}>
-      <span className="market-money-heading">{localizeCopy("Amount available")}</span>
+    <div className="market-money-summary" aria-label={t("Market money summary")} aria-busy={projectionRefreshing}>
+      <span className="market-money-heading">{t("Amount available")}</span>
       <Popover.Root>
         <Popover.Trigger className={"market-balance-amount" + (negative ? " is-negative" : "")}
-          aria-label={localizeCopy(`Amount available: ${formatEuro(money)}. Show balance details`)}>
-          <strong>{localizeCopy(formatEuro(money))}</strong>
+          aria-label={t("Amount available: {{0}}. Show balance details", { 0: formatEuro(money) })}>
+          <strong>{formatEuro(money)}</strong>
           <img className="market-money-icon" src={negative ? moneyWarningIconUrl : moneyIconUrl} alt="" aria-hidden="true" />
           <svg className="market-money-chevron" viewBox="0 0 24 24" aria-hidden="true"><path d="m6 9 6 6 6-6" /></svg>
         </Popover.Trigger>
@@ -43,33 +43,33 @@ export function MarketBalance({ money, projection, projectionRefreshing, project
           <Popover.Positioner align="end" sideOffset={8} className="market-money-positioner">
             <Popover.Popup className="market-money-popup" initialFocus={false}>
               <div className="market-money-popup-heading">
-                <Popover.Title>{localizeCopy("Balance details")}</Popover.Title>
-                <Help content={localizeCopy(help)} trigger={<button type="button" className="market-money-help" aria-label={localizeCopy("About available balance")} />}>
+                <Popover.Title>{t("Balance details")}</Popover.Title>
+                <Help content={t(help)} trigger={<button type="button" className="market-money-help" aria-label={t("About available balance")} />}>
                   <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9" /><path d="M12 11v6M12 7v1" /></svg>
                 </Help>
               </div>
               <dl className="market-money-breakdown">
-                <div><dt>{localizeCopy("Reported balance")}</dt><dd className={negative ? "is-negative" : undefined}>{localizeCopy(formatEuro(money))}</dd></div>
+                <div><dt>{t("Reported balance")}</dt><dd className={negative ? "is-negative" : undefined}>{formatEuro(money)}</dd></div>
                 {projection ? <>
                   <div>
-                    <dt>{localizeCopy("Projected spending")}</dt>
-                    <dd>{localizeCopy(projection.spending == null ? "Unavailable" : formatEuro(projection.spending))}</dd>
+                    <dt>{t("Projected spending")}</dt>
+                    <dd>{projection.spending == null ? t("Unavailable") : formatEuro(projection.spending)}</dd>
                   </div>
                   <div className={projection.available != null && projection.available < 0 ? "is-negative" : undefined}>
-                    <dt>{localizeCopy(projection.estimated ? "Estimated available" : "Projected available")}</dt>
-                    <dd>{localizeCopy(projection.available == null ? "Unavailable" : formatEuro(projection.available))}</dd>
+                    <dt>{projection.estimated ? t("Estimated available") : t("Projected available")}</dt>
+                    <dd>{projection.available == null ? t("Unavailable") : formatEuro(projection.available)}</dd>
                   </div>
                 </> : null}
               </dl>
               {negative ? <p className="market-money-status is-negative">
-                {localizeCopy("The balance must be positive before the next matchday begins; otherwise, no points will be scored.")}</p> : null}
+                {t("The balance must be positive before the next matchday begins; otherwise, no points will be scored.")}</p> : null}
               {projection && (!projection.complete || projectionRefreshing || projectionStale) ? (
                 <p className="market-money-status" role="status">
-                  {localizeCopy(!projection.complete ? "Projection incomplete. " : "")}
-                  {localizeCopy(projectionStale ? "Refresh failed; cached values may be stale." : projectionRefreshing ? "Refreshing balance and bids…" : "")}
+                  {!projection.complete ? t("Projection incomplete. ") : ""}
+                  {projectionStale ? t("Refresh failed; cached values may be stale.") : projectionRefreshing ? t("Refreshing balance and bids…") : ""}
                 </p>
               ) : null}
-              <Popover.Close render={<Button variant="ghost" size="sm" shape="square" />}>{localizeCopy("Close")}</Popover.Close>
+              <Popover.Close render={<Button variant="ghost" size="sm" shape="square" />}>{t("Close")}</Popover.Close>
             </Popover.Popup>
           </Popover.Positioner>
         </Popover.Portal>
@@ -105,11 +105,11 @@ export function MarketToolbar({
   suggestions,
   notifications,
 }: MarketToolbarProps) {
-  useLanguage();
+  useTranslation();
   return (
     <>
       <div className="market-toolbar">
-        <h1>{localizeCopy("Market")}</h1>
+        <h1>{t("Market")}</h1>
       </div>
       <div className="market-filter-row">
         {showSearch ? (
@@ -122,7 +122,7 @@ export function MarketToolbar({
           />
         ) : null}
         <div className="market-balance-actions">
-          {localizeCopy(notifications)}
+          {notifications}
           <MarketBalance money={money} projection={projection}
             projectionRefreshing={projectionRefreshing} projectionStale={projectionStale} />
         </div>

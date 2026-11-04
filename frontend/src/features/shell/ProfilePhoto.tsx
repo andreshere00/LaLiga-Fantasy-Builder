@@ -1,4 +1,3 @@
-import { copy as localizeCopy, useLanguage } from "../../i18n";
 import { Avatar } from "@base-ui/react/avatar";
 import type { ReactNode } from "react";
 
@@ -11,12 +10,11 @@ type ProfilePhotoProps = {
 };
 
 export function ProfilePhoto({ url, className, fallback }: ProfilePhotoProps) {
-  useLanguage();
   return (
     <Avatar.Root className={`fb-avatar ${className ?? ""}`}>
       {url ? <Avatar.Image className="fb-avatar-image" src={url} alt="" loading="lazy"
         decoding="async" referrerPolicy="no-referrer" /> : null}
-      <Avatar.Fallback className="fb-avatar-fallback">{localizeCopy(fallback)}</Avatar.Fallback>
+      <Avatar.Fallback className="fb-avatar-fallback">{fallback}</Avatar.Fallback>
     </Avatar.Root>
   );
 }

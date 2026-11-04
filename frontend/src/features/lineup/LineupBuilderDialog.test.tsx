@@ -114,3 +114,28 @@ it("shows actionable build diagnostics as a readable list without losing setting
   expect(screen.getByRole("button", { name: "Build" }).hasAttribute("disabled")).toBe(false);
   client.clear();
 });
+
+it("translates builder source labels and counts without losing selected formations", async () => {
+  const { squadCards } = await import("../../api/mappers");
+  const squad = squadCards([{ playerTeamId: "entry1", playerMaster: { id: "1", nickname: "Player from vs offers", positionId: 1 } }], null);
+  const { i18n } = await import("../../i18n");
+  void i18n.changeLanguage("es");
+  const client = new QueryClient({ defaultOptions: { queries: { retry: false } } });
+  try {
+    render(<QueryClientProvider client={client}>
+      <LineupBuilderDialog open onClose={vi.fn()} ranking={[]} squad={squad} selectedTeamId="t1"
+        formations={[]} canApply={() => true} onApply={vi.fn()} isDraftDirty={() => false} />
+    </QueryClientProvider>);
+    expect(screen.getByRole("checkbox", { name: "Mi plantilla: Considerar jugadores en plantilla" })).toBeTruthy();
+    expect(screen.getByRole("checkbox", { name: "Mercado: Considerar jugadores en el mercado" })).toBeTruthy();
+    fireEvent.click(screen.getByText("Elige qué jugadores quieres en el XI"));
+    expect(screen.getByRole("button", { name: "Player from vs offers Mi plantilla" })).toBeTruthy();
+    fireEvent.click(screen.getByLabelText("4-3-3"));
+    expect(screen.getByText("1 formación seleccionada")).toBeTruthy();
+    fireEvent.click(screen.getByLabelText("4-4-2"));
+    expect(screen.getByText("2 formaciones seleccionadas")).toBeTruthy();
+    await act(() => i18n.changeLanguage("en"));
+    expect(screen.getByText("2 formations selected")).toBeTruthy();
+    expect((screen.getByLabelText("4-3-3") as HTMLInputElement).checked).toBe(true);
+  } finally { void i18n.changeLanguage("en"); client.clear(); }
+});

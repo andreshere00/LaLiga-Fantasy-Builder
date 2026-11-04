@@ -1,4 +1,4 @@
-import { copy, i18n, language } from "../../../i18n";
+import { t, i18n, language } from "../../../i18n";
 import type { PlayerRadarDto, RadarProfileId } from "../../../api/radar";
 
 const profiles: Record<RadarProfileId, string> = {
@@ -40,15 +40,15 @@ const metrics: Record<string, readonly [string, string]> = {
 
 /** Stable IDs select repository-owned definitions; unknown provider metadata stays verbatim. */
 export function radarProfile(radar: Pick<PlayerRadarDto, "profile" | "profileLabel">): string {
-  return copy(profiles[radar.profile] ?? radar.profileLabel);
+  return profiles[radar.profile] ? t(profiles[radar.profile]) : radar.profileLabel;
 }
 export function radarMetric(axis: PlayerRadarDto["axes"][number]) {
   const known = metrics[axis.key];
-  return { label: copy(known?.[0] ?? axis.label), definition: copy(known?.[1] ?? axis.definition) };
+  return { label: known ? t(known[0]) : axis.label, definition: known ? t(known[1]) : axis.definition };
 }
 
 /** Published imports may supply prose outside the repository's translation contract. */
 export function radarSourceText(value: string): string {
-  if (language() === "en" || i18n.exists(value, { lng: "es", fallbackLng: false })) return copy(value);
-  return copy(`Original source label: ${value}`);
+  if (language() === "en" || i18n.exists(value, { lng: "es", fallbackLng: false })) return t(value);
+  return t("Original source label: {{0}}", { 0: value });
 }

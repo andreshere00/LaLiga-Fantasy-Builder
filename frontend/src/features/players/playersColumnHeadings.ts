@@ -1,3 +1,4 @@
+import { t } from "../../i18n";
 import { formatIntegerAmount } from "../../api/format";
 import { normalizeSearchText } from "../../searchText";
 import type { NumericRange } from "../market/marketFilters";
@@ -60,40 +61,40 @@ export function playersColumnHeadings(
 
   return {
     name: {
-      label: nameFiltered ? `${PLAYERS_COLUMN_BASE_LABELS.name} · filtered` : PLAYERS_COLUMN_BASE_LABELS.name,
+      label: nameFiltered ? t("{{0}} · filtered", { 0: t(PLAYERS_COLUMN_BASE_LABELS.name) }) : t(PLAYERS_COLUMN_BASE_LABELS.name),
       filtered: nameFiltered,
     },
     team: {
-      label: teamFiltered ? `${PLAYERS_COLUMN_BASE_LABELS.team} · filtered` : PLAYERS_COLUMN_BASE_LABELS.team,
+      label: teamFiltered ? t("{{0}} · filtered", { 0: t(PLAYERS_COLUMN_BASE_LABELS.team) }) : t(PLAYERS_COLUMN_BASE_LABELS.team),
       filtered: teamFiltered,
     },
     fsyp: {
-      label: `${PLAYERS_COLUMN_BASE_LABELS.fsyp}${fsypSuffix}`,
+      label: `${t(PLAYERS_COLUMN_BASE_LABELS.fsyp)}${fsypSuffix}`,
       filtered: fsypSuffix.length > 0,
     },
     form: {
-      label: `${PLAYERS_COLUMN_BASE_LABELS.form}${formSuffix}`,
+      label: `${t(PLAYERS_COLUMN_BASE_LABELS.form)}${formSuffix}`,
       filtered: formSuffix.length > 0,
     },
     marketValue: {
-      label: `${PLAYERS_COLUMN_BASE_LABELS.marketValue}${valueSuffix}`,
+      label: `${t(PLAYERS_COLUMN_BASE_LABELS.marketValue)}${valueSuffix}`,
       filtered: valueSuffix.length > 0,
     },
     owner: {
-      label: ownerFiltered ? `${PLAYERS_COLUMN_BASE_LABELS.owner} · filtered` : PLAYERS_COLUMN_BASE_LABELS.owner,
+      label: ownerFiltered ? t("{{0}} · filtered", { 0: t(PLAYERS_COLUMN_BASE_LABELS.owner) }) : t(PLAYERS_COLUMN_BASE_LABELS.owner),
       filtered: ownerFiltered,
     },
     availability: {
-      label: `${PLAYERS_COLUMN_BASE_LABELS.availability}${availabilitySuffix}`,
+      label: `${t(PLAYERS_COLUMN_BASE_LABELS.availability)}${availabilitySuffix}`,
       filtered: availabilityFiltered,
     },
     position: {
-      label: `${PLAYERS_COLUMN_BASE_LABELS.position}${positionSuffix}`,
+      label: `${t(PLAYERS_COLUMN_BASE_LABELS.position)}${positionSuffix}`,
       filtered: positionFiltered,
     },
   };
 }
 
 export function playersColumnBaseLabel(column: PlayersColumnKey): string {
-  return PLAYERS_COLUMN_BASE_LABELS[column];
+  return t(PLAYERS_COLUMN_BASE_LABELS[column]);
 }

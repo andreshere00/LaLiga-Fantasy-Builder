@@ -1,6 +1,6 @@
 import { decimal } from "../../i18n/format";
 import { locale } from "../../i18n";
-import { copy as localizeCopy, useLanguage } from "../../i18n";
+import { t, useTranslation } from "../../i18n";
 import type { BuilderCandidate } from "../../api/schemas";
 import { builderScoreTone } from "./builderScoreTone";
 
@@ -69,100 +69,95 @@ function observedFact(rule: Criterion, player: ScoredPlayer): string {
   switch (rule.ruleId) {
     case "club_position":
     case "opponent_position":
-      return Number.isFinite(number) ? `${ordinal(number)} in LaLiga` : value;
+      return Number.isFinite(number) ? t("{{0}} in LaLiga", { 0: ordinal(number) }) : value;
     case "fantasy_average":
     case "dazn_average":
-      return Number.isFinite(number) ? `${decimal(number, 2)} points per match` : value;
+      return Number.isFinite(number) ? t("{{0}} points per match", { 0: decimal(number, 2) }) : value;
     case "market_growth_and_value": {
       if (!Number.isFinite(number)) return value;
       const price = new Intl.NumberFormat(locale(), {
         style: "currency", currency: "EUR", maximumFractionDigits: 0,
       }).format(player.marketValue);
-      return `${signed(number * 100)}% over five days · Current value ${price}`;
+      return t("{{0}}% over five days · Current value {{1}}", { 0: signed(number * 100), 1: price });
     }
     case "owned_protection_lineup":
     case "owned_protection_trading": {
       const expiry = new Date(value.replace(" ", "T"));
-      return Number.isNaN(expiry.getTime()) ? value : `Protection expires ${new Intl.DateTimeFormat(locale(), {
+      return Number.isNaN(expiry.getTime()) ? value : t("Protection expires {{0}}", { 0: new Intl.DateTimeFormat(locale(), {
         day: "numeric", month: "short", year: "numeric", hour: "2-digit", minute: "2-digit",
-      }).format(expiry)}`;
+      }).format(expiry) });
     }
     case "role_and_starting_probability": {
       const [role, probability] = value.split(":").map((item) => item.trim());
-      return probability ? `${localizeCopy(ROLES[role] ?? readable(role))} · ${probability} chance of starting` : value;
+      return probability ? t("{{0}} · {{1}} chance of starting", { 0: t(ROLES[role] ?? readable(role)), 1: probability }) : value;
     }
     case "starting_probability":
-      return Number.isFinite(number) ? `${number}% chance of starting` : value;
+      return Number.isFinite(number) ? t("{{0}}% chance of starting", { 0: number }) : value;
     case "squad_role":
-      return ROLES[value] ?? readable(value);
+      return t(ROLES[value] ?? readable(value));
     case "club_results": {
       const results = [...value.matchAll(/['"]([WDL])['"]/g)].map((match) =>
         ({ W: "Win", D: "Draw", L: "Loss" })[match[1] as "W" | "D" | "L"]);
-      return results.length ? results.map(localizeCopy).join(" · ") : value;
+      return results.length ? results.map(value => t(value)).join(" · ") : value;
     }
     case "midweek_congestion":
-      return value === "True" ? "The club has a midweek fixture" : readable(value);
+      return value === "True" ? t("The club has a midweek fixture") : readable(value);
     case "midweek_minutes_and_rest":
-      return Number.isFinite(number) ? `${number} minutes played in the midweek match` : value;
+      return Number.isFinite(number) ? t("{{0}} minutes played in the midweek match", { 0: number }) : value;
     case "injury_history":
-      if (value === "complete_empty") return "No injuries in the complete recorded history";
-      return Number.isFinite(number)
-        ? `${number} days since the last recorded injury began, measured at round kickoff`
-        : value;
+      if (value === "complete_empty") return t("No injuries in the complete recorded history");
+      return Number.isFinite(number) ? t("{{0}} days since the last recorded injury began, measured at round kickoff", { 0: number }) : value;
     default:
-      return VALUES[value] ?? readable(value);
+      return t(VALUES[value] ?? readable(value));
   }
 }
 
 /** Human-readable evidence, separate score axes, and explicit source gaps. */
 export function LineupBuilderScoreDetails({ player }: { player: ScoredPlayer }) {
-  useLanguage();
+  useTranslation();
   return <details className="lineup-builder-player-reasoning">
     <summary>
       <strong>{player.name}</strong>
-      {player.protectionAdvice && <small className="lineup-builder-protection-label">{localizeCopy("Protection advised")}</small>}
+      {player.protectionAdvice && <small className="lineup-builder-protection-label">{t("Protection advised")}</small>}
       <span className="lineup-builder-score-summary">
-        <span className="lineup-builder-score" data-tone={builderScoreTone(player.lineupScore, "lineup")}>{localizeCopy("Lineup ")}<b>{localizeCopy(signed(player.lineupScore))}</b></span>
-        <span className="lineup-builder-score" data-tone={builderScoreTone(player.tradingScore, "trading")}>{localizeCopy("Trading ")}<b>{localizeCopy(signed(player.tradingScore))}</b></span>
-        <span className="lineup-builder-score" data-tone={builderScoreTone(player.combinedScore, "combined")}>{localizeCopy("Combined ")}<b>{localizeCopy(signed(player.combinedScore))}</b></span>
+        <span className="lineup-builder-score" data-tone={builderScoreTone(player.lineupScore, "lineup")}>{t("Lineup ")}<b>{signed(player.lineupScore)}</b></span>
+        <span className="lineup-builder-score" data-tone={builderScoreTone(player.tradingScore, "trading")}>{t("Trading ")}<b>{signed(player.tradingScore)}</b></span>
+        <span className="lineup-builder-score" data-tone={builderScoreTone(player.combinedScore, "combined")}>{t("Combined ")}<b>{signed(player.combinedScore)}</b></span>
       </span>
     </summary>
     {player.protectionAdvice && <p className="lineup-builder-protection-advice">
-      {localizeCopy("Protection expires shortly before kickoff. Consider protecting the player before the round starts.")}</p>}
+      {t("Protection expires shortly before kickoff. Consider protecting the player before the round starts.")}</p>}
     <div className="lineup-builder-score-sections">
       {player.sections.map((section) => <section key={section.section} className="lineup-builder-score-section">
-        <h5>{localizeCopy(SECTION_LABELS[section.section] ?? readable(section.section))}</h5>
+        <h5>{t(SECTION_LABELS[section.section] ?? readable(section.section))}</h5>
         <p className="lineup-builder-section-impact">
-          {localizeCopy(section.effectiveWeight > 0
-            ? `Lineup contribution ${signed(section.lineupNormalized * section.effectiveWeight, 3)} · Weight ${decimal(section.effectiveWeight * 100, 1)}%`
-            : "Not used in the lineup score")}
-          {localizeCopy(section.criteria.some((rule) => rule.trading !== null) &&
-            ` · Trading contribution ${signed(section.tradingNormalized, 3)}`)}
+          {section.effectiveWeight > 0 ? t("Lineup contribution {{0}} · Weight {{1}}%", { 0: signed(section.lineupNormalized * section.effectiveWeight, 3), 1: decimal(section.effectiveWeight * 100, 1) }) : t("Not used in the lineup score")}
+          {(section.criteria.some((rule) => rule.trading !== null) && t(" · Trading contribution {{0}}", { 0: signed(section.tradingNormalized, 3) }))}
         </p>
         {section.criteria.length > 0 ? <ul className="lineup-builder-rule-list">
           {section.criteria.map((rule) => <li key={rule.ruleId}>
             <div>
-              <strong>{localizeCopy(RULE_LABELS[rule.ruleId] ?? readable(rule.ruleId))}</strong>
-              <p>{localizeCopy(observedFact(rule, player))}</p>
-              {rule.ruleId === "market_growth_and_value" && <small>{localizeCopy("The rule considers both price growth and current value.")}</small>}
-              <small>{localizeCopy("Source: ")}{localizeCopy(SOURCES[rule.source] ?? readable(rule.source))}</small>
+              <strong>{t(RULE_LABELS[rule.ruleId] ?? readable(rule.ruleId))}</strong>
+              <p>{observedFact(rule, player)}</p>
+              {rule.ruleId === "market_growth_and_value" && <small>{t("The rule considers both price growth and current value.")}</small>}
+              <small>{t("Source: ")}{t(SOURCES[rule.source] ?? readable(rule.source))}</small>
             </div>
             <span className="lineup-builder-rule-points">
-              {rule.lineup !== null && <span>{localizeCopy("Lineup ")}{localizeCopy(signed(rule.lineup, 0))} {localizeCopy(" rule pts")}</span>}
-              {rule.trading !== null && <span>{localizeCopy("Trading ")}{localizeCopy(signed(rule.trading, 0))} {localizeCopy(" rule pts")}</span>}
+              {rule.lineup !== null && <span>{t("Lineup ")}{signed(rule.lineup, 0)} {t(" rule pts")}</span>}
+              {rule.trading !== null && <span>{t("Trading ")}{signed(rule.trading, 0)} {t(" rule pts")}</span>}
             </span>
           </li>)}
-        </ul> : <p className="fb-helper">{localizeCopy("No usable evidence for this category.")}</p>}
+        </ul> : <p className="fb-helper">{t("No usable evidence for this category.")}</p>}
       </section>)}
     </div>
-    <section className="lineup-builder-missing-data" aria-label={localizeCopy(`Missing data for ${player.name}`)}>
-      <h5>{localizeCopy("Data not included")}</h5>
+    <section className="lineup-builder-missing-data" aria-label={t("Missing data for {{0}}", { 0: player.name })}>
+      <h5>{t("Data not included")}</h5>
       {player.omissions.length > 0 ? <>
         <ul>{[...new Set(player.omissions)].map((omission) => <li key={omission}>
-          {localizeCopy(OMISSIONS[omission] ?? `${RULE_LABELS[omission] ?? readable(omission)} is unavailable`)}
+          {OMISSIONS[omission] ? t(OMISSIONS[omission]) : t("{{0}} is unavailable", { 0: t(RULE_LABELS[omission] ?? readable(omission)) })}
         </li>)}</ul>
-        <p className="fb-helper">{localizeCopy("Unavailable criteria are left out. When a whole lineup category has no usable evidence, its weight is redistributed across the remaining categories.")}</p>
-      </> : <p>{localizeCopy("No missing scoring criteria were reported.")}</p>}
+        <p className="fb-helper">{t("Unavailable criteria are left out. When a whole lineup category has no usable evidence, its weight is redistributed across the remaining categories.")}</p>
+      </> : <p>{t("No missing scoring criteria were reported.")}</p>}
     </section>
   </details>;
 }

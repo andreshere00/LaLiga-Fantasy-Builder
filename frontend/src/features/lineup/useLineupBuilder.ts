@@ -1,3 +1,4 @@
+import { t } from "../../i18n";
 import { useEffect, useRef, useState } from "react";
 import { streamLineupBuild } from "../../api/lineupBuild";
 import { ApiError, NeedsReauthError } from "../../api/errors";
@@ -49,12 +50,12 @@ export function useLineupBuilder(
       Number(b.playerId === null) - Number(a.playerId === null));
     const details = diagnostics.slice(0, 5).map((diagnostic) => {
       const name = diagnostic.playerId
-        ? playersById?.get(diagnostic.playerId)?.name ?? "Unknown player"
-        : "Source";
-      return SOURCE_MESSAGES[diagnostic.code] ??
-        `${name}: ${builderDiagnosticMessage(diagnostic.code)}`;
+        ? playersById?.get(diagnostic.playerId)?.name ?? t("Unknown player")
+        : t("Source");
+      return SOURCE_MESSAGES[diagnostic.code] ? t(SOURCE_MESSAGES[diagnostic.code])
+        : t("{{0}}: {{1}}", { 0: name, 1: t(builderDiagnosticMessage(diagnostic.code)) });
     });
-    errorSummary = MESSAGES[failure.code] ?? `Lineup build failed (${failure.code}).`;
+    errorSummary = MESSAGES[failure.code] ? t(MESSAGES[failure.code]) : t("Lineup build failed ({{0}}).", { 0: failure.code });
     errorDetails = details;
     error = [errorSummary, ...details].join(" ");
     if (failure.code === "no_feasible_lineup") {
@@ -100,5 +101,5 @@ export function useLineupBuilder(
       }
     }
   }
-  return { pending, progress, result, error, errorSummary: errorSummary ?? error, errorDetails, errorRecovery, build, cancel };
+  return { pending, progress, result, error, errorSummary: errorSummary ?? (error ? t(error) : null), errorDetails, errorRecovery, build, cancel };
 }

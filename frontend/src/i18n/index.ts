@@ -37,26 +37,13 @@ export function setLanguage(value: Language): void {
   document.documentElement.lang = value;
   try { localStorage.setItem(LANGUAGE_STORAGE_KEY, value); } catch { /* In-memory preference. */ }
 }
-// Literal source messages are stable catalog keys. Interpolated data stays verbatim.
-const patterns = Object.keys(english).filter(key => /\{\{\d+\}\}/.test(key)).map(key => ({
-  key,
-  regex: new RegExp("^" + key.split(/\{\{\d+\}\}/).map(part => part.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")).join("(.*?)") + "$"),
-}));
-export function copy<T>(value: T): T {
-  if (typeof value === "string") {
-    if (Object.hasOwn(english, value)) return i18n.t(value) as T;
-    // Reuse catalog entries for padded UI fragments without losing their spacing.
-    const trimmed = value.trim();
-    if (trimmed !== value && Object.hasOwn(english, trimmed)) {
-      const start = value.length - value.trimStart().length;
-      const end = value.trimEnd().length;
-      return (value.slice(0, start) + i18n.t(trimmed) + value.slice(end)) as T;
-    }
-    for (const { key, regex } of patterns) {
-      const match = regex.exec(value);
-      if (match) return i18n.t(key, Object.fromEntries(match.slice(1).map((part, index) => [index, part]))) as T;
-    }
-  }
-  if (Array.isArray(value)) return value.map(item => copy(item)) as T;
-  return value;
+/** Translate an exact application message; interpolated values are never reinterpreted. */
+export function t(key: string, parameters?: Record<string, string | number>): string {
+  return i18n.t(key, parameters ?? {});
+}
+
+/** Subscribe the caller to language changes without replacing component instances. */
+export function useTranslation(): typeof t {
+  useLanguage();
+  return t;
 }

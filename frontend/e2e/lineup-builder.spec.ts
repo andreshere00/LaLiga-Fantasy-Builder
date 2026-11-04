@@ -172,7 +172,7 @@ test("builder generates read-only previews and supports keyboard dismissal", asy
   await preview.screenshot({ path: info.outputPath("lineup-builder-player-photos.png") });
   const exclusions = dialog.getByRole("table", { name: "Source exclusions" });
   await expect(exclusions).not.toBeVisible();
-  await dialog.getByText("1 source exclusions", { exact: true }).locator("..").focus();
+  await dialog.getByText("1 source exclusion", { exact: true }).locator("..").focus();
   await page.keyboard.press("Enter");
   await expect(exclusions).toBeVisible();
   await expect(exclusions.getByRole("rowheader", { name: "Player 13" })).toBeVisible();

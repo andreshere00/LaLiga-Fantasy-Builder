@@ -1,4 +1,4 @@
-import { copy as localizeCopy, useLanguage } from "../../i18n";
+import { t, useTranslation } from "../../i18n";
 import type { ComponentProps, ReactNode } from "react";
 
 export type ButtonVariant = "default" | "secondary" | "outline" | "ghost" | "destructive";
@@ -28,9 +28,9 @@ export type ButtonProps = ComponentProps<"button"> & VariantOptions & {
 /** Native React 19 button; the ref prop passes directly through to the DOM. */
 export function Button({
   variant, size, shape, className, icon, loading = false,
-  loadingLabel = "Working…", disabled, children, type = "button", onClick, ...props
+  loadingLabel, disabled, children, type = "button", onClick, ...props
 }: ButtonProps) {
-  useLanguage();
+  useTranslation();
   const unavailable = disabled || loading || props["aria-disabled"] === true ||
     props["aria-disabled"] === "true";
   return (
@@ -46,8 +46,8 @@ export function Button({
       }}
       className={buttonVariants({ variant, size, shape, className })}>
       {loading ? <span className="fb-button-spinner" aria-hidden="true" /> :
-        icon ? <span className="fb-button-icon" aria-hidden="true">{localizeCopy(icon)}</span> : null}
-      <span>{localizeCopy(loading ? loadingLabel : children)}</span>
+        icon ? <span className="fb-button-icon" aria-hidden="true">{icon}</span> : null}
+      <span>{loading ? (loadingLabel ?? t("Working…")) : children}</span>
     </button>
   );
 }

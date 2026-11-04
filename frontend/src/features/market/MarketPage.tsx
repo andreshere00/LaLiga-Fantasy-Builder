@@ -1,4 +1,4 @@
-import { copy as localizeCopy, useLanguage } from "../../i18n";
+import { t, useTranslation } from "../../i18n";
 import { useDeferredValue, useEffect, useMemo, useState } from "react";
 
 import { useAuth } from "../../auth/AuthProvider";
@@ -30,13 +30,12 @@ import { MarketOffers } from "./offers/MarketOffers";
 import { MarketOffersProvider } from "./offers/MarketOffersContext";
 
 function MarketList() {
-  useLanguage();
   const { selected } = useLeague();
   return <MarketOffersProvider><MarketListContent key={selected ? leagueId(selected) : ""} /></MarketOffersProvider>;
 }
 
 function MarketListContent() {
-  useLanguage();
+  useTranslation();
   const { user } = useAuth();
   const board = useMarketBoard();
   const favorites = useMemo(
@@ -60,10 +59,7 @@ function MarketListContent() {
     setTickMs(soon ? 1_000 : 60_000);
   }, [visibleRows, now]);
   const filterCount = useMemo(() => activeFilterCount(filters), [filters]);
-  const columnHeadings = useMemo(
-    () => marketColumnHeadings(deferredFilters),
-    [deferredFilters],
-  );
+  const columnHeadings = marketColumnHeadings(deferredFilters);
   const sellers = useMemo(() => sellerOptions(board.rows), [board.rows]);
   const marketActions = useMarketActions();
   const actionContext = {
@@ -84,7 +80,7 @@ function MarketListContent() {
     setFilters(createEmptyMarketFilters());
   };
 
-  if (board.noLeague) return <p className="status-copy">{localizeCopy("No leagues found for this account.")}</p>;
+  if (board.noLeague) return <p className="status-copy">{t("No leagues found for this account.")}</p>;
 
   return (
     <>
@@ -104,28 +100,28 @@ function MarketListContent() {
           <MarketBids board={board} actions={marketActions} now={now} /></>}
       />
       {!board.isLoading && !board.hasError && board.rows.length > 0 ? <div className="market-results-summary">
-        <p role="status">{visibleRows.length} {localizeCopy(" of ")}{board.rows.length} {localizeCopy(" players")}{localizeCopy(filterCount > 0 ? " · Filters active" : " available")}</p>
-        <span>{localizeCopy("Form: oldest → latest")}</span>
+        <p role="status">{visibleRows.length} {t(" of ")}{board.rows.length} {t(" players")}{filterCount > 0 ? t(" · Filters active") : t(" available")}</p>
+        <span>{t("Form: oldest → latest")}</span>
       </div> : null}
       {board.isDegraded ? (
         <p className="market-notice status-copy" role="status">
-          {localizeCopy("Some market details could not be loaded. Balance, squad data, value changes and last performances may be incomplete, and some actions may be unavailable.")}</p>
+          {t("Some market details could not be loaded. Balance, squad data, value changes and last performances may be incomplete, and some actions may be unavailable.")}</p>
       ) : null}
       {marketActions.message && !dialogOpen ? (
         <p className="status-copy" role="alert">
-          {localizeCopy(marketActions.message)}
+          {t(marketActions.message)}
         </p>
       ) : null}
       {board.isLoading ? <MarketScreenLoading tableOnly /> : board.hasError ? (
-        <p className="status-copy" role="alert">{localizeCopy("The market could not be loaded. Refresh bids to retry.")}</p>
+        <p className="status-copy" role="alert">{t("The market could not be loaded. Refresh bids to retry.")}</p>
       ) : board.rows.length === 0 ? (
-        <p className="status-copy">{localizeCopy("No players on the market.")}</p>
+        <p className="status-copy">{t("No players on the market.")}</p>
       ) : visibleRows.length === 0 ? (
         <div className="market-empty-filters" role="status">
-          <p className="status-copy">{localizeCopy(MARKET_SEARCH_NO_MATCHES)}</p>
+          <p className="status-copy">{t(MARKET_SEARCH_NO_MATCHES)}</p>
           {filterCount > 0 ? (
             <button type="button" className="market-filter-clear-main" onClick={clearFilters}>
-              {localizeCopy(MARKET_CLEAR_FILTERS_LABEL)}
+              {t(MARKET_CLEAR_FILTERS_LABEL)}
             </button>
           ) : null}
         </div>
@@ -164,7 +160,6 @@ function MarketListContent() {
 }
 
 export function MarketPage() {
-  useLanguage();
   const { status } = useAuth();
   if (status !== "ready") return <GatePanel status={status} />;
   return (

@@ -1,5 +1,5 @@
 import { afterEach, describe, expect, it } from "vitest";
-import { copy, i18n, resolveLanguage } from ".";
+import { t, i18n, resolveLanguage } from ".";
 import en from "./en.json";
 import es from "./es.json";
 import { formatIntegerAmount, parseIntegerAmount } from "../api/format";
@@ -19,22 +19,22 @@ describe("Spanish and English localization", () => {
   });
   it("localizes labels and leaves interpolated identities untouched", () => {
     void i18n.changeLanguage("es");
-    expect(copy("Market")).toBe("Mercado");
-    expect(copy("Rain")).toBe("Lluvia");
-    expect(copy("Bid for Demo Manager")).toBe("Pujar por Demo Manager");
-    expect(copy("Unlisted User Name")).toBe("Unlisted User Name");
+    expect(t("Market")).toBe("Mercado");
+    expect(t("Rain")).toBe("Lluvia");
+    expect(t("Bid for {{0}}", { 0: "Demo Manager" })).toBe("Pujar por Demo Manager");
+    expect(t("Unlisted User Name")).toBe("Unlisted User Name");
   });
-  it("reuses unpadded labels while preserving spacing and distinct reviewed variants", () => {
+  it("uses exact keys without inferring whitespace or message patterns", () => {
     void i18n.changeLanguage("es");
-    expect(copy("Lineup ")).toBe("Alineación ");
-    expect(copy(" My bids ")).toBe(" Mis pujas ");
-    expect(copy("\tSeason\n")).toBe("\tTemporada\n");
-    expect(copy(" Average ")).toBe(" Promedio ");
-    expect(copy("Average")).toBe("Media");
-    expect(copy(" Unlisted User Name ")).toBe(" Unlisted User Name ");
+    expect(t("Lineup ")).toBe("Alineación ");
+    expect(t(" My bids ")).toBe(" Mis pujas ");
+    expect(t("\tSeason\n")).toBe("\tSeason\n");
+    expect(t(" Average ")).toBe(" Promedio ");
+    expect(t("Average")).toBe("Media");
+    expect(t(" Unlisted User Name ")).toBe(" Unlisted User Name ");
     void i18n.changeLanguage("en");
-    expect(copy("Lineup ")).toBe("Lineup ");
-    expect(copy(" My bids ")).toBe(" My bids ");
+    expect(t("Lineup ")).toBe("Lineup ");
+    expect(t(" My bids ")).toBe(" My bids ");
   });
   it("does not reinterpret whole-euro drafts across language changes", () => {
     void i18n.changeLanguage("es");
@@ -53,14 +53,12 @@ it("includes every literal presentation key in both bundled catalogs", async () 
   const ts = await import("typescript");
   const root = `${process.cwd()}/src/`;
   const files = readdirSync(root, { recursive: true }).filter((file): file is string => typeof file === "string" && /\.tsx?$/.test(file) && !file.includes(".test."));
-  const templates = Object.keys(en).filter(key => /\{\{\d+\}\}/.test(key)).map(key =>
-    new RegExp("^" + key.split(/\{\{\d+\}\}/).map(part => part.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")).join("(.*?)") + "$"));
   const missing = new Set<string>();
   const check = (node: import("typescript").Node) => {
     if (ts.isStringLiteral(node)) {
       const key = node.text;
-      if (!/[A-Za-z]/.test(key) || templates.some(template => template.test(key))) return;
-      const catalogKey = Object.hasOwn(en, key) ? key : key.trim();
+      if (!/[A-Za-z]/.test(key)) return;
+      const catalogKey = key;
       if (!Object.hasOwn(en, catalogKey) || !Object.hasOwn(es, catalogKey)) missing.add(key);
     } else if (ts.isConditionalExpression(node)) {
       check(node.whenTrue);
@@ -74,7 +72,7 @@ it("includes every literal presentation key in both bundled catalogs", async () 
   };
   const visit = (node: import("typescript").Node) => {
     if (ts.isCallExpression(node) && ts.isIdentifier(node.expression)
-      && ["copy", "localizeCopy"].includes(node.expression.text) && node.arguments[0]) {
+      && node.expression.text === "t" && node.arguments[0]) {
       check(node.arguments[0]);
     }
     ts.forEachChild(node, visit);

@@ -19,8 +19,10 @@ entry, not a claim that every optional provider or deployment gate is complete.
   isolated browser readers. Keep source text available when translation fails.
 - Complete market action, bid-limit, offer and release-clause messages; refine
   football terminology and use «pronóstico» for match weather forecasts.
-- Consolidate equivalent dictionary entries while preserving fragment spacing,
-  and resize value/form tooltips to contain translated content on narrow screens.
+- Use explicit translation keys and parameters for complete messages and counts.
+  Preserve club/player/manager identities, translate existing notifications when
+  switching languages, and simplify isolated prose readers to return text only.
+- Resize value/form tooltips to contain translated content on narrow screens.
 
 ## [0.2.1] - 2026-11-03
 

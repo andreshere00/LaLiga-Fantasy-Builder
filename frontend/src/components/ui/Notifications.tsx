@@ -1,4 +1,4 @@
-import { copy as localizeCopy, useLanguage } from "../../i18n";
+import { t, useTranslation } from "../../i18n";
 import { Toast } from "@base-ui/react/toast";
 import type { ReactNode } from "react";
 import { Button } from "./Button";
@@ -7,12 +7,17 @@ const manager = Toast.createToastManager();
 
 /** Call only after a confirmed response; stable IDs deduplicate repeated errors. */
 export function notify(title: string, type: "success" | "error" = "success") {
-  manager.add({ id: type + ":" + title, title, type,
+  manager.add({ id: type + ":" + title, title: <NotificationTitle messageKey={title} />, type,
     timeout: type === "error" ? 0 : 5000, priority: type === "error" ? "high" : "low" });
 }
 
+function NotificationTitle({ messageKey }: { messageKey: string }) {
+  const translate = useTranslation();
+  return translate(messageKey);
+}
+
 function NotificationList() {
-  useLanguage();
+  useTranslation();
   const { toasts } = Toast.useToastManager();
   return (
     <Toast.Portal>
@@ -24,7 +29,7 @@ function NotificationList() {
               <Toast.Description />
             </Toast.Content>
             <Toast.Close render={<Button variant="ghost" shape="square" size="icon"
-              aria-label={localizeCopy("Dismiss notification")} />}>×</Toast.Close>
+              aria-label={t("Dismiss notification")} />}>×</Toast.Close>
           </Toast.Root>
         ))}
       </Toast.Viewport>
@@ -33,6 +38,5 @@ function NotificationList() {
 }
 
 export function Notifications({ children }: { children: ReactNode }) {
-  useLanguage();
-  return <Toast.Provider toastManager={manager}>{localizeCopy(children)}<NotificationList /></Toast.Provider>;
+  return <Toast.Provider toastManager={manager}>{children}<NotificationList /></Toast.Provider>;
 }

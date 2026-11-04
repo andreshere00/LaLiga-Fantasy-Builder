@@ -1,4 +1,4 @@
-import { copy as localizeCopy, useLanguage } from "../../i18n";
+import { t, useTranslation } from "../../i18n";
 import { Link } from "react-router-dom";
 
 import { GitHubIcon, MailIcon } from "./icons";
@@ -6,20 +6,20 @@ import { AUTHOR_NAME, GITHUB_URL, SITE_YEAR } from "./siteLinks";
 import "./Footer.css";
 
 export function Footer() {
-  useLanguage();
+  useTranslation();
   return (
     <footer className="app-footer">
       <p className="app-footer-credit">
-        © {SITE_YEAR} {localizeCopy(AUTHOR_NAME)}
-        {" · "}<a href="https://football-logos.cc/" target="_blank" rel="noopener noreferrer">{localizeCopy("Badges: football-logos.cc")}</a>
+        © {SITE_YEAR} {AUTHOR_NAME}
+        {" · "}<a href="https://football-logos.cc/" target="_blank" rel="noopener noreferrer">{t("Badges: football-logos.cc")}</a>
       </p>
-      <nav className="app-footer-links" aria-label={localizeCopy("Author")}>
+      <nav className="app-footer-links" aria-label={t("Author")}>
         <a href={GITHUB_URL} target="_blank" rel="noopener noreferrer">
           <GitHubIcon />
-          {localizeCopy("GitHub")}</a>
+          {t("GitHub")}</a>
         <Link to="/contact">
           <MailIcon />
-          {localizeCopy("Contact")}</Link>
+          {t("Contact")}</Link>
       </nav>
     </footer>
   );

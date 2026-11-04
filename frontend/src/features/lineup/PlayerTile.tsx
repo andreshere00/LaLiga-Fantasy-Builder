@@ -1,4 +1,4 @@
-import { copy as localizeCopy, useLanguage, i18n } from "../../i18n";
+import { t, useTranslation } from "../../i18n";
 import { BadgeImage } from "../../components/BadgeImage";
 import { clubMediaFromBadge } from "../../api/clubMedia";
 import { useState } from "react";
@@ -45,25 +45,25 @@ type PlayerTileProps = {
 };
 
 function FixtureScoreBreakdown({ lines }: { lines: readonly FixtureScoreLine[] }) {
-  useLanguage();
+  useTranslation();
   return (
     <table className="player-score-breakdown">
-      <caption>{localizeCopy("Fixture points")}</caption>
+      <caption>{t("Fixture points")}</caption>
       <thead>
         <tr>
-          <th scope="col">{localizeCopy("Event")}</th>
-          <th scope="col">{localizeCopy("Count")}</th>
-          <th scope="col">{localizeCopy("Points")}</th>
+          <th scope="col">{t("Event")}</th>
+          <th scope="col">{t("Count")}</th>
+          <th scope="col">{t("Points")}</th>
         </tr>
       </thead>
       <tbody>
         {lines.map((line) => (
           <tr key={line.key}>
-            <th scope="row">{localizeCopy(line.label)}</th>
-            <td className="player-score-count">{localizeCopy(line.count ?? "—")}</td>
+            <th scope="row">{t(line.label)}</th>
+            <td className="player-score-count">{(line.count ?? t("—"))}</td>
             <td className="player-score-points">
-              <span className="player-score-figure">{localizeCopy(signedFixturePoints(line.points))}</span>
-              <span className="player-score-unit">{localizeCopy("p")}</span>
+              <span className="player-score-figure">{signedFixturePoints(line.points)}</span>
+              <span className="player-score-unit">{t("p")}</span>
             </td>
           </tr>
         ))}
@@ -79,7 +79,6 @@ export function PlayerScoreBadge({
   points: number;
   isMvp?: boolean;
 }) {
-  useLanguage();
   const tone = scoreTone(points, isMvp);
   return (
     <span className={`player-score-badge is-${tone}`} aria-hidden="true">
@@ -89,7 +88,6 @@ export function PlayerScoreBadge({
 }
 
 function TeamBadge({ url }: { url: string | null | undefined }) {
-  useLanguage();
   const media = clubMediaFromBadge(url);
   if (!media) return null;
   return <span className="player-badge" aria-hidden="true">
@@ -98,7 +96,6 @@ function TeamBadge({ url }: { url: string | null | undefined }) {
 }
 
 function PlayerPhoto({ candidates }: { candidates: readonly string[] }) {
-  useLanguage();
   const [candidateIndex, setCandidateIndex] = useState(0);
   const url = candidates[candidateIndex];
   return (
@@ -146,12 +143,12 @@ export function PlayerTile({
   interactive = false,
   onSelect,
 }: PlayerTileProps) {
-  useLanguage();
+  useTranslation();
   const shownHighlight = empty ? null : fixtureHighlight;
   const highlightText = fixtureHighlightLabel(shownHighlight);
   const scoreLineTexts = (empty ? [] : fixtureScoreLines ?? []).map(fixtureScoreLineLabel);
   const positionNeededText = positionNeeded && !shownHighlight
-    ? LINEUP_POSITION_NEEDED_LABEL : null;
+    ? t(LINEUP_POSITION_NEEDED_LABEL) : null;
   const className = [
     "player-tile",
     variant === "squad" ? "squad-tile" : "pitch-tile",
@@ -171,28 +168,27 @@ export function PlayerTile({
     fixturePoints == null
       ? ""
       : isMvp
-        ? `, ${fixturePoints} ${localizeCopy("points")}, MVP`
-        : `, ${fixturePoints} ${localizeCopy("points")}`;
+        ? `, ${fixturePoints} ${t("points")}, MVP`
+        : `, ${fixturePoints} ${t("points")}`;
   const form = squadStats?.outlook;
   const formRating = playerFormPresentation(form?.rating);
-  const formLabel = form ? `Current form: ${localizeCopy(formRating?.label ?? "Unavailable")}` : null;
+  const formLabel = form ? t("Current form: {{0}}", { 0: t(formRating?.label ?? "Unavailable") }) : null;
   const totalLabel = squadStats
-    ? `Season total: ${squadStats.totalPoints ?? localizeCopy("Unavailable")} Fantasy points` : null;
-  const starterLabel = form ? i18n.t("Starter probability: {{0}}{{1}}", {
-    0: form.starterProbability == null ? localizeCopy("Unavailable") : `${form.starterProbability}%`,
-    1: form.matchweek == null ? "" : i18n.t(" for matchday {{0}}", { 0: form.matchweek }),
+    ? t("Season total: {{0}} Fantasy points", { 0: squadStats.totalPoints ?? t("Unavailable") }) : null;
+  const starterLabel = form ? t("Starter probability: {{0}}{{1}}", {
+    0: form.starterProbability == null ? t("Unavailable") : `${form.starterProbability}%`,
+    1: form.matchweek == null ? "" : t(" for matchday {{0}}", { 0: form.matchweek }),
   }) : null;
   const playerLabel = empty
-    ? NOT_SELECTED_PLAYER_LABEL
+    ? t(NOT_SELECTED_PLAYER_LABEL)
     : captain
-      ? `${name}, ${localizeCopy("Captain")}${scoreLabel}`
+      ? `${name}, ${t("Captain")}${scoreLabel}`
       : `${name}${scoreLabel}`;
   const label = [
     playerLabel, highlightText, positionNeededText, ...scoreLineTexts,
     totalLabel, starterLabel, formLabel,
   ]
     .filter(Boolean)
-    .map(fragment => localizeCopy(fragment))
     .join(", ");
   const photoCandidates = [
     ...new Set(
@@ -212,7 +208,7 @@ export function PlayerTile({
       </div>
       <div className="player-card-gap" aria-hidden="true" />
       <span className="player-name player-name-empty">
-        <span className="player-name-label">{localizeCopy(NOT_SELECTED_PLAYER_LABEL)}</span>
+        <span className="player-name-label">{t(NOT_SELECTED_PLAYER_LABEL)}</span>
       </span>
     </>
   ) : (
@@ -220,14 +216,14 @@ export function PlayerTile({
       <div className="player-card-spacer" aria-hidden="true" />
       <PlayerPhoto key={`${name}|${photoCandidates.join("|")}`} candidates={photoCandidates} />
       {squadStats ? <span className="player-total-points" aria-hidden="true">
-        {localizeCopy(squadStats.totalPoints ?? "—")}<span>{localizeCopy("p")}</span>
+        {(squadStats.totalPoints ?? t("—"))}<span>{t("p")}</span>
       </span> : fixturePoints != null ? (
         <PlayerScoreBadge points={fixturePoints} isMvp={isMvp} />
       ) : null}
       <TeamBadge key={teamBadgeUrl ?? "no-badge"} url={teamBadgeUrl} />
       {form ? <span className="player-starter-probability"
         data-tone={starterProbabilityTone(form.starterProbability) ?? undefined} aria-hidden="true">
-        {localizeCopy(form.starterProbability == null ? "—" : `${form.starterProbability}%`)}
+        {form.starterProbability == null ? "—" : `${form.starterProbability}%`}
       </span> : null}
       {form ? <span className="player-form-badge" aria-hidden="true">
         {formRating ? <>
@@ -247,8 +243,7 @@ export function PlayerTile({
   );
 
   const fixtureHelp = unplayedFixture
-    ? `Fixture ${fixtureWeek == null ? "" : scoreWeekLabel(fixtureWeek)}`
-      + " has not been played yet."
+    ? t("Fixture {{0}} has not been played yet.", { 0: fixtureWeek == null ? "" : scoreWeekLabel(fixtureWeek) })
     : null;
   const helpLines = [
     highlightText, positionNeededText, fixtureHelp, totalLabel, starterLabel,
@@ -257,7 +252,7 @@ export function PlayerTile({
     <>
       {helpLines.map((line) => (
         <span key={line}>
-          {localizeCopy(line)}
+          {line}
           <br />
         </span>
       ))}
@@ -266,21 +261,21 @@ export function PlayerTile({
       ) : null}
       {formLabel ? (
         <>
-          {localizeCopy(formLabel)}.
+          {formLabel}.
           <br />
-          {localizeCopy("Data obtained from ")}
+          {t("Data obtained from ")}
           <a href="https://www.futbolfantasy.com/" target="_blank" rel="noreferrer">
-            {localizeCopy("FutbolFantasy")}</a></>
+            {t("FutbolFantasy")}</a></>
       ) : null}
     </>
   );
-  const statusText = [highlightText, positionNeededText].filter(Boolean).map(fragment => localizeCopy(fragment)).join(", ");
+  const statusText = [highlightText, positionNeededText].filter(Boolean).map(fragment => fragment).join(", ");
   const visibleLabel = statusText
-    ? [captain ? `${name}, ${localizeCopy("Captain")}` : name, statusText].join(", ")
-    : captain ? `${name}, ${localizeCopy("Captain")}` : undefined;
+    ? [captain ? `${name}, ${t("Captain")}` : name, statusText].join(", ")
+    : captain ? `${name}, ${t("Captain")}` : undefined;
   if (interactive && onSelect) {
     return <Help content={help} trigger={<button type="button" className={className}
-      aria-label={localizeCopy(label)} aria-pressed={selected} onClick={onSelect} />}>{body}</Help>;
+      aria-label={label} aria-pressed={selected} onClick={onSelect} />}>{body}</Help>;
   }
   return <Help content={help} trigger={<div className={className}
     aria-label={empty || !showName ? label : visibleLabel} />}>

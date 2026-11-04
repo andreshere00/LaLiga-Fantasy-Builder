@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from "react";
-import { copy as localizeCopy, useLanguage } from "../../i18n";
+import { t, useLanguage } from "../../i18n";
 import "./translation.css";
 
 /** Only public FutbolFantasy prose crosses the sandbox boundary. */
@@ -12,9 +12,9 @@ export function ScrapedText({ text, textId }: { text: string; textId?: string })
     {original ? <span id={textId} lang="es">{text}</span> : <VisibleReader key={`${text}|${attempt}`} text={text} textId={textId} />}
     <span className="scraped-text-controls">
       <button type="button" onClick={event => { event.preventDefault(); event.stopPropagation(); setOriginal(!original); }}>
-        {localizeCopy(original ? "Translate to English" : "Show original")}
+        {original ? t("Translate to English") : t("Show original")}
       </button>
-      {!original && <button type="button" onClick={event => { event.preventDefault(); event.stopPropagation(); setAttempt(attempt + 1); }}>{localizeCopy("Retry translation")}</button>}
+      {!original && <button type="button" onClick={event => { event.preventDefault(); event.stopPropagation(); setAttempt(attempt + 1); }}>{t("Retry translation")}</button>}
       <a href="https://gtranslate.io/" target="_blank" rel="noopener noreferrer" onClick={event => event.stopPropagation()}>GTranslate</a>
     </span>
   </span>;
@@ -35,8 +35,7 @@ function VisibleReader(props: { text: string; textId?: string }) {
 }
 function Reader({ text, textId }: { text: string; textId?: string }) {
   const frame = useRef<HTMLIFrameElement>(null);
-  const host = useRef<HTMLSpanElement>(null);
-  const [result, setResult] = useState<{ text: string; height: number } | null>(null);
+  const [result, setResult] = useState<string | null>(null);
   const [failed, setFailed] = useState(false);
   const channel = useRef(crypto.randomUUID());
   useEffect(() => {
@@ -46,29 +45,21 @@ function Reader({ text, textId }: { text: string; textId?: string }) {
       if (event.source !== frame.current?.contentWindow || !value ||
         value.type !== "lfb-translation-result" || value.channel !== channel.current) return;
       if (value.state === "error") { clearTimeout(timer); setFailed(true); }
-      if (value.state === "translated" && typeof value.text === "string" && value.text.length <= 100000 &&
-        typeof value.height === "number" && Number.isFinite(value.height)) {
-        clearTimeout(timer); setResult({ text: value.text, height: Math.min(10000, Math.max(16, value.height)) });
-      }
-      if (value.state === "size" && typeof value.height === "number" && Number.isFinite(value.height)) {
-        setResult(current => current ? { ...current, height: Math.min(10000, Math.max(16, value.height)) } : null);
+      if (value.state === "translated" && typeof value.text === "string" && value.text.length <= 100000) {
+        clearTimeout(timer); setResult(value.text);
       }
     };
     window.addEventListener("message", receive);
     return () => { clearTimeout(timer); window.removeEventListener("message", receive); };
   }, []);
   const ready = () => {
-    if (!host.current) return;
-    const computed = getComputedStyle(host.current);
-    const style = Object.fromEntries(["fontFamily", "fontSize", "fontWeight", "lineHeight", "color", "letterSpacing"]
-      .map(key => [key, computed[key as keyof CSSStyleDeclaration]]));
-    frame.current?.contentWindow?.postMessage({ type: "lfb-translate", channel: channel.current, text, style }, "*");
+    frame.current?.contentWindow?.postMessage({ type: "lfb-translate", channel: channel.current, text }, "*");
   };
-  return <span ref={host} className="translation-reader" lang={result && !failed ? "en" : "es"}>
-    <span id={textId}>{result && !failed ? result.text : text}</span>
-    {!failed && !result && <iframe ref={frame} title={localizeCopy("Automatic translation")} aria-hidden="true" tabIndex={-1}
+  return <span className="translation-reader" lang={result !== null && !failed ? "en" : "es"}>
+    <span id={textId}>{result !== null && !failed ? result : text}</span>
+    {!failed && result === null && <iframe ref={frame} title={t("Automatic translation")} aria-hidden="true" tabIndex={-1}
       sandbox="allow-scripts" src="/translation-reader.html" onLoad={ready}
       style={{ height: 32, position: "absolute", opacity: 0 }} />}
-    <span className="translation-reader-status" lang="en">{localizeCopy(failed ? "Translation unavailable. Original Spanish shown." : result ? "Automatically translated" : "Automatic translation requested")}</span>
+    <span className="translation-reader-status" lang="en">{failed ? t("Translation unavailable. Original Spanish shown.") : result !== null ? t("Automatically translated") : t("Automatic translation requested")}</span>
   </span>;
 }

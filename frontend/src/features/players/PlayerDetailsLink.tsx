@@ -1,4 +1,4 @@
-import { copy, useLanguage } from "../../i18n";
+import { t, useTranslation } from "../../i18n";
 import { Link, useMatch } from "react-router-dom";
 
 import infoIcon from "../../assets/button_info.svg";
@@ -22,7 +22,7 @@ export function PlayerDetailsLink({
   card = false,
   returnTo,
 }: PlayerDetailsLinkProps) {
-  useLanguage();
+  useTranslation();
   const match = useMatch(`/players/${playerId}`);
   const active = match != null;
   return (
@@ -30,7 +30,7 @@ export function PlayerDetailsLink({
       to={`/players/${encodeURIComponent(playerId)}`}
       state={returnTo ? { returnTo } : undefined}
       className={["player-details-link", className].filter(Boolean).join(" ")}
-      aria-label={copy(`${playerName}, view details`)}
+      aria-label={t("{{0}}, view details", { 0: playerName })}
     >
       {card ? (
         <>

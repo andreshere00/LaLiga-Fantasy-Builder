@@ -1,6 +1,6 @@
 import { dateFormatter } from "../../i18n/format";
 import { ScrapedText } from "../translation/ScrapedText";
-import { copy as localizeCopy, useLanguage, i18n } from "../../i18n";
+import { t, useTranslation } from "../../i18n";
 import { NumberPagination } from "../../components/ui/NumberPagination";
 import { Help } from "../../components/ui/Help";
 import hierarchyGod from "../../assets/button_hierarchy_god.svg";
@@ -77,14 +77,14 @@ function HistoryNavigator({
   label: string;
   onPageChange: (page: number) => void;
 }) {
-  useLanguage();
+  useTranslation();
   if (pageCount < 2) return null;
   const first = page * HISTORY_PAGE_SIZE + 1;
   const last = Math.min((page + 1) * HISTORY_PAGE_SIZE, total);
 
   return <NumberPagination page={page + 1} totalPages={pageCount}
-    onPageChange={(next) => onPageChange(next - 1)} label={localizeCopy(label + " history pages")}
-    caption={localizeCopy(first + "–" + last + " of " + total)} showArrows />;
+    onPageChange={(next) => onPageChange(next - 1)} label={t(label === "News" ? "News history pages" : "Injury records history pages")}
+    caption={t("{{0}}–{{1}} of {{2}}", { 0: first, 1: last, 2: total })} showArrows />;
 }
 
 function displayDate(value: unknown): string | null {
@@ -111,14 +111,13 @@ function reportDate(raw: string | null): string | null {
 }
 
 function ArticleArrow() {
-  useLanguage();
   return <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" aria-hidden="true">
     <path d="M7 17 17 7M7 7h10v10" />
   </svg>;
 }
 
 export function PlayerFantasySummary({ profile }: FantasySectionProps) {
-  useLanguage();
+  useTranslation();
   const hierarchy = asRecord(profile?.hierarchy);
   const startProbability = asRecord(profile?.startProbability);
   const form = asRecord(profile?.form);
@@ -163,44 +162,44 @@ export function PlayerFantasySummary({ profile }: FantasySectionProps) {
 
   return (
     <dl className="player-fantasy-profile-list player-detail-fantasy-summary"
-      aria-label={localizeCopy("Fantasy profile")}>
-      <Help content={localizeCopy("Probability that the player starts the game from the first minute.")}
+      aria-label={t("Fantasy profile")}>
+      <Help content={t("Probability that the player starts the game from the first minute.")}
         trigger={<div tabIndex={0} className="player-fantasy-summary-block player-fantasy-summary-block--starter"
           data-unavailable={startPercent == null || undefined} />}>
-        <dt>{localizeCopy("Starter likelihood")}<span className="player-outlook-help" aria-hidden="true" /></dt>
+        <dt>{t("Starter likelihood")}<span className="player-outlook-help" aria-hidden="true" /></dt>
         <dd>
           <span className="player-outlook-starter-readout">
             <span className="player-fantasy-summary-value player-outlook-probability">
-              <span>{localizeCopy(startPercent != null ? `${startPercent}%` : "Unavailable")}</span>
+              <span>{startPercent != null ? `${startPercent}%` : t("Unavailable")}</span>
             </span>
             {startPercent != null ? <img className="player-outlook-starter-icon" src={starterIcon}
               alt="" aria-hidden="true" /> : null}
           </span>
           {startPercent != null ? <meter className="player-outlook-meter" min={0} max={100}
-            value={startPercent} aria-label={localizeCopy("Estimated chance of starting")} /> : null}
+            value={startPercent} aria-label={t("Estimated chance of starting")} /> : null}
           <span className="player-fantasy-matchday">
-            {localizeCopy(startMatchweek != null ? `Matchday ${startMatchweek}` : "Matchday unavailable")}
+            {startMatchweek != null ? t("Matchday {{0}}", { 0: startMatchweek }) : t("Matchday unavailable")}
           </span>
         </dd>
       </Help>
-      <Help content={localizeCopy("Indicates the player's role on the team. From highest to lowest importance: God, Key player, Important, Rotation, Impact substitute, Reserve.")}
+      <Help content={t("Indicates the player's role on the team. From highest to lowest importance: God, Key player, Important, Rotation, Impact substitute, Reserve.")}
         trigger={<div tabIndex={0} className="player-fantasy-summary-block player-fantasy-summary-block--hierarchy" />}>
-        <dt>{localizeCopy("Hierarchy")}<span className="player-outlook-help" aria-hidden="true" /></dt>
+        <dt>{t("Hierarchy")}<span className="player-outlook-help" aria-hidden="true" /></dt>
         <dd>
           <span className="player-fantasy-summary-value">
             <span className="player-outlook-icon" aria-hidden="true">
               {hierarchyRaw ? <img src={hierarchyIcon} alt=""
                 className={hierarchyIcon === hierarchyImportant ? "player-outlook-neutral-icon" : undefined} /> : "—"}
             </span>
-            <span>{localizeCopy(hierarchyLabel)}</span>
-            {hierarchyRaw && !HIERARCHY_LABELS[hierarchyKeyValue] ? <small>{i18n.t("Original source label: {{0}}", { 0: hierarchyRaw })}</small> : null}
+            <span>{t(hierarchyLabel)}</span>
+            {hierarchyRaw && !HIERARCHY_LABELS[hierarchyKeyValue] ? <small>{t("Original source label: {{0}}", { 0: hierarchyRaw })}</small> : null}
           </span>
-          <span className="player-outlook-caption">{localizeCopy("Role in the squad")}</span>
+          <span className="player-outlook-caption">{t("Role in the squad")}</span>
         </dd>
       </Help>
-      <Help content={localizeCopy("The player's form and performance in recent matches: poor, average, good, or very good.")}
+      <Help content={t("The player's form and performance in recent matches: poor, average, good, or very good.")}
         trigger={<div tabIndex={0} className="player-fantasy-summary-block" />}>
-        <dt>{localizeCopy("Form")}<span className="player-outlook-help" aria-hidden="true" /></dt>
+        <dt>{t("Form")}<span className="player-outlook-help" aria-hidden="true" /></dt>
         <dd>
           <span className="player-fantasy-summary-value">
             <span className="player-outlook-icon" aria-hidden="true">
@@ -209,23 +208,23 @@ export function PlayerFantasySummary({ profile }: FantasySectionProps) {
                 <img className="player-form-rating-icon is-dark" src={formIcons.dark} alt="" />
               </> : "—"}
             </span>
-            <span>{localizeCopy(formRating?.label ?? (formValue != null ? String(formValue) : "Unavailable"))}</span>
+            <span>{(formRating?.label ?? (formValue != null ? String(formValue) : t("Unavailable")))}</span>
           </span>
-          <span className="player-outlook-caption">{localizeCopy("Recent performances")}</span>
+          <span className="player-outlook-caption">{t("Recent performances")}</span>
         </dd>
       </Help>
-      <Help content={localizeCopy("Indicates the player's injury risk based on recent injuries. For players new to the league, the risk may be Unknown.")}
+      <Help content={t("Indicates the player's injury risk based on recent injuries. For players new to the league, the risk may be Unknown.")}
         trigger={<div tabIndex={0} className="player-fantasy-summary-block" />}>
-        <dt>{localizeCopy("Injury risk")}<span className="player-outlook-help" aria-hidden="true" /></dt>
+        <dt>{t("Injury risk")}<span className="player-outlook-help" aria-hidden="true" /></dt>
         <dd>
           <span className="player-fantasy-summary-value">
             <span className="player-outlook-icon" aria-hidden="true">
               <img className={`player-fantasy-risk-icon${riskIcon === injuryGray ? " is-unknown" : ""}`}
                 src={riskIcon} alt="" />
             </span>
-            <span>{localizeCopy(injuryLabel)}</span>
+            <span>{t(injuryLabel)}</span>
           </span>
-          <span className="player-outlook-caption">{localizeCopy("Injury history")}</span>
+          <span className="player-outlook-caption">{t("Injury history")}</span>
         </dd>
       </Help>
     </dl>
@@ -233,7 +232,7 @@ export function PlayerFantasySummary({ profile }: FantasySectionProps) {
 }
 
 function PlayerNewsList({ profile }: FantasySectionProps) {
-  useLanguage();
+  useTranslation();
   const news = Array.isArray(profile?.news)
     ? [...profile.news].sort((left, right) => {
         const leftDate = Date.parse(text(asRecord(left)?.publishedAt) ?? "");
@@ -255,12 +254,12 @@ function PlayerNewsList({ profile }: FantasySectionProps) {
   return (
     <section className="player-updates-news" aria-labelledby="player-fantasy-news-title">
       <header className="player-updates-column-heading">
-        <h3 id="player-fantasy-news-title">{localizeCopy("Latest news")}</h3>
-        {news.length > 0 ? <span>{news.length} {localizeCopy(news.length === 1 ? "article" : "articles")}</span> : null}
+        <h3 id="player-fantasy-news-title">{t("Latest news")}</h3>
+        {news.length > 0 ? <span>{t(news.length === 1 ? "{{0}} article" : "{{0}} articles", { 0: news.length })}</span> : null}
       </header>
-      <span className="visually-hidden" id={externalHintId}>{localizeCopy("Opens in a new tab.")}</span>
+      <span className="visually-hidden" id={externalHintId}>{t("Opens in a new tab.")}</span>
       {news.length === 0 ? (
-        <p className="player-updates-empty">{localizeCopy("No recent news available.")}</p>
+        <p className="player-updates-empty">{t("No recent news available.")}</p>
       ) : (
         <>
           <ul className="player-news-list">
@@ -274,11 +273,11 @@ function PlayerNewsList({ profile }: FantasySectionProps) {
               const contents = <>
                 <span className="player-news-metadata">
                   {source ? <span className="player-news-source">{source}</span> : null}
-                  {published ? <time dateTime={published}>{localizeCopy(reportDate(published))}</time> : null}
+                  {published ? <time dateTime={published}>{reportDate(published)}</time> : null}
                 </span>
-                <h4 aria-labelledby={`${externalHintId}-${index}`}><ScrapedText text={title} textId={`${externalHintId}-${index}`} /></h4>{href ? <a href={href} aria-labelledby={`${externalHintId}-${index}`} aria-describedby={externalHintId} target="_blank" rel="noopener noreferrer">{localizeCopy("Read article")}</a> : null}
+                <h4 aria-labelledby={`${externalHintId}-${index}`}><ScrapedText text={title} textId={`${externalHintId}-${index}`} /></h4>{href ? <a href={href} aria-labelledby={`${externalHintId}-${index}`} aria-describedby={externalHintId} target="_blank" rel="noopener noreferrer">{t("Read article")}</a> : null}
                 {href ? <span className="player-news-read" aria-hidden="true"><ArticleArrow /></span>
-                  : <span className="player-news-unavailable">{localizeCopy("Article link unavailable")}</span>}
+                  : <span className="player-news-unavailable">{t("Article link unavailable")}</span>}
               </>;
               return <li key={`${title}|${href ?? index}`} className={lead ? "is-lead" : undefined}>
                 <article>
@@ -291,7 +290,7 @@ function PlayerNewsList({ profile }: FantasySectionProps) {
             })}
           </ul>
           <HistoryNavigator page={currentPage} pageCount={pageCount} total={news.length}
-            label={localizeCopy("News")} onPageChange={setPage} />
+            label={t("News")} onPageChange={setPage} />
         </>
       )}
     </section>
@@ -300,7 +299,7 @@ function PlayerNewsList({ profile }: FantasySectionProps) {
 
 function PlayerInjuryHistory({ profile }: FantasySectionProps) {
   const injuryTextId = useId();
-  useLanguage();
+  useTranslation();
   const history = Array.isArray(profile?.injuryHistory)
     ? [...profile.injuryHistory].sort((left, right) => {
         const leftRow = asRecord(left);
@@ -325,15 +324,14 @@ function PlayerInjuryHistory({ profile }: FantasySectionProps) {
   return (
     <section className="player-updates-injuries" aria-labelledby="player-fantasy-injury-title">
       <header className="player-updates-column-heading">
-        <h3 id="player-fantasy-injury-title">{localizeCopy("Injury history")}</h3>
-        {history.length > 0 ? <span>{history.length} {localizeCopy(history.length === 1 ? "record" : "records")}</span> : null}
+        <h3 id="player-fantasy-injury-title">{t("Injury history")}</h3>
+        {history.length > 0 ? <span>{t(history.length === 1 ? "{{0}} record" : "{{0}} records", { 0: history.length })}</span> : null}
       </header>
       {history.length === 0 ? (
-        <p className="player-updates-empty">{localizeCopy("No injury history available.")}</p>
+        <p className="player-updates-empty">{t("No injury history available.")}</p>
       ) : (
         <>
-          <p className="player-injury-order">{localizeCopy(history.some((item) => asRecord(item)?.ongoing === true)
-            ? "Current records first · Newest to oldest" : "Newest to oldest")}</p>
+          <p className="player-injury-order">{history.some((item) => asRecord(item)?.ongoing === true) ? t("Current records first · Newest to oldest") : t("Newest to oldest")}</p>
           <ul className="player-injury-timeline">
             {visibleHistory.map((item, index) => {
               const row = asRecord(item);
@@ -350,27 +348,27 @@ function PlayerInjuryHistory({ profile }: FantasySectionProps) {
                 <article className="player-injury-record">
                   <div className="player-injury-record-content">
                     <span className={`player-injury-status${ongoing ? " is-current" : ""}`}>
-                      {localizeCopy(ongoing ? "Current injury" : ended ? "Ended" : "End date unreported")}
+                      {ongoing ? t("Current injury") : ended ? t("Ended") : t("End date unreported")}
                     </span>
                     <h4 aria-labelledby={`${injuryTextId}-${index}`}><ScrapedText text={formatted.diagnosis} textId={`${injuryTextId}-${index}`} /></h4>
                     <p className="player-injury-period">
-                      {start ? <><span className="visually-hidden">{localizeCopy("Start date: ")}</span>
-                        {localizeCopy(ongoing ? "Since " : null)}<time dateTime={start}>{localizeCopy(reportDate(start))}</time>
-                      </> : <span>{localizeCopy("Start date unreported")}</span>}
+                      {start ? <><span className="visually-hidden">{t("Start date: ")}</span>
+                        {ongoing ? t("Since ") : null}<time dateTime={start}>{reportDate(start)}</time>
+                      </> : <span>{t("Start date unreported")}</span>}
                       {!ongoing && end ? <><span aria-hidden="true"> → </span>
-                        <span className="visually-hidden">{localizeCopy("End date: ")}</span>
-                        <time dateTime={end}>{localizeCopy(reportDate(end))}</time></> : null}
+                        <span className="visually-hidden">{t("End date: ")}</span>
+                        <time dateTime={end}>{reportDate(end)}</time></> : null}
                     </p>
                   </div>
-                  {days ? <span className="player-injury-duration" aria-label={i18n.t(days[1] === "1" ? "{{0}} day" : "{{0}} days", { 0: days[1] })}>
-                    <strong>{localizeCopy(days[1])}</strong><span>{localizeCopy(days[2])}</span>
+                  {days ? <span className="player-injury-duration" aria-label={t(days[1] === "1" ? "{{0}} day" : "{{0}} days", { 0: days[1] })}>
+                    <strong>{days[1]}</strong><span>{t(days[2])}</span>
                   </span> : null}
                 </article>
               </li>;
             })}
           </ul>
           <HistoryNavigator page={currentPage} pageCount={pageCount} total={history.length}
-            label={localizeCopy("Injury records")} onPageChange={setPage} />
+            label={t("Injury records")} onPageChange={setPage} />
         </>
       )}
     </section>
@@ -378,12 +376,12 @@ function PlayerInjuryHistory({ profile }: FantasySectionProps) {
 }
 
 export function PlayerFantasySection({ profile }: FantasySectionProps) {
-  useLanguage();
+  useTranslation();
   return (
     <section className="player-detail-panel player-fantasy-section" aria-labelledby="player-fantasy-title">
       <header className="player-updates-heading">
-        <h2 className="player-section-title" id="player-fantasy-title" tabIndex={-1}>{localizeCopy("News & injuries")}</h2>
-        <p>{localizeCopy("Recent reports and recorded absences.")}</p>
+        <h2 className="player-section-title" id="player-fantasy-title" tabIndex={-1}>{t("News & injuries")}</h2>
+        <p>{t("Recent reports and recorded absences.")}</p>
       </header>
       {profile ? (
         <div className="player-updates-layout">
@@ -391,7 +389,7 @@ export function PlayerFantasySection({ profile }: FantasySectionProps) {
           <PlayerInjuryHistory profile={profile} />
         </div>
       ) : (
-        <p className="player-fantasy-empty">{localizeCopy("News & injuries data is temporarily unavailable.")}</p>
+        <p className="player-fantasy-empty">{t("News & injuries data is temporarily unavailable.")}</p>
       )}
     </section>
   );

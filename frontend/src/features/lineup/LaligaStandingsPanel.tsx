@@ -1,5 +1,5 @@
 import { locale } from "../../i18n";
-import { copy as localizeCopy, useLanguage, language, i18n } from "../../i18n";
+import { t, useTranslation, language } from "../../i18n";
 import { Popover } from "@base-ui/react/popover";
 import { useId } from "react";
 import { ApiContractError, ApiError } from "../../api/errors";
@@ -37,27 +37,27 @@ function dateLabel(value: string): string {
 }
 
 function MatchResult({ match, teamName }: { match: StandingMatch; teamName: string }) {
-  useLanguage();
+  useTranslation();
   const outcome = outcomes[match.result];
-  const description = i18n.t("{{0}} against {{1}}, {{2}}, {{3}}, {{4}}", {
-    0: localizeCopy(outcome.label), 1: match.opponent.name,
-    2: localizeCopy(match.venue === "home" ? "Home" : "Away"),
+  const description = t("{{0}} against {{1}}, {{2}}, {{3}}, {{4}}", {
+    0: t(outcome.label), 1: match.opponent.name,
+    2: match.venue === "home" ? t("Home") : t("Away"),
     3: `${match.goalsFor}–${match.goalsAgainst}`, 4: dateLabel(match.kickoffAt),
   });
   return (
     <Popover.Root>
-      <Popover.Trigger className="standing-form-trigger" aria-label={localizeCopy(description)}>
+      <Popover.Trigger className="standing-form-trigger" aria-label={description}>
         <Badge variant={outcome.variant}>{shortLabel(match.result)}</Badge>
       </Popover.Trigger>
       <Popover.Portal>
         <Popover.Positioner sideOffset={8} className="standing-match-positioner">
           <Popover.Popup className="standing-match-popup">
-            <Popover.Title>{localizeCopy(outcome.label)} · {localizeCopy(match.venue === "home" ? "Home" : "Away")}</Popover.Title>
+            <Popover.Title>{t(outcome.label)} · {match.venue === "home" ? t("Home") : t("Away")}</Popover.Title>
             <Popover.Description>
               {teamName} {match.goalsFor}–{match.goalsAgainst} {match.opponent.name}
-              <time dateTime={match.kickoffAt}>{localizeCopy(dateLabel(match.kickoffAt))}</time>
+              <time dateTime={match.kickoffAt}>{dateLabel(match.kickoffAt)}</time>
             </Popover.Description>
-            <Popover.Close render={<Button variant="ghost" size="sm" />}>{localizeCopy("Close")}</Popover.Close>
+            <Popover.Close render={<Button variant="ghost" size="sm" />}>{t("Close")}</Popover.Close>
           </Popover.Popup>
         </Popover.Positioner>
       </Popover.Portal>
@@ -79,7 +79,7 @@ function errorCopy(error: unknown): string {
 }
 
 export function LaligaStandingsPanel() {
-  useLanguage();
+  useTranslation();
   const headingId = useId();
   const query = useCompetitionStandingsQuery();
   const data = query.data;
@@ -88,8 +88,8 @@ export function LaligaStandingsPanel() {
     <Card className="standings-panel" role="region" aria-labelledby={headingId}>
       <CardHeader>
         <div className="standings-heading">
-          <CardTitle id={headingId}>{localizeCopy("LALIGA standings")}</CardTitle>
-          <Button variant="ghost" size="sm" shape="square" aria-label={localizeCopy("Refresh LALIGA standings")}
+          <CardTitle id={headingId}>{t("LALIGA standings")}</CardTitle>
+          <Button variant="ghost" size="sm" shape="square" aria-label={t("Refresh LALIGA standings")}
             aria-disabled={query.isFetching} aria-busy={query.isFetching || undefined}
             onClick={() => { if (!query.isFetching) void query.refetch(); }}>
             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor"
@@ -100,26 +100,26 @@ export function LaligaStandingsPanel() {
           </Button>
         </div>
         <p className="standings-meta">
-          {localizeCopy(data ? `${data.season}/${String(data.season + 1).slice(-2)} · ` : "")}{localizeCopy("Completed matches")}</p>
+          {data ? `${data.season}/${String(data.season + 1).slice(-2)} · ` : ""}{t("Completed matches")}</p>
         {updatedAt ? <p className="standings-meta">
-          {localizeCopy(data?.sourceUpdatedAt ? "Source updated " : "Retrieved ")}
-          <time dateTime={updatedAt}>{localizeCopy(dateLabel(updatedAt))}</time>
+          {data?.sourceUpdatedAt ? t("Source updated ") : t("Retrieved ")}
+          <time dateTime={updatedAt}>{dateLabel(updatedAt)}</time>
         </p> : null}
-        <p className="standings-legend">{localizeCopy("W Win · D Draw · L Loss · Latest on the right")}</p>
+        <p className="standings-legend">{t("W Win · D Draw · L Loss · Latest on the right")}</p>
         {query.isError ? <p className="standings-error" role="alert">
-          {localizeCopy(data ? "Refresh failed. Showing previously retrieved standings. " : "")}
-          {localizeCopy(errorCopy(query.error))}
+          {data ? t("Refresh failed. Showing previously retrieved standings. ") : ""}
+          {t(errorCopy(query.error))}
         </p> : null}
       </CardHeader>
       <CardContent>
-        <ScrollArea horizontal viewportProps={{ role: "region", "aria-label": localizeCopy("LALIGA standings table") }}>
+        <ScrollArea horizontal viewportProps={{ role: "region", "aria-label": t("LALIGA standings table") }}>
           {data ? (
             <Table className="standings-table">
               <TableCaption className="standings-sr-only">
-                {localizeCopy("LALIGA ")}{data.season}/{localizeCopy(String(data.season + 1).slice(-2))} {localizeCopy(" standings from completed matches. Last five results run from oldest to newest.")}</TableCaption>
+                {t("LALIGA ")}{data.season}/{String(data.season + 1).slice(-2)} {t(" standings from completed matches. Last five results run from oldest to newest.")}</TableCaption>
               <TableHeader><TableRow>
                 {columns.map(([short, label]) => (
-                  <TableHead key={label} aria-label={localizeCopy(label)}>{shortLabel(short)}</TableHead>
+                  <TableHead key={label} aria-label={t(label)}>{shortLabel(short)}</TableHead>
                 ))}
               </TableRow></TableHeader>
               <TableBody>
@@ -138,11 +138,11 @@ export function LaligaStandingsPanel() {
                     <TableCell>{row.won}</TableCell><TableCell>{row.drawn}</TableCell>
                     <TableCell>{row.lost}</TableCell><TableCell>{row.goalsFor}</TableCell>
                     <TableCell>{row.goalsAgainst}</TableCell>
-                    <TableCell>{localizeCopy(row.goalDifference > 0 ? "+" : "")}{row.goalDifference}</TableCell>
+                    <TableCell>{row.goalDifference > 0 ? "+" : ""}{row.goalDifference}</TableCell>
                     <TableCell><div className="standing-form">
                       {row.last5Matches.length ? row.last5Matches.map((match) => (
                         <MatchResult key={match.matchId} match={match} teamName={row.team.name} />
-                      )) : <span className="standings-meta">{localizeCopy("No completed matches")}</span>}
+                      )) : <span className="standings-meta">{t("No completed matches")}</span>}
                     </div></TableCell>
                   </TableRow>
                 ))}
@@ -150,11 +150,11 @@ export function LaligaStandingsPanel() {
             </Table>
           ) : query.isError ? (
             <div className="standings-placeholder">
-              <Button variant="outline" size="sm" loading={query.isFetching} loadingLabel={localizeCopy("Retrying…")}
-                onClick={() => { void query.refetch(); }}>{localizeCopy("Retry standings")}</Button>
+              <Button variant="outline" size="sm" loading={query.isFetching} loadingLabel={t("Retrying…")}
+                onClick={() => { void query.refetch(); }}>{t("Retry standings")}</Button>
             </div>
-          ) : <div className="standings-loading" role="status" aria-label={localizeCopy("Loading LALIGA standings")}>
-            <span className="standings-loading-label">{localizeCopy("Loading standings…")}</span>
+          ) : <div className="standings-loading" role="status" aria-label={t("Loading LALIGA standings")}>
+            <span className="standings-loading-label">{t("Loading standings…")}</span>
             <div className="standings-skeleton" aria-hidden="true">
               {Array.from({ length: 8 }, (_, index) => (
                 <div className="standings-skeleton-row" key={index}>

@@ -1,4 +1,4 @@
-import { copy as localizeCopy, useLanguage } from "../../../i18n";
+import { t, useTranslation } from "../../../i18n";
 import { Help } from "../../../components/ui/Help";
 
 import { pointsLabel } from "../../../api/mappers";
@@ -13,23 +13,23 @@ type FsypCellProps = {
 };
 
 export function FsypCell({ points, averagePoints, formRecent, labelAverage = false }: FsypCellProps) {
-  useLanguage();
+  useTranslation();
   const seasonAverage = formatScoreAverage(averagePoints);
   const formAverage = formatScoreAverage(averageLastPerformances(formRecent, 3));
 
   return (
     <Help className="market-fsyp" content={<>
         <span className="market-fsyp-tooltip-line">
-          {localizeCopy("Total score: ")}{localizeCopy(pointsLabel(points))}
+          {t("Total score: ")}{pointsLabel(points)}
         </span>
-        <span className="market-fsyp-tooltip-line">{localizeCopy("Season average: ")}{localizeCopy(seasonAverage)}</span>
+        <span className="market-fsyp-tooltip-line">{t("Season average: ")}{seasonAverage}</span>
         <span className="market-fsyp-tooltip-line">
-          {localizeCopy("Last 3 matches average: ")}{localizeCopy(formAverage)}
+          {t("Last 3 matches average: ")}{formAverage}
         </span>
 
     </>}>
-      <span className="market-fsyp-primary">{localizeCopy(pointsLabel(points))}</span>
-      <span className="market-fsyp-average">{localizeCopy(labelAverage ? "Avg. " : "")}{localizeCopy(seasonAverage)}</span>
+      <span className="market-fsyp-primary">{pointsLabel(points)}</span>
+      <span className="market-fsyp-average">{labelAverage ? t("Avg. ") : ""}{seasonAverage}</span>
     </Help>
   );
 }
