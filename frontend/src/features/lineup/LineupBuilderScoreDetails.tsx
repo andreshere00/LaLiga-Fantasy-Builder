@@ -89,7 +89,7 @@ function observedFact(rule: Criterion, player: ScoredPlayer): string {
     }
     case "role_and_starting_probability": {
       const [role, probability] = value.split(":").map((item) => item.trim());
-      return probability ? `${ROLES[role] ?? readable(role)} · ${probability} chance of starting` : value;
+      return probability ? `${localizeCopy(ROLES[role] ?? readable(role))} · ${probability} chance of starting` : value;
     }
     case "starting_probability":
       return Number.isFinite(number) ? `${number}% chance of starting` : value;
@@ -98,7 +98,7 @@ function observedFact(rule: Criterion, player: ScoredPlayer): string {
     case "club_results": {
       const results = [...value.matchAll(/['"]([WDL])['"]/g)].map((match) =>
         ({ W: "Win", D: "Draw", L: "Loss" })[match[1] as "W" | "D" | "L"]);
-      return results.length ? results.join(" · ") : value;
+      return results.length ? results.map(localizeCopy).join(" · ") : value;
     }
     case "midweek_congestion":
       return value === "True" ? "The club has a midweek fixture" : readable(value);
@@ -145,7 +145,7 @@ export function LineupBuilderScoreDetails({ player }: { player: ScoredPlayer }) 
               <strong>{localizeCopy(RULE_LABELS[rule.ruleId] ?? readable(rule.ruleId))}</strong>
               <p>{localizeCopy(observedFact(rule, player))}</p>
               {rule.ruleId === "market_growth_and_value" && <small>{localizeCopy("The rule considers both price growth and current value.")}</small>}
-              <small>{localizeCopy("Source: ")}{SOURCES[rule.source] ?? readable(rule.source)}</small>
+              <small>{localizeCopy("Source: ")}{localizeCopy(SOURCES[rule.source] ?? readable(rule.source))}</small>
             </div>
             <span className="lineup-builder-rule-points">
               {rule.lineup !== null && <span>{localizeCopy("Lineup ")}{localizeCopy(signed(rule.lineup, 0))} {localizeCopy(" rule pts")}</span>}

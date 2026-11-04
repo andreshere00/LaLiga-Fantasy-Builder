@@ -1,3 +1,4 @@
+import { copy as localizeCopy } from "../../i18n";
 import type { PlayerAverage } from "./playerAverages";
 
 /** Plain-language guides, not a claim that all providers classify events identically. */
@@ -47,7 +48,7 @@ export function seasonMetricShare(rows: readonly PlayerAverage[], partCode: stri
 
 export function metricSource(row: PlayerAverage): string {
   if (row.source === "fantasy") {
-    return `Fantasy · ${row.sampleSize ?? "Unknown"} played matchweeks`;
+    return row.sampleSize === 1 ? "Fantasy · 1 played matchweek" : `Fantasy · ${row.sampleSize ?? localizeCopy("Unknown")} played matchweeks`;
   }
   return row.source === "futbolfantasy" ? "FutbolFantasy · Season" : "Not supplied";
 }

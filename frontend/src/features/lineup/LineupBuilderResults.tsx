@@ -17,6 +17,10 @@ const money = (value: number) => new Intl.NumberFormat(locale(), { style: "curre
 export const LINEUP_RECOMMENDATION_LIMIT = 7;
 
 /** Read-only candidate comparisons and complete rule/transaction evidence. */
+const ACQUISITION_SOURCES: Record<string, string> = {
+  owned: "Your squad", market: "Market", opponent: "Opponent squad",
+};
+
 export function LineupBuilderResults({ result, playersById, canApply, onApply, ownedPlayerIds, onAcquire }: {
   result: LineupBuildDto;
   playersById: ReadonlyMap<string, { name: string; photoUrl: string | null }>;
@@ -69,7 +73,7 @@ export function LineupBuilderResults({ result, playersById, canApply, onApply, o
       </header>
       {notices.length > 0 && <ul className="lineup-builder-notices-list">
         {notices.map((notice) => <li key={notice.title} data-tone={notice.tone}>
-          <strong>{notice.title}</strong>
+          <strong>{localizeCopy(notice.title)}</strong>
           <p>{localizeCopy(notice.detail)}</p>
         </li>)}
       </ul>}
@@ -122,7 +126,7 @@ export function LineupBuilderResults({ result, playersById, canApply, onApply, o
             className="lineup-builder-player-photo" url={playersById.get(player.playerId)?.photoUrl ?? null}
             fallback={<PersonIcon />} />
           <span>{player.name}</span><small>
-            <b className="lineup-builder-score" data-tone={builderScoreTone(player.lineupScore, "lineup")}>{localizeCopy(decimal(player.lineupScore, 3))}</b> · {player.source}
+            <b className="lineup-builder-score" data-tone={builderScoreTone(player.lineupScore, "lineup")}>{localizeCopy(decimal(player.lineupScore, 3))}</b> · {localizeCopy(ACQUISITION_SOURCES[player.source] ?? player.source)}
           </small>
           {needsAcquisition(player) && <span className="lineup-builder-ownership-label">{localizeCopy("Not owned")}</span>}
           {needsAcquisition(player) && onAcquire && <Button size="sm" shape="square" variant="secondary"

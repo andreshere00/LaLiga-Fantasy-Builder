@@ -1,6 +1,7 @@
 import { copy as localizeCopy, useLanguage } from "../../i18n";
 import { useId, useState } from "react";
 import { DayPicker } from "react-day-picker";
+import { es, enGB } from "react-day-picker/locale";
 import { Button } from "../../components/ui/Button";
 import { Dialog } from "../../components/ui/Dialog";
 import { Field, FieldDescription, FieldError, FieldLabel, Input } from "../../components/ui/Fields";
@@ -17,7 +18,7 @@ export function DateRangeDialog({ from, to, onClose, onApply }: {
   from: string; to: string; onClose: () => void;
   onApply: (from: string, to: string) => void;
 }) {
-  useLanguage();
+  const language = useLanguage();
   const fieldId = useId();
   const [draftFrom, setDraftFrom] = useState(from);
   const [draftTo, setDraftTo] = useState(to);
@@ -53,7 +54,7 @@ export function DateRangeDialog({ from, to, onClose, onApply }: {
       </div>
       {invalid ? <FieldError id={`${fieldId}-error`}>
         {localizeCopy("Choose an end date on or after the start date.")}</FieldError> : null}
-      <DayPicker className="fb-calendar" mode="range" weekStartsOn={1} selected={selected}
+      <DayPicker locale={language === "es" ? es : enGB} className="fb-calendar" mode="range" weekStartsOn={1} selected={selected}
         defaultMonth={selected?.from} onSelect={(range) => {
           setDraftFrom(range?.from ? localDate(range.from) : "");
           setDraftTo(range?.to ? localDate(range.to) : "");

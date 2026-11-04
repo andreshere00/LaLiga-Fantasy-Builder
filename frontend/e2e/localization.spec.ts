@@ -73,3 +73,67 @@ test("language changes retain independent history pages and blocked translation 
   await expect(news.getByText('Translation unavailable. Original Spanish shown.').first()).toBeVisible();
   await expect(news.getByRole('heading', { level: 4 })).toHaveCount(5);
 });
+
+for (const { theme, width } of [{ theme: "light", width: 375 }, { theme: "dark", width: 1440 }]) {
+  test(`structured player translations survive a language switch: ${theme} ${width}`, async ({ page }, info) => {
+    const { default: examples } = await import("../test/fixtures/player-radars.json", { with: { type: "json" } });
+    await mockApplication(page);
+    await page.setViewportSize({ width, height: 1000 });
+    await page.addInitScript(value => {
+      localStorage.setItem("lfb-language", "es");
+      localStorage.setItem("lfb-theme", value);
+    }, theme);
+    const radar = { ...examples[0], player_id: "1", comparison_key: "test", cohort: {
+      id: "test", label: "Custom population", eligibility: "300 minutes", reference_snapshot: "test-v1",
+      size: 100, minimum_minutes: 300,
+    } };
+    await page.route("**/api/players/1/stats/radar?*", route => route.fulfill({ json: {
+      player_id: "1", season: "2026-27", available_seasons: ["2026-27"], status: "available",
+      reason: null, radars: [radar], comparison: null, comparison_reason: null,
+      compatible_players: Array.from({ length: 21 }, (_, i) => ({
+        player_id: String(i + 2), player: `Candidate ${i + 1}`, club: "Other Club", profile: radar.profile,
+      })),
+    } }));
+    await page.route("**/api/players/1/stats/detail?*", route => route.fulfill({ json: { ...detail,
+      segmentErrors: [
+        { segment: "market", code: "disabled", detail: "segment disabled" },
+        { segment: "recent", code: "upstream_error", detail: "unrecognized provider wording" },
+      ],
+    } }));
+    await page.goto("/players/1");
+    await page.getByRole("heading", { name: "Perfil de rendimiento", exact: true }).scrollIntoViewIfNeeded();
+    const plot = page.locator(".player-radar");
+    await expect(plot.getByRole("heading", { name: "Defensa central", exact: true })).toBeVisible();
+    await expect(plot.getByText("Pases completados por 90 minutos", { exact: true })).toBeVisible();
+    await expect(plot.locator(".recharts-polar-angle-axis")).toContainText(/Pases\s*compl\./);
+    await plot.getByText("Fuente y metodología", { exact: true }).click();
+    await expect(plot.getByText("Importación del usuario", { exact: true })).toBeVisible();
+    await expect(plot.locator("dd").filter({ hasText: "Etiqueta original de la fuente: Custom population" })).toBeVisible();
+    await page.getByText("Compara con un jugador compatible", { exact: true }).click();
+    const search = page.getByLabel("Buscar un jugador compatible");
+    await expect(page.getByText("21 jugadores compatibles.", { exact: false })).toBeVisible();
+    await expect(page.getByText("Se muestran los primeros 20; afina la búsqueda.", { exact: false })).toBeVisible();
+    await search.fill("missing");
+    await expect(page.getByText("No hay jugadores compatibles con esta búsqueda. Prueba con otro nombre o club.")).toBeVisible();
+    await expect(page.locator(".player-detail-segment-errors")).toContainText("Sección desactivada");
+    await expect(page.locator(".player-detail-segment-errors")).toContainText("No disponible temporalmente");
+    await expect(page.locator(".player-detail-segment-errors")).not.toContainText("unrecognized provider wording");
+    const legend = page.locator(".player-detail-chart .recharts-legend-wrapper");
+    await legend.scrollIntoViewIfNeeded();
+    await expect(legend).toContainText("Tendencia");
+    await expect(legend).toContainText("Valor");
+    await page.getByRole("button", { name: "Personalizado", exact: true }).click();
+    const dialog = page.getByRole("dialog", { name: "Período de valor personalizado" });
+    await expect(dialog.getByText("octubre 2026", { exact: true })).toBeVisible();
+    await expect(dialog.getByRole("button", { name: "Ir al mes siguiente" })).toBeVisible();
+    await dialog.getByRole("button", { name: "Cancelar", exact: true }).click();
+    expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
+    await page.screenshot({ path: info.outputPath(`structured-es-${theme}-${width}.png`), fullPage: true });
+    await page.getByRole("combobox", { name: "Idioma", exact: true }).click();
+    await page.getByRole("option", { name: "English", exact: true }).click();
+    await expect(plot.getByRole("heading", { name: "Centre-back", exact: true })).toBeVisible();
+    await expect(legend).toContainText("Trend");
+    await expect(page.getByLabel("Find compatible player")).toHaveValue("missing");
+    await expect(page.getByText("No compatible players match this search. Try another name or club.")).toBeAttached();
+  });
+}

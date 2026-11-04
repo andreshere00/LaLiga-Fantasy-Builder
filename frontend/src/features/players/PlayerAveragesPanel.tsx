@@ -17,7 +17,7 @@ type PlayerAveragesPanelProps = {
 
 function averageSource(row: PlayerAverage): string {
   if (row.source === "fantasy") {
-    return `LaLiga Fantasy API · ${row.sampleSize ?? 0} played matchweeks`;
+    return (row.sampleSize ?? 0) === 1 ? `LaLiga Fantasy API · 1 played matchweek` : `LaLiga Fantasy API · ${row.sampleSize ?? 0} played matchweeks`;
   }
   if (row.source === "futbolfantasy") return "FutbolFantasy season";
   return "Unavailable";
@@ -63,7 +63,7 @@ export function PlayerAveragesPanel({ rows, positionId, playerName = "Player" }:
           </dl>
           {fantasySampleSize != null ? (
             <p className="player-detail-averages-source-note">
-              {localizeCopy(`LaLiga Fantasy API fallback averages use ${fantasySampleSize} played matchweek${fantasySampleSize === 1 ? "" : "s"}.`)}
+              {localizeCopy(fantasySampleSize === 1 ? `LaLiga Fantasy API fallback averages use ${fantasySampleSize} played matchweek.` : `LaLiga Fantasy API fallback averages use ${fantasySampleSize} played matchweeks.`)}
             </p>
           ) : null}
           {detailsOpen ? <PlayerPerformanceDialog rows={rows} playerName={playerName}

@@ -212,7 +212,7 @@ function BuilderDialogSession({
             <span className="lineup-builder-bounce-ground" />
           </span>
           <Progress value={builder.progress?.percent ?? null} className="lineup-builder-loading-details"
-            aria-valuetext={builder.progress ? `Estimated progress: ${builder.progress.percent}%` : undefined}>
+            aria-valuetext={builder.progress ? localizeCopy(`Estimated progress: ${builder.progress.percent}%`) : undefined}>
             <ProgressLabel className="lineup-builder-loading-text">
               {localizeCopy(progressLabel(builder.progress))}
               {builder.progress && <span className="lineup-builder-loading-percent"

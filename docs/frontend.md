@@ -21,6 +21,13 @@ catalogs. Dates and numbers use the selected locale; currency remains EUR and
 fixture times remain Europe/Madrid. Whole-euro fields accept validated English
 or Spanish thousands grouping, preserving edits through language changes.
 
+Radar profile and metric IDs select bundled labels and definitions before chart
+wrapping. Imported cohort descriptions without a bundled translation are marked
+as original-source labels in Spanish. Calendar chrome, chart series, countdown
+units, competition categories, partial-data errors, and accessible names also
+follow the selected language. Partial-data messages use stable error codes; raw
+provider details are not translation keys.
+
 Only FutbolFantasy injury diagnoses, free-form injury availability notes, and
 news headlines request machine translation. Spanish shows the original. English
 uses GTranslate Free in a separate opaque sandbox document for each visible

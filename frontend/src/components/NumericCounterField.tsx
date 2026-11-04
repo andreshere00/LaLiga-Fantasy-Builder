@@ -64,7 +64,7 @@ export function NumericCounterField({
       <button
         type="button"
         className="numeric-counter-btn"
-        aria-label={localizeCopy(`Decrease ${ariaLabel}`)}
+        aria-label={localizeCopy(`Decrease ${localizeCopy(ariaLabel)}`)}
         disabled={disabled}
         onClick={() => applyStep(-1)}
       >
@@ -89,7 +89,7 @@ export function NumericCounterField({
       <button
         type="button"
         className="numeric-counter-btn"
-        aria-label={localizeCopy(`Increase ${ariaLabel}`)}
+        aria-label={localizeCopy(`Increase ${localizeCopy(ariaLabel)}`)}
         disabled={disabled}
         onClick={() => applyStep(1)}
       >

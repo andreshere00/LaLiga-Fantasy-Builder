@@ -268,10 +268,9 @@ export function PlayerTile({
         <>
           {localizeCopy(formLabel)}.
           <br />
-          {localizeCopy("Current")}{" "}
+          {localizeCopy("Data obtained from ")}
           <a href="https://www.futbolfantasy.com/" target="_blank" rel="noreferrer">
-            {localizeCopy("FutbolFantasy")}</a>{" "}
-          {localizeCopy("rating.")}</>
+            {localizeCopy("FutbolFantasy")}</a></>
       ) : null}
     </>
   );

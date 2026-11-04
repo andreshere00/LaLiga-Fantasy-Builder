@@ -4,6 +4,7 @@ import { useAuth } from "../../../auth/AuthProvider";
 import type { RadarCoverageDto, RadarProfileId } from "../../../api/radar";
 import { Button } from "../../../components/ui/Button";
 import { Input, NativeSelect } from "../../../components/ui/Fields";
+import { radarProfile } from "./radarLocalization";
 import { PlayerRadarPlot } from "./PlayerRadarPlot";
 
 
@@ -37,7 +38,7 @@ function RadarContent({ playerId, embedded }: { playerId: string; embedded: bool
     <div className="player-radar-section-header"><h2 className="player-section-title" id="player-radar-title" tabIndex={-1}>{localizeCopy("Performance profile")}</h2>
     <div className="player-radar-controls">
     {radars.length > 1 ? <label>{localizeCopy("Radar profile")}<NativeSelect value={selected?.profile} onChange={(e) => { setProfile(e.target.value as RadarProfileId); resetComparison(); }}>
-      {radars.map((r) => <option key={r.profile} value={r.profile}>{localizeCopy(r.profileLabel)}</option>)}
+      {radars.map((r) => <option key={r.profile} value={r.profile}>{radarProfile(r)}</option>)}
     </NativeSelect></label> : null}
     {query.data?.status === "available" ? <Button variant="outline" loading={query.isFetching} onClick={refresh}>{localizeCopy("Refresh performance data")}</Button> : null}
     </div></div>
@@ -49,7 +50,7 @@ function RadarContent({ playerId, embedded }: { playerId: string; embedded: bool
       <Button variant="outline" loading={query.isFetching} onClick={refresh}>{localizeCopy("Retry performance data")}</Button></div> : null}
     {query.data?.status === "unavailable" || reason && reason !== "ready" ? <p>{localizeCopy(reason ? reasons[reason] : reasons.not_published)}</p> : null}
     {query.data?.coverage && Object.keys(query.data.coverage.profileErrors).length ? <p className="player-radar-notice">{localizeCopy("Some role profiles could not be updated. Available profiles remain shown.")}</p> : null}
-    {profile && selected && selected.profile !== profile ? <p role="status">{localizeCopy("The selected role is no longer published. Showing ")}{localizeCopy(selected.profileLabel)}.</p> : null}
+    {profile && selected && selected.profile !== profile ? <p role="status">{localizeCopy("The selected role is no longer published. Showing ")}{radarProfile(selected)}.</p> : null}
     {displayed ? <>
       <PlayerRadarPlot radar={displayed} comparison={paired?.comparison} embedded={embedded} />
       <RadarComparison state={state} />
@@ -66,10 +67,10 @@ function RadarComparison({ state }: { state: ReturnType<typeof usePlayerRadar> }
         <summary ref={comparisonSummary}>{localizeCopy("Compare with a compatible player")}</summary>
         <p className="player-radar-context">{localizeCopy("Same role, season and reference population. Choose one player.")}</p>
         <label>{localizeCopy("Find compatible player")}<Input type="search" value={search} onChange={(e) => setSearch(e.target.value)} placeholder={localizeCopy("Name or club")} /></label>
-        <p role="status" className="player-radar-context">{filtered.length ? `${filtered.length} compatible ${filtered.length === 1 ? "player" : "players"}${filtered.length > 20 ? ". Showing the first 20; narrow your search." : "."}` : "No compatible players match this search. Try another name or club."}</p>
+        <p role="status" className="player-radar-context">{filtered.length ? localizeCopy(filtered.length === 1 ? `${filtered.length} compatible player.` : `${filtered.length} compatible players.`) : localizeCopy("No compatible players match this search. Try another name or club.")} {filtered.length > 20 ? localizeCopy("Showing the first 20; narrow your search.") : null}</p>
         <ul aria-label={localizeCopy("Compatible players")}>{filtered.slice(0, 20).map((candidate) => <li key={candidate.playerId}>
           <Button variant="outline" aria-pressed={activeComparison === candidate.playerId} onClick={() => { setComparison(candidate.playerId); setNotice(""); }}>
-            {localizeCopy(candidate.player)} · {localizeCopy(candidate.club ?? "Club not published")} · {localizeCopy(selected.profileLabel)}
+            {localizeCopy(candidate.player)} · {localizeCopy(candidate.club ?? "Club not published")} · {radarProfile(selected)}
           </Button></li>)}</ul>
       </details> : selected?.comparisonKey ? <p className="player-radar-context">{localizeCopy("No compatible players are published for this dataset.")}</p> : null}
       {activeComparison ? <Button variant="outline" onClick={() => { setComparison(undefined); setNotice("Comparison removed."); comparisonSummary.current?.focus(); }}>{localizeCopy("Remove comparison")}</Button> : null}

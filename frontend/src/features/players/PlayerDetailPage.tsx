@@ -362,7 +362,7 @@ function PlayerDetailBody({ masterId }: PlayerDetailBodyProps) {
                 const segment = text(row?.segment) ?? "";
                 return (
                   <li key={`${segment}-${index}`}>
-                    {localizeCopy(SEGMENT_LABELS[segment] ?? "Player data")}: {localizeCopy(text(row?.detail) ?? "temporarily unavailable")}
+                    {localizeCopy(SEGMENT_LABELS[segment] ?? "Player data")}: {localizeCopy(row?.code === "disabled" ? "Segment disabled" : "Temporarily unavailable")}
                   </li>
                 );
               })}
@@ -604,13 +604,13 @@ function PlayerDetailBody({ masterId }: PlayerDetailBodyProps) {
                     labelFormatter={(label) => formatChartAxisDate(String(label ?? ""))}
                     formatter={(value, name) => [
                       formatEuro(Number(value)),
-                      name === "Trend" ? "Trend" : "Value",
+                      String(name),
                     ]}
                   />
                   <Line
                     type="monotone"
                     dataKey="trend"
-                    name="Trend"
+                    name={localizeCopy("Trend")}
                     stroke="var(--fb-muted)"
                     strokeDasharray="5 4"
                     strokeWidth={2}
@@ -620,7 +620,7 @@ function PlayerDetailBody({ masterId }: PlayerDetailBodyProps) {
                   <Line
                     type="monotone"
                     dataKey="value"
-                    name="Value"
+                    name={localizeCopy("Value")}
                     stroke="#FF4B44"
                     strokeWidth={2.5}
                     dot={false}

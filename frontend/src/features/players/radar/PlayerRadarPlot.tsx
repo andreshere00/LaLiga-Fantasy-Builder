@@ -3,6 +3,7 @@ import { copy as localizeCopy, useLanguage } from "../../../i18n";
 import { useId } from "react";
 import { PolarAngleAxis, PolarGrid, PolarRadiusAxis, Radar, RadarChart, ResponsiveContainer } from "recharts";
 import type { PlayerRadarDto } from "../../../api/radar";
+import { radarMetric, radarProfile, radarSourceText } from "./radarLocalization";
 import "./playerRadar.css";
 
 const number = numberFormatter({ minimumFractionDigits: 1, maximumFractionDigits: 1 });
@@ -28,7 +29,7 @@ function AxisTick({ x = 0, y = 0, payload }: { x?: number; y?: number; payload?:
     else lines[lines.length - 1] += ` ${word}`;
   }
   return <text x={x} y={y - (lines.length - 1) * 6} textAnchor="middle" fill="var(--fb-secondary)" fontSize={12}>
-    {lines.map((line, i) => <tspan key={i} x={x} dy={i === 0 ? 0 : 14}>{localizeCopy(line)}</tspan>)}
+    {lines.map((line, i) => <tspan key={i} x={x} dy={i === 0 ? 0 : 14}>{line}</tspan>)}
   </text>;
 }
 
@@ -38,12 +39,12 @@ export function PlayerRadarPlot({ radar, comparison, embedded = false }: { radar
   const titleId = useId();
   const complete = radar.axes.every((axis) => axis.percentile !== null);
   const other = comparison && canCompareRadars(radar, comparison) ? comparison : null;
-  const points = radar.axes.map((axis, i) => ({ label: axis.label, player: axis.percentile,
+  const points = radar.axes.map((axis, i) => ({ label: radarMetric(axis).label, player: axis.percentile,
     comparison: other?.axes[i].percentile ?? null }));
   return <article className="player-radar" aria-labelledby={titleId}>
     <header className="player-radar-identity">
-      <div>{embedded ? <h3 id={titleId}>{localizeCopy(radar.profileLabel)}</h3> : <>
-        <p className="player-radar-eyebrow">{localizeCopy(radar.position)} · {localizeCopy(radar.profileLabel)}</p>
+      <div>{embedded ? <h3 id={titleId}>{radarProfile(radar)}</h3> : <>
+        <p className="player-radar-eyebrow">{localizeCopy(radar.position)} · {radarProfile(radar)}</p>
         <h3 id={titleId}>{localizeCopy(radar.player)}</h3>
       </>}
         <p>{localizeCopy(embedded ? radar.competition : radar.club)}{localizeCopy(embedded ? "" : ` · ${radar.season.replace("-", "/")}`)}</p>
@@ -51,11 +52,11 @@ export function PlayerRadarPlot({ radar, comparison, embedded = false }: { radar
       <p className="player-radar-minutes"><strong>{localizeCopy(numberFormatter().format(radar.minutes))}</strong><span>{localizeCopy("minutes in sample")}</span></p>
     </header>
     <div className="player-radar-sample">
-      <p className="player-radar-population">{localizeCopy(radar.cohort ? `Percentiles against ${radar.cohort.label}` : "Reference population unverified")}</p>
+      <p className="player-radar-population">{localizeCopy(radar.cohort ? `Percentiles against ${radarSourceText(radar.cohort.label)}` : "Reference population unverified")}</p>
       {!embedded ? <p className="player-radar-context">{localizeCopy(radar.competition)} · {localizeCopy(radar.period)}</p> : null}
     </div>
     {radar.stale ? <p className="player-radar-notice">{localizeCopy("Saved snapshot may be out of date. Its original retrieval date is in Source and methodology.")}</p> : null}
-    {radar.warnings.length ? <ul className="player-radar-warnings">{radar.warnings.map((warning, i) => <li key={i}>{localizeCopy(warning)}</li>)}</ul> : null}
+    {radar.warnings.length ? <ul className="player-radar-warnings">{radar.warnings.map((warning, i) => <li key={i}>{radarSourceText(warning)}</li>)}</ul> : null}
     {!complete ? <p className="player-radar-notice">{radar.axes.filter((axis) => axis.percentile !== null).length} {localizeCopy(" of 7 metrics available. The polygon is hidden; all seven axes remain in the table.")}</p> : null}
     {comparison && !other ? <p className="player-radar-notice">{localizeCopy("These players cannot be overlaid: their comparison contexts differ.")}</p> : null}
     <div className="player-radar-content">
@@ -81,7 +82,7 @@ export function PlayerRadarPlot({ radar, comparison, embedded = false }: { radar
           <caption className={embedded ? "visually-hidden" : undefined}>{localizeCopy("Percentiles for ")}{localizeCopy(radar.player)}{localizeCopy(other ? ` and ${other.player}` : "")}</caption>
           <thead><tr><th scope="col">{localizeCopy("Metric")}</th><th scope="col">{localizeCopy(other ? radar.player : "Percentile")}</th>{other ? <th scope="col">{localizeCopy(other.player)}</th> : null}</tr></thead>
           <tbody>{radar.axes.map((axis, i) => <tr key={axis.key}>
-            <th scope="row">{localizeCopy(axis.label)}<small>{localizeCopy(axis.definition)}</small></th>
+            <th scope="row">{radarMetric(axis).label}<small>{radarMetric(axis).definition}</small></th>
             <td><span className="player-radar-value">{localizeCopy(percentile(axis.percentile))}</span>
               {axis.percentile !== null ? <span className="player-radar-meter" aria-hidden="true"><span style={{ width: `${axis.percentile}%` }} /></span> : null}
             </td>{other ? <td>{localizeCopy(percentile(other.axes[i].percentile))}</td> : null}
@@ -102,17 +103,17 @@ function RadarMethodology({ radar, titleId }: { radar: PlayerRadarDto; titleId: 
         <section aria-labelledby={`${titleId}-provenance`}>
           <h4 id={`${titleId}-provenance`}>{localizeCopy("Data provenance")}</h4>
           <dl>
-            <div><dt>{localizeCopy("Source")}</dt><dd>{radar.source === "imported" ? "User-supplied import" : radar.source.toLowerCase() === "datamb" ? "DataMB" : radar.source}</dd></div>
+            <div><dt>{localizeCopy("Source")}</dt><dd>{radar.source === "imported" ? localizeCopy("User-supplied import") : radar.source.toLowerCase() === "datamb" ? "DataMB" : radar.source}</dd></div>
             <div><dt>{localizeCopy("Measurement")}</dt><dd>{localizeCopy(radar.method === "provider_native_percentile" ? "Percentiles published by the provider" : radar.method === "user_supplied_percentile" ? "Imported percentiles" : "Published percentile data")}</dd></div>
-            <div><dt>{localizeCopy("Reference sample")}</dt><dd>{radar.cohort ? <>{localizeCopy(radar.cohort.label)}<small>{localizeCopy(radar.cohort.eligibility)}</small></> : <>{localizeCopy("Not verified")}<small>{localizeCopy("Player comparisons are unavailable until the reference population is verified.")}</small></>}</dd></div>
+            <div><dt>{localizeCopy("Reference sample")}</dt><dd>{radar.cohort ? <>{radarSourceText(radar.cohort.label)}<small>{radarSourceText(radar.cohort.eligibility)}</small></> : <>{localizeCopy("Not verified")}<small>{localizeCopy("Player comparisons are unavailable until the reference population is verified.")}</small></>}</dd></div>
             {radar.cohort?.size ? <div><dt>{localizeCopy("Players in sample")}</dt><dd>{localizeCopy(numberFormatter().format(radar.cohort.size))}</dd></div> : null}
           </dl>
         </section>
         <section aria-labelledby={`${titleId}-dates`}>
           <h4 id={`${titleId}-dates`}>{localizeCopy("Dates")}</h4>
           <dl>
-            <div><dt>{radar.source === "imported" ? "Imported" : "Retrieved"}</dt><dd><time dateTime={radar.fetchedAt}>{localizeCopy(readableDate(radar.fetchedAt))}</time></dd></div>
-            <div><dt>{localizeCopy("Source updated")}</dt><dd>{radar.dataAsOf ? <time dateTime={radar.dataAsOf}>{localizeCopy(readableDate(radar.dataAsOf))}</time> : "Not provided by the source"}</dd></div>
+            <div><dt>{localizeCopy(radar.source === "imported" ? "Imported" : "Retrieved")}</dt><dd><time dateTime={radar.fetchedAt}>{localizeCopy(readableDate(radar.fetchedAt))}</time></dd></div>
+            <div><dt>{localizeCopy("Source updated")}</dt><dd>{radar.dataAsOf ? <time dateTime={radar.dataAsOf}>{localizeCopy(readableDate(radar.dataAsOf))}</time> : localizeCopy("Not provided by the source")}</dd></div>
           </dl>
           <p className="player-radar-context">{localizeCopy("Retrieval records when we saved the data, not when the provider updated it.")}</p>
         </section>

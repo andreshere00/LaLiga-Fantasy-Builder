@@ -1,3 +1,4 @@
+import { numberFormatter } from "../../i18n/format";
 import { copy as localizeCopy, useLanguage } from "../../i18n";
 import { BadgeImage } from "../../components/BadgeImage";
 import { fixtureClubMedia, competitionMedia } from "../../api/clubMedia";
@@ -31,9 +32,10 @@ function competitionHeading(fixture: Record<string, unknown> | null): string {
     normalized.includes("PRIMERA DIVISION")
   ) competition = "LEAGUE";
 
-  if (!competition) return "OTHERS";
+  if (!competition) return localizeCopy("Other competitions");
   const matchweek = asFiniteNumber(fixture?.matchweek);
-  return `${matchweek != null ? `F${matchweek}` : "F–"} · ${competition}`;
+  const labels: Record<string, string> = { LEAGUE: "LALIGA", CHAMPIONS: "UEFA Champions League", CONFERENCE: "UEFA Conference League", EUROPA: "UEFA Europa League", SUPERCOPA: "Supercopa de España", COPA: "Copa del Rey" };
+  return `${localizeCopy(`Matchweek ${matchweek ?? "–"}`)} · ${labels[competition]}`;
 }
 
 function MatchWeather({ match }: { match: Record<string, unknown> | null }) {
@@ -65,11 +67,11 @@ function MatchWeather({ match }: { match: Record<string, unknown> | null }) {
           </p>
           <ul className="player-match-weather-metrics">
             <li>
-              {localizeCopy("Temperature: ")}{localizeCopy(temperature != null ? `${temperature}°C` : "–")}
-              {localizeCopy(feelsLike != null ? ` (${feelsLike}°C)` : "")}
+              {localizeCopy("Temperature: ")}{localizeCopy(temperature != null ? `${numberFormatter({ maximumFractionDigits: 20 }).format(temperature)}°C` : "–")}
+              {localizeCopy(feelsLike != null ? ` (${numberFormatter({ maximumFractionDigits: 20 }).format(feelsLike)}°C)` : "")}
             </li>
-            <li>{localizeCopy("Humidity: ")}{localizeCopy(humidity != null ? `${humidity}%` : "–")}</li>
-            <li>{localizeCopy("Wind: ")}{localizeCopy(wind != null ? `${wind} km/h` : "–")}</li>
+            <li>{localizeCopy("Humidity: ")}{localizeCopy(humidity != null ? `${numberFormatter({ maximumFractionDigits: 20 }).format(humidity)}%` : "–")}</li>
+            <li>{localizeCopy("Wind: ")}{localizeCopy(wind != null ? `${numberFormatter({ maximumFractionDigits: 20 }).format(wind)} km/h` : "–")}</li>
           </ul>
         </>
       ) : (
@@ -212,9 +214,9 @@ function MatchGroup({
         {title}
       </h3>
       {unavailable ? (
-        <p className="player-match-empty">{localizeCopy(upcoming ? "Upcoming" : "Recent")} {localizeCopy(" matches are temporarily unavailable.")}</p>
+        <p className="player-match-empty">{localizeCopy(upcoming ? "Upcoming matches are temporarily unavailable." : "Recent matches are temporarily unavailable.")}</p>
       ) : matches.length === 0 ? (
-        <p className="player-match-empty">{localizeCopy("No ")}{localizeCopy(upcoming ? "upcoming" : "recent")} {localizeCopy(" matches available.")}</p>
+        <p className="player-match-empty">{localizeCopy(upcoming ? "No upcoming matches available." : "No recent matches available.")}</p>
       ) : (
         <ul className="player-match-grid">
           {matches.slice(0, 5).map((match, index) => {

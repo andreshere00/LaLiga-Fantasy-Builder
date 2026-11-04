@@ -1,4 +1,4 @@
-import { dateFormatter } from "../../i18n/format";
+import { durationLabel, numberFormatter, dateFormatter } from "../../i18n/format";
 import { copy as localizeCopy, useLanguage } from "../../i18n";
 import { useEffect, useId, useRef, useState, type CSSProperties } from "react";
 import type { FixtureWeatherDto } from "../../api/schemas";
@@ -48,7 +48,7 @@ function MatchForecast({ match, row, loading, failed, now }: {
         <span className="fixture-weather-chevron" aria-hidden="true">⌄</span>
       </summary>
       <div className="fixture-forecast-content" role="region" aria-label={localizeCopy(`Forecast for ${match.home.name} vs ${match.away.name}`)}>
-        <p className="fixture-weather-meta">{localizeCopy("Rain ")}{localizeCopy(rain == null ? "—" : `${rain}%`)} {localizeCopy(" · Wind ")}{localizeCopy(wind == null ? "—" : `${wind} km/h`)}</p>
+        <p className="fixture-weather-meta">{localizeCopy("Rain ")}{localizeCopy(rain == null ? "—" : `${rain}%`)} {localizeCopy(" · Wind ")}{localizeCopy(wind == null ? "—" : `${numberFormatter({ maximumFractionDigits: 20 }).format(wind)} km/h`)}</p>
         {past ? <p className="fixture-weather-meta">{localizeCopy("Saved kickoff forecast")}</p> : null}
         {row?.fetchedAt ? <p className="fixture-weather-meta">
           {localizeCopy(updateFailed ? "Update unavailable · " : "Retrieved ")}
@@ -76,7 +76,7 @@ function FixtureMatch({ match, forecast, weatherLoading, weatherFailed, now }: {
         <div className="fixture-match-team" key={index}>
           <span className="fixture-match-crest" aria-hidden="true"><BadgeImage media={clubMediaFromFixture(team)} fallback="—" /></span>
           <span>{team.name}</span>
-          <span className="fixture-match-score" aria-label={localizeCopy(`${index === 0 ? "Home" : "Away"} goals: ${(index === 0 ? match.homeScore : match.awayScore) ?? "no result"}`)}>
+          <span className="fixture-match-score" aria-label={localizeCopy(`${index === 0 ? "Home" : "Away"} goals: ${(index === 0 ? match.homeScore : match.awayScore) ?? localizeCopy("no result")}`)}>
             {localizeCopy((index === 0 ? match.homeScore : match.awayScore) ?? "—")}
           </span>
         </div>
@@ -94,12 +94,12 @@ export function FixtureMatchesPanel() {
 }
 
 function FixtureMatchesPanelContent() {
-  useLanguage();
+  const language = useLanguage();
   const panel = useFixturePanel();
   const heading = useId();
   const viewport = useRef<HTMLDivElement>(null);
   const [announcement, setAnnouncement] = useState("");
-  const lastAnnounced = useRef<{ week: number | undefined; label: string; scores: Map<string, string> } | null>(null);
+  const lastAnnounced = useRef<{ week: number | undefined; label: string; language: string; scores: Map<string, string> } | null>(null);
   const week = panel.selection?.week;
   const matches = panel.round?.matches ?? [];
   const hasMatches = matches.length > 0;
@@ -116,22 +116,22 @@ function FixtureMatchesPanelContent() {
   const weatherRows = panel.weather.data?.matches ?? [];
   const upcoming = nextKickoff(matches, panel.now);
   const nextKickoffText = upcoming == null ? null
-    : upcoming.pairing ? `Next: ${upcoming.pairing} in ${upcoming.remaining}`
-      : `Next kickoff in ${upcoming.remaining}`;
+    : upcoming.pairing ? `Next: ${upcoming.pairing} in ${durationLabel(Math.floor((upcoming.kickoffMs - panel.now) / 60_000), true)}`
+      : `Next kickoff in ${durationLabel(Math.floor((upcoming.kickoffMs - panel.now) / 60_000), true)}`;
   const reportedScores = JSON.stringify(matches.map((match) => ({
     key: match.key, text: `${match.home.name} ${match.homeScore ?? "—"}, ${match.away.name} ${match.awayScore ?? "—"}`,
   })));
   useEffect(() => {
     const scores = new Map<string, string>((JSON.parse(reportedScores) as { key: string; text: string }[]).map((row) => [row.key, row.text]));
     const old = lastAnnounced.current;
-    if (week != null && (!old || old.week !== week || old.label !== label)) {
-      setAnnouncement(`Fixture ${week}. ${label}.`);
+    if (week != null && (!old || old.week !== week || old.label !== label || old.language !== language)) {
+      setAnnouncement(`Fixture ${week}. ${localizeCopy(label)}.`);
     } else if (old) {
       const changed = [...scores].filter(([key, text]) => old.scores.has(key) && old.scores.get(key) !== text);
       if (changed.length > 0) setAnnouncement(changed.length > 3 ? `${changed.length} match results updated.` : changed.map(([, text]) => text).join(". "));
     }
-    lastAnnounced.current = { week, label, scores };
-  }, [week, label, reportedScores]);
+    lastAnnounced.current = { week, label, language, scores };
+  }, [week, label, language, reportedScores]);
   return (
     <Card className="fixture-matches-panel" role="region" aria-labelledby={heading}>
       <CardHeader>
@@ -164,7 +164,7 @@ function FixtureMatchesPanelContent() {
       </CardHeader>
       <CardContent>
         {hasMatches ? <ScrollArea horizontal className="fixture-matches-scroll" viewportProps={{
-          ref: viewport, role: "region", "aria-label": "Fixture matches",
+          ref: viewport, role: "region", "aria-label": localizeCopy("Fixture matches"),
           onKeyDown: (event) => {
             if (event.target !== event.currentTarget || !["Home", "End"].includes(event.key)) return;
             event.preventDefault();
