@@ -6,6 +6,8 @@ entry, not a claim that every optional provider or deployment gate is complete.
 
 ## [Unreleased]
 
+## [0.3.0] - 2026-11-04
+
 ### Spanish and English
 
 - Add Spanish and English application copy, structured football and Fantasy
@@ -23,6 +25,16 @@ entry, not a claim that every optional provider or deployment gate is complete.
   Preserve club/player/manager identities, translate existing notifications when
   switching languages, and simplify isolated prose readers to return text only.
 - Resize value/form tooltips to contain translated content on narrow screens.
+
+### Documentation and release metadata
+
+- Document language selection, explicit message keys, locale-aware formatting,
+  isolated prose translation, source fallback and localization validation.
+- Align Python package versions, runtime service versions, the scraper User-Agent
+  and generated OpenAPI documents with v0.3.0.
+- Product gallery captures remain dated 27 October and do not show the new
+  language controls. English scraped prose translation requires access to the
+  external translation service; failed requests preserve the Spanish source.
 
 ## [0.2.1] - 2026-11-03
 

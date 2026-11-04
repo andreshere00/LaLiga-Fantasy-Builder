@@ -6,7 +6,7 @@ data and user-confirmed writes with your linked account.
 
 | Topic | Doc |
 |-------|-----|
-| Changes in v0.2.1 | [CHANGELOG.md](CHANGELOG.md#021---2026-11-03) |
+| Changes in v0.3.0 | [CHANGELOG.md](CHANGELOG.md#030---2026-11-04) |
 | Backend, frontend, and cloud architecture | [ARCHITECTURE.md](ARCHITECTURE.md) |
 | Detailed service trust boundaries | [docs/architecture.md](docs/architecture.md) |
 | Google Cloud Terraform deployment | [infra/gcp/README.md](infra/gcp/README.md) |
@@ -15,6 +15,16 @@ data and user-confirmed writes with your linked account.
 | Agent / contributor rules | [AGENTS.md](AGENTS.md) |
 
 ## Main features
+
+### Spanish and English
+
+- Choose Español or English from the globe selector in Options, beside the theme
+  control. The app remembers the choice and preserves open dialogs and drafts.
+- Application labels, dates, numbers and countdowns follow the selected language;
+  currency stays EUR and fixture times stay in Europe/Madrid.
+- English news headlines and injury notes use optional browser translation, with
+  the original Spanish available and retained when the service is unavailable.
+  See the [localization guide](docs/frontend-localization-plan.md).
 
 ### Lineup (`/`)
 
@@ -60,8 +70,9 @@ Radar reads require an application login and a configured local publication.
 The local dataset verified on 3 November 2026 covers 333 players and 348 role
 snapshots across all 20 clubs; 238 active-roster players remain unresolved.
 Published data stays outside Git and requires durable storage. Native DataMB
-comparisons remain disabled until their reference population is verified, and
-the weekly production timer is opt-in and disabled by default. See
+comparisons remain disabled until their reference population is verified.
+Terraform enables the weekly refresh by default; production activation still
+requires reviewed inputs and deployment configuration. See
 [coverage](docs/scraping/radar-laliga-2026-27.md) and the
 [operations runbook](docs/scraping/radar-operations.md).
 

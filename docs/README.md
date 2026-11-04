@@ -3,7 +3,10 @@
 Start with the [project README](../README.md) for features and quick start.
 This folder is the detailed map.
 
-See the [v0.2.1 changelog](../CHANGELOG.md#021---2026-11-03) for weekly radar
+See the [v0.3.0 changelog](../CHANGELOG.md#030---2026-11-04) for Spanish and English
+localization and the [language guide](frontend-localization-plan.md) for selection,
+formatting and optional prose translation. The
+[v0.2.1 entry](../CHANGELOG.md#021---2026-11-03) covers weekly radar
 refresh fixes and the [v0.2.0 entry](../CHANGELOG.md#020---2026-11-03) for published
 2026/27 player performance radars and current age.
 The [coverage report](scraping/radar-laliga-2026-27.md#current-result) records the
@@ -23,7 +26,7 @@ and the lineup builder in light and dark themes.
 | [Terraform deployment](../infra/gcp/README.md) | Provision the GCP VM, network, private backups, registry, secrets, and runtime |
 | [Google Cloud deployment assessment](deployment/google-cloud-cost-architecture.md) | Cost comparison and architecture for four concurrent users; trial, sizing, and production preparation |
 | [Frontend](frontend.md) | Lineup, market, and players UI, data loading, actions, details, and product screenshot gallery |
-| [Spanish and English implementation plan](frontend-localization-plan.md) | Deterministic UI/data translations, selective GTranslate for scraped injury/news prose, and header language control |
+| [Spanish and English localization](frontend-localization-plan.md) | Deterministic UI/data translations, selective GTranslate for scraped injury/news prose, and Options language control |
 | [Lineup builder](api/lineup-builder.md) | Read-only recommendations, scoring, and source contracts |
 | [LALIGA standings](api/standings/README.md) | Completed-match table and provider limitations |
 | [Authentication](authentication/authentication.md) | Sessions, internal JWT, LaLiga vault, CSRF |

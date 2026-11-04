@@ -5,7 +5,7 @@ from functools import lru_cache
 from pydantic import Field, model_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
-USER_AGENT_PREFIX: str = "LaLigaFantasyBuilder-Scraper/0.2.1"
+USER_AGENT_PREFIX: str = "LaLigaFantasyBuilder-Scraper/0.3.0"
 
 
 class ScraperSettings(BaseSettings):
