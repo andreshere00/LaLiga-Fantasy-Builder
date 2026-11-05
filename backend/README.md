@@ -7,7 +7,8 @@ The system map is [Architecture](../docs/architecture.md).
 | --- | --- | --- |
 | [`auth/`](auth/) | LaLiga pairing, vault and external JWT verification | 8000 |
 | [`identity/`](identity/) | Better Auth login, recovery, sessions, JWTs | 8003 |
-| [`api/`](api/) | Fantasy routes | 8001 |
+| [`api/`](api/) | Fantasy routes, favorites and scouting storage | 8001 |
+| API image: `fantasy-scouting-worker` | Read-only background market/clause monitoring | None |
 | [`scraping/`](scraping/) | Private FutbolFantasy scraper and profile parser | 8002 |
 
 Do not nest a second `.git` here. Feature routes:

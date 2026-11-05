@@ -41,7 +41,7 @@ application activation or live health.
 
 | Finding | Deployment implication |
 | --- | --- |
-| `docker-compose.yml` already defines the frontend, identity, auth, API, scraper, PostgreSQL, and Redis. | A single Compose host needs little architectural change. |
+| `docker-compose.yml` already defines the frontend, identity, auth, API, scouting worker, scraper, PostgreSQL, and Redis. | A single Compose host needs little architectural change. |
 | `docker-compose.https.yml` and `docker/Caddyfile` already define an HTTPS ingress. | Reuse Caddy directly; a Google load balancer is unnecessary at this scale. |
 | The frontend uses `/auth`, `/laliga`, and `/api` on one origin. | Keep `https://fantasybuilder.es` as the shared origin for cookies, callbacks, and JWT calls. |
 | Identity always needs PostgreSQL. Production auth needs PostgreSQL and Redis. | These dependencies continue running even when nobody is using the UI. |
@@ -137,11 +137,11 @@ the application and its databases.
 | Disk | One 30 GiB standard persistent disk, initially for OS, images, database volume, and Caddy data. Monitor capacity; do not let old images fill it. |
 | Public networking | One reserved Standard Tier IPv4; DNS A record for `fantasybuilder.es`. |
 | TLS and routing | Caddy on 80/443; `/auth/*` directly to identity with the actual client IP; other paths through frontend/Nginx. |
-| Runtime | Docker Compose `apps` profile, one worker/instance per backend. Optional OTEL collector stays disabled initially. |
-| Storage isolation | PostgreSQL identity/vault databases and roles remain separate; durable PostgreSQL and Caddy volumes. Redis stays private. |
+| Runtime | Production Compose template, one instance per backend plus a separate scouting process from the API image. Local Compose uses the `apps` profile; optional OTEL stays disabled initially. |
+| Storage isolation | PostgreSQL identity/vault/application databases and roles remain separate; durable PostgreSQL and Caddy volumes. Redis stays private. |
 | Backups | Daily logical backups of the identity, auth and application scouting databases to a private regional Cloud Storage bucket. Bound retention; rehearse restoring them. Back up vault and identity secrets separately. |
 | Access | SSH through IAP with OS Login; restrict SSH to IAP's required source range rather than opening it to everyone. |
-| Build/release | CI runs test, build, and deploy stages. Every branch push and PR builds off-host after checks pass; only main pushes publish the checked images, once optional keyless publisher IAM is configured. A one-day artifact transfers images between jobs; the VM pulls from the registry. Operators activate releases explicitly. Clean old untagged images automatically and retire obsolete release tags manually; tagged storage is not automatically bounded. |
+| Build/release | CI runs test, build, and deploy stages. Every branch push and PR builds off-host after checks pass; only main pushes publish the checked images, once optional keyless publisher IAM is configured. A one-day artifact transfers images between jobs; the VM pulls from the registry. The separate CI deployer activates published main releases on the bootstrapped development VM; manual activation remains available. Clean old untagged images automatically and retire obsolete release tags manually; tagged storage is not automatically bounded. |
 | Monitoring | Container health checks, bounded Docker logs, disk/memory/OOM checks, and a billing budget. Add larger observability services only if needed. |
 
 Standard disk is chosen for low cost, not maximum database I/O. If database

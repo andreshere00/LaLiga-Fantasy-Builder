@@ -13,7 +13,7 @@ template; it has not been provisioned or load-tested in the user's project.
 | --- | --- | --- | --- |
 | Identity | TypeScript, Node 24, Express 5, Better Auth; Bun for dependency/build tooling | 8003 | Credentials, optional social providers, email verification/recovery, sessions, signing keys, application JWTs. |
 | Auth | Python 3.14, FastAPI | 8000 | LaLiga pairing, encrypted token vault, refresh, connection ownership, private bearer exchange. |
-| API | Python 3.14, FastAPI | 8001 | Leagues, teams, players, calendar, standings, market, buyout, and read-only lineup recommendations. |
+| API | Python 3.14, FastAPI | 8001 | Leagues, teams, players, calendar, standings, market, buyout, read-only lineup recommendations, favorites and scouting alerts. |
 | Scraping | Python 3.14, FastAPI, downloader/parser | 8002 | Private FutbolFantasy data and official standings extraction; no LaLiga credentials. |
 
 ### Boundaries and request flow
@@ -22,7 +22,12 @@ Identity stores users, sessions, provider accounts, and JWT signing material in
 its own PostgreSQL database. The auth service stores pairing state, encrypted
 LaLiga connections, and refresh locks in a separate database with its own
 non-superuser role. The production auth rate limiter uses Redis. Sharing a
-PostgreSQL server does not grant either runtime access to the other's database.
+PostgreSQL server does not grant runtimes access to each other's databases.
+The API owns favorites, league watches and alerts in `fantasy_app` using the
+`fantasy_api` role. A separate `scouting-worker` process reuses the API image
+without exposing a port. It redeems explicit Auth-owned grants with a dedicated
+service token and holds LaLiga bearers only transiently; it never places bids or
+pays clauses. See the [scouting contract](docs/api/scouting/README.md).
 
 ```mermaid
 sequenceDiagram
@@ -175,22 +180,23 @@ Only each backend's own environment file and required variables reach that
 container.
 
 Identity migrations run through a one-shot container; auth applies its additive
-migrations at startup. Persistent Docker volumes hold PostgreSQL data and Caddy
+migrations at startup. API applies app migrations under a database lock before
+readiness; the scouting worker waits for API health. Persistent Docker volumes hold PostgreSQL data and Caddy
 certificates. The boot disk is managed separately, has `prevent_destroy`, and is
 attached with `auto_delete=false`; VM deletion protection is enabled by default.
 The OS image initializes only a new disk, so image-family updates do not replace
 the populated database disk. Restart policies, bounded container logs, and
 systemd startup are included in the production template.
 
-Daily logical backups of both PostgreSQL databases go to a private regional
-Cloud Storage bucket. A completion manifest is uploaded only after both database
+Daily logical backups of all three PostgreSQL databases go to a private regional
+Cloud Storage bucket. A completion manifest is uploaded only after all three database
 dumps and uploads succeed. Backups and releases share an operation lock.
 The VM can create new backup objects but cannot read or
 delete them. Lifecycle rules expire live objects after 14 days by default, with
 a further 7-day soft-delete recovery window. Secrets and role provisioning are
 recovered independently; a dump alone cannot recover encrypted vault contents.
 Restore exercises and backup-failure monitoring remain operator responsibilities.
-The two logical database dumps are independent snapshots; they do not provide
+The three logical database dumps are independent snapshots; they do not provide
 cross-database point-in-time consistency.
 
 ### Cost, capacity, and availability

@@ -17,6 +17,11 @@ The [product gallery](frontend.md#product-captures) contains ten captures from
 the signed-in application, covering lineup, market, players, player details,
 and the lineup builder in light and dark themes.
 
+Favorites, per-league scouting alerts and the deployment/storage upgrade are in
+[Unreleased](../CHANGELOG.md#unreleased). Existing installations need a third
+logical database and new runtime values; follow the
+[upgrade checklist](../infra/gcp/README.md#upgrading-an-existing-installation-for-scouting).
+
 ## Core
 
 | Doc | Contents |
@@ -27,6 +32,7 @@ and the lineup builder in light and dark themes.
 | [Google Cloud deployment assessment](deployment/google-cloud-cost-architecture.md) | Cost comparison and architecture for four concurrent users; trial, sizing, and production preparation |
 | [Frontend](frontend.md) | Lineup, market, and players UI, data loading, actions, details, and product screenshot gallery |
 | [Spanish and English localization](frontend-localization-plan.md) | Deterministic UI/data translations, selective GTranslate for scraped injury/news prose, and Options language control |
+| [Favorites and scouting](api/scouting/README.md) | Global bookmarks, per-league alerts, worker delegation, storage and recovery |
 | [Lineup builder](api/lineup-builder.md) | Read-only recommendations, scoring, and source contracts |
 | [LALIGA standings](api/standings/README.md) | Completed-match table and provider limitations |
 | [Authentication](authentication/authentication.md) | Sessions, internal JWT, LaLiga vault, CSRF |

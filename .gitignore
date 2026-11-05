@@ -82,3 +82,7 @@ gha-creds-*.json
 # Local radar datasets and reviewed supply manifests
 /data/radar/
 /data/radar-review/
+
+# Python bytecode caches
+__pycache__/
+*.py[cod]

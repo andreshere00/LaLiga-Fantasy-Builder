@@ -8,6 +8,14 @@ entry, not a claim that every optional provider or deployment gate is complete.
 
 ### Favorites and scouting
 
+- Align 44px row bookmarks before player names in Market and Players; highlight
+  saved player portraits with `#FFC2BF` without tinting whole rows. Keep toolbar
+  labels on one line and wrap complete destination buttons on narrow screens.
+- Make notification close controls usable with touch, mouse and keyboard; use
+  compact body text and keep the notification stack above mobile navigation.
+- Update setup and infrastructure upgrade instructions for the app database,
+  shared-image worker, runtime secrets and three-database backup/recovery sets.
+
 - Compact favorite cards with grouped market/clause status, recent form badges and
   collapsible alert settings that keep the saved configuration visible. Add inline
   save errors and consistent keyboard, touch and theme styling.

@@ -387,9 +387,10 @@ Run commands live in the [root README](../README.md).
   `python:3.14-slim-trixie` with uv only in the builder. The frontend image
   builds with Bun and serves static files plus `/auth`, `/laliga`, and `/api`
   proxies from Nginx.
-- Compose profile `apps` runs identity, auth, API, scraping and frontend, with
+- Compose profile `apps` runs identity, auth, API, scraping, scouting-worker and frontend, with
   PostgreSQL and Redis. Identity sends email through configured SMTP. `full` adds OTEL.
-  Identity owns its own logical database and role.
+  Identity, Auth and API own separate logical databases and roles. The scouting
+  worker reuses the API image and application database without a published port.
 - API and auth share a private network for `/internal/*`. Scraping joins that
   network and an `egress` network so a future downloader can reach the public
   internet without putting the API on egress.

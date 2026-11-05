@@ -214,9 +214,18 @@ a task; blocking/rate-limit categories are recorded safely without provider bodi
 
 ## Favorites and background scouting
 
-`/scouting` owns favorites, per-league watches and the persistent alert inbox. Configure
-`SCOUTING_DATABASE_URL` for the separate `fantasy_app` database and a matching private
-`SCOUTING_SERVICE_TOKEN` with Auth. Start `uv run fantasy-scouting-worker` separately
-from HTTP (Compose does this automatically). Read-only CLI: `uv run fantasy-scouting
---league-id LEAGUE`. Provision existing volumes before starting; see the
-[domain guide](../../docs/api/scouting/README.md) for migrations, grants and backups.
+Favorites, league watches, observations and inbox alerts persist in `fantasy_app`
+using the `fantasy_api` role. Configure `SCOUTING_DATABASE_URL` for the API and
+worker; migrations apply under a database lock and readiness checks app storage.
+Auth/API/worker need a matching, dedicated `SCOUTING_SERVICE_TOKEN` for delegated
+background reads. Do not reuse `INTERNAL_SERVICE_TOKEN`.
+
+`fantasy-scouting-worker` is a separate process from this package/image with no
+HTTP port. Compose starts it after API readiness. Host development starts it via
+`uv run poe dev` / `uv run poe dev-clean`; standalone use is
+`uv run fantasy-scouting-worker` from this directory with the service environment
+configured. Favorites still save without a running worker, but alerts cannot
+advance. See [storage, existing-volume provisioning and recovery](../../docs/api/scouting/README.md#storage-and-operation)
+and the [production upgrade checklist](../../infra/gcp/README.md#upgrading-an-existing-installation-for-scouting).
+
+Read-only CLI: `uv run fantasy-scouting --league-id LEAGUE`.

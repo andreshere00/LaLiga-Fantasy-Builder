@@ -1,7 +1,7 @@
 flowchart TB
     users["Up to 4 simultaneous users"]
     dns["Registrar DNS<br/>fantasybuilder.es → VM IPv4"]
-    ci["GitHub Actions · test → build → deploy<br/>all 5 amd64 images; publish only on main push"]
+    ci["GitHub Actions · test → build → deploy<br/>all 5 amd64 images; main publish + development activation"]
     admin["Operator · secret uploads + explicit VM activation"]
     users -. "DNS lookup" .-> dns
     ci -.->|"GitHub OIDC · main push + CI workflow"| wif
@@ -21,8 +21,9 @@ flowchart TB
           identity["Identity · 8003<br/>Better Auth sessions + JWTs"]
           auth["Auth · 8000<br/>LaLiga pairing + encrypted vault"]
           api["API · 8001<br/>Fantasy features + lineup builder"]
+          worker["Scouting worker · API image<br/>no HTTP port · read-only polling"]
           scraper["Scraping · 8002<br/>one worker · local cache + limiter"]
-          pg[("PostgreSQL<br/>separate identity + vault DBs/roles")]
+          pg[("PostgreSQL<br/>identity + vault + application DBs/roles")]
           redis[("Redis<br/>auth rate limits")]
         end
         caddy -->|"/auth/*; replace client IP"| identity
@@ -31,6 +32,11 @@ flowchart TB
         web -->|"/api/*; strip /api"| api
         api -->|"private bearer exchange + service token"| auth
         api -->|"private scrape + service token"| scraper
+        api -->|"application role · favorites, watches, inbox"| pg
+        worker -->|"application role"| pg
+        worker -->|"opaque grant + dedicated service token"| auth
+        worker -->|"read-only checks"| laliga
+        identity -->|"account cleanup"| api
         identity -->|"own DB role"| pg
         auth -->|"vault, pairings, refresh locks"| pg
         auth --> redis
@@ -42,7 +48,7 @@ flowchart TB
       vm ---|"attached boot disk"| disk
       end
       backup[("Private Cloud Storage bucket<br/>daily DB backups · bounded retention")]
-      pg -.->|"logical backups"| backup
+      pg -.->|"three logical dumps + completion manifest"| backup
     end
 
     users -->|"HTTPS · fantasybuilder.es"| caddy
@@ -50,6 +56,7 @@ flowchart TB
     admin -.->|"SSH administration"| iap
     admin -.->|"upload dotenv versions"| secrets
     iap -.-> vm
+    wif -.->|"CI deployer · IAP + runtime secret update"| iap
     wif -.->|"CI publisher · repository writer only"| registry
     secrets -.->|"host fetches during explicit releases; scoped IAM<br/>reboots use local snapshot"| vm
     identity -->|"TLS SMTP 465"| mail["Resend<br/>verification + recovery"]
@@ -63,6 +70,6 @@ flowchart TB
     classDef edge fill:#eff6ff,stroke:#60a5fa,color:#0f172a;
     classDef data fill:#ecfdf5,stroke:#34d399,color:#064e3b;
     classDef ops fill:#f5f3ff,stroke:#a78bfa,color:#312e81;
-    class caddy,web,identity,auth,api,scraper edge;
+    class caddy,web,identity,auth,api,scraper,worker edge;
     class pg,redis,disk,backup data;
     class ci,registry,admin,secrets ops;
