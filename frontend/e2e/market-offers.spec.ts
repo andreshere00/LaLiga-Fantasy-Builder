@@ -326,10 +326,15 @@ for (const [width, theme] of [[320, "dark"], [375, "light"], [1440, "dark"], [20
       const name = cell.querySelector(".market-name")!.getBoundingClientRect();
       const photo = cell.closest(".market-data-row")!.querySelector(".market-card")!.getBoundingClientRect();
       const offers = cell.querySelector(".market-player-offers-flag")?.getBoundingClientRect();
-      return { gap: name.left - bookmark.right, photoGap: bookmark.left - photo.right, offersAfterName: !offers || offers.left >= name.right || offers.top >= name.bottom };
+      return { horizontalCenterOffset: name.x + name.width / 2 - bookmark.x - bookmark.width / 2, centerOffset: name.y + name.height / 2 - bookmark.y - bookmark.height / 2, gap: name.left - bookmark.right, photoGap: bookmark.left - photo.right, offersAfterName: !offers || offers.left >= name.right || offers.top >= name.bottom };
     }));
-    for (const { gap, photoGap, offersAfterName } of gaps) {
-      expect(gap).toBeCloseTo(photoGap, 0);
+    for (const { horizontalCenterOffset, centerOffset, gap, photoGap, offersAfterName } of gaps) {
+      if (width > 400) {
+        expect(gap).toBeCloseTo(photoGap, 0);
+        expect(centerOffset).toBeCloseTo(0, 0);
+      } else {
+        expect(horizontalCenterOffset).toBeCloseTo(0, 0);
+      }
       expect(offersAfterName).toBe(true);
     }
     const indicators = await page.locator(".player-status-indicators").evaluateAll(groups => groups.filter(group => group.children.length > 0).map(group => {
@@ -343,10 +348,14 @@ for (const [width, theme] of [[320, "dark"], [375, "light"], [1440, "dark"], [20
       expect(indicator.right).toBeCloseTo(indicators[0].right, 0);
       if (indicator.clause) expect(indicator.clause.x).toBeCloseTo(withBoth[0].clause!.x, 0);
       if (indicator.offers) expect(indicator.offers.x).toBeCloseTo(withBoth[0].offers!.x, 0);
-      if (indicator.offers && indicator.clause) expect(indicator.offers.y).toBeCloseTo(indicator.clause.y, 0);
+      if (indicator.offers && indicator.clause) {
+        expect(indicator.offers.x).toBeCloseTo(indicator.clause.x, 0);
+        expect(indicator.clause.y - indicator.offers.y).toBeCloseTo(44, 0);
+      }
     }
     await page.locator(".market-clause-flag").first().focus();
     await expect(page.getByRole("tooltip")).toBeVisible();
-    await page.screenshot({ path: `/tmp/lfb-player-spacing-${width}.png`, fullPage: true });
+    await page.keyboard.press("Escape");
+    await page.locator(".market-data-row").filter({ hasText: "Iñaki Williams" }).screenshot({ path: `/tmp/lfb-player-spacing-${width}.png` });
   });
 }

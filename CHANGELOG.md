@@ -9,8 +9,8 @@ entry, not a claim that every optional provider or deployment gate is complete.
 ### Favorites and scouting
 
 - Align offer and release-clause indicators in fixed slots across Market and Players
-  rows. Narrow name areas place indicators beneath the name, retaining readable
-  long names and consistent positions when a status is absent.
+  rows. Stack notification and clause indicators in one column within the name
+  field and vertically center the bookmark and name alongside them.
 
 - Align 44px row bookmarks before player names in Market and Players; highlight
   saved player portraits with `#FFC2BF` without tinting whole rows. Keep toolbar

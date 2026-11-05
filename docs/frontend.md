@@ -953,11 +953,13 @@ the notification region; Tab reaches Close, and Enter dismisses it. Browser chec
 cover stacked errors with touch, mouse and keyboard in light/mobile and dark/desktop.
 
 Favorites labels stay on one line; toolbar destinations wrap as complete controls.
-Row bookmarks occupy a fixed 44px slot before player names with matching spacing on each side
-(14px).
-Offer and clause indicators occupy fixed 44px slots at the end of the identity
-area, retaining their positions when either status is absent. Narrow identity
-areas place the slots below the name, preserving readable names and aligned
-indicators independently of name length. These controls sit alongside identity instead of beneath market actions, keeping
+On wider layouts, row bookmarks occupy a fixed 44px slot before player names
+with matching spacing on each side (14px).
+Offer and clause indicators occupy a single vertical column inside the name
+field: notification above, clause below, each with a fixed 44px target. The
+bookmark and name are vertically centered alongside that column. On the smallest
+cards (up to 400px), the bookmark sits centered above the name beside the same
+status column, leaving more readable space for long names.
+Empty status slots preserve alignment independently of name length. These controls sit alongside identity instead of beneath market actions, keeping
 transaction columns compact. Favorited Market and Players portrait tiles use `#FFC2BF` in
 both themes; comparison row backgrounds remain unchanged.
