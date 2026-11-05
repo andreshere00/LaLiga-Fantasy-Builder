@@ -121,3 +121,30 @@
   .market-page:not(.players-page) :is(.market-offers-trigger,.market-bids-trigger) { padding-inline:8px; font-size:12px; }
   .market-page:not(.players-page) .market-offers-trigger img { width:18px; height:18px; }
 }
+
+/* One action group keeps the three destinations aligned independently of balance. */
+.market-page.comparison-page:not(.players-page) .market-balance-actions {
+  display:flex; flex-wrap:wrap; gap:12px; align-items:flex-end;
+}
+.market-section-actions { display:flex; flex-wrap:wrap; gap:8px; flex:1 1 380px; min-width:0; }
+.market-section-actions > .fb-button {
+  flex:1 1 110px; min-width:0; min-height:44px; margin:0; padding-inline:10px;
+}
+.market-section-actions > .fb-button > span { display:flex; align-items:center; justify-content:center; gap:6px; }
+.market-section-actions :is(.market-offers-trigger img, .fb-button-icon, .fb-button-icon svg) { width:18px; height:18px; flex-shrink:0; }
+.market-section-actions :is(.market-bids-count, .market-offers-count, .scouting-unread) {
+  box-sizing:border-box; min-width:20px; height:20px; padding:0 4px; font-size:12px;
+  display:inline-grid; place-items:center; border:1px solid currentColor; line-height:1;
+}
+.market-auction-icon { display:block; width:18px; height:18px; background:currentColor; mask-size:contain; mask-position:center; mask-repeat:no-repeat; }
+@media(max-width:700px) {
+  .market-page.comparison-page .market-filter-row { gap:16px; }
+  .market-section-actions { flex-basis:100%; }
+  .market-section-actions > .fb-button {
+    flex-basis:80px; flex-direction:column; justify-content:flex-start; gap:6px; min-height:64px; padding:8px 4px; font-size:12px;
+  }
+  .market-section-actions > .fb-button > span:last-child { white-space:normal; line-height:1.2; flex-wrap:wrap; }
+  .market-section-actions .market-offers-trigger > span:last-child { flex-wrap:nowrap; }
+}
+
+.market-section-actions .market-offers-label { display:inline; }

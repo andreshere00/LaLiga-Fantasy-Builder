@@ -122,7 +122,7 @@ export function MarketToolbar({
           />
         ) : null}
         <div className="market-balance-actions">
-          {notifications}
+          <div className="market-section-actions">{notifications}</div>
           <MarketBalance money={money} projection={projection}
             projectionRefreshing={projectionRefreshing} projectionStale={projectionStale} />
         </div>

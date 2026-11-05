@@ -937,3 +937,10 @@ alerts; local data remains until import succeeds. Return URLs preserve the open
 sheet, query/filter and scroll; details accept only local Market/Players return paths.
 Domain Zod contracts live in `api/scouting.ts`; all public properties use
 camelCase. See [scouting](api/scouting/README.md) for monitoring semantics and operation.
+
+Market toolbar destinations (Favorites, Offers and My bids) share one responsive
+flex group with equal button heights, 18px icons and 8px gaps. Phone layouts place
+icons above labels to fit three destinations while keeping touch targets at least
+44px. Balance remains a separate full-width row on phones. The bids icon uses the
+requested [Flaticon auction asset](https://www.flaticon.com/free-icon/auction_9367178),
+credited in the footer and next to the bundled asset.
