@@ -13,6 +13,8 @@ for (const [theme, width] of [["light", 1440], ["dark", 375]] as const) {
     const bookmark = page.getByRole("button", { name: "Favorite Player 14", exact: true });
     await bookmark.click();
     await expect(bookmark).toHaveAttribute("aria-pressed", "true");
+    await expect(page.locator('.fb-toast[data-tone="success"]')).toHaveText(/Player added to favorites\./);
+    await page.screenshot({ path: `/tmp/lfb-favorite-confirmation-${theme}.png` });
     await expect(page.locator(".market-data-row").filter({ has: bookmark }).locator(".player-tile"))
       .toHaveCSS("background-color", "rgb(255, 194, 191)");
     await expect(page.locator(".market-name-wrap").filter({ has: bookmark })).toBeVisible();
@@ -49,6 +51,7 @@ for (const [theme, width] of [["light", 1440], ["dark", 375]] as const) {
     await expect(dialog.getByRole("searchbox", { name: "Search favorites" })).toHaveValue("Player 14");
     await dialog.getByRole("button", { name: "Favorite Player 14", exact: true }).click();
     await expect(dialog.getByText("Save players with the bookmark button to follow them here.")).toBeVisible();
+    await expect(page.locator('.fb-toast[data-tone="success"]', { hasText: "Player removed from favorites." })).toBeVisible();
   });
 }
 
@@ -67,6 +70,36 @@ test("legacy import keeps alerts off and partial activation preserves the favori
   await page.getByRole("button", { name: "Favorite Player 02", exact: true }).click();
   await expect(page.getByRole("button", { name: "Favorite Player 02", exact: true })).toHaveAttribute("aria-pressed", "true");
   await expect(page.getByRole("region", { name: "Notifications" }).getByText("Favorite saved; alerts could not be activated. Retry in Favorites.")).toBeVisible();
+  await expect(page.locator('.fb-toast[data-tone="success"]')).toHaveCount(0);
+});
+
+test("favorite confirmation waits for persistence and failures allow retry in Spanish", async ({ page }) => {
+  await mockApplication(page);
+  await page.addInitScript(() => localStorage.setItem("lfb-language", "es"));
+  let release!: () => void;
+  const pending = new Promise<void>(resolve => { release = resolve; });
+  await page.route("**/api/scouting/favorites/14", async route => {
+    await pending;
+    await route.fulfill({ status: 502, json: { error: "upstream_error" } });
+  });
+  await page.goto("/market");
+  const bookmark = page.getByRole("button", { name: "Marcar como favorito a Player 14", exact: true });
+  await bookmark.focus();
+  await page.keyboard.press("Enter");
+  await expect(bookmark).toBeDisabled();
+  await expect(page.locator('.fb-toast[data-tone="success"]')).toHaveCount(0);
+  release();
+  await expect(page.locator('.fb-toast[data-tone="error"]')).toContainText("No se pudieron guardar los favoritos.");
+  await expect(bookmark).toHaveAttribute("aria-pressed", "false");
+  await expect(bookmark).toBeEnabled();
+  await expect(page.locator('.fb-toast[data-tone="success"]')).toHaveCount(0);
+  await page.unroute("**/api/scouting/favorites/14");
+  await bookmark.click();
+  await expect(bookmark).toHaveAttribute("aria-pressed", "true");
+  await expect(page.locator('.fb-toast[data-tone="success"]')).toContainText("Jugador añadido a favoritos.");
+  await bookmark.click();
+  await expect(bookmark).toHaveAttribute("aria-pressed", "false");
+  await expect(page.locator('.fb-toast[data-tone="success"]', { hasText: "Jugador eliminado de favoritos." })).toBeVisible();
 });
 
 test("inbox stays unread until explicitly opened or marked", async ({ page }) => {

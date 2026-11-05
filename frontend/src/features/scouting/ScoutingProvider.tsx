@@ -87,10 +87,17 @@ function useScoutingState() {
           await scoutingRequest(token, scoutingPaths.watch(league, player), resultSchema, "PUT", {
             marketAlert: true, clauseAlert: true, leadHours: 24,
           });
-        } catch { notify("Favorite saved; alerts could not be activated. Retry in Favorites.", "error"); }
+        } catch {
+          notify("Favorite saved; alerts could not be activated. Retry in Favorites.", "error");
+          return false;
+        }
       }
+      return true;
     },
-    onSuccess: invalidate,
+    onSuccess: (complete, { remove }) => {
+      if (complete) notify(remove ? "Player removed from favorites." : "Player added to favorites.");
+      return invalidate();
+    },
     onError: () => notify("Favorites could not be saved. Try again.", "error"),
   });
   const refresh = useMutation({

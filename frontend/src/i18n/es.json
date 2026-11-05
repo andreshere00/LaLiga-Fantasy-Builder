@@ -1664,6 +1664,8 @@
   "Alert preferences could not be saved. Try again.": "No se pudieron guardar las alertas. Vuelve a intentarlo.",
   "Favorite saved; alerts could not be activated. Retry in Favorites.": "Favorito guardado; no se pudieron activar las alertas. Reinténtalo en Favoritos.",
   "Favorites could not be saved. Try again.": "No se pudieron guardar los favoritos. Vuelve a intentarlo.",
+  "Player added to favorites.": "Jugador añadido a favoritos.",
+  "Player removed from favorites.": "Jugador eliminado de favoritos.",
   "Monitoring could not be refreshed. Try again.": "No se pudo actualizar el seguimiento. Vuelve a intentarlo.",
   "The alert could not be marked as read.": "No se pudo marcar la alerta como leída.",
   "Awaiting first check": "Pendiente de la primera comprobación",

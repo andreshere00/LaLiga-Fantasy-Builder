@@ -8,6 +8,9 @@ entry, not a claim that every optional provider or deployment gate is complete.
 
 ### Favorites and scouting
 
+- Confirm favorite saves and removals with localized success toasts after persistence;
+  preserve clear error and partial alert-activation feedback.
+
 - Align offer and release-clause indicators in fixed slots across Market and Players
   rows. Stack notification and clause indicators in one column within the name
   field and vertically center the bookmark and name alongside them.

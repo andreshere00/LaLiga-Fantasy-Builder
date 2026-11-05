@@ -951,6 +951,9 @@ messages expire. Base UI's urgent-announcement `aria-hidden` state does not disa
 pointer interaction: only exiting notifications ignore pointer input. F6 enters
 the notification region; Tab reaches Close, and Enter dismisses it. Browser checks
 cover stacked errors with touch, mouse and keyboard in light/mobile and dark/desktop.
+Saving or removing a favorite shows a localized success toast after the confirmed
+write. Failed writes show only the error; failed alert activation keeps its existing
+partial-success warning without adding a second success toast.
 
 Favorites labels stay on one line; toolbar destinations wrap as complete controls.
 On wider layouts, row bookmarks occupy a fixed 44px slot before player names
