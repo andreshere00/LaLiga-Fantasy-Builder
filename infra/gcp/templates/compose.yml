@@ -18,6 +18,7 @@ services:
       POSTGRES_DB: fantasy_auth
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?Set POSTGRES_PASSWORD}
       IDENTITY_DB_PASSWORD: ${IDENTITY_DB_PASSWORD:?Set IDENTITY_DB_PASSWORD}
+      APP_DB_PASSWORD: ${APP_DB_PASSWORD:?Set APP_DB_PASSWORD}
       VAULT_DB_PASSWORD: ${VAULT_DB_PASSWORD:?Set VAULT_DB_PASSWORD}
     volumes:
       - postgres-data:/var/lib/postgresql/data
@@ -59,6 +60,7 @@ services:
     image: ${IDENTITY_IMAGE:?Set IDENTITY_IMAGE}
     env_file: ["${CONFIG_DIR:-/etc/fantasybuilder/current}/identity.env"]
     environment:
+      SCOUTING_API_URL: http://api:8001
       NODE_ENV: production
       PORT: "8003"
       BETTER_AUTH_URL: https://${APP_DOMAIN:?Set APP_DOMAIN}
@@ -75,6 +77,7 @@ services:
     image: ${AUTH_IMAGE:?Set AUTH_IMAGE}
     env_file: ["${CONFIG_DIR:-/etc/fantasybuilder/current}/auth.env"]
     environment:
+      SCOUTING_SERVICE_TOKEN: ${SCOUTING_SERVICE_TOKEN:?Set SCOUTING_SERVICE_TOKEN}
       DEBUG: "false"
       USE_MEMORY_STORE: "false"
       DATABASE_URL: postgresql://fantasy_vault:${VAULT_DB_PASSWORD:?Set VAULT_DB_PASSWORD}@postgres:5432/fantasy_auth
@@ -100,6 +103,8 @@ services:
     image: ${API_IMAGE:?Set API_IMAGE}
     env_file: ["${CONFIG_DIR:-/etc/fantasybuilder/current}/api.env"]
     environment:
+      SCOUTING_DATABASE_URL: postgresql://fantasy_api:${APP_DB_PASSWORD:?Set APP_DB_PASSWORD}@postgres:5432/fantasy_app
+      SCOUTING_SERVICE_TOKEN: ${SCOUTING_SERVICE_TOKEN:?Set SCOUTING_SERVICE_TOKEN}
       DEBUG: "false"
       AUTH_JWKS_URL: http://identity:8003/auth/jwks
       AUTH_INTERNAL_BASE_URL: http://auth:8000
@@ -115,6 +120,22 @@ services:
       auth:
         condition: service_healthy
       scraping:
+        condition: service_healthy
+    networks: [internal, egress]
+
+  scouting-worker:
+    <<: *runtime
+    image: ${API_IMAGE:?Set API_IMAGE}
+    env_file: ["${CONFIG_DIR:-/etc/fantasybuilder/current}/api.env"]
+    command: ["fantasy-scouting-worker"]
+    healthcheck:
+      disable: true
+    environment:
+      SCOUTING_DATABASE_URL: postgresql://fantasy_api:${APP_DB_PASSWORD:?Set APP_DB_PASSWORD}@postgres:5432/fantasy_app
+      SCOUTING_SERVICE_TOKEN: ${SCOUTING_SERVICE_TOKEN:?Set SCOUTING_SERVICE_TOKEN}
+      AUTH_INTERNAL_BASE_URL: http://auth:8000
+    depends_on:
+      api:
         condition: service_healthy
     networks: [internal, egress]
 

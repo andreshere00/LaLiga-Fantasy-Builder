@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { favoritesSchema, inboxSchema, resultSchema, watchSchema, favoritesImportSchema, favoritesQuerySchema, inboxQuerySchema } from "./scouting";
 import { radarResponseShape, radarQuerySchema, type PlayerRadarResponseDto } from "./radar";
 export { radarQuerySchema } from "./radar";
 
@@ -973,6 +974,9 @@ export const lineupBuildStreamEventSchema = z.discriminatedUnion("type", [
 export const playerRadarResponseSchema = responseSchema(radarResponseShape);
 
 export type ApiResponseDto =
+  | z.infer<typeof favoritesSchema>
+  | z.infer<typeof inboxSchema>
+  | z.infer<typeof resultSchema>
   | PlayerRadarResponseDto
   | z.infer<typeof lineupBuildStreamEventSchema>
   | LineupBuildDto
@@ -1017,6 +1021,15 @@ const endpointContracts: Array<{
   request?: z.ZodType;
   query?: z.ZodType;
 }> = [
+  { method: "GET", path: /^\/api\/scouting\/favorites$/, response: favoritesSchema, query: favoritesQuerySchema },
+  { method: "PUT", path: /^\/api\/scouting\/favorites\/[^/]+$/, response: resultSchema },
+  { method: "DELETE", path: /^\/api\/scouting\/favorites\/[^/]+$/, response: resultSchema },
+  { method: "POST", path: /^\/api\/scouting\/favorites\/import$/, response: resultSchema, request: favoritesImportSchema },
+  { method: "PUT", path: /^\/api\/scouting\/leagues\/[^/]+\/watches\/[^/]+$/, response: resultSchema, request: watchSchema },
+  { method: "POST", path: /^\/api\/scouting\/leagues\/[^/]+\/refresh$/, response: resultSchema },
+  { method: "GET", path: /^\/api\/scouting\/notifications$/, response: inboxSchema, query: inboxQuerySchema },
+  { method: "PUT", path: /^\/api\/scouting\/notifications\/[^/]+\/read$/, response: resultSchema },
+  { method: "DELETE", path: /^\/api\/scouting\/account$/, response: resultSchema },
   { method: "POST", path: /^\/api\/lineup-builder\/leagues\/[^/]+\/build$/, response: lineupBuildResponseSchema, request: lineupBuildRequestSchema },
   { method: "POST", path: /^\/api\/lineup-builder\/leagues\/[^/]+\/build\/stream$/, response: lineupBuildStreamEventSchema, request: lineupBuildRequestSchema },
   { method: "GET", path: /^\/api\/competitions\/\d+\/standings$/, response: competitionStandingsSchema, query: standingsQuerySchema },

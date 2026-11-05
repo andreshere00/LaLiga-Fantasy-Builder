@@ -38,6 +38,7 @@ from fantasy_api.schemas.player_stats import (
     UpcomingMatchesResponse,
 )
 from fantasy_api.schemas.players import CatalogPlayer, LeaguePlayer, PlayerMarketValue
+from fantasy_api.schemas.scouting import FavoritesResponse, InboxResponse
 from fantasy_api.schemas.standings import CompetitionStandings, StandingsQuery
 from fantasy_api.schemas.teams import TeamLineup, TeamMoney
 
@@ -51,6 +52,8 @@ def _list_response(pattern: str, model: type[BaseModel]):
 
 
 _RESPONSE_ADAPTERS = (
+    _model_response(r"/scouting/favorites", FavoritesResponse),
+    _model_response(r"/scouting/notifications", InboxResponse),
     _model_response(r"/lineup-builder/leagues/[^/]+/build", BuildResponse),
     _model_response(r"/competitions/\d+/standings", CompetitionStandings),
     _list_response(r"/leagues", FantasyLeague),

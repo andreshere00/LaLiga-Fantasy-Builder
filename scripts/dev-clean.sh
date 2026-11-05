@@ -11,7 +11,7 @@ fi
 
 # Docker may still own the published ports from `poe up`.
 if command -v docker >/dev/null 2>&1; then
-  docker compose --profile apps stop identity auth api scraping frontend >/dev/null 2>&1 || true
+  docker compose --profile apps stop identity auth api scouting-worker scraping frontend >/dev/null 2>&1 || true
 fi
 
 service_for_port() {
@@ -77,6 +77,14 @@ for entry in "3000 frontend vite" "8003 backend/identity src/server.ts"; do
     echo "Stopped stale $directory server (PID $pid) on port $port."
   done < <(lsof -tiTCP:"$port" -sTCP:LISTEN 2>/dev/null || true)
 done
+
+# Scouting has no listening port, so identify only this checkout's worker by cwd.
+while read -r pid command; do
+  [[ "$command" == *"fantasy-scouting-worker"* ]] || continue
+  process_dir="$(lsof -a -p "$pid" -d cwd -Fn 2>/dev/null | sed -n 's/^n//p')"
+  [[ "$process_dir" == "$ROOT/backend/api" ]] || continue
+  kill -TERM "$pid" 2>/dev/null || true
+done < <(ps -axo pid=,command=)
 
 for port in 3000 8000 8001 8002 8003; do
   if lsof -nP -iTCP:"$port" -sTCP:LISTEN >/dev/null 2>&1; then

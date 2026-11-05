@@ -4,3 +4,30 @@
 .player-bookmark-btn:hover { background:var(--fb-coral); color:var(--fb-on-coral); }
 .player-bookmark-btn:hover .player-bookmark-icon { color:currentColor; }
 .player-bookmark-btn.is-active:not(:hover) .player-bookmark-icon { color:var(--fb-primary); }
+
+/* Center identity beside a fixed vertical column of status targets. */
+.market-page .market-name-wrap {
+  display:block;
+  justify-self:stretch; width:100%; box-sizing:border-box;
+}
+.player-identity-layout {
+  display:grid; grid-template-columns:44px minmax(0,1fr) 44px;
+  align-items:center; gap:14px;
+}
+.player-identity-layout > :is(.market-name-line, .market-name) { min-width:0; }
+.player-status-indicators { display:grid; grid-template-columns:44px; grid-template-rows:repeat(2,44px); align-items:center; }
+.player-status-indicators > .market-player-offers-flag { grid-column:1; grid-row:1; }
+.player-status-indicators > .market-clause-flag {
+  grid-column:1; grid-row:2; justify-content:center; width:44px; height:44px;
+}
+/* Small cards center save/name together without squeezing names between controls. */
+@media(max-width:400px) {
+  .player-identity-layout { grid-template-columns:minmax(0,1fr) 44px; row-gap:4px; }
+  .player-identity-layout > .player-bookmark-btn { grid-column:1; grid-row:1; justify-self:center; }
+  .player-identity-layout > :is(.market-name-line, .market-name) {
+    grid-column:1; grid-row:2; text-align:center; justify-content:center;
+  }
+  .player-identity-layout > .player-status-indicators { grid-column:2; grid-row:1 / span 2; }
+}
+/* A single status sits on the identity centerline instead of an empty half-slot. */
+.player-status-indicators > :only-child { grid-row:1 / -1; align-self:center; }

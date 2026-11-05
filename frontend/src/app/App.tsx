@@ -1,3 +1,4 @@
+import { ScoutingProvider } from "../features/scouting/ScoutingProvider";
 import { t, useTranslation } from "../i18n";
 import { Notifications } from "../components/ui/Notifications";
 import { PulseRing } from "../components/ui/PulseRing";
@@ -53,6 +54,7 @@ export function App() {
         <BrowserRouter>
           <AppErrorBoundary>
             <LeagueProvider>
+              <ScoutingProvider>
               <div className="app-shell">
                 <Header />
                 <main className="app-main">
@@ -77,6 +79,7 @@ export function App() {
                 </main>
                 <Footer />
               </div>
+              </ScoutingProvider>
             </LeagueProvider>
           </AppErrorBoundary>
         </BrowserRouter>

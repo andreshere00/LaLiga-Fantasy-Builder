@@ -90,3 +90,12 @@ See [authentication](../../docs/authentication/authentication.md),
 [endpoints](../../docs/authentication/endpoints.md),
 [release checks](../../docs/authentication/release-checks.md), and
 [OpenAPI](openapi.json).
+
+## Scouting delegation
+
+Auth owns revocable league grants for the private scouting worker. Creating/revoking
+requires the subject JWT + ordinary service token; redeeming requires an existing
+grant + dedicated `SCOUTING_SERVICE_TOKEN`. Migration 0006 persists grants; unlinking
+and re-pairing revoke them. `fantasy-browser-session scouting-analysis --json` reads
+favorites/alerts without pairing or changing read state. See
+[scouting](../../docs/api/scouting/README.md) for the full trust boundary.

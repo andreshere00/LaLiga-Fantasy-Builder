@@ -184,6 +184,10 @@ function OffersPanel({ cards, squadAvailable, showTrigger, leagueKey, teamId }: 
   return (
     <>
       {showTrigger ? <Button variant="outline" shape="square"
+        icon={<><img className="market-offers-icon-light"
+          src={hasOffers ? blackIcon : !enabled || loading ? grayIcon : blackIcon} alt="" />
+        <img className="market-offers-icon-dark"
+          src={hasOffers ? whiteIcon : !enabled || loading ? grayIcon : whiteIcon} alt="" /></>}
         className={`market-offers-trigger${hasOffers ? " has-offers" : ""}`}
         aria-label={t("Market offers{{0}}{{1}}", { 0: pendingCount ? t(", {{0}} pending", { 0: pendingCount }) : "", 1: degraded ? t(", incomplete") : "" })}
         aria-haspopup="dialog" aria-expanded={open} disabled={!enabled}
@@ -191,10 +195,6 @@ function OffersPanel({ cards, squadAvailable, showTrigger, leagueKey, teamId }: 
           offersMenu?.openAll();
           void queryClient.invalidateQueries({ queryKey: ["market-offers", leagueKey] });
         }}>
-        <img className="market-offers-icon-light"
-          src={hasOffers ? blackIcon : !enabled || loading ? grayIcon : blackIcon} alt="" />
-        <img className="market-offers-icon-dark"
-          src={hasOffers ? whiteIcon : !enabled || loading ? grayIcon : whiteIcon} alt="" />
         <span className="market-offers-label">{t("Offers")}</span>
         {pendingCount > 0 ? <span className="market-offers-count">{pendingCount}</span> : null}
       </Button> : null}

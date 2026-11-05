@@ -121,3 +121,8 @@ to prove actual framework-token compatibility. CI also builds the identity image
 
 Real Google/Facebook/Apple login, Apple HTTPS/form callback cookies and production
 mail deliverability require the [staging checklist](../../docs/authentication/release-checks.md).
+
+Account deletion first removes app scouting records through `SCOUTING_API_URL`
+(default `http://localhost:8001`), then disconnects LaLiga before deleting identity.
+Both calls use the verified subject's JWT. A failed cleanup preserves the identity
+so deletion can be retried.

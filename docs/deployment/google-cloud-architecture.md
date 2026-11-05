@@ -1,17 +1,92 @@
 # Google Cloud architecture diagram
 
-![Fantasy Builder Google Cloud architecture](google-cloud-architecture.png)
+The current configured topology is shown below; the
+[Mermaid source](google-cloud-architecture.mmd) is the editable service graph.
+The older [SVG](google-cloud-architecture.svg) and [PNG](google-cloud-architecture.png)
+exports date from 27 October and omit the scouting worker, application database
+and automatic development activation. They are historical visual references.
 
-Open the [standalone editable SVG](google-cloud-architecture.svg) for vector editing,
-the [PNG](google-cloud-architecture.png) for sharing, or the
-[Mermaid flow view](google-cloud-architecture.mmd) for the detailed service graph.
-The SVG embeds its icons and requires no external image downloads to display.
-The SVG and Mermaid are separate editable views; regenerating Mermaid does not
-reproduce the Google icon layout.
+```mermaid
+flowchart TB
+    users["Up to 4 simultaneous users"]
+    dns["Registrar DNS<br/>fantasybuilder.es → VM IPv4"]
+    ci["GitHub Actions · test → build → deploy<br/>all 5 amd64 images; main publish + development activation"]
+    admin["Operator · secret uploads + explicit VM activation"]
+    users -. "DNS lookup" .-> dns
+    ci -.->|"GitHub OIDC · main push + CI workflow"| wif
+
+    subgraph gcp["Google Cloud · dev-fantasybuilder"]
+      wif["Workload Identity Federation · opt-in<br/>repository + numeric ID + main workflow restricted"]
+      iap["IAP + OS Login<br/>SSH 22 from IAP range only"]
+      iam["Dedicated VM service account<br/>registry reader · five secret accessors · backup object creator"]
+      budget["Cloud Billing budget · optional<br/>50% / 90% / 100% alerts · not a spending cap"]
+      registry["Artifact Registry<br/>untagged cleanup after 7 days; keep 3 recent<br/>tagged releases retired manually"]
+      secrets["Secret Manager · 5 secret containers<br/>payloads uploaded separately by operator"]
+      subgraph vpc["VPC · us-central1 · subnet 10.42.0.0/24 · zone us-central1-a"]
+      subgraph vm["One e2-small Compute Engine VM · 2 GiB · Debian 12 · Docker Compose"]
+        caddy["Caddy · HTTPS on 80/443"]
+        web["Nginx + React static files"]
+        subgraph private["Private service connections · no published backend ports"]
+          identity["Identity · 8003<br/>Better Auth sessions + JWTs"]
+          auth["Auth · 8000<br/>LaLiga pairing + encrypted vault"]
+          api["API · 8001<br/>Fantasy features + lineup builder"]
+          worker["Scouting worker · API image<br/>no HTTP port · read-only polling"]
+          scraper["Scraping · 8002<br/>one worker · local cache + limiter"]
+          pg[("PostgreSQL<br/>identity + vault + application DBs/roles")]
+          redis[("Redis<br/>auth rate limits")]
+        end
+        caddy -->|"/auth/*; replace client IP"| identity
+        caddy -->|"other paths"| web
+        web -->|"/laliga/*"| auth
+        web -->|"/api/*; strip /api"| api
+        api -->|"private bearer exchange + service token"| auth
+        api -->|"private scrape + service token"| scraper
+        api -->|"application role · favorites, watches, inbox"| pg
+        worker -->|"application role"| pg
+        worker -->|"opaque grant + dedicated service token"| auth
+        worker -->|"read-only checks"| laliga
+        identity -->|"account cleanup"| api
+        identity -->|"own DB role"| pg
+        auth -->|"vault, pairings, refresh locks"| pg
+        auth --> redis
+        identity -->|"LaLiga integration"| auth
+        auth -.->|"JWKS"| identity
+        api -.->|"JWKS"| identity
+      end
+      disk["30 GiB pd-standard Persistent Disk<br/>PostgreSQL volume + Caddy data + OS/images<br/>auto_delete=false · prevent_destroy"]
+      vm ---|"attached boot disk"| disk
+      end
+      backup[("Private Cloud Storage bucket<br/>daily DB backups · bounded retention")]
+      pg -.->|"three logical dumps + completion manifest"| backup
+    end
+
+    users -->|"HTTPS · fantasybuilder.es"| caddy
+    registry -.->|"operator activates pinned release"| vm
+    admin -.->|"SSH administration"| iap
+    admin -.->|"upload dotenv versions"| secrets
+    iap -.-> vm
+    wif -.->|"CI deployer · IAP + runtime secret update"| iap
+    wif -.->|"CI publisher · repository writer only"| registry
+    secrets -.->|"host fetches during explicit releases; scoped IAM<br/>reboots use local snapshot"| vm
+    identity -->|"TLS SMTP 465"| mail["Resend<br/>verification + recovery"]
+    identity --> providers["Optional Google / Facebook / Apple"]
+    auth --> laligaAuth["LaLiga authentication"]
+    auth --> laliga["LaLiga Fantasy API"]
+    api --> laliga
+    scraper --> ff["FutbolFantasy / official standings pages"]
+    api --> weather["OpenWeather · optional"]
+
+    classDef edge fill:#eff6ff,stroke:#60a5fa,color:#0f172a;
+    classDef data fill:#ecfdf5,stroke:#34d399,color:#064e3b;
+    classDef ops fill:#f5f3ff,stroke:#a78bfa,color:#312e81;
+    class caddy,web,identity,auth,api,scraper,worker edge;
+    class pg,redis,disk,backup data;
+    class ci,registry,admin,secrets ops;
+```
 
 ## Scope
 
-Updated on 27 October 2026 from `infra/gcp/main.tf`, `github-actions.tf`,
+Updated on 5 November 2026 from `infra/gcp/main.tf`, `github-actions.tf`,
 `variables.tf`, the selected local deployment settings, the production Compose
 template, `docker/Caddyfile`, and `.github/workflows/ci.yml`. Project
 `dev-fantasybuilder`, region `us-central1`, zone `us-central1-a`, and machine
@@ -34,11 +109,12 @@ or application health check was performed to produce this diagram.
 | Compute Engine | One Shielded Debian 12 `e2-small` VM with 2 GiB RAM hosts all containers. |
 | Caddy and frontend | Caddy terminates TLS and routes `/auth/*` to Identity. Other paths go to Nginx, which serves React and proxies `/laliga/*` and `/api/*`. |
 | Backend containers | Identity, Auth, API, and Scraping use private ports. API calls Auth and Scraping with service tokens; Auth and API fetch Identity JWKS. Identity also calls Auth for the LaLiga integration. |
-| PostgreSQL and Redis | Self-hosted containers on the same VM. PostgreSQL has separate identity and vault databases/roles; Redis supports Auth rate limiting. These are not Cloud SQL or Memorystore resources. |
+| PostgreSQL and Redis | Self-hosted containers on the same VM. PostgreSQL has separate identity, vault and application databases/roles; Redis supports Auth rate limiting. These are not Cloud SQL or Memorystore resources. |
 | Persistent Disk | Separate protected 30 GiB `pd-standard` boot-disk resource. It stores OS, images, PostgreSQL data, and Caddy data. VM attachment has `auto_delete=false`; Terraform disk lifecycle has `prevent_destroy`. |
+| Scouting worker | Separate process from the API image, no HTTP port. Uses the application database and a dedicated Auth delegation token for read-only polling; shares the VM resource budget. |
 | Artifact Registry | Stores the five application images. CI publishes; the VM pulls immutable digests during explicit releases. Old untagged images are cleaned up, with three recent versions protected; tagged releases require deliberate retirement. |
 | Secret Manager | Five dotenv payloads, uploaded outside Terraform. The host stages them for each explicit release; reboots use the committed local snapshot. |
-| Cloud Storage | Private regional backup bucket. A VM systemd timer uploads two database dumps and then a completion manifest. Default lifecycle deletion is after 14 days, with a further 7-day soft-delete window. |
+| Cloud Storage | Private regional backup bucket. A VM systemd timer uploads three database dumps (identity, auth and application scouting) and then a completion manifest. Default lifecycle deletion is after 14 days, with a further 7-day soft-delete window. |
 | IAP and OS Login | Operator SSH administration without opening SSH to the public internet. Operator IAM is configurable. |
 | IAM and federation | Separate VM reader/uploader and CI image-writer identities. Optional GitHub federation is restricted to the configured repository, numeric repository ID, main push event, and CI workflow. No service-account key files are provisioned. |
 | Cloud Billing budget | Optional project budget with 50%, 90%, and 100% alerts. It is an alerting resource, not a spending cap. |

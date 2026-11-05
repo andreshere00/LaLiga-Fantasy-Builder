@@ -254,6 +254,39 @@ mode are enforced by the production Compose file. Only the matching service's
 dotenv file is passed to each backend. The root runtime dotenv is used for
 Compose interpolation, not injected wholesale into containers.
 
+### Upgrading an existing installation for scouting
+
+The existing API image also runs `scouting-worker`; no sixth image, public port,
+Secret Manager container, or managed database is added. PostgreSQL gains a third
+logical database. Upgrade the runtime and data before activating the new images:
+
+1. Retain a verified backup and recoverable identity/vault secrets. Preserve all
+   existing passwords and encryption keys.
+2. Add independent URL-safe `APP_DB_PASSWORD` and `SCOUTING_SERVICE_TOKEN` values to
+   the private runtime dotenv payload. The latter must differ from
+   `INTERNAL_SERVICE_TOKEN`. Compose supplies the same scouting token to Auth,
+   API and worker and constructs `SCOUTING_DATABASE_URL` for API/worker.
+3. Provision `fantasy_api` and `fantasy_app` on the existing cluster using the
+   [scouting SQL instructions](../../docs/api/scouting/README.md#storage-and-operation).
+   The PostgreSQL entrypoint runs only on fresh volumes; never delete the volume
+   to trigger initialization.
+4. Review and apply any Terraform changes, and refresh the installed host Compose,
+   initialization and backup templates through the provisioning/bootstrap path.
+   An image-only CI activation does not refresh these files. Confirm the installed
+   backup script includes `fantasy_app` before treating new backups as complete.
+5. Upload the updated runtime secret and deploy matching Auth/API/frontend images
+   with `fantasybuilder-deploy`. API applies ordered app migrations under a lock;
+   Auth applies grant migrations. The worker starts after API readiness, uses the
+   API image and has no HTTP health endpoint.
+6. Check API readiness, worker container status and aggregate last-success/lag
+   logs. Verify saving a favorite and explicitly enabling a league watch. Check a
+   complete three-database backup and rehearse recovery with the worker stopped.
+   Use synthetic events for alert validation; no real bid or clause payment is needed.
+
+The worker shares the VM's memory and CPU budget. Include polling and database
+backup activity in capacity checks; this documentation does not claim the
+four-user sizing has been load-tested with scouting enabled.
+
 ## 4. Set DNS and activate
 
 Use `terraform -chdir=infra/gcp output dns_a_record` to create the DNS A record
@@ -336,23 +369,25 @@ df -h /var/lib/docker
 ```
 
 Daily backups run around 03:30 UTC with a randomized delay and catch up after
-downtime. Backups and deployments share an operation lock. Both local database
-dumps must succeed before uploads begin. Each backup consists of two uniquely
+downtime. Backups and deployments share an operation lock. All three local database
+dumps must succeed before uploads begin. Each backup consists of three uniquely
 named `pg_dump --format=custom` objects and a `manifest.json` completion marker,
-uploaded last. Only prefixes containing that marker are complete backup pairs;
+uploaded last. Only prefixes containing that marker are complete backup sets;
 an interrupted upload may leave incomplete objects without a marker. Role definitions
 and vault/identity secrets are not stored with database dumps. Keep the secrets
-recoverable independently and verify both uploads regularly; this template does
+recoverable independently and verify all three uploads regularly; this template does
 not provision an external alerting service.
-The two logical dumps are independent snapshots, not a cross-database atomic
-recovery point. If coordinated recovery is required, pause account/vault writes
+The three logical dumps are independent snapshots, not a cross-database atomic
+recovery point. If coordinated recovery is required, pause account/vault/application writes and stop the scouting worker
 for the backup or implement PostgreSQL physical backups and WAL recovery.
 
-Rehearse recovery on a separate disposable VM: provision the two non-superuser
-roles/databases with the same credentials, download a backup pair whose prefix
+Rehearse recovery on a separate disposable VM: provision the three non-superuser
+roles/databases with the same credentials, download a backup set whose prefix
 contains `manifest.json` using
 an administrator with object-read access, and restore each with `pg_restore` to
-its corresponding database before starting the application. Do not restore over
+its corresponding database before starting the application and scouting worker.
+The dumps are `fantasy_identity.dump`, `fantasy_auth.dump`, and `fantasy_app.dump`;
+their runtime roles are `fantasy_identity`, `fantasy_vault`, and `fantasy_api`. Do not restore over
 live writes. Full provider/recovery checks remain in the
 [release runbook](../../docs/authentication/release-checks.md).
 

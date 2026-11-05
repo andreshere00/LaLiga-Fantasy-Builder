@@ -13,6 +13,10 @@ export type SendMail = (mail: Mail) => Promise<void>;
 export type DisconnectLaliga = (token: string) => Promise<void>;
 
 export function createIdentity(cfg: Config, database: Pool, send: SendMail, disconnectLaliga: DisconnectLaliga = async token => {
+  const cleanup = await fetch(`${cfg.SCOUTING_API_URL}/scouting/account`, {
+    method: "DELETE", headers: { Authorization: `Bearer ${token}` }, signal: AbortSignal.timeout(10000),
+  });
+  if (!cleanup.ok) throw new Error("Scouting data removal failed");
   const response = await fetch(`${cfg.LALIGA_AUTH_URL}/laliga/connection`, {
     method: "DELETE", headers: { Authorization: `Bearer ${token}` }, signal: AbortSignal.timeout(10000),
   });

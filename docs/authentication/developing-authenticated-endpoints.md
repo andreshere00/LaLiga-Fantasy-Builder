@@ -61,3 +61,13 @@ return upstream bodies.
 
 JWT tests for auth-critical paths: missing Bearer, malformed, expired, wrong
 `iss`/`aud`, bad signature, missing `sub`.
+
+## Explicit background scouting delegation
+
+Scouting is the explicit exception to requiring a live user JWT on **redemption**:
+creation/revocation still require verified JWT + ordinary service credential. Auth
+stores a random, revocable grant bound to subject, league and current connection.
+Redemption resolves the owner from that record and requires a separate private
+`SCOUTING_SERVICE_TOKEN`; it never accepts an owner ID. Unlink/re-pair/delete revoke
+grants. Do not copy this pattern into arbitrary service-to-user endpoints. See the
+[complete delegation contract](../api/scouting/README.md#background-monitoring-and-credential-delegation).

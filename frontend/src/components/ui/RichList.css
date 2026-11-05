@@ -782,7 +782,7 @@
   object-fit: contain;
 }
 
-.market-player-offers-flag { display:inline-flex; align-items:center; justify-content:center; flex-shrink:0; width:28px; height:32px; padding:0; border:0; background:transparent; cursor:pointer; }
+.market-player-offers-flag { display:inline-flex; align-items:center; justify-content:center; flex-shrink:0; width:44px; height:44px; padding:0; border:0; background:transparent; cursor:pointer; }
 .market-player-offers-flag img { width:20px; height:20px; object-fit:contain; }
 .market-player-offers-flag:focus-visible { outline:2px solid var(--fb-focus); outline-offset:2px; }
 
@@ -1177,3 +1177,9 @@ a.market-actions-item {
 [data-theme="dark"] .market-page .market-clause-shield { filter:brightness(0) invert(1); }
 .fb-dialog.market-bid-dialog button,
 .fb-dialog.market-bid-dialog button:not(.fb-button) { border-radius:0; }
+
+/* Highlight the player portrait, preserving comparison row surfaces. */
+.market-page .is-favorite .market-card .player-tile,
+.market-page .is-favorite .market-card .player-tile:is(:hover, :active) {
+  background-color:#FFC2BF;
+}

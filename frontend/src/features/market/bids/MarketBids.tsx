@@ -8,6 +8,7 @@ import type { MarketBoard } from "../useMarketBoard";
 import type { MarketRow } from "../model/row";
 import { remainingLabel } from "../model/valueSeries";
 import "./MarketBids.css";
+import auctionIconUrl from "../../../assets/auction-9367178.png";
 
 type Props = { board: MarketBoard; actions: MarketActionsApi; now: number };
 
@@ -30,6 +31,7 @@ export function MarketBids({ board, actions, now }: Props) {
   const close = () => { if (!actions.actionPending) setOpen(false); };
   return <>
     <Button ref={trigger} shape="square" variant="outline" className="market-bids-trigger"
+      icon={<span className="market-auction-icon" style={{ maskImage: `url(${auctionIconUrl})` }} />}
       aria-label={t("My bids, {{0}} active{{1}}", { 0: bids.length, 1: !complete ? t(", incomplete") : "" })}
       aria-haspopup="dialog" aria-expanded={open} onClick={() => setOpen(true)}>
       {t("My bids ")}<span className="market-bids-count">{bids.length}</span>

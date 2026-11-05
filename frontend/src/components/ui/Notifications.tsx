@@ -11,6 +11,11 @@ export function notify(title: string, type: "success" | "error" = "success") {
     timeout: type === "error" ? 0 : 5000, priority: type === "error" ? "high" : "low" });
 }
 
+/** Event IDs deduplicate arrivals while allowing separate alerts with identical copy. */
+export function notifyEvent(id: string, title: string) {
+  manager.add({ id: "scouting:" + id, title, type: "success", timeout: 8000, priority: "low" });
+}
+
 function NotificationTitle({ messageKey }: { messageKey: string }) {
   const translate = useTranslation();
   return translate(messageKey);
@@ -24,11 +29,11 @@ function NotificationList() {
       <Toast.Viewport className="fb-toast-viewport">
         {toasts.map((toast) => (
           <Toast.Root key={toast.id} toast={toast} className="fb-toast" data-tone={toast.type}>
-            <Toast.Content>
+            <Toast.Content className="fb-toast-content">
               <Toast.Title className="fb-toast-title" />
               <Toast.Description />
             </Toast.Content>
-            <Toast.Close render={<Button variant="ghost" shape="square" size="icon"
+            <Toast.Close render={<Button className="fb-toast-close" variant="ghost" shape="square" size="icon"
               aria-label={t("Dismiss notification")} />}>×</Toast.Close>
           </Toast.Root>
         ))}

@@ -211,3 +211,21 @@ Bulk DataMB tasks cannot assert a verified cohort: the current private adapter
 has no authoritative population revision field. Keep their cohort null; use an
 authorized frozen import for verified comparisons. Source schema errors quarantine
 a task; blocking/rate-limit categories are recorded safely without provider bodies.
+
+## Favorites and background scouting
+
+Favorites, league watches, observations and inbox alerts persist in `fantasy_app`
+using the `fantasy_api` role. Configure `SCOUTING_DATABASE_URL` for the API and
+worker; migrations apply under a database lock and readiness checks app storage.
+Auth/API/worker need a matching, dedicated `SCOUTING_SERVICE_TOKEN` for delegated
+background reads. Do not reuse `INTERNAL_SERVICE_TOKEN`.
+
+`fantasy-scouting-worker` is a separate process from this package/image with no
+HTTP port. Compose starts it after API readiness. Host development starts it via
+`uv run poe dev` / `uv run poe dev-clean`; standalone use is
+`uv run fantasy-scouting-worker` from this directory with the service environment
+configured. Favorites still save without a running worker, but alerts cannot
+advance. See [storage, existing-volume provisioning and recovery](../../docs/api/scouting/README.md#storage-and-operation)
+and the [production upgrade checklist](../../infra/gcp/README.md#upgrading-an-existing-installation-for-scouting).
+
+Read-only CLI: `uv run fantasy-scouting --league-id LEAGUE`.

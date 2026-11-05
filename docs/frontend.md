@@ -916,3 +916,54 @@ roles, explicit absence, coaches, missing metrics and independent detail failure
 Phone/desktop and light/dark screenshots are inspected. Reflow is checked at
 320 CSS pixels with 200% text sizing; this is not a certification of accessibility
 or a study with representative users.
+
+## Favorites and scouting
+
+`ScoutingProvider` shares server-backed bookmarks across Market, Players and player
+detail, keyed by user and league. The shared toolbar sheet has Favorites and Alerts
+views, basic player cards, per-league preferences and a persistent unread inbox.
+Cards group comparable metrics and league availability separately. The latest five
+form scores run oldest to newest. Alert settings start collapsed with their saved
+market/clause and lead-time summary visible; keyboard and touch can expand them.
+Advance warning is shown only when clause alerts are enabled. Failed saves keep the
+confirmed values and show an inline correction message. The sheet keeps a neutral
+Close action and a separate Player details action on each card.
+Grouping uses [proximity](https://lawsofux.com/law-of-proximity/) to keep labels and
+values together; disclosing alert controls keeps comparison data prominent, at the
+cost of one extra action to edit preferences. These are heuristic choices, checked
+with fixture-based browser flows and screenshots rather than user research.
+Legacy device favorites import once after a successful server read, without enabling
+alerts; local data remains until import succeeds. Return URLs preserve the open
+sheet, query/filter and scroll; details accept only local Market/Players return paths.
+Domain Zod contracts live in `api/scouting.ts`; all public properties use
+camelCase. See [scouting](api/scouting/README.md) for monitoring semantics and operation.
+
+Market toolbar destinations (Favorites, Offers and My bids) share one responsive
+flex group with equal button heights, 18px icons and 8px gaps. Phone layouts place
+icons above labels to fit three destinations while keeping touch targets at least
+44px. Balance remains a separate full-width row on phones. The bids icon uses the
+requested [Flaticon auction asset](https://www.flaticon.com/free-icon/auction_9367178),
+credited in the footer and next to the bundled asset.
+
+Notifications use 14px body text with wrapping, 44px close targets and a scrollable
+stack above mobile navigation. Urgent errors remain until dismissed; success
+messages expire. Base UI's urgent-announcement `aria-hidden` state does not disable
+pointer interaction: only exiting notifications ignore pointer input. F6 enters
+the notification region; Tab reaches Close, and Enter dismisses it. Browser checks
+cover stacked errors with touch, mouse and keyboard in light/mobile and dark/desktop.
+Saving or removing a favorite shows a localized success toast after the confirmed
+write. Failed writes show only the error; failed alert activation keeps its existing
+partial-success warning without adding a second success toast.
+
+Favorites labels stay on one line; toolbar destinations wrap as complete controls.
+On wider layouts, row bookmarks occupy a fixed 44px slot before player names
+with matching spacing on each side (14px).
+Offer and clause indicators occupy a single vertical column inside the name
+field: notification above, clause below, each with a fixed 44px target. The
+bookmark and name are vertically centered alongside that column. On the smallest
+cards (up to 400px), the bookmark sits centered above the name beside the same
+status column, leaving more readable space for long names.
+A lone status icon is centered vertically within the column; two icons remain
+stacked. Empty columns preserve alignment independently of name length. These controls sit alongside identity instead of beneath market actions, keeping
+transaction columns compact. Favorited Market and Players portrait tiles use `#FFC2BF` in
+both themes; comparison row backgrounds remain unchanged.

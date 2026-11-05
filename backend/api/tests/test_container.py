@@ -35,6 +35,7 @@ def default_auth_ok_handler(request: httpx.Request) -> httpx.Response:
 def test_settings() -> Settings:
     """Return baseline settings for wired API test containers."""
     return Settings(
+        _env_file=None,
         auth_jwks_url="http://auth.test/jwks",
         internal_jwt_issuer=TEST_ISSUER,
         internal_jwt_audience=TEST_AUDIENCE,
@@ -43,6 +44,7 @@ def test_settings() -> Settings:
         laliga_fantasy_origin=TEST_FANTASY_ORIGIN,
         laliga_competition_id=1,
         log_json=False,
+        scouting_database_url="",
     )
 
 

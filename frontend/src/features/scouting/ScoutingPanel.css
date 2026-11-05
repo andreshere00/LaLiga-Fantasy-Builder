@@ -1,0 +1,72 @@
+.scouting-toolbar { display:flex; align-items:center; justify-content:space-between; gap:1rem; flex-wrap:wrap; }
+.fb-dialog.scouting-panel { width:min(38rem, 100vw); }
+.scouting-panel .fb-dialog-body { padding-block:12px; }
+.scouting-tabs { display:flex; border-bottom:1px solid var(--fb-line); }
+.scouting-tabs .fb-button { flex:1; border:0; border-bottom:3px solid transparent; }
+.scouting-tabs .fb-button[aria-pressed="true"] { border-bottom-color:var(--fb-primary); text-decoration:none; font-weight:700; }
+.scouting-league, .scouting-help { margin-block:12px; font-size:14px; }
+.scouting-league { color:var(--fb-muted); }
+.scouting-league strong { color:var(--fb-secondary); }
+.scouting-list { list-style:none; margin:16px 0 0; padding:0; display:grid; gap:12px; }
+.scouting-card { min-width:0; border:1px solid var(--fb-line); padding:16px; background:var(--fb-surface); font-size:14px; line-height:1.5; }
+.scouting-card--unread { border-inline-start:4px solid var(--fb-primary); }
+.scouting-player { display:flex; align-items:center; gap:12px; }
+.scouting-player > .player-tile { width:48px; flex-shrink:0; }
+.scouting-player-title { display:grid; gap:2px; flex:1; min-width:0; }
+.scouting-player-title h3 { margin:0; font:inherit; }
+.scouting-player-title > span { display:flex; align-items:center; gap:8px; flex-wrap:wrap; color:var(--fb-muted); font-size:12px; }
+.scouting-name { min-height:44px; background:none; border:0; padding:0; text-align:start; color:inherit; font:700 18px/1.3 var(--fb-font-body); overflow-wrap:anywhere; cursor:pointer; }
+.scouting-name:hover { color:var(--fb-tertiary); }
+.scouting-name:focus-visible, .scouting-alert-trigger:focus-visible { outline:2px solid var(--fb-focus); outline-offset:3px; }
+.scouting-facts { display:grid; grid-template-columns:minmax(0, 1fr) minmax(0, 1fr); gap:12px 16px; margin:16px 0; }
+.scouting-facts > div { min-width:0; }
+.scouting-facts dt, .scouting-availability dt { color:var(--fb-muted); font-size:12px; }
+.scouting-facts dd { margin:2px 0 0; font-variant-numeric:tabular-nums; overflow-wrap:anywhere; }
+.scouting-facts > :nth-child(-n+2) dd { font-size:18px; font-weight:600; }
+.scouting-form { display:flex; align-items:center; gap:4px; min-height:24px; }
+.scouting-form .player-score-badge { position:static; width:22px; height:22px; font-size:12px; flex-shrink:0; }
+.scouting-availability { display:grid; gap:10px; background:var(--fb-subtle); padding:12px; margin:0; }
+.scouting-availability > div { display:grid; grid-template-columns:90px minmax(0, 1fr); align-items:baseline; gap:8px; }
+.scouting-availability dd { display:grid; margin:0; overflow-wrap:anywhere; }
+.scouting-availability dd[data-available="true"] { border-inline-start:3px solid var(--fb-success); padding-inline-start:8px; }
+.scouting-availability strong { font-weight:600; font-variant-numeric:tabular-nums; }
+.scouting-card-footer { display:flex; align-items:center; justify-content:space-between; gap:12px; flex-wrap:wrap; margin-top:12px; }
+.scouting-card small { display:block; font-size:12px; line-height:1.5; color:var(--fb-muted); }
+.scouting-card-footer > small { flex:1 1 140px; }
+.scouting-card-footer .fb-button { font-size:12px; }
+.scouting-alert-settings { margin-top:12px; border-top:1px solid var(--fb-line); }
+.scouting-alert-trigger { display:flex; align-items:center; justify-content:space-between; gap:12px; width:100%; min-height:56px; padding:10px 0 0; border:0; background:none; color:inherit; text-align:start; font:inherit; cursor:pointer; }
+.scouting-alert-trigger strong { font-weight:600; }
+.scouting-chevron { font-size:20px; line-height:1; }
+.scouting-alert-trigger[aria-expanded="true"] .scouting-chevron { transform:rotate(180deg); }
+.scouting-preferences { border:0; padding:12px 0 0; margin:0; min-width:0; display:grid; gap:4px; }
+.scouting-preferences label { display:flex; align-items:center; gap:12px; min-height:44px; cursor:pointer; }
+.scouting-preferences:disabled label { cursor:default; }
+.scouting-preferences .scouting-lead-time { justify-content:space-between; gap:16px; margin-top:4px; }
+.scouting-lead-time select { width:132px; flex-shrink:0; }
+.scouting-save-status, .scouting-save-error { font-size:12px; margin:8px 0 0; }
+.scouting-save-status { color:var(--fb-muted); }
+.scouting-save-error { border-inline-start:3px solid var(--fb-failure); padding-inline-start:8px; }
+.scouting-filters { display:grid; grid-template-columns:minmax(0, 1fr) minmax(140px, .7fr); gap:12px; margin-block:12px; }
+.scouting-filters label { display:grid; gap:4px; font-size:12px; font-weight:600; }
+.scouting-filters :is(input, select) { min-width:0; }
+.scouting-refresh { display:flex; align-items:center; justify-content:space-between; gap:12px; margin-block:12px; }
+.scouting-refresh small { color:var(--fb-muted); font-size:12px; line-height:1.5; }
+.scouting-refresh .fb-button { flex-shrink:0; font-size:12px; }
+.scouting-unread { padding:2px 6px; background:var(--fb-primary); color:var(--fb-on-brand); font-size:12px; }
+@media (max-width:600px) {
+  .fb-dialog.scouting-panel { padding:16px; max-height:90dvh; }
+  .scouting-filters { grid-template-columns:minmax(0, 1fr) minmax(130px, .85fr); gap:8px; }
+  .scouting-card { padding:12px; }
+}
+@media (max-width:350px) {
+  .scouting-filters { grid-template-columns:1fr; }
+  .scouting-refresh { align-items:flex-start; flex-direction:column; }
+  .scouting-availability > div { grid-template-columns:1fr; gap:2px; }
+  .scouting-facts { gap:12px 8px; }
+  .scouting-facts > :nth-child(-n+2) dd { font-size:16px; }
+  .scouting-facts > :last-child { grid-column:1 / -1; }
+  .scouting-form { gap:3px; }
+  .scouting-form .player-score-badge { width:20px; height:20px; }
+  .scouting-preferences .scouting-lead-time { align-items:stretch; flex-direction:column; gap:4px; }
+}

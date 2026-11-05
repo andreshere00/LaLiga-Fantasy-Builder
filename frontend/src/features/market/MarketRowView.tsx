@@ -1,3 +1,5 @@
+import { PlayerBookmarkButton } from "../players/PlayerBookmarkButton";
+import { useScouting } from "../scouting/ScoutingProvider";
 import { t, useTranslation } from "../../i18n";
 import type { MarketActionsApi } from "./actions/useMarketActions";
 import { formatEuro } from "../../api/format";
@@ -62,9 +64,12 @@ export function MarketRowCells({
   columnHeadings,
 }: MarketRowCellsProps) {
   useTranslation();
+  const scouting = useScouting();
   return (
     <>
-      <PlayerCell row={row} now={now} columnLabel={columnHeadings.player.label} />
+      <PlayerCell row={row} now={now} columnLabel={columnHeadings.player.label}
+        bookmark={row.playerId ? <PlayerBookmarkButton playerName={row.name} pressed={scouting.favorites.has(row.playerId)}
+          disabled={scouting.pending} onToggle={() => scouting.toggle(row.playerId!)} /> : null} />
       <span className="market-cell" data-label={columnHeadings.position.label}>
         <PositionCell positionId={row.positionId} />
       </span>

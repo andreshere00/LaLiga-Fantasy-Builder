@@ -12,6 +12,7 @@ services:
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
       POSTGRES_DB: ${POSTGRES_DB}
       IDENTITY_DB_PASSWORD: ${IDENTITY_DB_PASSWORD:-identity_dev}
+      APP_DB_PASSWORD: ${APP_DB_PASSWORD:-app_dev}
       VAULT_DB_PASSWORD: ${VAULT_DB_PASSWORD:-vault_dev}
     ports:
       - "127.0.0.1:${POSTGRES_PUBLISH_PORT}:${POSTGRES_PORT}"
@@ -60,6 +61,7 @@ services:
     build: ./backend/identity
     env_file: [./backend/identity/.env]
     environment:
+      SCOUTING_API_URL: http://api:8001
       NODE_ENV: ${IDENTITY_NODE_ENV:-development}
       IDENTITY_DATABASE_URL: postgresql://fantasy_identity:${IDENTITY_DB_PASSWORD:-identity_dev}@postgres:5432/fantasy_identity
       SMTP_HOST: ${SMTP_HOST:-smtp.resend.com}
@@ -84,6 +86,7 @@ services:
       - "127.0.0.1:${AUTH_PUBLISH_PORT}:${AUTH_SERVICE_PORT}"
     env_file: [./backend/auth/.env]
     environment:
+      SCOUTING_SERVICE_TOKEN: ${SCOUTING_SERVICE_TOKEN:-local-scouting-worker-token}
       AUTH_JWKS_URL: http://identity:8003/auth/jwks
       INTERNAL_JWT_ISSUER: ${INTERNAL_JWT_ISSUER:-http://localhost:3000/auth}
       FRONTEND_ORIGIN: ${FRONTEND_ORIGIN:-http://localhost:3000}
@@ -112,6 +115,8 @@ services:
       - "127.0.0.1:${API_PUBLISH_PORT}:${API_SERVICE_PORT}"
     env_file: [./backend/api/.env]
     environment:
+      SCOUTING_DATABASE_URL: postgresql://fantasy_api:${APP_DB_PASSWORD:-app_dev}@postgres:5432/fantasy_app
+      SCOUTING_SERVICE_TOKEN: ${SCOUTING_SERVICE_TOKEN:-local-scouting-worker-token}
       AUTH_JWKS_URL: ${AUTH_JWKS_URL:-http://identity:8003/auth/jwks}
       AUTH_INTERNAL_BASE_URL: ${AUTH_INTERNAL_BASE_URL:-http://${AUTH_SERVICE_HOST:-auth}:${AUTH_SERVICE_PORT:-8000}}
       INTERNAL_JWT_ISSUER: ${INTERNAL_JWT_ISSUER}
@@ -129,6 +134,23 @@ services:
         required: false
     profiles: [apps, full]
     networks: [public, internal]
+
+  scouting-worker:
+    build: ./backend/api
+    env_file: [./backend/api/.env]
+    restart: unless-stopped
+    command: ["fantasy-scouting-worker"]
+    healthcheck:
+      disable: true
+    environment:
+      SCOUTING_DATABASE_URL: postgresql://fantasy_api:${APP_DB_PASSWORD:-app_dev}@postgres:5432/fantasy_app
+      SCOUTING_SERVICE_TOKEN: ${SCOUTING_SERVICE_TOKEN:-local-scouting-worker-token}
+      AUTH_INTERNAL_BASE_URL: http://auth:8000
+    depends_on:
+      api:
+        condition: service_healthy
+    networks: [internal, egress]
+    profiles: [apps, full]
 
   radar-job:
     build:

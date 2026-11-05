@@ -6,6 +6,7 @@ data and user-confirmed writes with your linked account.
 
 | Topic | Doc |
 |-------|-----|
+| Latest changes | [Unreleased](CHANGELOG.md#unreleased) |
 | Changes in v0.3.0 | [CHANGELOG.md](CHANGELOG.md#030---2026-11-04) |
 | Backend, frontend, and cloud architecture | [ARCHITECTURE.md](ARCHITECTURE.md) |
 | Detailed service trust boundaries | [docs/architecture.md](docs/architecture.md) |
@@ -75,6 +76,21 @@ Terraform enables the weekly refresh by default; production activation still
 requires reviewed inputs and deployment configuration. See
 [coverage](docs/scraping/radar-laliga-2026-27.md) and the
 [operations runbook](docs/scraping/radar-operations.md).
+
+### Favorites and scouting
+
+- Save players with the bookmark before their name in Market or Players, or from
+  player details. Favorites persist across devices; saved portrait tiles use
+  `#FFC2BF` while row backgrounds stay unchanged.
+- Open Favorites from either toolbar to search saved players, inspect basic data,
+  open details, or adjust league alerts. Settings show the saved configuration
+  and expand when needed.
+- Enable alerts for market listings and release-clause unlocks, with advance
+  warnings at 1, 6 or 24 hours. A background worker checks while the website is
+  closed; alerts appear in the persistent in-app inbox when you return.
+- Favorites are global to your account; alerts are configured per league and need
+  a linked LaLiga account. Delivery follows polling, rather than being immediate.
+  See the [scouting guide](docs/api/scouting/README.md).
 
 ### Platform
 
@@ -155,12 +171,14 @@ uv run poe dev-clean
 
 `dev-clean` stops Compose app containers and stale project Uvicorn servers,
 then starts auth (`:8000`), API (`:8001`), scraping (`:8002`), identity (`:8003`), and Vite
-(`:3000`) with reload enabled. It reports occupied ports owned by other
-processes instead of stopping them. The command creates missing service
+(`:3000`) with reload enabled, plus the scouting worker (no listening port).
+It reports occupied ports owned by other processes instead of stopping them. The command creates missing service
 `.env` files. Set `SCRAPER_CONTACT` in `backend/scraping/.env` to a contact
 address before using the scraper against FutbolFantasy. Scraping API calls use
 the shared token in `backend/scraping/.env`; the command passes it to the API
-automatically.
+automatically. It also prepares missing local scouting settings with a shared token
+and provisions the default Compose application database without replacing existing
+credentials or data.
 
 From `frontend/` only: `bun install && bun run dev:all` (or `npm`).
 
@@ -177,7 +195,7 @@ Per-service notes: [auth](backend/auth/README.md), [API](backend/api/README.md),
 | [`backend/api/`](backend/api/) | Fantasy proxy routes and CLIs |
 | [`backend/scraping/`](backend/scraping/) | FutbolFantasy scraper + parser (port 8002, private) |
 | [`docs/`](docs/) | Architecture, authentication, API domain guides |
-| [`docker/`](docker/) | Identity database initialization, HTTPS ingress, OTEL collector |
+| [`docker/`](docker/) | Identity, vault and app database initialization, HTTPS ingress, OTEL collector |
 | [`assets/`](assets/) | Sample Fantasy JSON trees |
 
 ## Tests
@@ -193,3 +211,24 @@ Frontend only: `cd frontend && bun run test`. Hooks lint (also a pre-commit and 
 
 See the [lineup builder guide](docs/api/lineup-builder.md) for the authenticated planning POST, CLI,
 browser-session flow, source restrictions and optional explanation configuration.
+
+## Infrastructure upgrade for favorites
+
+The API and `scouting-worker` now share a third logical PostgreSQL database,
+`fantasy_app`, owned by `fantasy_api`. The worker uses the existing API image;
+there are still five application images. It exposes no HTTP port. Auth retains
+revocable league grants and encrypted credentials in its own database.
+
+Fresh Compose volumes provision all three databases. Existing volumes need
+explicit app database provisioning; rerunning the init script or changing dotenv
+passwords does not upgrade them. Host `poe dev` / `poe dev-clean` prepares the
+default local Compose database; custom database URLs need separate provisioning.
+
+For production, configure `APP_DB_PASSWORD` and `SCOUTING_SERVICE_TOKEN` in the
+runtime secret before deploying. The production Compose template wires the app
+connection and matching worker token to the required services. Backups now contain
+three dumps and a completion manifest. Follow the
+[deployment upgrade checklist](infra/gcp/README.md#upgrading-an-existing-installation-for-scouting)
+and [storage/recovery contract](docs/api/scouting/README.md#storage-and-operation).
+CI updates image references only; it does not provision the database, add missing
+secrets, or refresh installed host scripts.

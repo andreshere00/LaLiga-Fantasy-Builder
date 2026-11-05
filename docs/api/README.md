@@ -2,6 +2,7 @@
 
 Application API docs for `backend/api` (`fantasy_api`).
 
+- [Favorites and scouting](scouting/README.md) — persistent favorites, per-league watches and alerts
 - [Adding endpoints](adding-endpoints.md) — availability/auth, CRS, CLI
 - [OpenAPI / Swagger](openapi.md)
 - [Endpoint schemas](endpoint-schemas.md) — generated input/output reference

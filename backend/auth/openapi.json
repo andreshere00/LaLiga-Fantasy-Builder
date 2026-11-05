@@ -72,6 +72,227 @@
         }
       }
     },
+    "/internal/scouting/leagues/{league_id}/grant": {
+      "put": {
+        "tags": [
+          "internal"
+        ],
+        "summary": "Create Scouting Grant",
+        "description": "Delegate background reads for the verified subject and requested league.",
+        "operationId": "create_scouting_grant_internal_scouting_leagues__league_id__grant_put",
+        "parameters": [
+          {
+            "name": "league_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "League Id"
+            }
+          },
+          {
+            "name": "authorization",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Authorization"
+            }
+          },
+          {
+            "name": "X-Service-Token",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Service-Token"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ScoutingGrantResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "internal"
+        ],
+        "summary": "Revoke Scouting Grant",
+        "description": "Revoke the verified subject's delegation.",
+        "operationId": "revoke_scouting_grant_internal_scouting_leagues__league_id__grant_delete",
+        "parameters": [
+          {
+            "name": "league_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "League Id"
+            }
+          },
+          {
+            "name": "authorization",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Authorization"
+            }
+          },
+          {
+            "name": "X-Service-Token",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Service-Token"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "additionalProperties": {
+                    "type": "boolean"
+                  },
+                  "title": "Response Revoke Scouting Grant Internal Scouting Leagues  League Id  Grant Delete"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/internal/scouting/leagues/{league_id}/bearer": {
+      "post": {
+        "tags": [
+          "internal"
+        ],
+        "summary": "Redeem Scouting Grant",
+        "description": "Redeem an explicit grant; owner is resolved from Auth storage only.",
+        "operationId": "redeem_scouting_grant_internal_scouting_leagues__league_id__bearer_post",
+        "parameters": [
+          {
+            "name": "league_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "League Id"
+            }
+          },
+          {
+            "name": "X-Service-Token",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Service-Token"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ScoutingRedemption"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/LaligaBearerResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/laliga/link-options": {
       "get": {
         "tags": [
@@ -960,6 +1181,42 @@
         ],
         "title": "PairingCreateResponse",
         "description": "One-time pairing credentials for the local helper."
+      },
+      "ScoutingGrantResponse": {
+        "properties": {
+          "grant_id": {
+            "type": "string",
+            "title": "Grant Id"
+          }
+        },
+        "type": "object",
+        "required": [
+          "grant_id"
+        ],
+        "title": "ScoutingGrantResponse",
+        "description": "Opaque revocable delegation, never a LaLiga or application JWT."
+      },
+      "ScoutingRedemption": {
+        "properties": {
+          "grant_id": {
+            "type": "string",
+            "maxLength": 128,
+            "minLength": 32,
+            "title": "Grant Id"
+          },
+          "retry_unauthorized": {
+            "type": "boolean",
+            "title": "Retry Unauthorized",
+            "default": false
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "grant_id"
+        ],
+        "title": "ScoutingRedemption",
+        "description": "Worker possession plus a private service credential authorizes redemption."
       },
       "ValidationError": {
         "properties": {

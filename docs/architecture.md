@@ -162,6 +162,7 @@ do not share a generic proxy class.
 
 | Domain | Public prefix | Upstream prefix | Methods |
 |--------|---------------|-----------------|---------|
+| Scouting | `/scouting/...` | Application PostgreSQL; worker uses existing read repositories | GET + PUT/POST/DELETE (app records only) |
 | Leagues | `/leagues/...` | `{CMP}/leagues/...` | GET (reads) |
 | Lineup builder | `/lineup-builder/leagues/{league_id}/build` and `/build/stream` | Existing read-only services | POST planning only; JSON or request-scoped progress stream; JWT membership verified |
 | Teams | `/teams/...` | `{CMP}/teams/...` | GET + PUT (lineup write) |
@@ -386,9 +387,10 @@ Run commands live in the [root README](../README.md).
   `python:3.14-slim-trixie` with uv only in the builder. The frontend image
   builds with Bun and serves static files plus `/auth`, `/laliga`, and `/api`
   proxies from Nginx.
-- Compose profile `apps` runs identity, auth, API, scraping and frontend, with
+- Compose profile `apps` runs identity, auth, API, scraping, scouting-worker and frontend, with
   PostgreSQL and Redis. Identity sends email through configured SMTP. `full` adds OTEL.
-  Identity owns its own logical database and role.
+  Identity, Auth and API own separate logical databases and roles. The scouting
+  worker reuses the API image and application database without a published port.
 - API and auth share a private network for `/internal/*`. Scraping joins that
   network and an `egress` network so a future downloader can reach the public
   internet without putting the API on egress.
@@ -405,3 +407,12 @@ roster/money/market reads. Its public calendar/stat reads remain bearer-free.
 Controller → service → typed snapshot repository → existing services feeds a pure
 scoring and bounded search engine. Recommendations never execute Fantasy writes.
 See [lineup builder](api/lineup-builder.md).
+
+## Scouting and background reads
+
+The JWT-owned `/scouting` domain persists global favorites, per-league watches and
+notifications in `fantasy_app` (role `fantasy_api`), separate from the vault and Identity.
+A private worker redeems explicit Auth-owned league grants with a dedicated service
+credential; it never stores browser JWTs or LaLiga bearers. Existing bearer exchange
+requirements are unchanged. See [scouting](api/scouting/README.md) for the delegation
+trust boundary, revocation, event semantics, database provisioning and recovery.

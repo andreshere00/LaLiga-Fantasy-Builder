@@ -1,3 +1,5 @@
+import { ScoutingPanel } from "../scouting/ScoutingPanel";
+import { useScouting } from "../scouting/ScoutingProvider";
 import { t, useTranslation } from "../../i18n";
 import { ManagerIdentity } from "../shell/ManagerIdentity";
 import { Menu } from "@base-ui/react/menu";
@@ -8,7 +10,7 @@ import { Help } from "../../components/ui/Help";
 import shieldRedIcon from "../../assets/button_shield_red.svg";
 import { useQueries } from "@tanstack/react-query";
 import { NumberPagination } from "../../components/ui/NumberPagination";
-import { useCallback, useMemo, useState } from "react";
+import { useCallback, useMemo } from "react";
 import { Link, useSearchParams } from "react-router-dom";
 
 import { getJson, paths } from "../../api/client";
@@ -55,7 +57,7 @@ import { playersColumnHeadings } from "./playersColumnHeadings";
 import { PlayersListHead } from "./PlayersListHead";
 import { MarketOffers } from "../market/offers/MarketOffers";
 import { MarketOffersProvider } from "../market/offers/MarketOffersContext";
-import { readFavoritePlayerIds, toggleFavoritePlayerId } from "./favorites";
+
 import type { PlayerRow } from "./model/playerRow";
 import { matchingPlayerListing, playerClauseDetails } from "./model/playerMarketDetails";
 import {
@@ -76,6 +78,7 @@ import "../../components/ui/ComparisonList.css";
 function PlayersListRow({
   row,
   favorite,
+  favoritePending,
   marketRow,
   valueHistory,
   ownSquadCard,
@@ -86,6 +89,7 @@ function PlayersListRow({
 }: {
   row: PlayerRow;
   favorite: boolean;
+  favoritePending: boolean;
   marketRow: MarketRow | null;
   valueHistory: readonly ValuePoint[];
   ownSquadCard: SquadCard | null;
@@ -153,12 +157,22 @@ function PlayersListRow({
         />
       </div>
       <span className="market-name-wrap" data-column="player" data-label={t("Player")}>
-        {row.positionId === 5 ? <span className={nameClass}>{row.name}</span> : (
-          <Link className={nameClass + " players-name-link"} to={"/players/" + encodeURIComponent(row.playerId)} state={{ returnTo: "/players" }}>{row.name}</Link>
-        )}
-        {protection ? <Help content={protection} className="market-clause-flag">
-          <img className="market-clause-flag-icon" src={shieldRedIcon} alt={protection} />
-        </Help> : null}
+        <span className="player-identity-layout">
+          <PlayerBookmarkButton
+            disabled={favoritePending}
+            pressed={favorite}
+            playerName={row.name}
+            onToggle={onToggleFavorite}
+          />
+          {row.positionId === 5 ? <span className={nameClass}>{row.name}</span> : (
+            <Link className={nameClass + " players-name-link"} to={"/players/" + encodeURIComponent(row.playerId)} state={{ returnTo: "/players" }}>{row.name}</Link>
+          )}
+          <span className="player-status-indicators">
+            {protection ? <Help content={protection} className="market-clause-flag">
+              <img className="market-clause-flag-icon" src={shieldRedIcon} alt={protection} />
+            </Help> : null}
+          </span>
+        </span>
       </span>
       <span className="market-cell players-team-cell" data-column="team" data-label={t("Team")}>{row.teamName ?? "—"}</span>
       <span className="market-cell" data-column="position" data-label={t("Position")}>
@@ -212,11 +226,6 @@ function PlayersListRow({
           ) : (
             detailsOptions
           )}
-          <PlayerBookmarkButton
-            pressed={favorite}
-            playerName={row.name}
-            onToggle={onToggleFavorite}
-          />
         </span>
         {marketRow ? <span className="market-bid-count">{t("Bids: ")}{bidCountLabel(marketRow.numberOfBids)}</span> : null}
         <span className="players-mobile-value-details">{moneyDetails}</span>
@@ -239,14 +248,14 @@ function PlayersListContent() {
   const actions = useMarketActions();
   const sales = useSquadSales();
   const now = useNow();
-  const { user, accessToken } = useAuth();
-  const userId = user?.userId ?? null;
+  const { accessToken } = useAuth();
   const [searchParams, setSearchParams] = useSearchParams();
   const urlState = useMemo(
     () => parsePlayersSearchParams(searchParams),
     [searchParams],
   );
-  const [favorites, setFavorites] = useState(() => readFavoritePlayerIds(userId));
+  const scouting = useScouting();
+  const favorites = scouting.favorites;
 
   const filtered = useMemo(
     () => applyPlayersFilters(board.rows, urlState.filters),
@@ -331,7 +340,7 @@ function PlayersListContent() {
   };
 
   const toggleFavorite = (playerId: string) => {
-    setFavorites(toggleFavoritePlayerId(userId, playerId));
+    scouting.toggle(playerId);
   };
 
   if (board.isLoading) return <PlayersScreenLoading />;
@@ -345,8 +354,9 @@ function PlayersListContent() {
 
   return (
     <>
-      <div className="market-toolbar">
+      <div className="market-toolbar scouting-toolbar">
         <h1>{t("Players")}</h1>
+        <ScoutingPanel />
       </div>
       <MarketOffers showTrigger={false} cards={marketBoard.ownSquadCards}
         squadAvailable={marketBoard.ownSquadAvailable} />
@@ -393,6 +403,7 @@ function PlayersListContent() {
                 key={row.playerId}
                 row={row}
                 favorite={favorites.has(row.playerId)}
+                favoritePending={scouting.pending}
                 marketRow={matchingPlayerListing(row, marketRowsByPlayer.get(row.playerId) ?? null)}
                 valueHistory={valueHistoryByPlayer.get(row.playerId) ?? []}
                 ownSquadCard={ownSquadByPlayer.get(row.playerId) ?? null}

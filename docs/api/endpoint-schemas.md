@@ -1563,6 +1563,225 @@ Each item:
 | `marketValue` | integer | no |  |  |
 
 
+## Tag: `scouting`
+
+User-owned favorites, per-league watches and persistent alerts.
+
+### `DELETE` `/scouting/account`
+
+Delete Account
+
+**Security:** HTTP Bearer (internal JWT)
+
+#### Inputs
+
+No path, query, or body parameters.
+
+#### Outputs
+
+**HTTP 200:** `ScoutingResult`
+
+| Field | Type | Required | Constraints | Description |
+|-------|------|----------|-------------|-------------|
+| `ok` | boolean | no |  |  |
+
+Full nested fields: [`ScoutingResult`](#scoutingresult).
+
+
+### `GET` `/scouting/favorites`
+
+Favorites
+
+**Security:** HTTP Bearer (internal JWT)
+
+#### Inputs
+
+| Source | Name | Type | Required | Constraints | Description |
+|--------|------|------|----------|-------------|-------------|
+| query | `league_id` | string | no |  |  |
+
+#### Outputs
+
+**HTTP 200:** `FavoritesResponse`
+
+| Field | Type | Required | Constraints | Description |
+|-------|------|----------|-------------|-------------|
+| `favorites` | array[Favorite] | yes |  |  |
+| `status` | string | no |  |  |
+| `checkedAt` | string | no |  |  |
+
+Full nested fields: [`FavoritesResponse`](#favoritesresponse).
+
+
+### `POST` `/scouting/favorites/import`
+
+Import Favorites
+
+**Security:** HTTP Bearer (internal JWT)
+
+#### Inputs
+
+| Source | Name | Type | Required | Constraints | Description |
+|--------|------|------|----------|-------------|-------------|
+| body | `playerIds` | array[string] | yes |  |  |
+
+#### Outputs
+
+**HTTP 200:** `ScoutingResult`
+
+| Field | Type | Required | Constraints | Description |
+|-------|------|----------|-------------|-------------|
+| `ok` | boolean | no |  |  |
+
+Full nested fields: [`ScoutingResult`](#scoutingresult).
+
+
+### `PUT` `/scouting/favorites/{player_id}`
+
+Add Favorite
+
+**Security:** HTTP Bearer (internal JWT)
+
+#### Inputs
+
+| Source | Name | Type | Required | Constraints | Description |
+|--------|------|------|----------|-------------|-------------|
+| path | `player_id` | string | yes |  |  |
+
+#### Outputs
+
+**HTTP 200:** `ScoutingResult`
+
+| Field | Type | Required | Constraints | Description |
+|-------|------|----------|-------------|-------------|
+| `ok` | boolean | no |  |  |
+
+Full nested fields: [`ScoutingResult`](#scoutingresult).
+
+
+### `DELETE` `/scouting/favorites/{player_id}`
+
+Remove Favorite
+
+**Security:** HTTP Bearer (internal JWT)
+
+#### Inputs
+
+| Source | Name | Type | Required | Constraints | Description |
+|--------|------|------|----------|-------------|-------------|
+| path | `player_id` | string | yes |  |  |
+
+#### Outputs
+
+**HTTP 200:** `ScoutingResult`
+
+| Field | Type | Required | Constraints | Description |
+|-------|------|----------|-------------|-------------|
+| `ok` | boolean | no |  |  |
+
+Full nested fields: [`ScoutingResult`](#scoutingresult).
+
+
+### `POST` `/scouting/leagues/{league_id}/refresh`
+
+Refresh
+
+**Security:** HTTP Bearer (internal JWT)
+
+#### Inputs
+
+| Source | Name | Type | Required | Constraints | Description |
+|--------|------|------|----------|-------------|-------------|
+| path | `league_id` | string | yes | minLength=1 |  |
+
+#### Outputs
+
+**HTTP 200:** `ScoutingResult`
+
+| Field | Type | Required | Constraints | Description |
+|-------|------|----------|-------------|-------------|
+| `ok` | boolean | no |  |  |
+
+Full nested fields: [`ScoutingResult`](#scoutingresult).
+
+
+### `PUT` `/scouting/leagues/{league_id}/watches/{player_id}`
+
+Set Watch
+
+**Security:** HTTP Bearer (internal JWT)
+
+#### Inputs
+
+| Source | Name | Type | Required | Constraints | Description |
+|--------|------|------|----------|-------------|-------------|
+| path | `league_id` | string | yes | minLength=1 |  |
+| path | `player_id` | string | yes |  |  |
+| body | `marketAlert` | boolean | yes |  |  |
+| body | `clauseAlert` | boolean | yes |  |  |
+| body | `leadHours` | integer | no |  |  |
+
+#### Outputs
+
+**HTTP 200:** `ScoutingResult`
+
+| Field | Type | Required | Constraints | Description |
+|-------|------|----------|-------------|-------------|
+| `ok` | boolean | no |  |  |
+
+Full nested fields: [`ScoutingResult`](#scoutingresult).
+
+
+### `GET` `/scouting/notifications`
+
+Notifications
+
+**Security:** HTTP Bearer (internal JWT)
+
+#### Inputs
+
+| Source | Name | Type | Required | Constraints | Description |
+|--------|------|------|----------|-------------|-------------|
+| query | `league_id` | string | no |  |  |
+| query | `cursor` | integer | no |  |  |
+| query | `limit` | integer | no | min=1, max=100 |  |
+
+#### Outputs
+
+**HTTP 200:** `InboxResponse`
+
+| Field | Type | Required | Constraints | Description |
+|-------|------|----------|-------------|-------------|
+| `notifications` | array[ScoutingNotification] | yes |  |  |
+| `unreadCount` | integer | yes |  |  |
+| `nextCursor` | string | no |  |  |
+
+Full nested fields: [`InboxResponse`](#inboxresponse).
+
+
+### `PUT` `/scouting/notifications/{notification_id}/read`
+
+Mark Read
+
+**Security:** HTTP Bearer (internal JWT)
+
+#### Inputs
+
+| Source | Name | Type | Required | Constraints | Description |
+|--------|------|------|----------|-------------|-------------|
+| path | `notification_id` | integer | yes |  |  |
+
+#### Outputs
+
+**HTTP 200:** `ScoutingResult`
+
+| Field | Type | Required | Constraints | Description |
+|-------|------|----------|-------------|-------------|
+| `ok` | boolean | no |  |  |
+
+Full nested fields: [`ScoutingResult`](#scoutingresult).
+
+
 ## Tag: `standings`
 
 Real LALIGA club classification. Internal JWT; no LaLiga pairing. Provider-key integration with hourly completed tables; live mode is unavailable.
@@ -1882,6 +2101,29 @@ Type: `string`
 | `premium` | boolean | no |  |  |
 | `team` | LeagueTeamSummary | no |  | Caller's team summary embedded in a league object. |
 
+### `Favorite`
+
+| Field | Type | Required | Constraints | Description |
+|-------|------|----------|-------------|-------------|
+| `playerId` | string | yes |  |  |
+| `createdAt` | string | yes |  |  |
+| `watch` | WatchWrite | no |  | Full replacement of a player's alert preferences in one league. |
+| `observation` | Observation | no |  | Last successful read; unknown protection data never implies availability. |
+
+### `FavoritesImport`
+
+| Field | Type | Required | Constraints | Description |
+|-------|------|----------|-------------|-------------|
+| `playerIds` | array[string] | yes |  |  |
+
+### `FavoritesResponse`
+
+| Field | Type | Required | Constraints | Description |
+|-------|------|----------|-------------|-------------|
+| `favorites` | array[Favorite] | yes |  |  |
+| `status` | string | no |  |  |
+| `checkedAt` | string | no |  |  |
+
 ### `Fixture`
 
 | Field | Type | Required | Constraints | Description |
@@ -1995,6 +2237,14 @@ Type: `string`
 | Field | Type | Required | Constraints | Description |
 |-------|------|----------|-------------|-------------|
 | `playerId` | string \| integer | yes |  |  |
+
+### `InboxResponse`
+
+| Field | Type | Required | Constraints | Description |
+|-------|------|----------|-------------|-------------|
+| `notifications` | array[ScoutingNotification] | yes |  |  |
+| `unreadCount` | integer | yes |  |  |
+| `nextCursor` | string | no |  |  |
 
 ### `IncreaseBuyoutWrite`
 
@@ -2379,6 +2629,25 @@ Type: `string`
 | `published_at` | string | no |  |  |
 | `source` | string | no |  |  |
 
+### `Observation`
+
+| Field | Type | Required | Constraints | Description |
+|-------|------|----------|-------------|-------------|
+| `name` | string | yes |  |  |
+| `listings` | array[string] | no |  |  |
+| `ownerId` | string | no |  |  |
+| `ownerName` | string | no |  |  |
+| `playerTeamId` | string | no |  |  |
+| `unlockAt` | string | no |  |  |
+| `shielded` | boolean | no |  |  |
+| `clause` | integer | no |  |  |
+| `clauseEnabled` | boolean | no |  |  |
+| `rival` | boolean | no |  |  |
+| `available` | boolean | no |  |  |
+| `checkedAt` | string | yes |  |  |
+| `cycle` | string | no |  |  |
+| `episode` | string | no |  |  |
+
 ### `PayBuyoutWrite`
 
 | Field | Type | Required | Constraints | Description |
@@ -2691,6 +2960,25 @@ Type: `string`
 | `clause_price` | integer | no |  |  |
 | `sale_settlement_at` | string | no |  |  |
 
+### `ScoutingNotification`
+
+| Field | Type | Required | Constraints | Description |
+|-------|------|----------|-------------|-------------|
+| `id` | string | yes |  |  |
+| `leagueId` | string | yes |  |  |
+| `leagueName` | string | yes |  |  |
+| `playerId` | string | yes |  |  |
+| `playerName` | string | yes |  |  |
+| `kind` | string | yes |  |  |
+| `createdAt` | string | yes |  |  |
+| `readAt` | string | no |  |  |
+
+### `ScoutingResult`
+
+| Field | Type | Required | Constraints | Description |
+|-------|------|----------|-------------|-------------|
+| `ok` | boolean | no |  |  |
+
 ### `SectionScore`
 
 | Field | Type | Required | Constraints | Description |
@@ -2961,6 +3249,14 @@ Type: `string`
 | `lat` | number | yes |  |  |
 | `lon` | number | yes |  |  |
 | `country` | string | no |  |  |
+
+### `WatchWrite`
+
+| Field | Type | Required | Constraints | Description |
+|-------|------|----------|-------------|-------------|
+| `marketAlert` | boolean | yes |  |  |
+| `clauseAlert` | boolean | yes |  |  |
+| `leadHours` | integer | no |  |  |
 
 ### `WeatherReason`
 

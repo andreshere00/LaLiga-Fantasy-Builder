@@ -6,6 +6,41 @@ entry, not a claim that every optional provider or deployment gate is complete.
 
 ## [Unreleased]
 
+### Favorites and scouting
+
+- Confirm favorite saves and removals with localized success toasts after persistence;
+  preserve clear error and partial alert-activation feedback.
+
+- Align offer and release-clause indicators in fixed slots across Market and Players
+  rows. Stack notification and clause indicators in one column within the name
+  field and vertically center the bookmark and name alongside them.
+
+- Align 44px row bookmarks before player names in Market and Players; highlight
+  saved player portraits with `#FFC2BF` without tinting whole rows. Keep toolbar
+  labels on one line and wrap complete destination buttons on narrow screens.
+- Make notification close controls usable with touch, mouse and keyboard; use
+  compact body text and keep the notification stack above mobile navigation.
+- Update setup and infrastructure upgrade instructions for the app database,
+  shared-image worker, runtime secrets and three-database backup/recovery sets.
+
+- Compact favorite cards with grouped market/clause status, recent form badges and
+  collapsible alert settings that keep the saved configuration visible. Add inline
+  save errors and consistent keyboard, touch and theme styling.
+- Accept authenticated league responses that omit the optional manager block when
+  enabling scouting. Resolve ownership from the caller's roster so own sales remain
+  excluded, and stop stale host workers during development restarts.
+
+- Persist favorite players across devices and share bookmarks across Market, Players
+  and player details. Import existing device favorites without enabling alerts.
+- Add a shared Favorites/Alerts sheet with basic player information, search, filters,
+  per-league settings and return navigation that preserves browsing context.
+- Monitor official and rival listings and clause unlocks with the website closed.
+  Configure advance warnings at 1, 6 or 24 hours; keep a persistent in-app inbox with
+  unread counts and explicit read actions.
+- Add isolated PostgreSQL app storage, revocable Auth delegations, a separate read-only
+  worker, account cleanup, CLI reads and backups for the new database. Existing volumes
+  need app database provisioning and the new runtime secrets before deployment.
+
 ### Development deployment
 
 - Automatically activate published main-branch images on the development VM
