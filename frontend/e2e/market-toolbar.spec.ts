@@ -12,6 +12,11 @@ for (const [width, theme, language] of [[320, "light", "es"], [500, "dark", "en"
     await page.goto("/market");
     await expect(page.locator(".market-data-row").first()).toBeVisible();
     const bookmarks = page.locator(".market-name-wrap .player-bookmark-btn");
+    for (const identity of await page.locator(".market-name-wrap").all()) {
+      const bookmark = await identity.locator(".player-bookmark-btn").boundingBox();
+      const name = await identity.locator(".market-name").boundingBox();
+      expect(bookmark!.x + bookmark!.width).toBeLessThanOrEqual(name!.x);
+    }
     const bookmarkPositions = await bookmarks.evaluateAll(buttons => buttons.map(button => button.getBoundingClientRect().right));
     for (const right of bookmarkPositions) expect(right).toBeCloseTo(bookmarkPositions[0], 0);
     const actions = page.locator(".market-section-actions > button");

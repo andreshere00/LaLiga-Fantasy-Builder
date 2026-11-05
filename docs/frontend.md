@@ -953,6 +953,6 @@ the notification region; Tab reaches Close, and Enter dismisses it. Browser chec
 cover stacked errors with touch, mouse and keyboard in light/mobile and dark/desktop.
 
 Favorites labels stay on one line; toolbar destinations wrap as complete controls.
-Row bookmarks sit beside player identity instead of beneath market actions, keeping
+Row bookmarks occupy a fixed 44px slot before player names instead of beneath market actions, keeping
 transaction columns compact. Favorited Market and Players portrait tiles use `#FFC2BF` in
 both themes; comparison row backgrounds remain unchanged.

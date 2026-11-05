@@ -157,18 +157,18 @@ function PlayersListRow({
         />
       </div>
       <span className="market-name-wrap" data-column="player" data-label={t("Player")}>
+        <PlayerBookmarkButton
+          disabled={favoritePending}
+          pressed={favorite}
+          playerName={row.name}
+          onToggle={onToggleFavorite}
+        />
         {row.positionId === 5 ? <span className={nameClass}>{row.name}</span> : (
           <Link className={nameClass + " players-name-link"} to={"/players/" + encodeURIComponent(row.playerId)} state={{ returnTo: "/players" }}>{row.name}</Link>
         )}
         {protection ? <Help content={protection} className="market-clause-flag">
           <img className="market-clause-flag-icon" src={shieldRedIcon} alt={protection} />
         </Help> : null}
-          <PlayerBookmarkButton
-            disabled={favoritePending}
-            pressed={favorite}
-            playerName={row.name}
-            onToggle={onToggleFavorite}
-          />
       </span>
       <span className="market-cell players-team-cell" data-column="team" data-label={t("Team")}>{row.teamName ?? "—"}</span>
       <span className="market-cell" data-column="position" data-label={t("Position")}>

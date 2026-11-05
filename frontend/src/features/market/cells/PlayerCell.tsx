@@ -54,6 +54,7 @@ export function PlayerCell({ row, now, columnLabel = t("Player"), bookmark }: Pl
         />
       </div>
       <span className="market-name-wrap" data-label={columnLabel}>
+        {bookmark}
         {hasOffers ? <Help content={t("This player has offers.")}
           trigger={<button type="button" className="market-player-offers-flag"
             aria-label={t("View offers for {{0}}", { 0: row.name })}
@@ -81,7 +82,6 @@ export function PlayerCell({ row, now, columnLabel = t("Player"), bookmark }: Pl
             <img className="market-clause-flag-icon" src={shieldRedIconUrl} alt="" aria-hidden />
           </Help>
         ) : null}
-        {bookmark}
       </span>
     </>
   );
