@@ -960,6 +960,7 @@ field: notification above, clause below, each with a fixed 44px target. The
 bookmark and name are vertically centered alongside that column. On the smallest
 cards (up to 400px), the bookmark sits centered above the name beside the same
 status column, leaving more readable space for long names.
-Empty status slots preserve alignment independently of name length. These controls sit alongside identity instead of beneath market actions, keeping
+A lone status icon is centered vertically within the column; two icons remain
+stacked. Empty columns preserve alignment independently of name length. These controls sit alongside identity instead of beneath market actions, keeping
 transaction columns compact. Favorited Market and Players portrait tiles use `#FFC2BF` in
 both themes; comparison row backgrounds remain unchanged.

@@ -29,3 +29,5 @@
   }
   .player-identity-layout > .player-status-indicators { grid-column:2; grid-row:1 / span 2; }
 }
+/* A single status sits on the identity centerline instead of an empty half-slot. */
+.player-status-indicators > :only-child { grid-row:1 / -1; align-self:center; }

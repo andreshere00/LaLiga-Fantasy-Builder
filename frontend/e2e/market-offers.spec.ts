@@ -312,6 +312,10 @@ for (const [width, theme] of [[320, "dark"], [375, "light"], [1440, "dark"], [20
         playerTeam: { playerTeamId: "s12", teamId: "t1", isShielded: true },
         sellerTeam: { id: "t1", manager: { managerName: "Demo Manager" } },
       }, {
+        id: "offer-only", playerMaster: { ...catalog[9], nickname: "Ez Abde" },
+        playerTeam: { playerTeamId: "s10", teamId: "t1", isShielded: false },
+        sellerTeam: { id: "t1", manager: { managerName: "Demo Manager" } },
+      }, {
         id: "clause-only", playerMaster: { ...catalog[10], nickname: "Boyomo" },
         playerTeam: { playerTeamId: "s11", teamId: "t2", isShielded: true },
         sellerTeam: { id: "t2", manager: { managerName: "Other Manager" } },
@@ -319,7 +323,10 @@ for (const [width, theme] of [[320, "dark"], [375, "light"], [1440, "dark"], [20
     } }));
     await page.route("**/api/market/leagues/l1/player-teams/s12/offers", route =>
       route.fulfill({ json: { offers: [{ id: "short-offer", money: 3200000, status: "pending" }] } }));
+    await page.route("**/api/market/leagues/l1/player-teams/s10/offers", route =>
+      route.fulfill({ json: { offers: [{ id: "only-offer", money: 3200000, status: "pending" }] } }));
     await page.goto("/market");
+    await expect(page.getByRole("button", { name: "View offers for Ez Abde" })).toBeVisible();
     await expect(page.getByRole("button", { name: "View offers for Iñaki Williams" })).toBeVisible();
     const gaps = await page.locator(".market-name-wrap").evaluateAll(cells => cells.map(cell => {
       const bookmark = cell.querySelector(".player-bookmark-btn")!.getBoundingClientRect();
@@ -340,11 +347,15 @@ for (const [width, theme] of [[320, "dark"], [375, "light"], [1440, "dark"], [20
     const indicators = await page.locator(".player-status-indicators").evaluateAll(groups => groups.filter(group => group.children.length > 0).map(group => {
       const offers = group.querySelector(".market-player-offers-flag")?.getBoundingClientRect();
       const clause = group.querySelector(".market-clause-flag")?.getBoundingClientRect();
-      return { right: group.getBoundingClientRect().right, offers: offers && { x: offers.x, y: offers.y }, clause: clause && { x: clause.x, y: clause.y } };
+      const only = group.children.length === 1 ? group.firstElementChild!.getBoundingClientRect() : null;
+      const groupRect = group.getBoundingClientRect();
+      return { singleCenterOffset: only ? only.y + only.height / 2 - groupRect.y - groupRect.height / 2 : null, right: groupRect.right, offers: offers && { x: offers.x, y: offers.y }, clause: clause && { x: clause.x, y: clause.y } };
     }));
     const withBoth = indicators.filter(item => item.offers && item.clause);
     expect(withBoth).toHaveLength(2);
+    expect(indicators.filter(item => item.singleCenterOffset !== null)).toHaveLength(2);
     for (const indicator of indicators) {
+      if (indicator.singleCenterOffset !== null) expect(indicator.singleCenterOffset).toBeCloseTo(0, 0);
       expect(indicator.right).toBeCloseTo(indicators[0].right, 0);
       if (indicator.clause) expect(indicator.clause.x).toBeCloseTo(withBoth[0].clause!.x, 0);
       if (indicator.offers) expect(indicator.offers.x).toBeCloseTo(withBoth[0].offers!.x, 0);
