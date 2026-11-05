@@ -21,6 +21,10 @@ if ! command -v curl >/dev/null 2>&1; then
   exit 1
 fi
 
+# Upgrade pre-feature local .env files before starting any long-running process.
+# The helper uses dotenv parsing; it never sources configuration as shell code.
+uv run --directory backend/api python "$ROOT/scripts/dev_scouting.py"
+
 children=()
 cleanup() {
   trap - EXIT INT TERM
@@ -63,6 +67,8 @@ export SCRAPING_BASE_URL SCRAPING_SERVICE_TOKEN
 uv run --directory backend/auth uvicorn fantasy_auth.main:app --reload --port 8000 &
 children+=("$!")
 uv run --directory backend/api uvicorn fantasy_api.main:app --reload --port 8001 &
+children+=("$!")
+(cd backend/api && exec uv run fantasy-scouting-worker) &
 children+=("$!")
 uv run --directory backend/scraping uvicorn fantasy_scraping.main:create_app --factory --reload --port 8002 &
 children+=("$!")

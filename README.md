@@ -160,7 +160,9 @@ processes instead of stopping them. The command creates missing service
 `.env` files. Set `SCRAPER_CONTACT` in `backend/scraping/.env` to a contact
 address before using the scraper against FutbolFantasy. Scraping API calls use
 the shared token in `backend/scraping/.env`; the command passes it to the API
-automatically.
+automatically. It also prepares missing local scouting settings with a shared token
+and provisions the default Compose application database without replacing existing
+credentials or data.
 
 From `frontend/` only: `bun install && bun run dev:all` (or `npm`).
 
@@ -193,3 +195,7 @@ Frontend only: `cd frontend && bun run test`. Hooks lint (also a pre-commit and 
 
 See the [lineup builder guide](docs/api/lineup-builder.md) for the authenticated planning POST, CLI,
 browser-session flow, source restrictions and optional explanation configuration.
+
+Favorites and persistent in-app scouting alerts are documented in the
+[scouting guide](docs/api/scouting/README.md). Existing PostgreSQL volumes require
+provisioning `fantasy_app` before starting the new API and scouting worker.

@@ -24,6 +24,7 @@ from fantasy_auth.adapters.redis import MemoryRefreshLock
 from fantasy_auth.adapters.vault_aesgcm import AesGcmTokenVault
 from fantasy_auth.application.credentials import CredentialProvider
 from fantasy_auth.application.pairing import PairingService
+from fantasy_auth.application.scouting import ScoutingGrants
 from fantasy_auth.config import Settings, get_settings
 from fantasy_auth.domain.errors import SessionError, ValidationError
 from fantasy_auth.domain.users import AppUser, extract_app_user_from_claims
@@ -54,6 +55,7 @@ class AppContainer:
     clock: Clock
     browser_pairings: BrowserPairingStore
     refresh_lock: RefreshLock
+    scouting_grants: ScoutingGrants | None = None
     pg_pool: Any | None = None
     redis: Any | None = None
 
@@ -123,6 +125,7 @@ def build_container(
         audience=cfg.internal_jwt_audience,
     )
 
+    grants = ScoutingGrants(resolved_connections, pg_pool)
     pairings = PairingService(
         pairings=resolved_pairings,
         connections=resolved_connections,
@@ -137,6 +140,7 @@ def build_container(
         b2c=b2c,
         redirect_uri=cfg.laliga_redirect_uri,
         operation_lock=resolved_refresh_lock,
+        on_connection_change=grants.revoke_all,
     )
     credentials = CredentialProvider(
         connections=resolved_connections,
@@ -156,6 +160,7 @@ def build_container(
         clock=clock,
         browser_pairings=resolved_browser,
         refresh_lock=resolved_refresh_lock,
+        scouting_grants=grants,
         pg_pool=pg_pool,
         redis=redis,
     )

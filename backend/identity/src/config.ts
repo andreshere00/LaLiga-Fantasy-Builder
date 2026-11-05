@@ -8,6 +8,7 @@ const schema = z.object({
   BETTER_AUTH_SECRET: z.string().min(32),
   IDENTITY_DATABASE_URL: z.url(),
   INTERNAL_JWT_ISSUER: z.url().default("http://localhost:3000/auth"),
+  SCOUTING_API_URL: z.url().default("http://localhost:8001"),
   LALIGA_AUTH_URL: z.url().default("http://localhost:8000"),
   SMTP_HOST: z.string().min(1).default("smtp.resend.com"),
   SMTP_PORT: z.coerce.number().int().positive().default(465),
@@ -33,6 +34,10 @@ export function readConfig(env: NodeJS.ProcessEnv = process.env) {
   const origin = new URL(cfg.BETTER_AUTH_URL);
   if (origin.origin !== cfg.BETTER_AUTH_URL || origin.username || origin.password) {
     throw new Error("BETTER_AUTH_URL must be an exact origin without a path");
+  }
+  const apiOrigin = new URL(cfg.SCOUTING_API_URL);
+  if (apiOrigin.origin !== cfg.SCOUTING_API_URL || apiOrigin.username || apiOrigin.password) {
+    throw new Error("SCOUTING_API_URL must be an exact origin without a path");
   }
   const laligaAuth = new URL(cfg.LALIGA_AUTH_URL);
   if (laligaAuth.origin !== cfg.LALIGA_AUTH_URL || laligaAuth.username || laligaAuth.password) {

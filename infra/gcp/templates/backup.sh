@@ -10,15 +10,15 @@ staging=$(mktemp -d /var/lib/fantasybuilder-backup.XXXXXX)
 trap 'rm -rf "$staging"' EXIT
 stamp=$(date -u +%Y%m%dT%H%M%S)-$(cat /proc/sys/kernel/random/uuid)
 compose=(docker compose --env-file /etc/fantasybuilder/current/runtime.env -f /opt/fantasybuilder/compose.yml)
-for database in fantasy_identity fantasy_auth; do
+for database in fantasy_identity fantasy_auth fantasy_app; do
   "${compose[@]}" exec -T postgres pg_dump -U fantasy --format=custom "$database" > "$staging/$database.dump"
 done
-for database in fantasy_identity fantasy_auth; do
+for database in fantasy_identity fantasy_auth fantasy_app; do
   # Unique object names let the VM upload with objectCreator, without delete/read access.
   gcloud storage cp "$staging/$database.dump" \
     "gs://$BACKUP_BUCKET/postgres/$stamp/$database.dump" --project="$PROJECT_ID" --quiet
 done
-printf '%s\n' '{"format":1,"databases":["fantasy_identity","fantasy_auth"]}' > "$staging/manifest.json"
+printf '%s\n' '{"format":1,"databases":["fantasy_identity","fantasy_auth","fantasy_app"]}' > "$staging/manifest.json"
 gcloud storage cp "$staging/manifest.json" \
   "gs://$BACKUP_BUCKET/postgres/$stamp/manifest.json" --project="$PROJECT_ID" --quiet
-echo 'Both PostgreSQL database backups uploaded.'
+echo 'All PostgreSQL database backups uploaded.'

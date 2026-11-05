@@ -11,6 +11,11 @@ export function notify(title: string, type: "success" | "error" = "success") {
     timeout: type === "error" ? 0 : 5000, priority: type === "error" ? "high" : "low" });
 }
 
+/** Event IDs deduplicate arrivals while allowing separate alerts with identical copy. */
+export function notifyEvent(id: string, title: string) {
+  manager.add({ id: "scouting:" + id, title, type: "success", timeout: 8000, priority: "low" });
+}
+
 function NotificationTitle({ messageKey }: { messageKey: string }) {
   const translate = useTranslation();
   return translate(messageKey);

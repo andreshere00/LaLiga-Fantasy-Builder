@@ -129,6 +129,11 @@ def parse_args(argv: list[str] | None = None) -> argparse.Namespace:
         help="Squad-entry id (playerTeamId)",
     )
     buyout.add_argument("--json", action="store_true")
+    scouting = subparsers.add_parser(
+        "scouting-analysis", help="Read favorites and alert inbox (no pairing)"
+    )
+    scouting.add_argument("--league-id", default=None)
+    scouting.add_argument("--json", action="store_true")
     standings = subparsers.add_parser(
         "standings-analysis",
         help="GET real LALIGA club standings (no LaLiga pairing)",
@@ -270,7 +275,9 @@ def load_put_lineup(path: str | None) -> dict[str, Any] | None:
 def needs_laliga(args: argparse.Namespace) -> bool:
     """Return whether this invocation requires a linked LaLiga vault."""
     return bool(
-        args.pair_only or args.player_id or (args.flow and args.flow != "standings-analysis")
+        args.pair_only
+        or args.player_id
+        or (args.flow and args.flow not in ("standings-analysis", "scouting-analysis"))
     )
 
 

@@ -38,7 +38,7 @@ or application health check was performed to produce this diagram.
 | Persistent Disk | Separate protected 30 GiB `pd-standard` boot-disk resource. It stores OS, images, PostgreSQL data, and Caddy data. VM attachment has `auto_delete=false`; Terraform disk lifecycle has `prevent_destroy`. |
 | Artifact Registry | Stores the five application images. CI publishes; the VM pulls immutable digests during explicit releases. Old untagged images are cleaned up, with three recent versions protected; tagged releases require deliberate retirement. |
 | Secret Manager | Five dotenv payloads, uploaded outside Terraform. The host stages them for each explicit release; reboots use the committed local snapshot. |
-| Cloud Storage | Private regional backup bucket. A VM systemd timer uploads two database dumps and then a completion manifest. Default lifecycle deletion is after 14 days, with a further 7-day soft-delete window. |
+| Cloud Storage | Private regional backup bucket. A VM systemd timer uploads three database dumps (identity, auth and application scouting) and then a completion manifest. Default lifecycle deletion is after 14 days, with a further 7-day soft-delete window. |
 | IAP and OS Login | Operator SSH administration without opening SSH to the public internet. Operator IAM is configurable. |
 | IAM and federation | Separate VM reader/uploader and CI image-writer identities. Optional GitHub federation is restricted to the configured repository, numeric repository ID, main push event, and CI workflow. No service-account key files are provisioned. |
 | Cloud Billing budget | Optional project budget with 50%, 90%, and 100% alerts. It is an alerting resource, not a spending cap. |

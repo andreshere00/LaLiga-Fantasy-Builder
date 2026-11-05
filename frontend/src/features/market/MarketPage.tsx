@@ -2,10 +2,12 @@ import { t, useTranslation } from "../../i18n";
 import { useDeferredValue, useEffect, useMemo, useState } from "react";
 
 import { useAuth } from "../../auth/AuthProvider";
+import { ScoutingPanel } from "../scouting/ScoutingPanel";
+import { useScouting } from "../scouting/ScoutingProvider";
 import { leagueId } from "../../api/mappers";
 import { useLeague } from "../lineup/LeagueProvider";
 import { MarketBids } from "./bids/MarketBids";
-import { favoriteMarketRowClass, readFavoritePlayerIds } from "../players/favorites";
+import { favoriteMarketRowClass } from "../players/favorites";
 import { useNow } from "../../hooks/useNow";
 import { GatePanel } from "../gates/GatePanel";
 import { MarketActionDialogs } from "./actions/MarketActionDialogs";
@@ -36,12 +38,9 @@ function MarketList() {
 
 function MarketListContent() {
   useTranslation();
-  const { user } = useAuth();
+  const scouting = useScouting();
   const board = useMarketBoard();
-  const favorites = useMemo(
-    () => readFavoritePlayerIds(user?.userId ?? null),
-    [user?.userId],
-  );
+  const favorites = scouting.favorites;
   const [filters, setFilters] = useState(createEmptyMarketFilters);
   const deferredFilters = useDeferredValue(filters);
   const [tickMs, setTickMs] = useState(60_000);
@@ -95,7 +94,7 @@ function MarketListContent() {
         activeFilterCount={filterCount}
         onClearFilters={clearFilters}
         suggestions={board.rows.map((row) => row.name)}
-        notifications={<><MarketOffers cards={board.ownSquadCards}
+        notifications={<><ScoutingPanel /><MarketOffers cards={board.ownSquadCards}
           squadAvailable={board.ownSquadAvailable} />
           <MarketBids board={board} actions={marketActions} now={now} /></>}
       />

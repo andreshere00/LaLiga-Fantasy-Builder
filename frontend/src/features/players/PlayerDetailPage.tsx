@@ -60,7 +60,7 @@ import {
 } from "./playerDetailFormat";
 import { PlayerBookmarkButton } from "./PlayerBookmarkButton";
 import { usePlayerMarketListing } from "./usePlayerMarketListing";
-import { readFavoritePlayerIds, toggleFavoritePlayerId } from "./favorites";
+import { useScouting } from "../scouting/ScoutingProvider";
 import { rosterPhotoByMasterId, teamIdsFromLeagueTeams } from "./model/playerRow";
 import { PlayerMatchesSection } from "./PlayerMatchesSection";
 import { PlayerFantasySection, PlayerFantasySummary } from "./PlayerFantasySection";
@@ -87,6 +87,10 @@ type PlayerDetailBodyProps = {
   masterId: MasterPlayerId;
 };
 
+function detailReturnTo(value: unknown): string {
+  return typeof value === "string" && /^\/(market|players)(\?|$)/.test(value) ? value : "/players";
+}
+
 function PlayerDetailUnavailable({ notFound = false, invalidLink = false, pending = false, onRetry }: {
   notFound?: boolean;
   invalidLink?: boolean;
@@ -95,13 +99,14 @@ function PlayerDetailUnavailable({ notFound = false, invalidLink = false, pendin
 }) {
   useTranslation();
   const location = useLocation();
+  const returnTo = detailReturnTo(location.state?.returnTo);
   const heading = useRef<HTMLHeadingElement>(null);
   useEffect(() => heading.current?.focus(), []);
 
   return (
     <section className="player-detail-page">
       <nav className="player-detail-back fb-breadcrumb" aria-label={t("Breadcrumb")}>
-        <Link to="/players">{t("Players")}</Link><span aria-hidden="true">/</span>
+        <Link to={returnTo}>{returnTo.startsWith("/market") ? t("Market") : t("Players")}</Link><span aria-hidden="true">/</span>
         <span aria-current="page">{notFound ? t("Player not found") : t("Details unavailable")}</span>
       </nav>
       <section className="player-detail-panel player-detail-unavailable" aria-labelledby="player-unavailable-title">
@@ -114,8 +119,8 @@ function PlayerDetailUnavailable({ notFound = false, invalidLink = false, pendin
             {t("Retry player data")}</Button> : null}
           <Link to="/players" className={buttonVariants({ variant: notFound ? "default" : "outline" })}>
             {t("Browse players")}</Link>
-          {location.state?.returnTo === "/market" ? (
-            <Link to="/market" className={buttonVariants({ variant: "outline" })}>{t("Back to market")}</Link>
+          {returnTo.startsWith("/market") ? (
+            <Link to={returnTo} className={buttonVariants({ variant: "outline" })}>{t("Back to market")}</Link>
           ) : null}
         </div>
       </section>
@@ -126,16 +131,17 @@ function PlayerDetailUnavailable({ notFound = false, invalidLink = false, pendin
 function PlayerDetailBody({ masterId }: PlayerDetailBodyProps) {
   useTranslation();
   const location = useLocation();
-  const returnTo = location.state?.returnTo === "/market" ? "/market" : "/players";
-  const { user, accessToken } = useAuth();
-  const userId = user?.userId ?? null;
+  const returnTo = detailReturnTo(location.state?.returnTo);
+  const { accessToken } = useAuth();
+
   const [last, setLast] = useState(5);
   const [marketPreset, setMarketPreset] = useState<(typeof MARKET_PRESETS)[number]>("season");
   const [marketCustomFrom, setMarketCustomFrom] = useState("");
   const [marketCustomTo, setMarketCustomTo] = useState("");
   const [dateEditorOpen, setDateEditorOpen] = useState(false);
   const [marketUseCustomRange, setMarketUseCustomRange] = useState(false);
-  const [favorites, setFavorites] = useState(() => readFavoritePlayerIds(userId));
+  const scouting = useScouting();
+  const favorites = scouting.favorites;
   const [lastLoadedDetail, setLastLoadedDetail] = useState<Record<string, unknown> | null>(null);
 
   const detailQueryInput = useMemo((): PlayerStatsDetailQuery => {
@@ -334,7 +340,7 @@ function PlayerDetailBody({ masterId }: PlayerDetailBodyProps) {
   return (
     <section className="player-detail-page">
       <nav className="player-detail-back fb-breadcrumb" aria-label={t("Breadcrumb")}>
-        <Link to={returnTo}>{returnTo === "/market" ? t("Market") : t("Players")}</Link>
+        <Link to={returnTo}>{returnTo.startsWith("/market") ? t("Market") : t("Players")}</Link>
         <span aria-hidden="true">/</span><span aria-current="page">{name}</span>
       </nav>
       <PlayerSectionNavigation detailReady={detailReady} />
@@ -438,7 +444,8 @@ function PlayerDetailBody({ masterId }: PlayerDetailBodyProps) {
             showLabel
             pressed={favorites.has(masterId)}
             playerName={name}
-            onToggle={() => setFavorites(toggleFavoritePlayerId(userId, masterId))}
+            disabled={scouting.pending}
+            onToggle={() => scouting.toggle(masterId)}
           />
         </div>
         <section className="player-detail-fantasy-overview" aria-labelledby="player-summary-fantasy-title">

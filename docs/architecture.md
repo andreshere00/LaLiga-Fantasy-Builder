@@ -162,6 +162,7 @@ do not share a generic proxy class.
 
 | Domain | Public prefix | Upstream prefix | Methods |
 |--------|---------------|-----------------|---------|
+| Scouting | `/scouting/...` | Application PostgreSQL; worker uses existing read repositories | GET + PUT/POST/DELETE (app records only) |
 | Leagues | `/leagues/...` | `{CMP}/leagues/...` | GET (reads) |
 | Lineup builder | `/lineup-builder/leagues/{league_id}/build` and `/build/stream` | Existing read-only services | POST planning only; JSON or request-scoped progress stream; JWT membership verified |
 | Teams | `/teams/...` | `{CMP}/teams/...` | GET + PUT (lineup write) |
@@ -405,3 +406,12 @@ roster/money/market reads. Its public calendar/stat reads remain bearer-free.
 Controller → service → typed snapshot repository → existing services feeds a pure
 scoring and bounded search engine. Recommendations never execute Fantasy writes.
 See [lineup builder](api/lineup-builder.md).
+
+## Scouting and background reads
+
+The JWT-owned `/scouting` domain persists global favorites, per-league watches and
+notifications in `fantasy_app` (role `fantasy_api`), separate from the vault and Identity.
+A private worker redeems explicit Auth-owned league grants with a dedicated service
+credential; it never stores browser JWTs or LaLiga bearers. Existing bearer exchange
+requirements are unchanged. See [scouting](api/scouting/README.md) for the delegation
+trust boundary, revocation, event semantics, database provisioning and recovery.

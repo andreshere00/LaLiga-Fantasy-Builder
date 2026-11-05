@@ -1,6 +1,7 @@
 import { readFileSync } from "node:fs";
 import { resolve } from "node:path";
 import type { Page } from "@playwright/test";
+import type { Favorite } from "../src/api/scouting";
 
 export const standingsFixture = JSON.parse(
   readFileSync(resolve(process.cwd(), "../contracts/standings-response.json"), "utf8"),
@@ -65,6 +66,7 @@ export async function mockApplication(page: Page, { rankingSize = 2 } = {}) {
       helperAvailable: false, helperPlatforms: [], userId: "demo", email: "demo@example.com", name: "Demo Manager" };
     else if (p === "/laliga/connection") body = { linked: true, needsReauth: false, managerId: "demo", managerName: "Demo Manager", avatar: null };
     else if (!p.startsWith("/api/")) return route.continue();
+    else if (p.startsWith("/api/scouting/")) return route.fallback();
     else if (request.method() !== "GET") body = p.includes("lineup") ? lineup : { ok: true, id: "fixture-bid" };
     else if (p === "/api/leagues") body = [league];
     else if (/^\/api\/competitions\/\d+\/standings$/.test(p)) body = standingsFixture;
@@ -115,6 +117,7 @@ export async function mockApplication(page: Page, { rankingSize = 2 } = {}) {
     else return route.fulfill({ status: 404, json: { error: "fixture_missing", detail: p } });
     await route.fulfill({ json: body });
   });
+  await mockScouting(page);
 }
 
 /** Stateful synthetic market: mutations affect subsequent reads, with optional lag/failure. */
@@ -169,4 +172,33 @@ export async function mockMarketBids(page: Page) {
     failRead: (value: boolean) => { failReads = value; },
     rejectCancellation: (value: boolean) => { failCancel = value; },
   };
+}
+
+
+/** Server-owned scouting fixture; importing device favorites never enables alerts. */
+export async function mockScouting(page: Page) {
+  const favorites = new Map<string, Favorite>();
+  const alerts: { id: string; leagueId: string; leagueName: string; playerId: string; playerName: string; kind: string; createdAt: string; readAt: string | null }[] = [];
+  let failWatch = false;
+  await page.route("**/api/scouting/**", async route => {
+    const request = route.request(); const url = new URL(request.url());
+    const path = url.pathname; const method = request.method();
+    let body: unknown = { ok: true };
+    if (path.endsWith("/notifications")) body = { notifications: alerts, unreadCount: alerts.filter(item => !item.readAt).length, nextCursor: null };
+    else if (/notifications\/[^/]+\/read$/.test(path)) { const id = path.split("/").at(-2); const item = alerts.find(item => item.id === id); if (item) item.readAt = "2026-10-12T12:00:00Z"; }
+    else if (path.endsWith("/favorites/import")) {
+      for (const id of request.postDataJSON().playerIds) if (!favorites.has(id)) favorites.set(id, { playerId: id, createdAt: "2026-10-12T12:00:00Z", watch: null, observation: null });
+    } else if (path.endsWith("/favorites")) body = { favorites: [...favorites.values()].reverse(), status: "active", checkedAt: null };
+    else if (path.includes("/watches/")) {
+      if (failWatch) return route.fulfill({ status: 502, json: { error: "fantasy_error" } });
+      const favorite = favorites.get(path.split("/").at(-1)!);
+      if (favorite) favorite.watch = request.postDataJSON();
+    } else if (path.includes("/favorites/")) {
+      const id = path.split("/").at(-1)!;
+      if (method === "DELETE") favorites.delete(id);
+      else if (!favorites.has(id)) favorites.set(id, { playerId: id, createdAt: "2026-10-12T12:00:00Z", watch: null, observation: null });
+    }
+    return route.fulfill({ json: body });
+  });
+  return { favorites, alerts, setFailWatch: (value: boolean) => { failWatch = value; } };
 }

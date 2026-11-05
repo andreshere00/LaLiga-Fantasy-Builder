@@ -916,3 +916,24 @@ roles, explicit absence, coaches, missing metrics and independent detail failure
 Phone/desktop and light/dark screenshots are inspected. Reflow is checked at
 320 CSS pixels with 200% text sizing; this is not a certification of accessibility
 or a study with representative users.
+
+## Favorites and scouting
+
+`ScoutingProvider` shares server-backed bookmarks across Market, Players and player
+detail, keyed by user and league. The shared toolbar sheet has Favorites and Alerts
+views, basic player cards, per-league preferences and a persistent unread inbox.
+Cards group comparable metrics and league availability separately. The latest five
+form scores run oldest to newest. Alert settings start collapsed with their saved
+market/clause and lead-time summary visible; keyboard and touch can expand them.
+Advance warning is shown only when clause alerts are enabled. Failed saves keep the
+confirmed values and show an inline correction message. The sheet keeps a neutral
+Close action and a separate Player details action on each card.
+Grouping uses [proximity](https://lawsofux.com/law-of-proximity/) to keep labels and
+values together; disclosing alert controls keeps comparison data prominent, at the
+cost of one extra action to edit preferences. These are heuristic choices, checked
+with fixture-based browser flows and screenshots rather than user research.
+Legacy device favorites import once after a successful server read, without enabling
+alerts; local data remains until import succeeds. Return URLs preserve the open
+sheet, query/filter and scroll; details accept only local Market/Players return paths.
+Domain Zod contracts live in `api/scouting.ts`; all public properties use
+camelCase. See [scouting](api/scouting/README.md) for monitoring semantics and operation.

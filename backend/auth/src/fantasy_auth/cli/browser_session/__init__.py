@@ -22,6 +22,7 @@ from fantasy_auth.cli.browser_session.flows import (
     run_leagues_analysis,
     run_lineup_builder_analysis,
     run_market_analysis,
+    run_scouting_analysis,
     run_standings_analysis,
     run_teams_analysis,
 )
@@ -153,6 +154,10 @@ def _run_requested(args: Any, *, jwt: str, linked: bool) -> dict[str, Any]:
             jwt=jwt,
             league_id=args.league_id,
             player_team_id=args.player_team_id,
+        )
+    elif args.flow == "scouting-analysis":
+        report["scouting_analysis"] = run_scouting_analysis(
+            api_base=args.api_base, jwt=jwt, league_id=args.league_id
         )
     elif args.flow == "standings-analysis":
         report["standings_analysis"] = _run_standings_analysis(

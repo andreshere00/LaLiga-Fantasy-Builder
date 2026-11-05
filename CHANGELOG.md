@@ -6,6 +6,26 @@ entry, not a claim that every optional provider or deployment gate is complete.
 
 ## [Unreleased]
 
+### Favorites and scouting
+
+- Compact favorite cards with grouped market/clause status, recent form badges and
+  collapsible alert settings that keep the saved configuration visible. Add inline
+  save errors and consistent keyboard, touch and theme styling.
+- Accept authenticated league responses that omit the optional manager block when
+  enabling scouting. Resolve ownership from the caller's roster so own sales remain
+  excluded, and stop stale host workers during development restarts.
+
+- Persist favorite players across devices and share bookmarks across Market, Players
+  and player details. Import existing device favorites without enabling alerts.
+- Add a shared Favorites/Alerts sheet with basic player information, search, filters,
+  per-league settings and return navigation that preserves browsing context.
+- Monitor official and rival listings and clause unlocks with the website closed.
+  Configure advance warnings at 1, 6 or 24 hours; keep a persistent in-app inbox with
+  unread counts and explicit read actions.
+- Add isolated PostgreSQL app storage, revocable Auth delegations, a separate read-only
+  worker, account cleanup, CLI reads and backups for the new database. Existing volumes
+  need app database provisioning and the new runtime secrets before deployment.
+
 ### Development deployment
 
 - Automatically activate published main-branch images on the development VM

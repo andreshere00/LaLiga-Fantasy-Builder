@@ -234,3 +234,19 @@ def run_lineup_builder_analysis(
         f"/lineup-builder/leagues/{quote(league_id, safe='')}/build",
         load_builder_preferences(preferences_file),
     )
+
+
+def run_scouting_analysis(
+    *,
+    api_base: str,
+    jwt: str,
+    league_id: str | None = None,
+    transport: httpx.BaseTransport | None = None,
+) -> dict[str, Any]:
+    """Read application favorites and inbox without mutating alerts or Fantasy state."""
+    client = FantasyClient(base_url=api_base, jwt=jwt, transport=transport)
+    query = "?" + urlencode({"league_id": league_id}) if league_id else ""
+    return {
+        "favorites": client.get_json("/scouting/favorites" + query),
+        "notifications": client.get_json("/scouting/notifications" + query),
+    }

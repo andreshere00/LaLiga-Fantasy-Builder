@@ -589,6 +589,14 @@ def response_adapter(method: str, path: str) -> TypeAdapter[Any]:
         if segments[2] == "standings":
             return TypeAdapter(BrowserCompetitionStandings)
 
+    if method == "GET" and segments in (["scouting", "favorites"], ["scouting", "notifications"]):
+        from fantasy_auth.cli.browser_session.scouting_contracts import (
+            FavoritesResponse,
+            InboxResponse,
+        )
+
+        return TypeAdapter(FavoritesResponse if segments[1] == "favorites" else InboxResponse)
+
     if method == "GET" and segments == ["leagues"]:
         return _LIST_LEAGUES
     if method == "GET" and len(segments) == 4 and segments[0] == "players":

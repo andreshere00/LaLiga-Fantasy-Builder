@@ -211,3 +211,12 @@ Bulk DataMB tasks cannot assert a verified cohort: the current private adapter
 has no authoritative population revision field. Keep their cohort null; use an
 authorized frozen import for verified comparisons. Source schema errors quarantine
 a task; blocking/rate-limit categories are recorded safely without provider bodies.
+
+## Favorites and background scouting
+
+`/scouting` owns favorites, per-league watches and the persistent alert inbox. Configure
+`SCOUTING_DATABASE_URL` for the separate `fantasy_app` database and a matching private
+`SCOUTING_SERVICE_TOKEN` with Auth. Start `uv run fantasy-scouting-worker` separately
+from HTTP (Compose does this automatically). Read-only CLI: `uv run fantasy-scouting
+--league-id LEAGUE`. Provision existing volumes before starting; see the
+[domain guide](../../docs/api/scouting/README.md) for migrations, grants and backups.

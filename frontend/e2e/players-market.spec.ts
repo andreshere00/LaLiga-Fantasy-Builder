@@ -117,6 +117,7 @@ test("catalog bid mutations reconcile amounts and counts, including stale reads 
   await expect(row.getByText("Bids: 2", { exact: true })).toBeVisible();
   await expect(row.locator(".players-value-details .market-bid-value")).toHaveText("Your bid: 6,000,000 €");
   fixture.rejectCancellation(false);
+  await page.getByRole("region", { name: "Notifications" }).getByRole("button", { name: "Dismiss notification" }).click();
   await row.getByRole("button", { name: "Bid placed", exact: true }).click();
   await page.getByRole("menuitem", { name: "Cancel bid", exact: true }).click();
   await expect(row.locator(".market-bid-value")).toHaveCount(0);

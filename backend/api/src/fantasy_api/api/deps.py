@@ -14,6 +14,7 @@ from fantasy_api.clients.auth_credentials import AuthCredentialsClient
 from fantasy_api.clients.football import FootballClient
 from fantasy_api.clients.laliga_fantasy import LaligaFantasyClient
 from fantasy_api.clients.openweather import OpenWeatherClient
+from fantasy_api.clients.scouting_auth import ScoutingAuthClient
 from fantasy_api.clients.scraping import ScrapingClient
 from fantasy_api.config import Settings, get_settings
 from fantasy_api.domain.errors import UnauthorizedError
@@ -28,6 +29,8 @@ from fantasy_api.repositories.market import MarketRepository
 from fantasy_api.repositories.player_radar import PlayerRadarRepository
 from fantasy_api.repositories.player_stats import PlayerStatsRepository
 from fantasy_api.repositories.players import PlayersRepository
+from fantasy_api.repositories.scouting import ScoutingRepository
+from fantasy_api.repositories.scouting_sources import ScoutingSources
 from fantasy_api.repositories.standings import StandingsRepository
 from fantasy_api.repositories.teams import TeamsRepository
 from fantasy_api.repositories.weather import WeatherRepository
@@ -47,6 +50,7 @@ from fantasy_api.services.player_radar import PlayerRadarService
 from fantasy_api.services.player_resolver import PlayerResolver
 from fantasy_api.services.player_stats import PlayerStatsService
 from fantasy_api.services.players import PlayersService
+from fantasy_api.services.scouting import ScoutingService
 from fantasy_api.services.scraped_player import ScrapedPlayerProvider
 from fantasy_api.services.standings import StandingsService
 from fantasy_api.services.teams import TeamsService
@@ -100,6 +104,7 @@ class AppContainer:
     standings_service: StandingsService | FixtureStandingsService
     calendar_weather_service: CalendarWeatherService
 
+    scouting_service: ScoutingService | None = None
     player_radar_service: PlayerRadarService | None = None
     lineup_builder_service: LineupBuilderService | None = None
 
@@ -107,6 +112,8 @@ class AppContainer:
         """Close process-lifetime HTTP clients."""
         if self.lineup_builder_service is not None:
             await self.lineup_builder_service.aclose()
+        if self.scouting_service is not None:
+            await self.scouting_service.aclose()
         await self.credentials.aclose()
         await self.laliga_client.aclose()
         await self.scraping_client.aclose()
@@ -300,6 +307,14 @@ def build_container(
             venues,
             enabled=weather.enabled,
             clock=lambda: datetime.now(tz=UTC),
+        ),
+        scouting_service=ScoutingService(
+            ScoutingRepository(cfg.scouting_database_url),
+            ScoutingSources(fantasy, cfg.laliga_competition_id),
+            creds,
+            ScoutingAuthClient(
+                cfg.auth_internal_base_url, cfg.internal_service_token, cfg.scouting_service_token
+            ),
         ),
         player_radar_service=PlayerRadarService(
             PlayerRadarRepository(

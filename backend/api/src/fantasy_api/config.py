@@ -27,6 +27,8 @@ class Settings(BaseSettings):
     internal_jwt_audience: str = "fantasy-api"
     auth_internal_base_url: str = "http://localhost:8000"
     internal_service_token: str = ""
+    scouting_service_token: str = ""
+    scouting_database_url: str = ""
 
     laliga_fantasy_origin: str = "https://fantasy-api.llt-services.com"
     laliga_competition_id: int = 1

@@ -251,6 +251,8 @@ class RuntimeTests(unittest.TestCase):
                 "POSTGRES_PASSWORD",
                 "IDENTITY_DB_PASSWORD",
                 "VAULT_DB_PASSWORD",
+                "APP_DB_PASSWORD",
+                "SCOUTING_SERVICE_TOKEN",
                 "INTERNAL_SERVICE_TOKEN",
                 "SCRAPING_SERVICE_TOKEN",
             ]

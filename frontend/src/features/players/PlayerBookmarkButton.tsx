@@ -4,6 +4,7 @@ import "./PlayerBookmarkButton.css";
 
 type PlayerBookmarkButtonProps = {
   pressed: boolean;
+  disabled?: boolean;
   playerName: string;
   onToggle: () => void;
   showLabel?: boolean;
@@ -11,6 +12,7 @@ type PlayerBookmarkButtonProps = {
 
 export function PlayerBookmarkButton({
   pressed,
+  disabled = false,
   playerName,
   onToggle,
   showLabel = false,
@@ -19,6 +21,7 @@ export function PlayerBookmarkButton({
   return (
     <button
       type="button"
+      disabled={disabled}
       className={["player-bookmark-btn", pressed && "is-active"].filter(Boolean).join(" ")}
       aria-label={t("Favorite {{0}}", { 0: playerName })}
       aria-pressed={pressed}

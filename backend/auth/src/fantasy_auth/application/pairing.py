@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from collections.abc import Mapping
+from collections.abc import Awaitable, Callable, Mapping
 from dataclasses import dataclass
 from typing import Any
 from urllib.parse import parse_qs, urlparse
@@ -120,10 +120,12 @@ class PairingService:
         b2c: B2CClient | None = None,
         operation_lock: RefreshLock | None = None,
         redirect_uri: str = "authredirect://com.lfp.laligafantasy",
+        on_connection_change: Callable[[str], Awaitable[None]] | None = None,
     ) -> None:
         from fantasy_auth.adapters.redis import MemoryRefreshLock
 
         self._operation_lock = operation_lock or MemoryRefreshLock()
+        self._on_connection_change = on_connection_change
         self._pairings = pairings
         self._connections = connections
         self._vault = vault
@@ -332,6 +334,8 @@ class PairingService:
                 needs_reauth=False,
                 profile=profile,
             )
+            if self._on_connection_change is not None:
+                await self._on_connection_change(connection.user_id)
             await self._connections.save(connection)
 
             return PairingCompleted(user_id=pairing.user_id, profile=profile)
@@ -388,6 +392,8 @@ class PairingService:
             connection = await self._connections.get(user_id)
             if connection is not None and connection.user_id != user_id:
                 raise OwnershipError()
+            if self._on_connection_change is not None:
+                await self._on_connection_change(user_id)
             await self._connections.delete(user_id)
         finally:
             await self._operation_lock.release(user_id)

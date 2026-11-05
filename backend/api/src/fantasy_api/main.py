@@ -19,6 +19,7 @@ from fantasy_api.api import (
     me,
     player_stats,
     players,
+    scouting,
     standings,
     teams,
 )
@@ -46,6 +47,8 @@ async def _lifespan(app: FastAPI) -> AsyncIterator[None]:
         app.state.container = container
     set_container(container)
     try:
+        if container.settings.scouting_database_url and container.scouting_service:
+            await container.scouting_service.repository.start()
         yield
     finally:
         await container.aclose()
@@ -84,6 +87,7 @@ def create_app(
         allow_methods=["GET", "POST", "PUT", "DELETE", "OPTIONS"],
         allow_headers=["Authorization", "Content-Type", "X-Request-Id"],
     )
+    app.include_router(scouting.router)
     app.include_router(me.router)
     app.include_router(leagues.router)
     app.include_router(lineup_builder.router)
@@ -119,7 +123,10 @@ def create_app(
         summary="Readiness probe",
     )
     async def health_ready() -> HealthResponse:
-        """Return process readiness."""
+        """Return process readiness, including configured application storage."""
+        runtime = app.state.container
+        if runtime.settings.scouting_database_url and runtime.scouting_service:
+            await runtime.scouting_service.repository.ready()
         return HealthResponse(status="ok")
 
     @app.exception_handler(UnauthorizedError)
