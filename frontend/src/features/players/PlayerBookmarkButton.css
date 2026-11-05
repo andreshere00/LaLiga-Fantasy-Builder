@@ -4,3 +4,10 @@
 .player-bookmark-btn:hover { background:var(--fb-coral); color:var(--fb-on-coral); }
 .player-bookmark-btn:hover .player-bookmark-icon { color:currentColor; }
 .player-bookmark-btn.is-active:not(:hover) .player-bookmark-icon { color:var(--fb-primary); }
+
+/* Save alongside identity, without stacking under transaction actions. */
+.market-name-wrap > .player-bookmark-btn { margin-left:auto; align-self:center; }
+/* A full-width identity cell gives every row the same trailing save slot. */
+.market-page .market-name-wrap { justify-self:stretch; width:100%; box-sizing:border-box; }
+.market-page .market-name-wrap > .market-name-line { flex:1; min-width:0; }
+.market-page .market-name-wrap > .player-bookmark-btn { margin-left:auto; }

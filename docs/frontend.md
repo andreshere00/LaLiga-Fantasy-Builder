@@ -944,3 +944,15 @@ icons above labels to fit three destinations while keeping touch targets at leas
 44px. Balance remains a separate full-width row on phones. The bids icon uses the
 requested [Flaticon auction asset](https://www.flaticon.com/free-icon/auction_9367178),
 credited in the footer and next to the bundled asset.
+
+Notifications use 14px body text with wrapping, 44px close targets and a scrollable
+stack above mobile navigation. Urgent errors remain until dismissed; success
+messages expire. Base UI's urgent-announcement `aria-hidden` state does not disable
+pointer interaction: only exiting notifications ignore pointer input. F6 enters
+the notification region; Tab reaches Close, and Enter dismisses it. Browser checks
+cover stacked errors with touch, mouse and keyboard in light/mobile and dark/desktop.
+
+Favorites labels stay on one line; toolbar destinations wrap as complete controls.
+Row bookmarks sit beside player identity instead of beneath market actions, keeping
+transaction columns compact. Favorited Market and Players portrait tiles use `#FFC2BF` in
+both themes; comparison row backgrounds remain unchanged.

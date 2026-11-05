@@ -67,7 +67,9 @@ export function MarketRowCells({
   const scouting = useScouting();
   return (
     <>
-      <PlayerCell row={row} now={now} columnLabel={columnHeadings.player.label} />
+      <PlayerCell row={row} now={now} columnLabel={columnHeadings.player.label}
+        bookmark={row.playerId ? <PlayerBookmarkButton playerName={row.name} pressed={scouting.favorites.has(row.playerId)}
+          disabled={scouting.pending} onToggle={() => scouting.toggle(row.playerId!)} /> : null} />
       <span className="market-cell" data-label={columnHeadings.position.label}>
         <PositionCell positionId={row.positionId} />
       </span>
@@ -108,8 +110,6 @@ export function MarketRowCells({
         data-label={columnHeadings.sellOptions.label}
       >
         <SellerCell row={row} actionContext={actionContext} actions={actions} />
-        {row.playerId ? <PlayerBookmarkButton playerName={row.name} pressed={scouting.favorites.has(row.playerId)}
-          disabled={scouting.pending} onToggle={() => scouting.toggle(row.playerId!)} /> : null}
       </span>
     </>
   );

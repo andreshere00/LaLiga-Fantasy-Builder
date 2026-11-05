@@ -22,7 +22,7 @@
 .players-page .fb-pagination { margin-top:20px; justify-content:center; }
 .players-page .market-cell { min-width:0; overflow-wrap:anywhere; font-size:14px; }
 .players-player-heading { grid-column:span 2; font-size:12px; text-transform:uppercase; }
-.players-row.is-favorite { background:var(--fb-surface); }
+
 @media(max-width:1280px) {
  .players-page { --players-table-columns:84px minmax(100px,1fr) minmax(80px,.8fr) 60px 72px 148px minmax(115px,1.2fr) 108px; }
  .players-page :is(.market-head-cell-availability,.market-head-cell-owner,[data-column="availability"],[data-column="owner"]) { display:none; }

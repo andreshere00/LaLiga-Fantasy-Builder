@@ -163,6 +163,12 @@ function PlayersListRow({
         {protection ? <Help content={protection} className="market-clause-flag">
           <img className="market-clause-flag-icon" src={shieldRedIcon} alt={protection} />
         </Help> : null}
+          <PlayerBookmarkButton
+            disabled={favoritePending}
+            pressed={favorite}
+            playerName={row.name}
+            onToggle={onToggleFavorite}
+          />
       </span>
       <span className="market-cell players-team-cell" data-column="team" data-label={t("Team")}>{row.teamName ?? "—"}</span>
       <span className="market-cell" data-column="position" data-label={t("Position")}>
@@ -216,12 +222,6 @@ function PlayersListRow({
           ) : (
             detailsOptions
           )}
-          <PlayerBookmarkButton
-            disabled={favoritePending}
-            pressed={favorite}
-            playerName={row.name}
-            onToggle={onToggleFavorite}
-          />
         </span>
         {marketRow ? <span className="market-bid-count">{t("Bids: ")}{bidCountLabel(marketRow.numberOfBids)}</span> : null}
         <span className="players-mobile-value-details">{moneyDetails}</span>

@@ -1177,3 +1177,9 @@ a.market-actions-item {
 [data-theme="dark"] .market-page .market-clause-shield { filter:brightness(0) invert(1); }
 .fb-dialog.market-bid-dialog button,
 .fb-dialog.market-bid-dialog button:not(.fb-button) { border-radius:0; }
+
+/* Highlight the player portrait, preserving comparison row surfaces. */
+.market-page .is-favorite .market-card .player-tile,
+.market-page .is-favorite .market-card .player-tile:is(:hover, :active) {
+  background-color:#FFC2BF;
+}

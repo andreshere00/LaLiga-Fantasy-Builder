@@ -13,6 +13,9 @@ for (const [theme, width] of [["light", 1440], ["dark", 375]] as const) {
     const bookmark = page.getByRole("button", { name: "Favorite Player 14", exact: true });
     await bookmark.click();
     await expect(bookmark).toHaveAttribute("aria-pressed", "true");
+    await expect(page.locator(".market-data-row").filter({ has: bookmark }).locator(".player-tile"))
+      .toHaveCSS("background-color", "rgb(255, 194, 191)");
+    await expect(page.locator(".market-name-wrap").filter({ has: bookmark })).toBeVisible();
     await page.getByRole("button", { name: "Favorites (1)", exact: true }).click();
     const dialog = page.getByRole("dialog", { name: "Favorites and scouting" });
     await expect(dialog).toBeVisible();

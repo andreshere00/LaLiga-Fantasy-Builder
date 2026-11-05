@@ -1,3 +1,4 @@
+import type { ReactNode } from "react";
 import { t, useTranslation } from "../../../i18n";
 import { Help } from "../../../components/ui/Help";
 import { Link } from "react-router-dom";
@@ -18,9 +19,10 @@ type PlayerCellProps = {
   row: MarketRow;
   now: number;
   columnLabel?: string;
+  bookmark?: ReactNode;
 };
 
-export function PlayerCell({ row, now, columnLabel = t("Player") }: PlayerCellProps) {
+export function PlayerCell({ row, now, columnLabel = t("Player"), bookmark }: PlayerCellProps) {
   useTranslation();
   const offersMenu = useMarketOffersMenu();
   const { selected } = useLeague();
@@ -79,6 +81,7 @@ export function PlayerCell({ row, now, columnLabel = t("Player") }: PlayerCellPr
             <img className="market-clause-flag-icon" src={shieldRedIconUrl} alt="" aria-hidden />
           </Help>
         ) : null}
+        {bookmark}
       </span>
     </>
   );
