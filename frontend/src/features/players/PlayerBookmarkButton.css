@@ -5,7 +5,23 @@
 .player-bookmark-btn:hover .player-bookmark-icon { color:currentColor; }
 .player-bookmark-btn.is-active:not(:hover) .player-bookmark-icon { color:var(--fb-primary); }
 
-/* A fixed leading save target aligns with player names across rows. */
-.market-page .market-name-wrap { justify-self:stretch; width:100%; box-sizing:border-box; gap:14px; }
-.market-page .market-name-wrap > .market-name-line { flex:0 1 auto; min-width:0; }
-.market-page .market-name-wrap > .player-bookmark-btn { align-self:center; }
+/* Container width, rather than name length, determines the shared status layout. */
+.market-page .market-name-wrap {
+  display:block; container-type:inline-size;
+  justify-self:stretch; width:100%; box-sizing:border-box;
+}
+.player-identity-layout {
+  display:grid; grid-template-columns:44px minmax(0,1fr) 88px;
+  align-items:center; gap:14px;
+}
+.player-identity-layout > :is(.market-name-line, .market-name) { min-width:0; }
+.player-status-indicators { display:grid; grid-template-columns:repeat(2,44px); align-items:center; }
+.player-status-indicators > .market-player-offers-flag { grid-column:1; grid-row:1; }
+.player-status-indicators > .market-clause-flag {
+  grid-column:2; grid-row:1; justify-content:center; width:44px; height:44px;
+}
+@container (max-width:260px) {
+  .player-identity-layout { grid-template-columns:44px minmax(0,1fr); row-gap:0; }
+  .player-status-indicators { grid-column:2; justify-self:end; }
+  .player-status-indicators:empty { display:none; }
+}

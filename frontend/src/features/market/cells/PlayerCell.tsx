@@ -54,34 +54,38 @@ export function PlayerCell({ row, now, columnLabel = t("Player"), bookmark }: Pl
         />
       </div>
       <span className="market-name-wrap" data-label={columnLabel}>
-        {bookmark}
-        <Help className="market-name-line" content={bidded && bidMoney != null ? bidAmountTooltipLabel(bidMoney) : null}>
-          {bidded ? (
-            <img className="market-bid-icon" src={bidIconUrl} alt="" aria-hidden />
-          ) : null}
-          <span
-            className={
-              ["market-name", bidded && "is-bidded", clauseTooltip && "is-protected"]
-                .filter(Boolean)
-                .join(" ")
-            }
-          >
-            {row.playerId && row.positionId !== 5 ? <Link className="players-name-link" to={"/players/" + encodeURIComponent(row.playerId)} state={{ returnTo: "/market" }}>{row.name}</Link> : row.name}
-          </span>
-        </Help>
-        {hasOffers ? <Help content={t("This player has offers.")}
-          trigger={<button type="button" className="market-player-offers-flag"
-            aria-label={t("View offers for {{0}}", { 0: row.name })}
-            onClick={() => {
-              if (row.playerTeamId) offersMenu?.openForPlayer(row.playerTeamId, row.name);
-            }} />}>
-          <img src={notificationRedIconUrl} alt="" aria-hidden="true" />
-        </Help> : null}
-        {clauseTooltip ? (
-          <Help content={clauseTooltip} className="market-clause-flag">
-            <img className="market-clause-flag-icon" src={shieldRedIconUrl} alt="" aria-hidden />
+        <span className="player-identity-layout">
+          {bookmark}
+          <Help className="market-name-line" content={bidded && bidMoney != null ? bidAmountTooltipLabel(bidMoney) : null}>
+            {bidded ? (
+              <img className="market-bid-icon" src={bidIconUrl} alt="" aria-hidden />
+            ) : null}
+            <span
+              className={
+                ["market-name", bidded && "is-bidded", clauseTooltip && "is-protected"]
+                  .filter(Boolean)
+                  .join(" ")
+              }
+            >
+              {row.playerId && row.positionId !== 5 ? <Link className="players-name-link" to={"/players/" + encodeURIComponent(row.playerId)} state={{ returnTo: "/market" }}>{row.name}</Link> : row.name}
+            </span>
           </Help>
-        ) : null}
+          <span className="player-status-indicators">
+            {hasOffers ? <Help content={t("This player has offers.")}
+              trigger={<button type="button" className="market-player-offers-flag"
+                aria-label={t("View offers for {{0}}", { 0: row.name })}
+                onClick={() => {
+                  if (row.playerTeamId) offersMenu?.openForPlayer(row.playerTeamId, row.name);
+                }} />}>
+              <img src={notificationRedIconUrl} alt="" aria-hidden="true" />
+            </Help> : null}
+            {clauseTooltip ? (
+              <Help content={clauseTooltip} className="market-clause-flag">
+                <img className="market-clause-flag-icon" src={shieldRedIconUrl} alt="" aria-hidden />
+              </Help>
+            ) : null}
+          </span>
+        </span>
       </span>
     </>
   );

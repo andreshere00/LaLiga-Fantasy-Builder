@@ -296,7 +296,7 @@ test("an expired confirmation can be cancelled without locking the remaining off
   await expect(page.getByRole("button", { name: "Accept offer for Player 13 from Another Manager", exact: true })).toBeEnabled();
 });
 
-for (const [width, theme] of [[375, "light"], [1440, "dark"]] as const) {
+for (const [width, theme] of [[320, "dark"], [375, "light"], [1440, "dark"], [2000, "light"]] as const) {
   test(`player identity spacing stays stable with offers at ${width}px`, async ({ page }) => {
     await mockOffers(page);
     await page.setViewportSize({ width, height: 900 });
@@ -304,24 +304,49 @@ for (const [width, theme] of [[375, "light"], [1440, "dark"]] as const) {
     await page.route("**/api/market/leagues/l1", route => route.fulfill({ json: {
       ...marketFixture,
       marketPlayers: [...marketFixture.marketPlayers, {
-        id: "own-listing", playerMaster: catalog[12],
-        playerTeam: { playerTeamId: "s13", teamId: "t1" },
+        id: "own-listing", playerMaster: { ...catalog[12], nickname: "Iñaki Williams" },
+        playerTeam: { playerTeamId: "s13", teamId: "t1", isShielded: true },
         sellerTeam: { id: "t1", manager: { managerName: "Demo Manager" } },
+      }, {
+        id: "short-name", playerMaster: { ...catalog[11], nickname: "Niño" },
+        playerTeam: { playerTeamId: "s12", teamId: "t1", isShielded: true },
+        sellerTeam: { id: "t1", manager: { managerName: "Demo Manager" } },
+      }, {
+        id: "clause-only", playerMaster: { ...catalog[10], nickname: "Boyomo" },
+        playerTeam: { playerTeamId: "s11", teamId: "t2", isShielded: true },
+        sellerTeam: { id: "t2", manager: { managerName: "Other Manager" } },
       }],
     } }));
+    await page.route("**/api/market/leagues/l1/player-teams/s12/offers", route =>
+      route.fulfill({ json: { offers: [{ id: "short-offer", money: 3200000, status: "pending" }] } }));
     await page.goto("/market");
-    await expect(page.getByRole("button", { name: "View offers for Player 13" })).toBeVisible();
+    await expect(page.getByRole("button", { name: "View offers for Iñaki Williams" })).toBeVisible();
     const gaps = await page.locator(".market-name-wrap").evaluateAll(cells => cells.map(cell => {
       const bookmark = cell.querySelector(".player-bookmark-btn")!.getBoundingClientRect();
       const name = cell.querySelector(".market-name")!.getBoundingClientRect();
       const photo = cell.closest(".market-data-row")!.querySelector(".market-card")!.getBoundingClientRect();
       const offers = cell.querySelector(".market-player-offers-flag")?.getBoundingClientRect();
-      return { gap: name.left - bookmark.right, photoGap: bookmark.left - photo.right, offersAfterName: !offers || offers.left >= name.right };
+      return { gap: name.left - bookmark.right, photoGap: bookmark.left - photo.right, offersAfterName: !offers || offers.left >= name.right || offers.top >= name.bottom };
     }));
     for (const { gap, photoGap, offersAfterName } of gaps) {
       expect(gap).toBeCloseTo(photoGap, 0);
       expect(offersAfterName).toBe(true);
     }
+    const indicators = await page.locator(".player-status-indicators").evaluateAll(groups => groups.filter(group => group.children.length > 0).map(group => {
+      const offers = group.querySelector(".market-player-offers-flag")?.getBoundingClientRect();
+      const clause = group.querySelector(".market-clause-flag")?.getBoundingClientRect();
+      return { right: group.getBoundingClientRect().right, offers: offers && { x: offers.x, y: offers.y }, clause: clause && { x: clause.x, y: clause.y } };
+    }));
+    const withBoth = indicators.filter(item => item.offers && item.clause);
+    expect(withBoth).toHaveLength(2);
+    for (const indicator of indicators) {
+      expect(indicator.right).toBeCloseTo(indicators[0].right, 0);
+      if (indicator.clause) expect(indicator.clause.x).toBeCloseTo(withBoth[0].clause!.x, 0);
+      if (indicator.offers) expect(indicator.offers.x).toBeCloseTo(withBoth[0].offers!.x, 0);
+      if (indicator.offers && indicator.clause) expect(indicator.offers.y).toBeCloseTo(indicator.clause.y, 0);
+    }
+    await page.locator(".market-clause-flag").first().focus();
+    await expect(page.getByRole("tooltip")).toBeVisible();
     await page.screenshot({ path: `/tmp/lfb-player-spacing-${width}.png`, fullPage: true });
   });
 }

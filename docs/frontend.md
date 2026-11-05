@@ -955,7 +955,9 @@ cover stacked errors with touch, mouse and keyboard in light/mobile and dark/des
 Favorites labels stay on one line; toolbar destinations wrap as complete controls.
 Row bookmarks occupy a fixed 44px slot before player names with matching spacing on each side
 (14px).
-Optional offer indicators follow the name so names align whether offers exist or not;
-the offer trigger also has a 44px target. These controls sit alongside identity instead of beneath market actions, keeping
+Offer and clause indicators occupy fixed 44px slots at the end of the identity
+area, retaining their positions when either status is absent. Narrow identity
+areas place the slots below the name, preserving readable names and aligned
+indicators independently of name length. These controls sit alongside identity instead of beneath market actions, keeping
 transaction columns compact. Favorited Market and Players portrait tiles use `#FFC2BF` in
 both themes; comparison row backgrounds remain unchanged.
