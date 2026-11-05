@@ -54,13 +54,18 @@ protected from container HTTP access by the installed Docker metadata guard.
 1. GitHub Actions runs `test` then `build` for branch pushes and pull requests.
 2. On a main push, `deploy` uses keyless federation to publish the exact five
    checked images. It produces `release-images.env` with pinned digests.
-3. The operator merges those references into the private runtime dotenv and
-   uploads the five Secret Manager payloads as needed.
-4. The operator connects through IAP and runs `fantasybuilder-deploy` on the VM.
+3. The operator configures the five Secret Manager payloads for the initial
+   installation. Subsequent main releases update only the runtime image entries.
+4. The serialized `activate-development` job uses a separate federated identity
+   to preserve runtime settings, update the five image references, and run
+   `fantasybuilder-deploy` on the VM through IAP. Superseded main runs are skipped.
 5. The host stages secrets, validates Compose, pulls images, runs migrations, and
    waits for health checks before committing the configuration snapshot.
 
-CI does not activate the VM. All application and data services share one host;
+Automatic activation requires the deployment IAM configuration and GitHub Actions
+variables from Terraform, plus an already bootstrapped host and configured
+secrets. The job checks HTTPS after the helper's container health checks. Manual
+activation remains available for recovery. All application and data services share one host;
 this design has no automatic failover or zero-downtime deployment guarantee.
 See the [deployment guide](../../infra/gcp/README.md) for activation and recovery.
 

@@ -141,7 +141,7 @@ variable "radar_discovery_enabled" {
 }
 
 variable "github_actions" {
-  description = "Optional main CI publisher. Pin both the owner/repository name and GitHub numeric repository ID."
+  description = "Optional main CI image publisher and development deployer. Pin the repository name and numeric ID."
   type = object({
     repository    = string
     repository_id = string

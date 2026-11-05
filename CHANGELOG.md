@@ -6,6 +6,13 @@ entry, not a claim that every optional provider or deployment gate is complete.
 
 ## [Unreleased]
 
+### Development deployment
+
+- Automatically activate published main-branch images on the development VM
+  through a separate federated deployment identity and IAP. Preserve runtime
+  secrets, serialize deployments, skip superseded commits, and check HTTPS after
+  the existing deployment helper completes its container health checks.
+
 ## [0.3.0] - 2026-11-04
 
 ### Spanish and English

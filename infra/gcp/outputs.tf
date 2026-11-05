@@ -38,5 +38,10 @@ output "github_actions_variables" {
     GCP_ARTIFACT_REGISTRY          = "${var.region}-docker.pkg.dev/${var.project_id}/${google_artifact_registry_repository.app.repository_id}"
     GCP_WORKLOAD_IDENTITY_PROVIDER = google_iam_workload_identity_pool_provider.github[0].name
     GCP_IMAGE_PUBLISHER            = google_service_account.image_publisher[0].email
+    GCP_DEPLOYER                   = google_service_account.deployer[0].email
+    GCP_DEPLOY_ZONE                = var.zone
+    GCP_DEPLOY_INSTANCE            = google_compute_instance.app.name
+    GCP_RUNTIME_SECRET             = local.secret_ids.runtime
+    DEPLOY_URL                     = "https://${var.domain}"
   }
 }

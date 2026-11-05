@@ -43,7 +43,7 @@ run "private_backends_and_protected_storage" {
     error_message = "Keep the five service-separated secret containers protected."
   }
   assert {
-    condition     = length(google_billing_budget.app) == 0 && length(google_project_iam_member.operator) == 0 && length(google_service_account.image_publisher) == 0 && length(google_iam_workload_identity_pool.github) == 0
+    condition     = length(google_billing_budget.app) == 0 && length(google_project_iam_member.operator) == 0 && length(google_service_account.image_publisher) == 0 && length(google_service_account.deployer) == 0 && length(google_iam_workload_identity_pool.github) == 0
     error_message = "Optional budget and administrator IAM must not create unsolicited grants."
   }
   assert {
@@ -151,6 +151,17 @@ run "main_ci_publisher_has_scoped_access" {
   assert {
     condition     = contains(keys(google_project_service.required), "iamcredentials.googleapis.com") && contains(keys(google_project_service.required), "sts.googleapis.com")
     error_message = "Enable token exchange and service-account impersonation APIs when CI is enabled."
+  }
+  assert {
+    condition = (
+      google_service_account_iam_member.github_deployer[0].role == "roles/iam.workloadIdentityUser" &&
+      google_service_account.deployer[0].account_id != google_service_account.image_publisher[0].account_id &&
+      toset(keys(google_secret_manager_secret_iam_member.deployer_runtime)) == toset(["roles/secretmanager.secretAccessor", "roles/secretmanager.secretVersionAdder"]) &&
+      google_compute_instance_iam_member.deployer_login[0].role == "roles/compute.osAdminLogin" &&
+      google_service_account_iam_member.deployer_vm_account[0].role == "roles/iam.serviceAccountUser" &&
+      google_iap_tunnel_instance_iam_member.deployer[0].condition[0].expression == "destination.port == 22"
+    )
+    error_message = "Deployment needs a separate federated identity, runtime-only secret access, and VM-scoped OS Login/IAP."
   }
 }
 

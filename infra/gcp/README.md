@@ -21,7 +21,7 @@ does not publish an application with development credentials.
 | Private backup bucket | Regional Standard storage, daily database dumps, lifecycle expiry after 14 days plus a 7-day soft-delete recovery window. |
 | Artifact Registry Docker repository | App images, cleanup of old untagged versions, protection for the three most recent versions. Tagged releases require deliberate cleanup. |
 | Five Secret Manager secret containers | Runtime, identity, auth, API, and scraper dotenv files; secret versions are uploaded outside Terraform. |
-| Optional GitHub publisher | Keyless federation restricted to this repository ID, `main` push events, and the CI workflow; repository-scoped image writer. |
+| Optional GitHub publisher and deployer | Separate keyless identities restricted to this repository ID, `main` pushes, and the CI workflow; registry writer and VM deployment permissions. |
 | Optional operator IAM | OS administrator login, Compute read access, instance-scoped IAP access, and service-account use. |
 | Optional billing budget | Project usage before credits at 50%, 90%, and 100% thresholds. Alerts do not stop spending. |
 
@@ -67,16 +67,18 @@ bucket is not intended as a Terraform-state bucket.
 
 ## 2. Build and upload images
 
-### Automatic publishing after CI on main
+### Automatic publishing and development deployment on main
 
-The GitHub workflow has three stages: `test` → `build` → `deploy`. Tests and
+The GitHub workflow has four stages: `test` → `build` → `deploy` (publish images)
+→ `activate-development`. Tests and
 builds run for pull requests and pushes to every branch; tag pushes do not trigger
 the workflow. Image builds wait for the test job, and the frontend image build
 includes TypeScript checks and the production bundle. Every application image
 must build successfully before deployment. On a `push` event on `refs/heads/main`,
 the build job exports the five checked Linux amd64 images as a one-day artifact.
 The deploy job downloads and loads those exact images without rebuilding, then
-publishes them tagged `sha-<full commit SHA>`. Only deploy receives OIDC permission.
+publishes them tagged `sha-<full commit SHA>`. Publishing and activation receive
+OIDC permission with separate service accounts.
 PRs, other branches, and tags do not publish. A rerun of a main push can republish
 that commit. Registry pushes are not atomic: a failed push can leave some images
 uploaded, but the release artifact is produced only when all five succeed.
@@ -100,7 +102,7 @@ Apply the reviewed Terraform plan, then run:
 terraform -chdir=infra/gcp output github_actions_variables
 ```
 
-Copy its four values into GitHub **Settings → Secrets and variables → Actions →
+Copy its values into GitHub **Settings → Secrets and variables → Actions →
 Variables** (repository variables, not secrets):
 
 | Variable | Source |
@@ -109,21 +111,63 @@ Variables** (repository variables, not secrets):
 | `GCP_ARTIFACT_REGISTRY` | Regional registry path, without a scheme or trailing slash. |
 | `GCP_WORKLOAD_IDENTITY_PROVIDER` | Full provider resource name including the numeric GCP project number. |
 | `GCP_IMAGE_PUBLISHER` | Dedicated publisher service-account email. |
+| `GCP_DEPLOYER` | Separate deployment service-account email. |
+| `GCP_DEPLOY_ZONE` | VM zone. |
+| `GCP_DEPLOY_INSTANCE` | VM name. |
+| `GCP_RUNTIME_SECRET` | Runtime dotenv secret name. |
+| `DEPLOY_URL` | Public HTTPS origin, without a trailing slash. |
+
+With a GitHub CLI credential allowed to write Actions variables, copy the exact
+Terraform outputs without handling any application secrets:
+
+```bash
+terraform -chdir=infra/gcp output -json github_actions_variables > /tmp/fantasybuilder-ci-variables.json
+gh variable set --repo andreshere00/LaLiga-Fantasy-Builder \
+  --env-file <(python3 -c 'import json; d=json.load(open("/tmp/fantasybuilder-ci-variables.json")); print("\n".join(f"{k}={v}" for k,v in d.items()))')
+rm /tmp/fantasybuilder-ci-variables.json
+```
 
 Terraform enables token-exchange APIs, creates the identity pool/provider and
 publisher service account, and grants only repository-level Artifact Registry
-writer access to that account. It does not grant VM, application-secret, or
-backup-bucket access. The provider checks the repository's numeric ID and full
-name, the push event, main ref, and `.github/workflows/ci.yml` workflow ref.
+writer access to the publisher account. The separate deployer can read and add
+versions of only the runtime secret, discover Compute resources, use OS Login
+with sudo on this VM, and connect through instance-scoped IAP on port 22. It can
+act as the attached VM service account as required by OS Login. Consequently,
+the deployment identity is trusted with host administration and can reach the
+application secrets through that host; it is not an untrusted runner identity.
+It has no image writer or backup-bucket IAM grant. The provider checks the
+repository's numeric ID and full name, the push event, main ref, and
+`.github/workflows/ci.yml` workflow ref.
 Short-lived federated credentials replace service-account keys. Allow a few
 minutes for IAM changes to propagate before the first run.
 
-After merging to main, download the `release-images-<full commit SHA>` artifact
-from the successful Actions run. It contains `release-images.env` with only the
-five pinned image references. Merge those five entries into your private
-`runtime.env`, preserving its passwords and service tokens, upload a new runtime
-secret version, and activate the VM using the deployment helper below. The
-deploy stage publishes images; it does not update secrets or restart the live VM.
+After merging this workflow to main, activation downloads the
+`release-images-<full commit SHA>` artifact from the same run. It skips superseded
+main commits, verifies SSH/sudo access, reads the runtime dotenv into a private
+temporary directory, and replaces only the five image assignments. It validates
+all five digests against the configured registry before uploading a new runtime
+secret version. Passwords, service tokens, comments, and other configuration are
+preserved byte-for-byte. Payloads are never sourced, printed or uploaded as CI
+artifacts; temporary files and SSH keys are removed on exit.
+
+The job then runs `sudo -n /usr/local/sbin/fantasybuilder-deploy` through IAP and
+checks the public HTTPS page after the helper's Compose health checks. SSH keys
+expire after 30 minutes. The `development-deployment` concurrency group serializes
+activation without cancelling a running release. Backups and host releases also
+share the existing VM operation lock. Do not upload runtime configuration or run
+manual deployments concurrently with CI. Missing variables, SSH/IAM failures,
+invalid manifests, startup failures and HTTPS failures fail the job.
+
+The host must already be bootstrapped, with all five configured secret payloads
+and working DNS. CI does not provision infrastructure, rerun bootstrap, rotate
+credentials, or roll back databases. A failure after the runtime version upload
+can leave Secret Manager pointing at the failed candidate; the host's committed
+snapshot remains unchanged until startup succeeds. Inspect the active snapshot
+and container health before recovery. Do not simply rerun an older main workflow:
+superseded runs are skipped. For a rollback, publish a revert on main or use the
+manual release procedure with known tagged digests.
+
+The release artifact remains available for seven days for manual deployment.
 No release artifact is uploaded for PRs or a failed publishing run.
 
 ### Manual publishing fallback
