@@ -295,3 +295,32 @@ test("an expired confirmation can be cancelled without locking the remaining off
   await page.getByRole("button", { name: "Cancel confirmation", exact: true }).click();
   await expect(page.getByRole("button", { name: "Accept offer for Player 13 from Another Manager", exact: true })).toBeEnabled();
 });
+
+for (const [width, theme] of [[375, "light"], [1440, "dark"]] as const) {
+  test(`player identity spacing stays stable with offers at ${width}px`, async ({ page }) => {
+    await mockOffers(page);
+    await page.setViewportSize({ width, height: 900 });
+    await page.addInitScript(theme => localStorage.setItem("lfb-theme", theme), theme);
+    await page.route("**/api/market/leagues/l1", route => route.fulfill({ json: {
+      ...marketFixture,
+      marketPlayers: [...marketFixture.marketPlayers, {
+        id: "own-listing", playerMaster: catalog[12],
+        playerTeam: { playerTeamId: "s13", teamId: "t1" },
+        sellerTeam: { id: "t1", manager: { managerName: "Demo Manager" } },
+      }],
+    } }));
+    await page.goto("/market");
+    await expect(page.getByRole("button", { name: "View offers for Player 13" })).toBeVisible();
+    const gaps = await page.locator(".market-name-wrap").evaluateAll(cells => cells.map(cell => {
+      const bookmark = cell.querySelector(".player-bookmark-btn")!.getBoundingClientRect();
+      const name = cell.querySelector(".market-name")!.getBoundingClientRect();
+      const offers = cell.querySelector(".market-player-offers-flag")?.getBoundingClientRect();
+      return { gap: name.left - bookmark.right, offersAfterName: !offers || offers.left >= name.right };
+    }));
+    for (const { gap, offersAfterName } of gaps) {
+      expect(gap).toBeCloseTo(8, 0);
+      expect(offersAfterName).toBe(true);
+    }
+    await page.screenshot({ path: `/tmp/lfb-player-spacing-${width}.png`, fullPage: true });
+  });
+}
