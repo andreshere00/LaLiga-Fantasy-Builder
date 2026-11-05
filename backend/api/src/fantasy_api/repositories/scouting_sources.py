@@ -92,7 +92,11 @@ class ScoutingSources:
             card.buyout_clause is None or card.buyout_clause_locked_end_time is None
         )
         if missing_clause or (
-            manager is None and listings.get(player) and not listings.get("official:" + player)
+            manager is None
+            and (
+                card.player_team_id
+                or (listings.get(player) and not listings.get("official:" + player))
+            )
         ):
             try:
                 card = await self._complete_from_roster(

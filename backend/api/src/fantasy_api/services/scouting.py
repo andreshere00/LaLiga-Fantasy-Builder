@@ -112,11 +112,6 @@ class ScoutingService:
             bearer = (await self._credentials.get_laliga_bearer(jwt)).bearer_token
             membership = await self._sources.membership(bearer, league)
             grant = await self._grants.create(jwt, league)
-            # A manual refresh cannot bypass the five-minute Fantasy polling budget.
-            state = await session.league(league)
-            if state and state["checked_at"] and state["status"] == "active":
-                if state["checked_at"] > datetime.now(UTC) - timedelta(minutes=5):
-                    return
             watch = watches[0]
             await session.watch(
                 league,
@@ -127,6 +122,11 @@ class ScoutingService:
                 membership.name or league,
                 grant,
             )
+            # A manual refresh cannot bypass the five-minute Fantasy polling budget.
+            state = await session.league(league)
+            if state and state["checked_at"] and state["status"] == "active":
+                if state["checked_at"] > datetime.now(UTC) - timedelta(minutes=5):
+                    return
         await self.evaluate(owner, league)
 
     async def evaluate(self, owner: str, league: str) -> None:

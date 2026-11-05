@@ -248,6 +248,32 @@ async def test_refresh_revalidates_and_enforces_poll_budget(application):
     assert (await service.favorites("alice", "l1")).status == "inactive"
 
 
+async def test_refresh_replaces_revoked_grant_within_poll_budget(application):
+    from unittest.mock import AsyncMock
+
+    from fantasy_api.domain.errors import NeedsReauthError
+
+    client, service, _state = application
+    await service.add("alice", ["7"])
+    await service.watch("alice", "alice", "l1", "7", PREFS)
+    await service.evaluate("alice", "l1")
+    replacement = "replacement-grant-012345678901234567890"
+    service._grants.create = AsyncMock(return_value=replacement)
+
+    async def redeem(grant: str, _league: str, **_kwargs: object) -> str:
+        if grant != replacement:
+            raise NeedsReauthError("delegation_revoked")
+        return "transient-laliga-secret"
+
+    service._grants.redeem = redeem
+    await service.refresh("alice", "alice", "l1")
+    await due(service.repository)
+    await service.evaluate("alice", "l1")
+
+    assert (await service.favorites("alice", "l1")).status == "active"
+    service._grants.create.assert_awaited_once_with("alice", "l1")
+
+
 # ---- Error paths ---- #
 
 
@@ -486,6 +512,37 @@ async def test_sources_missing_clause_metadata_uses_cached_rival_roster(applicat
         )
         assert value.unlock_at is not None
     source._leagues.list_teams.assert_awaited_once()
+
+
+async def test_sources_missing_manager_resolves_rival_clause_watch(application):
+    from unittest.mock import AsyncMock
+
+    _client, service, state = application
+    state["card"].pop("managerId")
+    state["card"].pop("manager")
+    service._sources._leagues.list_teams = AsyncMock(
+        return_value=[
+            {
+                "id": "t2",
+                "manager": {"id": "2", "managerName": "Rival"},
+                "players": [dict(state["card"])],
+            }
+        ]
+    )
+
+    await service.add("alice", ["7"])
+    await service.watch(
+        "alice",
+        "alice",
+        "l1",
+        "7",
+        WatchWrite(market_alert=False, clause_alert=True),
+    )
+    await service.evaluate("alice", "l1")
+
+    inbox = await service.inbox("alice", None, None, 50)
+    assert [item.kind for item in inbox.notifications] == ["clause_soon"]
+    service._sources._leagues.list_teams.assert_awaited_once()
 
 
 async def test_watch_league_without_embedded_manager_uses_verified_team_membership(application):
