@@ -314,11 +314,12 @@ for (const [width, theme] of [[375, "light"], [1440, "dark"]] as const) {
     const gaps = await page.locator(".market-name-wrap").evaluateAll(cells => cells.map(cell => {
       const bookmark = cell.querySelector(".player-bookmark-btn")!.getBoundingClientRect();
       const name = cell.querySelector(".market-name")!.getBoundingClientRect();
+      const photo = cell.closest(".market-data-row")!.querySelector(".market-card")!.getBoundingClientRect();
       const offers = cell.querySelector(".market-player-offers-flag")?.getBoundingClientRect();
-      return { gap: name.left - bookmark.right, offersAfterName: !offers || offers.left >= name.right };
+      return { gap: name.left - bookmark.right, photoGap: bookmark.left - photo.right, offersAfterName: !offers || offers.left >= name.right };
     }));
-    for (const { gap, offersAfterName } of gaps) {
-      expect(gap).toBeCloseTo(8, 0);
+    for (const { gap, photoGap, offersAfterName } of gaps) {
+      expect(gap).toBeCloseTo(photoGap, 0);
       expect(offersAfterName).toBe(true);
     }
     await page.screenshot({ path: `/tmp/lfb-player-spacing-${width}.png`, fullPage: true });

@@ -6,6 +6,6 @@
 .player-bookmark-btn.is-active:not(:hover) .player-bookmark-icon { color:var(--fb-primary); }
 
 /* A fixed leading save target aligns with player names across rows. */
-.market-page .market-name-wrap { justify-self:stretch; width:100%; box-sizing:border-box; gap:8px; }
+.market-page .market-name-wrap { justify-self:stretch; width:100%; box-sizing:border-box; gap:14px; }
 .market-page .market-name-wrap > .market-name-line { flex:0 1 auto; min-width:0; }
 .market-page .market-name-wrap > .player-bookmark-btn { align-self:center; }
