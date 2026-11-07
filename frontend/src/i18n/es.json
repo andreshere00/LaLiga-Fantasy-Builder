@@ -1733,5 +1733,22 @@
   "Partial training with the group": "Parcial con el grupo",
   "Training with the group": "Grupo sin el alta",
   "Percentile": "Percentil",
-  "Radar is not published for this player.": "El radar de este jugador no está publicado."
+  "Radar is not published for this player.": "El radar de este jugador no está publicado.",
+  "European": "Europea",
+  "Domestic": "Nacional",
+  "Friendlies": "Amistosos",
+  "All competitions": "Todas las competiciones",
+  "Competition": "Competición",
+  "Match window": "Ventana de partidos",
+  "Whole season": "Temporada completa",
+  "Other competitions are unavailable.": "El resto de competiciones no está disponible.",
+  "No {{0}} matches in this window.": "No hay partidos de {{0}} en esta ventana.",
+  "Show all competitions": "Ver todas las competiciones",
+  "Previous matches": "Partidos anteriores",
+  "Next match": "Próximo partido",
+  "Started": "Inicio",
+  "Expected return": "Vuelta prevista",
+  "Injury status": "Estado de la lesión",
+  "{{0}} players. Matchweek coverage was not published.": "{{0}} jugadores. No se ha publicado la cobertura por jornada.",
+  "Results are not published for this club.": "No se han publicado resultados de este club."
 }

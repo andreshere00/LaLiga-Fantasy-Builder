@@ -1,13 +1,115 @@
-.team-page { display: grid; gap: 1rem; }
-.team-picker { display: flex; gap: 0.5rem; overflow-x: auto; padding-bottom: 0.25rem; }
-.team-picker button { min-height: 44px; min-width: 44px; }
-.team-sections { display: flex; gap: 0.5rem; position: sticky; top: var(--app-header-height, 0px); z-index: 2; background: var(--surface, Canvas); }
-.team-sections a { min-height: 44px; display: inline-flex; align-items: center; }
+.team-page { display: grid; gap: 1.25rem; padding: 1rem 1rem 5.5rem; }
+.team-page h1,
+.team-page h2,
+.team-page .player-section-title {
+  margin: 0;
+  font: 400 1.75rem/1.15 Anton, sans-serif;
+  color: var(--fb-tertiary);
+}
+.team-page h3 {
+  margin: 0.5rem 0 0;
+  font: 400 1.15rem/1.3 Anton, sans-serif;
+  color: var(--fb-tertiary);
+}
+.team-picker { display: flex; gap: 0.35rem; overflow-x: auto; padding-bottom: 0.35rem; }
+.team-picker a {
+  display: grid;
+  justify-items: center;
+  align-content: start;
+  gap: 0.25rem;
+  flex: 0 0 5.5rem;
+  min-height: 44px;
+  padding: 0.35rem 0.25rem;
+  color: var(--fb-secondary);
+  font-size: 11px;
+  line-height: 1.25;
+  text-align: center;
+  text-decoration: none;
+}
+.team-picker img { width: 36px; height: 36px; object-fit: contain; }
+.team-picker a[aria-current="page"] { outline: 2px solid var(--fb-primary); outline-offset: 2px; }
+.team-sections {
+  display: flex;
+  gap: 0.25rem;
+  position: sticky;
+  top: var(--app-header-height, 0px);
+  z-index: 2;
+  background: var(--fb-surface);
+  border-bottom: 1px solid var(--fb-line);
+}
+.team-sections a {
+  display: inline-flex;
+  align-items: center;
+  min-height: 44px;
+  padding: 0 0.75rem;
+  color: var(--fb-secondary);
+  font-weight: 600;
+  text-decoration: none;
+}
+.team-sections a[aria-current="true"] { box-shadow: inset 0 -3px var(--fb-primary); }
+.team-filter { display: flex; flex-wrap: wrap; gap: 0.4rem; }
+.team-filter button,
+.team-table th button,
+.team-page [role="alert"] button,
+.player-match-empty button {
+  min-height: 44px;
+  padding: 0 0.75rem;
+  border: 1px solid var(--fb-line);
+  background: transparent;
+  color: var(--fb-secondary);
+}
+.team-filter button[aria-pressed="true"] {
+  background: var(--fb-primary);
+  color: var(--fb-on-brand);
+  border-color: var(--fb-primary);
+}
+.team-record { display: grid; gap: 0.35rem; }
+.team-record p { display: flex; flex-wrap: wrap; gap: 0.75rem 1.25rem; margin: 0; }
+.team-record-primary { font-size: 1.25rem; }
+.team-next-label {
+  margin: 0;
+  color: var(--fb-secondary);
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+.team-mvp-list,
+.team-injury-list { display: grid; gap: 0.75rem; margin: 0; padding: 0; list-style: none; }
+.team-mvp-card,
+.team-injury-card {
+  display: grid;
+  gap: 0.5rem;
+  padding: 0.75rem;
+  border: 1px solid var(--fb-line);
+  background: var(--fb-subtle);
+}
+.team-mvp-card h4,
+.team-injury-card h4 { margin: 0; font: 600 1rem/1.4 var(--fb-font-body); }
+.team-mvp-card dl,
+.team-injury-card dl {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(8rem, 1fr));
+  gap: 0.5rem 1rem;
+  margin: 0;
+}
+.team-mvp-card dt,
+.team-injury-card dt { color: var(--fb-muted); font-size: 11px; }
+.team-mvp-card dd,
+.team-injury-card dd { margin: 0.15rem 0 0; font-variant-numeric: tabular-nums; }
 .team-table-wrap { overflow-x: auto; }
 .team-table { border-collapse: collapse; width: max-content; min-width: 100%; }
-.team-table th, .team-table td { padding: 0.4rem 0.6rem; text-align: right; font-variant-numeric: tabular-nums; }
-.team-table .is-sticky { position: sticky; left: 0; text-align: left; background: var(--surface, Canvas); }
+.team-table th,
+.team-table td {
+  padding: 0.4rem 0.6rem;
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+}
+.team-table .is-sticky {
+  position: sticky;
+  left: 0;
+  text-align: left;
+  background: var(--fb-surface);
+}
 .team-table .is-sticky-2 { left: 8rem; }
 .team-table .is-sticky-3 { left: 13rem; }
-.team-mvp-list, .team-injury-list, .team-news-list { display: grid; gap: 0.75rem; list-style: none; padding: 0; }
-.team-news-list a { overflow-wrap: anywhere; }

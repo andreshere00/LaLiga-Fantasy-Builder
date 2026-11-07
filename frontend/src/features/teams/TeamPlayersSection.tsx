@@ -63,7 +63,11 @@ export function TeamPlayersSection({
       <TeamInjuryList injuries={injuries} />
       <h3>{t("Squad")}</h3>
       <p>
-        {t("{{0}} players across matchweeks {{1}}.", { 0: roster.coverage.players, 1: weeks || "—" })}
+        {roster.coverage.matchweeks.length > 0
+          ? t("{{0}} players across matchweeks {{1}}.", { 0: roster.coverage.players, 1: weeks })
+          : t("{{0}} players. Matchweek coverage was not published.", {
+            0: roster.coverage.players,
+          })}
         {roster.coverage.shortWindow ? ` ${t("Totals cover a short window.")}` : ""}
       </p>
       <div className="team-table-wrap">
@@ -128,11 +132,24 @@ export function TeamInjuryList({
   return (
     <ul className="team-injury-list">
       {injuries.items.map((item) => (
-        <li key={`${item.name}-${item.startedOn ?? ""}`}>
-          <strong>{item.name}</strong>
-          <span>{item.startedOn ?? ""}</span>
-          {item.expectedReturn ? <span>{item.expectedReturn}</span> : null}
-          <span>{item.status ? t(INJURY_LABELS[item.status] ?? item.status) : ""}</span>
+        <li key={`${item.name}-${item.startedOn ?? ""}`} className="team-injury-card">
+          <h4>{item.name}</h4>
+          <dl>
+            <div>
+              <dt>{t("Started")}</dt>
+              <dd>
+                {item.startedOn ? <time dateTime={item.startedOn}>{item.startedOn}</time> : "—"}
+              </dd>
+            </div>
+            <div>
+              <dt>{t("Expected return")}</dt>
+              <dd>{item.expectedReturn || "—"}</dd>
+            </div>
+            <div>
+              <dt>{t("Injury status")}</dt>
+              <dd>{item.status ? t(INJURY_LABELS[item.status] ?? item.status) : "—"}</dd>
+            </div>
+          </dl>
         </li>
       ))}
     </ul>
@@ -144,7 +161,10 @@ function MvpCard({
   outlook,
 }: {
   player: Roster["mvps"][number];
-  outlook: { form?: { rating?: string | null } | null; startProbability?: { percent?: number | null } | null } | undefined;
+  outlook: {
+    form?: { rating?: string | null } | null;
+    startProbability?: { percent?: number | null } | null;
+  } | undefined;
 }) {
   const radar = usePlayerRadar(player.playerId);
   const axes = [...(radar.displayed?.axes ?? [])]
@@ -152,11 +172,16 @@ function MvpCard({
     .sort((left, right) => (right.percentile ?? 0) - (left.percentile ?? 0))
     .slice(0, 3);
   return (
-    <li>
-      <strong>{player.name}</strong>
-      <span>{t("FSYP")} {player.points}</span>
-      <span>{t("Form")} {outlook?.form?.rating ?? "—"}</span>
-      <span>{t("Starter likelihood")} {outlook?.startProbability?.percent ?? "—"}</span>
+    <li className="team-mvp-card">
+      <h4>{player.name}</h4>
+      <dl>
+        <div><dt>{t("FSYP")}</dt><dd>{player.points}</dd></div>
+        <div><dt>{t("Form")}</dt><dd>{outlook?.form?.rating ?? "—"}</dd></div>
+        <div>
+          <dt>{t("Starter likelihood")}</dt>
+          <dd>{outlook?.startProbability?.percent ?? "—"}</dd>
+        </div>
+      </dl>
       {axes.length === 0 ? <p>{t("Radar is not published for this player.")}</p> : (
         <ul>
           {axes.map((axis) => (

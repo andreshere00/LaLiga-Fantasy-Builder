@@ -3,7 +3,9 @@ import { useClubDossierQuery, useClubIndexQuery } from "../../api/queries";
 import { Link, Navigate, useParams, useSearchParams } from "react-router-dom";
 import { initialClubId, teamPath, teamSearch, teamSectionId, type TeamSection } from "./teamRoutes";
 import { TeamPlayersSection } from "./TeamPlayersSection";
+import { TeamPerformanceSection } from "./TeamPerformanceSection";
 import { TeamNewsSection } from "./TeamNewsSection";
+import type { TeamRouteState } from "./teamRoutes";
 import "./teams.css";
 
 const SECTION_LABELS: Record<TeamSection, string> = {
@@ -27,20 +29,33 @@ export function TeamsPage({ opponentClubId = null }: { opponentClubId?: number |
     if (next != null) return <Navigate to={teamPath(next, route)} replace />;
   }
   const selected = clubs.find((club) => String(club.clubId) === clubId);
+  function replaceRoute(patch: Partial<TeamRouteState>) {
+    if (!clubId) return;
+    const url = teamPath(clubId, { ...route, ...patch });
+    const query = url.includes("?") ? url.slice(url.indexOf("?") + 1) : "";
+    setSearch(new URLSearchParams(query), { replace: true });
+  }
   return (
     <div className="team-page">
       <h1>{t("Teams")}</h1>
-      <div className="team-picker" role="listbox" aria-label={t("Choose a club")}>
+      <nav className="team-picker" aria-label={t("Choose a club")}>
         {clubs.map((club) => (
-          <Link key={club.clubId} to={teamPath(club.clubId, route)} aria-current={String(club.clubId) === clubId ? "page" : undefined}>
+          <Link
+            key={club.clubId}
+            to={teamPath(club.clubId, route)}
+            aria-current={String(club.clubId) === clubId ? "page" : undefined}
+          >
             {club.badgeUrl ? <img src={club.badgeUrl} alt="" /> : null}
             {club.name}
           </Link>
         ))}
-      </div>
+      </nav>
       <nav className="team-sections" aria-label={t("Sections")}>
         {(Object.keys(SECTION_LABELS) as TeamSection[]).map((section) => (
-          <a key={section} href={`#${teamSectionId(section)}`} aria-current={route.section === section ? "true" : undefined}
+          <a
+            key={section}
+            href={`#${teamSectionId(section)}`}
+            aria-current={route.section === section ? "true" : undefined}
             onClick={(event) => {
               event.preventDefault();
               const next = new URLSearchParams(search);
@@ -61,13 +76,28 @@ export function TeamsPage({ opponentClubId = null }: { opponentClubId?: number |
       {dossier.data?.roster ? (
         <TeamPlayersSection roster={dossier.data.roster} injuries={dossier.data.injuries ?? null} />
       ) : <section id="team-players" tabIndex={-1} />}
-      <section id="team-performance" tabIndex={-1} aria-label={t("Performance")} />
+      {dossier.data ? (
+        <TeamPerformanceSection
+          performance={dossier.data.performance ?? null}
+          clubs={clubs}
+          competition={route.competition}
+          window={route.window}
+          failed={dossier.data.segmentErrors?.some(
+            (error) => error.segment === "performance",
+          ) ?? false}
+          onCompetition={(competition) => replaceRoute({ competition })}
+          onWindow={(window) => replaceRoute({ window })}
+          onRetry={() => void dossier.refetch()}
+        />
+      ) : <section id="team-performance" tabIndex={-1} />}
       <section id="team-lineup" tabIndex={-1} aria-label={t("Lineup")} />
       <SegmentNotice
         failed={dossier.data?.segmentErrors?.some((error) => error.segment === "news") ?? false}
         onRetry={() => void dossier.refetch()}
       />
-      {dossier.data?.news ? <TeamNewsSection news={dossier.data.news} /> : <section id="team-news" tabIndex={-1} />}
+      {dossier.data?.news
+        ? <TeamNewsSection news={dossier.data.news} />
+        : <section id="team-news" tabIndex={-1} />}
     </div>
   );
 }

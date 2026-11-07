@@ -410,6 +410,7 @@
 
 .player-match-grid { gap:12px; }
 .player-match-card { padding:16px 12px; border:1px solid var(--fb-line); }
+.player-match-card.is-next { outline: 2px solid var(--fb-secondary); outline-offset: 2px; }
 .player-match-card.is-win { border-left:3px solid var(--fb-success); }
 .player-match-card.is-loss { border-left:3px solid var(--fb-primary); }
 .player-match-card.is-draw { border-left:3px solid var(--fb-warning); }
