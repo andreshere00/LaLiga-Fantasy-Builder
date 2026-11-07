@@ -67,6 +67,7 @@ import { PlayerFantasySection, PlayerFantasySummary } from "./PlayerFantasySecti
 import { PlayerAveragesPanel } from "./PlayerAveragesPanel";
 import { PlayerRadarSection } from "./radar/PlayerRadarSection";
 import { PlayerSectionNavigation } from "./PlayerSectionNavigation";
+import { detailReturnTo, returnPlace } from "./playerReturn";
 import { PlayerFormHistory } from "./PlayerFormHistory";
 import { playerAverages } from "./playerAverages";
 import { PlayerDetailScreenLoading } from "./PlayerScreenLoading";
@@ -87,10 +88,6 @@ type PlayerDetailBodyProps = {
   masterId: MasterPlayerId;
 };
 
-function detailReturnTo(value: unknown): string {
-  return typeof value === "string" && /^\/(market|players)(\?|$)/.test(value) ? value : "/players";
-}
-
 function PlayerDetailUnavailable({ notFound = false, invalidLink = false, pending = false, onRetry }: {
   notFound?: boolean;
   invalidLink?: boolean;
@@ -106,7 +103,7 @@ function PlayerDetailUnavailable({ notFound = false, invalidLink = false, pendin
   return (
     <section className="player-detail-page">
       <nav className="player-detail-back fb-breadcrumb" aria-label={t("Breadcrumb")}>
-        <Link to={returnTo}>{returnTo.startsWith("/market") ? t("Market") : t("Players")}</Link><span aria-hidden="true">/</span>
+        <Link to={returnTo}>{t(returnPlace(returnTo))}</Link><span aria-hidden="true">/</span>
         <span aria-current="page">{notFound ? t("Player not found") : t("Details unavailable")}</span>
       </nav>
       <section className="player-detail-panel player-detail-unavailable" aria-labelledby="player-unavailable-title">
@@ -121,6 +118,10 @@ function PlayerDetailUnavailable({ notFound = false, invalidLink = false, pendin
             {t("Browse players")}</Link>
           {returnTo.startsWith("/market") ? (
             <Link to={returnTo} className={buttonVariants({ variant: "outline" })}>{t("Back to market")}</Link>
+          ) : returnPlace(returnTo) === "Teams" ? (
+            <Link to={returnTo} className={buttonVariants({ variant: "outline" })}>
+              {t("Back to the club")}
+            </Link>
           ) : null}
         </div>
       </section>
@@ -340,7 +341,7 @@ function PlayerDetailBody({ masterId }: PlayerDetailBodyProps) {
   return (
     <section className="player-detail-page">
       <nav className="player-detail-back fb-breadcrumb" aria-label={t("Breadcrumb")}>
-        <Link to={returnTo}>{returnTo.startsWith("/market") ? t("Market") : t("Players")}</Link>
+        <Link to={returnTo}>{t(returnPlace(returnTo))}</Link>
         <span aria-hidden="true">/</span><span aria-current="page">{name}</span>
       </nav>
       <PlayerSectionNavigation detailReady={detailReady} />

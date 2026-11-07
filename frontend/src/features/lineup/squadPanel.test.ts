@@ -2,7 +2,7 @@
 
 import { describe, expect, it } from "vitest";
 
-import { SQUAD_PAGE_SIZE, squadCountLabel, squadPageSlice } from "./squadPanel";
+import { SQUAD_PAGE_SIZE, squadCountLabel, squadPageForPlayer, squadPageSlice } from "./squadPanel";
 
 // ---- Happy path ---- //
 
@@ -21,6 +21,12 @@ describe("squadPageSlice", () => {
 
   it("squadPageSlice_clamps_page_index", () => {
     expect(squadPageSlice([1, 2, 3], 99).page).toBe(0);
+  });
+
+  it("squadPageForPlayer_later_page_focuses_that_card", () => {
+    const ids = Array.from({ length: 20 }, (_, index) => String(index + 1));
+    expect(squadPageForPlayer(ids, "9")).toBe(1);
+    expect(squadPageForPlayer(ids, "missing")).toBeNull();
   });
 
   it("squadCountLabel_count_against_cap", () => {

@@ -18,7 +18,7 @@ import originalFixtureWhiteUrl from "../../assets/button_original_fixture_white.
 import originalFixtureGrayUrl from "../../assets/button_original_fixture_gray.svg";
 import { pitchRowGapFraction, pitchRows } from "./pitchLayout";
 import { SQUAD_PICKER_EMPTY_MESSAGE } from "./playerTileCopy";
-import { squadCountLabel, squadPageSlice } from "./squadPanel";
+import { squadCountLabel, squadPageForPlayer, squadPageSlice } from "./squadPanel";
 import { SquadFilterDialog } from "./SquadFilterDialog";
 import { playerFormPresentation } from "../players/playerForm";
 import type { SquadPlayerStats } from "./useSquadStats";
@@ -86,6 +86,7 @@ export function LineupPage() {
 function LineupPageContent() {
   useTranslation();
   const [searchParams] = useSearchParams();
+  const focusPlayer = searchParams.get("focusPlayer");
   const board = useLineupBoard({ initialTeamId: searchParams.get("team") });
   const squadOffers = useOwnSquadOffers();
   const squadSales = useSquadSales();
@@ -130,6 +131,21 @@ function LineupPageContent() {
   const squadPageData = squadPageSlice(visibleSquad, filteredPage);
   const filterCount = activeSquadFilterCount(squadFilters);
   useEffect(() => { setFilteredPage(0); }, [board.selectedTeamId, picking, squadFilters]);
+  useEffect(() => {
+    const page = squadPageForPlayer(
+      visibleSquad.map((card) => card.masterPlayerId),
+      focusPlayer,
+    );
+    if (page != null) setFilteredPage(page);
+  }, [focusPlayer, visibleSquad]);
+  useEffect(() => {
+    if (!focusPlayer) return;
+    const node = document.getElementById(`squad-player-${focusPlayer}`);
+    if (!(node instanceof HTMLElement)) return;
+    if (typeof node.scrollIntoView === "function") node.scrollIntoView({ block: "nearest" });
+    const button = node.querySelector("button");
+    if (button instanceof HTMLButtonElement) button.focus();
+  }, [focusPlayer, squadPageData.page, squadPageData.pageItems]);
   useEffect(() => {
     setSquadFilters(createEmptySquadFilters());
     setFilterOpen(false);
@@ -633,14 +649,30 @@ function LineupPageContent() {
                         />
                       );
                       if (picking) {
-                        return <div className="squad-tile-slot" key={player.id}>{tile(() => board.pickSquadPlayer(player.id))}</div>;
+                        return (
+                          <div
+                            className="squad-tile-slot"
+                            id={player.masterPlayerId
+                              ? `squad-player-${player.masterPlayerId}`
+                              : undefined}
+                            key={player.id}
+                          >
+                            {tile(() => board.pickSquadPlayer(player.id))}
+                          </div>
+                        );
                       }
                       const pitchSlot = board.groups.flatMap((group) =>
                         group.players.map((slot) => ({ slot, role: group.role })),
                       ).find(({ slot }) => slot.id === player.id);
                       return (
-                        <SquadPlayerActions
+                        <div
+                          className="squad-tile-slot"
+                          id={player.masterPlayerId
+                            ? `squad-player-${player.masterPlayerId}`
+                            : undefined}
                           key={`${board.selectedTeamId}-${board.week}-${player.id}`}
+                        >
+                        <SquadPlayerActions
                           player={player}
                           sales={squadSales}
                           cardMenu
@@ -660,6 +692,7 @@ function LineupPageContent() {
                         >
                           {tile}
                         </SquadPlayerActions>
+                        </div>
                       );
                     })}
                   </div>

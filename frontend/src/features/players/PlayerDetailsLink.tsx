@@ -11,7 +11,7 @@ type PlayerDetailsLinkProps = {
   className?: string;
   /** Gray player card by default, red when the market or players row is hovered. */
   card?: boolean;
-  returnTo?: "/market" | "/players";
+  returnTo?: string;
 };
 
 /** Navigates to the player detail screen with an info icon. */

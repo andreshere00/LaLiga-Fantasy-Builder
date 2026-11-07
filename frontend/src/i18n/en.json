@@ -1750,5 +1750,19 @@
   "Expected return": "Expected return",
   "Injury status": "Injury status",
   "{{0}} players. Matchweek coverage was not published.": "{{0}} players. Matchweek coverage was not published.",
-  "Results are not published for this club.": "Results are not published for this club."
+  "Results are not published for this club.": "Results are not published for this club.",
+  "Matchday": "Matchday",
+  "Rotations": "Rotations",
+  "Predictability": "Predictability",
+  "Season predictability": "Season predictability",
+  "Starters": "Starters",
+  "Alternatives": "Alternatives",
+  "Average probability": "Average probability",
+  "Substitute risk": "Substitute risk",
+  "No slot": "No slot",
+  "Probability": "Probability",
+  "Field player": "Field player",
+  "Fantasy actions are unavailable for this player.": "Fantasy actions are unavailable for this player.",
+  "The predicted lineup is not published.": "The predicted lineup is not published.",
+  "Back to the club": "Back to the club"
 }

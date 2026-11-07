@@ -26,7 +26,7 @@ type MarketActionMenuProps = {
   context: MarketActionContext;
   actions: MarketActionsApi;
   detailsPlayer?: { id: string; name: string };
-  detailsReturnTo?: "/market" | "/players";
+  detailsReturnTo?: string;
 };
 
 function menuItemTooltip(

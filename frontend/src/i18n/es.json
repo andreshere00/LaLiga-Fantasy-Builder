@@ -1750,5 +1750,19 @@
   "Expected return": "Vuelta prevista",
   "Injury status": "Estado de la lesión",
   "{{0}} players. Matchweek coverage was not published.": "{{0}} jugadores. No se ha publicado la cobertura por jornada.",
-  "Results are not published for this club.": "No se han publicado resultados de este club."
+  "Results are not published for this club.": "No se han publicado resultados de este club.",
+  "Matchday": "Jornada",
+  "Rotations": "Rotaciones",
+  "Predictability": "Previsibilidad",
+  "Season predictability": "Previsibilidad de la temporada",
+  "Starters": "Titulares",
+  "Alternatives": "Alternativas",
+  "Average probability": "Probabilidad media",
+  "Substitute risk": "Riesgo de suplencia",
+  "No slot": "Sin posición",
+  "Probability": "Probabilidad",
+  "Field player": "Alinear",
+  "Fantasy actions are unavailable for this player.": "Las acciones de Fantasy no están disponibles para este jugador.",
+  "The predicted lineup is not published.": "El once previsto no está publicado.",
+  "Back to the club": "Volver al club"
 }

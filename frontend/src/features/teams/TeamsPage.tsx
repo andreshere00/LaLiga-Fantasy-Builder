@@ -4,6 +4,7 @@ import { Link, Navigate, useParams, useSearchParams } from "react-router-dom";
 import { initialClubId, teamPath, teamSearch, teamSectionId, type TeamSection } from "./teamRoutes";
 import { TeamPlayersSection } from "./TeamPlayersSection";
 import { TeamPerformanceSection } from "./TeamPerformanceSection";
+import { TeamLineupSection } from "./TeamLineupSection";
 import { TeamNewsSection } from "./TeamNewsSection";
 import type { TeamRouteState } from "./teamRoutes";
 import "./teams.css";
@@ -90,7 +91,14 @@ export function TeamsPage({ opponentClubId = null }: { opponentClubId?: number |
           onRetry={() => void dossier.refetch()}
         />
       ) : <section id="team-performance" tabIndex={-1} />}
-      <section id="team-lineup" tabIndex={-1} aria-label={t("Lineup")} />
+      {dossier.data && (dossier.data.prediction || predictionFailed(dossier.data)) ? (
+        <TeamLineupSection
+          prediction={dossier.data.prediction ?? null}
+          failed={predictionFailed(dossier.data)}
+          returnTo={teamPath(clubId ?? "", { ...route, section: "lineup" })}
+          onRetry={() => void dossier.refetch()}
+        />
+      ) : <section id="team-lineup" tabIndex={-1} />}
       <SegmentNotice
         failed={dossier.data?.segmentErrors?.some((error) => error.segment === "news") ?? false}
         onRetry={() => void dossier.refetch()}
@@ -100,6 +108,10 @@ export function TeamsPage({ opponentClubId = null }: { opponentClubId?: number |
         : <section id="team-news" tabIndex={-1} />}
     </div>
   );
+}
+
+function predictionFailed(dossier: { segmentErrors?: { segment: string }[] }): boolean {
+  return dossier.segmentErrors?.some((error) => error.segment === "prediction") ?? false;
 }
 
 function SegmentNotice({ failed, onRetry }: { failed: boolean; onRetry: () => void }) {

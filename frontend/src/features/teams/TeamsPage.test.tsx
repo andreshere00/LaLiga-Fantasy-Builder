@@ -48,6 +48,18 @@ vi.mock("../players/radar/usePlayerRadar", () => ({
   usePlayerRadar: () => ({ displayed: { axes: [] } }),
 }));
 
+vi.mock("../market/useMarketBoard", () => ({
+  useMarketBoard: () => { throw new Error("market board is unused on this fixture"); },
+}));
+
+vi.mock("../market/actions/useMarketActions", () => ({
+  useMarketActions: () => { throw new Error("market actions are unused on this fixture"); },
+}));
+
+vi.mock("../scouting/ScoutingProvider", () => ({
+  useScouting: () => { throw new Error("scouting is unused on this fixture"); },
+}));
+
 function renderTeams(path: string, opponentClubId?: number) {
   return render(
     <MemoryRouter initialEntries={[path]}>
