@@ -77,7 +77,7 @@ surfaces, thin borders and coral primary actions. All buttons and button-styled
 links have rectangular corners, enforced globally across pages and portaled
 overlays. The header's **Dark/Light** control switches the whole document,
 including portaled overlays and charts.
-At widths up to 1000px, the main **Lineup / Market / Players** navigation is
+At widths up to 1000px, the main **Lineup / Market / Players / Teams** navigation is
 fixed to the bottom of the viewport. It accounts for device safe areas, keeps
 the active destination visible, and reserves space below the footer so content
 is not covered. Branding and account options stay in the top header; desktop
@@ -207,8 +207,57 @@ and the API.
 | `/market` | Market — listings, bids, release clauses | [Market](api/market/README.md), [Buyout](api/buyout/README.md), [Players](api/players/README.md), [Calendar](api/calendar/README.md) |
 | `/players` | Players — catalog, filters, top-10 leaderboard | [Players](api/players/README.md), [Calendar](api/calendar/README.md) |
 | `/players/:playerId` | Player detail — stats aggregate | [Players](api/players/README.md) (`GET /players/{id}/stats/detail`) |
+| `/teams` | Teams — opens the first current club for the selected language | [Clubs](api/clubs/README.md) |
+| `/teams/:clubId` | One club dossier: players, results, predicted lineup, news | [Clubs](api/clubs/README.md) |
 
 The shell header switches routes. The league dropdown applies to lineup, market, and players.
+Teams reads the current club directory and one dossier; it does not use the manager-squad API.
+
+### Teams screen
+
+`/teams` opens the first current club in the selected language. `/teams/:clubId`
+keeps the club, and the query keeps `section`, `competition`, and `window` when
+they differ from Players, LaLiga, and five matches. Refresh restores that URL.
+The club strip and the Players, Performance, Lineup, and News links stay
+available from the keyboard. That bar is named **Club sections**, separate
+from the header's Sections navigation. On a phone the four header destinations move to
+the bottom bar and keep their labels inside the safe area.
+
+Players lists the top three footballers by published season points, with FSYP,
+form, starter likelihood, and the best published radar percentiles. A player
+without a radar says so. Injuries show the start date, the expected return, and
+the published status, including a status outside the six usual labels. An
+unpublished injury block stays distinct from a published empty list. The squad
+table leads with player, position, and FSYP, then the twelve event columns.
+Sort headers are buttons. Totals skip unpublished counts. A short window and a
+missing matchweek list are named in the caption.
+
+Performance reuses the player match cards. LaLiga is the default competition;
+European, Domestic, Friendlies, and All use the same control as the record.
+The window starts at five previous and five next matches and widens to 10, 20,
+or the whole season. The record, home and away split, and goals follow the
+finished matches in that window. The soonest scheduled kickoff inside the
+filter is labeled **Next match**. A score beyond 90 minutes shows the
+regulation score and the published final score. An empty filter names itself
+and offers all competitions. A failed cup or European read stays visible while
+LaLiga matches remain usable.
+
+Lineup shows the coach report and the matchday printed on the club page. It
+does not invent a formation: starters are a labeled list with photo, short
+name, and probability, and alternatives stay on their slot, ordered by
+probability, including a published 0%. The XI summary appears when the page
+publishes one. A resolved player can be bookmarked with the scouting control,
+and player details return to this club. Market actions use the existing menu
+and dialogs only when the selected league has a listing, bid, clause, or sale.
+**Field player** appears only for a player that league owns. It opens Lineup
+and focuses that squad card; it does not place the player or save the lineup.
+An unresolved scraped name stays visible and says that Fantasy actions are
+unavailable.
+
+News shows up to five headlines, the original article link, and the Madrid
+local date and time. Headlines use the same translation control as player
+news. A failed section names itself and can be retried without clearing the
+sections that loaded.
 
 ### Fixture matches and stadium weather
 

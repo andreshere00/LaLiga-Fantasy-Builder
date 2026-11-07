@@ -32,6 +32,9 @@ describe("predicted lineup", () => {
       { playerId: "9", name: "Alex Valles", nickname: "A. Valles" },
     ];
     expect(matchCatalogPlayer("Isco", catalog)).toBe("7");
+    expect(matchCatalogPlayer("Player 01", [
+      { playerId: "1", name: "Player 01", nickname: "Player 01" },
+    ])).toBe("1");
     expect(matchCatalogPlayer("Á. Valles", catalog)).toBeNull();
   });
 

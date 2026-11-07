@@ -50,9 +50,10 @@ export function matchCatalogPlayer(
 export function catalogNames(payload: unknown): CatalogName[] {
   const names: CatalogName[] = [];
   for (const [playerId, master] of catalogById(payload)) {
-    const name = text(master.name);
+    const nickname = text(master.nickname);
+    const name = text(master.name) ?? nickname;
     if (!name) continue;
-    names.push({ playerId, name, nickname: text(master.nickname) });
+    names.push({ playerId, name, nickname });
   }
   return names;
 }
