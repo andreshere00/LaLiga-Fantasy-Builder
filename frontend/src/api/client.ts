@@ -62,6 +62,8 @@ export const paths = {
   weekWeather: (week: number): `/api/calendar/weeks/${number}/weather` => `/api/calendar/weeks/${weekNumber(week)}/weather`,
   weekStats: (week: number) => `/api/calendar/weeks/${weekNumber(week)}/stats`,
   playersCatalog: () => "/api/players",
+  clubs: () => "/api/clubs",
+  club: (clubId: string) => `/api/clubs/${weekNumber(Number(clubId))}`,
   playerLeague: (playerId: string, leagueId: string) =>
     `/api/players/${segment(playerId)}/league/${segment(leagueId)}`,
   market: (leagueId: string) => `/api/market/leagues/${segment(leagueId)}`,

@@ -16,6 +16,7 @@ import { LeagueProvider } from "../features/lineup/LeagueProvider";
 import { LineupPage } from "../features/lineup/LineupPage";
 import { MarketPage } from "../features/market/MarketPage";
 import { PlayersPage } from "../features/players/PlayersPage";
+import { TeamsPage } from "../features/teams/TeamsPage";
 import { Footer } from "../features/shell/Footer";
 import { Header } from "../features/shell/Header";
 import { AppErrorBoundary } from "./AppErrorBoundary";
@@ -65,6 +66,8 @@ export function App() {
                     <Route path="/" element={<LineupRoute />} />
                     <Route path="/market" element={<MarketPage />} />
                     <Route path="/players" element={<PlayersPage />} />
+                    <Route path="/teams" element={<TeamsPage />} />
+                    <Route path="/teams/:clubId" element={<TeamsPage />} />
                     <Route
                       path="/players/:playerId"
                       element={

@@ -49,6 +49,7 @@ export function Header() {
           <NavLink to="/" end className="nav-tab">{t("Lineup")}</NavLink>
           <NavLink to="/market" className="nav-tab">{t("Market")}</NavLink>
           <NavLink to="/players" className="nav-tab">{t("Players")}</NavLink>
+          <NavLink to="/teams" className="nav-tab">{t("Teams")}</NavLink>
         </nav>
         <div className={`nav-actions${optionsOpen ? " is-open" : ""}`}>
           <button

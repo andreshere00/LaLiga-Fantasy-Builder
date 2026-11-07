@@ -14,14 +14,12 @@ export type SquadPlayerStats = {
   outlook: { rating: string | null; starterProbability: number | null; matchweek: number | null } | null;
 };
 
-/** Loads the whole squad's outlook in parallel so cards can be revealed together. */
-export function useSquadStats(players: readonly SquadCard[]) {
+/** Loads profile form and starter likelihood for the given master ids. */
+export function usePlayerOutlooks(ids: readonly string[]) {
   const { accessToken, user } = useAuth();
-  const catalog = usePlayersCatalogQuery(players.length > 0);
-  const ids = [...new Set(players.filter((player) => player.positionId !== 5)
-    .map((player) => player.masterPlayerId).filter((id): id is string => Boolean(id)))];
+  const unique = [...new Set(ids.filter((id) => id.length > 0))];
   const queries = useQueries({
-    queries: ids.map((id) => ({
+    queries: unique.map((id) => ({
       queryKey: ["players", "profile", user?.userId, id],
       enabled: accessToken != null,
       staleTime: CALENDAR_STALE_MS,
@@ -32,16 +30,30 @@ export function useSquadStats(players: readonly SquadCard[]) {
         }),
     })),
   });
-  useReauthOnError([catalog.error, ...queries.map((query) => query.error)]);
+  useReauthOnError(queries.map((query) => query.error));
+  return {
+    profiles: new Map(unique.map((id, index) => [
+      id, queries[index]?.data as PlayerProfileDto | undefined,
+    ])),
+    isLoading: unique.length > 0 && queries.some((query) => query.isPending),
+    errors: queries.map((query) => query.error),
+  };
+}
+
+/** Loads the whole squad's outlook in parallel so cards can be revealed together. */
+export function useSquadStats(players: readonly SquadCard[]) {
+  const catalog = usePlayersCatalogQuery(players.length > 0);
+  const ids = [...new Set(players.filter((player) => player.positionId !== 5)
+    .map((player) => player.masterPlayerId).filter((id): id is string => Boolean(id)))];
+  const outlooks = usePlayerOutlooks(ids);
+  useReauthOnError([catalog.error, ...outlooks.errors]);
   const catalogById = new Map<string, Record<string, unknown>>();
   for (const entry of Array.isArray(catalog.data) ? catalog.data : []) {
     const record = asRecord(entry);
     const id = idText(record?.id);
     if (id && record) catalogById.set(id, record);
   }
-  const profiles = new Map(ids.map((id, index) => [
-    id, queries[index].data as PlayerProfileDto | undefined,
-  ]));
+  const profiles = outlooks.profiles;
   const stats = new Map<string, SquadPlayerStats>();
   for (const player of players) {
     const id = player.masterPlayerId;
@@ -63,7 +75,7 @@ export function useSquadStats(players: readonly SquadCard[]) {
   }
   return {
     stats,
-    isLoading: players.length > 0 && (catalog.isPending || queries.some((query) => query.isPending)),
+    isLoading: players.length > 0 && (catalog.isPending || outlooks.isLoading),
   };
 }
 

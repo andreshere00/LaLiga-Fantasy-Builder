@@ -1,0 +1,13 @@
+.team-page { display: grid; gap: 1rem; }
+.team-picker { display: flex; gap: 0.5rem; overflow-x: auto; padding-bottom: 0.25rem; }
+.team-picker button { min-height: 44px; min-width: 44px; }
+.team-sections { display: flex; gap: 0.5rem; position: sticky; top: var(--app-header-height, 0px); z-index: 2; background: var(--surface, Canvas); }
+.team-sections a { min-height: 44px; display: inline-flex; align-items: center; }
+.team-table-wrap { overflow-x: auto; }
+.team-table { border-collapse: collapse; width: max-content; min-width: 100%; }
+.team-table th, .team-table td { padding: 0.4rem 0.6rem; text-align: right; font-variant-numeric: tabular-nums; }
+.team-table .is-sticky { position: sticky; left: 0; text-align: left; background: var(--surface, Canvas); }
+.team-table .is-sticky-2 { left: 8rem; }
+.team-table .is-sticky-3 { left: 13rem; }
+.team-mvp-list, .team-injury-list, .team-news-list { display: grid; gap: 0.75rem; list-style: none; padding: 0; }
+.team-news-list a { overflow-wrap: anywhere; }

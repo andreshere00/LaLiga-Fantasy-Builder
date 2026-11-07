@@ -2,6 +2,7 @@ import { useEffect } from "react";
 import { useQuery } from "@tanstack/react-query";
 
 import { getJson, paths, type PlayerStatsDetailQuery } from "./client";
+import type { ClubDossierDto, ClubIndexDto } from "./schemas";
 import { ApiError, NeedsReauthError } from "./errors";
 import { asCurrentWeek, asFiniteNumber, asRecord } from "./mappers";
 import { useAuth } from "../auth/AuthProvider";
@@ -69,6 +70,28 @@ export function useWeekFixturesQuery(week: number | null, enabled: boolean, poll
       if (week == null || week < 1 || week > 38) throw new Error("Invalid fixture week");
       return getJson(paths.weekFixtures(week), accessToken ?? "", { signal });
     },
+  });
+}
+
+export function useClubIndexQuery(enabled = true) {
+  const { accessToken, user } = useAuth();
+  return useQuery({
+    queryKey: ["clubs", user?.userId ?? null],
+    enabled: enabled && accessToken != null && user != null,
+    staleTime: CATALOG_STALE_MS,
+    queryFn: ({ signal }) =>
+      getJson(paths.clubs(), accessToken ?? "", { signal }) as Promise<ClubIndexDto>,
+  });
+}
+
+export function useClubDossierQuery(clubId: string | null) {
+  const { accessToken, user } = useAuth();
+  return useQuery({
+    queryKey: ["clubs", "dossier", user?.userId ?? null, clubId],
+    enabled: accessToken != null && user != null && clubId != null && clubId !== "",
+    staleTime: CALENDAR_STALE_MS,
+    queryFn: ({ signal }) =>
+      getJson(paths.club(clubId ?? ""), accessToken ?? "", { signal }) as Promise<ClubDossierDto>,
   });
 }
 

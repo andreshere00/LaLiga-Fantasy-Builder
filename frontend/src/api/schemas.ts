@@ -973,6 +973,93 @@ export const lineupBuildStreamEventSchema = z.discriminatedUnion("type", [
 
 export const playerRadarResponseSchema = responseSchema(radarResponseShape);
 
+const clubStatLineSchema = readObject({
+  minutes: z.number().int().nullable().optional(),
+  goals: z.number().int().nullable().optional(),
+  assists: z.number().int().nullable().optional(),
+  dribbles: z.number().int().nullable().optional(),
+  penaltiesCommitted: z.number().int().nullable().optional(),
+  penaltiesSaved: z.number().int().nullable().optional(),
+  shots: z.number().int().nullable().optional(),
+  recoveries: z.number().int().nullable().optional(),
+  saves: z.number().int().nullable().optional(),
+  ballsLost: z.number().int().nullable().optional(),
+  yellowCards: z.number().int().nullable().optional(),
+  redCards: z.number().int().nullable().optional(),
+});
+const clubSummarySchema = readObject({
+  clubId: z.number().int().positive(),
+  name: z.string(),
+  shortName: z.string().nullable().optional(),
+  badgeUrl: z.string().nullable().optional(),
+  slug: z.string().nullable().optional(),
+});
+export const clubIndexSchema = responseSchema(readObject({
+  clubs: z.array(clubSummarySchema),
+}));
+const clubSegmentErrorSchema = readObject({
+  segment: z.enum(["roster", "performance", "prediction", "injuries", "news"]),
+  code: z.string(),
+  detail: z.string(),
+});
+export const clubDossierSchema = responseSchema(readObject({
+  club: clubSummarySchema,
+  roster: readObject({
+    mvps: z.array(readObject({
+      playerId: z.string(),
+      name: z.string(),
+      points: z.number().int(),
+      positionId: z.number().int().nullable().optional(),
+    })),
+    players: z.array(readObject({
+      playerId: z.string(),
+      name: z.string(),
+      positionId: z.number().int().nullable().optional(),
+      points: z.number().int().nullable().optional(),
+      stats: clubStatLineSchema,
+    })),
+    totals: clubStatLineSchema,
+    coverage: readObject({
+      players: z.number().int().nonnegative(),
+      matchweeks: z.array(z.number().int()),
+      shortWindow: z.boolean(),
+    }),
+  }).nullable().optional(),
+  performance: readObject({
+    matches: z.array(readObject({ matchId: z.string() })).optional(),
+    records: z.array(readObject({ competition: z.string() })).optional(),
+    nextMatchId: z.string().nullable().optional(),
+  }).nullable().optional(),
+  prediction: readObject({
+    matchday: z.number().int().nullable().optional(),
+    coach: readObject({ name: z.string() }).nullable().optional(),
+    starters: z.array(readObject({ name: z.string() })).optional(),
+    alternatives: z.array(readObject({ name: z.string(), probability: z.number().nullable().optional() })).optional(),
+  }).nullable().optional(),
+  injuries: readObject({
+    published: z.boolean(),
+    items: z.array(readObject({
+      name: z.string(),
+      profileUrl: z.string().nullable().optional(),
+      photoUrl: z.string().nullable().optional(),
+      diagnosis: z.string().nullable().optional(),
+      startedOn: z.string().nullable().optional(),
+      expectedReturn: z.string().nullable().optional(),
+      status: z.string().nullable().optional(),
+    })),
+  }).nullable().optional(),
+  news: readObject({
+    items: z.array(readObject({
+      title: z.string(),
+      url: z.string(),
+      publishedAt: z.string().nullable().optional(),
+    })),
+  }).nullable().optional(),
+  segmentErrors: z.array(clubSegmentErrorSchema).optional(),
+}));
+export type ClubIndexDto = z.infer<typeof clubIndexSchema>;
+export type ClubDossierDto = z.infer<typeof clubDossierSchema>;
+
 export type ApiResponseDto =
   | z.infer<typeof favoritesSchema>
   | z.infer<typeof inboxSchema>
@@ -985,6 +1072,8 @@ export type ApiResponseDto =
   | CredentialProbeResponseDto
   | LeaguesProbeResponseDto
   | HealthResponseDto
+  | ClubIndexDto
+  | ClubDossierDto
   | z.infer<typeof leaguesResponseSchema>
   | z.infer<typeof standingResponseSchema>
   | z.infer<typeof activityResponseSchema>
@@ -1048,6 +1137,8 @@ const endpointContracts: Array<{
   { method: "GET", path: /^\/api\/calendar\/weeks\/\d+\/stats$/, response: matchStatsResponseSchema },
   { method: "GET", path: /^\/api\/calendar\/weeks\/\d+\/weather$/, response: weekWeatherSchema },
   { method: "GET", path: /^\/api\/players$/, response: catalogPlayersResponseSchema },
+  { method: "GET", path: /^\/api\/clubs$/, response: clubIndexSchema },
+  { method: "GET", path: /^\/api\/clubs\/[^/]+$/, response: clubDossierSchema },
   { method: "GET", path: /^\/api\/players\/[^/]+\/market-value$/, response: marketValuesResponseSchema },
   { method: "GET", path: /^\/api\/players\/[^/]+\/league\/[^/]+$/, response: leaguePlayerSchema },
   { method: "GET", path: /^\/api\/players\/[^/]+\/stats$/, response: playerStatsIndexSchema },
