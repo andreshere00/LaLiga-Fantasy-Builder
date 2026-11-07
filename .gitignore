@@ -83,6 +83,9 @@ gha-creds-*.json
 /data/radar/
 /data/radar-review/
 
+# Local implementation plans
+docs/plan/
+
 # Python bytecode caches
 __pycache__/
 *.py[cod]
