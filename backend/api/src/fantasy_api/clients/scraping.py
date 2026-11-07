@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import logging
+import re
 from collections.abc import Mapping
 from typing import Any
 
@@ -14,8 +15,22 @@ from fantasy_api.domain.errors import UpstreamError
 logger = logging.getLogger(__name__)
 
 _ALLOWED_PATHS = frozenset(
-    {"/internal/players/futbolfantasy", "/internal/scrape/standings", "/internal/radar/datamb"}
+    {
+        "/internal/players/futbolfantasy",
+        "/internal/scrape/standings",
+        "/internal/radar/datamb",
+        "/internal/clubs/{slug}",
+        "/internal/clubs/{slug}/news",
+    }
 )
+_CLUB_PATH = re.compile(r"^/internal/clubs/[a-z0-9]+(?:-[a-z0-9]+)*(?:/news)?$")
+
+
+def _path_allowed(path: str) -> bool:
+    """Allow a fixed internal path or one verified club dossier path."""
+    if path in _ALLOWED_PATHS:
+        return True
+    return _CLUB_PATH.fullmatch(path) is not None
 
 
 class ScrapingClient:
@@ -55,7 +70,7 @@ class ScrapingClient:
                 status_code=503,
                 category="scraping_disabled",
             )
-        if path not in _ALLOWED_PATHS:
+        if not _path_allowed(path):
             raise UpstreamError("invalid scraping path", category="scraping_error")
         url = f"{self._base_url}{path}"
         headers = {

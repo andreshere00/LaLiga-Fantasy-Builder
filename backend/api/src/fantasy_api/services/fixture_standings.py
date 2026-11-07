@@ -37,6 +37,7 @@ class FixtureStandingsService:
         self._clock = clock or (lambda: datetime.now(UTC))
         self._snapshot = AsyncTtlCache[CompetitionStandings](ttl_seconds)
         self._clubs = AsyncTtlCache[list[TeamsMasterRow]](86400)
+        self._fixture_cache = AsyncTtlCache[list[SeasonFixture]](ttl_seconds)
 
     async def get_standings(
         self, competition_id: int, season: int | None, mode: str
@@ -67,6 +68,27 @@ class FixtureStandingsService:
         if season is not None and season != snapshot.season:
             raise NotFoundError("only the current season is supported by this source")
         return snapshot.model_copy(update={"cached": cached, "generated_at": self._clock()})
+
+    async def get_clubs(self) -> list[TeamsMasterRow]:
+        """Return the cached public teams-master directory."""
+        return await self._clubs.get_or_fetch(self._fetch_clubs)
+
+    async def get_season_fixtures(self) -> list[SeasonFixture]:
+        """Return the season fixtures already fetched for the classification.
+
+        Finished and unfinished matches are both included. ``get_standings()``
+        still returns only ``CompetitionStandings``.
+        """
+        return await self._fixture_cache.get_or_fetch(self._load_fixtures)
+
+    async def _load_fixtures(self) -> list[SeasonFixture]:
+        """Deduplicate the 38 public matchweeks."""
+        seen: dict[str, SeasonFixture] = {}
+        for match in _models(await self._repository.get_fixtures(), SeasonFixture):
+            if match.id in seen and match != seen[match.id]:
+                raise ValueError("conflicting copies of a fixture")
+            seen.setdefault(match.id, match)
+        return list(seen.values())
 
     async def _fetch_clubs(self) -> list[TeamsMasterRow]:
         """Validate the public real-club directory."""
@@ -99,15 +121,9 @@ class FixtureStandingsService:
             for official_id, club in mapped.items()
         }
         clubs = {club.id: club for club in mapped.values()}
-        raw_fixtures = _models(await self._repository.get_fixtures(), SeasonFixture)
-        seen: dict[str, SeasonFixture] = {}
+        raw_fixtures = await self.get_season_fixtures()
         fixtures: list[FootballFixture] = []
         for match in raw_fixtures:
-            if match.id in seen:
-                if match != seen[match.id]:
-                    raise ValueError("conflicting copies of a fixture")
-                continue
-            seen[match.id] = match
             if match.local_id == match.visitor_id:
                 raise ValueError("fixture club cannot play itself")
             if match.local_id not in clubs or match.visitor_id not in clubs:

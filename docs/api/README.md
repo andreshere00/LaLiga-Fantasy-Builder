@@ -10,6 +10,7 @@ Application API docs for `backend/api` (`fantasy_api`).
 - [Real LALIGA standings API](standings/README.md) — club table, configuration,
   CLI access, and completed/live availability
 - [Leagues](leagues/README.md) · [Teams](teams/README.md) ·
+  [Clubs](clubs/README.md) ·
   [Players](players/README.md) · [Calendar](calendar/README.md) ·
   [Market](market/README.md) · [Buyout](buyout/README.md)
 - [Proxy endpoint pitfalls](proxy-endpoint-pitfalls.md)

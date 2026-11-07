@@ -1,6 +1,7 @@
 # Teams API
 
 Authenticated LaLiga team money and lineup routes under `{CMP}/teams/...`.
+Real-club dossiers live under [Clubs](../clubs/README.md).
 To add a route, follow [Adding endpoints](../adding-endpoints.md).
 
 ## Routes

@@ -2951,6 +2951,195 @@
         ]
       }
     },
+    "/clubs": {
+      "get": {
+        "tags": [
+          "clubs"
+        ],
+        "summary": "List current LaLiga clubs",
+        "operationId": "list_clubs_clubs_get",
+        "parameters": [
+          {
+            "name": "authorization",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Authorization"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ClubIndex"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized or LaLiga re-auth required.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "502": {
+            "description": "Auth or Fantasy upstream failure.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Fantasy upstream unavailable.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ]
+      }
+    },
+    "/clubs/{club_id}": {
+      "get": {
+        "tags": [
+          "clubs"
+        ],
+        "summary": "Read one real-club dossier",
+        "description": "A failed section is omitted and listed in ``segment_errors``. The response\ndoes not include HTML, tokens, or upstream bodies. Radar and player form\nstay on the existing player routes.",
+        "operationId": "get_club_clubs__club_id__get",
+        "parameters": [
+          {
+            "name": "club_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "title": "Club Id"
+            }
+          },
+          {
+            "name": "authorization",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Authorization"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ClubDossier"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized or LaLiga re-auth required.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "502": {
+            "description": "Auth or Fantasy upstream failure.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Fantasy upstream unavailable.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Unknown club.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ]
+      }
+    },
     "/players": {
       "get": {
         "tags": [
@@ -7261,6 +7450,299 @@
         "title": "CatalogPlayer",
         "description": "Master player entry from ``GET /players``."
       },
+      "ClubDossier": {
+        "properties": {
+          "club": {
+            "$ref": "#/components/schemas/ClubSummary"
+          },
+          "roster": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/RosterSection"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "performance": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/PerformanceSection"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "prediction": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/PredictionSection"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "injuries": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/InjuriesSection"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "news": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/NewsSection"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "segmentErrors": {
+            "items": {
+              "$ref": "#/components/schemas/ClubSegmentError"
+            },
+            "type": "array",
+            "title": "Segmenterrors"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "club"
+        ],
+        "title": "ClubDossier",
+        "description": "One club dossier. Failed sections stay null and are listed in ``segment_errors``."
+      },
+      "ClubIndex": {
+        "properties": {
+          "clubs": {
+            "items": {
+              "$ref": "#/components/schemas/ClubSummary"
+            },
+            "type": "array",
+            "title": "Clubs"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "clubs"
+        ],
+        "title": "ClubIndex",
+        "description": "Current clubs with their verified FutbolFantasy slugs."
+      },
+      "ClubMatch": {
+        "properties": {
+          "matchId": {
+            "type": "string",
+            "title": "Matchid"
+          },
+          "competition": {
+            "type": "string",
+            "title": "Competition"
+          },
+          "group": {
+            "type": "string",
+            "enum": [
+              "laliga",
+              "european",
+              "domestic",
+              "friendly"
+            ],
+            "title": "Group"
+          },
+          "home": {
+            "type": "string",
+            "title": "Home"
+          },
+          "away": {
+            "type": "string",
+            "title": "Away"
+          },
+          "homeBadge": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Homebadge"
+          },
+          "awayBadge": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Awaybadge"
+          },
+          "kickoff": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Kickoff"
+          },
+          "kickoffText": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Kickofftext"
+          },
+          "roundLabel": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Roundlabel"
+          },
+          "regulationHome": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Regulationhome"
+          },
+          "regulationAway": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Regulationaway"
+          },
+          "finalHome": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Finalhome"
+          },
+          "finalAway": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Finalaway"
+          },
+          "outcome": {
+            "anyOf": [
+              {
+                "type": "string",
+                "enum": [
+                  "win",
+                  "draw",
+                  "loss"
+                ]
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Outcome"
+          },
+          "venue": {
+            "type": "string",
+            "enum": [
+              "home",
+              "away"
+            ],
+            "title": "Venue",
+            "default": "home"
+          },
+          "scheduled": {
+            "type": "boolean",
+            "title": "Scheduled",
+            "default": false
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "matchId",
+          "competition",
+          "group",
+          "home",
+          "away"
+        ],
+        "title": "ClubMatch",
+        "description": "One club match. A second score is present only when both were published."
+      },
+      "ClubSegmentError": {
+        "properties": {
+          "segment": {
+            "type": "string",
+            "enum": [
+              "roster",
+              "performance",
+              "prediction",
+              "injuries",
+              "news"
+            ],
+            "title": "Segment"
+          },
+          "code": {
+            "type": "string",
+            "title": "Code"
+          },
+          "detail": {
+            "type": "string",
+            "maxLength": 200,
+            "title": "Detail"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "segment",
+          "code",
+          "detail"
+        ],
+        "title": "ClubSegmentError",
+        "description": "Sanitised reason one dossier section could not be produced."
+      },
       "ClubStanding": {
         "properties": {
           "team": {
@@ -7335,6 +7817,59 @@
         ],
         "title": "ClubStanding",
         "description": "All eleven required classification fields for a real club."
+      },
+      "ClubSummary": {
+        "properties": {
+          "clubId": {
+            "type": "integer",
+            "title": "Clubid"
+          },
+          "name": {
+            "type": "string",
+            "title": "Name"
+          },
+          "shortName": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Shortname"
+          },
+          "badgeUrl": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Badgeurl"
+          },
+          "slug": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Slug"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "clubId",
+          "name"
+        ],
+        "title": "ClubSummary",
+        "description": "One current club in the index."
       },
       "ClubTeam": {
         "properties": {
@@ -7422,6 +7957,60 @@
           "other"
         ],
         "title": "Competition"
+      },
+      "CompetitionRecord": {
+        "properties": {
+          "competition": {
+            "type": "string",
+            "enum": [
+              "laliga",
+              "european",
+              "domestic",
+              "friendly"
+            ],
+            "title": "Competition"
+          },
+          "won": {
+            "type": "integer",
+            "title": "Won",
+            "default": 0
+          },
+          "drawn": {
+            "type": "integer",
+            "title": "Drawn",
+            "default": 0
+          },
+          "lost": {
+            "type": "integer",
+            "title": "Lost",
+            "default": 0
+          },
+          "home": {
+            "$ref": "#/components/schemas/VenueRecord"
+          },
+          "away": {
+            "$ref": "#/components/schemas/VenueRecord"
+          },
+          "goalsFor": {
+            "type": "integer",
+            "title": "Goalsfor",
+            "default": 0
+          },
+          "goalsAgainst": {
+            "type": "integer",
+            "title": "Goalsagainst",
+            "default": 0
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "competition",
+          "home",
+          "away"
+        ],
+        "title": "CompetitionRecord",
+        "description": "Results and goals for one competition group."
       },
       "CompetitionStandings": {
         "properties": {
@@ -8624,6 +9213,29 @@
         "title": "IncreaseBuyoutWrite",
         "description": "Request body for setting or increasing a buyout clause."
       },
+      "InjuriesSection": {
+        "properties": {
+          "published": {
+            "type": "boolean",
+            "title": "Published"
+          },
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/InjuryItem"
+            },
+            "type": "array",
+            "title": "Items"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "published",
+          "items"
+        ],
+        "title": "InjuriesSection",
+        "description": "Current injuries. ``published`` is false when the page has no injury block."
+      },
       "Injury": {
         "properties": {
           "active": {
@@ -8756,6 +9368,87 @@
         "additionalProperties": true,
         "type": "object",
         "title": "InjuryHistoryEntry"
+      },
+      "InjuryItem": {
+        "properties": {
+          "name": {
+            "type": "string",
+            "title": "Name"
+          },
+          "profileUrl": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Profileurl"
+          },
+          "photoUrl": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Photourl"
+          },
+          "diagnosis": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Diagnosis"
+          },
+          "startedOn": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Startedon"
+          },
+          "expectedReturn": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Expectedreturn"
+          },
+          "status": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Status"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "name"
+        ],
+        "title": "InjuryItem",
+        "description": "One current injury. ``status`` is the published recovery step."
       },
       "InjuryRisk": {
         "type": "string",
@@ -10898,56 +11591,23 @@
         "type": "object",
         "title": "MinutesPlayed"
       },
-      "NewsItem": {
+      "NewsSection": {
         "properties": {
-          "title": {
-            "type": "string",
-            "title": "Title"
-          },
-          "url": {
-            "anyOf": [
-              {
-                "type": "string",
-                "maxLength": 2083,
-                "minLength": 1,
-                "format": "uri"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Url"
-          },
-          "published_at": {
-            "anyOf": [
-              {
-                "type": "string",
-                "format": "date-time"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Published At"
-          },
-          "source": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Source"
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/fantasy_api__schemas__clubs__NewsItem"
+            },
+            "type": "array",
+            "title": "Items"
           }
         },
-        "additionalProperties": true,
+        "additionalProperties": false,
         "type": "object",
         "required": [
-          "title"
+          "items"
         ],
-        "title": "NewsItem"
+        "title": "NewsSection",
+        "description": "The five newest club changelog headlines."
       },
       "Observation": {
         "properties": {
@@ -11084,6 +11744,43 @@
         ],
         "title": "PayBuyoutWrite",
         "description": "Request body for paying a buyout clause."
+      },
+      "PerformanceSection": {
+        "properties": {
+          "matches": {
+            "items": {
+              "$ref": "#/components/schemas/ClubMatch"
+            },
+            "type": "array",
+            "title": "Matches"
+          },
+          "records": {
+            "items": {
+              "$ref": "#/components/schemas/CompetitionRecord"
+            },
+            "type": "array",
+            "title": "Records"
+          },
+          "nextMatchId": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Nextmatchid"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "matches",
+          "records"
+        ],
+        "title": "PerformanceSection",
+        "description": "LaLiga record plus other competitions published on the club page."
       },
       "PlayerDetailResponse": {
         "properties": {
@@ -11716,7 +12413,7 @@
           },
           "news": {
             "items": {
-              "$ref": "#/components/schemas/NewsItem"
+              "$ref": "#/components/schemas/fantasy_api__schemas__player_stats__NewsItem"
             },
             "type": "array",
             "title": "News"
@@ -12123,6 +12820,264 @@
         "type": "object",
         "title": "PlayerTeamOffers",
         "description": "Offers on an owned squad entry."
+      },
+      "PredictedCoach": {
+        "properties": {
+          "name": {
+            "type": "string",
+            "title": "Name"
+          },
+          "photoUrl": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Photourl"
+          },
+          "matchday": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Matchday"
+          },
+          "rotations": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Rotations"
+          },
+          "matchdayPredictability": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Matchdaypredictability"
+          },
+          "seasonPredictabilityPercent": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Seasonpredictabilitypercent"
+          },
+          "seasonPredictabilityLabel": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Seasonpredictabilitylabel"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "name"
+        ],
+        "title": "PredictedCoach",
+        "description": "Coach report for the published matchday."
+      },
+      "PredictedPlayer": {
+        "properties": {
+          "name": {
+            "type": "string",
+            "title": "Name"
+          },
+          "role": {
+            "type": "string",
+            "enum": [
+              "starter",
+              "alternative"
+            ],
+            "title": "Role"
+          },
+          "profileUrl": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Profileurl"
+          },
+          "photoUrl": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Photourl"
+          },
+          "probability": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Probability"
+          },
+          "formArrow": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Formarrow"
+          },
+          "position": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Position"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "name",
+          "role"
+        ],
+        "title": "PredictedPlayer",
+        "description": "One starter or alternative in the published XI."
+      },
+      "PredictedSummary": {
+        "properties": {
+          "averageFormArrow": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Averageformarrow"
+          },
+          "averageProbability": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Averageprobability"
+          },
+          "substituteRisk": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Substituterisk"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "title": "PredictedSummary",
+        "description": "Published XI averages."
+      },
+      "PredictionSection": {
+        "properties": {
+          "matchday": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Matchday"
+          },
+          "coach": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/PredictedCoach"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "starters": {
+            "items": {
+              "$ref": "#/components/schemas/PredictedPlayer"
+            },
+            "type": "array",
+            "title": "Starters"
+          },
+          "alternatives": {
+            "items": {
+              "$ref": "#/components/schemas/PredictedPlayer"
+            },
+            "type": "array",
+            "title": "Alternatives"
+          },
+          "summary": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/PredictedSummary"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "starters",
+          "alternatives"
+        ],
+        "title": "PredictionSection",
+        "description": "FutbolFantasy forecast. It is not the lineup saved in Fantasy."
       },
       "PremiumConfigurations": {
         "properties": {
@@ -12774,6 +13729,290 @@
         ],
         "title": "RecentMatchesResponse"
       },
+      "RosterCoverage": {
+        "properties": {
+          "players": {
+            "type": "integer",
+            "title": "Players"
+          },
+          "matchweeks": {
+            "items": {
+              "type": "integer"
+            },
+            "type": "array",
+            "title": "Matchweeks"
+          },
+          "shortWindow": {
+            "type": "boolean",
+            "title": "Shortwindow"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "players",
+          "matchweeks",
+          "shortWindow"
+        ],
+        "title": "RosterCoverage",
+        "description": "How many footballers and matchweeks the totals include."
+      },
+      "RosterMvp": {
+        "properties": {
+          "playerId": {
+            "type": "string",
+            "title": "Playerid"
+          },
+          "name": {
+            "type": "string",
+            "title": "Name"
+          },
+          "points": {
+            "type": "integer",
+            "title": "Points"
+          },
+          "positionId": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Positionid"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "playerId",
+          "name",
+          "points"
+        ],
+        "title": "RosterMvp",
+        "description": "One of the three footballers with the most published season points."
+      },
+      "RosterPlayer": {
+        "properties": {
+          "playerId": {
+            "type": "string",
+            "title": "Playerid"
+          },
+          "name": {
+            "type": "string",
+            "title": "Name"
+          },
+          "positionId": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Positionid"
+          },
+          "points": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Points"
+          },
+          "stats": {
+            "$ref": "#/components/schemas/RosterStatLine"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "playerId",
+          "name",
+          "stats"
+        ],
+        "title": "RosterPlayer",
+        "description": "One footballer in the club squad table."
+      },
+      "RosterSection": {
+        "properties": {
+          "mvps": {
+            "items": {
+              "$ref": "#/components/schemas/RosterMvp"
+            },
+            "type": "array",
+            "title": "Mvps"
+          },
+          "players": {
+            "items": {
+              "$ref": "#/components/schemas/RosterPlayer"
+            },
+            "type": "array",
+            "title": "Players"
+          },
+          "totals": {
+            "$ref": "#/components/schemas/RosterStatLine"
+          },
+          "coverage": {
+            "$ref": "#/components/schemas/RosterCoverage"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "mvps",
+          "players",
+          "totals",
+          "coverage"
+        ],
+        "title": "RosterSection",
+        "description": "Squad table, totals, and the three MVP ids."
+      },
+      "RosterStatLine": {
+        "properties": {
+          "minutes": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Minutes"
+          },
+          "goals": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Goals"
+          },
+          "assists": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Assists"
+          },
+          "dribbles": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Dribbles"
+          },
+          "penaltiesCommitted": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Penaltiescommitted"
+          },
+          "penaltiesSaved": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Penaltiessaved"
+          },
+          "shots": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Shots"
+          },
+          "recoveries": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Recoveries"
+          },
+          "saves": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Saves"
+          },
+          "ballsLost": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Ballslost"
+          },
+          "yellowCards": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Yellowcards"
+          },
+          "redCards": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Redcards"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "title": "RosterStatLine",
+        "description": "Event counts for one footballer. Missing counts stay null."
+      },
       "ScoredPlayer": {
         "properties": {
           "player_id": {
@@ -12850,7 +14089,7 @@
           },
           "news": {
             "items": {
-              "$ref": "#/components/schemas/NewsItem"
+              "$ref": "#/components/schemas/fantasy_api__schemas__player_stats__NewsItem"
             },
             "type": "array",
             "title": "News"
@@ -14465,6 +15704,29 @@
         ],
         "title": "Venue"
       },
+      "VenueRecord": {
+        "properties": {
+          "won": {
+            "type": "integer",
+            "title": "Won",
+            "default": 0
+          },
+          "drawn": {
+            "type": "integer",
+            "title": "Drawn",
+            "default": 0
+          },
+          "lost": {
+            "type": "integer",
+            "title": "Lost",
+            "default": 0
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "title": "VenueRecord",
+        "description": "Wins, draws, and losses at one venue."
+      },
       "WatchWrite": {
         "properties": {
           "marketAlert": {
@@ -14651,6 +15913,89 @@
         ],
         "title": "WeekWeather",
         "description": "Matchweek weather aggregate with explicit per-match unavailable reasons."
+      },
+      "fantasy_api__schemas__clubs__NewsItem": {
+        "properties": {
+          "title": {
+            "type": "string",
+            "title": "Title"
+          },
+          "url": {
+            "type": "string",
+            "title": "Url"
+          },
+          "publishedAt": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Publishedat"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "title",
+          "url"
+        ],
+        "title": "NewsItem",
+        "description": "One club headline. The article body stays on the source site."
+      },
+      "fantasy_api__schemas__player_stats__NewsItem": {
+        "properties": {
+          "title": {
+            "type": "string",
+            "title": "Title"
+          },
+          "url": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 2083,
+                "minLength": 1,
+                "format": "uri"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Url"
+          },
+          "published_at": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Published At"
+          },
+          "source": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Source"
+          }
+        },
+        "additionalProperties": true,
+        "type": "object",
+        "required": [
+          "title"
+        ],
+        "title": "NewsItem"
       }
     },
     "securitySchemes": {
@@ -14666,6 +16011,10 @@
     {
       "name": "scouting",
       "description": "User-owned favorites, per-league watches and persistent alerts."
+    },
+    {
+      "name": "clubs",
+      "description": "Real LaLiga club dossiers. Internal JWT; no LaLiga bearer. Roster and LaLiga results are public Fantasy reads. Predicted XI, injuries, and news come from the scraping service."
     },
     {
       "name": "standings",

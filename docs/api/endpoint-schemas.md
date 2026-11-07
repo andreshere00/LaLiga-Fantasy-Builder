@@ -719,6 +719,60 @@ Activate shielding for a squad entry
 Full nested fields: [`BuyoutMutationResult`](#buyoutmutationresult).
 
 
+## Tag: `clubs`
+
+Real LaLiga club dossiers. Internal JWT; no LaLiga bearer. Roster and LaLiga results are public Fantasy reads. Predicted XI, injuries, and news come from the scraping service.
+
+### `GET` `/clubs`
+
+List current LaLiga clubs
+
+**Security:** HTTP Bearer (internal JWT)
+
+#### Inputs
+
+No path, query, or body parameters.
+
+#### Outputs
+
+**HTTP 200:** `ClubIndex`
+
+| Field | Type | Required | Constraints | Description |
+|-------|------|----------|-------------|-------------|
+| `clubs` | array[ClubSummary] | yes |  |  |
+
+Full nested fields: [`ClubIndex`](#clubindex).
+
+
+### `GET` `/clubs/{club_id}`
+
+Read one real-club dossier
+
+**Security:** HTTP Bearer (internal JWT)
+
+#### Inputs
+
+| Source | Name | Type | Required | Constraints | Description |
+|--------|------|------|----------|-------------|-------------|
+| path | `club_id` | integer | yes | min=1 |  |
+
+#### Outputs
+
+**HTTP 200:** `ClubDossier`
+
+| Field | Type | Required | Constraints | Description |
+|-------|------|----------|-------------|-------------|
+| `club` | ClubSummary | yes |  | One current club in the index. |
+| `roster` | RosterSection | no |  | Squad table, totals, and the three MVP ids. |
+| `performance` | PerformanceSection | no |  | LaLiga record plus other competitions published on the club page. |
+| `prediction` | PredictionSection | no |  | FutbolFantasy forecast. It is not the lineup saved in Fantasy. |
+| `injuries` | InjuriesSection | no |  | Current injuries. ``published`` is false when the page has no injury block. |
+| `news` | NewsSection | no |  | The five newest club changelog headlines. |
+| `segmentErrors` | array[ClubSegmentError] | no |  |  |
+
+Full nested fields: [`ClubDossier`](#clubdossier).
+
+
 ## Tag: `lineup-builder`
 
 Read-only lineup recommendations and conditional market-value projections.
@@ -1427,7 +1481,7 @@ Global player profile from FutbolFantasy
 | `injury_history` | array[InjuryHistoryEntry] | no |  |  |
 | `max_profitable_bid` | MaxProfitableBid | yes |  |  |
 | `hierarchy` | Hierarchy | yes |  |  |
-| `news` | array[NewsItem] | no |  |  |
+| `news` | array[fantasy_api__schemas__player_stats__NewsItem] | no |  |  |
 | `averages` | array[AveragePerMatch] | no |  |  |
 
 Full nested fields: [`PlayerProfileResponse`](#playerprofileresponse).
@@ -1992,6 +2046,54 @@ Type: `any`
 | `images` | JsonObject-Output | no |  |  |
 | `lastStats` | array[JsonValue-Output] | no |  |  |
 
+### `ClubDossier`
+
+| Field | Type | Required | Constraints | Description |
+|-------|------|----------|-------------|-------------|
+| `club` | ClubSummary | yes |  | One current club in the index. |
+| `roster` | RosterSection | no |  | Squad table, totals, and the three MVP ids. |
+| `performance` | PerformanceSection | no |  | LaLiga record plus other competitions published on the club page. |
+| `prediction` | PredictionSection | no |  | FutbolFantasy forecast. It is not the lineup saved in Fantasy. |
+| `injuries` | InjuriesSection | no |  | Current injuries. ``published`` is false when the page has no injury block. |
+| `news` | NewsSection | no |  | The five newest club changelog headlines. |
+| `segmentErrors` | array[ClubSegmentError] | no |  |  |
+
+### `ClubIndex`
+
+| Field | Type | Required | Constraints | Description |
+|-------|------|----------|-------------|-------------|
+| `clubs` | array[ClubSummary] | yes |  |  |
+
+### `ClubMatch`
+
+| Field | Type | Required | Constraints | Description |
+|-------|------|----------|-------------|-------------|
+| `matchId` | string | yes |  |  |
+| `competition` | string | yes |  |  |
+| `group` | string | yes |  |  |
+| `home` | string | yes |  |  |
+| `away` | string | yes |  |  |
+| `homeBadge` | string | no |  |  |
+| `awayBadge` | string | no |  |  |
+| `kickoff` | string | no |  |  |
+| `kickoffText` | string | no |  |  |
+| `roundLabel` | string | no |  |  |
+| `regulationHome` | integer | no |  |  |
+| `regulationAway` | integer | no |  |  |
+| `finalHome` | integer | no |  |  |
+| `finalAway` | integer | no |  |  |
+| `outcome` | string | no |  |  |
+| `venue` | string | no |  |  |
+| `scheduled` | boolean | no |  |  |
+
+### `ClubSegmentError`
+
+| Field | Type | Required | Constraints | Description |
+|-------|------|----------|-------------|-------------|
+| `segment` | string | yes |  |  |
+| `code` | string | yes |  |  |
+| `detail` | string | yes |  |  |
+
 ### `ClubStanding`
 
 | Field | Type | Required | Constraints | Description |
@@ -2008,6 +2110,16 @@ Type: `any`
 | `goalDifference` | integer | yes |  |  |
 | `last5Matches` | array[StandingMatch] | yes |  |  |
 
+### `ClubSummary`
+
+| Field | Type | Required | Constraints | Description |
+|-------|------|----------|-------------|-------------|
+| `clubId` | integer | yes |  |  |
+| `name` | string | yes |  |  |
+| `shortName` | string | no |  |  |
+| `badgeUrl` | string | no |  |  |
+| `slug` | string | no |  |  |
+
 ### `ClubTeam`
 
 | Field | Type | Required | Constraints | Description |
@@ -2022,6 +2134,19 @@ Type: `any`
 ### `Competition`
 
 Type: `string`
+
+### `CompetitionRecord`
+
+| Field | Type | Required | Constraints | Description |
+|-------|------|----------|-------------|-------------|
+| `competition` | string | yes |  |  |
+| `won` | integer | no |  |  |
+| `drawn` | integer | no |  |  |
+| `lost` | integer | no |  |  |
+| `home` | VenueRecord | yes |  | Wins, draws, and losses at one venue. |
+| `away` | VenueRecord | yes |  | Wins, draws, and losses at one venue. |
+| `goalsFor` | integer | no |  |  |
+| `goalsAgainst` | integer | no |  |  |
 
 ### `CompetitionStandings`
 
@@ -2252,6 +2377,13 @@ Type: `string`
 |-------|------|----------|-------------|-------------|
 | `buyoutClause` | integer | yes | >0 |  |
 
+### `InjuriesSection`
+
+| Field | Type | Required | Constraints | Description |
+|-------|------|----------|-------------|-------------|
+| `published` | boolean | yes |  |  |
+| `items` | array[InjuryItem] | yes |  |  |
+
 ### `Injury`
 
 | Field | Type | Required | Constraints | Description |
@@ -2272,6 +2404,18 @@ Type: `string`
 | `ongoing` | boolean | no |  |  |
 | `diagnosis` | string | no |  |  |
 | `duration_days` | integer | no |  |  |
+
+### `InjuryItem`
+
+| Field | Type | Required | Constraints | Description |
+|-------|------|----------|-------------|-------------|
+| `name` | string | yes |  |  |
+| `profileUrl` | string | no |  |  |
+| `photoUrl` | string | no |  |  |
+| `diagnosis` | string | no |  |  |
+| `startedOn` | string | no |  |  |
+| `expectedReturn` | string | no |  |  |
+| `status` | string | no |  |  |
 
 ### `InjuryRisk`
 
@@ -2620,14 +2764,11 @@ Type: `string`
 | `started` | boolean | no |  |  |
 | `note` | string | no |  |  |
 
-### `NewsItem`
+### `NewsSection`
 
 | Field | Type | Required | Constraints | Description |
 |-------|------|----------|-------------|-------------|
-| `title` | string | yes |  |  |
-| `url` | string | no |  |  |
-| `published_at` | string | no |  |  |
-| `source` | string | no |  |  |
+| `items` | array[fantasy_api__schemas__clubs__NewsItem] | yes |  |  |
 
 ### `Observation`
 
@@ -2653,6 +2794,14 @@ Type: `string`
 | Field | Type | Required | Constraints | Description |
 |-------|------|----------|-------------|-------------|
 | `buyoutClauseToPay` | integer | yes | >0 |  |
+
+### `PerformanceSection`
+
+| Field | Type | Required | Constraints | Description |
+|-------|------|----------|-------------|-------------|
+| `matches` | array[ClubMatch] | yes |  |  |
+| `records` | array[CompetitionRecord] | yes |  |  |
+| `nextMatchId` | string | no |  |  |
 
 ### `PlayerDetailResponse`
 
@@ -2755,7 +2904,7 @@ Type: `string`
 | `injury_history` | array[InjuryHistoryEntry] | no |  |  |
 | `max_profitable_bid` | MaxProfitableBid | yes |  |  |
 | `hierarchy` | Hierarchy | yes |  |  |
-| `news` | array[NewsItem] | no |  |  |
+| `news` | array[fantasy_api__schemas__player_stats__NewsItem] | no |  |  |
 | `averages` | array[AveragePerMatch] | no |  |  |
 
 ### `PlayerRadar`
@@ -2822,6 +2971,48 @@ Type: `string`
 |-------|------|----------|-------------|-------------|
 | `offers` | array[MarketOffer] | no |  |  |
 | `bids` | array[MarketBid] | no |  |  |
+
+### `PredictedCoach`
+
+| Field | Type | Required | Constraints | Description |
+|-------|------|----------|-------------|-------------|
+| `name` | string | yes |  |  |
+| `photoUrl` | string | no |  |  |
+| `matchday` | integer | no |  |  |
+| `rotations` | string | no |  |  |
+| `matchdayPredictability` | string | no |  |  |
+| `seasonPredictabilityPercent` | integer | no |  |  |
+| `seasonPredictabilityLabel` | string | no |  |  |
+
+### `PredictedPlayer`
+
+| Field | Type | Required | Constraints | Description |
+|-------|------|----------|-------------|-------------|
+| `name` | string | yes |  |  |
+| `role` | string | yes |  |  |
+| `profileUrl` | string | no |  |  |
+| `photoUrl` | string | no |  |  |
+| `probability` | integer | no |  |  |
+| `formArrow` | integer | no |  |  |
+| `position` | string | no |  |  |
+
+### `PredictedSummary`
+
+| Field | Type | Required | Constraints | Description |
+|-------|------|----------|-------------|-------------|
+| `averageFormArrow` | integer | no |  |  |
+| `averageProbability` | integer | no |  |  |
+| `substituteRisk` | string | no |  |  |
+
+### `PredictionSection`
+
+| Field | Type | Required | Constraints | Description |
+|-------|------|----------|-------------|-------------|
+| `matchday` | integer | no |  |  |
+| `coach` | PredictedCoach | no |  | Coach report for the published matchday. |
+| `starters` | array[PredictedPlayer] | yes |  |  |
+| `alternatives` | array[PredictedPlayer] | yes |  |  |
+| `summary` | PredictedSummary | no |  | Published XI averages. |
 
 ### `PremiumConfigurations`
 
@@ -2937,6 +3128,59 @@ Type: `string`
 | `warnings` | array[SegmentWarning] | no |  |  |
 | `matches` | array[RecentMatch] | no |  |  |
 
+### `RosterCoverage`
+
+| Field | Type | Required | Constraints | Description |
+|-------|------|----------|-------------|-------------|
+| `players` | integer | yes |  |  |
+| `matchweeks` | array[integer] | yes |  |  |
+| `shortWindow` | boolean | yes |  |  |
+
+### `RosterMvp`
+
+| Field | Type | Required | Constraints | Description |
+|-------|------|----------|-------------|-------------|
+| `playerId` | string | yes |  |  |
+| `name` | string | yes |  |  |
+| `points` | integer | yes |  |  |
+| `positionId` | integer | no |  |  |
+
+### `RosterPlayer`
+
+| Field | Type | Required | Constraints | Description |
+|-------|------|----------|-------------|-------------|
+| `playerId` | string | yes |  |  |
+| `name` | string | yes |  |  |
+| `positionId` | integer | no |  |  |
+| `points` | integer | no |  |  |
+| `stats` | RosterStatLine | yes |  | Event counts for one footballer. Missing counts stay null. |
+
+### `RosterSection`
+
+| Field | Type | Required | Constraints | Description |
+|-------|------|----------|-------------|-------------|
+| `mvps` | array[RosterMvp] | yes |  |  |
+| `players` | array[RosterPlayer] | yes |  |  |
+| `totals` | RosterStatLine | yes |  | Event counts for one footballer. Missing counts stay null. |
+| `coverage` | RosterCoverage | yes |  | How many footballers and matchweeks the totals include. |
+
+### `RosterStatLine`
+
+| Field | Type | Required | Constraints | Description |
+|-------|------|----------|-------------|-------------|
+| `minutes` | integer | no |  |  |
+| `goals` | integer | no |  |  |
+| `assists` | integer | no |  |  |
+| `dribbles` | integer | no |  |  |
+| `penaltiesCommitted` | integer | no |  |  |
+| `penaltiesSaved` | integer | no |  |  |
+| `shots` | integer | no |  |  |
+| `recoveries` | integer | no |  |  |
+| `saves` | integer | no |  |  |
+| `ballsLost` | integer | no |  |  |
+| `yellowCards` | integer | no |  |  |
+| `redCards` | integer | no |  |  |
+
 ### `ScoredPlayer`
 
 | Field | Type | Required | Constraints | Description |
@@ -2953,7 +3197,7 @@ Type: `string`
 | `combined_score` | string | yes |  |  |
 | `sections` | array[SectionScore] | no |  |  |
 | `omissions` | array[string] | no |  |  |
-| `news` | array[NewsItem] | no |  |  |
+| `news` | array[fantasy_api__schemas__player_stats__NewsItem] | no |  |  |
 | `protection_advice` | boolean | no |  |  |
 | `acquisition_method` | string | no |  |  |
 | `settlement_at` | string | no |  |  |
@@ -3250,6 +3494,14 @@ Type: `string`
 | `lon` | number | yes |  |  |
 | `country` | string | no |  |  |
 
+### `VenueRecord`
+
+| Field | Type | Required | Constraints | Description |
+|-------|------|----------|-------------|-------------|
+| `won` | integer | no |  |  |
+| `drawn` | integer | no |  |  |
+| `lost` | integer | no |  |  |
+
 ### `WatchWrite`
 
 | Field | Type | Required | Constraints | Description |
@@ -3286,3 +3538,20 @@ Type: `string`
 | `weekNumber` | integer | yes |  |  |
 | `generatedAt` | string | yes |  |  |
 | `matches` | array[FixtureWeather] | yes |  |  |
+
+### `fantasy_api__schemas__clubs__NewsItem`
+
+| Field | Type | Required | Constraints | Description |
+|-------|------|----------|-------------|-------------|
+| `title` | string | yes |  |  |
+| `url` | string | yes |  |  |
+| `publishedAt` | string | no |  |  |
+
+### `fantasy_api__schemas__player_stats__NewsItem`
+
+| Field | Type | Required | Constraints | Description |
+|-------|------|----------|-------------|-------------|
+| `title` | string | yes |  |  |
+| `url` | string | no |  |  |
+| `published_at` | string | no |  |  |
+| `source` | string | no |  |  |
