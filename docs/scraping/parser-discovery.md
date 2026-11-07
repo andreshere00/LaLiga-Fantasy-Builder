@@ -61,3 +61,68 @@ No section is classified as XHR in this contract. A block that is absent from
 the delivered HTML becomes `null` plus `missing`. It is not guessed. More than
 two of the four core sections failing raises `UnsupportedLayoutError` (see
 [parser.md](parser.md)).
+
+## Club dossier (captured 2026-11-07)
+
+Saved contract pages, trimmed to the nodes below:
+
+`tests/parser/fixtures/futbolfantasy/clubs/villarreal.html`,
+`getafe.html`, and the matching `*-ultimos-cambios.html` files.
+Source URLs are the canonical club page and
+`/laliga/equipos/{slug}/ultimos-cambios`. The capture is Villarreal–Getafe,
+matchday 12. Tests read these files and do not fetch the site.
+
+| Section | Locator |
+| --- | --- |
+| Matchday | `h2.lineup-title span.jornada` (the number beside `span.jornada_label`) |
+| Coach | `.entrenador-widget`. Name: `.nombre-entrenador` and the coach `img[alt]` |
+| Rotations | `.coach-metric--rotations` (`Rotaciones J12`, then the published label) |
+| Matchday predictability | the next `.coach-metric` (`Previsib. J12`) |
+| Season predictability | `.coach-metric--season .coach-ring` (the percentage text) |
+| Starters | `.jugadores-titulares-* > .camiseta-wrapper[data-onceff="titular"]` |
+| Alternatives | `.jugadores-suplentes-* > .camiseta-wrapper[data-onceff="suplente"]` |
+| Short name | `.truncate-name` inside `a.juggador` |
+| Profile URL | `a.camiseta[href]` and `a.juggador[href]` |
+| Photo | `img` inside `.fotocontainer` (`data-src`, then `src`) |
+| Starter probability | `.probabilidad-widget` |
+| Form arrow | `span.forma.probabilidad` with `arrow-1` … `arrow-5` |
+| Pitch slot | `data-onceff-x`, `data-onceff-y`, and the inline `left` / `top` |
+| XI summary | `.alineacion-totales .view.probability`: average form arrow, `Probabilidad media`, `Riesgo suplencias` |
+| Played matches | `section.lista.partidos.ultimos a.partido` |
+| Upcoming matches | `section.lista.partidos.proximos a.partido` |
+| Competition | `.logo img[alt]` (`LaLiga`, `Champions League`, `Copa del Rey`, `Conference League` on this capture) |
+| Clubs and badges | `.equipo.local img[alt]` and `.equipo.visitante img[alt]` |
+| Score | `.resultado .widget-score` (home, then away) when the match is played |
+| Kickoff | `.date` on an upcoming `a.partido`; `.fase` is the round label |
+| Result class | `a.partido` also has `won` or `lost` for the club page's team |
+| Injuries | `.lesionados_wrapper .elemento.lesionado` |
+| Diagnosis | `span.lesion` |
+| Injury start | `span.rounded-card__date` (`Desde 30/10`) |
+| Expected return | `span.rounded-card__status` when that node exists |
+| Recovery phase | `li.v3-recovery-phase-strip__step`. The active step also has `is-current` |
+| News item | `.changelog-days h2.changelog-day` followed by `.event-row a.event-link` |
+| Headline | `span.event-title` |
+| News time | `time.event-time[datetime]` |
+| Article URL | `a.event-link[href]` |
+
+The saved pages do publish the six recovery labels: Pendiente pruebas,
+Postoperatorio, Rehabilitación, Trabajo de campo, Parcial con el grupo, and
+Grupo sin el alta. Injury rows are part of the dossier. Individual cards can
+replace Postoperatorio with `Tratamiento` (a completed step on Villarreal, the
+current step for Borja Mayoral and Zaid Romero on Getafe). Read the current
+step text. Do not collapse `Tratamiento` into one of the six labels.
+
+These eight injury cards all publish `span.rounded-card__status`. A card
+without that node has no expected return.
+
+Neither saved page contains `amistoso` or a named formation such as `4-3-3`.
+Do not add a friendly competition value from this capture. Pitch coordinates
+are published, and a formation name is not. Played matches publish one
+`.widget-score` pair. This capture has no parenthetical score after 90 minutes,
+including the Copa del Rey rows (Manacor 0-5, Lebrijana 2-3). Store a second
+score only when the page publishes a second score node.
+
+Villarreal alternatives include published `0%` rows (Diatta, Gerard, Foyth,
+Akhomach). The five newest news items are the first five `a.event-link` nodes.
+The first Villarreal headlines are lineup updates and status changes such as
+`Foyth pasa de duda a baja`, each with a FutbolFantasy article href.
