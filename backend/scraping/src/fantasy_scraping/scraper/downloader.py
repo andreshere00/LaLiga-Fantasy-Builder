@@ -10,7 +10,7 @@ from fantasy_scraping.scraper.http_client import ScrapingHttpClient
 from fantasy_scraping.scraper.models import ScrapeOptions
 from fantasy_scraping.scraper.sanitise import sanitise_html
 from fantasy_scraping.scraper.settings import ScraperSettings
-from fantasy_scraping.scraper.urls import club_url, player_url, widget_url
+from fantasy_scraping.scraper.urls import club_news_url, club_url, player_url, widget_url
 
 
 class PageDownloader:
@@ -60,6 +60,9 @@ class PageDownloader:
         if kind is PageKind.CLUB:
             url, ttl = club_url(player_slug), self._settings.ttl_club_s
             key = page_key("club", player_slug)
+        elif kind is PageKind.CLUB_NEWS:
+            url, ttl = club_news_url(player_slug), self._settings.ttl_club_s
+            key = page_key("club-news", player_slug)
         elif kind is PageKind.MARKET_WIDGET:
             url, ttl, key = widget_url(widget_id or ""), self._settings.ttl_market_s, ""
             key = page_key("market", widget_id or "")

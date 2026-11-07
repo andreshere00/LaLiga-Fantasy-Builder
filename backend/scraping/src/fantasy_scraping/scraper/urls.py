@@ -85,6 +85,18 @@ def club_url(team_slug: str) -> str:
     return f"{BASE}/laliga/equipos/{check_slug(team_slug)}"
 
 
+def club_news_url(team_slug: str) -> str:
+    """Build the club changelog URL.
+
+    Args:
+        team_slug: FutbolFantasy club slug.
+
+    Returns:
+        The ``ultimos-cambios`` URL for that club.
+    """
+    return f"{club_url(team_slug)}/ultimos-cambios"
+
+
 def assert_allowed_url(url: str) -> str:
     """Reject anything that is not an allow-listed FutbolFantasy URL.
 

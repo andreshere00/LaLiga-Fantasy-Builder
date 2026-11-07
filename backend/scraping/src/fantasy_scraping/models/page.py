@@ -19,6 +19,7 @@ class PageKind(StrEnum):
     MARKET_WIDGET = "market_widget"
     COMPETITION = "competition"
     CLUB = "club"
+    CLUB_NEWS = "club_news"
 
 
 class ScrapedPage(BaseModel):

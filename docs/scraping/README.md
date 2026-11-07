@@ -41,6 +41,8 @@ Health probes are open.
 |--------|------|------|---------|
 | `GET` | `/health/live`, `/health/ready` | None | Docker / Compose health |
 | `GET` | `/internal/health` | Token | Breaker, index age, cache stats |
+| `GET` | `/internal/clubs/{slug}` | Token | Parsed club page: XI, fixtures, injuries |
+| `GET` | `/internal/clubs/{slug}/news` | Token | Five newest club changelog headlines |
 | `GET` | `/internal/scrape/linked-data` | Token | Index counts (`refresh` query) |
 | `POST` | `/internal/scrape/linked-data/refresh` | Token | Force sitemap rebuild |
 | `GET` | `/internal/scrape/routes` | Token | Resolve nickname → route |
@@ -57,6 +59,7 @@ Errors: `{ "error", "detail" }` (fixed sentences; no upstream bodies).
 | Player profile | 10 min | `SCRAPER_TTL_PROFILE_S` |
 | Market widget | 5 min | `SCRAPER_TTL_MARKET_S` |
 | Club calendar | 10 min | One page per team slug |
+| Club changelog | 10 min | `ultimos-cambios`, same TTL as the club page |
 | Competition page | 6 h | Current-season club comps only |
 | Sitemap index | 24 h | Player + team slugs |
 | Resolved route | 7 d | Negative cache on not-found |
