@@ -141,7 +141,7 @@ export function TeamPerformanceSection({
         </p>
       ) : (
         <>
-          <div className={window === "season" ? "team-performance-board is-season" : "team-performance-board"}>
+          <div className={window === "5" ? "team-performance-board" : "team-performance-board is-long"}>
             <ResultSummary summary={summary} results={results} />
             <MatchList
               id="previous"

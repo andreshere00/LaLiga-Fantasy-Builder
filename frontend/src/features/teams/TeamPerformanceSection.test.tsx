@@ -107,6 +107,29 @@ describe("TeamPerformanceSection", () => {
       .toContain("Scheduled matches in the selected window");
   });
 
+  it("TeamPerformanceSection_long_windows_keep_the_whole_season_board_layout", () => {
+    const board = (window: "5" | "10" | "20" | "season") => {
+      cleanup();
+      const { container } = render(
+        <MemoryRouter><TeamPerformanceSection
+          performance={performance}
+          clubs={[]}
+          competition="all"
+          window={window}
+          failed={false}
+          onCompetition={vi.fn()}
+          onWindow={vi.fn()}
+          onRetry={vi.fn()}
+        /></MemoryRouter>,
+      );
+      return container.querySelector(".team-performance-board") as HTMLElement;
+    };
+    expect(board("5").classList.contains("is-long")).toBe(false);
+    for (const window of ["10", "20", "season"] as const) {
+      expect(board(window).classList.contains("is-long")).toBe(true);
+    }
+  });
+
   it("TeamPerformanceSection_about_block_is_a_one_line_toggle_that_opens_the_three_descriptions", () => {
     render(
       <MemoryRouter><TeamPerformanceSection

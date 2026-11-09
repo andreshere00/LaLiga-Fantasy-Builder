@@ -253,14 +253,14 @@
   .team-performance-board .team-match-group > .team-record { grid-row: 3; }
   /* Rows share spare height but stop growing at 6.5rem, so a long season list beside a short one stays readable. */
   .team-performance-board .team-fixtures { grid-auto-rows: minmax(auto, 6.5rem); align-content: start; }
-  /* The whole season lists every match, so the two lists differ a lot in length: each keeps its own height. */
-  .team-performance-board.is-season { align-items: start; }
-  .team-performance-board.is-season { grid-template-rows: none; }
-  .team-performance-board.is-season .team-match-group { grid-row: auto; grid-template-rows: none; }
-  .team-performance-board.is-season .team-match-group > .team-fixtures,
-  .team-performance-board.is-season .team-match-group > .team-record { grid-row: auto; }
-  .team-performance-board.is-season .team-record-group { max-height: none; }
-  .team-performance-board.is-season .team-fixtures { grid-auto-rows: auto; }
+  /* The 10, 20 and whole-season windows list many matches, so the lists differ in length: each keeps its own height and the record keeps its natural one. */
+  .team-performance-board.is-long { align-items: start; }
+  .team-performance-board.is-long { grid-template-rows: none; }
+  .team-performance-board.is-long .team-match-group { grid-row: auto; grid-template-rows: none; }
+  .team-performance-board.is-long .team-match-group > .team-fixtures,
+  .team-performance-board.is-long .team-match-group > .team-record { grid-row: auto; }
+  .team-performance-board.is-long .team-record-group { max-height: none; }
+  .team-performance-board.is-long .team-fixtures { grid-auto-rows: auto; }
   .team-performance-board .team-record-group {
     flex: 1 1 0;
     max-height: 14rem;
