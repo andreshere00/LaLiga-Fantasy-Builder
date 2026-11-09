@@ -51,7 +51,10 @@ vi.mock("../market/actions/MarketActionDialogs", () => ({
 
 vi.mock("../lineup/useSquadStats", () => ({
   usePlayerOutlooks: () => ({
-    profiles: new Map([["7", { form: { rating: "good" }, startProbability: { percent: 80 } }]]),
+    profiles: new Map([
+      ["7", { form: { rating: "good" }, startProbability: { percent: 80 } }],
+      ["8", { startProbability: { percent: 40 }, hierarchy: { label: "Rotación", rank: 4 } }],
+    ]),
     isLoading: false,
     errors: [],
   }),
@@ -186,5 +189,22 @@ describe("TeamLineupSection", () => {
     expect(screen.getByText("Mystery", { selector: "strong" })).toBeTruthy();
     fireEvent.click(screen.getByRole("button", { name: /Attack/ }));
     expect(screen.queryByText("Mystery", { selector: "strong" })).toBeNull();
+  });
+
+  it("TeamLineupSection_alternative_shows_the_translated_hierarchy_when_published", () => {
+    render(
+      <MemoryRouter>
+        <TeamLineupSection prediction={prediction}
+          squad={[{ playerId: "7", name: "Isco", points: 55 }, { playerId: "8", name: "Later", points: 3 }]}
+          failed={false} returnTo="/teams/5?section=lineup" onRetry={vi.fn()} />
+      </MemoryRouter>,
+    );
+    fireEvent.click(screen.getByRole("button", { name: /Attack/ }));
+    const rows = [...document.querySelectorAll(".team-alternatives .team-xi-player")];
+    const later = rows.find((row) => row.textContent?.includes("Later"));
+    expect(later?.querySelector(".team-hierarchy")?.textContent).toContain("Rotation");
+    // A substitute without a matching profile role shows no badge at all.
+    const mystery = rows.find((row) => row.textContent?.includes("Mystery"));
+    expect(mystery?.querySelector(".team-hierarchy")).toBeNull();
   });
 });

@@ -1906,5 +1906,10 @@
   "Most important: {{0}} ({{1}}).": "Most important: {{0}} ({{1}}).",
   "Most important: {{0}}.": "Most important: {{0}}.",
   "Events: {{0}}, covering {{1}}.": "Events: {{0}}, covering {{1}}.",
-  "Latest: {{0}}, {{1}}.": "Latest: {{0}}, {{1}}."
+  "Latest: {{0}}, {{1}}.": "Latest: {{0}}, {{1}}.",
+  "Hierarchy levels": "Hierarchy levels",
+  "Hierarchy levels: {{0}}.": "Hierarchy levels: {{0}}.",
+  "View hierarchy levels": "View hierarchy levels",
+  "Each player's role in the squad, from most to least important. Roles are read when you open the list.": "Each player's role in the squad, from most to least important. Roles are read when you open the list.",
+  "Loading roles: {{0}} of {{1}}.": "Loading roles: {{0}} of {{1}}."
 }

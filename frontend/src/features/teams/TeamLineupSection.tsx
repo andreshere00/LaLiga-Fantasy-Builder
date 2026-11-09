@@ -10,6 +10,7 @@ import type { MarketActionContext } from "../market/actions/marketActions";
 import { useMarketActions } from "../market/actions/useMarketActions";
 import { useMarketBoard } from "../market/useMarketBoard";
 import { PlayerBookmarkButton } from "../players/PlayerBookmarkButton";
+import { hierarchyPresentation } from "../players/hierarchy";
 import { useScouting } from "../scouting/ScoutingProvider";
 import { usePlayerOutlooks } from "../lineup/useSquadStats";
 import {
@@ -270,6 +271,8 @@ function AlternativeRow({
   const playerId = player.playerId;
   const likelihood = player.probability ?? outlook?.startProbability?.percent ?? null;
   const flagged = isStarterFlagged(likelihood);
+  const roleLabel = outlook?.hierarchy?.label;
+  const role = roleLabel ? hierarchyPresentation(roleLabel) : null;
   return (
     <li className="team-xi-player">
       {player.photoUrl
@@ -288,6 +291,13 @@ function AlternativeRow({
         <p className="team-xi-facts">
           <LineupFormBadge rating={outlook?.form?.rating} />
           <LineupFsyp points={player.points} />
+          {role ? (
+            <span className="team-hierarchy is-compact" title={t("Hierarchy")}>
+              <img src={role.icon} alt="" className={role.neutral ? "is-neutral" : undefined} />
+              <span className="visually-hidden">{t("Hierarchy")}: </span>
+              {t(role.label)}
+            </span>
+          ) : null}
           {!playerId && !catalogLoading ? <span className="team-xi-status">{t("Details unavailable")}</span> : null}
         </p>
       </div>

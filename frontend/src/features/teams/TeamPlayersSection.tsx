@@ -15,6 +15,7 @@ import { usePlayerRadar } from "../players/radar/usePlayerRadar";
 import type { ClubDossierDto, ClubRosterStatsDto } from "../../api/schemas";
 import { RecentPoints } from "./RecentPoints";
 import { useRecentPoints, type RecentPoint } from "./useRecentPoints";
+import { TeamHierarchySection } from "./TeamHierarchySection";
 import { TeamMeter } from "./TeamMeter";
 import { TeamSummary } from "./TeamSummary";
 import { mvpSummary, squadSummary } from "./teamSummaries";
@@ -215,6 +216,7 @@ export function TeamPlayersSection({
           </table>
         </div>
       </div>
+      <TeamHierarchySection players={roster.players} returnTo={returnTo} />
     </section>
   );
 

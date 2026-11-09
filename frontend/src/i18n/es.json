@@ -1906,5 +1906,10 @@
   "Most important: {{0}} ({{1}}).": "El más importante: {{0}} ({{1}}).",
   "Most important: {{0}}.": "El más importante: {{0}}.",
   "Events: {{0}}, covering {{1}}.": "Eventos: {{0}}, que abarcan {{1}}.",
-  "Latest: {{0}}, {{1}}.": "Último: {{0}}, {{1}}."
+  "Latest: {{0}}, {{1}}.": "Último: {{0}}, {{1}}.",
+  "Hierarchy levels": "Niveles de jerarquía",
+  "Hierarchy levels: {{0}}.": "Niveles de jerarquía: {{0}}.",
+  "View hierarchy levels": "Ver niveles de jerarquía",
+  "Each player's role in the squad, from most to least important. Roles are read when you open the list.": "El papel de cada jugador en la plantilla, del más al menos importante. Los papeles se consultan al abrir la lista.",
+  "Loading roles: {{0}} of {{1}}.": "Cargando papeles: {{0}} de {{1}}."
 }

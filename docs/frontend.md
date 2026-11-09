@@ -259,6 +259,16 @@ pieces with no counted nouns, so they need no plural forms, and a widget with no
 report shows none. The widget's own list, table, or group points back to its summary with
 `aria-describedby`, so a screen reader announces it again when that element is entered.
 
+Alternatives show each substitute's squad role (hierarchy) beside form and points when the
+player profile publishes one; the profile is read when its position group is opened, so a
+substitute without a matching profile shows no badge. Below the squad table, **Hierarchy levels**
+opens a dialog listing every squad player under their role, most important first (God, Key
+player, Important, Rotation, Impact substitute, Other, Reserve, then Unknown and Unavailable),
+best scorers first inside each role, with photo, position, and points. The roles come from one
+player-profile read per player, so nothing is requested until the dialog is first opened; while
+they load, the dialog shows `Skeleton` placeholders shaped like the list. Once read, the block
+also shows a tally chip per level and a Summary.
+
 Players lists the top three footballers by published season points as ranked
 cards: the player photo (from the shared players catalog, with a person icon
 fallback), the position name and age (age from the profile birth date, omitted
