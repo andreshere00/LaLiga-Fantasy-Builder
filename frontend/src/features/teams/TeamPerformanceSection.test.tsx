@@ -1,4 +1,5 @@
 import { cleanup, fireEvent, render, screen } from "@testing-library/react";
+import { MemoryRouter } from "react-router-dom";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { TeamPerformanceSection } from "./TeamPerformanceSection";
 
@@ -43,7 +44,7 @@ describe("TeamPerformanceSection", () => {
 
   it("TeamPerformanceSection_extra_time_and_next_match_stay_labeled", () => {
     render(
-      <TeamPerformanceSection
+      <MemoryRouter><TeamPerformanceSection
         performance={performance}
         clubs={[
           { clubId: 20, name: "Villarreal CF", badgeUrl: null },
@@ -55,16 +56,18 @@ describe("TeamPerformanceSection", () => {
         onCompetition={onCompetition}
         onWindow={vi.fn()}
         onRetry={vi.fn()}
-      />,
+      /></MemoryRouter>,
     );
     expect(screen.getByText("2 (4) – 2 (5)")).toBeTruthy();
     expect(screen.getByText("Next match")).toBeTruthy();
     expect(screen.getByText("Villarreal CF")).toBeTruthy();
+    const links = screen.getAllByRole("link").map((link) => link.getAttribute("href"));
+    expect(links.some((href) => href === "/teams/20" || href === "/teams/9")).toBe(true);
   });
 
   it("TeamPerformanceSection_empty_filter_offers_all_competitions", () => {
     render(
-      <TeamPerformanceSection
+      <MemoryRouter><TeamPerformanceSection
         performance={performance}
         clubs={[]}
         competition="domestic"
@@ -73,7 +76,7 @@ describe("TeamPerformanceSection", () => {
         onCompetition={onCompetition}
         onWindow={vi.fn()}
         onRetry={vi.fn()}
-      />,
+      /></MemoryRouter>,
     );
     fireEvent.click(screen.getByRole("button", { name: "Show all competitions" }));
     expect(onCompetition).toHaveBeenCalledWith("all");

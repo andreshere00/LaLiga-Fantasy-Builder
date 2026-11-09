@@ -1,3 +1,4 @@
+import { Link } from "react-router-dom";
 import { t, useTranslation } from "../../i18n";
 import { dateFormatter } from "../../i18n/format";
 import { BadgeImage } from "../../components/BadgeImage";
@@ -127,12 +128,14 @@ export function TeamPerformanceSection({
               title={t("Previous matches")}
               matches={view.previous}
               nextId={null}
+              clubs={clubs}
               showCompetition={competition !== "laliga"}
             />
             <MatchList
               title={t("Upcoming matches")}
               matches={view.upcoming}
               nextId={nextId}
+              clubs={clubs}
               showCompetition={competition !== "laliga"}
             />
           </div>
@@ -149,39 +152,53 @@ function ResultSummary({
   results: readonly ClubMatchView[];
 }) {
   const difference = summary.goalsFor - summary.goalsAgainst;
+  const signed = difference > 0 ? `+${difference}` : String(difference);
+  const tone = difference > 0 ? "positive" : difference < 0 ? "negative" : "even";
   return (
     <div className="team-record">
-      <dl className="team-record-primary">
-        <div><dd>{summary.won}</dd><dt>{t("Win")}</dt></div>
-        <div><dd>{summary.drawn}</dd><dt>{t("Draw")}</dt></div>
-        <div><dd>{summary.lost}</dd><dt>{t("Loss")}</dt></div>
-      </dl>
+      <section className="team-record-group" aria-labelledby="team-record-results">
+        <h3 id="team-record-results" className="team-record-title">{t("Results")}</h3>
+        <dl className="team-record-primary">
+          <div><dd>{summary.won}</dd><dt>{t("Win")}</dt></div>
+          <div><dd>{summary.drawn}</dd><dt>{t("Draw")}</dt></div>
+          <div><dd>{summary.lost}</dd><dt>{t("Loss")}</dt></div>
+        </dl>
+      </section>
       {results.length > 0 ? (
-        <ol className="team-form" aria-label={t("Recent results, oldest to newest")}>
-          {results.map((match) => (
-            <li key={match.matchId} className={`team-result team-result--${match.outcome}`}>
-              <span aria-hidden="true">{resultLetter(match.outcome)}</span>
-              <span className="visually-hidden">{t(resultWord(match.outcome))}</span>
-            </li>
-          ))}
-        </ol>
+        <section className="team-record-group" aria-labelledby="team-record-form">
+          <h3 id="team-record-form" className="team-record-title">{t("Recent form")}</h3>
+          <ol className="team-form" aria-label={t("Recent results, oldest to newest")}>
+            {results.map((match) => (
+              <li key={match.matchId} className={`team-result team-result--${match.outcome}`}>
+                <span aria-hidden="true">{resultLetter(match.outcome)}</span>
+                <span className="visually-hidden">{t(resultWord(match.outcome))}</span>
+              </li>
+            ))}
+          </ol>
+        </section>
       ) : null}
-      <dl className="team-record-facts">
-        <div>
-          <dt>{t("Home")}</dt>
-          <dd>{summary.home.won}-{summary.home.drawn}-{summary.home.lost}</dd>
-        </div>
-        <div>
-          <dt>{t("Away")}</dt>
-          <dd>{summary.away.won}-{summary.away.drawn}-{summary.away.lost}</dd>
-        </div>
-        <div><dt>{t("Goals scored")}</dt><dd>{summary.goalsFor}</dd></div>
-        <div><dt>{t("Goals conceded")}</dt><dd>{summary.goalsAgainst}</dd></div>
-        <div>
-          <dt>{t("Goals difference")}</dt>
-          <dd>{difference > 0 ? `+${difference}` : difference}</dd>
-        </div>
-      </dl>
+      <section className="team-record-group" aria-labelledby="team-record-venue">
+        <h3 id="team-record-venue" className="team-record-title">{t("Home and away")}</h3>
+        <dl className="team-record-facts">
+          <div>
+            <dt>{t("Home")}</dt>
+            <dd>{summary.home.won}-{summary.home.drawn}-{summary.home.lost}</dd>
+          </div>
+          <div>
+            <dt>{t("Away")}</dt>
+            <dd>{summary.away.won}-{summary.away.drawn}-{summary.away.lost}</dd>
+          </div>
+        </dl>
+        <p className="team-record-hint">{t("Wins-draws-losses")}</p>
+      </section>
+      <section className="team-record-group" aria-labelledby="team-record-goals">
+        <h3 id="team-record-goals" className="team-record-title">{t("Goals")}</h3>
+        <dl className="team-record-facts">
+          <div><dt>{t("Goals scored")}</dt><dd>{summary.goalsFor}</dd></div>
+          <div><dt>{t("Goals conceded")}</dt><dd>{summary.goalsAgainst}</dd></div>
+          <div><dt>{t("Goals difference")}</dt><dd data-tone={tone}>{signed}</dd></div>
+        </dl>
+      </section>
     </div>
   );
 }
@@ -195,11 +212,12 @@ function resultLetter(outcome: ClubMatchView["outcome"]): string {
 }
 
 function MatchList({
-  title, matches, nextId, showCompetition,
+  title, matches, nextId, clubs, showCompetition,
 }: {
   title: string;
   matches: ClubMatchView[];
   nextId: string | null;
+  clubs: readonly NamedClub[];
   showCompetition: boolean;
 }) {
   if (matches.length === 0) return null;
@@ -212,6 +230,7 @@ function MatchList({
             key={match.matchId}
             match={match}
             next={match.matchId === nextId}
+            clubs={clubs}
             showCompetition={showCompetition}
           />
         ))}
@@ -221,10 +240,11 @@ function MatchList({
 }
 
 function MatchRow({
-  match, next, showCompetition,
+  match, next, clubs, showCompetition,
 }: {
   match: ClubMatchView;
   next: boolean;
+  clubs: readonly NamedClub[];
   showCompetition: boolean;
 }) {
   const score = scoreText(match);
@@ -250,9 +270,9 @@ function MatchRow({
         {next ? <span className="team-next-label">{t("Next match")}</span> : null}
       </div>
       <div className="team-fixture-teams">
-        <Side name={match.home} badge={match.homeBadge} own={own === "home"} />
+        <Side name={match.home} badge={match.homeBadge} own={own === "home"} clubId={clubIdFor(match.home, clubs)} />
         <span className="team-fixture-score">{score ?? time ?? t("vs")}</span>
-        <Side name={match.away} badge={match.awayBadge} own={own === "away"} />
+        <Side name={match.away} badge={match.awayBadge} own={own === "away"} clubId={clubIdFor(match.away, clubs)} />
       </div>
       {outcome ? (
         <span className={`team-result team-result--${outcome}`}>
@@ -264,15 +284,32 @@ function MatchRow({
   );
 }
 
-function Side({ name, badge, own }: { name: string; badge: string | null; own: boolean }) {
-  return (
-    <span className={own ? "team-fixture-side is-own" : "team-fixture-side"}>
+/** The club a fixture side names, matched on its name without case or accents. */
+function clubIdFor(name: string, clubs: readonly NamedClub[]): number | null {
+  const key = plain(name);
+  return clubs.find((club) => plain(club.name) === key)?.clubId ?? null;
+}
+
+function plain(value: string): string {
+  return value.normalize("NFD").replace(/[\u0300-\u036f]/g, "").trim().toLowerCase();
+}
+
+function Side({ name, badge, own, clubId }: {
+  name: string; badge: string | null; own: boolean; clubId: number | null;
+}) {
+  const content = (
+    <>
       <span className="team-crest">
         <BadgeImage media={{ name, badge: badge ?? "" }} />
       </span>
       <span className="team-fixture-name">{name}</span>
-    </span>
+    </>
   );
+  // The club being viewed needs no link to itself; every other side opens that club's page.
+  if (own || clubId == null) {
+    return <span className={own ? "team-fixture-side is-own" : "team-fixture-side"}>{content}</span>;
+  }
+  return <Link className="team-fixture-side is-link" to={`/teams/${clubId}`}>{content}</Link>;
 }
 
 function kickoffTime(match: ClubMatchView): string | null {
