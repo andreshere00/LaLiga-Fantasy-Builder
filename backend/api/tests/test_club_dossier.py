@@ -397,3 +397,55 @@ def test_performance_home_and_away_splits_ignore_unfinished_matches() -> None:
     assert laliga.home.won == 1 and laliga.away.drawn == 1
     assert domestic.away.won == 1
     assert performance.next_match_id == "112"
+
+
+def test_other_matches_venue_uses_the_name_shared_by_every_fixture() -> None:
+    scraped = ScrapedClubPage.model_validate(
+        {
+            "slug": "getafe",
+            "fixtures": [
+                {
+                    "competition": "conference_league",
+                    "home": "Getafe",
+                    "away": "Brighton",
+                    "regulation": {"home": 3, "away": 0},
+                    "outcome": "win",
+                },
+                {
+                    "competition": "conference_league",
+                    "home": "Iberia 1999",
+                    "away": "Getafe",
+                    "regulation": {"home": 0, "away": 1},
+                    "outcome": "win",
+                },
+                {"competition": "laliga", "home": "Sevilla", "away": "Getafe"},
+            ],
+        }
+    )
+
+    performance = _performance(9, [], scraped, {"getafe cf", "get"})
+
+    european = next(record for record in performance.records if record.competition == "european")
+    assert (european.home.won, european.away.won) == (1, 1)
+    assert (european.goals_for, european.goals_against) == (4, 0)
+
+
+def test_other_matches_venue_falls_back_to_labels_when_fixtures_are_ambiguous() -> None:
+    scraped = ScrapedClubPage.model_validate(
+        {
+            "slug": "getafe",
+            "fixtures": [
+                {
+                    "competition": "copa_del_rey",
+                    "home": "Getafe CF",
+                    "away": "Lebrijana",
+                    "regulation": {"home": 2, "away": 0},
+                    "outcome": "win",
+                }
+            ],
+        }
+    )
+
+    performance = _performance(9, [], scraped, {"getafe cf"})
+
+    assert performance.matches[0].venue == "home"

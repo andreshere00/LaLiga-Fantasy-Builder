@@ -521,8 +521,26 @@ def _laliga_match(club_id: int, fixture: SeasonFixture) -> ClubMatch | None:
     )
 
 
+def _own_names(page: ScrapedClubPage, labels: set[str]) -> set[str]:
+    """Return the names the club page uses for its own club.
+
+    The club plays in every fixture on its page, so its printed name is the one shared by all of
+    them. FutbolFantasy prints short names ("Getafe") that differ from the teams-master name
+    ("Getafe CF"), so ``labels`` is only the fallback when the fixtures leave it ambiguous.
+    """
+    sides = [
+        {name for name in (fixture.home.casefold(), fixture.away.casefold()) if name}
+        for fixture in page.fixtures
+    ]
+    common = set.intersection(*sides) if sides else set()
+    if len(common) == 1:
+        return common
+    return (common & labels) or labels
+
+
 def _other_matches(page: ScrapedClubPage, labels: set[str]) -> list[ClubMatch]:
     matches: list[ClubMatch] = []
+    own = _own_names(page, labels)
     for fixture in page.fixtures:
         group = _group(fixture.competition)
         if group == "laliga":
@@ -544,7 +562,7 @@ def _other_matches(page: ScrapedClubPage, labels: set[str]) -> list[ClubMatch]:
                 final_home=None if fixture.final is None else fixture.final.home,
                 final_away=None if fixture.final is None else fixture.final.away,
                 outcome=fixture.outcome,
-                venue="home" if home_name in labels else "away",
+                venue="home" if home_name in own else "away",
                 scheduled=fixture.scheduled,
             )
         )
