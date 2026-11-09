@@ -14,6 +14,9 @@ import { TeamPerformanceSection } from "./TeamPerformanceSection";
 import { TeamLineupSection } from "./TeamLineupSection";
 import { TeamNewsInjuriesSection } from "./TeamNewsInjuriesSection";
 import { TeamSectionIcon } from "./TeamSectionIcon";
+import {
+  TeamDossierLoading, TeamPickerSkeleton, TeamSectionSkeleton,
+} from "./TeamSkeletons";
 import type { TeamRouteState } from "./teamRoutes";
 import "./teams.css";
 
@@ -88,6 +91,7 @@ export function TeamsPage({ opponentClubId = null }: { opponentClubId?: number |
     const next = initialClubId(clubs, document.documentElement.lang || "en", { opponentClubId });
     if (next != null) return <Navigate to={teamPath(next, route)} replace />;
   }
+  const loading = index.isLoading || dossier.isLoading;
   const selected = clubs.find((club) => String(club.clubId) === clubId);
   const standing = standings.data?.rows.find((row) => String(row.team.id) === clubId) ?? null;
   function replaceRoute(patch: Partial<TeamRouteState>) {
@@ -109,7 +113,8 @@ export function TeamsPage({ opponentClubId = null }: { opponentClubId?: number |
           </p>
         ) : null}
       </header>
-      <nav className="team-picker" aria-label={t("Choose a club")}>
+      {index.isLoading && clubs.length === 0 ? <TeamPickerSkeleton /> : null}
+      <nav className="team-picker" aria-label={t("Choose a club")} hidden={clubs.length === 0}>
         {clubs.map((club) => (
           <Link
             key={club.clubId}
@@ -146,9 +151,7 @@ export function TeamsPage({ opponentClubId = null }: { opponentClubId?: number |
           </a>
         ))}
       </nav>
-      {index.isLoading || dossier.isLoading
-        ? <p className="team-note" role="status">{t("Loading the club dossier.")}</p>
-        : null}
+      {index.isLoading || dossier.isLoading ? <TeamDossierLoading /> : null}
       {dossier.data ? (
         <TeamPerformanceSection
           performance={dossier.data.performance ?? null}
@@ -162,7 +165,7 @@ export function TeamsPage({ opponentClubId = null }: { opponentClubId?: number |
           onWindow={(window) => replaceRoute({ window })}
           onRetry={() => void dossier.refetch()}
         />
-      ) : <section id="team-performance" tabIndex={-1} />}
+      ) : <EmptySection section="performance" loading={loading} />}
       <SegmentNotice
         failed={dossier.data?.segmentErrors?.some((error) => error.segment === "roster") ?? false}
         onRetry={() => void dossier.refetch()}
@@ -177,7 +180,7 @@ export function TeamsPage({ opponentClubId = null }: { opponentClubId?: number |
             onRetry: () => void seasonStats.refetch(),
           }}
         />
-      ) : <section id="team-players" tabIndex={-1} />}
+      ) : <EmptySection section="players" loading={loading} />}
       {dossier.data && (dossier.data.prediction || predictionFailed(dossier.data)) ? (
         <TeamLineupSection
           prediction={dossier.data.prediction ?? null}
@@ -186,7 +189,7 @@ export function TeamsPage({ opponentClubId = null }: { opponentClubId?: number |
           returnTo={teamPath(clubId ?? "", { ...route, section: "lineup" })}
           onRetry={() => void dossier.refetch()}
         />
-      ) : <section id="team-lineup" tabIndex={-1} />}
+      ) : <EmptySection section="lineup" loading={loading} />}
       <SegmentNotice
         failed={dossier.data?.segmentErrors?.some(
           (error) => error.segment === "news" || error.segment === "injuries",
@@ -201,7 +204,7 @@ export function TeamsPage({ opponentClubId = null }: { opponentClubId?: number |
             squad={dossier.data.roster?.players ?? []}
             returnTo={teamPath(clubId ?? "", { ...route, section: "news" })}
           />
-        ) : <section id="team-news" tabIndex={-1} />}
+        ) : <EmptySection section="news" loading={loading} />}
     </div>
   );
 }
@@ -220,6 +223,13 @@ function sectionInView(): TeamSection | null {
   const bottomReached = window.innerHeight + window.scrollY >= document.documentElement.scrollHeight - 4;
   if (bottomReached && window.scrollY > 0) return "news";
   return found;
+}
+
+/** Before the dossier arrives a section is a skeleton; afterwards it is an empty anchor for links. */
+function EmptySection({ section, loading }: { section: TeamSection; loading: boolean }) {
+  return loading
+    ? <TeamSectionSkeleton section={section} />
+    : <section id={teamSectionId(section)} tabIndex={-1} />;
 }
 
 function predictionFailed(dossier: { segmentErrors?: { segment: string }[] }): boolean {

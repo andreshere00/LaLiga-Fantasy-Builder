@@ -1185,3 +1185,28 @@
     white-space: nowrap;
   }
 }
+
+/* ---- Loading: a spinner for the wait, skeletons shaped like the sections still to come ---- */
+.team-loading { display: flex; justify-content: center; }
+.team-picker[hidden] { display: none; }
+.team-picker-skeleton { display: flex; gap: 6px; overflow: hidden; padding-bottom: 6px; }
+.team-skeleton-tile { width: 64px; height: 64px; flex: none; border-radius: 8px; }
+.team-skeleton { display: grid; gap: 16px; }
+.team-skeleton-line { width: 60%; max-width: 32rem; height: 16px; border-radius: 4px; }
+.team-skeleton-line.is-wide { width: 100%; max-width: 48rem; }
+.team-skeleton-cards { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 12px; }
+.team-skeleton-card { height: 120px; border-radius: 8px; }
+.team-skeleton-card.is-tall { height: 160px; }
+.team-skeleton-rows { display: grid; gap: 10px; align-content: start; }
+.team-skeleton-row { height: 44px; border-radius: 6px; }
+.team-skeleton-player { display: flex; align-items: center; gap: 12px; }
+.team-skeleton-photo { width: 36px; height: 36px; flex: none; border-radius: 50%; }
+.team-skeleton-name { flex: 1 1 auto; max-width: 14rem; height: 14px; border-radius: 4px; }
+.team-skeleton-tag { width: 3rem; height: 20px; margin-inline-start: auto; border-radius: 4px; }
+.team-skeleton-pitch { height: 360px; border-radius: 12px; }
+.team-skeleton-split { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1.4fr); gap: 20px; }
+@media (max-width: 800px) {
+  .team-skeleton-cards { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .team-skeleton-split { grid-template-columns: 1fr; }
+  .team-skeleton-pitch { height: 260px; }
+}

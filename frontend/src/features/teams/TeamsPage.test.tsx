@@ -23,6 +23,7 @@ const harness = vi.hoisted(() => ({
     segmentErrors: [{ segment: "news", code: "scraping_unavailable", detail: "scraping unavailable" }],
   },
   refetch: vi.fn(),
+  loading: false,
 }));
 
 vi.mock("./useRecentPoints", () => ({ useRecentPoints: () => new Map() }));
@@ -43,8 +44,9 @@ vi.mock("../../api/queries", () => ({
     data: undefined, isPending: false, isError: false, fetchStatus: "idle", refetch: vi.fn(),
   }),
   useClubDossierQuery: (clubId: string | null) => ({
-    data: clubId === "4" ? harness.dossier : undefined,
-    isPending: false,
+    data: clubId === "4" && !harness.loading ? harness.dossier : undefined,
+    isPending: harness.loading,
+    isLoading: harness.loading,
     refetch: harness.refetch,
   }),
 }));
@@ -88,6 +90,7 @@ describe("Teams page", () => {
   beforeEach(() => {
     cleanup();
     harness.refetch.mockClear();
+    harness.loading = false;
   });
 
   it("TeamsPage_first_visit_opens_the_first_club_in_the_locale", async () => {
@@ -100,6 +103,20 @@ describe("Teams page", () => {
     const current = (await screen.findAllByRole("link", { name: "Villarreal CF" }))
       .find((link) => link.getAttribute("aria-current") === "page");
     expect(current).toBeTruthy();
+  });
+
+  it("TeamsPage_loading_dossier_shows_a_spinner_and_a_skeleton_for_each_section", async () => {
+    harness.loading = true;
+    renderTeams("/teams/4");
+    const status = await screen.findByRole("status");
+    expect(status.textContent).toContain("Loading the club dossier.");
+    expect(status.querySelector(".fb-pulse-ring")).toBeTruthy();
+    for (const id of ["team-performance", "team-players", "team-lineup", "team-news"]) {
+      const section = document.getElementById(id) as HTMLElement;
+      expect(section.getAttribute("aria-busy")).toBe("true");
+      expect(section.querySelector('[data-slot="skeleton"]')).toBeTruthy();
+    }
+    expect(screen.getByRole("heading", { name: "Players" })).toBeTruthy();
   });
 
   it("TeamsPage_players_and_news_failure_stay_separate", async () => {
