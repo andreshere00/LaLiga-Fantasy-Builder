@@ -26,6 +26,11 @@
   overflow-x: auto;
   padding-bottom: 4px;
 }
+/* Auto margins centre the row yet keep the first item reachable when it overflows and scrolls. */
+.team-picker > :first-child,
+.team-sections > :first-child { margin-inline-start: auto; }
+.team-picker > :last-child,
+.team-sections > :last-child { margin-inline-end: auto; }
 .team-picker a {
   position: relative;
   display: grid;
