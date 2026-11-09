@@ -159,6 +159,7 @@ export function TeamsPage({ opponentClubId = null }: { opponentClubId?: number |
       {dossier.data && (dossier.data.prediction || predictionFailed(dossier.data)) ? (
         <TeamLineupSection
           prediction={dossier.data.prediction ?? null}
+          squad={dossier.data.roster?.players ?? []}
           failed={predictionFailed(dossier.data)}
           returnTo={teamPath(clubId ?? "", { ...route, section: "lineup" })}
           onRetry={() => void dossier.refetch()}

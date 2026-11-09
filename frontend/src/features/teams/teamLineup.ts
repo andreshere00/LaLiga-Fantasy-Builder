@@ -47,6 +47,31 @@ export function matchCatalogPlayer(
   return hits.length === 1 ? hits[0].playerId : null;
 }
 
+/**
+ * One club squad member for a scraped XI name, or none when the match is missing or ambiguous.
+ * The XI abbreviates names ("I. Williams", "Sancet") that the squad spells in full
+ * ("Iñaki Williams", "O. Sancet"), so a leading initial and a trailing surname both count.
+ */
+export function matchRosterPlayer<T extends { name: string }>(
+  scrapedName: string,
+  squad: readonly T[],
+): T | null {
+  const target = fold(scrapedName);
+  if (!target) return null;
+  const exact = squad.filter((player) => fold(player.name) === target);
+  if (exact.length === 1) return exact[0];
+  if (exact.length > 1) return null;
+  const words = target.split(" ");
+  const initial = words.length > 1 && words[0].length === 1 ? words[0] : null;
+  const rest = initial ? words.slice(1).join(" ") : target;
+  const hits = squad.filter((player) => {
+    const name = fold(player.name);
+    if (initial) return name === rest || (name.endsWith(` ${rest}`) && name.startsWith(initial));
+    return name.endsWith(` ${rest}`);
+  });
+  return hits.length === 1 ? hits[0] : null;
+}
+
 export function catalogNames(payload: unknown): CatalogName[] {
   const names: CatalogName[] = [];
   for (const [playerId, master] of catalogById(payload)) {

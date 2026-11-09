@@ -5,6 +5,13 @@
 .player-bookmark-btn:hover .player-bookmark-icon { color:currentColor; }
 .player-bookmark-btn.is-active:not(:hover) .player-bookmark-icon { color:var(--fb-primary); }
 
+/* Quiet variant: no box until hover or focus, saved state filled in the brand colour. */
+.player-bookmark-btn.is-quiet { border-color:transparent; background:transparent; width:auto; min-width:44px; padding:0 8px; display:inline-flex; gap:6px; }
+.player-bookmark-btn.is-quiet:hover { border-color:var(--fb-control-line); }
+.player-bookmark-btn.is-quiet:focus-visible { outline:2px solid var(--fb-focus); outline-offset:2px; }
+.player-bookmark-btn.is-quiet.is-active { color:var(--fb-primary); }
+.player-bookmark-btn.is-quiet:disabled { opacity:.5; cursor:default; }
+
 /* Center identity beside a fixed vertical column of status targets. */
 .market-page .market-name-wrap {
   display:block;

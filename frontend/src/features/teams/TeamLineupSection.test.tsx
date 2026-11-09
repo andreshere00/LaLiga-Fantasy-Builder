@@ -49,6 +49,18 @@ vi.mock("../market/actions/MarketActionDialogs", () => ({
   MarketActionDialogs: () => null,
 }));
 
+vi.mock("../lineup/useSquadStats", () => ({
+  usePlayerOutlooks: () => ({
+    profiles: new Map([["7", { form: { rating: "good" }, startProbability: { percent: 80 } }]]),
+    isLoading: false,
+    errors: [],
+  }),
+}));
+
+vi.mock("./useRecentPoints", () => ({
+  useRecentPoints: () => new Map([["7", [{ matchweek: 11, points: 6 }, { matchweek: 12, points: 12 }]]]),
+}));
+
 vi.mock("../scouting/ScoutingProvider", () => ({
   useScouting: () => ({ favorites: new Set<string>(), pending: false, toggle }),
 }));
@@ -58,15 +70,25 @@ const prediction = {
   coach: {
     name: "Manuel Pellegrini",
     rotations: "Algunas rotaciones",
+    matchdayPredictability: "Poco previsible",
     seasonPredictabilityPercent: 70,
   },
-  starters: [{ name: "Isco", probability: 80, photoUrl: null, position: "Midfielder" }],
+  starters: [{ name: "Isco", probability: 80, photoUrl: null, position: "Mediocampista" }],
   alternatives: [
-    { name: "Mystery", probability: 0, position: "Forward" },
-    { name: "Later", probability: 40, position: "Forward" },
+    { name: "Mystery", probability: 0, position: "Delantero" },
+    { name: "Later", probability: 40, position: "Delantero" },
   ],
-  summary: { averageProbability: 70, averageFormArrow: null, substituteRisk: null },
+  summary: { averageProbability: 70, averageFormArrow: 3, substituteRisk: "2.64 jugs" },
 };
+
+function renderLineup() {
+  return render(
+    <MemoryRouter>
+      <TeamLineupSection prediction={prediction} squad={[{ playerId: "7", name: "Isco", points: 55 }]}
+        failed={false} returnTo="/teams/5?section=lineup" onRetry={vi.fn()} />
+    </MemoryRouter>,
+  );
+}
 
 describe("TeamLineupSection", () => {
   beforeEach(() => {
@@ -86,14 +108,32 @@ describe("TeamLineupSection", () => {
         />
       </MemoryRouter>,
     );
-    expect(screen.getByText("12")).toBeTruthy();
+    expect(screen.getByText(/Matchday 12/)).toBeTruthy();
     expect(screen.getByText("0%")).toBeTruthy();
     expect(screen.getAllByText("Mystery").length).toBeGreaterThan(0);
-    expect(screen.getAllByText("Fantasy actions are unavailable for this player.").length)
-      .toBeGreaterThan(0);
+    expect(screen.getAllByText("Details unavailable").length).toBeGreaterThan(0);
     const field = screen.getByRole("link", { name: "Field player" });
     expect(field.getAttribute("href")).toBe("/?focusPlayer=7&team=t1");
-    expect(screen.queryByRole("button", { name: "Save" })).toBeNull();
     expect(openBid).not.toHaveBeenCalled();
+  });
+
+  it("TeamLineupSection_coach_and_labels_are_translated_and_ranked", () => {
+    renderLineup();
+    expect(screen.getByText("Hard to predict")).toBeTruthy();
+    expect(screen.getByText("Some rotations")).toBeTruthy();
+    expect(screen.getByText("2.64 players")).toBeTruthy();
+    expect(screen.getByText("3 of 5")).toBeTruthy();
+    expect(screen.getByText("Attack", { selector: "h4" })).toBeTruthy();
+    expect(screen.queryByText(/Poco previsible|jugs|Delantero/)).toBeNull();
+  });
+
+  it("TeamLineupSection_matched_players_link_to_details_with_form_and_recent_points", () => {
+    renderLineup();
+    const link = screen.getByRole("link", { name: "Isco" });
+    expect(link.getAttribute("href")).toBe("/players/7");
+    expect(screen.getByText("Good")).toBeTruthy();
+    expect(screen.getByText("12")).toBeTruthy();
+    expect(screen.getByRole("button", { name: "Favorite Isco" }).getAttribute("aria-pressed")).toBe("false");
+    expect(screen.queryByRole("link", { name: "Mystery" })).toBeNull();
   });
 });

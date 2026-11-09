@@ -15,6 +15,7 @@ import { usePlayersCatalogQuery } from "../../api/queries";
 import { catalogMediaByMasterId } from "../../api/mappers";
 import { usePlayerRadar } from "../players/radar/usePlayerRadar";
 import type { ClubDossierDto, ClubRosterStatsDto } from "../../api/schemas";
+import { RecentPoints } from "./RecentPoints";
 import { useRecentPoints, type RecentPoint } from "./useRecentPoints";
 import { TeamMeter } from "./TeamMeter";
 import { publishedColumns, sortSquad, type SquadColumn, type SquadRow } from "./teamTable";
@@ -289,27 +290,6 @@ type Outlook = {
   form?: { rating?: string | null } | null;
   startProbability?: { percent?: number | null } | null;
 };
-
-/** The last five LaLiga matches' Fantasy points, oldest first, beside the season total. */
-function RecentPoints({ entries }: { entries: readonly RecentPoint[] }) {
-  if (entries.length === 0) return null;
-  return (
-    <div className="team-mvp-recent">
-      <p>{t("Last 5 LaLiga matches")}</p>
-      <ol aria-label={t("Fantasy points in the last 5 LaLiga matches, oldest to newest")}>
-        {entries.map((entry, index) => (
-          <li
-            key={`${entry.matchweek ?? "x"}-${index}`}
-            data-tone={entry.points == null ? undefined : entry.points < 0 ? "low" : entry.points >= 10 ? "high" : "mid"}
-            title={entry.matchweek != null ? t("Matchweek {{0}}", { 0: entry.matchweek }) : undefined}
-          >
-            {entry.points ?? "—"}
-          </li>
-        ))}
-      </ol>
-    </div>
-  );
-}
 
 /** Starter likelihood from this percentage up is flagged in red on the MVP cards. */
 const STARTER_RED_FROM = 90;

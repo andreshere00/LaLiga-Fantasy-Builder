@@ -3,6 +3,7 @@ import {
   alternativesBySlot,
   fieldPlayerPath,
   matchCatalogPlayer,
+  matchRosterPlayer,
   orderedAlternatives,
 } from "./teamLineup";
 
@@ -41,5 +42,27 @@ describe("predicted lineup", () => {
   it("fieldPlayerPath_focuses_the_squad_card", () => {
     expect(fieldPlayerPath("7", "t1")).toBe("/?focusPlayer=7&team=t1");
     expect(fieldPlayerPath("7", null)).toBe("/?focusPlayer=7");
+  });
+});
+
+describe("matchRosterPlayer", () => {
+  const squad = [
+    { playerId: "1", name: "Iñaki Williams" },
+    { playerId: "2", name: "Nico Williams" },
+    { playerId: "3", name: "O. Sancet" },
+    { playerId: "4", name: "De Galarreta" },
+    { playerId: "5", name: "Peio Canales" },
+  ];
+  it("matchRosterPlayer_initial_and_surname_resolve_the_squad_member", () => {
+    expect(matchRosterPlayer("I. Williams", squad)?.playerId).toBe("1");
+    expect(matchRosterPlayer("N. Williams", squad)?.playerId).toBe("2");
+    expect(matchRosterPlayer("R. de Galarreta", squad)?.playerId).toBe("4");
+    expect(matchRosterPlayer("Sancet", squad)?.playerId).toBe("3");
+    expect(matchRosterPlayer("Canales", squad)?.playerId).toBe("5");
+  });
+  it("matchRosterPlayer_ambiguous_or_unknown_names_stay_unmatched", () => {
+    expect(matchRosterPlayer("Williams", squad)).toBeNull();
+    expect(matchRosterPlayer("Nobody", squad)).toBeNull();
+    expect(matchRosterPlayer("", squad)).toBeNull();
   });
 });

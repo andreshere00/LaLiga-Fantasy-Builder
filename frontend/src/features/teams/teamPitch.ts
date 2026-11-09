@@ -44,3 +44,14 @@ export function pitchLines<T extends Pick<PredictedPlayer, "position">>(
     return row && row.length > 0 ? [{ line, players: row }] : [];
   });
 }
+
+/** Alternatives grouped by line, goalkeeper first, so headings use one translated vocabulary. */
+export function alternativeLines<T extends Pick<PredictedPlayer, "position">>(
+  players: readonly T[],
+): { line: PitchLine; players: T[] }[] {
+  const order: PitchLine[] = ["portero", "defensa", "mediocampista", "delantero", "other"];
+  return order.flatMap((line) => {
+    const row = players.filter((player) => pitchLine(player.position) === line);
+    return row.length > 0 ? [{ line, players: row }] : [];
+  });
+}

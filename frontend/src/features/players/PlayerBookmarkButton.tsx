@@ -8,6 +8,8 @@ type PlayerBookmarkButtonProps = {
   playerName: string;
   onToggle: () => void;
   showLabel?: boolean;
+  /** Borderless toggle for dense rows; the 44px hit area stays. */
+  variant?: "quiet";
 };
 
 export function PlayerBookmarkButton({
@@ -16,15 +18,17 @@ export function PlayerBookmarkButton({
   playerName,
   onToggle,
   showLabel = false,
+  variant,
 }: PlayerBookmarkButtonProps) {
   useTranslation();
   return (
     <button
       type="button"
       disabled={disabled}
-      className={["player-bookmark-btn", pressed && "is-active"].filter(Boolean).join(" ")}
+      className={["player-bookmark-btn", variant === "quiet" && "is-quiet", pressed && "is-active"].filter(Boolean).join(" ")}
       aria-label={t("Favorite {{0}}", { 0: playerName })}
       aria-pressed={pressed}
+      title={variant === "quiet" ? (pressed ? t("Remove from favorites") : t("Save to favorites")) : undefined}
       onClick={onToggle}
     >
       <svg className="player-bookmark-icon" viewBox="0 0 24 24" aria-hidden="true">
