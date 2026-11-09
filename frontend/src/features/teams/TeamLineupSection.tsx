@@ -1,47 +1,37 @@
 import { useMemo, useState } from "react";
+import { Collapsible } from "@base-ui/react/collapsible";
 import { t, useTranslation } from "../../i18n";
 import { Link } from "react-router-dom";
 import { PitchMarkings } from "../lineup/PitchMarkings";
 import { usePlayersCatalogQuery } from "../../api/queries";
 import type { ClubDossierDto } from "../../api/schemas";
 import { MarketActionDialogs } from "../market/actions/MarketActionDialogs";
-import { MarketActionMenu } from "../market/actions/MarketActionMenu";
-import {
-  resolveMarketActionOffers,
-  type MarketActionContext,
-} from "../market/actions/marketActions";
+import type { MarketActionContext } from "../market/actions/marketActions";
 import { useMarketActions } from "../market/actions/useMarketActions";
-import type { MarketRow } from "../market/model/row";
 import { useMarketBoard } from "../market/useMarketBoard";
 import { PlayerBookmarkButton } from "../players/PlayerBookmarkButton";
 import { useScouting } from "../scouting/ScoutingProvider";
 import { usePlayerOutlooks } from "../lineup/useSquadStats";
-import { playerFormPresentation } from "../players/playerForm";
 import {
   catalogNames,
-  fieldPlayerPath,
   matchCatalogPlayer,
   matchRosterPlayer,
   orderedAlternatives,
   type PredictedPlayer,
 } from "./teamLineup";
 import { LineupCoach } from "./LineupCoach";
+import { LineupFsyp } from "./LineupFsyp";
+import { LineupFormBadge } from "./LineupFormBadge";
+import { LineupPlayerDialog } from "./LineupPlayerDialog";
 import { RecentPoints } from "./RecentPoints";
 import { TeamMeter } from "./TeamMeter";
-import { alternativeLines, pitchLineLabel, pitchLines } from "./teamPitch";
+import { alternativeLines, pitchLineLabel, pitchLines, type PitchLine } from "./teamPitch";
 import { isStarterFlagged } from "./TeamPlayersSection";
 import { useRecentPoints } from "./useRecentPoints";
+import type { Entry, Outlook, RecentMap } from "./lineupTypes";
 
 type Prediction = NonNullable<ClubDossierDto["prediction"]>;
 type Squad = readonly { playerId: string; name: string; points?: number | null }[];
-
-/** A published XI name resolved to a Fantasy player when the club squad or catalog identifies one. */
-type Entry = PredictedPlayer & { playerId: string | null; points: number | null };
-
-type Outlook = {
-  form?: { rating?: string | null } | null;
-  startProbability?: { percent?: number | null } | null;
-};
 
 export function TeamLineupSection({
   prediction,
@@ -78,27 +68,36 @@ export function TeamLineupSection({
   };
   const starters = (prediction?.starters ?? []).map((player) => resolve(asPlayer(player)));
   const [picked, setPicked] = useState<string | null>(null);
-  const selected = starters.find((player) => player.name === picked) ?? starters[0] ?? null;
+  const selected = starters.find((player) => player.name === picked) ?? null;
   const alternatives = orderedAlternatives(
     (prediction?.alternatives ?? []).map((player) => resolve(asPlayer(player))),
   );
-  const detailIds = [selected, ...alternatives].flatMap((player) => player?.playerId ? [player.playerId] : []);
-  const outlooks = usePlayerOutlooks(detailIds);
-  const recent = useRecentPoints(detailIds);
-  const rowProps = {
-    returnTo,
-    catalogLoading: catalogQuery.isLoading,
-    rows: board.rows,
-    ownedIds: ownedIds(board.ownSquadCards),
-    teamId: board.callerTeamId,
-    context,
-    actions,
-    favorites: scouting.favorites,
-    favoritePending: scouting.pending,
-    onFavorite: scouting.toggle,
-    outlooks: outlooks.profiles,
-    recent,
+  const groups = alternativeLines(alternatives);
+  /** The line holding the likeliest alternative starts open; the rest are one tap away. */
+  const likeliest = alternatives[0] ? alternativeLines([alternatives[0]])[0]?.line : undefined;
+  const [open, setOpen] = useState<ReadonlySet<PitchLine> | null>(null);
+  const expanded = open ?? new Set<PitchLine>(likeliest ? [likeliest] : []);
+  const toggleLine = (line: PitchLine, next: boolean) => {
+    const copy = new Set(expanded);
+    if (next) copy.add(line);
+    else copy.delete(line);
+    setOpen(copy);
   };
+  const allOpen = groups.length > 0 && groups.every((group) => expanded.has(group.line));
+  // Form is read for the XI and for the lines that are open, so hidden rows cost nothing.
+  const detailIds = [
+    ...starters,
+    ...groups.filter((group) => expanded.has(group.line)).flatMap((group) => group.players),
+  ].flatMap((player) => player.playerId ? [player.playerId] : []);
+  const outlooks = usePlayerOutlooks(detailIds).profiles;
+  const recent = useRecentPoints(detailIds);
+  const ownedSet = ownedIds(board.ownSquadCards);
+  const selectedRow = selected?.playerId
+    ? board.rows.find((item) => item.playerId === selected.playerId) ?? null
+    : null;
+  const outlookOf = (player: Entry) => player.playerId
+    ? outlooks.get(player.playerId) as Outlook | undefined
+    : undefined;
   return (
     <section id="team-lineup" tabIndex={-1} aria-labelledby="team-lineup-title">
       <h2 id="team-lineup-title" className="team-section-title">{t("Lineup")}</h2>
@@ -116,6 +115,7 @@ export function TeamLineupSection({
           <div className="team-lineup-board">
             <div>
               <h3>{t("Starters")}</h3>
+              <p className="team-note">{t("Select a player for details and actions.")}</p>
               <div className="team-pitch">
                 <PitchMarkings />
                 <div className="team-pitch-rows">
@@ -131,44 +131,98 @@ export function TeamLineupSection({
                           key={player.name}
                           type="button"
                           className="team-pitch-player"
-                          aria-pressed={selected?.name === player.name}
+                          aria-haspopup="dialog"
                           onClick={() => setPicked(player.name)}
                         >
                           {player.photoUrl
                             ? <img src={player.photoUrl} alt="" />
                             : <span className="team-xi-photo" aria-hidden="true" />}
-                          <span>{player.name}</span>
+                          <span className="team-pitch-name">{player.name}</span>
                           <strong>
                             {player.probability == null ? "—" : `${player.probability}%`}
                           </strong>
+                          <span className="team-pitch-meta">
+                            <LineupFormBadge rating={outlookOf(player)?.form?.rating} iconOnly />
+                            <LineupFsyp points={player.points} />
+                          </span>
                         </button>
                       ))}
                     </div>
                   ))}
                 </div>
               </div>
-              {selected ? (
-                <ul className="team-xi team-xi-selected">
-                  <PlayerRow selected player={selected} {...rowProps} />
-                </ul>
-              ) : null}
             </div>
             <div className="team-alternatives">
-              <h3>{t("Alternatives")}</h3>
-              {alternativeLines(alternatives).map((group) => (
-                <div key={group.line}>
-                  <h4>{t(pitchLineLabel(group.line))}</h4>
-                  <ul className="team-xi">
-                    {group.players.map((player) => (
-                      <PlayerRow key={`${group.line}-${player.name}`} player={player} {...rowProps} />
-                    ))}
-                  </ul>
-                </div>
+              <div className="team-alternatives-head">
+                <h3>{t("Alternatives")}</h3>
+                {groups.length > 1 ? (
+                  <button
+                    type="button"
+                    className="team-alternatives-toggle"
+                    onClick={() => setOpen(allOpen ? new Set() : new Set(groups.map((group) => group.line)))}
+                  >
+                    {allOpen ? t("Collapse all") : t("Expand all")}
+                  </button>
+                ) : null}
+              </div>
+              {groups.map((group) => (
+                <Collapsible.Root
+                  key={group.line}
+                  className="team-alt-group"
+                  data-line={group.line}
+                  open={expanded.has(group.line)}
+                  onOpenChange={(next) => toggleLine(group.line, next)}
+                >
+                  <Collapsible.Trigger className="team-alt-trigger">
+                    <span className="team-alt-title">{t(pitchLineLabel(group.line))}</span>
+                    <span className="team-count">{group.players.length}</span>
+                    <span className="team-alt-preview">
+                      {expanded.has(group.line)
+                        ? null
+                        : group.players.slice(0, 2).map((player) => (
+                          `${player.name} ${player.probability == null ? "—" : `${player.probability}%`}`
+                        )).join(" · ")}
+                    </span>
+                    <span className="team-alt-chevron" aria-hidden="true" />
+                  </Collapsible.Trigger>
+                  <Collapsible.Panel>
+                    <ul className="team-xi">
+                      {group.players.map((player) => (
+                        <AlternativeRow
+                          key={`${group.line}-${player.name}`}
+                          player={player}
+                          outlook={outlookOf(player)}
+                          recent={recent}
+                          returnTo={returnTo}
+                          catalogLoading={catalogQuery.isLoading}
+                          favorite={player.playerId != null && scouting.favorites.has(player.playerId)}
+                          favoritePending={scouting.pending}
+                          onFavorite={scouting.toggle}
+                        />
+                      ))}
+                    </ul>
+                  </Collapsible.Panel>
+                </Collapsible.Root>
               ))}
             </div>
           </div>
         </>
       )}
+      <LineupPlayerDialog
+        player={selected}
+        onClose={() => setPicked(null)}
+        returnTo={returnTo}
+        row={selectedRow}
+        owned={selected?.playerId != null && ownedSet.has(selected.playerId)}
+        teamId={board.callerTeamId}
+        context={context}
+        actions={actions}
+        favorite={selected?.playerId != null && scouting.favorites.has(selected.playerId)}
+        favoritePending={scouting.pending}
+        onFavorite={scouting.toggle}
+        outlook={selected ? outlookOf(selected) : undefined}
+        recent={recent as RecentMap}
+      />
       <MarketActionDialogs
         actions={actions}
         money={board.money}
@@ -178,47 +232,30 @@ export function TeamLineupSection({
   );
 }
 
-function PlayerRow({
-  selected = false,
+function AlternativeRow({
   player,
+  outlook,
+  recent,
   returnTo,
   catalogLoading,
-  rows,
-  ownedIds,
-  teamId,
-  context,
-  actions,
-  favorites,
+  favorite,
   favoritePending,
   onFavorite,
-  outlooks,
-  recent,
 }: {
-  selected?: boolean;
   player: Entry;
+  outlook: Outlook | undefined;
+  recent: RecentMap;
   returnTo: string;
   catalogLoading: boolean;
-  rows: MarketRow[];
-  ownedIds: ReadonlySet<string>;
-  teamId: string | null;
-  context: MarketActionContext;
-  actions: ReturnType<typeof useMarketActions>;
-  favorites: ReadonlySet<string>;
+  favorite: boolean;
   favoritePending: boolean;
   onFavorite: (playerId: string) => void;
-  outlooks: { get(playerId: string): unknown };
-  recent: ReadonlyMap<string, readonly { matchweek: number | null; points: number | null }[]>;
 }) {
   const playerId = player.playerId;
-  const row = playerId == null ? null : rows.find((item) => item.playerId === playerId) ?? null;
-  const offers = row ? resolveMarketActionOffers(row, context) : [];
-  const owned = playerId != null && ownedIds.has(playerId);
-  const outlook = playerId ? outlooks.get(playerId) as Outlook | undefined : undefined;
-  const form = playerFormPresentation(outlook?.form?.rating);
   const likelihood = player.probability ?? outlook?.startProbability?.percent ?? null;
   const flagged = isStarterFlagged(likelihood);
   return (
-    <li className={selected ? "team-xi-player is-selected" : "team-xi-player"}>
+    <li className="team-xi-player">
       {player.photoUrl
         ? <img src={player.photoUrl} alt="" />
         : <span className="team-xi-photo" aria-hidden="true" />}
@@ -233,14 +270,8 @@ function PlayerRow({
           </Link>
         ) : <strong>{player.name}</strong>}
         <p className="team-xi-facts">
-          {form ? (
-            <span className="team-mvp-form" data-form={form.code}>
-              <img className="is-light" src={form.icons.light} alt="" />
-              <img className="is-dark" src={form.icons.dark} alt="" />
-              {t(form.label)}
-            </span>
-          ) : null}
-          {player.points != null ? <span><abbr title={t("Fantasy points this season")}>{t("FSYP")}</abbr> {player.points}</span> : null}
+          <LineupFormBadge rating={outlook?.form?.rating} />
+          <LineupFsyp points={player.points} />
           {!playerId && !catalogLoading ? <span className="team-xi-status">{t("Details unavailable")}</span> : null}
         </p>
       </div>
@@ -254,20 +285,11 @@ function PlayerRow({
         <div className="team-xi-actions">
           <PlayerBookmarkButton
             variant="quiet"
-            showLabel={selected}
-            pressed={favorites.has(playerId)}
+            pressed={favorite}
             disabled={favoritePending}
             playerName={player.name}
             onToggle={() => onFavorite(playerId)}
           />
-          {owned ? (
-            <Link className="team-xi-field" to={fieldPlayerPath(playerId, teamId)}>
-              {t("Field player")}
-            </Link>
-          ) : null}
-          {row && offers.length > 0 ? (
-            <MarketActionMenu row={row} context={context} actions={actions} />
-          ) : null}
         </div>
       ) : null}
     </li>

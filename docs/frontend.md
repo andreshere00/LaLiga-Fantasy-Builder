@@ -286,16 +286,19 @@ Lineup opens with one coach card: season predictability leads, then the matchday
 predictability badge and the rotation note, then the XI averages (probability, form on a
 1 to 5 scale, substitute risk). Known Spanish wording (predictability, rotations, "2.64
 jugs") is translated locally; only unknown free text uses the translation widget.
-Starters stand on a larger pitch (up to 620px) whose photos, type and margins scale with its own width (container units), grouped by the published position line
-from attack to goalkeeper. Selecting a starter opens a card under the pitch with the name
-link, form, FSYP, the last five LaLiga matches, probability, bookmark, market actions, and
-Field player. Alternatives sit in a narrower column grouped by translated line
-(goalkeeper to attack), ordered by probability including a published 0%, each row with form,
-FSYP, last five points, probability bar (red from 90%) and a quiet bookmark toggle.
-Every resolved name links to the player page and Back returns to this club. Published names
+Starters stand on a larger pitch (up to 620px) whose photos, type and margins scale with
+its own width (container units), grouped by the published position line from attack to
+goalkeeper. Each token shows the probability, the form icon, and an FSYP tag (a squared
+two-tone label, so it reads apart from the round form icon). Selecting a token opens a
+dialog with probability, form, FSYP, the last five LaLiga matches, a Player details link,
+the bookmark, Field player and the market menu; starting a bid or clause closes it first.
+Alternatives sit in a narrower column as one collapsible group per line (goalkeeper to
+attack), each header showing the translated line, a count and, when collapsed, the two
+likeliest names; the line holding the likeliest alternative starts open and Expand all
+opens the rest. Rows show form, FSYP, last five points, a probability bar (red from 90%)
+and a quiet bookmark toggle. Every resolved name links to the player page and Back returns to this club. Published names
 ("I. Williams") are matched first inside the club squad (initial plus surname), then in the
-catalog; an unmatched name stays plain text marked "Details unavailable". Form and last-five
-points load only for the selected starter and the alternatives. Market actions use the
+catalog; an unmatched name stays plain text marked "Details unavailable". Form loads for the XI and for open alternative lines; last-five points follow the same ids. Market actions use the
 existing menu and dialogs only when the selected league has a listing, bid, clause, or
 sale. **Field player** appears only for a player that league owns. It opens Lineup and
 focuses that squad card; it does not place the player or save the lineup.

@@ -1,4 +1,4 @@
-import { cleanup, render, screen } from "@testing-library/react";
+import { cleanup, fireEvent, render, screen, within } from "@testing-library/react";
 import { MemoryRouter } from "react-router-dom";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { TeamLineupSection } from "./TeamLineupSection";
@@ -112,6 +112,8 @@ describe("TeamLineupSection", () => {
     expect(screen.getByText("0%")).toBeTruthy();
     expect(screen.getAllByText("Mystery").length).toBeGreaterThan(0);
     expect(screen.getAllByText("Details unavailable").length).toBeGreaterThan(0);
+    expect(screen.queryByRole("link", { name: "Field player" })).toBeNull();
+    fireEvent.click(screen.getByRole("button", { name: /Isco/ }));
     const field = screen.getByRole("link", { name: "Field player" });
     expect(field.getAttribute("href")).toBe("/?focusPlayer=7&team=t1");
     expect(openBid).not.toHaveBeenCalled();
@@ -123,17 +125,30 @@ describe("TeamLineupSection", () => {
     expect(screen.getByText("Some rotations")).toBeTruthy();
     expect(screen.getByText("2.64 players")).toBeTruthy();
     expect(screen.getByText("3 of 5")).toBeTruthy();
-    expect(screen.getByText("Attack", { selector: "h4" })).toBeTruthy();
+    expect(screen.getByRole("button", { name: /Attack/ })).toBeTruthy();
     expect(screen.queryByText(/Poco previsible|jugs|Delantero/)).toBeNull();
   });
 
-  it("TeamLineupSection_matched_players_link_to_details_with_form_and_recent_points", () => {
+  it("TeamLineupSection_pitch_tokens_show_form_and_fsyp_and_open_a_detail_dialog", () => {
     renderLineup();
-    const link = screen.getByRole("link", { name: "Isco" });
-    expect(link.getAttribute("href")).toBe("/players/7");
-    expect(screen.getByText("Good")).toBeTruthy();
-    expect(screen.getByText("12")).toBeTruthy();
-    expect(screen.getByRole("button", { name: "Favorite Isco" }).getAttribute("aria-pressed")).toBe("false");
-    expect(screen.queryByRole("link", { name: "Mystery" })).toBeNull();
+    const token = screen.getByRole("button", { name: /Isco/ });
+    expect(token.textContent).toContain("55");
+    expect(token.textContent).toContain("Good");
+    expect(screen.queryByRole("dialog")).toBeNull();
+    fireEvent.click(token);
+    const dialog = screen.getByRole("dialog");
+    expect(within(dialog).getByRole("link", { name: "Player details" }).getAttribute("href")).toBe("/players/7");
+    expect(within(dialog).getByText("12")).toBeTruthy();
+    expect(within(dialog).getByRole("button", { name: "Favorite Isco" }).getAttribute("aria-pressed")).toBe("false");
+  });
+
+  it("TeamLineupSection_alternative_lines_expand_and_collapse", () => {
+    renderLineup();
+    expect(screen.getAllByText("Later").length).toBeGreaterThan(0);
+    const trigger = screen.getByRole("button", { name: /Attack/ });
+    expect(trigger.getAttribute("aria-expanded")).toBe("true");
+    fireEvent.click(trigger);
+    expect(screen.queryByText("Mystery", { selector: "strong" })).toBeNull();
+    expect(screen.getByRole("button", { name: /Attack/ }).textContent).toContain("Later 40%");
   });
 });

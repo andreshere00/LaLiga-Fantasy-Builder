@@ -580,7 +580,7 @@
   text-align: center;
   cursor: pointer;
 }
-.team-pitch-player > span:not(.team-xi-photo) {
+.team-pitch-name {
   display: -webkit-box;
   -webkit-line-clamp: 2;
   -webkit-box-orient: vertical;
@@ -600,7 +600,6 @@
   color: var(--fb-tertiary);
   font: 400 clamp(14px, 3.2cqi, 20px)/1 Anton, "Arial Narrow", sans-serif;
 }
-.team-pitch-player[aria-pressed="true"] { outline: 2px solid var(--fb-primary); outline-offset: 2px; background: color-mix(in srgb, var(--fb-primary) 10%, transparent); }
 .team-xi { display: grid; gap: 0; margin: 0; padding: 0; list-style: none; }
 /* One row layout for alternatives and the selected starter: identity, likelihood, actions, then form chips. */
 .team-xi-player {
@@ -651,20 +650,72 @@
   font-size: 13px;
   font-weight: 600;
 }
-/* The selected starter sits under the pitch in its own card; its actions wrap beneath. */
-.team-xi-selected { border: 1px solid var(--fb-line); background: var(--fb-surface); }
-.team-xi-player.is-selected {
-  grid-template-columns: 64px minmax(0, 1fr) 5rem;
-  grid-template-areas: "photo name like" "photo recent recent" "actions actions actions";
-  gap: 6px 16px;
-  padding: 16px;
-  border-bottom: 0;
+/* Starter detail dialog: facts first, then actions. */
+.team-detail { display: grid; gap: 16px; }
+.team-detail-head { display: flex; align-items: center; gap: 20px; }
+.team-detail-head > img,
+.team-detail-head > .team-xi-photo { width: 96px; height: 96px; flex: none; object-fit: cover; background: var(--fb-subtle); }
+.team-detail-facts { display: grid; grid-template-columns: repeat(auto-fit, minmax(6rem, 1fr)); flex: 1; gap: 12px 20px; margin: 0; min-width: 0; }
+.team-detail-facts dt { color: var(--fb-muted); font-size: 12px; }
+.team-detail-facts dd { display: grid; gap: 4px; margin: 4px 0 0; }
+.team-detail-facts .is-lead { grid-column: 1 / -1; }
+.team-detail-figure--fsyp { justify-self: start; padding: 2px 10px; border: 2px solid var(--fb-secondary); }
+.team-detail-figure { color: var(--fb-tertiary); font: 400 32px/1 Anton, "Arial Narrow", sans-serif; font-variant-numeric: tabular-nums; }
+.team-detail-facts [data-level="high"] .team-detail-figure { color: var(--fb-failure); }
+.team-detail .team-mvp-recent { text-align: left; }
+.team-detail .team-mvp-recent ol { justify-content: flex-start; }
+.team-detail-actions { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 12px; padding-top: 12px; border-top: 1px solid var(--fb-line); }
+.team-detail-link { display: inline-flex; align-items: center; min-height: 44px; padding: 0 16px; background: var(--fb-coral); color: var(--fb-on-coral); font-weight: 600; text-decoration: none; }
+.team-detail-link:focus-visible { outline: 2px solid var(--fb-focus); outline-offset: 2px; }
+
+/* Alternatives: one disclosure per line, each header a labelled, countable target. */
+.team-alternatives { gap: 8px; }
+.team-alternatives-head { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; }
+.team-alternatives-toggle { min-height: 44px; padding: 0 4px; border: 0; background: transparent; color: var(--fb-secondary); font: 600 13px/1 var(--fb-font-body); text-decoration: underline; text-underline-offset: 3px; cursor: pointer; }
+.team-alternatives-toggle:focus-visible,
+.team-alt-trigger:focus-visible { outline: 2px solid var(--fb-focus); outline-offset: 2px; }
+.team-alt-group { border: 1px solid var(--fb-line); background: var(--fb-surface); }
+.team-alt-group[data-line="portero"] { border-left: 4px solid var(--fb-warning); }
+.team-alt-group[data-line="defensa"] { border-left: 4px solid var(--fb-secondary); }
+.team-alt-group[data-line="mediocampista"] { border-left: 4px solid var(--fb-success); }
+.team-alt-group[data-line="delantero"] { border-left: 4px solid var(--fb-failure); }
+.team-alt-trigger {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  min-height: 48px;
+  padding: 0 14px;
+  border: 0;
+  background: transparent;
+  color: var(--fb-tertiary);
+  font: 600 13px/1.2 var(--fb-font-body);
+  letter-spacing: .04em;
+  text-align: left;
+  text-transform: uppercase;
+  cursor: pointer;
 }
-.team-xi-player.is-selected > img,
-.team-xi-player.is-selected > .team-xi-photo { width: 64px; height: 64px; }
-.team-xi-player.is-selected .team-xi-name > strong,
-.team-xi-player.is-selected .team-xi-name .team-player-link { font-size: 18px; }
-.team-xi-player.is-selected .team-xi-actions { justify-content: flex-start; }
+.team-alt-trigger:hover { background: var(--fb-subtle); }
+.team-alt-preview { flex: 1; min-width: 0; overflow: hidden; color: var(--fb-muted); font-weight: 400; letter-spacing: 0; text-overflow: ellipsis; text-transform: none; white-space: nowrap; }
+.team-alt-title { flex: none; }
+.team-alt-trigger[data-panel-open] .team-alt-title { color: var(--fb-primary); }
+.team-alt-trigger .team-count { flex: none; }
+.team-alt-trigger[data-panel-open] .team-alt-preview { visibility: hidden; }
+.team-alt-chevron { flex: none; width: 8px; height: 8px; margin-left: auto; border-right: 2px solid currentColor; border-bottom: 2px solid currentColor; transform: rotate(45deg); transition: transform var(--fb-color-duration, .15s); }
+.team-alt-trigger[data-panel-open] .team-alt-chevron { transform: rotate(-135deg); }
+.team-alt-group .team-xi { padding: 0 14px; border-top: 1px solid var(--fb-line); }
+.team-alt-group .team-xi-player:last-child { border-bottom: 0; }
+/* FSYP: a squared two-tone tag, so it reads apart from the round, coloured form icon. */
+.team-fsyp { display: inline-flex; align-items: stretch; border: 1px solid var(--fb-secondary); font-variant-numeric: tabular-nums; line-height: 1; }
+.team-fsyp-label { padding: 3px 5px; background: var(--fb-secondary); color: var(--fb-surface); font: 700 clamp(9px, 1.8cqi, 11px)/1 var(--fb-font-body); letter-spacing: .04em; }
+.team-fsyp-value { padding: 3px 6px; background: var(--fb-surface); color: var(--fb-tertiary); font: 700 clamp(11px, 2.2cqi, 13px)/1 var(--fb-font-body); }
+.team-xi-facts .team-fsyp-label { font-size: 10px; }
+.team-xi-facts .team-fsyp-value { font-size: 12px; }
+.team-xi-facts { gap: 4px 10px; }
+@container (max-width: 420px) { .team-pitch-meta .team-fsyp-label { display: none; } }
+.team-pitch-meta { display: inline-flex; align-items: center; justify-content: center; gap: clamp(3px, .8cqi, 6px); color: var(--fb-muted); font: 600 clamp(10px, 2cqi, 12px)/1 var(--fb-font-body); font-variant-numeric: tabular-nums; }
+.team-pitch-meta .team-mvp-form { padding-left: 0; border-left: 0; }
+.team-pitch-meta .team-mvp-form img { width: clamp(14px, 3cqi, 20px); height: clamp(14px, 3cqi, 20px); }
 
 /* ---- News ---- */
 .team-news-list {
