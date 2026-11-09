@@ -123,7 +123,7 @@ export function TeamPerformanceSection({
         </p>
       ) : (
         <>
-          <div className="team-performance-board">
+          <div className={window === "season" ? "team-performance-board is-season" : "team-performance-board"}>
             <ResultSummary summary={summary} results={results} />
             <MatchList
               title={t("Previous matches")}

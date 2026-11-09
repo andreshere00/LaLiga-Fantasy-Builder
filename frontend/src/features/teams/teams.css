@@ -204,13 +204,21 @@
   /* One height for all three columns: lists share it between their rows, the overview between its groups. */
   .team-performance-board { align-items: stretch; }
   .team-performance-board .team-match-group { grid-template-rows: auto 1fr; }
-  .team-performance-board .team-fixtures { grid-auto-rows: 1fr; }
+  /* Rows share spare height but stop growing at 6.5rem, so a long season list beside a short one stays readable. */
+  .team-performance-board .team-fixtures { grid-auto-rows: minmax(auto, 6.5rem); align-content: start; }
+  /* The whole season lists every match, so the two lists differ a lot in length: each keeps its own height. */
+  .team-performance-board.is-season { align-items: start; }
+  .team-performance-board.is-season .team-match-group { grid-template-rows: auto; }
+  .team-performance-board.is-season .team-record-group { max-height: none; }
+  .team-performance-board.is-season .team-fixtures { grid-auto-rows: auto; }
   .team-performance-board .team-record-group {
     flex: 1 1 0;
+    max-height: 14rem;
     align-content: center;
     justify-items: center;
     text-align: center;
-    padding: 12px 20px;
+    grid-template-rows: auto;
+    padding: 12px;
     border-left: 0;
     border-top: 1px solid var(--fb-line);
   }
@@ -221,9 +229,10 @@
   .team-performance-board .team-record-primary > div { align-items: center; }
   .team-performance-board .team-record-goals {
     display: grid;
-    grid-template-columns: repeat(3, minmax(0, auto));
+    grid-template-columns: repeat(3, minmax(0, 1fr));
     grid-template-rows: auto auto;
-    gap: 4px 16px;
+    gap: 4px 8px;
+    width: 100%;
   }
   .team-performance-board .team-record-goals > div {
     display: grid;
@@ -231,7 +240,7 @@
     grid-template-rows: subgrid;
     justify-items: center;
   }
-  .team-performance-board .team-record-goals dt { align-self: end; line-height: 1.25; }
+  .team-performance-board .team-record-goals dt { align-self: end; line-height: 1.25; text-align: center; overflow-wrap: anywhere; }
   .team-performance-board .team-record-goals dd { margin: 0; }
 }
 
@@ -504,7 +513,7 @@
   padding: 0 28px;
   border-left: 1px solid var(--fb-line);
 }
-.team-record-group { grid-template-rows: auto 1fr; }
+.team-record-group { grid-template-rows: auto 1fr; min-width: 0; }
 .team-record-group:first-child { border-left: 0; }
 .team-record-title {
   margin: 0;
@@ -525,7 +534,8 @@
   font-variant-numeric: tabular-nums;
 }
 .team-record dt { color: var(--fb-muted); font-size: 13px; }
-.team-form { display: flex; align-self: center; justify-self: center; gap: 4px; }
+/* Long windows (10, 20, the whole season) wrap onto further rows instead of overflowing the group. */
+.team-form { display: flex; flex-wrap: wrap; align-self: center; justify-self: center; justify-content: center; gap: 4px; max-width: 100%; }
 .team-result {
   display: inline-grid;
   place-items: center;
@@ -992,7 +1002,6 @@
   .team-record { padding: 16px; gap: 16px; }
   .team-record-group { flex: 1 1 100%; padding: 0 0 16px; border-left: 0; border-bottom: 1px solid var(--fb-line); }
   .team-record-group:last-child { padding-bottom: 0; border-bottom: 0; }
-  .team-form { flex-wrap: wrap; }
   .team-fixture { grid-template-columns: minmax(0, 1fr) 28px; padding-block: 10px; }
   .team-fixture-when { grid-column: 1 / -1; grid-template-columns: auto 1fr auto; align-items: baseline; gap: 4px 10px; }
   .team-fixture-when .team-next-label { grid-column: 3; }
