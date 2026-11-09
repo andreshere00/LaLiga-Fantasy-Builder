@@ -29,7 +29,7 @@ class ClubDocumentService:
         return parse_club_page(await self._scraper.download_club(slug))
 
     async def news(self, slug: str) -> ClubNewsDocument:
-        """Download and parse the five newest club headlines.
+        """Download and parse every club changelog event, newest first (capped at 100).
 
         Args:
             slug: FutbolFantasy club slug.

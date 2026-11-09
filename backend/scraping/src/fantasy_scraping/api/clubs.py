@@ -32,7 +32,7 @@ router = APIRouter(prefix="/internal/clubs", dependencies=[Depends(require_servi
 
 @router.get("/{slug}/news", response_model=ClubNewsDocument)
 async def get_club_news(slug: str, document: DocumentDep) -> ClubNewsDocument:
-    """Scrape and parse the five newest club changelog headlines."""
+    """Scrape and parse every club changelog event, newest first (capped at 100)."""
     return await document.news(check_slug(slug))
 
 

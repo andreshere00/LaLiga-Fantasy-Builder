@@ -531,7 +531,7 @@
     "/internal/clubs/{slug}/news": {
       "get": {
         "summary": "Get Club News",
-        "description": "Scrape and parse the five newest club changelog headlines.",
+        "description": "Scrape and parse every club changelog event, newest first (capped at 100).",
         "operationId": "get_club_news_internal_clubs__slug__news_get",
         "parameters": [
           {
