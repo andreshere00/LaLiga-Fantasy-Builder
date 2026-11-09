@@ -522,11 +522,11 @@
 .team-pips i[data-on] { background: var(--fb-secondary); border-color: var(--fb-secondary); }
 .team-lineup-board {
   display: grid;
-  grid-template-columns: minmax(0, 3fr) minmax(0, 2fr);
-  gap: 24px 40px;
+  grid-template-columns: minmax(0, 620px) minmax(0, 1fr);
+  gap: 24px clamp(24px, 3vw, 48px);
   align-items: start;
 }
-.team-lineup-board > div { display: grid; gap: 12px; align-content: start; min-width: 0; }
+.team-lineup-board > div { display: grid; gap: 16px; align-content: start; min-width: 0; }
 .team-lineup-board h3 {
   margin: 0;
   color: var(--fb-tertiary);
@@ -545,37 +545,38 @@
 }
 .team-lineup-board h4:first-child,
 .team-alternatives > div:first-of-type h4 { margin-top: 0; }
+/* The pitch is the size container: photos, type and margins scale with its own width (cqi). */
 .team-pitch {
   position: relative;
   width: 100%;
-  max-width: 640px;
   aspect-ratio: 611 / 761;
+  container-type: inline-size;
   background: var(--fb-surface);
   border: 1px solid var(--fb-line);
 }
 .team-pitch .pitch-markings { position: absolute; inset: 0; width: 100%; height: 100%; display: block; }
 .team-pitch-rows {
   position: absolute;
-  inset: 6% 2% 4%;
+  inset: 5% 3% 4%;
   display: flex;
   flex-direction: column;
   justify-content: space-between;
-  gap: 8px;
+  gap: 2cqi;
 }
-.team-pitch-row { display: flex; flex-wrap: nowrap; justify-content: space-evenly; gap: 4px; }
+.team-pitch-row { display: flex; flex-wrap: nowrap; justify-content: space-evenly; gap: 1cqi; }
 .team-pitch-player {
   display: grid;
   justify-items: center;
   align-content: start;
-  gap: 2px;
-  flex: 0 1 96px;
+  gap: clamp(2px, .8cqi, 6px);
+  flex: 0 1 clamp(64px, 19cqi, 124px);
   min-width: 0;
   min-height: 44px;
-  padding: 4px 2px;
+  padding: clamp(2px, .8cqi, 6px) 2px;
   border: 0;
   background: transparent;
   color: var(--fb-secondary);
-  font: 600 13px/1.2 var(--fb-font-body);
+  font: 600 clamp(11px, 2.3cqi, 14px)/1.2 var(--fb-font-body);
   text-align: center;
   cursor: pointer;
 }
@@ -589,17 +590,22 @@
 .team-pitch-player:hover { background: color-mix(in srgb, var(--fb-primary) 14%, transparent); }
 .team-pitch-player:focus-visible { outline: 2px solid var(--fb-focus); outline-offset: 2px; }
 .team-pitch-player img,
-.team-pitch-player .team-xi-photo { width: 56px; height: 56px; object-fit: cover; background: var(--fb-subtle); }
+.team-pitch-player .team-xi-photo {
+  width: clamp(44px, 13.5cqi, 88px);
+  height: clamp(44px, 13.5cqi, 88px);
+  object-fit: cover;
+  background: var(--fb-subtle);
+}
 .team-pitch-player strong {
   color: var(--fb-tertiary);
-  font: 400 17px/1 Anton, "Arial Narrow", sans-serif;
+  font: 400 clamp(14px, 3.2cqi, 20px)/1 Anton, "Arial Narrow", sans-serif;
 }
 .team-pitch-player[aria-pressed="true"] { outline: 2px solid var(--fb-primary); outline-offset: 2px; background: color-mix(in srgb, var(--fb-primary) 10%, transparent); }
 .team-xi { display: grid; gap: 0; margin: 0; padding: 0; list-style: none; }
 /* One row layout for alternatives and the selected starter: identity, likelihood, actions, then form chips. */
 .team-xi-player {
   display: grid;
-  grid-template-columns: 36px minmax(0, 1fr) 4.5rem auto;
+  grid-template-columns: 44px minmax(0, 1fr) 4.5rem auto;
   grid-template-areas: "photo name like actions" "photo recent recent recent";
   gap: 2px 12px;
   align-items: center;
@@ -609,7 +615,7 @@
 .team-xi-player > img,
 .team-xi-player > .team-xi-photo { grid-area: photo; align-self: start; }
 .team-xi-player > img,
-.team-xi-photo { width: 36px; height: 36px; object-fit: cover; background: var(--fb-subtle); }
+.team-xi-photo { width: 44px; height: 44px; object-fit: cover; background: var(--fb-subtle); }
 .team-xi-name { grid-area: name; min-width: 0; }
 .team-xi-name > strong,
 .team-xi-name .team-player-link { font-size: 14px; font-weight: 600; overflow-wrap: anywhere; }
@@ -648,14 +654,14 @@
 /* The selected starter sits under the pitch in its own card; its actions wrap beneath. */
 .team-xi-selected { border: 1px solid var(--fb-line); background: var(--fb-surface); }
 .team-xi-player.is-selected {
-  grid-template-columns: 56px minmax(0, 1fr) 5rem;
+  grid-template-columns: 64px minmax(0, 1fr) 5rem;
   grid-template-areas: "photo name like" "photo recent recent" "actions actions actions";
   gap: 6px 16px;
   padding: 16px;
   border-bottom: 0;
 }
 .team-xi-player.is-selected > img,
-.team-xi-player.is-selected > .team-xi-photo { width: 56px; height: 56px; }
+.team-xi-player.is-selected > .team-xi-photo { width: 64px; height: 64px; }
 .team-xi-player.is-selected .team-xi-name > strong,
 .team-xi-player.is-selected .team-xi-name .team-player-link { font-size: 18px; }
 .team-xi-player.is-selected .team-xi-actions { justify-content: flex-start; }
@@ -721,11 +727,7 @@
   .team-fixture-side,
   .team-fixture-side:first-child { flex-direction: column; justify-content: flex-start; text-align: center; gap: 4px; }
   .team-fixture-score { min-width: 3.5rem; }
-  .team-pitch-player { flex-basis: 64px; font-size: 11px; }
-  .team-pitch-player img,
-  .team-pitch-player .team-xi-photo { width: 40px; height: 40px; }
-  .team-pitch-player strong { font-size: 14px; }
-  .team-xi-player { grid-template-columns: 36px minmax(0, 1fr) 4rem auto; }
+  .team-xi-player { grid-template-columns: 44px minmax(0, 1fr) 4rem auto; }
   .team-news-list .is-lead h3 { font-size: 19px; }
 
   /* Injuries become labeled cards so no column needs horizontal scrolling. */

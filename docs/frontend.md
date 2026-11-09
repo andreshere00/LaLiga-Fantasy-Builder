@@ -286,7 +286,7 @@ Lineup opens with one coach card: season predictability leads, then the matchday
 predictability badge and the rotation note, then the XI averages (probability, form on a
 1 to 5 scale, substitute risk). Known Spanish wording (predictability, rotations, "2.64
 jugs") is translated locally; only unknown free text uses the translation widget.
-Starters stand on a larger pitch (up to 640px) grouped by the published position line
+Starters stand on a larger pitch (up to 620px) whose photos, type and margins scale with its own width (container units), grouped by the published position line
 from attack to goalkeeper. Selecting a starter opens a card under the pitch with the name
 link, form, FSYP, the last five LaLiga matches, probability, bookmark, market actions, and
 Field player. Alternatives sit in a narrower column grouped by translated line
