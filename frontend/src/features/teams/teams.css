@@ -650,7 +650,9 @@
   font-size: 13px;
   font-weight: 600;
 }
-/* Starter detail dialog: facts first, then actions. */
+/* Starter detail dialog: facts first, then actions. A panel docked to the viewport; only its body scrolls. */
+.fb-dialog.team-detail-dialog { width: min(440px, calc(100vw - 24px)); }
+@media (max-width: 600px) { .fb-dialog.team-detail-dialog { width: 100%; } }
 .team-detail { display: grid; gap: 16px; }
 .team-detail-head { display: flex; align-items: center; gap: 20px; }
 .team-detail-head > img,
