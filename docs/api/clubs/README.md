@@ -53,7 +53,9 @@ shots-on-target ratio), recoveries (`ballSteals`), saves, balls lost
 
 MVP form, starter likelihood, and radar stay on
 `GET /players/{id}/stats/profile` and `GET /players/{id}/stats/radar`. The MVP photo
-comes from the players catalog (`GET /players`), not from the dossier.
+comes from the players catalog (`GET /players`), the age from the profile
+`birthDate`, and the last five LaLiga matches' points from
+`GET /players/{id}/stats/fixtures?competition=laliga&last=5`, not from the dossier.
 
 ## CLI
 

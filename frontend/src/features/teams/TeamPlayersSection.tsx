@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState, type Ref } from "react";
 import { t, useTranslation } from "../../i18n";
 import { dateFormatter } from "../../i18n/format";
 import { Badge } from "../../components/ui/Badge";
+import { playerAge } from "../players/playerDetailFormat";
 import { positionAbbrev, positionLabel, positionTone } from "../market/positions";
 import { usePlayerOutlooks } from "../lineup/useSquadStats";
 import { radarMetric } from "../players/radar/radarLocalization";
@@ -13,6 +14,7 @@ import { usePlayersCatalogQuery } from "../../api/queries";
 import { catalogMediaByMasterId } from "../../api/mappers";
 import { usePlayerRadar } from "../players/radar/usePlayerRadar";
 import type { ClubDossierDto, ClubRosterStatsDto } from "../../api/schemas";
+import { useRecentPoints, type RecentPoint } from "./useRecentPoints";
 import { TeamMeter } from "./TeamMeter";
 import { publishedColumns, sortSquad, type SquadColumn, type SquadRow } from "./teamTable";
 
@@ -65,6 +67,7 @@ export function TeamPlayersSection({
   const outlooks = usePlayerOutlooks(roster.mvps.map((player) => player.playerId));
   const catalog = usePlayersCatalogQuery(true);
   const media = useMemo(() => catalogMediaByMasterId(catalog.data), [catalog.data]);
+  const recent = useRecentPoints(roster.mvps.map((player) => player.playerId));
   const [column, setColumn] = useState<SquadColumn | "position">("position");
   const [direction, setDirection] = useState<"asc" | "desc">("asc");
   const source = useMemo(() => {
@@ -96,6 +99,7 @@ export function TeamPlayersSection({
           players={roster.mvps}
           outlooks={outlooks.profiles}
           media={media}
+          recent={recent}
         />
       </div>
       <div className="team-block">
@@ -270,9 +274,31 @@ export function TeamInjuryList({
 }
 
 type Outlook = {
+  birthDate?: string | null;
   form?: { rating?: string | null } | null;
   startProbability?: { percent?: number | null } | null;
 };
+
+/** The last five LaLiga matches' Fantasy points, oldest first, beside the season total. */
+function RecentPoints({ entries }: { entries: readonly RecentPoint[] }) {
+  if (entries.length === 0) return null;
+  return (
+    <div className="team-mvp-recent">
+      <p>{t("Last 5 LaLiga matches")}</p>
+      <ol aria-label={t("Fantasy points in the last 5 LaLiga matches, oldest to newest")}>
+        {entries.map((entry, index) => (
+          <li
+            key={`${entry.matchweek ?? "x"}-${index}`}
+            data-tone={entry.points == null ? undefined : entry.points < 0 ? "low" : entry.points >= 10 ? "high" : "mid"}
+            title={entry.matchweek != null ? t("Matchweek {{0}}", { 0: entry.matchweek }) : undefined}
+          >
+            {entry.points ?? "—"}
+          </li>
+        ))}
+      </ol>
+    </div>
+  );
+}
 
 /** Starter likelihood from this percentage up is flagged in red on the MVP cards. */
 const STARTER_RED_FROM = 90;
@@ -285,10 +311,12 @@ function MvpStrip({
   players,
   outlooks,
   media,
+  recent,
 }: {
   players: Roster["mvps"];
   outlooks: { get(playerId: string): unknown };
   media: ReadonlyMap<string, { photoUrl: string | null }>;
+  recent: ReadonlyMap<string, readonly RecentPoint[]>;
 }) {
   const first = usePlayerRadar(players[0]?.playerId ?? "");
   const second = usePlayerRadar(players[1]?.playerId ?? "");
@@ -313,6 +341,8 @@ function MvpStrip({
           const flagged = isStarterFlagged(starter);
           const form = playerFormPresentation(outlook?.form?.rating);
           const displayed = radar.displayed;
+          const age = playerAge(outlook?.birthDate, Date.now());
+          const position = player.positionId != null ? positionLabel(player.positionId) : null;
           return (
             <li key={player.playerId} className="team-mvp-card">
               <div ref={radar.section as Ref<HTMLDivElement>}>
@@ -323,7 +353,15 @@ function MvpStrip({
                     url={media.get(player.playerId)?.photoUrl ?? null}
                     fallback={<PersonIcon />}
                   />
-                  <h4>{player.name}</h4>
+                  <div className="team-mvp-name">
+                    <h4>{player.name}</h4>
+                    {position || age != null ? (
+                      <p className="team-mvp-meta">
+                        {[position ? t(position) : null, age != null ? `${age}${t(" years old")}` : null]
+                          .filter(Boolean).join(" · ")}
+                      </p>
+                    ) : null}
+                  </div>
                   {player.positionId != null ? (
                     <span
                       className={`team-pos team-pos--${positionTone(player.positionId)}`}
@@ -333,10 +371,13 @@ function MvpStrip({
                     </span>
                   ) : null}
                 </div>
-                <p className="team-mvp-points">
-                  <span>{t("FSYP")}</span>
-                  {player.points}
-                </p>
+                <div className="team-mvp-score">
+                  <p className="team-mvp-points">
+                    <span>{t("FSYP")}</span>
+                    {player.points}
+                  </p>
+                  <RecentPoints entries={recent.get(player.playerId) ?? []} />
+                </div>
                 <dl className="team-mvp-facts">
                   <div>
                     <dt>{t("Form")}</dt>

@@ -532,7 +532,7 @@
   "Last 5": "Last 5",
   "Last 5 days market value:": "Last 5 days market value:",
   "Last 5 days team value:": "Last 5 days team value:",
-  "Last 5 matches": "Last 5 matches",
+  "Last 5 LaLiga matches": "Last 5 LaLiga matches",
   "Last days": "Last days",
   "Last market value:": "Last market value:",
   "Last performances: {{0}} points": "Last performances: {{0}} points",
@@ -1778,5 +1778,6 @@
   "Back to the club": "Back to the club",
   "Club sections": "Club sections",
   "(90% or more)": "(90% or more)",
-  "Radar percentiles": "Radar percentiles"
+  "Radar percentiles": "Radar percentiles",
+  "Fantasy points in the last 5 LaLiga matches, oldest to newest": "Fantasy points in the last 5 LaLiga matches, oldest to newest"
 }

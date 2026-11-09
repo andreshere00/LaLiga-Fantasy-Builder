@@ -25,6 +25,8 @@ const harness = vi.hoisted(() => ({
   refetch: vi.fn(),
 }));
 
+vi.mock("./useRecentPoints", () => ({ useRecentPoints: () => new Map() }));
+
 vi.mock("../../api/queries", () => ({
   useClubIndexQuery: () => ({
     data: { clubs: [

@@ -24,8 +24,17 @@ vi.mock("../shell/ProfilePhoto", () => ({
   ),
 }));
 
+vi.mock("./useRecentPoints", async (importOriginal) => ({
+  ...(await importOriginal<typeof import("./useRecentPoints")>()),
+  useRecentPoints: () => new Map([[
+    "1",
+    [{ matchweek: 8, points: 2 }, { matchweek: 9, points: -1 }, { matchweek: 10, points: 12 },
+      { matchweek: 11, points: null }, { matchweek: 12, points: 6 }],
+  ]]),
+}));
+
 const outlookState = vi.hoisted(() => ({
-  value: { form: { rating: "good" }, startProbability: { percent: 95 } } as Record<string, unknown> | undefined,
+  value: { form: { rating: "good" }, startProbability: { percent: 95 }, birthDate: "1990-01-01" } as Record<string, unknown> | undefined,
 }));
 
 vi.mock("../players/radar/usePlayerRadar", () => ({
@@ -87,7 +96,7 @@ function season(overrides: Partial<SeasonStatsState> = {}): SeasonStatsState {
 describe("TeamPlayersSection", () => {
   beforeEach(() => {
     cleanup();
-    outlookState.value = { form: { rating: "good" }, startProbability: { percent: 95 } };
+    outlookState.value = { form: { rating: "good" }, startProbability: { percent: 95 }, birthDate: "1990-01-01" };
   });
 
   // ---- Happy path ---- //
@@ -100,6 +109,26 @@ describe("TeamPlayersSection", () => {
     expect(within(card).getByText("58")).toBeTruthy();
     expect(card.textContent).not.toContain("57.99");
     expect(within(card).getByRole("img", { name: /Percentile radar for Ana/ })).toBeTruthy();
+  });
+
+  it("TeamPlayersSection_mvp_shows_position_and_age_when_published", () => {
+    renderSection({ published: true, items: [] });
+    const meta = document.querySelector(".team-mvp-meta")?.textContent ?? "";
+    expect(meta).toMatch(/^[^·]+ · \d{2} years old$/);
+  });
+
+  it("TeamPlayersSection_mvp_omits_age_without_a_birth_date", () => {
+    outlookState.value = { form: { rating: "good" }, startProbability: { percent: 50 } };
+    renderSection({ published: true, items: [] });
+    expect(document.querySelector(".team-mvp-meta")?.textContent).not.toContain("years");
+  });
+
+  it("TeamPlayersSection_mvp_lists_the_last_five_points_oldest_first", () => {
+    renderSection({ published: true, items: [] });
+    const items = [...document.querySelectorAll(".team-mvp-recent li")];
+    expect(items.map((item) => item.textContent)).toEqual(["2", "-1", "12", "—", "6"]);
+    expect(items.map((item) => item.getAttribute("data-tone"))).toEqual(["mid", "low", "high", null, "mid"]);
+    expect(screen.getByRole("list", { name: /last 5 LaLiga matches/i })).toBeTruthy();
   });
 
   it("TeamPlayersSection_mvp_shows_the_catalog_photo", () => {
@@ -201,5 +230,21 @@ describe("TeamPlayersSection", () => {
     renderSection({ published: false, items: [] });
     expect(screen.getByText("Current injuries are not published for this club.")).toBeTruthy();
     expect(screen.queryByRole("table", { name: "Injured players" })).toBeNull();
+  });
+});
+
+describe("recentPointsFrom", () => {
+  it("recentPointsFrom_keeps_only_laliga_rows_and_the_newest_five_oldest_first", async () => {
+    const { recentPointsFrom } = await vi.importActual<typeof import("./useRecentPoints")>("./useRecentPoints");
+    const row = (date: string, competition: string, points: number) => ({
+      fixture: { date, competition, matchweek: Number(date.slice(-2)) },
+      fantasyPointsTotal: points,
+    });
+    const result = recentPointsFrom({ fixtures: [
+      row("2026-10-12", "laliga", 3), row("2026-10-09", "champions_league", 9),
+      row("2026-10-05", "laliga", 1), row("2026-10-19", "laliga", 7),
+    ] });
+    expect(result.map((entry) => entry.points)).toEqual([1, 3, 7]);
+    expect(recentPointsFrom(null)).toEqual([]);
   });
 });

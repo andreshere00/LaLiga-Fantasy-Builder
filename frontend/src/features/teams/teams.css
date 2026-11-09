@@ -186,9 +186,9 @@
 }
 .team-mvp-card > div { display: grid; gap: 12px; }
 .team-mvp-head { display: flex; align-items: center; gap: 10px; min-width: 0; }
+.team-mvp-name { flex: 1; min-width: 0; }
+.team-mvp-meta { margin: 2px 0 0; color: var(--fb-muted); font-size: 12px; }
 .team-mvp-head h4 {
-  flex: 1;
-  min-width: 0;
   margin: 0;
   font: 600 16px/1.3 var(--fb-font-body);
   overflow-wrap: anywhere;
@@ -203,6 +203,24 @@
   color: var(--fb-on-brand);
   font: 400 16px/1 Anton, "Arial Narrow", sans-serif;
 }
+.team-mvp-score { display: flex; align-items: flex-end; justify-content: space-between; gap: 12px; min-width: 0; }
+.team-mvp-recent { min-width: 0; text-align: right; }
+.team-mvp-recent p { margin: 0 0 4px; color: var(--fb-muted); font-size: 12px; }
+.team-mvp-recent ol { display: flex; justify-content: flex-end; gap: 4px; margin: 0; padding: 0; list-style: none; }
+.team-mvp-recent li {
+  display: grid;
+  place-items: center;
+  min-width: 28px;
+  height: 28px;
+  padding: 0 4px;
+  background: var(--fb-subtle);
+  border-bottom: 3px solid var(--fb-line);
+  font: 600 13px/1 var(--fb-font-body);
+  font-variant-numeric: tabular-nums;
+}
+.team-mvp-recent li[data-tone="low"] { border-bottom-color: var(--fb-failure); }
+.team-mvp-recent li[data-tone="mid"] { border-bottom-color: var(--fb-warning); }
+.team-mvp-recent li[data-tone="high"] { border-bottom-color: var(--fb-success); }
 .team-mvp-points {
   display: flex;
   align-items: baseline;
