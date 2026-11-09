@@ -424,7 +424,7 @@
 .team-filter-logo img {
   box-sizing: content-box;
   width: auto;
-  max-width: 56px;
+  max-width: none;
   height: 18px;
   padding: 2px 4px;
   object-fit: contain;
