@@ -2,7 +2,9 @@ import { useEffect, useRef, useState } from "react";
 import { t, useTranslation } from "../../i18n";
 import {
   useClubDossierQuery, useClubIndexQuery, useClubRosterStatsQuery, useCompetitionStandingsQuery,
+  useReauthOnError,
 } from "../../api/queries";
+import { ApiError } from "../../api/errors";
 import { useAuth } from "../../auth/AuthProvider";
 import { GatePanel } from "../gates/GatePanel";
 import { Link, Navigate, useParams, useSearchParams } from "react-router-dom";
@@ -38,6 +40,7 @@ export function TeamsPage({ opponentClubId = null }: { opponentClubId?: number |
   const dossier = useClubDossierQuery(clubId);
   const seasonStats = useClubRosterStatsQuery(dossier.data?.roster ? clubId : null);
   const standings = useCompetitionStandingsQuery();
+  useReauthOnError([index.error, dossier.error]);
   const clubs = index.data?.clubs ?? [];
   const [reading, setReading] = useState<TeamSection | null>(null);
   useEffect(() => {
@@ -151,6 +154,17 @@ export function TeamsPage({ opponentClubId = null }: { opponentClubId?: number |
           </a>
         ))}
       </nav>
+      {index.isError && clubs.length === 0 ? (
+        <LoadError message={t("The clubs could not be loaded.")} onRetry={() => void index.refetch()} />
+      ) : null}
+      {dossier.isError && !dossier.data ? (
+        <LoadError
+          message={dossier.error instanceof ApiError && dossier.error.status === 404
+            ? t("This club could not be found.")
+            : t("The club could not be loaded.")}
+          onRetry={() => void dossier.refetch()}
+        />
+      ) : null}
       {index.isLoading || dossier.isLoading ? <TeamDossierLoading /> : null}
       {dossier.data ? (
         <TeamPerformanceSection
@@ -238,9 +252,14 @@ function predictionFailed(dossier: { segmentErrors?: { segment: string }[] }): b
 
 function SegmentNotice({ failed, onRetry }: { failed: boolean; onRetry: () => void }) {
   if (!failed) return null;
+  return <LoadError message={t("This section could not be loaded.")} onRetry={onRetry} />;
+}
+
+/** A failed request is announced, never drawn as an empty page. */
+function LoadError({ message, onRetry }: { message: string; onRetry: () => void }) {
   return (
     <p role="alert">
-      {t("This section could not be loaded.")}
+      {message}
       <button type="button" onClick={onRetry}>{t("Retry")}</button>
     </p>
   );

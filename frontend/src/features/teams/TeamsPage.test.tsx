@@ -1,6 +1,7 @@
 import { act, cleanup, render, screen } from "@testing-library/react";
 import { MemoryRouter, Route, Routes } from "react-router-dom";
 import { beforeEach, describe, expect, it, vi } from "vitest";
+import { ApiError } from "../../api/errors";
 import { TeamsPage } from "./TeamsPage";
 
 const harness = vi.hoisted(() => ({
@@ -24,11 +25,14 @@ const harness = vi.hoisted(() => ({
   },
   refetch: vi.fn(),
   loading: false,
+  dossierError: null as Error | null,
+  reauth: vi.fn(),
 }));
 
 vi.mock("./useRecentPoints", () => ({ useRecentPoints: () => new Map() }));
 
 vi.mock("../../api/queries", () => ({
+  useReauthOnError: (errors: unknown[]) => harness.reauth(errors),
   useClubIndexQuery: () => ({
     data: { clubs: [
       { clubId: 20, name: "Villarreal CF", shortName: "VIL", badgeUrl: "https://x.test/vil.png", slug: "villarreal" },
@@ -44,9 +48,11 @@ vi.mock("../../api/queries", () => ({
     data: undefined, isPending: false, isError: false, fetchStatus: "idle", refetch: vi.fn(),
   }),
   useClubDossierQuery: (clubId: string | null) => ({
-    data: clubId === "4" && !harness.loading ? harness.dossier : undefined,
+    data: clubId === "4" && !harness.loading && !harness.dossierError ? harness.dossier : undefined,
     isPending: harness.loading,
     isLoading: harness.loading,
+    isError: harness.dossierError != null,
+    error: harness.dossierError,
     refetch: harness.refetch,
   }),
 }));
@@ -91,6 +97,8 @@ describe("Teams page", () => {
     cleanup();
     harness.refetch.mockClear();
     harness.loading = false;
+    harness.dossierError = null;
+    harness.reauth.mockClear();
   });
 
   it("TeamsPage_first_visit_opens_the_first_club_in_the_locale", async () => {
@@ -117,6 +125,22 @@ describe("Teams page", () => {
       expect(section.querySelector('[data-slot="skeleton"]')).toBeTruthy();
     }
     expect(screen.getByRole("heading", { name: "Players" })).toBeTruthy();
+  });
+
+  it("TeamsPage_failed_dossier_announces_the_error_and_retries", async () => {
+    harness.dossierError = new Error("boom");
+    renderTeams("/teams/4");
+    const alert = await screen.findByRole("alert");
+    expect(alert.textContent).toContain("The club could not be loaded.");
+    await act(async () => { screen.getByRole("button", { name: "Retry" }).click(); });
+    expect(harness.refetch).toHaveBeenCalledTimes(1);
+    expect(harness.reauth).toHaveBeenCalledWith([undefined, harness.dossierError]);
+  });
+
+  it("TeamsPage_unknown_club_says_it_was_not_found", async () => {
+    harness.dossierError = new ApiError(404, "not_found");
+    renderTeams("/teams/4");
+    expect((await screen.findByRole("alert")).textContent).toContain("This club could not be found.");
   });
 
   it("TeamsPage_players_and_news_failure_stay_separate", async () => {
