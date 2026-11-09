@@ -449,3 +449,26 @@ def test_other_matches_venue_falls_back_to_labels_when_fixtures_are_ambiguous() 
     performance = _performance(9, [], scraped, {"getafe cf"})
 
     assert performance.matches[0].venue == "home"
+
+
+def test_performance_keeps_unrecognised_competitions_in_the_other_group() -> None:
+    scraped = ScrapedClubPage.model_validate(
+        {
+            "slug": "getafe",
+            "fixtures": [
+                {
+                    "competition": "other",
+                    "home": "Getafe",
+                    "away": "Atlético",
+                    "regulation": {"home": 1, "away": 0},
+                    "outcome": "win",
+                },
+                {"competition": "laliga", "home": "Getafe", "away": "Sevilla", "scheduled": True},
+            ],
+        }
+    )
+
+    performance = _performance(9, [], scraped, {"getafe cf"})
+
+    assert [match.group for match in performance.matches] == ["friendly"]
+    assert [record.competition for record in performance.records] == ["friendly"]

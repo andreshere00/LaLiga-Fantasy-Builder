@@ -624,9 +624,10 @@ def _group(competition: str) -> CompetitionGroup:
         return "european"
     if competition in _DOMESTIC:
         return "domestic"
-    if competition == "friendly":
-        return "friendly"
-    return "laliga"
+    if competition == "laliga":
+        return "laliga"
+    # Friendlies and any competition the parser could not name share the "Other competition" group.
+    return "friendly"
 
 
 def _involves(club_id: int, fixture: SeasonFixture) -> bool:
