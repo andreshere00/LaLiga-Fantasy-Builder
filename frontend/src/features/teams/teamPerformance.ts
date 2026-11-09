@@ -120,7 +120,15 @@ export function scoreText(match: ClubMatchView): string | null {
   return `${home} – ${away}`;
 }
 
-export function nextMatchId(upcoming: readonly ClubMatchView[]): string | null {
+/**
+ * The match to highlight as next: the API's pick when it is listed, since the API alone knows
+ * which scheduled match has not already kicked off; otherwise the first listed match.
+ */
+export function nextMatchId(
+  upcoming: readonly ClubMatchView[],
+  apiNextId?: string | null,
+): string | null {
+  if (apiNextId != null && upcoming.some((match) => match.matchId === apiNextId)) return apiNextId;
   return upcoming[0]?.matchId ?? null;
 }
 

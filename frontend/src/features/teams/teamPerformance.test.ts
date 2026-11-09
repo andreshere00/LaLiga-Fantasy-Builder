@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import {
-  competitionName, matchWindow, scoreText, summarize, type ClubMatchView,
+  competitionName, matchWindow, nextMatchId, scoreText, summarize, type ClubMatchView,
 } from "./teamPerformance";
 
 function match(partial: Partial<ClubMatchView> & Pick<ClubMatchView, "matchId">): ClubMatchView {
@@ -105,5 +105,23 @@ describe("competitionName", () => {
     expect(competitionName("laliga")).toBe("LaLiga");
     expect(competitionName("champions_league")).toBe("Champions League");
     expect(competitionName("Copa del Rey")).toBe("Copa Del Rey");
+  });
+});
+
+describe("nextMatchId", () => {
+  const stale = match({ matchId: "stale", scheduled: true, kickoff: "2026-10-25T18:30:00Z" });
+  const upcoming = match({ matchId: "soon", scheduled: true, kickoff: "2026-11-22T21:00:00Z" });
+
+  it("nextMatchId_listed_api_pick_wins_over_an_earlier_stale_fixture", () => {
+    expect(nextMatchId([stale, upcoming], "soon")).toBe("soon");
+  });
+
+  it("nextMatchId_api_pick_outside_the_filtered_list_falls_back_to_the_first_match", () => {
+    expect(nextMatchId([stale, upcoming], "elsewhere")).toBe("stale");
+  });
+
+  it("nextMatchId_without_an_api_pick_or_matches_is_null_or_first", () => {
+    expect(nextMatchId([upcoming], null)).toBe("soon");
+    expect(nextMatchId([], "soon")).toBeNull();
   });
 });

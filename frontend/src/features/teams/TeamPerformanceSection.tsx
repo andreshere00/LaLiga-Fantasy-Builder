@@ -63,7 +63,7 @@ export function TeamPerformanceSection({
   const matches = (performance?.matches ?? []).map((match) => withClubNames(asView(match), clubs));
   const view = matchWindow(matches, competition, window);
   const summary = summarize(view.previous);
-  const nextId = nextMatchId(view.upcoming);
+  const nextId = nextMatchId(view.upcoming, performance?.nextMatchId);
   const label = competitionLabel(competition);
   const showBoard = performance != null && view.filtered.length > 0;
   const results = [...view.previous].reverse().filter((match) => match.outcome != null);

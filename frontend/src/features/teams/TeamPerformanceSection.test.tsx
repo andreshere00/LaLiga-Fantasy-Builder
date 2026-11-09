@@ -65,6 +65,41 @@ describe("TeamPerformanceSection", () => {
     expect(links.some((href) => href === "/teams/20" || href === "/teams/9")).toBe(true);
   });
 
+  it("TeamPerformanceSection_highlights_the_api_next_match_not_a_stale_scheduled_fixture", () => {
+    const withStale = {
+      matches: [
+        {
+          matchId: "stale",
+          group: "laliga" as const,
+          competition: "laliga",
+          home: "20",
+          away: "9",
+          venue: "home" as const,
+          scheduled: true,
+          kickoff: "2026-10-25T18:30:00Z",
+        },
+        ...performance.matches.filter((item) => item.matchId === "next"),
+      ],
+      nextMatchId: "next",
+    };
+    render(
+      <MemoryRouter><TeamPerformanceSection
+        performance={withStale}
+        clubs={[{ clubId: 20, name: "Villarreal CF", badgeUrl: null }, { clubId: 9, name: "Getafe CF", badgeUrl: null }]}
+        competition="laliga"
+        window="5"
+        failed={false}
+        onCompetition={onCompetition}
+        onWindow={vi.fn()}
+        onRetry={vi.fn()}
+      /></MemoryRouter>,
+    );
+    const rows = screen.getByRole("list", { name: "Upcoming matches" }).querySelectorAll("li");
+    expect(rows).toHaveLength(2);
+    expect(rows[0].classList.contains("is-next")).toBe(false);
+    expect(rows[1].classList.contains("is-next")).toBe(true);
+  });
+
   it("TeamPerformanceSection_empty_filter_offers_all_competitions", () => {
     render(
       <MemoryRouter><TeamPerformanceSection
