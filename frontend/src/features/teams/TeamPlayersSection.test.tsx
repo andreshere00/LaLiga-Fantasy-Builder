@@ -1,3 +1,4 @@
+import { MemoryRouter } from "react-router-dom";
 import { cleanup, render, screen, within } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { TeamPlayersSection, type SeasonStatsState } from "./TeamPlayersSection";
@@ -63,7 +64,7 @@ function renderSection(
   injuries: Parameters<typeof TeamPlayersSection>[0]["injuries"],
   seasonStats?: SeasonStatsState,
 ) {
-  return render(<TeamPlayersSection roster={roster} injuries={injuries} seasonStats={seasonStats} />);
+  return render(<MemoryRouter initialEntries={["/teams/3?x=1"]}><TeamPlayersSection roster={roster} injuries={injuries} seasonStats={seasonStats} /></MemoryRouter>);
 }
 
 const blank = {
@@ -205,6 +206,13 @@ describe("TeamPlayersSection", () => {
     expect(screen.getByText(/Counts are blank for 1 player without a published profile/)).toBeTruthy();
   });
 
+  it("TeamPlayersSection_squad_row_names_link_to_player_details", () => {
+    renderSection({ published: true, items: [] });
+    const link = screen.getByRole("link", { name: "Ana" });
+    expect(link.getAttribute("href")).toBe("/players/1");
+    expect(screen.queryAllByRole("link", { name: /Totals/ })).toHaveLength(0);
+  });
+
   it("TeamPlayersSection_loading_and_failure_name_themselves_and_keep_the_table", () => {
     const onRetry = vi.fn();
     const { rerender } = renderSection(
@@ -214,11 +222,13 @@ describe("TeamPlayersSection", () => {
     expect(screen.getByRole("status").textContent).toContain("Loading season statistics");
     expect(screen.getByRole("rowheader", { name: "Ana" })).toBeTruthy();
     rerender(
-      <TeamPlayersSection
-        roster={roster}
-        injuries={{ published: true, items: [] }}
-        seasonStats={season({ data: undefined, failed: true, onRetry })}
-      />,
+      <MemoryRouter>
+        <TeamPlayersSection
+          roster={roster}
+          injuries={{ published: true, items: [] }}
+          seasonStats={season({ data: undefined, failed: true, onRetry })}
+        />
+      </MemoryRouter>,
     );
     screen.getByRole("button", { name: "Retry" }).click();
     expect(onRetry).toHaveBeenCalledTimes(1);

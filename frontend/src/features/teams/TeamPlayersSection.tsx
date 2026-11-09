@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState, type Ref } from "react";
+import { Link, useLocation } from "react-router-dom";
 import { t, useTranslation } from "../../i18n";
 import { dateFormatter } from "../../i18n/format";
 import { Badge } from "../../components/ui/Badge";
@@ -63,6 +64,8 @@ export function TeamPlayersSection({
   seasonStats?: SeasonStatsState;
 }) {
   useTranslation();
+  const location = useLocation();
+  const returnTo = `${location.pathname}${location.search}`;
   const season = seasonStats?.data;
   const outlooks = usePlayerOutlooks(roster.mvps.map((player) => player.playerId));
   const catalog = usePlayersCatalogQuery(true);
@@ -185,7 +188,15 @@ export function TeamPlayersSection({
             <tbody>
               {rows.map((row) => (
                 <tr key={row.playerId}>
-                  <th className="is-player" scope="row">{row.name}</th>
+                  <th className="is-player" scope="row">
+                    <Link
+                      className="team-player-link"
+                      to={`/players/${encodeURIComponent(row.playerId)}`}
+                      state={{ returnTo }}
+                    >
+                      {row.name}
+                    </Link>
+                  </th>
                   <td className="is-position">
                     <span
                       className={`team-pos team-pos--${positionTone(row.positionId)}`}

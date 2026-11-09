@@ -255,7 +255,8 @@ published label, including one outside the six usual ones, and the badge is
 neutral because severity is not published. An unpublished injury block stays
 distinct from a published empty list. The squad table leads with player, a position
 badge, and FSYP with a bar scaled to the squad's top score, then the twelve event
-columns: Minutes, Goals, Assists, Dribbles, Penalties committed, Penalties saved,
+columns (set one size smaller so player, position, and FSYP lead; each player name links to
+the player detail page and Back returns to the club): Minutes, Goals, Assists, Dribbles, Penalties committed, Penalties saved,
 Shots, Recoveries, Saves, Balls lost, Yellow cards, and Red cards. These are LaLiga
 season totals from `GET /api/clubs/{id}/roster-stats`, requested after the dossier
 because the first read of a club scrapes every profile (about half a minute); the
