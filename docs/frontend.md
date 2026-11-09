@@ -240,9 +240,13 @@ is capped so position and points stay beside the name. A phone stacks each pair.
 The first news headline stays full width and the other headlines share two columns.
 
 Players lists the top three footballers by published season points as ranked
-cards: position, FSYP, form, starter likelihood as a percentage with a bar, and
-the best published radar percentiles rounded to whole numbers. A player without a
-radar says so. Injuries are a table of player, status badge, expected return, and
+cards: the player photo (from the shared players catalog, with a person icon
+fallback), position, FSYP, form with its icon and a colored stripe (red, amber, or
+green by rating), starter likelihood as a percentage with a bar, and the compact
+percentile radar chart that the player detail page also uses
+(`PlayerRadarChart`). Starter likelihood of 90% or more turns the percentage chip and
+bar red, with a hidden text cue. The exact radar percentiles stay available to
+screen readers in a hidden table. A player without a radar says so. Injuries are a table of player, status badge, expected return, and
 start date; on a phone each row becomes a labeled card. The status can be any
 published label, including one outside the six usual ones, and the badge is
 neutral because severity is not published. An unpublished injury block stays

@@ -155,6 +155,7 @@
   background: var(--fb-subtle);
 }
 .team-meter > span { display: block; height: 100%; background: var(--fb-secondary); }
+.team-meter[data-tone="red"] > span { background: var(--fb-failure); }
 .team-empty { display: flex; flex-wrap: wrap; align-items: center; gap: 12px; margin: 0; }
 .team-filter button,
 .team-page [role="alert"] button,
@@ -221,10 +222,34 @@
 .team-mvp-facts dt,
 .team-mvp-radar > p { margin: 0 0 2px; color: var(--fb-muted); font-size: 12px; }
 .team-mvp-facts dd { display: grid; gap: 6px; margin: 0; font-size: 14px; font-weight: 600; }
+.team-mvp-photo {
+  flex: 0 0 auto;
+  width: 56px;
+  height: 56px;
+  border-radius: 50%;
+  overflow: hidden;
+  background: var(--fb-subtle);
+}
+.team-mvp-photo .fb-avatar-image { object-fit: contain; object-position: bottom center; }
+.team-mvp-photo .fb-avatar-fallback { display: grid; place-items: center; width: 100%; height: 100%; color: var(--fb-muted); }
+.team-mvp-photo svg { width: 60%; height: 60%; }
+.team-mvp-form { display: inline-flex; align-items: center; gap: 6px; padding-left: 8px; border-left: 4px solid var(--fb-line); }
+.team-mvp-form img { display: block; width: 20px; height: 20px; object-fit: contain; }
+.team-mvp-form .is-dark { display: none; }
+:root[data-theme="dark"] .team-mvp-form .is-light { display: none; }
+:root[data-theme="dark"] .team-mvp-form .is-dark { display: block; }
+.team-mvp-form[data-form="bad"] { border-left-color: #ff4b44; }
+.team-mvp-form[data-form="mid"] { border-left-color: var(--fb-warning); }
+.team-mvp-form[data-form="good"],
+.team-mvp-form[data-form="very_good"] { border-left-color: #10bd00; }
+.team-mvp-facts dd[data-level="high"] .team-starter-value {
+  justify-self: start;
+  padding: 1px 8px;
+  background: var(--fb-failure);
+  color: var(--fb-ink-on-status);
+}
 .team-mvp-radar { padding-top: 10px; border-top: 1px solid var(--fb-line); }
-.team-mvp-radar ul { display: flex; flex-wrap: wrap; gap: 6px; margin: 4px 0 0; padding: 0; list-style: none; }
-.team-mvp-radar li { padding: 2px 8px; background: var(--fb-subtle); font-size: 12px; }
-.team-mvp-radar strong { font-variant-numeric: tabular-nums; }
+.team-mvp-radar .player-radar-chart.is-compact { height: 230px; max-width: none; }
 .team-mvp-note { margin: 8px 0 0; color: var(--fb-muted); font-size: 13px; }
 
 /* ---- Tables (injuries and squad) ---- */

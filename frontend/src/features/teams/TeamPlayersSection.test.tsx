@@ -6,17 +6,32 @@ import { TeamPlayersSection, type SeasonStatsState } from "./TeamPlayersSection"
 
 vi.mock("../lineup/useSquadStats", () => ({
   usePlayerOutlooks: () => ({
-    profiles: new Map([
-      ["1", { form: { rating: "good" }, startProbability: { percent: 95 } }],
-    ]),
+    profiles: new Map(outlookState.value ? [["1", outlookState.value]] : []),
     isLoading: false,
     errors: [],
   }),
 }));
 
+vi.mock("../../api/queries", () => ({
+  usePlayersCatalogQuery: () => ({
+    data: [{ id: "1", images: { transparent: { "256x256": "https://example.test/ana.png" } } }],
+  }),
+}));
+
+vi.mock("../shell/ProfilePhoto", () => ({
+  ProfilePhoto: ({ url, className }: { url: string | null; className?: string }) => (
+    <span className={className}>{url ? <img src={url} alt="" /> : null}</span>
+  ),
+}));
+
+const outlookState = vi.hoisted(() => ({
+  value: { form: { rating: "good" }, startProbability: { percent: 95 } } as Record<string, unknown> | undefined,
+}));
+
 vi.mock("../players/radar/usePlayerRadar", () => ({
   usePlayerRadar: () => ({
     displayed: {
+      player: "Ana",
       axes: [
         { key: "a", label: "Assists", percentile: 57.99999999999999 },
         { key: "b", label: "Dribbles", percentile: 90 },
@@ -70,17 +85,58 @@ function season(overrides: Partial<SeasonStatsState> = {}): SeasonStatsState {
 }
 
 describe("TeamPlayersSection", () => {
-  beforeEach(() => cleanup());
+  beforeEach(() => {
+    cleanup();
+    outlookState.value = { form: { rating: "good" }, startProbability: { percent: 95 } };
+  });
 
   // ---- Happy path ---- //
 
   it("TeamPlayersSection_mvp_shows_units_and_whole_percentiles", () => {
     renderSection({ published: true, items: [] });
     const card = document.querySelector(".team-mvp-card") as HTMLElement;
-    expect(within(card).getByText("95%")).toBeTruthy();
+    expect(within(card).getByText(/95%/)).toBeTruthy();
     expect(within(card).getByText("Good")).toBeTruthy();
     expect(within(card).getByText("58")).toBeTruthy();
     expect(card.textContent).not.toContain("57.99");
+    expect(within(card).getByRole("img", { name: /Percentile radar for Ana/ })).toBeTruthy();
+  });
+
+  it("TeamPlayersSection_mvp_shows_the_catalog_photo", () => {
+    renderSection({ published: true, items: [] });
+    const photo = document.querySelector(".team-mvp-photo img") as HTMLImageElement | null;
+    expect(photo?.getAttribute("src")).toBe("https://example.test/ana.png");
+  });
+
+  it.each([[89, undefined], [90, "high"], [95, "high"]])(
+    "TeamPlayersSection_starter_at_%s_percent_has_level_%s",
+    (percent, level) => {
+      outlookState.value = { form: { rating: "good" }, startProbability: { percent } };
+      renderSection({ published: true, items: [] });
+      const value = document.querySelector(".team-mvp-facts > div:nth-child(2) dd");
+      expect(value?.getAttribute("data-level") ?? undefined).toBe(level);
+      expect(document.querySelector(".team-mvp-card .team-meter")?.getAttribute("data-tone") ?? undefined)
+        .toBe(level ? "red" : undefined);
+    },
+  );
+
+  it.each([
+    ["very_good", "Very good", "very_good"],
+    ["bad", "Poor", "bad"],
+    ["mid", "Average", "mid"],
+  ])("TeamPlayersSection_form_%s_shows_label_and_code", (rating, label, code) => {
+    outlookState.value = { form: { rating }, startProbability: { percent: 50 } };
+    renderSection({ published: true, items: [] });
+    const form = document.querySelector(".team-mvp-form");
+    expect(form?.getAttribute("data-form")).toBe(code);
+    expect(form?.textContent).toBe(label);
+  });
+
+  it("TeamPlayersSection_unknown_form_and_missing_starter_render_dashes", () => {
+    outlookState.value = { form: { rating: "weird" }, startProbability: null };
+    renderSection({ published: true, items: [] });
+    expect(document.querySelector(".team-mvp-form")).toBeNull();
+    expect(document.querySelector(".team-mvp-card .team-meter")).toBeNull();
   });
 
   it("TeamPlayersSection_injuries_render_as_a_table_with_status_badges", () => {

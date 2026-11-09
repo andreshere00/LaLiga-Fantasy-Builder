@@ -1,8 +1,8 @@
 import { numberFormatter, dateFormatter } from "../../../i18n/format";
 import { t, useTranslation } from "../../../i18n";
 import { useId } from "react";
-import { PolarAngleAxis, PolarGrid, PolarRadiusAxis, Radar, RadarChart, ResponsiveContainer } from "recharts";
 import type { PlayerRadarDto } from "../../../api/radar";
+import { PlayerRadarChart } from "./PlayerRadarChart";
 import { radarMetric, radarProfile, radarSourceText } from "./radarLocalization";
 import "./playerRadar.css";
 
@@ -20,26 +20,12 @@ export function canCompareRadars(a: PlayerRadarDto, b: PlayerRadarDto): boolean 
     a.axes.every((axis, i) => axis.key === b.axes[i]?.key && axis.percentile !== null && b.axes[i].percentile !== null);
 }
 
-function AxisTick({ x = 0, y = 0, payload }: { x?: number; y?: number; payload?: { value?: string } }) {
-  const words = (payload?.value ?? "").split(" ");
-  const lines: string[] = [];
-  for (const word of words) {
-    if (!lines.length || `${lines.at(-1)} ${word}`.length > 10) lines.push(word);
-    else lines[lines.length - 1] += ` ${word}`;
-  }
-  return <text x={x} y={y - (lines.length - 1) * 6} textAnchor="middle" fill="var(--fb-secondary)" fontSize={12}>
-    {lines.map((line, i) => <tspan key={i} x={x} dy={i === 0 ? 0 : 14}>{line}</tspan>)}
-  </text>;
-}
-
 /** A source-independent plot. Minutes and identity never become spokes. */
 export function PlayerRadarPlot({ radar, comparison, embedded = false }: { radar: PlayerRadarDto; comparison?: PlayerRadarDto | null; embedded?: boolean }) {
   useTranslation();
   const titleId = useId();
   const complete = radar.axes.every((axis) => axis.percentile !== null);
   const other = comparison && canCompareRadars(radar, comparison) ? comparison : null;
-  const points = radar.axes.map((axis, i) => ({ label: radarMetric(axis).label, player: axis.percentile,
-    comparison: other?.axes[i].percentile ?? null }));
   return <article className="player-radar" aria-labelledby={titleId}>
     <header className="player-radar-identity">
       <div>{embedded ? <h3 id={titleId}>{radarProfile(radar)}</h3> : <>
@@ -61,17 +47,7 @@ export function PlayerRadarPlot({ radar, comparison, embedded = false }: { radar
     <div className="player-radar-content">
       <figure className="player-radar-figure">
         <p className="player-radar-scale">{t("Percentile scale · 0 at centre · 100 at edge")}</p>
-        <div className="player-radar-chart" role="img" aria-label={t("Percentile radar for {{0}}{{1}}. Scale 0 to 100. Exact values in the metric table.", { 0: radar.player, 1: other ? t(" and {{0}}", { 0: other.player }) : "" })}>
-          <ResponsiveContainer width="100%" height="100%" minWidth={0}>
-            <RadarChart data={points} outerRadius="62%" startAngle={90} endAngle={-270} accessibilityLayer={false}>
-              <PolarGrid stroke="var(--fb-muted)" strokeOpacity={0.3} />
-              <PolarAngleAxis dataKey="label" tickSize={20} tick={<AxisTick />} />
-              <PolarRadiusAxis domain={[0, 100]} ticks={[25, 50, 75, 100]} tick={{ fontSize: 10, fill: "var(--fb-muted)" }} axisLine={false} />
-              {complete ? <Radar name={radar.player} dataKey="player" stroke="var(--fb-primary)" strokeWidth={2.5} fill="var(--fb-primary)" fillOpacity={0.13} isAnimationActive={false} /> : null}
-              {other ? <Radar name={other.player} dataKey="comparison" stroke="var(--fb-secondary)" strokeWidth={2} strokeDasharray="6 4" fill="none" isAnimationActive={false} /> : null}
-            </RadarChart>
-          </ResponsiveContainer>
-        </div>
+        <PlayerRadarChart radar={radar} comparison={other} />
         {!embedded || other ? <figcaption className="player-radar-legend"><span><i aria-hidden="true" />{radar.player}</span>
           {other ? <span><i className="player-radar-comparison-line" aria-hidden="true" />{other.player}</span> : null}
         </figcaption> : null}

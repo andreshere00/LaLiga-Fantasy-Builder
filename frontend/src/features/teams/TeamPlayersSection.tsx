@@ -5,6 +5,12 @@ import { Badge } from "../../components/ui/Badge";
 import { positionAbbrev, positionLabel, positionTone } from "../market/positions";
 import { usePlayerOutlooks } from "../lineup/useSquadStats";
 import { radarMetric } from "../players/radar/radarLocalization";
+import { PlayerRadarChart } from "../players/radar/PlayerRadarChart";
+import { playerFormPresentation } from "../players/playerForm";
+import { ProfilePhoto } from "../shell/ProfilePhoto";
+import { PersonIcon } from "../shell/icons";
+import { usePlayersCatalogQuery } from "../../api/queries";
+import { catalogMediaByMasterId } from "../../api/mappers";
 import { usePlayerRadar } from "../players/radar/usePlayerRadar";
 import type { ClubDossierDto, ClubRosterStatsDto } from "../../api/schemas";
 import { TeamMeter } from "./TeamMeter";
@@ -57,6 +63,8 @@ export function TeamPlayersSection({
   useTranslation();
   const season = seasonStats?.data;
   const outlooks = usePlayerOutlooks(roster.mvps.map((player) => player.playerId));
+  const catalog = usePlayersCatalogQuery(true);
+  const media = useMemo(() => catalogMediaByMasterId(catalog.data), [catalog.data]);
   const [column, setColumn] = useState<SquadColumn | "position">("position");
   const [direction, setDirection] = useState<"asc" | "desc">("asc");
   const source = useMemo(() => {
@@ -87,6 +95,7 @@ export function TeamPlayersSection({
         <MvpStrip
           players={roster.mvps}
           outlooks={outlooks.profiles}
+          media={media}
         />
       </div>
       <div className="team-block">
@@ -265,12 +274,21 @@ type Outlook = {
   startProbability?: { percent?: number | null } | null;
 };
 
+/** Starter likelihood from this percentage up is flagged in red on the MVP cards. */
+const STARTER_RED_FROM = 90;
+
+export function isStarterFlagged(percent: number | null | undefined): boolean {
+  return typeof percent === "number" && Number.isFinite(percent) && percent >= STARTER_RED_FROM;
+}
+
 function MvpStrip({
   players,
   outlooks,
+  media,
 }: {
   players: Roster["mvps"];
   outlooks: { get(playerId: string): unknown };
+  media: ReadonlyMap<string, { photoUrl: string | null }>;
 }) {
   const first = usePlayerRadar(players[0]?.playerId ?? "");
   const second = usePlayerRadar(players[1]?.playerId ?? "");
@@ -279,25 +297,32 @@ function MvpStrip({
   const shown = players.map((player, index) => ({
     player,
     radar: radars[index] ?? first,
-    axes: topAxes(radars[index] ?? first),
+    published: topAxes(radars[index] ?? first).length > 0,
   }));
   const settled = shown.every(({ radar }) => (
     radar.query == null || radar.query.isSuccess || radar.query.isError
   ));
   const unpublished = players.length > 0 && settled
-    && shown.every(({ axes }) => axes.length === 0);
+    && shown.every(({ published }) => !published);
   return (
     <div>
       <ul className="team-mvp-list">
-        {shown.map(({ player, radar, axes }, index) => {
+        {shown.map(({ player, radar, published }, index) => {
           const outlook = outlooks.get(player.playerId) as Outlook | undefined;
           const starter = outlook?.startProbability?.percent;
-          const form = outlook?.form?.rating;
+          const flagged = isStarterFlagged(starter);
+          const form = playerFormPresentation(outlook?.form?.rating);
+          const displayed = radar.displayed;
           return (
             <li key={player.playerId} className="team-mvp-card">
               <div ref={radar.section as Ref<HTMLDivElement>}>
                 <div className="team-mvp-head">
                   <span className="team-mvp-rank" aria-hidden="true">{index + 1}</span>
+                  <ProfilePhoto
+                    className="team-mvp-photo"
+                    url={media.get(player.playerId)?.photoUrl ?? null}
+                    fallback={<PersonIcon />}
+                  />
                   <h4>{player.name}</h4>
                   {player.positionId != null ? (
                     <span
@@ -315,26 +340,42 @@ function MvpStrip({
                 <dl className="team-mvp-facts">
                   <div>
                     <dt>{t("Form")}</dt>
-                    <dd>{form ? t(capitalize(form)) : "—"}</dd>
+                    <dd>
+                      {form ? (
+                        <span className="team-mvp-form" data-form={form.code}>
+                          <img className="is-light" src={form.icons.light} alt="" />
+                          <img className="is-dark" src={form.icons.dark} alt="" />
+                          {t(form.label)}
+                        </span>
+                      ) : "—"}
+                    </dd>
                   </div>
                   <div>
                     <dt>{t("Starter likelihood")}</dt>
-                    <dd>
-                      {starter == null ? "—" : `${starter}%`}
-                      <TeamMeter percent={starter} />
+                    <dd data-level={flagged ? "high" : undefined}>
+                      <span className="team-starter-value">
+                        {starter == null ? "—" : `${starter}%`}
+                        {flagged ? <span className="visually-hidden"> {t("(90% or more)")}</span> : null}
+                      </span>
+                      <TeamMeter percent={starter} tone={flagged ? "red" : undefined} />
                     </dd>
                   </div>
                 </dl>
-                {axes.length > 0 ? (
+                {published && displayed ? (
                   <div className="team-mvp-radar">
-                    <p>{t("Best radar percentiles")}</p>
-                    <ul>
-                      {axes.map((axis) => (
-                        <li key={axis.key}>
-                          {radarMetric(axis).label} <strong>{Math.round(axis.percentile ?? 0)}</strong>
-                        </li>
-                      ))}
-                    </ul>
+                    <p>{t("Radar percentiles")}</p>
+                    <PlayerRadarChart radar={displayed} compact />
+                    <table className="visually-hidden">
+                      <caption>{t("Percentiles for ")}{player.name}</caption>
+                      <tbody>
+                        {displayed.axes.filter((axis) => axis.percentile != null).map((axis) => (
+                          <tr key={axis.key}>
+                            <th scope="row">{radarMetric(axis).label}</th>
+                            <td>{Math.round(axis.percentile ?? 0)}</td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
                   </div>
                 ) : null}
               </div>
@@ -391,10 +432,6 @@ function startedLabel(value: string): string {
   return dateFormatter({
     day: "numeric", month: "short", year: "numeric", timeZone: "Europe/Madrid",
   }).format(parsed);
-}
-
-function capitalize(value: string): string {
-  return value.charAt(0).toUpperCase() + value.slice(1);
 }
 
 function formatCount(value: unknown): string {

@@ -33,6 +33,7 @@ vi.mock("../../api/queries", () => ({
     ] },
     isPending: false,
   }),
+  usePlayersCatalogQuery: () => ({ data: undefined }),
   useClubRosterStatsQuery: () => ({
     data: undefined, isPending: false, isError: false, fetchStatus: "idle", refetch: vi.fn(),
   }),
