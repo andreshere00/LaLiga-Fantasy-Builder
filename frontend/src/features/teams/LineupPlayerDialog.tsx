@@ -1,8 +1,8 @@
 import { Link } from "react-router-dom";
 import { t, useTranslation } from "../../i18n";
 import { Dialog } from "../../components/ui/Dialog";
-import { MarketActionMenu } from "../market/actions/MarketActionMenu";
-import { resolveMarketActionOffers, type MarketActionContext } from "../market/actions/marketActions";
+import { LineupMarketActions, LineupMatches, LineupRadar } from "./LineupDialogSections";
+import type { MarketActionContext } from "../market/actions/marketActions";
 import type { MarketActionsApi } from "../market/actions/useMarketActions";
 import type { MarketRow } from "../market/model/row";
 import { PlayerBookmarkButton } from "../players/PlayerBookmarkButton";
@@ -47,7 +47,6 @@ export function LineupPlayerDialog({
   const playerId = player?.playerId ?? null;
   const likelihood = player?.probability ?? outlook?.startProbability?.percent ?? null;
   const flagged = isStarterFlagged(likelihood);
-  const offers = row ? resolveMarketActionOffers(row, context) : [];
   /** A market dialog replaces this one instead of stacking over it. */
   const handoff = {
     ...actions,
@@ -87,7 +86,7 @@ export function LineupPlayerDialog({
               </div>
             </dl>
           </div>
-          {playerId ? <RecentPoints entries={recent.get(playerId) ?? []} /> : null}
+          {playerId && row ? <LineupMarketActions row={row} context={context} actions={handoff} /> : null}
           {playerId ? (
             <div className="team-detail-actions">
               <Link
@@ -110,13 +109,13 @@ export function LineupPlayerDialog({
                   {t("Field player")}
                 </Link>
               ) : null}
-              {row && offers.length > 0 ? (
-                <MarketActionMenu row={row} context={context} actions={handoff} />
-              ) : null}
             </div>
           ) : (
             <p className="team-xi-status">{t("Details unavailable")}</p>
           )}
+          {playerId ? <RecentPoints entries={recent.get(playerId) ?? []} /> : null}
+          {playerId ? <LineupMatches playerId={playerId} /> : null}
+          {playerId ? <LineupRadar playerId={playerId} name={player.name} /> : null}
         </div>
       ) : null}
     </Dialog>

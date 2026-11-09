@@ -290,9 +290,12 @@ Starters stand on a larger pitch (up to 620px) whose photos, type and margins sc
 its own width (container units), grouped by the published position line from attack to
 goalkeeper. Each token shows the probability, the form icon, and an FSYP tag (a squared
 two-tone label, so it reads apart from the round form icon). Selecting a token opens a
-dialog with probability, form, FSYP, the last five LaLiga matches, a Player details link,
-the bookmark, Field player and the market menu; starting a bid or clause closes it first.
-Alternatives sit in a narrower column as one collapsible group per line (goalkeeper to
+dialog with probability, form, FSYP, a Market options block (every bid, direct offer, release
+clause, modify or cancel option the listing offers, as visible buttons with the reason when one
+is off; shown only when the league has a listing for that player), Player details, the bookmark,
+Field player, the last five LaLiga points, a collapsible per-match stat list (newest first, with
+the Fantasy points each stat earned) and the percentile radar. Starting a bid or clause closes
+the dialog first. Alternatives sit in a narrower column as one collapsible group per line (goalkeeper to
 attack), each header showing the translated line, a count and, when collapsed, the two
 likeliest names; the line holding the likeliest alternative starts open and Expand all
 opens the rest. Rows show form, FSYP, last five points, a probability bar (red from 90%)

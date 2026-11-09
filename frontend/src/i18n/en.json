@@ -1790,5 +1790,10 @@
   "Remove from favorites": "Remove from favorites",
   "Select a player for details and actions.": "Select a player for details and actions.",
   "Collapse all": "Collapse all",
-  "Expand all": "Expand all"
+  "Expand all": "Expand all",
+  "Last 5 matches in detail": "Last 5 matches in detail",
+  "No stats published for this match.": "No stats published for this match.",
+  "Loading match stats.": "Loading match stats.",
+  "Match stats are unavailable.": "Match stats are unavailable.",
+  "Loading radar.": "Loading radar."
 }

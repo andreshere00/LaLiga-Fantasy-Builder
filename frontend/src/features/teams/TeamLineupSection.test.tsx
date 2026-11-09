@@ -59,7 +59,24 @@ vi.mock("../lineup/useSquadStats", () => ({
 
 vi.mock("./useRecentPoints", () => ({
   useRecentPoints: () => new Map([["7", [{ matchweek: 11, points: 6 }, { matchweek: 12, points: 12 }]]]),
+  useRecentMatches: () => ({
+    loading: false,
+    failed: false,
+    matches: [{
+      matchweek: 12, opponent: "Getafe", isHome: true, score: "2-1", result: "W", points: 12,
+      stats: [{ key: "goals", count: 1, points: 10 }, { key: "minutesPlayed", count: 90, points: 2 }],
+    }],
+  }),
 }));
+
+vi.mock("../players/radar/usePlayerRadar", () => ({
+  usePlayerRadar: () => ({
+    section: { current: null },
+    query: { isPending: false },
+    displayed: null,
+  }),
+}));
+
 
 vi.mock("../scouting/ScoutingProvider", () => ({
   useScouting: () => ({ favorites: new Set<string>(), pending: false, toggle }),
@@ -140,6 +157,20 @@ describe("TeamLineupSection", () => {
     expect(within(dialog).getByRole("link", { name: "Player details" }).getAttribute("href")).toBe("/players/7");
     expect(within(dialog).getByText("12")).toBeTruthy();
     expect(within(dialog).getByRole("button", { name: "Favorite Isco" }).getAttribute("aria-pressed")).toBe("false");
+    expect(within(dialog).getByText("Radar is not published for this player.")).toBeTruthy();
+    fireEvent.click(within(dialog).getByRole("button", { name: "Last 5 matches in detail" }));
+    expect(within(dialog).getByText(/Getafe/)).toBeTruthy();
+    expect(within(dialog).getByText("Goals")).toBeTruthy();
+  });
+
+  it("TeamLineupSection_dialog_lists_market_options_as_buttons", () => {
+    renderLineup();
+    fireEvent.click(screen.getByRole("button", { name: /Isco/ }));
+    const dialog = screen.getByRole("dialog");
+    expect(within(dialog).getByText("Market options")).toBeTruthy();
+    expect(within(dialog).getByRole("button", { name: "Cancel bid" })).toBeTruthy();
+    fireEvent.click(within(dialog).getByRole("button", { name: "Modify bid" }));
+    expect(openBid).toHaveBeenCalled();
   });
 
   it("TeamLineupSection_alternative_lines_expand_and_collapse", () => {

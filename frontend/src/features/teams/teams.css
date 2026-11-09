@@ -659,7 +659,7 @@
 .team-detail-facts dt { color: var(--fb-muted); font-size: 12px; }
 .team-detail-facts dd { display: grid; gap: 4px; margin: 4px 0 0; }
 .team-detail-facts .is-lead { grid-column: 1 / -1; }
-.team-detail-figure--fsyp { justify-self: start; padding: 2px 10px; border: 2px solid var(--fb-secondary); }
+.team-detail-figure--fsyp { display: inline-flex; align-items: center; justify-content: center; min-width: 4rem; justify-self: start; padding: 4px 12px; text-align: center; border: 2px solid var(--fb-secondary); }
 .team-detail-figure { color: var(--fb-tertiary); font: 400 32px/1 Anton, "Arial Narrow", sans-serif; font-variant-numeric: tabular-nums; }
 .team-detail-facts [data-level="high"] .team-detail-figure { color: var(--fb-failure); }
 .team-detail .team-mvp-recent { text-align: left; }
@@ -667,6 +667,25 @@
 .team-detail-actions { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 12px; padding-top: 12px; border-top: 1px solid var(--fb-line); }
 .team-detail-link { display: inline-flex; align-items: center; min-height: 44px; padding: 0 16px; background: var(--fb-coral); color: var(--fb-on-coral); font-weight: 600; text-decoration: none; }
 .team-detail-link:focus-visible { outline: 2px solid var(--fb-focus); outline-offset: 2px; }
+
+.team-detail-market h4,
+.team-detail-radar h4 { margin: 0 0 8px; color: var(--fb-muted); font: 600 12px/1.4 var(--fb-font-body); letter-spacing: .04em; text-transform: uppercase; }
+.team-detail-market ul { display: grid; gap: 8px; margin: 0; padding: 0; list-style: none; }
+.team-detail-market li { display: grid; gap: 2px; }
+.team-detail-market li .fb-button { width: 100%; justify-content: center; }
+.team-detail-radar .player-radar-chart { height: 260px; }
+.team-detail-matches { border: 1px solid var(--fb-line); background: var(--fb-surface); }
+.team-match-list { display: grid; gap: 0; margin: 0; padding: 0 14px; list-style: none; border-top: 1px solid var(--fb-line); }
+.team-match-list > li { padding: 10px 0; border-bottom: 1px solid var(--fb-line); }
+.team-match-list > li:last-child { border-bottom: 0; }
+.team-match-list header { display: flex; align-items: baseline; gap: 10px; }
+.team-match-list header span:nth-child(2) { flex: 1; min-width: 0; color: var(--fb-muted); font-size: 12px; }
+.team-match-points { font: 400 20px/1 Anton, "Arial Narrow", sans-serif; color: var(--fb-tertiary); font-variant-numeric: tabular-nums; }
+.team-match-list dl { display: grid; grid-template-columns: repeat(auto-fill, minmax(8.5rem, 1fr)); gap: 6px 16px; margin: 8px 0 0; }
+.team-match-list dt { color: var(--fb-muted); font-size: 12px; }
+.team-match-list dd { margin: 0; font-weight: 600; font-variant-numeric: tabular-nums; }
+.team-match-list dd [data-sign="positive"] { color: var(--fb-success); }
+.team-match-list dd [data-sign="negative"] { color: var(--fb-failure); }
 
 /* Alternatives: one disclosure per line, each header a labelled, countable target. */
 .team-alternatives { gap: 8px; }
@@ -706,9 +725,9 @@
 .team-alt-group .team-xi { padding: 0 14px; border-top: 1px solid var(--fb-line); }
 .team-alt-group .team-xi-player:last-child { border-bottom: 0; }
 /* FSYP: a squared two-tone tag, so it reads apart from the round, coloured form icon. */
-.team-fsyp { display: inline-flex; align-items: stretch; border: 1px solid var(--fb-secondary); font-variant-numeric: tabular-nums; line-height: 1; }
-.team-fsyp-label { padding: 3px 5px; background: var(--fb-secondary); color: var(--fb-surface); font: 700 clamp(9px, 1.8cqi, 11px)/1 var(--fb-font-body); letter-spacing: .04em; }
-.team-fsyp-value { padding: 3px 6px; background: var(--fb-surface); color: var(--fb-tertiary); font: 700 clamp(11px, 2.2cqi, 13px)/1 var(--fb-font-body); }
+.team-fsyp { display: inline-flex; align-items: stretch; justify-content: center; border: 1px solid var(--fb-secondary); font-variant-numeric: tabular-nums; line-height: 1; }
+.team-fsyp-label { display: inline-flex; align-items: center; justify-content: center; padding: 4px 5px; background: var(--fb-secondary); color: var(--fb-surface); font: 700 clamp(9px, 1.8cqi, 11px)/1 var(--fb-font-body); letter-spacing: .04em; }
+.team-fsyp-value { display: inline-flex; align-items: center; justify-content: center; min-width: 2.2ch; padding: 4px 6px; text-align: center; background: var(--fb-surface); color: var(--fb-tertiary); font: 700 clamp(11px, 2.2cqi, 13px)/1 var(--fb-font-body); }
 .team-xi-facts .team-fsyp-label { font-size: 10px; }
 .team-xi-facts .team-fsyp-value { font-size: 12px; }
 .team-xi-facts { gap: 4px 10px; }

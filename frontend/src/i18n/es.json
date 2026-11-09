@@ -1790,5 +1790,10 @@
   "Remove from favorites": "Quitar de favoritos",
   "Select a player for details and actions.": "Selecciona un jugador para ver detalles y acciones.",
   "Collapse all": "Contraer todo",
-  "Expand all": "Expandir todo"
+  "Expand all": "Expandir todo",
+  "Last 5 matches in detail": "Detalle de los últimos 5 partidos",
+  "No stats published for this match.": "No hay estadísticas publicadas para este partido.",
+  "Loading match stats.": "Cargando las estadísticas de los partidos.",
+  "Match stats are unavailable.": "Las estadísticas de los partidos no están disponibles.",
+  "Loading radar.": "Cargando el radar."
 }
