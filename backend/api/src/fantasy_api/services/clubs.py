@@ -3,10 +3,12 @@
 from __future__ import annotations
 
 import asyncio
+import re
 from collections import defaultdict
 from collections.abc import Callable, Iterable, Mapping
 from datetime import UTC, date, datetime
 from typing import Any
+from zoneinfo import ZoneInfo
 
 from pydantic import ValidationError
 
@@ -54,6 +56,8 @@ _COACH_POSITION = 5
 _FINISHED = 7
 _EUROPEAN = {"champions_league", "europa_league", "conference_league"}
 _DOMESTIC = {"copa_del_rey", "supercopa"}
+_MADRID = ZoneInfo("Europe/Madrid")
+_PRINTED_KICKOFF = re.compile(r"(\d{1,2})/(\d{1,2})\D+(\d{1,2}):(\d{2})")
 _COLUMNS: tuple[tuple[str, StatKey], ...] = (
     ("minutes", StatKey.MINUTES_PLAYED),
     ("goals", StatKey.GOALS),
@@ -89,12 +93,14 @@ class ClubsService:
         resolver: PlayerResolver | None = None,
         scraped: ScrapedPlayerProvider | None = None,
         today: Callable[[], date] | None = None,
+        now: Callable[[], datetime] | None = None,
     ) -> None:
         self._repository = repository
         self._pages = pages
         self._resolver = resolver
         self._player_pages = scraped
         self._today = today or (lambda: datetime.now(tz=UTC).date())
+        self._now = now or (lambda: datetime.now(tz=UTC))
 
     async def list_clubs(self) -> ClubIndex:
         """Return the current clubs and their verified slugs.
@@ -152,7 +158,7 @@ class ClubsService:
             labels.add(summary.short_name.casefold())
         performance = None
         if not fixture_error:
-            performance = _performance(club_id, fixtures or [], scraped, labels)
+            performance = _performance(club_id, fixtures or [], scraped, labels, self._now())
         if fixture_error:
             errors.append(fixture_error)
         elif scrape_error and summary.slug:
@@ -356,6 +362,7 @@ def _performance(
     fixtures: list[SeasonFixture],
     scraped: ScrapedClubPage | None,
     labels: set[str],
+    now: datetime | None = None,
 ) -> PerformanceSection:
     """Build LaLiga results from finalized fixtures and other results from the club page."""
     matches = [
@@ -371,7 +378,7 @@ def _performance(
     return PerformanceSection(
         matches=matches,
         records=_records(finished),
-        next_match_id=_next_match(matches),
+        next_match_id=_next_match(matches, now or datetime.now(tz=UTC)),
     )
 
 
@@ -606,17 +613,46 @@ def _record(group: CompetitionGroup, matches: list[ClubMatch]) -> CompetitionRec
     )
 
 
-def _next_match(matches: list[ClubMatch]) -> str | None:
-    dated = [
-        match
+def _next_match(matches: list[ClubMatch], now: datetime) -> str | None:
+    """Return the scheduled match that kicks off soonest at or after ``now``, in any competition.
+
+    A match still flagged as scheduled whose kickoff is already past is stale upstream data, not
+    the next match. A match whose kickoff cannot be placed on the calendar is never picked.
+    """
+    upcoming = [
+        (when, match.match_id)
         for match in matches
-        if match.scheduled and match.kickoff is not None and match.group == "laliga"
+        if match.scheduled and (when := _kickoff_at(match, now)) is not None and when >= now
     ]
-    if not dated:
-        upcoming = next((match for match in matches if match.scheduled), None)
-        return None if upcoming is None else upcoming.match_id
-    dated.sort(key=lambda match: match.kickoff or datetime.min.replace(tzinfo=UTC))
-    return dated[0].match_id
+    return min(upcoming)[1] if upcoming else None
+
+
+def _kickoff_at(match: ClubMatch, now: datetime) -> datetime | None:
+    """Return the kickoff instant: the fixture's own, else the one printed on the club page."""
+    if match.kickoff is not None:
+        return match.kickoff
+    return _printed_kickoff(match.kickoff_text, now)
+
+
+def _printed_kickoff(text: str | None, now: datetime) -> datetime | None:
+    """Parse a club-page kickoff like ``Dom 08/11 18:30h`` (Madrid time, no year printed).
+
+    The year is the one that puts the date closest to ``now``, so a late-season fixture keeps
+    its calendar year across New Year.
+    """
+    found = _PRINTED_KICKOFF.search(text or "")
+    if found is None:
+        return None
+    day, month, hour, minute = (int(part) for part in found.groups())
+    candidates: list[datetime] = []
+    for year in (now.year - 1, now.year, now.year + 1):
+        try:
+            candidates.append(datetime(year, month, day, hour, minute, tzinfo=_MADRID))
+        except ValueError:
+            continue
+    if not candidates:
+        return None
+    return min(candidates, key=lambda candidate: abs(candidate - now))
 
 
 def _group(competition: str) -> CompetitionGroup:

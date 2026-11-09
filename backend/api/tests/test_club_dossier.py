@@ -13,10 +13,10 @@ from fantasy_api.config import Settings
 from fantasy_api.domain.club_pages import FutbolFantasyClubPage, load_futbolfantasy_club_pages
 from fantasy_api.domain.errors import NeedsReauthError, UnauthorizedError
 from fantasy_api.main import create_app
-from fantasy_api.schemas.clubs import ScrapedClubPage
+from fantasy_api.schemas.clubs import ClubMatch, ScrapedClubPage
 from fantasy_api.schemas.fixture_standings import SeasonFixture
 from fantasy_api.schemas.players import CatalogPlayer
-from fantasy_api.services.clubs import ClubsService, _performance, _roster
+from fantasy_api.services.clubs import ClubsService, _next_match, _performance, _roster
 from fastapi.testclient import TestClient
 from pydantic import SecretStr
 from test_container import TEST_FANTASY_ORIGIN, TEST_SERVICE_TOKEN
@@ -210,6 +210,7 @@ def _client(
         ),
         scraping_transport=scraping or httpx.MockTransport(_scraping),
     )
+    container.clubs_service._now = lambda: NOW
     return TestClient(create_app(settings, container))
 
 
@@ -391,7 +392,7 @@ def test_performance_home_and_away_splits_ignore_unfinished_matches() -> None:
             ],
         }
     )
-    performance = _performance(20, fixtures, scraped, {"villarreal"})
+    performance = _performance(20, fixtures, scraped, {"villarreal"}, NOW)
     laliga = next(record for record in performance.records if record.competition == "laliga")
     domestic = next(record for record in performance.records if record.competition == "domestic")
     assert laliga.home.won == 1 and laliga.away.drawn == 1
@@ -472,3 +473,80 @@ def test_performance_keeps_unrecognised_competitions_in_the_other_group() -> Non
 
     assert [match.group for match in performance.matches] == ["friendly"]
     assert [record.competition for record in performance.records] == ["friendly"]
+
+
+def _scheduled(
+    match_id: str,
+    *,
+    kickoff: datetime | None = None,
+    text: str | None = None,
+    group: str = "laliga",
+) -> ClubMatch:
+    return ClubMatch(
+        match_id=match_id,
+        competition=group,
+        group=group,
+        home="Getafe",
+        away="Rival",
+        kickoff=kickoff,
+        kickoff_text=text,
+        scheduled=True,
+    )
+
+
+def test_next_match_skips_a_past_fixture_still_marked_scheduled() -> None:
+    # Arrange
+    now = datetime(2026, 11, 9, 12, 0, tzinfo=UTC)
+    matches = [
+        _scheduled("stale", kickoff=datetime(2026, 10, 25, 18, 30, tzinfo=UTC)),
+        _scheduled("next", kickoff=datetime(2026, 11, 22, 21, 0, tzinfo=UTC)),
+        _scheduled("later", kickoff=datetime(2026, 12, 6, 20, 0, tzinfo=UTC)),
+    ]
+
+    # Act / Assert
+    assert _next_match(matches, now) == "next"
+
+
+def test_next_match_compares_dated_laliga_and_printed_cup_kickoffs() -> None:
+    # Arrange
+    now = datetime(2026, 11, 9, 12, 0, tzinfo=UTC)
+    matches = [
+        _scheduled("liga", kickoff=datetime(2026, 11, 22, 21, 0, tzinfo=UTC)),
+        _scheduled("cup", text="Mié 11/11 \n21:00h", group="domestic"),
+        _scheduled("euro", text="Jue 26/11 18:45h", group="european"),
+    ]
+
+    # Act / Assert
+    assert _next_match(matches, now) == "cup"
+
+
+def test_next_match_reads_a_printed_january_date_in_the_next_year() -> None:
+    # Arrange
+    now = datetime(2026, 12, 28, 12, 0, tzinfo=UTC)
+    matches = [_scheduled("cup", text="Mié 06/01 21:00h", group="domestic")]
+
+    # Act / Assert
+    assert _next_match(matches, now) == "cup"
+
+
+def test_next_match_ignores_matches_it_cannot_place_on_the_calendar() -> None:
+    # Arrange
+    now = datetime(2026, 11, 9, 12, 0, tzinfo=UTC)
+    matches = [
+        _scheduled("undated"),
+        _scheduled("garbled", text="por determinar", group="domestic"),
+        _scheduled("impossible", text="Lun 31/02 21:00h", group="domestic"),
+    ]
+
+    # Act / Assert
+    assert _next_match(matches, now) is None
+
+
+def test_next_match_ignores_finished_matches() -> None:
+    # Arrange
+    now = datetime(2026, 11, 9, 12, 0, tzinfo=UTC)
+    played = _scheduled("played", kickoff=datetime(2026, 11, 20, 21, 0, tzinfo=UTC))
+    played.scheduled = False
+
+    # Act / Assert
+    assert _next_match([played], now) is None
