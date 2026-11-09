@@ -106,4 +106,28 @@ describe("TeamPerformanceSection", () => {
     expect(document.getElementById(upcoming.getAttribute("aria-describedby") ?? "")?.textContent)
       .toContain("Scheduled matches in the selected window");
   });
+
+  it("TeamPerformanceSection_about_block_is_a_one_line_toggle_that_opens_the_three_descriptions", () => {
+    render(
+      <MemoryRouter><TeamPerformanceSection
+        performance={performance}
+        clubs={[{ clubId: 20, name: "Villarreal CF", badgeUrl: null }, { clubId: 9, name: "Getafe CF", badgeUrl: null }]}
+        competition="all"
+        window="5"
+        failed={false}
+        onCompetition={vi.fn()}
+        onWindow={vi.fn()}
+        onRetry={vi.fn()}
+      /></MemoryRouter>,
+    );
+    const toggle = screen.getByRole("button", { name: /About/ });
+    expect(toggle.textContent).toContain("Overview · Previous matches · Upcoming matches");
+    expect(toggle.getAttribute("aria-expanded")).toBe("false");
+    const list = document.getElementById("team-about-list") as HTMLElement;
+    expect(list.hidden).toBe(true);
+    fireEvent.click(toggle);
+    expect(toggle.getAttribute("aria-expanded")).toBe("true");
+    expect(list.hidden).toBe(false);
+    expect(list.querySelectorAll("dd")).toHaveLength(3);
+  });
 });

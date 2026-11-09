@@ -185,6 +185,24 @@
   letter-spacing: .08em;
   text-transform: uppercase;
 }
+/* One "About" block for the three Performance widgets: a one-line toggle that opens the descriptions. */
+.team-about {
+  margin-bottom: 12px; background: var(--fb-subtle); border-inline-start: 3px solid var(--fb-primary);
+  color: var(--fb-secondary); font-size: 14px; line-height: 1.45;
+}
+.team-about-title { margin: 0; font: inherit; }
+.team-about-toggle {
+  display: flex; align-items: center; gap: 10px; width: 100%; min-height: 44px; padding: 8px 12px;
+  border: 0; background: transparent; color: inherit; font: inherit; text-align: left; cursor: pointer;
+}
+.team-about-toggle:hover .team-about-names { color: var(--fb-text); }
+.team-about-names { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.team-about-toggle[aria-expanded="true"] .team-idle-chevron { transform: rotate(-135deg); }
+.team-about-list { display: grid; gap: 4px; margin: 0; padding: 0 12px 10px; }
+.team-about-list[hidden] { display: none; }
+.team-about-list > div { display: flex; flex-wrap: wrap; gap: 0 10px; }
+.team-about-list dt { flex: none; min-width: 10.5rem; color: var(--fb-text); font-weight: 600; }
+.team-about-list dd { flex: 1 1 12rem; min-width: 0; margin: 0; overflow-wrap: anywhere; }
 .team-summary-text { flex: 1 1 12rem; min-width: 0; overflow-wrap: anywhere; }
 .team-count {
   display: inline-grid;
@@ -997,6 +1015,12 @@
 .fb-dialog.team-hierarchy-dialog { width: min(720px, calc(100vw - 24px)); }
 @media (max-width: 600px) { .fb-dialog.team-hierarchy-dialog { width: 100%; } }
 .team-hier-groups { display: grid; gap: 20px; }
+.team-hier-idle-toggle {
+  justify-self: start; display: inline-flex; align-items: center; gap: 8px; min-height: 44px;
+  padding: 8px 12px; border: 1px solid var(--fb-line); border-radius: 8px;
+  background: var(--fb-subtle); color: var(--fb-muted); font: 600 13px/1.2 var(--fb-font-body); cursor: pointer;
+}
+.team-hier-idle-toggle:hover { color: var(--fb-text); }
 .team-hier-group { display: grid; gap: 8px; min-width: 0; }
 .team-hier-title {
   display: flex;

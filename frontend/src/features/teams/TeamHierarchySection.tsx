@@ -15,7 +15,7 @@ import { LineupFsyp } from "./LineupFsyp";
 import { TeamSummary } from "./TeamSummary";
 import { widgetDescription } from "./teamSummaries";
 import {
-  hierarchyGroups, type HierarchyEntry, type HierarchyGroup,
+  hierarchyGroups, visibleGroups, type HierarchyEntry, type HierarchyGroup,
 } from "./teamHierarchy";
 
 type Squad = NonNullable<ClubDossierDto["roster"]>["players"];
@@ -24,10 +24,16 @@ type Squad = NonNullable<ClubDossierDto["roster"]>["players"];
  * Every player's squad role in one place. The roles come from the player profiles, one read each,
  * so nothing is requested until the list is first opened and the answers stay cached afterwards.
  */
-export function TeamHierarchySection({ players, returnTo }: { players: Squad; returnTo: string }) {
+export function TeamHierarchySection({ players, returnTo, idleIds }: {
+  players: Squad;
+  returnTo: string;
+  /** Players with a published zero minutes, kept out of the list until asked for. */
+  idleIds?: ReadonlySet<string>;
+}) {
   useTranslation();
   const [requested, setRequested] = useState(false);
   const [open, setOpen] = useState(false);
+  const [showIdle, setShowIdle] = useState(false);
   const trigger = useRef<HTMLButtonElement>(null);
   const ids = useMemo(() => players.map((player) => player.playerId), [players]);
   const outlooks = usePlayerOutlooks(requested ? ids : []);
@@ -43,8 +49,11 @@ export function TeamHierarchySection({ players, returnTo }: { players: Squad; re
       points: player.points ?? null,
       hierarchy: hierarchy?.label ?? null,
       rank: hierarchy?.rank ?? null,
+      idle: idleIds?.has(player.playerId) ?? false,
     };
-  })), [players, outlooks.profiles]);
+  })), [players, outlooks.profiles, idleIds]);
+  const shown = useMemo(() => visibleGroups(groups, showIdle), [groups, showIdle]);
+  const idleCount = idleIds?.size ?? 0;
   const ready = requested && !outlooks.isLoading;
   if (players.length === 0) return null;
   return (
@@ -52,7 +61,7 @@ export function TeamHierarchySection({ players, returnTo }: { players: Squad; re
       <h3 id="team-hierarchy-title">{t("Hierarchy levels")}</h3>
       <TeamSummary id="team-summary-hierarchy" widget="hierarchy" />
       <p className="team-note">{t("Roles are read when you open the list.")}</p>
-      {ready ? <LevelChips groups={groups} /> : null}
+      {ready ? <LevelChips groups={shown} /> : null}
       <div className="team-hierarchy-actions">
         <Button
           ref={trigger}
@@ -76,7 +85,17 @@ export function TeamHierarchySection({ players, returnTo }: { players: Squad; re
           <LoadingLevels loaded={loaded} total={ids.length} />
         ) : (
           <div className="team-hier-groups">
-            {groups.map((group) => (
+            {idleCount > 0 ? (
+              <button
+                type="button"
+                className="team-hier-idle-toggle"
+                onClick={() => setShowIdle((current) => !current)}
+              >
+                {showIdle ? t("Hide players without minutes") : t("Show players without minutes")}
+                <span className="team-count">{idleCount}</span>
+              </button>
+            ) : null}
+            {shown.map((group) => (
               <LevelGroup key={group.label} group={group} media={media} returnTo={returnTo} />
             ))}
           </div>

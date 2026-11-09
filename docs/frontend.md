@@ -255,11 +255,14 @@ what the widget is, not what it currently shows. The fixed, translated texts liv
 and Upcoming matches, MVPs, Squad, Hierarchy levels, Starters, Coach, Alternatives, Injured
 players, and News. They carry no numbers, so they stay true whatever the data says. The widget's
 own list, table, or group points back to its description with `aria-describedby`, so a screen
-reader announces it again when that element is entered.
+reader announces it again when that element is entered. In Performance the three lines (Overview,
+Previous matches, Upcoming matches) share one **About** block under the section title (`TeamAbout`): a single line naming the
+widgets that opens to show each description, instead of repeating inside every card.
 
-The squad table folds players with a published zero in the Minutes column behind a full-width
-"Show players without minutes" toggle (`splitByMinutes`); a blank is not a zero, and when nobody
-has played every row stays visible.
+The squad table folds players with a published zero in the Minutes column, or a published zero
+FSYP, behind a full-width "Show players without minutes" toggle (`splitIdle`); a blank is not a
+zero, and when every row would be folded they all stay visible. The Hierarchy levels dialog leaves
+the same players out (and any level that only held them) until its own toggle is used.
 
 Alternatives show each substitute's squad role (hierarchy) beside form and points when the
 player profile publishes one; the profile is read when its position group is opened, so a

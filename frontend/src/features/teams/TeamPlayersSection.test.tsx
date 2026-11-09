@@ -169,7 +169,8 @@ describe("TeamPlayersSection", () => {
   it("TeamPlayersSection_squad_keeps_a_published_zero_distinct_from_a_blank", () => {
     renderSection();
     const squad = screen.getByRole("region", { name: "Squad" });
-    const bea = within(squad).getByRole("rowheader", { name: "Bea" }).closest("tr") as HTMLElement;
+    const bea = within(squad).getByRole("rowheader", { hidden: true, name: "Bea" })
+      .closest("tr") as HTMLElement;
     expect(within(bea).getAllByText("0").length).toBeGreaterThan(0);
     expect(within(bea).getByText("DEF")).toBeTruthy();
   });
@@ -210,10 +211,13 @@ describe("TeamPlayersSection", () => {
       .getAttribute("aria-expanded")).toBe("true");
   });
 
-  it("TeamPlayersSection_without_published_minutes_shows_every_player_and_no_toggle", () => {
+  it("TeamPlayersSection_players_with_zero_FSYP_wait_behind_the_same_toggle", () => {
     renderSection();
-    expect(screen.queryByRole("button", { name: /players without minutes/ })).toBeNull();
-    expect(screen.getByRole("rowheader", { name: "Bea" })).toBeTruthy();
+    const squad = screen.getByRole("region", { name: "Squad" });
+    expect(within(squad).getByRole("button", { name: /Show players without minutes/ })).toBeTruthy();
+    const idle = document.getElementById("team-squad-idle") as HTMLElement;
+    expect(within(idle).getByRole("rowheader", { hidden: true, name: "Bea" })).toBeTruthy();
+    expect(within(squad).getByRole("rowheader", { name: "Ana" })).toBeTruthy();
   });
 
   it("TeamPlayersSection_squad_row_names_link_to_player_details", () => {

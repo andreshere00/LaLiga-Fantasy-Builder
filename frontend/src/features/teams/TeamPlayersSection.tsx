@@ -18,7 +18,7 @@ import { useRecentPoints, type RecentPoint } from "./useRecentPoints";
 import { TeamHierarchySection } from "./TeamHierarchySection";
 import { TeamMeter } from "./TeamMeter";
 import { TeamSummary } from "./TeamSummary";
-import { publishedColumns, sortSquad, splitByMinutes, type SquadColumn, type SquadRow } from "./teamTable";
+import { publishedColumns, sortSquad, splitIdle, type SquadColumn, type SquadRow } from "./teamTable";
 
 type Roster = NonNullable<ClubDossierDto["roster"]>;
 
@@ -84,8 +84,9 @@ export function TeamPlayersSection({
   const unavailable = season?.coverage.unavailable ?? 0;
   const maxPoints = Math.max(0, ...rows.map((row) => row.points ?? 0));
   // Players with zero minutes add noise to the table, so they wait behind a toggle.
-  const { played, idle } = splitByMinutes(rows);
+  const { played, idle } = splitIdle(rows);
   const foldIdle = idle.length > 0;
+  const idleIds = useMemo(() => new Set(idle.map((row) => row.playerId)), [idle]);
   const [showIdle, setShowIdle] = useState(false);
   const columns = 3 + statColumns.length;
   const renderRow = (row: SquadRow) => (
@@ -237,7 +238,7 @@ export function TeamPlayersSection({
           </table>
         </div>
       </div>
-      <TeamHierarchySection players={roster.players} returnTo={returnTo} />
+      <TeamHierarchySection players={roster.players} returnTo={returnTo} idleIds={idleIds} />
     </section>
   );
 

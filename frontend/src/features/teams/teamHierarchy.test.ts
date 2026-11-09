@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { hierarchyGroups, type HierarchyEntry } from "./teamHierarchy";
+import { hierarchyGroups, visibleGroups, type HierarchyEntry } from "./teamHierarchy";
 
 // ---- Mocks, fixtures & helpers ---- //
 
@@ -55,5 +55,24 @@ describe("hierarchyGroups", () => {
 
   it("hierarchyGroups_no_players_returns_no_groups", () => {
     expect(hierarchyGroups([])).toEqual([]);
+  });
+});
+
+describe("visibleGroups", () => {
+  const groups = () => hierarchyGroups([
+    entry({ name: "A", hierarchy: "Clave" }),
+    entry({ name: "B", hierarchy: "Clave", idle: true }),
+    entry({ name: "C", hierarchy: "Reserva", idle: true }),
+  ]);
+
+  it("visibleGroups_idle_hidden_drops_those_players_and_levels_left_empty", () => {
+    const shown = visibleGroups(groups(), false);
+    expect(shown.map((group) => group.label)).toEqual(["Key player"]);
+    expect(shown[0]?.players.map((player) => player.name)).toEqual(["A"]);
+  });
+
+  it("visibleGroups_idle_shown_keeps_everyone", () => {
+    const shown = visibleGroups(groups(), true);
+    expect(shown.map((group) => group.players.length)).toEqual([2, 1]);
   });
 });

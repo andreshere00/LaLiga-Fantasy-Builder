@@ -37,14 +37,15 @@ export function publishedColumns(
 }
 
 /**
- * Splits the squad into players who have been on the pitch and players with a published zero
- * minutes, who add noise to the table. A blank is not a zero, so a player whose minutes are not
- * published stays with the others. When nobody has played there is nothing to fold away.
+ * Splits the squad into players who have contributed and players who add noise to the table: a
+ * published zero in Minutes or a published zero FSYP. A blank is not a zero, so a player whose
+ * figures are not published stays with the others. When every row would be folded away, nothing is.
  */
-export function splitByMinutes(rows: readonly SquadRow[]): { played: SquadRow[]; idle: SquadRow[] } {
-  const idle = rows.filter((row) => row.stats.minutes === 0);
+export function splitIdle(rows: readonly SquadRow[]): { played: SquadRow[]; idle: SquadRow[] } {
+  const isIdle = (row: SquadRow) => row.stats.minutes === 0 || row.points === 0;
+  const idle = rows.filter(isIdle);
   if (idle.length === rows.length) return { played: [...rows], idle: [] };
-  return { played: rows.filter((row) => row.stats.minutes !== 0), idle };
+  return { played: rows.filter((row) => !isIdle(row)), idle };
 }
 
 export function sortSquad(

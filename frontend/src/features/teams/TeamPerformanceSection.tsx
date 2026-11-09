@@ -18,7 +18,7 @@ import {
   type NamedClub,
 } from "./teamPerformance";
 import type { TeamCompetition, TeamWindow } from "./teamRoutes";
-import { TeamSummary } from "./TeamSummary";
+import { TeamAbout } from "./TeamSummary";
 
 import laliga from "../../assets/competitions/laliga.png";
 import copa from "../../assets/competitions/copa-del-rey.png";
@@ -65,6 +65,7 @@ export function TeamPerformanceSection({
   const summary = summarize(view.previous);
   const nextId = nextMatchId(view.upcoming);
   const label = competitionLabel(competition);
+  const showBoard = performance != null && view.filtered.length > 0;
   const results = [...view.previous].reverse().filter((match) => match.outcome != null);
   return (
     <section
@@ -73,6 +74,19 @@ export function TeamPerformanceSection({
       aria-labelledby="team-performance-title"
     >
       <h2 id="team-performance-title" className="team-section-title">{t("Performance")}</h2>
+      {showBoard ? (
+        <TeamAbout
+          items={[
+            { id: "team-summary-overview", widget: "overview", label: t("Overview") },
+            ...(view.previous.length > 0
+              ? [{ id: "team-summary-previous", widget: "previous" as const, label: t("Previous matches") }]
+              : []),
+            ...(view.upcoming.length > 0
+              ? [{ id: "team-summary-upcoming", widget: "upcoming" as const, label: t("Upcoming matches") }]
+              : []),
+          ]}
+        />
+      ) : null}
       <div className="team-controls">
         <div className="team-control">
           <span className="team-control-label" id="team-competition-label">{t("Competition")}</span>
@@ -164,7 +178,6 @@ function ResultSummary({
   return (
     <div className="team-match-group team-overview">
       <h3 id="team-overview-title">{t("Overview")}</h3>
-      <TeamSummary id="team-summary-overview" widget="overview" />
       <div
         className="team-record"
         role="group"
@@ -237,7 +250,6 @@ function MatchList({
   return (
     <div className="team-match-group">
       <h3 id={`team-${id}-title`}>{title}</h3>
-      <TeamSummary id={`team-summary-${id}`} widget={id} />
       <ul
         className="team-fixtures"
         aria-labelledby={`team-${id}-title`}

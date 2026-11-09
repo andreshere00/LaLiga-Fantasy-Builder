@@ -36,9 +36,11 @@ const players = [
   { playerId: "3", name: "Cris", positionId: 3, points: 2, stats: {} },
 ] as never;
 
-function renderSection() {
+function renderSection(idleIds?: ReadonlySet<string>) {
   return render(
-    <MemoryRouter><TeamHierarchySection players={players} returnTo="/teams/3" /></MemoryRouter>,
+    <MemoryRouter>
+      <TeamHierarchySection players={players} returnTo="/teams/3" idleIds={idleIds} />
+    </MemoryRouter>,
   );
 }
 
@@ -83,6 +85,27 @@ describe("TeamHierarchySection", () => {
     const tally = document.querySelector(".team-hier-chips");
     expect(tally?.getAttribute("aria-describedby")).toBe("team-summary-hierarchy");
     expect(tally?.querySelectorAll("li")).toHaveLength(3);
+  });
+
+  it("TeamHierarchySection_players_without_minutes_stay_hidden_until_the_toggle_is_used", () => {
+    renderSection(new Set(["2", "3"]));
+    fireEvent.click(screen.getByRole("button", { name: "View hierarchy levels" }));
+    const dialog = screen.getByRole("dialog");
+    expect(within(dialog).getAllByRole("heading", { level: 3 }).map((h) => h.textContent))
+      .toEqual(["Key player1"]);
+    expect(within(dialog).queryByRole("link", { name: "Bea" })).toBeNull();
+    expect(document.querySelectorAll(".team-hier-chips li")).toHaveLength(1);
+
+    fireEvent.click(within(dialog).getByRole("button", { name: /Show players without minutes/ }));
+    expect(within(dialog).getAllByRole("heading", { level: 3 })).toHaveLength(3);
+    expect(within(dialog).getByRole("link", { name: "Bea" })).toBeTruthy();
+    expect(within(dialog).getByRole("button", { name: /Hide players without minutes/ })).toBeTruthy();
+  });
+
+  it("TeamHierarchySection_nobody_without_minutes_offers_no_toggle", () => {
+    renderSection();
+    fireEvent.click(screen.getByRole("button", { name: "View hierarchy levels" }));
+    expect(screen.queryByRole("button", { name: /without minutes/ })).toBeNull();
   });
 
   // ---- Edge cases ---- //

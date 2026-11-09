@@ -9,6 +9,8 @@ export type HierarchyEntry = {
   hierarchy: string | null;
   /** Position in the source ranking, 1 being the most important role. */
   rank: number | null;
+  /** True when the player has a published zero minutes this season. */
+  idle?: boolean;
 };
 
 export type HierarchyGroup = {
@@ -43,4 +45,15 @@ export function hierarchyGroups(entries: readonly HierarchyEntry[]): HierarchyGr
     group.players.sort((a, b) => (b.points ?? -1) - (a.points ?? -1) || a.name.localeCompare(b.name));
   }
   return [...byLabel.values()].sort((a, b) => levelIndex(a.label) - levelIndex(b.label));
+}
+
+/**
+ * The groups as shown: players without minutes are left out unless asked for, and a level that
+ * only held such players disappears with them.
+ */
+export function visibleGroups(groups: readonly HierarchyGroup[], showIdle: boolean): HierarchyGroup[] {
+  if (showIdle) return [...groups];
+  return groups
+    .map((group) => ({ ...group, players: group.players.filter((player) => !player.idle) }))
+    .filter((group) => group.players.length > 0);
 }
