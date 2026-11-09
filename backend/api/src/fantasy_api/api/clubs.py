@@ -6,7 +6,7 @@ from fastapi import APIRouter, Header, Path
 
 from fantasy_api.api.deps import get_container, get_current_user
 from fantasy_api.openapi import ERROR_RESPONSES
-from fantasy_api.schemas.clubs import ClubDossier, ClubIndex
+from fantasy_api.schemas.clubs import ClubDossier, ClubIndex, RosterStats
 from fantasy_api.schemas.common import ErrorResponse
 
 router = APIRouter(tags=["clubs"])
@@ -61,3 +61,35 @@ async def get_club(
     """
     await get_current_user(authorization)
     return await get_container().clubs_service.get_dossier(club_id)
+
+
+@router.get(
+    "/clubs/{club_id}/roster-stats",
+    response_model=RosterStats,
+    responses={
+        **ERROR_RESPONSES,
+        404: {"model": ErrorResponse, "description": "Unknown club."},
+    },
+    summary="Read LaLiga season totals for one club's squad",
+)
+async def get_club_roster_stats(
+    club_id: Annotated[int, Path(ge=1)],
+    authorization: Annotated[str | None, Header()] = None,
+) -> RosterStats:
+    """Return minutes, goals, assists and the other season counts per footballer.
+
+    Counts come from each footballer's FutbolFantasy profile (LaLiga season totals).
+    A footballer whose page could not be read is ``available: false`` with null
+    counts; null is never converted to zero. The first read of a club can take
+    several seconds because each profile is fetched through the rate-limited
+    scraper, then it is cached.
+
+    Args:
+        club_id: Teams-master id.
+        authorization: Internal application JWT.
+
+    Returns:
+        Per-footballer counts, club totals over published counts, and coverage.
+    """
+    await get_current_user(authorization)
+    return await get_container().clubs_service.get_roster_stats(club_id)

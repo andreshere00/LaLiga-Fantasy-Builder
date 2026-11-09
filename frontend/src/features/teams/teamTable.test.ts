@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { sortSquad, type SquadRow } from "./teamTable";
+import { publishedColumns, sortSquad, type SquadRow } from "./teamTable";
 
 const rows: SquadRow[] = [
   { playerId: "2", name: "Zeta", positionId: 4, points: 5, stats: { goals: null } },
@@ -10,6 +10,10 @@ const rows: SquadRow[] = [
 describe("squad table", () => {
   it("sortSquad_default_position_orders_goalkeeper_before_defender", () => {
     expect(sortSquad(rows, "position", "asc").map((row) => row.name)).toEqual(["Bea", "Ana", "Zeta"]);
+  });
+
+  it("publishedColumns_hides_columns_with_no_number", () => {
+    expect(publishedColumns(rows, { goals: null, minutes: 90 })).toEqual(["minutes", "goals"]);
   });
 
   it("sortSquad_points_puts_missing_values_last", () => {

@@ -25,6 +25,17 @@ export type SquadColumn = (typeof SQUAD_COLUMNS)[number] | "points";
 
 const POSITION_ORDER: Record<number, number> = { 1: 0, 2: 1, 3: 2, 4: 3 };
 
+/** Stat columns that have at least one published number. A blank is not a zero. */
+export function publishedColumns(
+  rows: readonly SquadRow[],
+  totals: Record<string, unknown>,
+): SquadColumn[] {
+  return SQUAD_COLUMNS.filter((column) => (
+    typeof totals[column] === "number"
+    || rows.some((row) => typeof row.stats[column] === "number")
+  ));
+}
+
 export function sortSquad(
   rows: readonly SquadRow[],
   column: SquadColumn | "position",

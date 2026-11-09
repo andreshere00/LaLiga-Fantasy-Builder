@@ -1,5 +1,7 @@
+import { useState } from "react";
 import { t, useTranslation } from "../../i18n";
 import { Link } from "react-router-dom";
+import { PitchMarkings } from "../lineup/PitchMarkings";
 import { usePlayersCatalogQuery } from "../../api/queries";
 import type { ClubDossierDto } from "../../api/schemas";
 import { MarketActionDialogs } from "../market/actions/MarketActionDialogs";
@@ -23,6 +25,8 @@ import {
   orderedAlternatives,
   type PredictedPlayer,
 } from "./teamLineup";
+import { TeamMeter } from "./TeamMeter";
+import { pitchLineLabel, pitchLines } from "./teamPitch";
 
 type Prediction = NonNullable<ClubDossierDto["prediction"]>;
 
@@ -55,11 +59,13 @@ export function TeamLineupSection({
     matchCatalogPlayer(name, catalog) ?? "",
   );
   const starters = (prediction?.starters ?? []).map(asPlayer);
+  const [picked, setPicked] = useState<string | null>(null);
+  const selected = starters.find((player) => player.name === picked) ?? starters[0] ?? null;
   const alternatives = orderedAlternatives((prediction?.alternatives ?? []).map(asPlayer));
   const summary = prediction?.summary;
   return (
     <section id="team-lineup" tabIndex={-1} aria-labelledby="team-lineup-title">
-      <h2 id="team-lineup-title" className="player-section-title">{t("Lineup")}</h2>
+      <h2 id="team-lineup-title" className="team-section-title">{t("Lineup")}</h2>
       {failed ? (
         <p role="alert">
           {t("This section could not be loaded.")}
@@ -70,23 +76,18 @@ export function TeamLineupSection({
         failed ? null : <p>{t("The predicted lineup is not published.")}</p>
       ) : (
         <>
-          {prediction.coach ? (
-            <article className="team-coach">
-              {prediction.coach.photoUrl ? <img src={prediction.coach.photoUrl} alt="" /> : null}
-              <div>
-                <h3>{prediction.coach.name}</h3>
+          <div className="team-pair">
+            {prediction.coach ? (
+              <article className="team-coach">
+                {prediction.coach.photoUrl ? <img src={prediction.coach.photoUrl} alt="" /> : null}
+                <div className="team-coach-body">
+                  <p className="team-coach-role">{t("Coach")}</p>
+                  <h3>{prediction.coach.name}</h3>
+                </div>
                 <dl>
                   <div>
                     <dt>{t("Matchday")}</dt>
                     <dd>{prediction.matchday ?? "—"}</dd>
-                  </div>
-                  <div>
-                    <dt>{t("Rotations")}</dt>
-                    <dd>
-                      {prediction.coach.rotations
-                        ? <ScrapedText text={prediction.coach.rotations} textId="club-rotations" />
-                        : "—"}
-                    </dd>
                   </div>
                   <div>
                     <dt>{t("Predictability")}</dt>
@@ -100,30 +101,99 @@ export function TeamLineupSection({
                         : `${prediction.coach.seasonPredictabilityPercent}%`}
                     </dd>
                   </div>
+                  <div className="is-wide">
+                    <dt>{t("Rotations")}</dt>
+                    <dd>
+                      {prediction.coach.rotations
+                        ? <ScrapedText text={prediction.coach.rotations} textId="club-rotations" />
+                        : "—"}
+                    </dd>
+                  </div>
                 </dl>
+              </article>
+            ) : null}
+            {summary && (
+              summary.averageProbability != null
+              || summary.averageFormArrow != null
+              || summary.substituteRisk
+            ) ? (
+              <dl className="team-xi-summary">
+                <div>
+                  <dt>{t("Average probability")}</dt>
+                  <dd className="is-figure">
+                    {summary.averageProbability == null ? "—" : `${summary.averageProbability}%`}
+                  </dd>
+                </div>
+                <div>
+                  <dt>{t("Average form")}</dt>
+                  <dd className="is-figure">{summary.averageFormArrow ?? "—"}</dd>
+                </div>
+                <div className="is-wide">
+                  <dt>{t("Substitute risk")}</dt>
+                  <dd>
+                    {summary.substituteRisk
+                      ? <ScrapedText text={summary.substituteRisk} textId="club-xi-risk" />
+                      : "—"}
+                  </dd>
+                </div>
+              </dl>
+            ) : null}
+          </div>
+          <div className="team-lineup-board">
+            <div>
+              <h3>{t("Starters")}</h3>
+              <div className="team-pitch">
+                <PitchMarkings />
+                <div className="team-pitch-rows">
+                  {pitchLines(starters).map((line) => (
+                    <div
+                      key={line.line}
+                      className="team-pitch-row"
+                      role="group"
+                      aria-label={t(pitchLineLabel(line.line))}
+                    >
+                      {line.players.map((player) => (
+                        <button
+                          key={player.name}
+                          type="button"
+                          className="team-pitch-player"
+                          aria-pressed={selected?.name === player.name}
+                          onClick={() => setPicked(player.name)}
+                        >
+                          {player.photoUrl
+                            ? <img src={player.photoUrl} alt="" />
+                            : <span className="team-xi-photo" aria-hidden="true" />}
+                          <span>{player.name}</span>
+                          <strong>
+                            {player.probability == null ? "—" : `${player.probability}%`}
+                          </strong>
+                        </button>
+                      ))}
+                    </div>
+                  ))}
+                </div>
               </div>
-            </article>
-          ) : null}
-          <h3>{t("Starters")}</h3>
-          <ol className="team-xi">
-            {starters.map((player) => (
-              <PlayerRow
-                key={`starter-${player.name}`}
-                player={player}
-                returnTo={returnTo}
-                catalog={catalog}
-                catalogLoading={catalogQuery.isLoading}
-                rows={board.rows}
-                ownedIds={ownedIds(board.ownSquadCards)}
-                teamId={board.callerTeamId}
-                context={context}
-                actions={actions}
-                favorite={favoriteFor(player.name)}
-                favoritePending={scouting.pending}
-                onFavorite={scouting.toggle}
-              />
-            ))}
-          </ol>
+              {selected ? (
+                <ul className="team-xi team-xi-selected">
+                <PlayerRow
+                  selected
+                  player={selected}
+                  returnTo={returnTo}
+                  catalog={catalog}
+                  catalogLoading={catalogQuery.isLoading}
+                  rows={board.rows}
+                  ownedIds={ownedIds(board.ownSquadCards)}
+                  teamId={board.callerTeamId}
+                  context={context}
+                  actions={actions}
+                  favorite={favoriteFor(selected.name)}
+                  favoritePending={scouting.pending}
+                  onFavorite={scouting.toggle}
+                />
+                </ul>
+              ) : null}
+            </div>
+            <div>
           <h3>{t("Alternatives")}</h3>
           {alternativesBySlot(alternatives).map((group) => (
             <div key={group.position || "unassigned"}>
@@ -149,30 +219,8 @@ export function TeamLineupSection({
               </ul>
             </div>
           ))}
-          {summary && (
-            summary.averageProbability != null
-            || summary.averageFormArrow != null
-            || summary.substituteRisk
-          ) ? (
-            <dl className="team-xi-summary">
-              <div>
-                <dt>{t("Average probability")}</dt>
-                <dd>{summary.averageProbability ?? "—"}</dd>
-              </div>
-              <div>
-                <dt>{t("Average form")}</dt>
-                <dd>{summary.averageFormArrow ?? "—"}</dd>
-              </div>
-              <div>
-                <dt>{t("Substitute risk")}</dt>
-                <dd>
-                  {summary.substituteRisk
-                    ? <ScrapedText text={summary.substituteRisk} textId="club-xi-risk" />
-                    : "—"}
-                </dd>
-              </div>
-            </dl>
-          ) : null}
+            </div>
+          </div>
         </>
       )}
       <MarketActionDialogs
@@ -185,6 +233,7 @@ export function TeamLineupSection({
 }
 
 function PlayerRow({
+  selected = false,
   player,
   returnTo,
   catalog,
@@ -198,6 +247,7 @@ function PlayerRow({
   favoritePending,
   onFavorite,
 }: {
+  selected?: boolean;
   player: PredictedPlayer;
   returnTo: string;
   catalog: ReturnType<typeof catalogNames>;
@@ -216,17 +266,16 @@ function PlayerRow({
   const offers = row ? resolveMarketActionOffers(row, context) : [];
   const owned = playerId != null && ownedIds.has(playerId);
   return (
-    <li className="team-xi-player">
+    <li className={selected ? "team-xi-player is-selected" : "team-xi-player"}>
       {player.photoUrl
         ? <img src={player.photoUrl} alt="" />
         : <span className="team-xi-photo" aria-hidden="true" />}
-      <div>
-        <strong>{player.name}</strong>
-        <p>
-          {t("Probability")}
-          <span>{player.probability == null ? "—" : `${player.probability}%`}</span>
-        </p>
-      </div>
+      <strong>{player.name}</strong>
+      <span className="team-xi-probability">
+        <span className="visually-hidden">{t("Probability")} </span>
+        <span>{player.probability == null ? "—" : `${player.probability}%`}</span>
+        <TeamMeter percent={player.probability} />
+      </span>
       {playerId ? (
         <div className="team-xi-actions">
           <PlayerBookmarkButton
@@ -252,7 +301,7 @@ function PlayerRow({
           ) : null}
         </div>
       ) : catalogLoading ? null : (
-        <p>{t("Fantasy actions are unavailable for this player.")}</p>
+        <p className="team-xi-status">{t("Fantasy actions are unavailable for this player.")}</p>
       )}
     </li>
   );

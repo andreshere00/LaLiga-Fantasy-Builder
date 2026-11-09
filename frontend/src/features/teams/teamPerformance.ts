@@ -50,6 +50,16 @@ export function competitionLabel(competition: TeamCompetition): string {
   return FILTER_LABELS[competition];
 }
 
+/** Human label for a provider competition id such as `laliga` or `champions_league`. */
+export function competitionName(raw: string): string {
+  if (raw.toLowerCase() === "laliga") return "LaLiga";
+  return raw
+    .split(/[_\s]+/)
+    .filter(Boolean)
+    .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
+    .join(" ");
+}
+
 export function withClubNames(match: ClubMatchView, clubs: readonly NamedClub[]): ClubMatchView {
   const home = namedSide(match.home, match.homeBadge, clubs);
   const away = namedSide(match.away, match.awayBadge, clubs);

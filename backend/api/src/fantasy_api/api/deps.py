@@ -134,6 +134,8 @@ def _clubs_service(
     fantasy: LaligaFantasyClient,
     scraper: ScrapingClient,
     standings: StandingsService | FixtureStandingsService,
+    resolver: PlayerResolver | None = None,
+    scraped: ScrapedPlayerProvider | None = None,
 ) -> ClubsService:
     """Wire the dossier onto the fixture cache when that source is active."""
     fixtures = standings
@@ -146,7 +148,12 @@ def _clubs_service(
     repository = ClubsRepository(
         fantasy, scraper, fixtures, competition_id=cfg.laliga_competition_id
     )
-    return ClubsService(repository, load_futbolfantasy_club_pages())
+    return ClubsService(
+        repository,
+        load_futbolfantasy_club_pages(),
+        resolver=resolver,
+        scraped=scraped,
+    )
 
 
 def build_container(
@@ -326,7 +333,7 @@ def build_container(
         player_stats_service=stats,
         football_client=football,
         standings_service=standings,
-        clubs_service=_clubs_service(cfg, fantasy, scraper, standings),
+        clubs_service=_clubs_service(cfg, fantasy, scraper, standings, resolver, scraped_provider),
         calendar_weather_service=CalendarWeatherService(
             CalendarRepository(fantasy, competition_id=cfg.laliga_competition_id),
             forecasts,

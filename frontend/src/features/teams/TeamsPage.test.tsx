@@ -1,4 +1,4 @@
-import { render, screen } from "@testing-library/react";
+import { act, cleanup, render, screen } from "@testing-library/react";
 import { MemoryRouter, Route, Routes } from "react-router-dom";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { TeamsPage } from "./TeamsPage";
@@ -33,6 +33,9 @@ vi.mock("../../api/queries", () => ({
     ] },
     isPending: false,
   }),
+  useClubRosterStatsQuery: () => ({
+    data: undefined, isPending: false, isError: false, fetchStatus: "idle", refetch: vi.fn(),
+  }),
   useClubDossierQuery: (clubId: string | null) => ({
     data: clubId === "4" ? harness.dossier : undefined,
     isPending: false,
@@ -60,6 +63,10 @@ vi.mock("../scouting/ScoutingProvider", () => ({
   useScouting: () => { throw new Error("scouting is unused on this fixture"); },
 }));
 
+vi.mock("../../auth/AuthProvider", () => ({
+  useAuth: () => ({ status: "ready" }),
+}));
+
 function renderTeams(path: string, opponentClubId?: number) {
   return render(
     <MemoryRouter initialEntries={[path]}>
@@ -72,7 +79,10 @@ function renderTeams(path: string, opponentClubId?: number) {
 }
 
 describe("Teams page", () => {
-  beforeEach(() => harness.refetch.mockClear());
+  beforeEach(() => {
+    cleanup();
+    harness.refetch.mockClear();
+  });
 
   it("TeamsPage_first_visit_opens_the_first_club_in_the_locale", async () => {
     renderTeams("/teams");
@@ -94,5 +104,21 @@ describe("Teams page", () => {
     expect(document.querySelector(".team-mvp-list")?.textContent).toContain("Cid");
     expect(screen.getAllByText(/Totals cover a short window/).length).toBeGreaterThan(0);
     expect(screen.getAllByRole("button", { name: "Retry" }).length).toBeGreaterThan(0);
+  });
+
+  it("TeamsPage_section_bar_follows_the_section_being_read", async () => {
+    renderTeams("/teams/4");
+    await screen.findByRole("heading", { name: "FC Barcelona" });
+    const tops: Record<string, number> = {
+      "team-players": -600, "team-performance": 80, "team-lineup": 900, "team-news": 1800,
+    };
+    for (const [id, top] of Object.entries(tops)) {
+      const element = document.getElementById(id) as HTMLElement;
+      element.getBoundingClientRect = () => ({ top } as DOMRect);
+    }
+    act(() => { window.dispatchEvent(new Event("scroll")); });
+    const bar = screen.getByRole("navigation", { name: "Club sections" });
+    const current = bar.querySelector('[aria-current="true"]');
+    expect(current?.textContent).toBe("Performance");
   });
 });

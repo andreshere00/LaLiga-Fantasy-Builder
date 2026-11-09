@@ -1107,6 +1107,24 @@ export const clubDossierSchema = responseSchema(readObject({
   }).nullable().optional(),
   segmentErrors: z.array(clubSegmentErrorSchema).optional(),
 }));
+export const clubRosterStatsSchema = responseSchema(readObject({
+  clubId: z.number().int().positive(),
+  season: z.string(),
+  scope: z.literal("laliga"),
+  source: z.literal("futbolfantasy"),
+  players: z.array(readObject({
+    playerId: z.string(),
+    available: z.boolean(),
+    stats: clubStatLineSchema,
+  })),
+  totals: clubStatLineSchema,
+  coverage: readObject({
+    requested: z.number().int().nonnegative(),
+    read: z.number().int().nonnegative(),
+    unavailable: z.number().int().nonnegative(),
+  }),
+}));
+export type ClubRosterStatsDto = z.infer<typeof clubRosterStatsSchema>;
 export type ClubIndexDto = z.infer<typeof clubIndexSchema>;
 export type ClubDossierDto = z.infer<typeof clubDossierSchema>;
 
@@ -1124,6 +1142,7 @@ export type ApiResponseDto =
   | HealthResponseDto
   | ClubIndexDto
   | ClubDossierDto
+  | ClubRosterStatsDto
   | z.infer<typeof leaguesResponseSchema>
   | z.infer<typeof standingResponseSchema>
   | z.infer<typeof activityResponseSchema>
@@ -1189,6 +1208,7 @@ const endpointContracts: Array<{
   { method: "GET", path: /^\/api\/players$/, response: catalogPlayersResponseSchema },
   { method: "GET", path: /^\/api\/clubs$/, response: clubIndexSchema },
   { method: "GET", path: /^\/api\/clubs\/[^/]+$/, response: clubDossierSchema },
+  { method: "GET", path: /^\/api\/clubs\/[^/]+\/roster-stats$/, response: clubRosterStatsSchema },
   { method: "GET", path: /^\/api\/players\/[^/]+\/market-value$/, response: marketValuesResponseSchema },
   { method: "GET", path: /^\/api\/players\/[^/]+\/league\/[^/]+$/, response: leaguePlayerSchema },
   { method: "GET", path: /^\/api\/players\/[^/]+\/stats$/, response: playerStatsIndexSchema },

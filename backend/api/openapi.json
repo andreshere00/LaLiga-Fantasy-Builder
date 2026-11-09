@@ -3140,6 +3140,111 @@
         ]
       }
     },
+    "/clubs/{club_id}/roster-stats": {
+      "get": {
+        "tags": [
+          "clubs"
+        ],
+        "summary": "Read LaLiga season totals for one club's squad",
+        "description": "Counts come from each footballer's FutbolFantasy profile (LaLiga season totals).\nA footballer whose page could not be read is ``available: false`` with null\ncounts; null is never converted to zero. The first read of a club can take\nseveral seconds because each profile is fetched through the rate-limited\nscraper, then it is cached.",
+        "operationId": "get_club_roster_stats_clubs__club_id__roster_stats_get",
+        "parameters": [
+          {
+            "name": "club_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "title": "Club Id"
+            }
+          },
+          {
+            "name": "authorization",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Authorization"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RosterStats"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized or LaLiga re-auth required.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "502": {
+            "description": "Auth or Fantasy upstream failure.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Fantasy upstream unavailable.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Unknown club.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ]
+      }
+    },
     "/players": {
       "get": {
         "tags": [
@@ -14012,6 +14117,103 @@
         "type": "object",
         "title": "RosterStatLine",
         "description": "Event counts for one footballer. Missing counts stay null."
+      },
+      "RosterStats": {
+        "properties": {
+          "clubId": {
+            "type": "integer",
+            "title": "Clubid"
+          },
+          "season": {
+            "type": "string",
+            "title": "Season"
+          },
+          "scope": {
+            "type": "string",
+            "const": "laliga",
+            "title": "Scope",
+            "default": "laliga"
+          },
+          "source": {
+            "type": "string",
+            "const": "futbolfantasy",
+            "title": "Source",
+            "default": "futbolfantasy"
+          },
+          "players": {
+            "items": {
+              "$ref": "#/components/schemas/RosterStatsPlayer"
+            },
+            "type": "array",
+            "title": "Players"
+          },
+          "totals": {
+            "$ref": "#/components/schemas/RosterStatLine"
+          },
+          "coverage": {
+            "$ref": "#/components/schemas/RosterStatsCoverage"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "clubId",
+          "season",
+          "players",
+          "totals",
+          "coverage"
+        ],
+        "title": "RosterStats",
+        "description": "LaLiga season totals per footballer, read from each FutbolFantasy profile."
+      },
+      "RosterStatsCoverage": {
+        "properties": {
+          "requested": {
+            "type": "integer",
+            "title": "Requested"
+          },
+          "read": {
+            "type": "integer",
+            "title": "Read"
+          },
+          "unavailable": {
+            "type": "integer",
+            "title": "Unavailable"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "requested",
+          "read",
+          "unavailable"
+        ],
+        "title": "RosterStatsCoverage",
+        "description": "How many squad pages were read for the season totals."
+      },
+      "RosterStatsPlayer": {
+        "properties": {
+          "playerId": {
+            "type": "string",
+            "title": "Playerid"
+          },
+          "available": {
+            "type": "boolean",
+            "title": "Available"
+          },
+          "stats": {
+            "$ref": "#/components/schemas/RosterStatLine"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "playerId",
+          "available",
+          "stats"
+        ],
+        "title": "RosterStatsPlayer",
+        "description": "One footballer's season totals. Unpublished counts stay null."
       },
       "ScoredPlayer": {
         "properties": {

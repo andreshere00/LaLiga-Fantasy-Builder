@@ -216,37 +216,72 @@ Teams reads the current club directory and one dossier; it does not use the mana
 ### Teams screen
 
 `/teams` opens the first current club in the selected language. `/teams/:clubId`
-keeps the club, and the query keeps `section`, `competition`, and `window` when
-they differ from Players, LaLiga, and five matches. Refresh restores that URL.
+keeps the club. The page heading is that club, with its crest, and the crest
+strip chooses another club without repeating the long name under every badge.
+The query keeps `section`, `competition`, and `window` when they differ from
+Players, LaLiga, and five matches. Refresh restores that URL. A signed-out
+visit uses the same sign-in gate as Market and Players.
 The club strip and the Players, Performance, Lineup, and News links stay
 available from the keyboard. That bar is named **Club sections**, separate
 from the header's Sections navigation. On a phone the four header destinations move to
 the bottom bar and keep their labels inside the safe area.
 
-Players lists the top three footballers by published season points, with FSYP,
-form, starter likelihood, and the best published radar percentiles. A player
-without a radar says so. Injuries show the start date, the expected return, and
-the published status, including a status outside the six usual labels. An
-unpublished injury block stays distinct from a published empty list. The squad
-table leads with player, position, and FSYP, then the twelve event columns.
-Sort headers are buttons. Totals skip unpublished counts. A short window and a
-missing matchweek list are named in the caption.
+The Club sections bar is sticky and follows the section being read as the page
+scrolls; selecting a link, or opening a `?section=` URL, jumps to that section and
+keeps the jump in place while images and radar chips finish loading, until the
+reader scrolls. Sections are separated by a rule and share one heading style.
 
-Performance reuses the player match cards. LaLiga is the default competition;
-European, Domestic, Friendlies, and All use the same control as the record.
-The window starts at five previous and five next matches and widens to 10, 20,
-or the whole season. The record, home and away split, and goals follow the
-finished matches in that window. The soonest scheduled kickoff inside the
-filter is labeled **Next match**. A score beyond 90 minutes shows the
-regulation score and the published final score. An empty filter names itself
-and offers all competitions. A failed cup or European read stays visible while
-LaLiga matches remain usable.
+On a wide screen the three MVP cards share a row, the competition filter sits
+beside the match window, previous matches beside upcoming ones, and the coach
+report beside the XI summary. Predicted starters stand on the same pitch markings
+as Lineup, in the published position lines, with the bench beside the pitch. The
+squad table stays full width once event columns are published; with only FSYP it
+is capped so position and points stay beside the name. A phone stacks each pair.
+The first news headline stays full width and the other headlines share two columns.
 
-Lineup shows the coach report and the matchday printed on the club page. It
-does not invent a formation: starters are a labeled list with photo, short
-name, and probability, and alternatives stay on their slot, ordered by
-probability, including a published 0%. The XI summary appears when the page
-publishes one. A resolved player can be bookmarked with the scouting control,
+Players lists the top three footballers by published season points as ranked
+cards: position, FSYP, form, starter likelihood as a percentage with a bar, and
+the best published radar percentiles rounded to whole numbers. A player without a
+radar says so. Injuries are a table of player, status badge, expected return, and
+start date; on a phone each row becomes a labeled card. The status can be any
+published label, including one outside the six usual ones, and the badge is
+neutral because severity is not published. An unpublished injury block stays
+distinct from a published empty list. The squad table leads with player, a position
+badge, and FSYP with a bar scaled to the squad's top score, then the twelve event
+columns: Minutes, Goals, Assists, Dribbles, Penalties committed, Penalties saved,
+Shots, Recoveries, Saves, Balls lost, Yellow cards, and Red cards. These are LaLiga
+season totals from `GET /api/clubs/{id}/roster-stats`, requested after the dossier
+because the first read of a club scrapes every profile (about half a minute); the
+table shows FSYP at once, a status line while the counts load, and a Retry on
+failure. A footballer without a published profile, or a count the page omits, stays a
+dash and is never summed as zero; the caption names how many players are blank. Zeros are muted so scorers stand out; a blank stays a dash. Only the
+player column is pinned, so event columns remain reachable on a phone. Sort headers
+are buttons. Totals skip unpublished counts. A short window and a missing matchweek
+list are named in the caption.
+
+Performance labels its two segmented controls, **Competition** and **Match window**.
+LaLiga is the default competition; European, Domestic, Friendlies, and All use the
+same control as the record. The window starts at five previous and five next
+matches and widens to 10, 20, or the whole season. One panel shows wins, draws and
+losses, the results as W/D/L chips from oldest to newest, the home and away split,
+and goals, all following the finished matches in that window. Matches are compact
+rows: date, the two clubs with crests (the viewed club in bold), the score or the
+kickoff time, and an outcome chip with a colored rail. The soonest scheduled
+kickoff inside the filter is labeled **Next match**. A kickoff that arrives as a
+date at midnight UTC is a date without a published time, so the row shows **vs**
+instead of an invented hour. The competition name appears only outside LaLiga. A
+score beyond 90 minutes shows the regulation score and the published final score.
+An empty filter names itself and offers all competitions. A failed cup or European
+read stays visible while LaLiga matches remain usable.
+
+Lineup shows the coach report and the matchday printed on the club page. Starters
+stand on the pitch markings used by the manager lineup, grouped by the published
+position line from attack to goalkeeper. Selecting a player shows the bookmark,
+details, market actions, and Field player controls. Alternatives stay beside the
+pitch, ordered by probability, including a published 0%, each with a probability bar.
+The selected starter sits in its own card under the pitch. The coach card keeps the
+rotation note on its own row so translation controls stay on one line. The XI summary
+appears when the page publishes one, with the average probability as a percentage. A resolved player can be bookmarked with the scouting control,
 and player details return to this club. Market actions use the existing menu
 and dialogs only when the selected league has a listing, bid, clause, or sale.
 **Field player** appears only for a player that league owns. It opens Lineup
@@ -254,8 +289,8 @@ and focuses that squad card; it does not place the player or save the lineup.
 An unresolved scraped name stays visible and says that Fantasy actions are
 unavailable.
 
-News shows up to five headlines, the original article link, and the Madrid
-local date and time. Headlines use the same translation control as player
+News shows up to five headlines in cards, the original article link (marked as
+opening in a new tab), and the Madrid local date and time. Headlines use the same translation control as player
 news. A failed section names itself and can be retried without clearing the
 sections that loaded.
 

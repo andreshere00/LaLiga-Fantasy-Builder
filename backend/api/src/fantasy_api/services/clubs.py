@@ -2,14 +2,17 @@
 
 from __future__ import annotations
 
+import asyncio
 from collections import defaultdict
-from collections.abc import Iterable
-from datetime import UTC, datetime
+from collections.abc import Callable, Iterable, Mapping
+from datetime import UTC, date, datetime
+from typing import Any
 
 from pydantic import ValidationError
 
 from fantasy_api.domain.club_pages import FutbolFantasyClubPages
 from fantasy_api.domain.errors import NotFoundError, UpstreamError
+from fantasy_api.domain.season import Season, current_season
 from fantasy_api.repositories.clubs import ClubsRepository
 from fantasy_api.schemas.clubs import (
     ClubDossier,
@@ -33,6 +36,9 @@ from fantasy_api.schemas.clubs import (
     RosterPlayer,
     RosterSection,
     RosterStatLine,
+    RosterStats,
+    RosterStatsCoverage,
+    RosterStatsPlayer,
     ScrapedClubPage,
     VenueRecord,
 )
@@ -40,6 +46,8 @@ from fantasy_api.schemas.fixture_standings import SeasonFixture
 from fantasy_api.schemas.player_stats import StatKey
 from fantasy_api.schemas.players import CatalogPlayer
 from fantasy_api.schemas.stats_provider import TeamsMasterRow
+from fantasy_api.services.player_resolver import PlayerResolver, ResolvedPlayer
+from fantasy_api.services.scraped_player import ScrapedPlayerProvider
 from fantasy_api.services.wire_map import stats_from_fantasy_week
 
 _COACH_POSITION = 5
@@ -68,11 +76,25 @@ class ClubsService:
     Args:
         repository: Catalog, fixture, and scraping reads.
         pages: Verified FutbolFantasy slugs for the current twenty.
+        resolver: Catalog index used to resolve each footballer to a scrape target.
+        scraped: Cached, concurrency-bounded FutbolFantasy player pages.
+        today: Calendar date used to pick the season.
     """
 
-    def __init__(self, repository: ClubsRepository, pages: FutbolFantasyClubPages) -> None:
+    def __init__(
+        self,
+        repository: ClubsRepository,
+        pages: FutbolFantasyClubPages,
+        *,
+        resolver: PlayerResolver | None = None,
+        scraped: ScrapedPlayerProvider | None = None,
+        today: Callable[[], date] | None = None,
+    ) -> None:
         self._repository = repository
         self._pages = pages
+        self._resolver = resolver
+        self._player_pages = scraped
+        self._today = today or (lambda: datetime.now(tz=UTC).date())
 
     async def list_clubs(self) -> ClubIndex:
         """Return the current clubs and their verified slugs.
@@ -158,6 +180,77 @@ class ClubsService:
             injuries=None if scraped is None else _injuries(scraped),
             news=news,
             segment_errors=errors,
+        )
+
+    async def get_roster_stats(self, club_id: int) -> RosterStats:
+        """Return LaLiga season totals for each footballer in one club.
+
+        The Fantasy catalog carries no event counts, so each squad member's
+        FutbolFantasy profile is read through the shared single-flight cache. A
+        player whose page cannot be read is listed as unavailable with null counts.
+
+        Args:
+            club_id: Teams-master id.
+
+        Raises:
+            NotFoundError: The id is not one of the current clubs.
+            UpstreamError: Scraping is not configured or the catalog could not be read.
+        """
+        if not any(item.team_id == club_id for item in self._pages.clubs):
+            raise NotFoundError("club not found")
+        if self._resolver is None or self._player_pages is None:
+            raise UpstreamError(
+                "season statistics are not available",
+                status_code=503,
+                category="scraping_unavailable",
+            )
+        try:
+            catalog = await self._repository.catalog()
+        except (UpstreamError, ValidationError, ValueError) as exc:
+            raise _directory_error(exc) from exc
+        squad = [
+            player
+            for player in catalog
+            if _team_id(player) == club_id and not _coach(player) and player.id is not None
+        ]
+        season = current_season(self._today())
+        resolver, pages = self._resolver, self._player_pages
+        rows = await asyncio.gather(
+            *(self._season_line(player, season, resolver, pages) for player in squad)
+        )
+        totals: dict[str, int] = {}
+        for row in rows:
+            for key, value in row.stats.model_dump().items():
+                if value is not None:
+                    totals[key] = totals.get(key, 0) + value
+        read = sum(1 for row in rows if row.available)
+        return RosterStats(
+            club_id=club_id,
+            season=season.label,
+            players=rows,
+            totals=_line({key: totals.get(key) for key, _stat in _COLUMNS}),
+            coverage=RosterStatsCoverage(
+                requested=len(rows), read=read, unavailable=len(rows) - read
+            ),
+        )
+
+    @staticmethod
+    async def _season_line(
+        player: CatalogPlayer,
+        season: Season,
+        resolver: PlayerResolver,
+        scraped: ScrapedPlayerProvider,
+    ) -> RosterStatsPlayer:
+        player_id = _player_id(player)
+        try:
+            resolved: ResolvedPlayer = await resolver.resolve(player_id)
+            document = await scraped.futbolfantasy(resolved, season)
+        except (UpstreamError, NotFoundError, ValidationError, ValueError):
+            return RosterStatsPlayer(player_id=player_id, available=False, stats=_line({}))
+        return RosterStatsPlayer(
+            player_id=player_id,
+            available=True,
+            stats=_line(_season_counts(document.wire.season_stats)),
         )
 
     async def _safe_clubs(self) -> list[TeamsMasterRow]:
@@ -355,6 +448,34 @@ def _counts(last_stats: object) -> tuple[dict[str, int], set[int]]:
                 continue
             totals[name] = totals.get(name, 0) + stat.count
     return totals, weeks
+
+
+_SEASON_FIELDS: tuple[tuple[str, str, str, str | None], ...] = (
+    ("minutes", "participation", "minutes", None),
+    ("goals", "attack", "goals", None),
+    ("assists", "attack", "assists", None),
+    ("dribbles", "attack", "successfulDribbles", None),
+    ("penalties_committed", "defense", "penaltiesCommitted", None),
+    ("penalties_saved", "goalkeeper", "penaltiesSaved", None),
+    ("shots", "attack", "shotsOnTarget", "denominator"),
+    ("recoveries", "defense", "ballSteals", None),
+    ("saves", "goalkeeper", "saves", None),
+    ("balls_lost", "defense", "possessionsLost", None),
+    ("yellow_cards", "discipline", "yellowCards", None),
+    ("red_cards", "discipline", "redCards", None),
+)
+
+
+def _season_counts(season: Mapping[str, Any] | None) -> dict[str, int | None]:
+    """Read the twelve columns from scraped season totals. Unpublished stays ``None``."""
+    counts: dict[str, int | None] = {}
+    for column, group_name, field, part in _SEASON_FIELDS:
+        group = season.get(group_name) if isinstance(season, Mapping) else None
+        raw = group.get(field) if isinstance(group, Mapping) else None
+        if isinstance(raw, Mapping) and part is not None:
+            raw = raw.get(part)
+        counts[column] = raw if isinstance(raw, int) and not isinstance(raw, bool) else None
+    return counts
 
 
 def _line(values: dict[str, int | None]) -> RosterStatLine:

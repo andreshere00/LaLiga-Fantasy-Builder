@@ -1,5 +1,7 @@
 import { describe, expect, it } from "vitest";
-import { matchWindow, scoreText, summarize, type ClubMatchView } from "./teamPerformance";
+import {
+  competitionName, matchWindow, scoreText, summarize, type ClubMatchView,
+} from "./teamPerformance";
 
 function match(partial: Partial<ClubMatchView> & Pick<ClubMatchView, "matchId">): ClubMatchView {
   return {
@@ -95,5 +97,13 @@ describe("club results", () => {
 
   it("matchWindow_empty_domestic_filter_has_no_rows", () => {
     expect(matchWindow(season, "domestic", "5").filtered).toHaveLength(0);
+  });
+});
+
+describe("competitionName", () => {
+  it("competitionName_provider_ids_read_as_names", () => {
+    expect(competitionName("laliga")).toBe("LaLiga");
+    expect(competitionName("champions_league")).toBe("Champions League");
+    expect(competitionName("Copa del Rey")).toBe("Copa Del Rey");
   });
 });

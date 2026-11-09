@@ -101,6 +101,34 @@ class RosterSection(ClubModel):
     coverage: RosterCoverage
 
 
+class RosterStatsPlayer(ClubModel):
+    """One footballer's season totals. Unpublished counts stay null."""
+
+    player_id: str
+    available: bool
+    stats: RosterStatLine
+
+
+class RosterStatsCoverage(ClubModel):
+    """How many squad pages were read for the season totals."""
+
+    requested: int
+    read: int
+    unavailable: int
+
+
+class RosterStats(ClubModel):
+    """LaLiga season totals per footballer, read from each FutbolFantasy profile."""
+
+    club_id: int
+    season: str
+    scope: Literal["laliga"] = "laliga"
+    source: Literal["futbolfantasy"] = "futbolfantasy"
+    players: list[RosterStatsPlayer]
+    totals: RosterStatLine
+    coverage: RosterStatsCoverage
+
+
 class VenueRecord(ClubModel):
     """Wins, draws, and losses at one venue."""
 

@@ -1,12 +1,24 @@
-import { useState } from "react";
+import { useEffect, useMemo, useState, type Ref } from "react";
 import { t, useTranslation } from "../../i18n";
-import { positionLabel } from "../market/positions";
+import { dateFormatter } from "../../i18n/format";
+import { Badge } from "../../components/ui/Badge";
+import { positionAbbrev, positionLabel, positionTone } from "../market/positions";
 import { usePlayerOutlooks } from "../lineup/useSquadStats";
+import { radarMetric } from "../players/radar/radarLocalization";
 import { usePlayerRadar } from "../players/radar/usePlayerRadar";
-import type { ClubDossierDto } from "../../api/schemas";
-import { SQUAD_COLUMNS, sortSquad, type SquadColumn, type SquadRow } from "./teamTable";
+import type { ClubDossierDto, ClubRosterStatsDto } from "../../api/schemas";
+import { TeamMeter } from "./TeamMeter";
+import { publishedColumns, sortSquad, type SquadColumn, type SquadRow } from "./teamTable";
 
 type Roster = NonNullable<ClubDossierDto["roster"]>;
+
+/** State of the separate season-totals read. Optional so the table works without it. */
+export type SeasonStatsState = {
+  data: ClubRosterStatsDto | undefined;
+  loading: boolean;
+  failed: boolean;
+  onRetry: () => void;
+};
 
 const COLUMN_LABELS: Record<SquadColumn, string> = {
   points: "FSYP",
@@ -36,77 +48,161 @@ const INJURY_LABELS: Record<string, string> = {
 export function TeamPlayersSection({
   roster,
   injuries,
+  seasonStats,
 }: {
   roster: Roster;
   injuries: ClubDossierDto["injuries"];
+  seasonStats?: SeasonStatsState;
 }) {
   useTranslation();
+  const season = seasonStats?.data;
   const outlooks = usePlayerOutlooks(roster.mvps.map((player) => player.playerId));
   const [column, setColumn] = useState<SquadColumn | "position">("position");
   const [direction, setDirection] = useState<"asc" | "desc">("asc");
-  const rows = sortSquad(roster.players.map(toRow), column, direction);
+  const source = useMemo(() => {
+    const byId = new Map(season?.players.map((entry) => [entry.playerId, entry]) ?? []);
+    return roster.players.map((player) => {
+      const row = toRow(player);
+      const counted = byId.get(player.playerId);
+      return counted?.available ? { ...row, stats: counted.stats as SquadRow["stats"] } : row;
+    });
+  }, [roster, season]);
+  const totals = (season?.totals ?? roster.totals) as Record<string, unknown>;
+  const statColumns = useMemo(() => publishedColumns(source, totals), [source, totals]);
+  useEffect(() => {
+    if (column !== "position" && column !== "points" && !statColumns.includes(column)) {
+      setColumn("position");
+      setDirection("asc");
+    }
+  }, [column, statColumns]);
+  const rows = sortSquad(source, column, direction);
   const weeks = roster.coverage.matchweeks.join(", ");
+  const unavailable = season?.coverage.unavailable ?? 0;
+  const maxPoints = Math.max(0, ...rows.map((row) => row.points ?? 0));
   return (
-    <section id="team-players" aria-labelledby="team-players-title">
-      <h2 id="team-players-title">{t("Players")}</h2>
-      <h3>{t("MVPs")}</h3>
-      <ul className="team-mvp-list">
-        {roster.mvps.map((player) => (
-          <MvpCard
-            key={player.playerId}
-            player={player}
-            outlook={outlooks.profiles.get(player.playerId)}
-          />
-        ))}
-      </ul>
-      <h3>{t("Injured players")}</h3>
-      <TeamInjuryList injuries={injuries} />
-      <h3>{t("Squad")}</h3>
-      <p>
-        {roster.coverage.matchweeks.length > 0
-          ? t("{{0}} players across matchweeks {{1}}.", { 0: roster.coverage.players, 1: weeks })
-          : t("{{0}} players. Matchweek coverage was not published.", {
-            0: roster.coverage.players,
-          })}
-        {roster.coverage.shortWindow ? ` ${t("Totals cover a short window.")}` : ""}
-      </p>
-      <div className="team-table-wrap">
-        <table className="team-table">
-          <thead>
-            <tr>
-              <th className="is-sticky">{t("Player")}</th>
-              <th className="is-sticky is-sticky-2">
-                <button type="button" onClick={() => toggle("position")}>{t("Position")}</button>
-              </th>
-              <th className="is-sticky is-sticky-3">
-                <button type="button" onClick={() => toggle("points")}>{t("FSYP")}</button>
-              </th>
-              {SQUAD_COLUMNS.map((key) => (
-                <th key={key}>
-                  <button type="button" onClick={() => toggle(key)}>{t(COLUMN_LABELS[key])}</button>
-                </th>
-              ))}
-            </tr>
-          </thead>
-          <tbody>
-            {rows.map((row) => (
-              <tr key={row.playerId}>
-                <th className="is-sticky" scope="row">{row.name}</th>
-                <td className="is-sticky is-sticky-2">{positionLabel(row.positionId) ?? "—"}</td>
-                <td className="is-sticky is-sticky-3">{formatCount(row.points)}</td>
-                {SQUAD_COLUMNS.map((key) => <td key={key}>{formatCount(row.stats[key])}</td>)}
+    <section id="team-players" tabIndex={-1} aria-labelledby="team-players-title">
+      <h2 id="team-players-title" className="team-section-title">{t("Players")}</h2>
+      <div className="team-block">
+        <h3>{t("MVPs")}</h3>
+        <MvpStrip
+          players={roster.mvps}
+          outlooks={outlooks.profiles}
+        />
+      </div>
+      <div className="team-block">
+        <h3>
+          {t("Injured players")}
+          {injuries?.published && injuries.items.length > 0
+            ? <span className="team-count">{injuries.items.length}</span>
+            : null}
+        </h3>
+        <TeamInjuryList injuries={injuries} />
+      </div>
+      <div className="team-block">
+        <h3>{t("Squad")}</h3>
+        <p className="team-note">
+          {season
+            ? t("{{0}} players. LaLiga {{1}} season totals from FutbolFantasy.", {
+              0: roster.coverage.players,
+              1: season.season,
+            })
+            : roster.coverage.matchweeks.length > 0
+              ? t("{{0}} players across matchweeks {{1}}.", { 0: roster.coverage.players, 1: weeks })
+              : t("{{0}} players. Matchweek coverage was not published.", {
+                0: roster.coverage.players,
+              })}
+          {!season && roster.coverage.shortWindow ? ` ${t("Totals cover a short window.")}` : ""}
+          {unavailable > 0
+            ? ` ${unavailable === 1
+              ? t("Counts are blank for 1 player without a published profile.")
+              : t("Counts are blank for {{0}} players without a published profile.", {
+                0: unavailable,
+              })}`
+            : ""}
+        </p>
+        {seasonStats?.loading ? (
+          <p className="team-note" role="status">
+            {t("Loading season statistics. The first read of a club can take about half a minute.")}
+          </p>
+        ) : null}
+        {seasonStats?.failed ? (
+          <p role="alert">
+            {t("Season statistics could not be loaded.")}
+            <button type="button" onClick={seasonStats.onRetry}>{t("Retry")}</button>
+          </p>
+        ) : null}
+        <div
+          className={statColumns.length > 0 ? "team-table-wrap" : "team-table-wrap is-compact"}
+          tabIndex={0}
+          role="region"
+          aria-label={t("Squad")}
+        >
+          <table className="team-table team-squad-table">
+            <thead>
+              <tr>
+                <th className="is-player" scope="col">{t("Player")}</th>
+                <SortHeader
+                  label={t("Position")}
+                  column="position"
+                  active={column}
+                  direction={direction}
+                  className="is-position"
+                  onSort={toggle}
+                />
+                <SortHeader
+                  label={t("FSYP")}
+                  column="points"
+                  active={column}
+                  direction={direction}
+                  className="is-points"
+                  onSort={toggle}
+                />
+                {statColumns.map((key) => (
+                  <SortHeader
+                    key={key}
+                    label={t(COLUMN_LABELS[key])}
+                    column={key}
+                    active={column}
+                    direction={direction}
+                    onSort={toggle}
+                  />
+                ))}
               </tr>
-            ))}
-          </tbody>
-          <tfoot>
-            <tr>
-              <th className="is-sticky" scope="row">{t("Totals")}</th>
-              <td className="is-sticky is-sticky-2" />
-              <td className="is-sticky is-sticky-3" />
-              {SQUAD_COLUMNS.map((key) => <td key={key}>{formatCount(roster.totals[key])}</td>)}
-            </tr>
-          </tfoot>
-        </table>
+            </thead>
+            <tbody>
+              {rows.map((row) => (
+                <tr key={row.playerId}>
+                  <th className="is-player" scope="row">{row.name}</th>
+                  <td className="is-position">
+                    <span
+                      className={`team-pos team-pos--${positionTone(row.positionId)}`}
+                      title={positionLabel(row.positionId) ?? undefined}
+                    >
+                      {positionAbbrev(row.positionId)}
+                    </span>
+                  </td>
+                  <td className="is-points">
+                    <span className={row.points ? "" : "is-zero"}>{formatCount(row.points)}</span>
+                    <TeamMeter percent={maxPoints > 0 && row.points ? (row.points / maxPoints) * 100 : 0} />
+                  </td>
+                  {statColumns.map((key) => (
+                    <td key={key} className={row.stats[key] ? "" : "is-zero"}>
+                      {formatCount(row.stats[key])}
+                    </td>
+                  ))}
+                </tr>
+              ))}
+            </tbody>
+            <tfoot>
+              <tr>
+                <th className="is-player" scope="row">{t("Totals")}</th>
+                <td className="is-position" />
+                <td className="is-points" />
+                {statColumns.map((key) => <td key={key}>{formatCount(totals[key])}</td>)}
+              </tr>
+            </tfoot>
+          </table>
+        </div>
       </div>
     </section>
   );
@@ -130,67 +226,132 @@ export function TeamInjuryList({
   if (!injuries.published) return <p>{t("Current injuries are not published for this club.")}</p>;
   if (injuries.items.length === 0) return <p>{t("No current injuries were published.")}</p>;
   return (
-    <ul className="team-injury-list">
-      {injuries.items.map((item) => (
-        <li key={`${item.name}-${item.startedOn ?? ""}`} className="team-injury-card">
-          <h4>{item.name}</h4>
-          <dl>
-            <div>
-              <dt>{t("Started")}</dt>
-              <dd>
-                {item.startedOn ? <time dateTime={item.startedOn}>{item.startedOn}</time> : "—"}
-              </dd>
-            </div>
-            <div>
-              <dt>{t("Expected return")}</dt>
-              <dd>{item.expectedReturn || "—"}</dd>
-            </div>
-            <div>
-              <dt>{t("Injury status")}</dt>
-              <dd>{item.status ? t(INJURY_LABELS[item.status] ?? item.status) : "—"}</dd>
-            </div>
-          </dl>
-        </li>
-      ))}
-    </ul>
+    <div className="team-table-wrap">
+      <table className="team-table team-injury-table">
+        <caption className="visually-hidden">{t("Injured players")}</caption>
+        <thead>
+          <tr>
+            <th scope="col">{t("Player")}</th>
+            <th scope="col">{t("Injury status")}</th>
+            <th scope="col">{t("Expected return")}</th>
+            <th scope="col">{t("Started")}</th>
+          </tr>
+        </thead>
+        <tbody>
+          {injuries.items.map((item) => (
+            <tr key={`${item.name}-${item.startedOn ?? ""}`}>
+              <th scope="row">{item.name}</th>
+              <td data-label={t("Injury status")}>
+                {item.status
+                  ? <Badge>{t(INJURY_LABELS[item.status] ?? item.status)}</Badge>
+                  : "—"}
+              </td>
+              <td data-label={t("Expected return")}>{item.expectedReturn || "—"}</td>
+              <td data-label={t("Started")}>
+                {item.startedOn
+                  ? <time dateTime={item.startedOn}>{startedLabel(item.startedOn)}</time>
+                  : "—"}
+              </td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
   );
 }
 
-function MvpCard({
-  player,
-  outlook,
+type Outlook = {
+  form?: { rating?: string | null } | null;
+  startProbability?: { percent?: number | null } | null;
+};
+
+function MvpStrip({
+  players,
+  outlooks,
 }: {
-  player: Roster["mvps"][number];
-  outlook: {
-    form?: { rating?: string | null } | null;
-    startProbability?: { percent?: number | null } | null;
-  } | undefined;
+  players: Roster["mvps"];
+  outlooks: { get(playerId: string): unknown };
 }) {
-  const radar = usePlayerRadar(player.playerId);
-  const axes = [...(radar.displayed?.axes ?? [])]
+  const first = usePlayerRadar(players[0]?.playerId ?? "");
+  const second = usePlayerRadar(players[1]?.playerId ?? "");
+  const third = usePlayerRadar(players[2]?.playerId ?? "");
+  const radars = [first, second, third];
+  const shown = players.map((player, index) => ({
+    player,
+    radar: radars[index] ?? first,
+    axes: topAxes(radars[index] ?? first),
+  }));
+  const settled = shown.every(({ radar }) => (
+    radar.query == null || radar.query.isSuccess || radar.query.isError
+  ));
+  const unpublished = players.length > 0 && settled
+    && shown.every(({ axes }) => axes.length === 0);
+  return (
+    <div>
+      <ul className="team-mvp-list">
+        {shown.map(({ player, radar, axes }, index) => {
+          const outlook = outlooks.get(player.playerId) as Outlook | undefined;
+          const starter = outlook?.startProbability?.percent;
+          const form = outlook?.form?.rating;
+          return (
+            <li key={player.playerId} className="team-mvp-card">
+              <div ref={radar.section as Ref<HTMLDivElement>}>
+                <div className="team-mvp-head">
+                  <span className="team-mvp-rank" aria-hidden="true">{index + 1}</span>
+                  <h4>{player.name}</h4>
+                  {player.positionId != null ? (
+                    <span
+                      className={`team-pos team-pos--${positionTone(player.positionId)}`}
+                      title={positionLabel(player.positionId) ?? undefined}
+                    >
+                      {positionAbbrev(player.positionId)}
+                    </span>
+                  ) : null}
+                </div>
+                <p className="team-mvp-points">
+                  <span>{t("FSYP")}</span>
+                  {player.points}
+                </p>
+                <dl className="team-mvp-facts">
+                  <div>
+                    <dt>{t("Form")}</dt>
+                    <dd>{form ? t(capitalize(form)) : "—"}</dd>
+                  </div>
+                  <div>
+                    <dt>{t("Starter likelihood")}</dt>
+                    <dd>
+                      {starter == null ? "—" : `${starter}%`}
+                      <TeamMeter percent={starter} />
+                    </dd>
+                  </div>
+                </dl>
+                {axes.length > 0 ? (
+                  <div className="team-mvp-radar">
+                    <p>{t("Best radar percentiles")}</p>
+                    <ul>
+                      {axes.map((axis) => (
+                        <li key={axis.key}>
+                          {radarMetric(axis).label} <strong>{Math.round(axis.percentile ?? 0)}</strong>
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                ) : null}
+              </div>
+            </li>
+          );
+        })}
+      </ul>
+      {unpublished ? <p className="team-mvp-note">{t("Radar is not published for these players.")}</p> : null}
+    </div>
+  );
+}
+
+function topAxes(radar: ReturnType<typeof usePlayerRadar>) {
+  return [...(radar.displayed?.axes ?? [])]
     .filter((axis) => axis.percentile != null)
     .sort((left, right) => (right.percentile ?? 0) - (left.percentile ?? 0))
     .slice(0, 3);
-  return (
-    <li className="team-mvp-card">
-      <h4>{player.name}</h4>
-      <dl>
-        <div><dt>{t("FSYP")}</dt><dd>{player.points}</dd></div>
-        <div><dt>{t("Form")}</dt><dd>{outlook?.form?.rating ?? "—"}</dd></div>
-        <div>
-          <dt>{t("Starter likelihood")}</dt>
-          <dd>{outlook?.startProbability?.percent ?? "—"}</dd>
-        </div>
-      </dl>
-      {axes.length === 0 ? <p>{t("Radar is not published for this player.")}</p> : (
-        <ul>
-          {axes.map((axis) => (
-            <li key={axis.key}>{axis.key}: {axis.percentile} {t("Percentile")}</li>
-          ))}
-        </ul>
-      )}
-    </li>
-  );
 }
 
 function toRow(player: Roster["players"][number]): SquadRow {
@@ -203,6 +364,39 @@ function toRow(player: Roster["players"][number]): SquadRow {
   };
 }
 
-function formatCount(value: number | null | undefined): string {
-  return typeof value === "number" ? String(value) : "";
+function SortHeader({
+  label, column, active, direction, className, onSort,
+}: {
+  label: string;
+  column: SquadColumn | "position";
+  active: SquadColumn | "position";
+  direction: "asc" | "desc";
+  className?: string;
+  onSort: (column: SquadColumn | "position") => void;
+}) {
+  const sorted = active === column;
+  return (
+    <th className={className} aria-sort={sorted ? (direction === "asc" ? "ascending" : "descending") : "none"}>
+      <button type="button" onClick={() => onSort(column)}>
+        {label}
+        {sorted ? <span aria-hidden="true">{direction === "asc" ? " ↑" : " ↓"}</span> : null}
+      </button>
+    </th>
+  );
+}
+
+function startedLabel(value: string): string {
+  const parsed = new Date(`${value}T12:00:00`);
+  if (!Number.isFinite(parsed.getTime())) return value;
+  return dateFormatter({
+    day: "numeric", month: "short", year: "numeric", timeZone: "Europe/Madrid",
+  }).format(parsed);
+}
+
+function capitalize(value: string): string {
+  return value.charAt(0).toUpperCase() + value.slice(1);
+}
+
+function formatCount(value: unknown): string {
+  return typeof value === "number" ? String(value) : "—";
 }

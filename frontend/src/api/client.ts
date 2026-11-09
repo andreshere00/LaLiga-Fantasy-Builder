@@ -64,6 +64,7 @@ export const paths = {
   playersCatalog: () => "/api/players",
   clubs: () => "/api/clubs",
   club: (clubId: string) => `/api/clubs/${weekNumber(Number(clubId))}`,
+  clubRosterStats: (clubId: string) => `/api/clubs/${weekNumber(Number(clubId))}/roster-stats`,
   playerLeague: (playerId: string, leagueId: string) =>
     `/api/players/${segment(playerId)}/league/${segment(leagueId)}`,
   market: (leagueId: string) => `/api/market/leagues/${segment(leagueId)}`,

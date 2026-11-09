@@ -773,6 +773,35 @@ Read one real-club dossier
 Full nested fields: [`ClubDossier`](#clubdossier).
 
 
+### `GET` `/clubs/{club_id}/roster-stats`
+
+Read LaLiga season totals for one club's squad
+
+**Security:** HTTP Bearer (internal JWT)
+
+#### Inputs
+
+| Source | Name | Type | Required | Constraints | Description |
+|--------|------|------|----------|-------------|-------------|
+| path | `club_id` | integer | yes | min=1 |  |
+
+#### Outputs
+
+**HTTP 200:** `RosterStats`
+
+| Field | Type | Required | Constraints | Description |
+|-------|------|----------|-------------|-------------|
+| `clubId` | integer | yes |  |  |
+| `season` | string | yes |  |  |
+| `scope` | string | no |  |  |
+| `source` | string | no |  |  |
+| `players` | array[RosterStatsPlayer] | yes |  |  |
+| `totals` | RosterStatLine | yes |  | Event counts for one footballer. Missing counts stay null. |
+| `coverage` | RosterStatsCoverage | yes |  | How many squad pages were read for the season totals. |
+
+Full nested fields: [`RosterStats`](#rosterstats).
+
+
 ## Tag: `lineup-builder`
 
 Read-only lineup recommendations and conditional market-value projections.
@@ -3180,6 +3209,34 @@ Type: `string`
 | `ballsLost` | integer | no |  |  |
 | `yellowCards` | integer | no |  |  |
 | `redCards` | integer | no |  |  |
+
+### `RosterStats`
+
+| Field | Type | Required | Constraints | Description |
+|-------|------|----------|-------------|-------------|
+| `clubId` | integer | yes |  |  |
+| `season` | string | yes |  |  |
+| `scope` | string | no |  |  |
+| `source` | string | no |  |  |
+| `players` | array[RosterStatsPlayer] | yes |  |  |
+| `totals` | RosterStatLine | yes |  | Event counts for one footballer. Missing counts stay null. |
+| `coverage` | RosterStatsCoverage | yes |  | How many squad pages were read for the season totals. |
+
+### `RosterStatsCoverage`
+
+| Field | Type | Required | Constraints | Description |
+|-------|------|----------|-------------|-------------|
+| `requested` | integer | yes |  |  |
+| `read` | integer | yes |  |  |
+| `unavailable` | integer | yes |  |  |
+
+### `RosterStatsPlayer`
+
+| Field | Type | Required | Constraints | Description |
+|-------|------|----------|-------------|-------------|
+| `playerId` | string | yes |  |  |
+| `available` | boolean | yes |  |  |
+| `stats` | RosterStatLine | yes |  | Event counts for one footballer. Missing counts stay null. |
 
 ### `ScoredPlayer`
 
