@@ -8,9 +8,9 @@ const clubs = [
 ];
 
 describe("team routes", () => {
-  it("teamSearch_missing_params_uses_players_laliga_and_five", () => {
+  it("teamSearch_missing_params_uses_performance_laliga_and_five", () => {
     expect(teamSearch(new URLSearchParams())).toEqual({
-      section: "players",
+      section: "performance",
       competition: "laliga",
       window: "5",
     });
@@ -19,6 +19,12 @@ describe("team routes", () => {
   it("teamPath_keeps_section_competition_and_window", () => {
     expect(teamPath(20, { section: "news", competition: "european", window: "10" }))
       .toBe("/teams/20?section=news&competition=european&window=10");
+  });
+
+  it("teamPath_default_section_is_omitted_and_players_is_kept", () => {
+    expect(teamPath(20, { section: "performance", competition: "laliga", window: "5" })).toBe("/teams/20");
+    expect(teamPath(20, { section: "players", competition: "laliga", window: "5" }))
+      .toBe("/teams/20?section=players");
   });
 
   it("initialClubId_known_opponent_opens_that_club", () => {

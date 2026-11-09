@@ -218,13 +218,17 @@ Teams reads the current club directory and one dossier; it does not use the mana
 ### Teams screen
 
 `/teams` opens the first current club in the selected language. `/teams/:clubId`
-keeps the club. The page heading is that club, with its crest, and the crest
-strip chooses another club without repeating the long name under every badge.
+keeps the club. The page heading is that club, with its crest and, when the LaLiga
+standings load, its league position and points. The crest
+strip chooses another club. Each club is a tile with its crest and the three-letter
+short name under it, so clubs stay recognisable by two cues; the current club's tile is
+tinted and outlined, and the strip scrolls it into view on narrow screens.
 The query keeps `section`, `competition`, and `window` when they differ from
-Players, LaLiga, and five matches. Refresh restores that URL. A signed-out
+Performance, LaLiga, and five matches. Refresh restores that URL. A signed-out
 visit uses the same sign-in gate as Market and Players.
-The club strip and the Players, Performance, Lineup, and News & Injuries links stay
-available from the keyboard. That bar is named **Club sections**, separate
+The club strip and the Performance, Players, Lineup, and News & Injuries links (each with a
+decorative icon, in that order and in the same order down the page) stay available from the
+keyboard. That bar is named **Club sections**, separate
 from the header's Sections navigation. On a phone the four header destinations move to
 the bottom bar and keep their labels inside the safe area.
 

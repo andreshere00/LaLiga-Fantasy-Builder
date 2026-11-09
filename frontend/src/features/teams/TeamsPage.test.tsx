@@ -30,12 +30,15 @@ vi.mock("./useRecentPoints", () => ({ useRecentPoints: () => new Map() }));
 vi.mock("../../api/queries", () => ({
   useClubIndexQuery: () => ({
     data: { clubs: [
-      { clubId: 20, name: "Villarreal CF", slug: "villarreal" },
+      { clubId: 20, name: "Villarreal CF", shortName: "VIL", badgeUrl: "https://x.test/vil.png", slug: "villarreal" },
       { clubId: 4, name: "FC Barcelona", slug: "barcelona" },
     ] },
     isPending: false,
   }),
   usePlayersCatalogQuery: () => ({ data: undefined }),
+  useCompetitionStandingsQuery: () => ({
+    data: { rows: [{ position: 3, points: 45, team: { id: 4, name: "FC Barcelona" } }] },
+  }),
   useClubRosterStatsQuery: () => ({
     data: undefined, isPending: false, isError: false, fetchStatus: "idle", refetch: vi.fn(),
   }),
@@ -113,7 +116,7 @@ describe("Teams page", () => {
     renderTeams("/teams/4");
     await screen.findByRole("heading", { name: "FC Barcelona" });
     const tops: Record<string, number> = {
-      "team-players": -600, "team-performance": 80, "team-lineup": 900, "team-news": 1800,
+      "team-performance": -600, "team-players": 80, "team-lineup": 900, "team-news": 1800,
     };
     for (const [id, top] of Object.entries(tops)) {
       const element = document.getElementById(id) as HTMLElement;
@@ -122,6 +125,32 @@ describe("Teams page", () => {
     act(() => { window.dispatchEvent(new Event("scroll")); });
     const bar = screen.getByRole("navigation", { name: "Club sections" });
     const current = bar.querySelector('[aria-current="true"]');
-    expect(current?.textContent).toBe("Performance");
+    expect(current?.textContent).toBe("Players");
+  });
+
+  it("TeamsPage_navigation_gives_each_section_an_icon_and_each_club_a_short_name", async () => {
+    renderTeams("/teams/4");
+    await screen.findByRole("heading", { name: "FC Barcelona" });
+    const tabs = screen.getByRole("navigation", { name: "Club sections" }).querySelectorAll("a");
+    expect(tabs).toHaveLength(4);
+    for (const tab of tabs) expect(tab.querySelector("svg.team-section-icon[aria-hidden='true']")).toBeTruthy();
+    const picker = screen.getByRole("navigation", { name: "Choose a club" });
+    const villarreal = picker.querySelector("a[title='Villarreal CF']") as HTMLElement;
+    expect(villarreal.querySelector(".team-picker-name")?.textContent).toBe("VIL");
+    expect(villarreal.textContent).toContain("Villarreal CF");
+    expect(picker.querySelector("a[title='FC Barcelona'] .team-picker-name")?.textContent).toBe("FC Barcelona");
+  });
+
+  it("TeamsPage_masthead_shows_the_league_position_and_sections_follow_the_requested_order", async () => {
+    renderTeams("/teams/4");
+    await screen.findByRole("heading", { name: "FC Barcelona" });
+    const rank = document.querySelector(".team-rank") as HTMLElement;
+    expect(rank.textContent).toContain("LaLiga position 3");
+    expect(rank.textContent).toContain("45 pts");
+    const tabs = [...screen.getByRole("navigation", { name: "Club sections" }).querySelectorAll("a")]
+      .map((link) => link.textContent);
+    expect(tabs).toEqual(["Performance", "Players", "Lineup", "News & Injuries"]);
+    const ids = [...document.querySelectorAll(".team-page > section")].map((section) => section.id);
+    expect(ids).toEqual(["team-performance", "team-players", "team-lineup", "team-news"]);
   });
 });

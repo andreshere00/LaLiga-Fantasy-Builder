@@ -1868,5 +1868,7 @@
   "Doubtful for matchday {{0}}": "Duda para la jornada {{0}}",
   "Available for matchday {{0}}": "Disponible para la jornada {{0}}",
   "{{0}} cramps": "Calambres en {{0}}",
-  "{{0}} players leave for international duty: {{1}}": "{{0}} jugadores se marchan con su selección: {{1}}"
+  "{{0}} players leave for international duty: {{1}}": "{{0}} jugadores se marchan con su selección: {{1}}",
+  "LaLiga position {{0}}": "Posición en LaLiga {{0}}",
+  "{{0}} pts": "{{0}} pts"
 }

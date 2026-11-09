@@ -15,6 +15,17 @@ import {
 } from "./teamPerformance";
 import type { TeamCompetition, TeamWindow } from "./teamRoutes";
 
+import laliga from "../../assets/competitions/laliga.png";
+import copa from "../../assets/competitions/copa-del-rey.png";
+import european from "../../assets/competitions/european.png";
+import friendlies from "../../assets/competitions/friendlies.svg";
+import fifa from "../../assets/competitions/fifa.png";
+
+/** Competition logos; "all" has no competition of its own, so it carries FIFA's mark. */
+const FILTER_LOGOS: Record<TeamCompetition, string> = {
+  laliga, domestic: copa, european, friendly: friendlies, all: fifa,
+};
+
 const FILTERS: TeamCompetition[] = ["laliga", "european", "domestic", "friendly", "all"];
 const WINDOWS: { id: TeamWindow; label: string }[] = [
   { id: "5", label: "5" },
@@ -67,9 +78,12 @@ export function TeamPerformanceSection({
                 key={item}
                 type="button"
                 aria-pressed={competition === item}
+                aria-label={t(competitionLabel(item))}
+                title={t(competitionLabel(item))}
+                className="team-filter-logo"
                 onClick={() => onCompetition(item)}
               >
-                {t(competitionLabel(item))}
+                <img src={FILTER_LOGOS[item]} alt="" />
               </button>
             ))}
           </div>

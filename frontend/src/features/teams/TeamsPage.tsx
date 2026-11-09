@@ -1,24 +1,25 @@
 import { useEffect, useRef, useState } from "react";
 import { t, useTranslation } from "../../i18n";
 import {
-  useClubDossierQuery, useClubIndexQuery, useClubRosterStatsQuery,
+  useClubDossierQuery, useClubIndexQuery, useClubRosterStatsQuery, useCompetitionStandingsQuery,
 } from "../../api/queries";
 import { useAuth } from "../../auth/AuthProvider";
 import { GatePanel } from "../gates/GatePanel";
 import { Link, Navigate, useParams, useSearchParams } from "react-router-dom";
 import {
-  initialClubId, TEAM_SECTIONS, teamPath, teamSearch, teamSectionId, type TeamSection,
+  DEFAULT_SECTION, initialClubId, TEAM_SECTIONS, teamPath, teamSearch, teamSectionId, type TeamSection,
 } from "./teamRoutes";
 import { TeamPlayersSection } from "./TeamPlayersSection";
 import { TeamPerformanceSection } from "./TeamPerformanceSection";
 import { TeamLineupSection } from "./TeamLineupSection";
 import { TeamNewsInjuriesSection } from "./TeamNewsInjuriesSection";
+import { TeamSectionIcon } from "./TeamSectionIcon";
 import type { TeamRouteState } from "./teamRoutes";
 import "./teams.css";
 
 const SECTION_LABELS: Record<TeamSection, string> = {
-  players: "Players",
   performance: "Performance",
+  players: "Players",
   lineup: "Lineup",
   news: "News & Injuries",
 };
@@ -33,6 +34,7 @@ export function TeamsPage({ opponentClubId = null }: { opponentClubId?: number |
   const clubId = params.clubId ?? null;
   const dossier = useClubDossierQuery(clubId);
   const seasonStats = useClubRosterStatsQuery(dossier.data?.roster ? clubId : null);
+  const standings = useCompetitionStandingsQuery();
   const clubs = index.data?.clubs ?? [];
   const [reading, setReading] = useState<TeamSection | null>(null);
   useEffect(() => {
@@ -46,6 +48,13 @@ export function TeamsPage({ opponentClubId = null }: { opponentClubId?: number |
       window.removeEventListener("resize", update);
     };
   }, [status, clubId]);
+  useEffect(() => {
+    // On narrow screens the picker scrolls; keep the selected club visible after a deep link or a pick.
+    const active = document.querySelector<HTMLElement>('.team-picker [aria-current="page"]');
+    if (typeof active?.scrollIntoView === "function") {
+      active.scrollIntoView({ block: "nearest", inline: "center" });
+    }
+  }, [clubId, clubs.length]);
   const restored = useRef<string | null>(null);
   useEffect(() => {
     // A deep link such as ?section=lineup lands on that section once the dossier is drawn.
@@ -53,7 +62,7 @@ export function TeamsPage({ opponentClubId = null }: { opponentClubId?: number |
     // page settles, unless the reader has already started scrolling.
     if (!dossier.data || restored.current === clubId) return undefined;
     restored.current = clubId;
-    if (route.section === "players") return undefined;
+    if (route.section === DEFAULT_SECTION) return undefined;
     let cancelled = false;
     const stop = () => { cancelled = true; };
     const events = ["wheel", "touchstart", "keydown"] as const;
@@ -80,6 +89,7 @@ export function TeamsPage({ opponentClubId = null }: { opponentClubId?: number |
     if (next != null) return <Navigate to={teamPath(next, route)} replace />;
   }
   const selected = clubs.find((club) => String(club.clubId) === clubId);
+  const standing = standings.data?.rows.find((row) => String(row.team.id) === clubId) ?? null;
   function replaceRoute(patch: Partial<TeamRouteState>) {
     if (!clubId) return;
     const url = teamPath(clubId, { ...route, ...patch });
@@ -91,6 +101,13 @@ export function TeamsPage({ opponentClubId = null }: { opponentClubId?: number |
       <header className="team-masthead">
         {selected?.badgeUrl ? <img src={selected.badgeUrl} alt="" /> : null}
         <h1 className="fb-title">{selected?.name ?? t("Teams")}</h1>
+        {standing ? (
+          <p className="team-rank">
+            <span className="visually-hidden">{t("LaLiga position {{0}}", { 0: standing.position })}, </span>
+            <strong aria-hidden="true">#{standing.position}</strong>
+            <span>{t("LaLiga")} · {t("{{0}} pts", { 0: standing.points })}</span>
+          </p>
+        ) : null}
       </header>
       <nav className="team-picker" aria-label={t("Choose a club")}>
         {clubs.map((club) => (
@@ -101,7 +118,10 @@ export function TeamsPage({ opponentClubId = null }: { opponentClubId?: number |
             aria-current={String(club.clubId) === clubId ? "page" : undefined}
           >
             {club.badgeUrl ? <img src={club.badgeUrl} alt="" /> : null}
-            <span className={club.badgeUrl ? "visually-hidden" : "team-picker-name"}>{club.name}</span>
+            <span className="team-picker-name" aria-hidden={club.badgeUrl ? "true" : undefined}>
+              {club.shortName || club.name}
+            </span>
+            {club.badgeUrl ? <span className="visually-hidden">{club.name}</span> : null}
           </Link>
         ))}
       </nav>
@@ -115,17 +135,34 @@ export function TeamsPage({ opponentClubId = null }: { opponentClubId?: number |
               event.preventDefault();
               setReading(section);
               const next = new URLSearchParams(search);
-              if (section === "players") next.delete("section");
+              if (section === DEFAULT_SECTION) next.delete("section");
               else next.set("section", section);
               setSearch(next, { replace: true });
               document.getElementById(teamSectionId(section))?.focus();
             }}
-          >{t(SECTION_LABELS[section])}</a>
+          >
+            <TeamSectionIcon section={section} />
+            {t(SECTION_LABELS[section])}
+          </a>
         ))}
       </nav>
       {index.isLoading || dossier.isLoading
         ? <p className="team-note" role="status">{t("Loading the club dossier.")}</p>
         : null}
+      {dossier.data ? (
+        <TeamPerformanceSection
+          performance={dossier.data.performance ?? null}
+          clubs={clubs}
+          competition={route.competition}
+          window={route.window}
+          failed={dossier.data.segmentErrors?.some(
+            (error) => error.segment === "performance",
+          ) ?? false}
+          onCompetition={(competition) => replaceRoute({ competition })}
+          onWindow={(window) => replaceRoute({ window })}
+          onRetry={() => void dossier.refetch()}
+        />
+      ) : <section id="team-performance" tabIndex={-1} />}
       <SegmentNotice
         failed={dossier.data?.segmentErrors?.some((error) => error.segment === "roster") ?? false}
         onRetry={() => void dossier.refetch()}
@@ -141,20 +178,6 @@ export function TeamsPage({ opponentClubId = null }: { opponentClubId?: number |
           }}
         />
       ) : <section id="team-players" tabIndex={-1} />}
-      {dossier.data ? (
-        <TeamPerformanceSection
-          performance={dossier.data.performance ?? null}
-          clubs={clubs}
-          competition={route.competition}
-          window={route.window}
-          failed={dossier.data.segmentErrors?.some(
-            (error) => error.segment === "performance",
-          ) ?? false}
-          onCompetition={(competition) => replaceRoute({ competition })}
-          onWindow={(window) => replaceRoute({ window })}
-          onRetry={() => void dossier.refetch()}
-        />
-      ) : <section id="team-performance" tabIndex={-1} />}
       {dossier.data && (dossier.data.prediction || predictionFailed(dossier.data)) ? (
         <TeamLineupSection
           prediction={dossier.data.prediction ?? null}

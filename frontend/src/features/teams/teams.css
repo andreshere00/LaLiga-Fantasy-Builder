@@ -20,40 +20,78 @@
   padding: 8px;
 }
 .team-masthead h1 { min-width: 0; overflow-wrap: anywhere; }
+/* League position beside the name: the number is the glanceable cue, the line under it the context. */
+.team-rank {
+  display: grid;
+  grid-template-columns: auto auto;
+  align-items: center;
+  gap: 10px;
+  margin: 0 0 0 8px;
+  color: var(--fb-muted);
+  font-size: 13px;
+  font-weight: 500;
+  letter-spacing: .04em;
+  text-transform: uppercase;
+}
+.team-rank strong {
+  display: grid;
+  place-items: center;
+  min-width: 48px;
+  height: 48px;
+  padding: 0 8px;
+  color: var(--fb-on-brand);
+  background: var(--fb-primary);
+  font: 400 28px/1 Anton, "Arial Narrow", sans-serif;
+}
 .team-picker {
   display: flex;
-  gap: 4px;
+  gap: 6px;
   overflow-x: auto;
-  padding-bottom: 4px;
+  padding-bottom: 6px;
 }
 /* Auto margins centre the row yet keep the first item reachable when it overflows and scrolls. */
 .team-picker > :first-child,
 .team-sections > :first-child { margin-inline-start: auto; }
 .team-picker > :last-child,
 .team-sections > :last-child { margin-inline-end: auto; }
+/* Each club is a tile: badge for recognition at a glance, short name as the second cue. */
 .team-picker a {
   position: relative;
   display: grid;
-  place-items: center;
+  grid-template-rows: 36px auto;
+  justify-items: center;
+  align-content: center;
+  gap: 4px;
   flex: 0 0 auto;
-  min-width: 52px;
-  height: 52px;
-  padding: 0 8px;
-  color: var(--fb-secondary);
+  min-width: 64px;
+  min-height: 68px;
+  padding: 6px 8px;
+  color: var(--fb-muted);
   text-decoration: none;
-  border-bottom: 3px solid transparent;
+  background: var(--fb-surface);
+  border: 1px solid var(--fb-line);
+  border-bottom: 3px solid var(--fb-line);
+  transition: background-color .16s ease, border-color .16s ease, transform .16s ease;
 }
-.team-picker a:hover { background: var(--fb-subtle); }
-.team-picker img { width: 32px; height: 32px; object-fit: contain; }
+.team-picker a:hover { background: var(--fb-subtle); border-color: var(--fb-control-line); transform: translateY(-1px); }
+.team-picker img { width: 36px; height: 36px; object-fit: contain; }
 .team-picker-name {
-  max-width: 9rem;
+  max-width: 7rem;
   overflow: hidden;
-  font-size: 13px;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: .04em;
   line-height: 1.2;
   text-overflow: ellipsis;
+  text-transform: uppercase;
   white-space: nowrap;
 }
-.team-picker a[aria-current="page"] { border-bottom-color: var(--fb-primary); }
+.team-picker a[aria-current="page"] {
+  background: var(--fb-selected);
+  border-color: var(--fb-primary);
+  border-bottom-color: var(--fb-primary);
+  color: var(--fb-selected-text);
+}
 .team-picker a:focus-visible,
 .team-sections a:focus-visible,
 .team-filter button:focus-visible,
@@ -88,6 +126,7 @@
   border-bottom: 4px solid transparent;
 }
 .team-sections a:hover { background: var(--fb-subtle); }
+.team-section-icon { width: 18px; height: 18px; flex: none; margin-inline-end: 8px; fill: currentColor; }
 .team-sections a[aria-current="true"] {
   border-bottom-color: var(--fb-primary);
   color: var(--fb-tertiary);
@@ -377,6 +416,17 @@
   border-color: var(--fb-primary);
   text-decoration: underline;
   text-underline-offset: 4px;
+}
+/* Logos sit on a white chip so dark marks stay legible in the dark theme. */
+.team-filter .team-filter-logo { display: grid; place-items: center; min-width: 64px; padding: 4px 10px; }
+.team-filter-logo img {
+  box-sizing: content-box;
+  width: auto;
+  max-width: 110px;
+  height: 28px;
+  padding: 3px 6px;
+  object-fit: contain;
+  background: #fff;
 }
 .team-record {
   display: grid;
@@ -868,4 +918,5 @@
 @media (prefers-reduced-motion: reduce) {
   .team-sections a,
   .team-picker a { transition: none; }
+  .team-picker a:hover { transform: none; }
 }

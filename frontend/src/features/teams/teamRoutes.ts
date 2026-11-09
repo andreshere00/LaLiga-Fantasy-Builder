@@ -1,4 +1,6 @@
-export const TEAM_SECTIONS = ["players", "performance", "lineup", "news"] as const;
+export const TEAM_SECTIONS = ["performance", "players", "lineup", "news"] as const;
+/** The section a club opens on: the first one in the bar, so no `section` param is needed. */
+export const DEFAULT_SECTION = "performance" as const;
 export const TEAM_COMPETITIONS = ["laliga", "european", "domestic", "friendly", "all"] as const;
 export const TEAM_WINDOWS = ["5", "10", "20", "season"] as const;
 
@@ -30,7 +32,7 @@ export function teamSearch(params: URLSearchParams): TeamRouteState {
   const competition = params.get("competition");
   const window = params.get("window");
   return {
-    section: isOne(TEAM_SECTIONS, section) ? section : "players",
+    section: isOne(TEAM_SECTIONS, section) ? section : DEFAULT_SECTION,
     competition: isOne(TEAM_COMPETITIONS, competition) ? competition : "laliga",
     window: isOne(TEAM_WINDOWS, window) ? window : "5",
   };
@@ -38,7 +40,7 @@ export function teamSearch(params: URLSearchParams): TeamRouteState {
 
 export function teamPath(clubId: number | string, state: TeamRouteState): string {
   const params = new URLSearchParams();
-  if (state.section !== "players") params.set("section", state.section);
+  if (state.section !== DEFAULT_SECTION) params.set("section", state.section);
   if (state.competition !== "laliga") params.set("competition", state.competition);
   if (state.window !== "5") params.set("window", state.window);
   const query = params.toString();
