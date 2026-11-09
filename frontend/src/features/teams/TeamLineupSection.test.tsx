@@ -126,6 +126,8 @@ describe("TeamLineupSection", () => {
       </MemoryRouter>,
     );
     expect(screen.getByText(/Matchday 12/)).toBeTruthy();
+    expect(screen.queryByText("Mystery")).toBeNull();
+    fireEvent.click(screen.getByRole("button", { name: /Attack/ }));
     expect(screen.getByText("0%")).toBeTruthy();
     expect(screen.getAllByText("Mystery").length).toBeGreaterThan(0);
     expect(screen.getAllByText("Details unavailable").length).toBeGreaterThan(0);
@@ -175,11 +177,14 @@ describe("TeamLineupSection", () => {
 
   it("TeamLineupSection_alternative_lines_expand_and_collapse", () => {
     renderLineup();
-    expect(screen.getAllByText("Later").length).toBeGreaterThan(0);
     const trigger = screen.getByRole("button", { name: /Attack/ });
-    expect(trigger.getAttribute("aria-expanded")).toBe("true");
-    fireEvent.click(trigger);
+    expect(trigger.getAttribute("aria-expanded")).toBe("false");
+    expect(trigger.textContent).toContain("Later 40%");
     expect(screen.queryByText("Mystery", { selector: "strong" })).toBeNull();
-    expect(screen.getByRole("button", { name: /Attack/ }).textContent).toContain("Later 40%");
+    fireEvent.click(trigger);
+    expect(screen.getByRole("button", { name: /Attack/ }).getAttribute("aria-expanded")).toBe("true");
+    expect(screen.getByText("Mystery", { selector: "strong" })).toBeTruthy();
+    fireEvent.click(screen.getByRole("button", { name: /Attack/ }));
+    expect(screen.queryByText("Mystery", { selector: "strong" })).toBeNull();
   });
 });

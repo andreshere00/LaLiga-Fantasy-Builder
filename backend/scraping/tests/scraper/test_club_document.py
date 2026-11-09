@@ -53,12 +53,13 @@ def test_get_internal_club_returns_parsed_page(site: FakeSite, service: ScraperS
     assert len(body["starters"]) == 11
 
 
-def test_get_internal_club_news_returns_five_items(site: FakeSite, service: ScraperService) -> None:
+def test_get_internal_club_news_returns_every_item(site: FakeSite, service: ScraperService) -> None:
     site.overrides[NEWS_URL] = _html_response("villarreal-ultimos-cambios.html")
     response = _client(service).get("/internal/clubs/villarreal/news", headers=TOKEN)
     assert response.status_code == 200
     items = response.json()["items"]
-    assert len(items) == 5
+    assert len(items) == 7
+    assert items[2]["kind"] == "injury_update"
     assert items[2]["title"] == "Foyth pasa de duda a baja"
 
 

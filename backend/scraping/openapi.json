@@ -1437,6 +1437,17 @@
               }
             ],
             "title": "Status"
+          },
+          "reportUrl": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Reporturl"
           }
         },
         "additionalProperties": false,
@@ -1474,7 +1485,7 @@
           "slug"
         ],
         "title": "ClubNewsDocument",
-        "description": "The newest changelog items for one club."
+        "description": "Every changelog event published for one club, newest first."
       },
       "ClubNewsItem": {
         "properties": {
@@ -1497,6 +1508,28 @@
               }
             ],
             "title": "Publishedat"
+          },
+          "kind": {
+            "type": "string",
+            "enum": [
+              "injury_update",
+              "lineup",
+              "call_up",
+              "national_team",
+              "other"
+            ],
+            "title": "Kind",
+            "default": "other"
+          },
+          "target": {
+            "type": "string",
+            "enum": [
+              "article",
+              "match",
+              "club"
+            ],
+            "title": "Target",
+            "default": "club"
           }
         },
         "additionalProperties": false,
@@ -1506,7 +1539,7 @@
           "url"
         ],
         "title": "ClubNewsItem",
-        "description": "One changelog headline. The body stays on the source article."
+        "description": "One changelog event. The body stays on the source article.\n\n``kind`` is the event type from its icon. ``target`` says what ``url`` opens: an article, a\nmatch page, or only the club page the feed already lives on."
       },
       "ClubPageDocument": {
         "properties": {

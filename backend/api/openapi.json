@@ -9545,6 +9545,17 @@
               }
             ],
             "title": "Status"
+          },
+          "reportUrl": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Reporturl"
           }
         },
         "additionalProperties": false,
@@ -11712,7 +11723,7 @@
           "items"
         ],
         "title": "NewsSection",
-        "description": "The five newest club changelog headlines."
+        "description": "Every club changelog event the source publishes (about the last week), newest first."
       },
       "Observation": {
         "properties": {
@@ -16137,6 +16148,28 @@
               }
             ],
             "title": "Publishedat"
+          },
+          "kind": {
+            "type": "string",
+            "enum": [
+              "injury_update",
+              "lineup",
+              "call_up",
+              "national_team",
+              "other"
+            ],
+            "title": "Kind",
+            "default": "other"
+          },
+          "target": {
+            "type": "string",
+            "enum": [
+              "article",
+              "match",
+              "club"
+            ],
+            "title": "Target",
+            "default": "club"
           }
         },
         "additionalProperties": false,
@@ -16146,7 +16179,7 @@
           "url"
         ],
         "title": "NewsItem",
-        "description": "One club headline. The article body stays on the source site."
+        "description": "One club changelog event. The article body stays on the source site.\n\n``kind`` is the event type; ``target`` says what ``url`` opens (an article, a match page, or\nonly the club page)."
       },
       "fantasy_api__schemas__player_stats__NewsItem": {
         "properties": {

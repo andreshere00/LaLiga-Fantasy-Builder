@@ -19,6 +19,7 @@ import {
   orderedAlternatives,
   type PredictedPlayer,
 } from "./teamLineup";
+import { Button } from "../../components/ui/Button";
 import { LineupCoach } from "./LineupCoach";
 import { LineupFsyp } from "./LineupFsyp";
 import { LineupFormBadge } from "./LineupFormBadge";
@@ -73,10 +74,9 @@ export function TeamLineupSection({
     (prediction?.alternatives ?? []).map((player) => resolve(asPlayer(player))),
   );
   const groups = alternativeLines(alternatives);
-  /** The line holding the likeliest alternative starts open; the rest are one tap away. */
-  const likeliest = alternatives[0] ? alternativeLines([alternatives[0]])[0]?.line : undefined;
+  /** Every line starts wrapped; opening one loads its players' form. */
   const [open, setOpen] = useState<ReadonlySet<PitchLine> | null>(null);
-  const expanded = open ?? new Set<PitchLine>(likeliest ? [likeliest] : []);
+  const expanded = open ?? new Set<PitchLine>();
   const toggleLine = (line: PitchLine, next: boolean) => {
     const copy = new Set(expanded);
     if (next) copy.add(line);
@@ -111,7 +111,6 @@ export function TeamLineupSection({
         failed ? null : <p>{t("The predicted lineup is not published.")}</p>
       ) : (
         <>
-          <LineupCoach prediction={prediction} />
           <div className="team-lineup-board">
             <div>
               <h3>{t("Starters")}</h3>
@@ -153,16 +152,23 @@ export function TeamLineupSection({
               </div>
             </div>
             <div className="team-alternatives">
+              <LineupCoach prediction={prediction} heading={t("Coach")} subtitle={t("How predictable the XI is for this matchday.")} />
               <div className="team-alternatives-head">
-                <h3>{t("Alternatives")}</h3>
+                <div className="team-alternatives-title">
+                  <h3>{t("Alternatives")}</h3>
+                  <p className="team-note">{t("Likeliest substitutes by position. Open a group to compare them.")}</p>
+                </div>
                 {groups.length > 1 ? (
-                  <button
-                    type="button"
+                  <Button
+                    variant="outline"
+                    size="sm"
                     className="team-alternatives-toggle"
+                    icon={<span className="team-toggle-chevrons" data-open={allOpen ? "true" : undefined} />}
+                    aria-expanded={allOpen}
                     onClick={() => setOpen(allOpen ? new Set() : new Set(groups.map((group) => group.line)))}
                   >
                     {allOpen ? t("Collapse all") : t("Expand all")}
-                  </button>
+                  </Button>
                 ) : null}
               </div>
               {groups.map((group) => (

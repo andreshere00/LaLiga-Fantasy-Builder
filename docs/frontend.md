@@ -47,8 +47,10 @@ units, competition categories, partial-data errors, and accessible names also
 follow the selected language. Partial-data messages use stable error codes; raw
 provider details are not translation keys.
 
-Only FutbolFantasy injury diagnoses, free-form injury availability notes, and
-news headlines request machine translation. Spanish shows the original. English
+Known FutbolFantasy wording is translated from closed, tested maps
+(`teamInjuryLabels.ts`, `teamNewsLabels.ts`): recovery phases, diagnoses, return
+notes, and the generated changelog sentences. Only wording outside those maps (other
+diagnoses and return notes, article headlines) requests machine translation. Spanish shows the original. English
 uses GTranslate Free in a separate opaque sandbox document for each visible
 text block; no application credentials or whole API responses are passed in.
 Results are ephemeral presentation state. Show original and Retry translation
@@ -208,7 +210,7 @@ and the API.
 | `/players` | Players — catalog, filters, top-10 leaderboard | [Players](api/players/README.md), [Calendar](api/calendar/README.md) |
 | `/players/:playerId` | Player detail — stats aggregate | [Players](api/players/README.md) (`GET /players/{id}/stats/detail`) |
 | `/teams` | Teams — opens the first current club for the selected language | [Clubs](api/clubs/README.md) |
-| `/teams/:clubId` | One club dossier: players, results, predicted lineup, news | [Clubs](api/clubs/README.md) |
+| `/teams/:clubId` | One club dossier: players, results, predicted lineup, news and injuries | [Clubs](api/clubs/README.md) |
 
 The shell header switches routes. The league dropdown applies to lineup, market, and players.
 Teams reads the current club directory and one dossier; it does not use the manager-squad API.
@@ -221,7 +223,7 @@ strip chooses another club without repeating the long name under every badge.
 The query keeps `section`, `competition`, and `window` when they differ from
 Players, LaLiga, and five matches. Refresh restores that URL. A signed-out
 visit uses the same sign-in gate as Market and Players.
-The club strip and the Players, Performance, Lineup, and News links stay
+The club strip and the Players, Performance, Lineup, and News & Injuries links stay
 available from the keyboard. That bar is named **Club sections**, separate
 from the header's Sections navigation. On a phone the four header destinations move to
 the bottom bar and keep their labels inside the safe area.
@@ -237,7 +239,7 @@ report beside the XI summary. Predicted starters stand on the same pitch marking
 as Lineup, in the published position lines, with the bench beside the pitch. The
 squad table stays full width once event columns are published; with only FSYP it
 is capped so position and points stay beside the name. A phone stacks each pair.
-The first news headline stays full width and the other headlines share two columns.
+News & Injuries puts the injured players beside the news feed; a phone stacks them, injuries first.
 
 Players lists the top three footballers by published season points as ranked
 cards: the player photo (from the shared players catalog, with a person icon
@@ -249,11 +251,7 @@ and 10-plus scores, loaded per player), form with its icon and a colored stripe
 and the compact percentile radar chart that the player detail page also uses
 (`PlayerRadarChart`). Starter likelihood of 90% or more turns the percentage chip
 and bar red, with a hidden text cue. The exact radar percentiles stay available
-to screen readers in a hidden table. A player without a radar says so. Injuries are a table of player, status badge, expected return, and
-start date; on a phone each row becomes a labeled card. The status can be any
-published label, including one outside the six usual ones, and the badge is
-neutral because severity is not published. An unpublished injury block stays
-distinct from a published empty list. The squad table leads with player, a position
+to screen readers in a hidden table. A player without a radar says so. The squad table leads with player, a position
 badge, and FSYP with a bar scaled to the squad's top score, then the twelve event
 columns (set one size smaller so player, position, and FSYP lead; each player name links to
 the player detail page and Back returns to the club): Minutes, Goals, Assists, Dribbles, Penalties committed, Penalties saved,
@@ -308,10 +306,25 @@ focuses that squad card; it does not place the player or save the lineup.
 An unresolved scraped name stays visible and says that Fantasy actions are
 unavailable.
 
-News shows up to five headlines in cards, the original article link (marked as
-opening in a new tab), and the Madrid local date and time. Headlines use the same translation control as player
-news. A failed section names itself and can be retried without clearing the
-sections that loaded.
+**News & Injuries** (`section=news`) has two blocks with a heading and a one-line subtitle each.
+
+Injured players are cards ordered by squad role (the player profile's hierarchy, the same
+value and icon as the player details page), then FSYP. Each card shows the photo, name
+(linked to the player when the name matches the club squad), FSYP, hierarchy, injury type,
+recovery phase, expected return, and start date with elapsed days, plus the medical-report
+link when the source publishes one. Names are matched against the club squad
+(`matchRosterPlayer`); an unmatched player keeps the card with dashes for FSYP and
+hierarchy. The phase badge is neutral because severity is not published. An unpublished
+injury block stays distinct from a published empty list.
+
+News is the club's `ultimos-cambios` feed: about the last week of events, grouped by Madrid
+calendar day, each with a kind tag (injury update, lineup, squad list, international duty).
+It shows five events and offers 10, 20, and All (steps that would equal All are hidden, and the
+control disappears for five or fewer), with a live line such as "Showing 5 of 37 events,
+covering 7 days." The source publishes no season history, so All is the whole feed. Only
+events that open an article or a match show a link (marked as opening in a new tab);
+events that point back to the club page do not. A failed news or injury segment names
+itself and can be retried without clearing the sections that loaded.
 
 ### Fixture matches and stadium weather
 

@@ -302,7 +302,13 @@ class ClubsService:
         return (
             NewsSection(
                 items=[
-                    NewsItem(title=item.title, url=item.url, published_at=item.published_at)
+                    NewsItem(
+                        title=item.title,
+                        url=item.url,
+                        published_at=item.published_at,
+                        kind=item.kind,
+                        target=item.target,
+                    )
                     for item in news.items
                 ]
             ),
@@ -401,6 +407,7 @@ def _injuries(page: ScrapedClubPage) -> InjuriesSection:
                 started_on=item.started_on,
                 expected_return=item.expected_return,
                 status=item.status,
+                report_url=item.report_url,
             )
             for item in page.injuries
         ],

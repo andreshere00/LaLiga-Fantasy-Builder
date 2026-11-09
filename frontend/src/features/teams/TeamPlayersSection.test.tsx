@@ -60,11 +60,8 @@ const roster = {
   coverage: { players: 2, matchweeks: [12], shortWindow: false },
 };
 
-function renderSection(
-  injuries: Parameters<typeof TeamPlayersSection>[0]["injuries"],
-  seasonStats?: SeasonStatsState,
-) {
-  return render(<MemoryRouter initialEntries={["/teams/3?x=1"]}><TeamPlayersSection roster={roster} injuries={injuries} seasonStats={seasonStats} /></MemoryRouter>);
+function renderSection(seasonStats?: SeasonStatsState) {
+  return render(<MemoryRouter initialEntries={["/teams/3?x=1"]}><TeamPlayersSection roster={roster} seasonStats={seasonStats} /></MemoryRouter>);
 }
 
 const blank = {
@@ -103,7 +100,7 @@ describe("TeamPlayersSection", () => {
   // ---- Happy path ---- //
 
   it("TeamPlayersSection_mvp_shows_units_and_whole_percentiles", () => {
-    renderSection({ published: true, items: [] });
+    renderSection();
     const card = document.querySelector(".team-mvp-card") as HTMLElement;
     expect(within(card).getByText(/95%/)).toBeTruthy();
     expect(within(card).getByText("Good")).toBeTruthy();
@@ -113,19 +110,19 @@ describe("TeamPlayersSection", () => {
   });
 
   it("TeamPlayersSection_mvp_shows_position_and_age_when_published", () => {
-    renderSection({ published: true, items: [] });
+    renderSection();
     const meta = document.querySelector(".team-mvp-meta")?.textContent ?? "";
     expect(meta).toMatch(/^[^·]+ · \d{2} years old$/);
   });
 
   it("TeamPlayersSection_mvp_omits_age_without_a_birth_date", () => {
     outlookState.value = { form: { rating: "good" }, startProbability: { percent: 50 } };
-    renderSection({ published: true, items: [] });
+    renderSection();
     expect(document.querySelector(".team-mvp-meta")?.textContent).not.toContain("years");
   });
 
   it("TeamPlayersSection_mvp_lists_the_last_five_points_oldest_first", () => {
-    renderSection({ published: true, items: [] });
+    renderSection();
     const items = [...document.querySelectorAll(".team-mvp-recent li")];
     expect(items.map((item) => item.textContent)).toEqual(["2", "-1", "12", "—", "6"]);
     expect(items.map((item) => item.getAttribute("data-tone"))).toEqual(["mid", "low", "high", null, "mid"]);
@@ -133,7 +130,7 @@ describe("TeamPlayersSection", () => {
   });
 
   it("TeamPlayersSection_mvp_shows_the_catalog_photo", () => {
-    renderSection({ published: true, items: [] });
+    renderSection();
     const photo = document.querySelector(".team-mvp-photo img") as HTMLImageElement | null;
     expect(photo?.getAttribute("src")).toBe("https://example.test/ana.png");
   });
@@ -142,7 +139,7 @@ describe("TeamPlayersSection", () => {
     "TeamPlayersSection_starter_at_%s_percent_has_level_%s",
     (percent, level) => {
       outlookState.value = { form: { rating: "good" }, startProbability: { percent } };
-      renderSection({ published: true, items: [] });
+      renderSection();
       const value = document.querySelector(".team-mvp-facts > div:nth-child(2) dd");
       expect(value?.getAttribute("data-level") ?? undefined).toBe(level);
       expect(document.querySelector(".team-mvp-card .team-meter")?.getAttribute("data-tone") ?? undefined)
@@ -156,7 +153,7 @@ describe("TeamPlayersSection", () => {
     ["mid", "Average", "mid"],
   ])("TeamPlayersSection_form_%s_shows_label_and_code", (rating, label, code) => {
     outlookState.value = { form: { rating }, startProbability: { percent: 50 } };
-    renderSection({ published: true, items: [] });
+    renderSection();
     const form = document.querySelector(".team-mvp-form");
     expect(form?.getAttribute("data-form")).toBe(code);
     expect(form?.textContent).toBe(label);
@@ -164,29 +161,13 @@ describe("TeamPlayersSection", () => {
 
   it("TeamPlayersSection_unknown_form_and_missing_starter_render_dashes", () => {
     outlookState.value = { form: { rating: "weird" }, startProbability: null };
-    renderSection({ published: true, items: [] });
+    renderSection();
     expect(document.querySelector(".team-mvp-form")).toBeNull();
     expect(document.querySelector(".team-mvp-card .team-meter")).toBeNull();
   });
 
-  it("TeamPlayersSection_injuries_render_as_a_table_with_status_badges", () => {
-    renderSection({
-      published: true,
-      items: [{
-        name: "Gorka Guruzeta",
-        startedOn: "2026-10-17",
-        expectedReturn: "Baja hasta mayo",
-        status: "Rehabilitación",
-      }],
-    });
-    const table = screen.getByRole("table", { name: "Injured players" });
-    const row = within(table).getByRole("row", { name: /Gorka Guruzeta/ });
-    expect(within(row).getByText("Rehabilitation")).toBeTruthy();
-    expect(within(row).getByText("Baja hasta mayo")).toBeTruthy();
-  });
-
   it("TeamPlayersSection_squad_keeps_a_published_zero_distinct_from_a_blank", () => {
-    renderSection({ published: true, items: [] });
+    renderSection();
     const squad = screen.getByRole("region", { name: "Squad" });
     const bea = within(squad).getByRole("rowheader", { name: "Bea" }).closest("tr") as HTMLElement;
     expect(within(bea).getAllByText("0").length).toBeGreaterThan(0);
@@ -194,7 +175,7 @@ describe("TeamPlayersSection", () => {
   });
 
   it("TeamPlayersSection_season_totals_add_the_published_columns_and_totals", () => {
-    renderSection({ published: true, items: [] }, season());
+    renderSection(season());
     const squad = screen.getByRole("region", { name: "Squad" });
     expect(within(squad).getByRole("button", { name: "Minutes" })).toBeTruthy();
     expect(within(squad).getByRole("button", { name: "Goals" })).toBeTruthy();
@@ -207,7 +188,7 @@ describe("TeamPlayersSection", () => {
   });
 
   it("TeamPlayersSection_squad_row_names_link_to_player_details", () => {
-    renderSection({ published: true, items: [] });
+    renderSection();
     const link = screen.getByRole("link", { name: "Ana" });
     expect(link.getAttribute("href")).toBe("/players/1");
     expect(screen.queryAllByRole("link", { name: /Totals/ })).toHaveLength(0);
@@ -216,7 +197,6 @@ describe("TeamPlayersSection", () => {
   it("TeamPlayersSection_loading_and_failure_name_themselves_and_keep_the_table", () => {
     const onRetry = vi.fn();
     const { rerender } = renderSection(
-      { published: true, items: [] },
       season({ data: undefined, loading: true }),
     );
     expect(screen.getByRole("status").textContent).toContain("Loading season statistics");
@@ -225,7 +205,6 @@ describe("TeamPlayersSection", () => {
       <MemoryRouter>
         <TeamPlayersSection
           roster={roster}
-          injuries={{ published: true, items: [] }}
           seasonStats={season({ data: undefined, failed: true, onRetry })}
         />
       </MemoryRouter>,
@@ -235,12 +214,6 @@ describe("TeamPlayersSection", () => {
   });
 
   // ---- Edge cases ---- //
-
-  it("TeamPlayersSection_unpublished_injuries_are_not_an_empty_table", () => {
-    renderSection({ published: false, items: [] });
-    expect(screen.getByText("Current injuries are not published for this club.")).toBeTruthy();
-    expect(screen.queryByRole("table", { name: "Injured players" })).toBeNull();
-  });
 });
 
 describe("recentPointsFrom", () => {

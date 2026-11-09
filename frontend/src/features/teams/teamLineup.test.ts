@@ -60,6 +60,19 @@ describe("matchRosterPlayer", () => {
     expect(matchRosterPlayer("Sancet", squad)?.playerId).toBe("3");
     expect(matchRosterPlayer("Canales", squad)?.playerId).toBe("5");
   });
+  it("matchRosterPlayer_a_full_name_resolves_a_shorter_squad_name", () => {
+    const short = [
+      { playerId: "10", name: "Guruzeta" },
+      { playerId: "11", name: "De Galarreta" },
+      { playerId: "12", name: "O. Sancet" },
+      { playerId: "13", name: "Paredes" },
+    ];
+    expect(matchRosterPlayer("Gorka Guruzeta", short)?.playerId).toBe("10");
+    expect(matchRosterPlayer("Íñigo Ruiz de Galarreta", short)?.playerId).toBe("11");
+    expect(matchRosterPlayer("Oihan Sancet", short)?.playerId).toBe("12");
+    expect(matchRosterPlayer("Aitor Paredes", short)?.playerId).toBe("13");
+    expect(matchRosterPlayer("Pablo Sancet", short)).toBeNull();
+  });
   it("matchRosterPlayer_ambiguous_or_unknown_names_stay_unmatched", () => {
     expect(matchRosterPlayer("Williams", squad)).toBeNull();
     expect(matchRosterPlayer("Nobody", squad)).toBeNull();

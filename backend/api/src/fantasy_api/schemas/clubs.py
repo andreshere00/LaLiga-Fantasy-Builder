@@ -232,6 +232,7 @@ class InjuryItem(ClubModel):
     started_on: str | None = None
     expected_return: str | None = None
     status: str | None = None
+    report_url: str | None = None
 
 
 class InjuriesSection(ClubModel):
@@ -241,16 +242,26 @@ class InjuriesSection(ClubModel):
     items: list[InjuryItem]
 
 
+NewsKind = Literal["injury_update", "lineup", "call_up", "national_team", "other"]
+NewsTarget = Literal["article", "match", "club"]
+
+
 class NewsItem(ClubModel):
-    """One club headline. The article body stays on the source site."""
+    """One club changelog event. The article body stays on the source site.
+
+    ``kind`` is the event type; ``target`` says what ``url`` opens (an article, a match page, or
+    only the club page).
+    """
 
     title: str
     url: str
     published_at: datetime | None = None
+    kind: NewsKind = "other"
+    target: NewsTarget = "club"
 
 
 class NewsSection(ClubModel):
-    """The five newest club changelog headlines."""
+    """Every club changelog event the source publishes (about the last week), newest first."""
 
     items: list[NewsItem]
 
@@ -334,6 +345,7 @@ class ScrapedInjury(FantasyWireModel):
     started_on: str | None = None
     expected_return: str | None = None
     status: str | None = None
+    report_url: str | None = None
 
 
 class ScrapedClubPage(FantasyWireModel):
@@ -355,6 +367,8 @@ class ScrapedNewsItem(FantasyWireModel):
     title: str
     url: str
     published_at: datetime | None = None
+    kind: NewsKind = "other"
+    target: NewsTarget = "club"
 
 
 class ScrapedClubNews(FantasyWireModel):

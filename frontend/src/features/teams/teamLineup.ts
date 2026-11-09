@@ -69,7 +69,16 @@ export function matchRosterPlayer<T extends { name: string }>(
     if (initial) return name === rest || (name.endsWith(` ${rest}`) && name.startsWith(initial));
     return name.endsWith(` ${rest}`);
   });
-  return hits.length === 1 ? hits[0] : null;
+  if (hits.length === 1) return hits[0];
+  if (hits.length > 1) return null;
+  // The scraped name can also be the longer one: "Gorka Guruzeta" for the squad's "Guruzeta".
+  const wider = squad.filter((player) => {
+    const parts = fold(player.name).split(" ");
+    const lead = parts.length > 1 && parts[0].length === 1 ? parts[0] : null;
+    const surname = (lead ? parts.slice(1) : parts).join(" ");
+    return surname.length > 2 && target.endsWith(` ${surname}`) && (!lead || target.startsWith(lead));
+  });
+  return wider.length === 1 ? wider[0] : null;
 }
 
 export function catalogNames(payload: unknown): CatalogName[] {

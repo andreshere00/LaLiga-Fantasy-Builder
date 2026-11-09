@@ -305,6 +305,47 @@ def test_get_club_unknown_id_returns_404() -> None:
 
 
 @pytest.mark.asyncio
+async def test_news_keeps_every_event_with_kind_target_and_report_link() -> None:
+    from fantasy_api.schemas.clubs import ScrapedClubNews, ScrapedClubPage
+    from fantasy_api.services.clubs import _injuries
+
+    class NewsRepo(Repo):
+        async def club_news(self, slug: str) -> ScrapedClubNews:
+            return ScrapedClubNews.model_validate(
+                {
+                    "slug": slug,
+                    "items": [
+                        {
+                            "title": f"Event {index}",
+                            "url": "https://www.futbolfantasy.com/laliga/equipos/getafe",
+                            "kind": "lineup",
+                        }
+                        for index in range(8)
+                    ]
+                    + [
+                        {
+                            "title": "Paredes pasa de duda a baja",
+                            "url": "https://www.futbolfantasy.com/laliga/noticias/1-x",
+                            "kind": "injury_update",
+                            "target": "article",
+                        }
+                    ],
+                }
+            )
+
+    service = ClubsService(NewsRepo(), Pages())  # type: ignore[arg-type]
+    news, error = await service._news("getafe")
+    assert error is None and news is not None
+    assert len(news.items) == 9
+    assert news.items[0].target == "club" and news.items[0].kind == "lineup"
+    assert news.items[-1].target == "article" and news.items[-1].kind == "injury_update"
+    page = ScrapedClubPage.model_validate(
+        {"slug": "getafe", "injuries": [{"name": "A", "reportUrl": "https://x.test/r"}]}
+    )
+    assert _injuries(page).items[0].report_url == "https://x.test/r"
+
+
+@pytest.mark.asyncio
 async def test_get_dossier_without_slug_keeps_the_club_and_skips_scraping() -> None:
     service = ClubsService(Repo(), Pages())  # type: ignore[arg-type]
     dossier = await service.get_dossier(9)

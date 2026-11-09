@@ -73,6 +73,7 @@ class ClubInjury(ParserModel):
     started_on: Date | None = None
     expected_return: str | None = None
     status: str | None = None
+    report_url: str | None = None
 
 
 class ClubPageDocument(ParserModel):
@@ -89,16 +90,26 @@ class ClubPageDocument(ParserModel):
     warnings: list[PartialParseWarning] = Field(default_factory=list)
 
 
+ClubNewsKind = Literal["injury_update", "lineup", "call_up", "national_team", "other"]
+ClubNewsTarget = Literal["article", "match", "club"]
+
+
 class ClubNewsItem(ParserModel):
-    """One changelog headline. The body stays on the source article."""
+    """One changelog event. The body stays on the source article.
+
+    ``kind`` is the event type from its icon. ``target`` says what ``url`` opens: an article, a
+    match page, or only the club page the feed already lives on.
+    """
 
     title: str
     url: str
     published_at: datetime | None = None
+    kind: ClubNewsKind = "other"
+    target: ClubNewsTarget = "club"
 
 
 class ClubNewsDocument(ParserModel):
-    """The newest changelog items for one club."""
+    """Every changelog event published for one club, newest first."""
 
     slug: str
     items: list[ClubNewsItem] = Field(default_factory=list)

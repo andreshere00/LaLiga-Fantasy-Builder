@@ -767,7 +767,7 @@ Read one real-club dossier
 | `performance` | PerformanceSection | no |  | LaLiga record plus other competitions published on the club page. |
 | `prediction` | PredictionSection | no |  | FutbolFantasy forecast. It is not the lineup saved in Fantasy. |
 | `injuries` | InjuriesSection | no |  | Current injuries. ``published`` is false when the page has no injury block. |
-| `news` | NewsSection | no |  | The five newest club changelog headlines. |
+| `news` | NewsSection | no |  | Every club changelog event the source publishes (about the last week), newest first. |
 | `segmentErrors` | array[ClubSegmentError] | no |  |  |
 
 Full nested fields: [`ClubDossier`](#clubdossier).
@@ -2084,7 +2084,7 @@ Type: `any`
 | `performance` | PerformanceSection | no |  | LaLiga record plus other competitions published on the club page. |
 | `prediction` | PredictionSection | no |  | FutbolFantasy forecast. It is not the lineup saved in Fantasy. |
 | `injuries` | InjuriesSection | no |  | Current injuries. ``published`` is false when the page has no injury block. |
-| `news` | NewsSection | no |  | The five newest club changelog headlines. |
+| `news` | NewsSection | no |  | Every club changelog event the source publishes (about the last week), newest first. |
 | `segmentErrors` | array[ClubSegmentError] | no |  |  |
 
 ### `ClubIndex`
@@ -2445,6 +2445,7 @@ Type: `string`
 | `startedOn` | string | no |  |  |
 | `expectedReturn` | string | no |  |  |
 | `status` | string | no |  |  |
+| `reportUrl` | string | no |  |  |
 
 ### `InjuryRisk`
 
@@ -3603,6 +3604,8 @@ Type: `string`
 | `title` | string | yes |  |  |
 | `url` | string | yes |  |  |
 | `publishedAt` | string | no |  |  |
+| `kind` | string | no |  |  |
+| `target` | string | no |  |  |
 
 ### `fantasy_api__schemas__player_stats__NewsItem`
 

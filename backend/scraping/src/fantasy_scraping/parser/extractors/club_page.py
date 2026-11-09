@@ -286,9 +286,15 @@ def _injuries(root: HtmlElement, base: str, today: Date) -> list[ClubInjury] | N
                 started_on=_since(_plain(card.cssselect("span.rounded-card__date")) or "", today),
                 expected_return=_plain(card.cssselect("span.rounded-card__status")),
                 status=_plain(current),
+                report_url=_report(base, card),
             )
         )
     return injuries
+
+
+def _report(base: str, card: HtmlElement) -> str | None:
+    links = card.cssselect(".links a.lesion")
+    return http_url(base, links[0].get("href")) if links else None
 
 
 def _since(text: str, today: Date) -> Date | None:

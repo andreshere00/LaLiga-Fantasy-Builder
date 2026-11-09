@@ -12,7 +12,7 @@ import {
 import { TeamPlayersSection } from "./TeamPlayersSection";
 import { TeamPerformanceSection } from "./TeamPerformanceSection";
 import { TeamLineupSection } from "./TeamLineupSection";
-import { TeamNewsSection } from "./TeamNewsSection";
+import { TeamNewsInjuriesSection } from "./TeamNewsInjuriesSection";
 import type { TeamRouteState } from "./teamRoutes";
 import "./teams.css";
 
@@ -20,7 +20,7 @@ const SECTION_LABELS: Record<TeamSection, string> = {
   players: "Players",
   performance: "Performance",
   lineup: "Lineup",
-  news: "News",
+  news: "News & Injuries",
 };
 
 export function TeamsPage({ opponentClubId = null }: { opponentClubId?: number | null }) {
@@ -133,7 +133,6 @@ export function TeamsPage({ opponentClubId = null }: { opponentClubId?: number |
       {dossier.data?.roster ? (
         <TeamPlayersSection
           roster={dossier.data.roster}
-          injuries={dossier.data.injuries ?? null}
           seasonStats={{
             data: seasonStats.data,
             loading: seasonStats.isPending && seasonStats.fetchStatus !== "idle",
@@ -166,12 +165,20 @@ export function TeamsPage({ opponentClubId = null }: { opponentClubId?: number |
         />
       ) : <section id="team-lineup" tabIndex={-1} />}
       <SegmentNotice
-        failed={dossier.data?.segmentErrors?.some((error) => error.segment === "news") ?? false}
+        failed={dossier.data?.segmentErrors?.some(
+          (error) => error.segment === "news" || error.segment === "injuries",
+        ) ?? false}
         onRetry={() => void dossier.refetch()}
       />
-      {dossier.data?.news
-        ? <TeamNewsSection news={dossier.data.news} />
-        : <section id="team-news" tabIndex={-1} />}
+      {dossier.data && (dossier.data.news || dossier.data.injuries)
+        ? (
+          <TeamNewsInjuriesSection
+            injuries={dossier.data.injuries ?? null}
+            news={dossier.data.news ?? null}
+            squad={dossier.data.roster?.players ?? []}
+            returnTo={teamPath(clubId ?? "", { ...route, section: "news" })}
+          />
+        ) : <section id="team-news" tabIndex={-1} />}
     </div>
   );
 }

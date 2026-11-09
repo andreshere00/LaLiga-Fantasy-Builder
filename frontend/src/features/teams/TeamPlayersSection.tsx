@@ -1,8 +1,6 @@
 import { useEffect, useMemo, useState, type Ref } from "react";
 import { Link, useLocation } from "react-router-dom";
 import { t, useTranslation } from "../../i18n";
-import { dateFormatter } from "../../i18n/format";
-import { Badge } from "../../components/ui/Badge";
 import { playerAge } from "../players/playerDetailFormat";
 import { positionAbbrev, positionLabel, positionTone } from "../market/positions";
 import { usePlayerOutlooks } from "../lineup/useSquadStats";
@@ -46,22 +44,11 @@ const COLUMN_LABELS: Record<SquadColumn, string> = {
   redCards: "Red cards",
 };
 
-const INJURY_LABELS: Record<string, string> = {
-  "Pendiente pruebas": "Awaiting tests",
-  Postoperatorio: "Post-operative",
-  Rehabilitación: "Rehabilitation",
-  "Trabajo de campo": "Field work",
-  "Parcial con el grupo": "Partial training with the group",
-  "Grupo sin el alta": "Training with the group",
-};
-
 export function TeamPlayersSection({
   roster,
-  injuries,
   seasonStats,
 }: {
   roster: Roster;
-  injuries: ClubDossierDto["injuries"];
   seasonStats?: SeasonStatsState;
 }) {
   useTranslation();
@@ -105,15 +92,6 @@ export function TeamPlayersSection({
           media={media}
           recent={recent}
         />
-      </div>
-      <div className="team-block">
-        <h3>
-          {t("Injured players")}
-          {injuries?.published && injuries.items.length > 0
-            ? <span className="team-count">{injuries.items.length}</span>
-            : null}
-        </h3>
-        <TeamInjuryList injuries={injuries} />
       </div>
       <div className="team-block">
         <h3>{t("Squad")}</h3>
@@ -239,50 +217,6 @@ export function TeamPlayersSection({
       setDirection(next === "position" ? "asc" : "desc");
     }
   }
-}
-
-export function TeamInjuryList({
-  injuries,
-}: {
-  injuries: ClubDossierDto["injuries"];
-}) {
-  useTranslation();
-  if (!injuries) return null;
-  if (!injuries.published) return <p>{t("Current injuries are not published for this club.")}</p>;
-  if (injuries.items.length === 0) return <p>{t("No current injuries were published.")}</p>;
-  return (
-    <div className="team-table-wrap">
-      <table className="team-table team-injury-table">
-        <caption className="visually-hidden">{t("Injured players")}</caption>
-        <thead>
-          <tr>
-            <th scope="col">{t("Player")}</th>
-            <th scope="col">{t("Injury status")}</th>
-            <th scope="col">{t("Expected return")}</th>
-            <th scope="col">{t("Started")}</th>
-          </tr>
-        </thead>
-        <tbody>
-          {injuries.items.map((item) => (
-            <tr key={`${item.name}-${item.startedOn ?? ""}`}>
-              <th scope="row">{item.name}</th>
-              <td data-label={t("Injury status")}>
-                {item.status
-                  ? <Badge>{t(INJURY_LABELS[item.status] ?? item.status)}</Badge>
-                  : "—"}
-              </td>
-              <td data-label={t("Expected return")}>{item.expectedReturn || "—"}</td>
-              <td data-label={t("Started")}>
-                {item.startedOn
-                  ? <time dateTime={item.startedOn}>{startedLabel(item.startedOn)}</time>
-                  : "—"}
-              </td>
-            </tr>
-          ))}
-        </tbody>
-      </table>
-    </div>
-  );
 }
 
 type Outlook = {
@@ -456,14 +390,6 @@ function SortHeader({
       </button>
     </th>
   );
-}
-
-function startedLabel(value: string): string {
-  const parsed = new Date(`${value}T12:00:00`);
-  if (!Number.isFinite(parsed.getTime())) return value;
-  return dateFormatter({
-    day: "numeric", month: "short", year: "numeric", timeZone: "Europe/Madrid",
-  }).format(parsed);
 }
 
 function formatCount(value: unknown): string {

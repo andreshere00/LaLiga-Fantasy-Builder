@@ -351,9 +351,6 @@
 .team-squad-table .is-points .team-meter { margin-top: 4px; }
 .team-squad-table th:not(.is-player):not(.is-position) button { text-align: right; }
 .team-squad-table th.is-position button { text-align: left; }
-.team-injury-table th:first-child,
-.team-injury-table td { text-align: left; }
-.team-injury-table .fb-badge { white-space: normal; }
 
 /* ---- Performance ---- */
 .team-controls { display: flex; flex-wrap: wrap; gap: 16px 40px; }
@@ -691,9 +688,20 @@
 
 /* Alternatives: one disclosure per line, each header a labelled, countable target. */
 .team-alternatives { gap: 8px; }
-.team-alternatives-head { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; }
-.team-alternatives-toggle { min-height: 44px; padding: 0 4px; border: 0; background: transparent; color: var(--fb-secondary); font: 600 13px/1 var(--fb-font-body); text-decoration: underline; text-underline-offset: 3px; cursor: pointer; }
-.team-alternatives-toggle:focus-visible,
+.team-coach-block { display: grid; gap: 16px; margin-bottom: 16px; }
+.team-coach-block > h3 { margin: 0; }
+.team-coach-block .team-coach { margin-bottom: 0; }
+.team-alternatives-head { display: flex; align-items: flex-end; justify-content: space-between; gap: 12px; margin-bottom: 8px; }
+.team-alternatives-title { display: grid; gap: 16px; min-width: 0; }
+.team-alternatives-title h3 { margin: 0; }
+.team-alternatives-toggle { padding: 4px 12px; font-size: 12px; letter-spacing: .04em; text-transform: uppercase; }
+.team-toggle-chevrons { display: block; position: relative; width: 10px; height: 14px; }
+.team-toggle-chevrons::before,
+.team-toggle-chevrons::after { content: ""; position: absolute; left: 1px; width: 6px; height: 6px; border-right: 2px solid currentColor; border-bottom: 2px solid currentColor; transform: rotate(45deg); transition: transform var(--fb-color-duration, .15s); }
+.team-toggle-chevrons::before { top: 0; }
+.team-toggle-chevrons::after { top: 6px; }
+.team-toggle-chevrons[data-open]::before { top: 5px; transform: rotate(-135deg); }
+.team-toggle-chevrons[data-open]::after { top: 1px; transform: rotate(-135deg); }
 .team-alt-trigger:focus-visible { outline: 2px solid var(--fb-focus); outline-offset: 2px; }
 .team-alt-group { border: 1px solid var(--fb-line); background: var(--fb-surface); }
 .team-alt-group[data-line="portero"] { border-left: 4px solid var(--fb-warning); }
@@ -738,31 +746,78 @@
 .team-pitch-meta .team-mvp-form { padding-left: 0; border-left: 0; }
 .team-pitch-meta .team-mvp-form img { width: clamp(14px, 3cqi, 20px); height: clamp(14px, 3cqi, 20px); }
 
-/* ---- News ---- */
-.team-news-list {
+/* ---- News & injuries ---- */
+.team-news-board {
   display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 16px;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  gap: 24px clamp(24px, 3vw, 48px);
+  align-items: start;
+}
+.team-injury-list,
+.team-feed-list { display: grid; margin: 0; padding: 0; list-style: none; }
+.team-injury-list { gap: 12px; }
+.team-injury {
+  display: grid;
+  grid-template-columns: 56px minmax(0, 1fr);
+  gap: 14px;
+  padding: 14px 16px;
+  border: 1px solid var(--fb-line);
+  background: var(--fb-surface);
+}
+.team-injury-photo { width: 56px; height: 56px; flex: none; font: 700 16px/1 var(--fb-font-body); }
+.team-injury-body { display: grid; gap: 8px; min-width: 0; }
+.team-injury-head { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 10px; font-weight: 700; color: var(--fb-tertiary); }
+.team-injury-head strong { font-weight: 700; }
+.team-injury-facts { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 8px 16px; margin: 0; }
+.team-injury-facts > div { display: grid; gap: 2px; min-width: 0; align-content: start; }
+.team-injury-facts dt { color: var(--fb-muted); font-size: 12px; font-weight: 600; letter-spacing: .04em; text-transform: uppercase; }
+.team-injury-facts dd { margin: 0; font-size: 14px; overflow-wrap: anywhere; }
+.team-injury-facts .fb-badge { white-space: normal; }
+.team-hierarchy { display: inline-flex; align-items: center; gap: 6px; }
+.team-hierarchy img { width: 20px; height: 20px; }
+.team-hierarchy img.is-neutral { opacity: .6; }
+
+.team-feed { display: grid; gap: 16px; }
+.team-feed .team-control { gap: 8px; }
+.team-feed-day { display: grid; gap: 4px; }
+.team-feed-day-title {
   margin: 0;
-  padding: 0;
-  list-style: none;
+  padding-bottom: 6px;
+  border-bottom: 1px solid var(--fb-line);
+  color: var(--fb-secondary);
+  font: 700 12px/1.3 var(--fb-font-body);
+  letter-spacing: .04em;
+  text-transform: uppercase;
 }
-.team-news-list > li { min-width: 0; border: 1px solid var(--fb-line); background: var(--fb-surface); }
-.team-news-list > .is-lead {
-  grid-column: 1 / -1;
-  border-left: 4px solid var(--fb-primary);
+.team-feed-item {
+  display: grid;
+  grid-template-columns: 3.2rem auto minmax(0, 1fr);
+  grid-template-areas: "time kind title" ". . link";
+  align-items: baseline;
+  gap: 2px 10px;
+  padding: 8px 0;
+  border-bottom: 1px solid var(--fb-line);
 }
-.team-news-list article { display: grid; gap: 6px; justify-items: start; padding: 16px 20px; }
-.team-news-date { color: var(--fb-muted); font-size: 12px; }
-.team-news-list h3 {
-  margin: 0;
-  letter-spacing: normal;
-  text-transform: none;
-  color: var(--fb-tertiary);
-  font: 600 16px/1.4 var(--fb-font-body);
-  overflow-wrap: anywhere;
+.team-feed-item:last-child { border-bottom: 0; }
+.team-feed-item > time,
+.team-feed-item > span:first-child { grid-area: time; }
+.team-feed-kind {
+  grid-area: kind;
+  justify-self: start;
+  padding: 2px 6px;
+  border: 1px solid var(--fb-line);
+  background: var(--fb-subtle);
+  color: var(--fb-secondary);
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: .03em;
+  text-transform: uppercase;
+  white-space: nowrap;
 }
-.team-news-list .is-lead h3 { font-size: 22px; font-weight: 700; }
+.team-feed-kind[data-kind="injury_update"] { border-color: var(--fb-primary); color: var(--fb-primary); }
+.team-feed-title { grid-area: title; margin: 0; color: var(--fb-tertiary); font-size: 14px; line-height: 1.4; overflow-wrap: anywhere; }
+.team-feed-item .team-news-read { grid-area: link; justify-self: start; min-height: 28px; }
+.team-news-date { color: var(--fb-muted); font-size: 12px; font-variant-numeric: tabular-nums; }
 .team-news-read {
   display: inline-flex;
   align-items: center;
@@ -788,7 +843,7 @@
   .team-section-title { font-size: 24px; }
   .team-mvp-list,
   .team-pair,
-  .team-news-list,
+  .team-news-board,
   .team-lineup-board { grid-template-columns: 1fr; }
   .team-record { grid-template-columns: 1fr; }
   .team-form { flex-wrap: wrap; }
@@ -800,27 +855,10 @@
   .team-fixture-side:first-child { flex-direction: column; justify-content: flex-start; text-align: center; gap: 4px; }
   .team-fixture-score { min-width: 3.5rem; }
   .team-xi-player { grid-template-columns: 44px minmax(0, 1fr) 4rem auto; }
-  .team-news-list .is-lead h3 { font-size: 19px; }
 
-  /* Injuries become labeled cards so no column needs horizontal scrolling. */
-  .team-injury-table thead { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0, 0, 0, 0); }
-  .team-injury-table,
-  .team-injury-table tbody,
-  .team-injury-table tr,
-  .team-injury-table th,
-  .team-injury-table td { display: block; }
-  .team-injury-table tr { padding: 10px 14px; border-bottom: 1px solid var(--fb-line); }
-  .team-injury-table tbody tr:last-child { border-bottom: 0; }
-  .team-injury-table th,
-  .team-injury-table td { padding: 2px 0; border: 0; }
-  .team-injury-table tbody tr:hover > * { background: transparent; }
-  .team-injury-table td { display: flex; gap: 10px; font-size: 14px; }
-  .team-injury-table td::before {
-    content: attr(data-label);
-    flex: 0 0 7.5rem;
-    color: var(--fb-muted);
-    font-size: 12px;
-  }
+  .team-injury { grid-template-columns: 44px minmax(0, 1fr); padding: 12px; }
+  .team-injury-photo { width: 44px; height: 44px; }
+  .team-feed-item { grid-template-columns: auto minmax(0, 1fr); grid-template-areas: "time kind" "title title" "link link"; }
 }
 @media (prefers-reduced-motion: reduce) {
   .team-sections a,

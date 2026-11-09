@@ -26,7 +26,7 @@ function FormScale({ value }: { value: number | null | undefined }) {
 }
 
 /** Coach report and XI averages in one card: how far the published XI can be trusted. */
-export function LineupCoach({ prediction }: { prediction: Prediction }) {
+export function LineupCoach({ prediction, heading, subtitle }: { prediction: Prediction; heading?: string; subtitle?: string }) {
   useTranslation();
   const { coach, summary } = prediction;
   const hasSummary = summary != null && (
@@ -38,7 +38,10 @@ export function LineupCoach({ prediction }: { prediction: Prediction }) {
   const predictability = predictabilityLabel(coach?.matchdayPredictability);
   const season = coach?.seasonPredictabilityPercent;
   return (
-    <article className="team-coach">
+    <div className="team-coach-block">
+      {heading ? <h3>{heading}</h3> : null}
+      {subtitle ? <p className="team-note">{subtitle}</p> : null}
+      <article className="team-coach">
       {coach ? (
         <>
           <header className="team-coach-head">
@@ -106,6 +109,7 @@ export function LineupCoach({ prediction }: { prediction: Prediction }) {
           </div>
         </dl>
       ) : null}
-    </article>
+      </article>
+    </div>
   );
 }

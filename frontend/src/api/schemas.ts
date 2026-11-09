@@ -1096,6 +1096,7 @@ export const clubDossierSchema = responseSchema(readObject({
       startedOn: z.string().nullable().optional(),
       expectedReturn: z.string().nullable().optional(),
       status: z.string().nullable().optional(),
+      reportUrl: z.string().nullable().optional(),
     })),
   }).nullable().optional(),
   news: readObject({
@@ -1103,6 +1104,8 @@ export const clubDossierSchema = responseSchema(readObject({
       title: z.string(),
       url: z.string(),
       publishedAt: z.string().nullable().optional(),
+      kind: z.string().optional(),
+      target: z.string().optional(),
     })),
   }).nullable().optional(),
   segmentErrors: z.array(clubSegmentErrorSchema).optional(),

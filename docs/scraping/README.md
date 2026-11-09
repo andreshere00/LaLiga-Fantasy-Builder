@@ -42,7 +42,7 @@ Health probes are open.
 | `GET` | `/health/live`, `/health/ready` | None | Docker / Compose health |
 | `GET` | `/internal/health` | Token | Breaker, index age, cache stats |
 | `GET` | `/internal/clubs/{slug}` | Token | Parsed club page: XI, fixtures, injuries |
-| `GET` | `/internal/clubs/{slug}/news` | Token | Five newest club changelog headlines |
+| `GET` | `/internal/clubs/{slug}/news` | Token | Every club changelog event (about the last week) with its kind and link target |
 | `GET` | `/internal/scrape/linked-data` | Token | Index counts (`refresh` query) |
 | `POST` | `/internal/scrape/linked-data/refresh` | Token | Force sitemap rebuild |
 | `GET` | `/internal/scrape/routes` | Token | Resolve nickname → route |

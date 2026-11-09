@@ -60,16 +60,19 @@ def test_parse_club_page_saved_villarreal_reads_xi_results_and_injuries() -> Non
     assert injury.started_on is not None and injury.started_on.isoformat() == "2026-10-30"
     assert injury.expected_return == "Baja hasta abril"
     assert injury.diagnosis == "Rotura en los isquiotibiales"
+    assert injury.report_url is not None and "/laliga/noticias/" in injury.report_url
 
 
-def test_parse_club_news_saved_page_returns_five_headlines() -> None:
+def test_parse_club_news_saved_page_returns_every_event_with_kind_and_target() -> None:
     page = _page("villarreal-ultimos-cambios.html", "villarreal", PageKind.CLUB_NEWS)
     page = page.model_copy(
         update={"url": "https://www.futbolfantasy.com/laliga/equipos/villarreal/ultimos-cambios"}
     )
     news = parse_club_news(page)
-    assert len(news.items) == 5
+    assert len(news.items) == 7
     assert news.items[2].title == "Foyth pasa de duda a baja"
+    assert [item.kind for item in news.items[:3]] == ["lineup", "lineup", "injury_update"]
+    assert [item.target for item in news.items[:3]] == ["club", "club", "article"]
     assert news.items[0].published_at is not None
     assert news.items[0].url.startswith("https://www.futbolfantasy.com/")
 

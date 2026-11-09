@@ -27,8 +27,8 @@ Responses do not include HTML, tokens, or upstream bodies.
 | `roster` | Public player catalog grouped by real `teamId`. Coaches (`positionId` 5) are excluded. MVPs are the top three footballers by published season points, then name, then id. |
 | `performance` | Finalized LaLiga fixtures (`matchState` 7), plus other competitions from the parsed club page. The next match is the soonest unfinished LaLiga kickoff and stays out of the record. |
 | `prediction` | Scraped coach, starters, and alternatives. |
-| `injuries` | Scraped injury cards. `published` is false when the page has no injury block. |
-| `news` | Five newest scraped headlines and article links. |
+| `injuries` | Scraped injury cards (type, recovery phase, expected return, start date, medical-report link). `published` is false when the page has no injury block. |
+| `news` | Every event of the club's `ultimos-cambios` feed, newest first. The source publishes one unpaginated page covering about the last week, so there is no season history. Each item carries `kind` (`injury_update`, `lineup`, `call_up`, `national_team`, `other`) and `target` (`article`, `match`, `club`: what `url` opens). |
 
 ## Roster season totals
 

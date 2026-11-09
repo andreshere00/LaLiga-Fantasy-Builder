@@ -123,6 +123,6 @@ including the Copa del Rey rows (Manacor 0-5, Lebrijana 2-3). Store a second
 score only when the page publishes a second score node.
 
 Villarreal alternatives include published `0%` rows (Diatta, Gerard, Foyth,
-Akhomach). The five newest news items are the first five `a.event-link` nodes.
+Akhomach). The news items are all `a.event-link` nodes of the one-page feed (about a week; Athletic had 37, Getafe 7). The event type comes from the `img.event-icon` file name, and the same article URL can repeat across several events.
 The first Villarreal headlines are lineup updates and status changes such as
 `Foyth pasa de duda a baja`, each with a FutbolFantasy article href.
