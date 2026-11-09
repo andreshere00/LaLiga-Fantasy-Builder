@@ -468,7 +468,7 @@
   font-variant-numeric: tabular-nums;
 }
 .team-record dt { color: var(--fb-muted); font-size: 13px; }
-.team-form { display: flex; align-self: center; gap: 4px; }
+.team-form { display: flex; align-self: center; justify-self: center; gap: 4px; }
 .team-result {
   display: inline-grid;
   place-items: center;
