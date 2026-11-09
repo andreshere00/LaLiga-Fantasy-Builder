@@ -110,20 +110,20 @@ describe("TeamNewsInjuriesSection", () => {
 
   // ---- News feed ---- //
 
-  it("TeamNewsInjuriesSection_feed_shows_five_by_default_and_expands_with_the_range_control", () => {
+  it("TeamNewsInjuriesSection_feed_shows_ten_by_default_and_narrows_or_expands_with_the_range_control", () => {
     renderSection();
     const feedBlock = document.querySelector(".team-feed") as HTMLElement;
-    expect(feedBlock.querySelectorAll(".team-feed-item")).toHaveLength(5);
-    expect(within(feedBlock).getByRole("button", { name: "5" }).getAttribute("aria-pressed")).toBe("true");
-    expect(within(feedBlock).queryByRole("button", { name: "20" })).toBeNull();
-    fireEvent.click(within(feedBlock).getByRole("button", { name: "10" }));
     expect(feedBlock.querySelectorAll(".team-feed-item")).toHaveLength(10);
+    expect(within(feedBlock).getByRole("button", { name: "10" }).getAttribute("aria-pressed")).toBe("true");
+    expect(within(feedBlock).queryByRole("button", { name: "20" })).toBeNull();
+    fireEvent.click(within(feedBlock).getByRole("button", { name: "5" }));
+    expect(feedBlock.querySelectorAll(".team-feed-item")).toHaveLength(5);
     fireEvent.click(within(feedBlock).getByRole("button", { name: "All" }));
     expect(feedBlock.querySelectorAll(".team-feed-item")).toHaveLength(12);
     expect(within(feedBlock).getByRole("status").textContent).toMatch(/Showing 12 of 12 events, covering \d+ days?/);
   });
 
-  it("TeamNewsInjuriesSection_feed_translates_sentences_and_only_links_articles", () => {
+  it("TeamNewsInjuriesSection_feed_translates_sentences_and_links_every_event_to_futbolfantasy", () => {
     renderSection();
     const feedBlock = document.querySelector(".team-feed") as HTMLElement;
     expect(within(feedBlock).getAllByText("Yuri is now recovered").length).toBeGreaterThan(0);
@@ -131,8 +131,10 @@ describe("TeamNewsInjuriesSection", () => {
     expect(within(feedBlock).getByText("Injury update")).toBeTruthy();
     const links = within(feedBlock).getAllByRole("link")
       .filter((link) => link.getAttribute("href")?.includes("futbolfantasy.com"));
-    expect(links).toHaveLength(1);
+    expect(links).toHaveLength(10);
     expect(links[0].getAttribute("href")).toBe("https://www.futbolfantasy.com/laliga/noticias/154051-x");
+    expect(links[0].textContent).toContain("Read article");
+    expect(within(feedBlock).getAllByRole("link", { name: /View on FutbolFantasy/ })).toHaveLength(9);
   });
 
   it("TeamNewsInjuriesSection_repeated_urls_and_titles_render_without_key_collisions", () => {
@@ -142,7 +144,7 @@ describe("TeamNewsInjuriesSection", () => {
       publishedAt: "2026-11-08T10:00:00+01:00", kind: "lineup", target: "club",
     })) });
     expect(spy).not.toHaveBeenCalled();
-    expect(document.querySelectorAll(".team-feed-item")).toHaveLength(5);
+    expect(document.querySelectorAll(".team-feed-item")).toHaveLength(8);
     spy.mockRestore();
   });
 
@@ -158,7 +160,7 @@ describe("TeamNewsInjuriesSection", () => {
       ...feed(6).map((item) => ({ ...item, publishedAt: "2026-11-07T10:00:00+01:00" })),
     ] });
     const rows = document.querySelectorAll(".team-feed-item");
-    expect(rows).toHaveLength(5);
+    expect(rows).toHaveLength(7);
     expect(rows[0].textContent).toContain("3 players leave for international duty: Imga, Djaló, Sancet");
   });
 

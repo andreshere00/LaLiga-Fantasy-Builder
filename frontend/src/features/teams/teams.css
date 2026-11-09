@@ -409,22 +409,24 @@
 /* Segmented control: one choice per group, joined so the options read as a set. */
 .team-filter { display: flex; flex-wrap: wrap; }
 .team-filter button + button { margin-left: -1px; }
+.team-filter button:not([aria-pressed="true"]):hover {
+  background: var(--fb-coral);
+  color: var(--fb-on-coral);
+}
 .team-filter button[aria-pressed="true"] {
   position: relative;
   background: var(--fb-primary);
-  color: var(--fb-on-brand);
+  color: #fff;
   border-color: var(--fb-primary);
-  text-decoration: underline;
-  text-underline-offset: 4px;
 }
 /* Logos sit on a white chip so dark marks stay legible in the dark theme. */
-.team-filter .team-filter-logo { display: grid; place-items: center; min-width: 64px; padding: 4px 10px; }
+.team-filter .team-filter-logo { display: inline-flex; align-items: center; gap: 8px; padding: 2px 12px 2px 8px; }
 .team-filter-logo img {
   box-sizing: content-box;
   width: auto;
-  max-width: 110px;
-  height: 28px;
-  padding: 3px 6px;
+  max-width: 56px;
+  height: 18px;
+  padding: 2px 4px;
   object-fit: contain;
   background: #fff;
 }
@@ -846,11 +848,12 @@
 }
 .team-feed-item {
   display: grid;
-  grid-template-columns: 3.2rem auto minmax(0, 1fr);
+  /* Fixed time and tag columns keep every title on one left edge, whatever the tag says. */
+  grid-template-columns: 3.5rem 8.5rem minmax(0, 1fr);
   grid-template-areas: "time kind title" ". . link";
   align-items: baseline;
-  gap: 2px 10px;
-  padding: 8px 0;
+  gap: 4px 16px;
+  padding: 12px 0;
   border-bottom: 1px solid var(--fb-line);
 }
 .team-feed-item:last-child { border-bottom: 0; }
@@ -858,8 +861,11 @@
 .team-feed-item > span:first-child { grid-area: time; }
 .team-feed-kind {
   grid-area: kind;
-  justify-self: start;
-  padding: 2px 6px;
+  justify-self: stretch;
+  overflow: hidden;
+  padding: 3px 6px;
+  text-align: center;
+  text-overflow: ellipsis;
   border: 1px solid var(--fb-line);
   background: var(--fb-subtle);
   color: var(--fb-secondary);
@@ -870,9 +876,9 @@
   white-space: nowrap;
 }
 .team-feed-kind[data-kind="injury_update"] { border-color: var(--fb-primary); color: var(--fb-primary); }
-.team-feed-title { grid-area: title; margin: 0; color: var(--fb-tertiary); font-size: 14px; line-height: 1.4; overflow-wrap: anywhere; }
-.team-feed-item .team-news-read { grid-area: link; justify-self: start; min-height: 28px; }
-.team-news-date { color: var(--fb-muted); font-size: 12px; font-variant-numeric: tabular-nums; }
+.team-feed-title { grid-area: title; margin: 0; color: var(--fb-tertiary); font-size: 15px; font-weight: 600; line-height: 1.5; overflow-wrap: anywhere; }
+.team-feed-item .team-news-read { grid-area: link; justify-self: start; min-height: 28px; color: var(--fb-muted); }
+.team-news-date { color: var(--fb-muted); font-size: 13px; font-variant-numeric: tabular-nums; }
 .team-news-read {
   display: inline-flex;
   align-items: center;

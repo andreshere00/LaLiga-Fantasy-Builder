@@ -10,7 +10,7 @@ import {
 
 export type NewsItem = NonNullable<NonNullable<ClubDossierDto["news"]>["items"][number]>;
 
-const DEFAULT_LIMIT: FeedLimit = 5;
+const DEFAULT_LIMIT: FeedLimit = 10;
 
 export function TeamNewsFeed({ events }: { events: readonly NewsItem[] }) {
   useTranslation();
@@ -66,13 +66,12 @@ export function TeamNewsFeed({ events }: { events: readonly NewsItem[] }) {
                   <p className="team-feed-title">
                     {label ?? <ScrapedText text={item.title} textId={id} />}
                   </p>
-                  {item.target === "article" || item.target === "match" ? (
-                    <a className="team-news-read" href={item.url} target="_blank" rel="noreferrer">
-                      {item.target === "match" ? t("View match") : t("Read article")}
-                      <span aria-hidden="true"> ↗</span>
-                      <span className="visually-hidden"> {t("Opens in a new tab.")}</span>
-                    </a>
-                  ) : null}
+                  <a className="team-news-read" href={item.url} target="_blank" rel="noreferrer">
+                    {item.target === "match" ? t("View match")
+                      : item.target === "article" ? t("Read article") : t("View on FutbolFantasy")}
+                    <span aria-hidden="true"> ↗</span>
+                    <span className="visually-hidden"> {t("Opens in a new tab.")}</span>
+                  </a>
                 </li>
               );
             })}

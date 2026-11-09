@@ -39,10 +39,10 @@ export type ResultSummary = {
 };
 
 const FILTER_LABELS: Record<TeamCompetition, string> = {
-  laliga: "LaLiga",
-  european: "European",
-  domestic: "Domestic",
-  friendly: "Friendlies",
+  laliga: "National league",
+  european: "European competitions",
+  domestic: "Domestic cup",
+  friendly: "Other competition",
   all: "All competitions",
 };
 
