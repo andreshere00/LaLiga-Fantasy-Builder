@@ -422,11 +422,11 @@
 /* Logos sit on a white chip so dark marks stay legible in the dark theme. */
 .team-filter .team-filter-logo { display: inline-flex; align-items: center; gap: 8px; padding: 2px 12px 2px 8px; }
 .team-filter-logo img {
-  box-sizing: content-box;
-  width: auto;
-  max-width: none;
-  height: 18px;
-  padding: 2px 4px;
+  /* Every logo gets the same square tile; object-fit keeps each mark's own proportions inside it. */
+  box-sizing: border-box;
+  width: 28px;
+  height: 28px;
+  padding: 3px;
   object-fit: contain;
   background: #fff;
 }
