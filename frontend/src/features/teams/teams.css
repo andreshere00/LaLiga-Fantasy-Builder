@@ -848,9 +848,9 @@
 }
 .team-feed-item {
   display: grid;
-  /* Fixed time and tag columns keep every title on one left edge, whatever the tag says. */
-  grid-template-columns: 3.5rem 8.5rem minmax(0, 1fr);
-  grid-template-areas: "time kind title" ". . link";
+  /* Fixed tag and time columns keep every title on one left edge, whatever the tag says. */
+  grid-template-columns: 10.5rem minmax(0, 1fr) 3.5rem;
+  grid-template-areas: "kind title time" ". link .";
   align-items: baseline;
   gap: 4px 16px;
   padding: 12px 0;
@@ -878,7 +878,7 @@
 .team-feed-kind[data-kind="injury_update"] { border-color: var(--fb-primary); color: var(--fb-primary); }
 .team-feed-title { grid-area: title; margin: 0; color: var(--fb-tertiary); font-size: 15px; font-weight: 600; line-height: 1.5; overflow-wrap: anywhere; }
 .team-feed-item .team-news-read { grid-area: link; justify-self: start; min-height: 28px; color: var(--fb-muted); }
-.team-news-date { color: var(--fb-muted); font-size: 13px; font-variant-numeric: tabular-nums; }
+.team-news-date { text-align: right; color: var(--fb-muted); font-size: 13px; font-variant-numeric: tabular-nums; }
 .team-news-read {
   display: inline-flex;
   align-items: center;
