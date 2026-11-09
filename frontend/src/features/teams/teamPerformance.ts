@@ -1,3 +1,4 @@
+import { dateFormatter } from "../../i18n/format";
 import type { TeamCompetition, TeamWindow } from "./teamRoutes";
 
 export type ClubMatchView = {
@@ -141,4 +142,36 @@ function byKickoff(left: ClubMatchView, right: ClubMatchView): number {
   if (leftKnown && rightKnown && leftTime !== rightTime) return leftTime - rightTime;
   if (leftKnown !== rightKnown) return leftKnown ? -1 : 1;
   return left.matchId.localeCompare(right.matchId);
+}
+
+export function resultWord(outcome: ClubMatchView["outcome"]): "Win" | "Draw" | "Loss" {
+  return outcome === "win" ? "Win" : outcome === "draw" ? "Draw" : "Loss";
+}
+
+/** Goal difference with an explicit plus sign, as the overview shows it. */
+export function signedDifference(value: number): string {
+  return value > 0 ? `+${value}` : String(value);
+}
+
+/** Kick-off time in Madrid, or null when the page published only a date. */
+export function kickoffTime(match: ClubMatchView): string | null {
+  if (!match.kickoff) return null;
+  const parsed = new Date(match.kickoff);
+  if (!Number.isFinite(parsed.getTime())) return null;
+  // Midnight UTC is how a date-only kickoff arrives; it is not a published time.
+  if (parsed.getUTCHours() === 0 && parsed.getUTCMinutes() === 0) return null;
+  return dateFormatter({ hour: "2-digit", minute: "2-digit", timeZone: "Europe/Madrid" })
+    .format(parsed);
+}
+
+export function matchDate(match: ClubMatchView): string | null {
+  if (match.kickoff) {
+    const parsed = new Date(match.kickoff);
+    if (Number.isFinite(parsed.getTime())) {
+      return dateFormatter({
+        day: "numeric", month: "short", year: "numeric", timeZone: "Europe/Madrid",
+      }).format(parsed);
+    }
+  }
+  return match.kickoffText;
 }

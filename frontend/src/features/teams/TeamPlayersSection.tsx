@@ -16,6 +16,8 @@ import type { ClubDossierDto, ClubRosterStatsDto } from "../../api/schemas";
 import { RecentPoints } from "./RecentPoints";
 import { useRecentPoints, type RecentPoint } from "./useRecentPoints";
 import { TeamMeter } from "./TeamMeter";
+import { TeamSummary } from "./TeamSummary";
+import { mvpSummary, squadSummary } from "./teamSummaries";
 import { publishedColumns, sortSquad, type SquadColumn, type SquadRow } from "./teamTable";
 
 type Roster = NonNullable<ClubDossierDto["roster"]>;
@@ -81,20 +83,25 @@ export function TeamPlayersSection({
   const weeks = roster.coverage.matchweeks.join(", ");
   const unavailable = season?.coverage.unavailable ?? 0;
   const maxPoints = Math.max(0, ...rows.map((row) => row.points ?? 0));
+  const mvpText = mvpSummary(roster.mvps);
+  const squadText = squadSummary(rows);
   return (
     <section id="team-players" tabIndex={-1} aria-labelledby="team-players-title">
       <h2 id="team-players-title" className="team-section-title">{t("Players")}</h2>
       <div className="team-block">
-        <h3>{t("MVPs")}</h3>
+        <h3 id="team-mvps-title">{t("MVPs")}</h3>
+        <TeamSummary id="team-summary-mvps" text={mvpText} />
         <MvpStrip
           players={roster.mvps}
+          described={mvpText !== null}
           outlooks={outlooks.profiles}
           media={media}
           recent={recent}
         />
       </div>
       <div className="team-block">
-        <h3>{t("Squad")}</h3>
+        <h3 id="team-squad-title">{t("Squad")}</h3>
+        <TeamSummary id="team-summary-squad" text={squadText} />
         <p className="team-note">
           {season
             ? t("{{0}} players. LaLiga {{1}} season totals from FutbolFantasy.", {
@@ -130,7 +137,8 @@ export function TeamPlayersSection({
           className={statColumns.length > 0 ? "team-table-wrap" : "team-table-wrap is-compact"}
           tabIndex={0}
           role="region"
-          aria-label={t("Squad")}
+          aria-labelledby="team-squad-title"
+          aria-describedby={squadText ? "team-summary-squad" : undefined}
         >
           <table className="team-table team-squad-table">
             <thead>
@@ -234,11 +242,13 @@ export function isStarterFlagged(percent: number | null | undefined): boolean {
 
 function MvpStrip({
   players,
+  described,
   outlooks,
   media,
   recent,
 }: {
   players: Roster["mvps"];
+  described: boolean;
   outlooks: { get(playerId: string): unknown };
   media: ReadonlyMap<string, { photoUrl: string | null }>;
   recent: ReadonlyMap<string, readonly RecentPoint[]>;
@@ -259,7 +269,8 @@ function MvpStrip({
     && shown.every(({ published }) => !published);
   return (
     <div>
-      <ul className="team-mvp-list">
+      <ul className="team-mvp-list" aria-labelledby="team-mvps-title"
+        aria-describedby={described ? "team-summary-mvps" : undefined}>
         {shown.map(({ player, radar, published }, index) => {
           const outlook = outlooks.get(player.playerId) as Outlook | undefined;
           const starter = outlook?.startProbability?.percent;

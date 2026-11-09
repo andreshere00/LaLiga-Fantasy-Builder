@@ -81,4 +81,29 @@ describe("TeamPerformanceSection", () => {
     fireEvent.click(screen.getByRole("button", { name: "Show all competitions" }));
     expect(onCompetition).toHaveBeenCalledWith("all");
   });
+
+  it("TeamPerformanceSection_each_widget_shows_a_summary_that_its_content_points_back_to", () => {
+    render(
+      <MemoryRouter><TeamPerformanceSection
+        performance={performance}
+        clubs={[{ clubId: 20, name: "Villarreal CF", badgeUrl: null }, { clubId: 9, name: "Getafe CF", badgeUrl: null }]}
+        competition="all"
+        window="5"
+        failed={false}
+        onCompetition={onCompetition}
+        onWindow={vi.fn()}
+        onRetry={vi.fn()}
+      /></MemoryRouter>,
+    );
+    const overview = screen.getByRole("group", { name: "Overview" });
+    expect(overview.getAttribute("aria-describedby")).toBe("team-summary-overview");
+    expect(document.getElementById("team-summary-overview")?.textContent)
+      .toContain("Played 1: won 0, drawn 0, lost 1.");
+    const previous = screen.getByRole("list", { name: "Previous matches" });
+    expect(document.getElementById(previous.getAttribute("aria-describedby") ?? "")?.textContent)
+      .toContain("Played 1, newest first.");
+    const upcoming = screen.getByRole("list", { name: "Upcoming matches" });
+    expect(document.getElementById(upcoming.getAttribute("aria-describedby") ?? "")?.textContent)
+      .toContain("Scheduled 1. Next: Villarreal CF vs Getafe CF");
+  });
 });

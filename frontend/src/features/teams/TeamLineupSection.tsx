@@ -26,6 +26,8 @@ import { LineupFormBadge } from "./LineupFormBadge";
 import { LineupPlayerDialog } from "./LineupPlayerDialog";
 import { RecentPoints } from "./RecentPoints";
 import { TeamMeter } from "./TeamMeter";
+import { TeamSummary } from "./TeamSummary";
+import { alternativesSummary, startersSummary } from "./teamSummaries";
 import { alternativeLines, pitchLineLabel, pitchLines, type PitchLine } from "./teamPitch";
 import { isStarterFlagged } from "./TeamPlayersSection";
 import { useRecentPoints } from "./useRecentPoints";
@@ -74,6 +76,7 @@ export function TeamLineupSection({
     (prediction?.alternatives ?? []).map((player) => resolve(asPlayer(player))),
   );
   const groups = alternativeLines(alternatives);
+  const startersText = startersSummary(starters);
   /** Every line starts wrapped; opening one loads its players' form. */
   const [open, setOpen] = useState<ReadonlySet<PitchLine> | null>(null);
   const expanded = open ?? new Set<PitchLine>();
@@ -113,9 +116,15 @@ export function TeamLineupSection({
         <>
           <div className="team-lineup-board">
             <div>
-              <h3>{t("Starters")}</h3>
+              <h3 id="team-starters-title">{t("Starters")}</h3>
+              <TeamSummary id="team-summary-starters" text={startersText} />
               <p className="team-note">{t("Select a player for details and actions.")}</p>
-              <div className="team-pitch">
+              <div
+                className="team-pitch"
+                role="group"
+                aria-labelledby="team-starters-title"
+                aria-describedby={startersText ? "team-summary-starters" : undefined}
+              >
                 <PitchMarkings />
                 <div className="team-pitch-rows">
                   {pitchLines(starters).map((line) => (
@@ -155,7 +164,8 @@ export function TeamLineupSection({
               <LineupCoach prediction={prediction} heading={t("Coach")} subtitle={t("How predictable the XI is for this matchday.")} />
               <div className="team-alternatives-head">
                 <div className="team-alternatives-title">
-                  <h3>{t("Alternatives")}</h3>
+                  <h3 id="team-alternatives-title">{t("Alternatives")}</h3>
+                  <TeamSummary id="team-summary-alternatives" text={alternativesSummary(groups)} />
                   <p className="team-note">{t("Likeliest substitutes by position. Open a group to compare them.")}</p>
                 </div>
                 {groups.length > 1 ? (

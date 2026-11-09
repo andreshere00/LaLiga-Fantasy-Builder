@@ -177,4 +177,21 @@ describe("TeamNewsInjuriesSection", () => {
     renderSection({ items: [] }, { published: true, items: [] });
     expect(screen.getByText("No current injuries were published.")).toBeTruthy();
   });
+
+  it("TeamNewsInjuriesSection_summarises_injuries_and_news_and_links_them_to_their_content", () => {
+    renderSection();
+    expect(document.getElementById("team-summary-injuries")?.textContent)
+      .toContain("Injured: 3. Most important: Unai Egiluz (Key player).");
+    expect(screen.getByRole("list", { name: "Injured players" }).getAttribute("aria-describedby"))
+      .toBe("team-summary-injuries");
+    expect(document.getElementById("team-summary-news")?.textContent)
+      .toMatch(/Events: 12, covering \d+ days?\. Latest: Injury update, /);
+    expect(document.querySelector(".team-feed")?.getAttribute("aria-describedby"))
+      .toBe("team-summary-news");
+  });
+
+  it("TeamNewsInjuriesSection_without_events_or_injuries_shows_no_summary", () => {
+    renderSection({ items: [] }, { published: true, items: [] });
+    expect(document.querySelector(".team-summary")).toBeNull();
+  });
 });

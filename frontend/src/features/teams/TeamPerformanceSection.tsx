@@ -1,20 +1,25 @@
 import { Link } from "react-router-dom";
 import { t, useTranslation } from "../../i18n";
-import { dateFormatter } from "../../i18n/format";
 import { BadgeImage } from "../../components/BadgeImage";
 import type { ClubDossierDto } from "../../api/schemas";
 import {
   competitionLabel,
   competitionName,
+  kickoffTime,
+  matchDate,
   matchWindow,
   nextMatchId,
+  resultWord,
   scoreText,
+  signedDifference,
   summarize,
   withClubNames,
   type ClubMatchView,
   type NamedClub,
 } from "./teamPerformance";
 import type { TeamCompetition, TeamWindow } from "./teamRoutes";
+import { TeamSummary } from "./TeamSummary";
+import { overviewSummary, previousSummary, upcomingSummary } from "./teamSummaries";
 
 import laliga from "../../assets/competitions/laliga.png";
 import copa from "../../assets/competitions/copa-del-rey.png";
@@ -126,14 +131,18 @@ export function TeamPerformanceSection({
           <div className={window === "season" ? "team-performance-board is-season" : "team-performance-board"}>
             <ResultSummary summary={summary} results={results} />
             <MatchList
+              id="previous"
               title={t("Previous matches")}
+              summary={previousSummary(view.previous)}
               matches={view.previous}
               nextId={null}
               clubs={clubs}
               showCompetition={competition !== "laliga"}
             />
             <MatchList
+              id="upcoming"
               title={t("Upcoming matches")}
+              summary={upcomingSummary(view.upcoming)}
               matches={view.upcoming}
               nextId={nextId}
               clubs={clubs}
@@ -153,12 +162,18 @@ function ResultSummary({
   results: readonly ClubMatchView[];
 }) {
   const difference = summary.goalsFor - summary.goalsAgainst;
-  const signed = difference > 0 ? `+${difference}` : String(difference);
+  const signed = signedDifference(difference);
   const tone = difference > 0 ? "positive" : difference < 0 ? "negative" : "even";
   return (
     <div className="team-match-group team-overview">
-      <h3>{t("Overview")}</h3>
-      <div className="team-record">
+      <h3 id="team-overview-title">{t("Overview")}</h3>
+      <TeamSummary id="team-summary-overview" text={overviewSummary(summary)} />
+      <div
+        className="team-record"
+        role="group"
+        aria-labelledby="team-overview-title"
+        aria-describedby="team-summary-overview"
+      >
         <section className="team-record-group" aria-labelledby="team-record-results">
           <h4 id="team-record-results" className="team-record-title">{t("Results")}</h4>
           <dl className="team-record-primary">
@@ -207,18 +222,16 @@ function ResultSummary({
   );
 }
 
-function resultWord(outcome: ClubMatchView["outcome"]): "Win" | "Draw" | "Loss" {
-  return outcome === "win" ? "Win" : outcome === "draw" ? "Draw" : "Loss";
-}
-
 function resultLetter(outcome: ClubMatchView["outcome"]): string {
   return t(resultWord(outcome)).charAt(0).toUpperCase();
 }
 
 function MatchList({
-  title, matches, nextId, clubs, showCompetition,
+  id, title, summary, matches, nextId, clubs, showCompetition,
 }: {
+  id: "previous" | "upcoming";
   title: string;
+  summary: string | null;
   matches: ClubMatchView[];
   nextId: string | null;
   clubs: readonly NamedClub[];
@@ -227,8 +240,13 @@ function MatchList({
   if (matches.length === 0) return null;
   return (
     <div className="team-match-group">
-      <h3>{title}</h3>
-      <ul className="team-fixtures">
+      <h3 id={`team-${id}-title`}>{title}</h3>
+      <TeamSummary id={`team-summary-${id}`} text={summary} />
+      <ul
+        className="team-fixtures"
+        aria-labelledby={`team-${id}-title`}
+        aria-describedby={summary ? `team-summary-${id}` : undefined}
+      >
         {matches.map((match) => (
           <MatchRow
             key={match.matchId}
@@ -314,28 +332,6 @@ function Side({ name, badge, own, clubId }: {
     return <span className={own ? "team-fixture-side is-own" : "team-fixture-side"}>{content}</span>;
   }
   return <Link className="team-fixture-side is-link" to={`/teams/${clubId}`}>{content}</Link>;
-}
-
-function kickoffTime(match: ClubMatchView): string | null {
-  if (!match.kickoff) return null;
-  const parsed = new Date(match.kickoff);
-  if (!Number.isFinite(parsed.getTime())) return null;
-  // Midnight UTC is how a date-only kickoff arrives; it is not a published time.
-  if (parsed.getUTCHours() === 0 && parsed.getUTCMinutes() === 0) return null;
-  return dateFormatter({ hour: "2-digit", minute: "2-digit", timeZone: "Europe/Madrid" })
-    .format(parsed);
-}
-
-function matchDate(match: ClubMatchView): string | null {
-  if (match.kickoff) {
-    const parsed = new Date(match.kickoff);
-    if (Number.isFinite(parsed.getTime())) {
-      return dateFormatter({
-        day: "numeric", month: "short", year: "numeric", timeZone: "Europe/Madrid",
-      }).format(parsed);
-    }
-  }
-  return match.kickoffText;
 }
 
 function asView(match: Performance["matches"][number]): ClubMatchView {

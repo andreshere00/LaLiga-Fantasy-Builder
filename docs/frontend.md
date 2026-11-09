@@ -244,6 +244,20 @@ as Lineup, in the published position lines, with the bench beside the pitch. The
 squad table stays full width once event columns are published; with only FSYP it
 is capped so position and points stay beside the name. A phone stacks each pair.
 News & Injuries puts the injured players beside the news feed; a phone stacks them, injuries first.
+On a phone the four section links become equal-width tabs with the icon above the label.
+Performance shows the match window at the right end of the filter row on wide screens, and on
+a narrow screen the competition buttons keep only their logo (the name stays as the accessible
+name and tooltip).
+
+Every widget opens with a **Summary**: one visible sentence under its heading that reads the
+widget's main takeaway, built in `teamSummaries.ts` from the data the widget draws and shown by
+`TeamSummary`. Overview, Previous and Upcoming matches, MVPs, Squad, Starters, Coach,
+Alternatives, Injured players, and News each have one (for example the record and goal
+difference, the newest result or next fixture, the points leader, the formation and least
+certain starter, or the event count and latest event). The sentences use fixed translated
+pieces with no counted nouns, so they need no plural forms, and a widget with nothing to
+report shows none. The widget's own list, table, or group points back to its summary with
+`aria-describedby`, so a screen reader announces it again when that element is entered.
 
 Players lists the top three footballers by published season points as ranked
 cards: the player photo (from the shared players catalog, with a person icon

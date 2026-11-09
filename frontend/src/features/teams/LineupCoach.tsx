@@ -2,6 +2,8 @@ import { t, useTranslation } from "../../i18n";
 import type { ClubDossierDto } from "../../api/schemas";
 import { ScrapedText } from "../translation/ScrapedText";
 import { TeamMeter } from "./TeamMeter";
+import { TeamSummary } from "./TeamSummary";
+import { coachSummary } from "./teamSummaries";
 import { predictabilityLabel, rotationsLabel, substituteRiskLabel } from "./teamLineupLabels";
 
 type Prediction = NonNullable<ClubDossierDto["prediction"]>;
@@ -35,13 +37,19 @@ export function LineupCoach({ prediction, heading, subtitle }: { prediction: Pre
     || Boolean(summary.substituteRisk)
   );
   if (!coach && !hasSummary) return null;
+  const overview = coachSummary(prediction);
   const predictability = predictabilityLabel(coach?.matchdayPredictability);
   const season = coach?.seasonPredictabilityPercent;
   return (
     <div className="team-coach-block">
-      {heading ? <h3>{heading}</h3> : null}
+      {heading ? <h3 id="team-coach-title">{heading}</h3> : null}
+      <TeamSummary id="team-summary-coach" text={overview} />
       {subtitle ? <p className="team-note">{subtitle}</p> : null}
-      <article className="team-coach">
+      <article
+        className="team-coach"
+        aria-labelledby={heading ? "team-coach-title" : undefined}
+        aria-describedby={overview ? "team-summary-coach" : undefined}
+      >
       {coach ? (
         <>
           <header className="team-coach-head">
@@ -86,7 +94,7 @@ export function LineupCoach({ prediction, heading, subtitle }: { prediction: Pre
       {hasSummary && summary ? (
         <dl className="team-coach-facts team-xi-summary">
           <div>
-            <dt>{t("Average probability")}</dt>
+            <dt>{t("Lineup Average probability")}</dt>
             <dd className="is-figure">
               {summary.averageProbability == null ? "—" : `${summary.averageProbability}%`}
             </dd>

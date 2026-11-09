@@ -2,9 +2,12 @@ import { useMemo } from "react";
 import { t, useTranslation } from "../../i18n";
 import type { ClubDossierDto } from "../../api/schemas";
 import { usePlayerOutlooks } from "../lineup/useSquadStats";
+import { hierarchyPresentation } from "../players/hierarchy";
 import { matchRosterPlayer } from "./teamLineup";
 import { TeamInjuryCard, type InjuryItem } from "./TeamInjuryCard";
-import { TeamNewsFeed } from "./TeamNewsFeed";
+import { feedSummary, TeamNewsFeed } from "./TeamNewsFeed";
+import { TeamSummary } from "./TeamSummary";
+import { injuriesSummary } from "./teamSummaries";
 
 type Roster = NonNullable<ClubDossierDto["roster"]>;
 type Injuries = ClubDossierDto["injuries"];
@@ -35,23 +38,35 @@ export function TeamNewsInjuriesSection({ injuries, news, squad, returnTo }: {
     // Hold the fetched order until every role has loaded so the cards do not jump.
     return outlooks.isLoading ? list : list.sort(byImportance);
   }, [matched, outlooks.profiles, outlooks.isLoading]);
+  const newsText = news ? feedSummary(news.items) : null;
   const injuredCount = injuries?.published ? injuries.items.length : 0;
+  const summary = injuries?.published
+    ? injuriesSummary(rows.map((row) => ({
+      name: row.item.name,
+      hierarchy: row.hierarchy ? t(hierarchyPresentation(row.hierarchy).label) : null,
+    })))
+    : null;
   return (
     <section id="team-news" tabIndex={-1} aria-labelledby="team-news-title">
       <h2 id="team-news-title" className="team-section-title">{t("News & Injuries")}</h2>
       <div className="team-news-board">
         <div className="team-block team-injuries">
-          <h3>
+          <h3 id="team-injuries-title">
             {t("Injured players")}
             {injuredCount > 0 ? <span className="team-count">{injuredCount}</span> : null}
           </h3>
+          <TeamSummary id="team-summary-injuries" text={summary} />
           <p className="team-note">{t("Most important players first.")}</p>
-          <InjuryList injuries={injuries} rows={rows} loading={outlooks.isLoading} returnTo={returnTo} />
+          <InjuryList injuries={injuries} rows={rows} loading={outlooks.isLoading}
+            summary={summary} returnTo={returnTo} />
         </div>
         <div className="team-block team-news">
-          <h3>{t("News")}</h3>
+          <h3 id="team-news-block-title">{t("News")}</h3>
+          <TeamSummary id="team-summary-news" text={newsText} />
           <p className="team-note">{t("Status changes, lineups and call-ups, newest first.")}</p>
-          {news ? <TeamNewsFeed events={news.items} /> : null}
+          {news
+            ? <TeamNewsFeed events={news.items} summaryId={newsText ? "team-summary-news" : undefined} />
+            : null}
         </div>
       </div>
     </section>
@@ -73,17 +88,22 @@ function byImportance(a: Row, b: Row): number {
     || a.item.name.localeCompare(b.item.name);
 }
 
-function InjuryList({ injuries, rows, loading, returnTo }: {
+function InjuryList({ injuries, rows, loading, summary, returnTo }: {
   injuries: Injuries;
   rows: Row[];
   loading: boolean;
+  summary: string | null;
   returnTo: string;
 }) {
   if (!injuries) return null;
   if (!injuries.published) return <p>{t("Current injuries are not published for this club.")}</p>;
   if (injuries.items.length === 0) return <p>{t("No current injuries were published.")}</p>;
   return (
-    <ul className="team-injury-list" aria-label={t("Injured players")}>
+    <ul
+      className="team-injury-list"
+      aria-label={t("Injured players")}
+      aria-describedby={summary ? "team-summary-injuries" : undefined}
+    >
       {rows.map((row, index) => (
         <TeamInjuryCard key={`${row.item.name}-${row.item.startedOn ?? ""}`} item={row.item}
           index={index} playerId={row.playerId} points={row.points} hierarchy={row.hierarchy}
