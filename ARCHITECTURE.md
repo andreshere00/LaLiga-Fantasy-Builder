@@ -13,7 +13,7 @@ template; it has not been provisioned or load-tested in the user's project.
 | --- | --- | --- | --- |
 | Identity | TypeScript, Node 24, Express 5, Better Auth; Bun for dependency/build tooling | 8003 | Credentials, optional social providers, email verification/recovery, sessions, signing keys, application JWTs. |
 | Auth | Python 3.14, FastAPI | 8000 | LaLiga pairing, encrypted token vault, refresh, connection ownership, private bearer exchange. |
-| API | Python 3.14, FastAPI | 8001 | Leagues, teams, players, calendar, standings, market, buyout, read-only lineup recommendations, favorites and scouting alerts. |
+| API | Python 3.14, FastAPI | 8001 | Leagues, teams, clubs, players, calendar, standings, market, buyout, read-only lineup recommendations, favorites and scouting alerts. |
 | Scraping | Python 3.14, FastAPI, downloader/parser | 8002 | Private FutbolFantasy data and official standings extraction; no LaLiga credentials. |
 
 ### Boundaries and request flow
@@ -101,14 +101,14 @@ shared API layer, and reusable UI components sit alongside them.
 | Application composition and routing | `frontend/src/app`; providers, route boundaries, lazy player-detail loading. |
 | Identity and LaLiga connection state | `frontend/src/auth`; Better Auth client, in-memory JWT, account and linking flows. |
 | Data contracts and clients | `frontend/src/api`; paths, schemas, mappers, queries, and streaming builder calls. |
-| Product features | `frontend/src/features`; lineup, market, players, and shared shell. |
+| Product features | `frontend/src/features`; lineup, market, players, teams, scouting, and shared shell. |
 | Shared interaction primitives | `frontend/src/components`; accessible controls, feedback, dialogs, and visual components. |
 
 The browser uses one origin, `https://fantasybuilder.es` in the cloud template:
 
 | Path | Destination |
 | --- | --- |
-| `/`, `/market`, `/players`, `/account`, and other UI routes | Static frontend; Nginx falls back to `index.html` for client-side routes. |
+| `/`, `/market`, `/players`, `/teams`, `/account`, and other UI routes | Static frontend; Nginx falls back to `index.html` for client-side routes. |
 | `/auth/*` | Identity; HTTPS Caddy routes directly and replaces the client-IP header. |
 | `/laliga/*` | Nginx → auth, retaining the prefix. |
 | `/api/*` | Nginx → API, removing `/api` before forwarding. |

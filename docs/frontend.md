@@ -2,7 +2,8 @@
 
 React app in `frontend/` (Vite, Bun). It is the browser entry point for
 LaLiga Fantasy Builder: sign-in, league selection, lineup editing, player
-catalog and profiles, and an interactive market board. It never calls LaLiga
+catalog and profiles, an interactive market board, and a Teams tab with one dossier
+per real LaLiga club. It never calls LaLiga
 directly and keeps the internal JWT in memory only.
 
 - System map: [Architecture](architecture.md)
@@ -145,50 +146,66 @@ or close-button dismissal until a result is available. Closing an idle dialog
 restores focus to its originating control. Date-range editing still uses an
 explicit Apply/Cancel workflow.
 
-Automated browser checks use fictional, deterministic account data. The ten
+Automated browser checks use fictional, deterministic account data. The sixteen
 product captures below come from a signed-in browser session with real league and
 player data. Screenshot assets live under [`docs/images/screenshots/`](images/screenshots/).
 Keep captions and screenshots in the same change.
 
 ### Product captures
 
-Captured on 27 October 2026 (Europe/Madrid) from the running local React app.
+Captured on 9 November 2026 (Europe/Madrid) from the running local React app.
 Each image shows the actual browser-rendered interface and live API data at capture
-time, including the account's league, lineup, market, and player profiles. Values,
-standings, availability, and market listings may change. The browser chrome was
-cropped away and the application viewport was reduced to 1512 × 760 pixels for
-documentation. The [project README](../README.md#screenshots) contains the same gallery.
+time, including the account's league, lineup, market, player profiles and the
+Athletic Club dossier on Teams. Values, standings, availability, market listings and
+published radar or profile data may change. The browser chrome was cropped away and
+the application viewport was set to 1512 × 782 pixels for documentation. The
+[project README](../README.md#screenshots) contains the same gallery.
 
 #### Light theme
 
-![Live lineup and squad in light theme](images/screenshots/lineup-live-light.jpg)
+![Live lineup in light theme](images/screenshots/lineup-live-light.jpg)
 
-![Live market listings in light theme](images/screenshots/market-live-light.jpg)
+![Live market in light theme](images/screenshots/market-live-light.jpg)
 
-![Live player catalog in light theme](images/screenshots/players-live-light.jpg)
+![Live players catalog in light theme](images/screenshots/players-live-light.jpg)
 
-![Ionut Radu profile in light theme](images/screenshots/details-ionut-radu-live-light.jpg)
+![Teams club dossier, Performance in light theme](images/screenshots/teams-live-light.jpg)
 
-![Lineup builder with the live squad in light theme](images/screenshots/lineup-builder-live-light.jpg)
+![Teams club dossier, Players in light theme](images/screenshots/teams-players-live-light.jpg)
+
+![Teams club dossier, predicted lineup in light theme](images/screenshots/teams-lineup-live-light.jpg)
+
+![Ionut Radu player details in light theme](images/screenshots/details-ionut-radu-live-light.jpg)
+
+![Live lineup builder in light theme](images/screenshots/lineup-builder-live-light.jpg)
 
 #### Dark theme
 
-![Live lineup and squad in dark theme](images/screenshots/lineup-live-dark.jpg)
+![Live lineup in dark theme](images/screenshots/lineup-live-dark.jpg)
 
-![Live market listings in dark theme](images/screenshots/market-live-dark.jpg)
+![Live market in dark theme](images/screenshots/market-live-dark.jpg)
 
-![Live player catalog in dark theme](images/screenshots/players-live-dark.jpg)
+![Live players catalog in dark theme](images/screenshots/players-live-dark.jpg)
 
-![Lamine Yamal profile in dark theme](images/screenshots/details-lamine-yamal-live-dark.jpg)
+![Teams club dossier, Performance in dark theme](images/screenshots/teams-live-dark.jpg)
 
-![Lineup builder with the live squad in dark theme](images/screenshots/lineup-builder-live-dark.jpg)
+![Teams club dossier, Players in dark theme](images/screenshots/teams-players-live-dark.jpg)
+
+![Teams club dossier, predicted lineup in dark theme](images/screenshots/teams-lineup-live-dark.jpg)
+
+![Lamine Yamal player details in dark theme](images/screenshots/details-lamine-yamal-live-dark.jpg)
+
+![Live lineup builder in dark theme](images/screenshots/lineup-builder-live-dark.jpg)
 
 #### Refreshing screenshots
 
 Open a signed-in local application session, select the intended league, and visit
-`/`, `/market`, `/players`, and each player's profile. Capture both themes and the
-builder setup dialog directly from the browser. Check that images and data have
-loaded, and review the ten resulting images together before updating captions.
+`/`, `/market`, `/players`, one player's profile, and a club on Teams (`/teams/{clubId}`
+for the Performance view, then `?section=players` and `?section=lineup`). Capture both
+themes (switch with the theme control in Options) and the builder setup dialog directly
+from the browser. The first read of a club scrapes every profile and can take about half
+a minute, so wait until the season statistics, MVP form and radar have loaded before
+capturing. Review the sixteen resulting images together before updating captions.
 The builder setup view is read-only; no build, bid, trade, or lineup save is needed.
 
 ## Running locally
@@ -226,11 +243,6 @@ tinted and outlined, and the strip scrolls it into view on narrow screens.
 The query keeps `section`, `competition`, and `window` when they differ from
 Performance, LaLiga, and five matches. Refresh restores that URL. A signed-out
 visit uses the same sign-in gate as Market and Players.
-While the club directory or the dossier loads, a `PulseRing` announces "Loading the club
-dossier." and each section that has not arrived is a `TeamSectionSkeleton`: the real
-heading and id (so deep links and the section bar still land) over skeleton blocks shaped
-like the finished content, marked `aria-busy`. The club strip shows skeleton tiles until the
-directory arrives. A section left empty after the load stays a plain anchor.
 While the club directory or the dossier loads, a `PulseRing` announces "Loading the club
 dossier." and each section that has not arrived is a `TeamSectionSkeleton`: the real
 heading and id (so deep links and the section bar still land) over skeleton blocks shaped
