@@ -452,6 +452,10 @@
 /* ---- Performance ---- */
 .team-controls { display: flex; flex-wrap: wrap; gap: 16px 40px; }
 .team-control { display: grid; gap: 6px; min-width: 0; }
+/* Wide screens: the match window sits at the right edge of the widget, opposite the competition. */
+@media (min-width: 801px) {
+  .team-control:last-child { margin-inline-start: auto; }
+}
 .team-control-label {
   color: var(--fb-muted);
   font-size: 12px;
@@ -1006,4 +1010,37 @@
   .team-sections a,
   .team-picker a { transition: none; }
   .team-picker a:hover { transform: none; }
+}
+
+/* Phones: four equal tabs, icon above label, so no tab changes height or width when its label is long. */
+@media (max-width: 640px) {
+  .team-sections { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); overflow-x: visible; }
+  .team-sections > :first-child,
+  .team-sections > :last-child { margin-inline: 0; }
+  .team-sections a {
+    flex-direction: column;
+    justify-content: flex-start;
+    gap: 4px;
+    min-height: 60px;
+    padding: 8px 4px 6px;
+    font-size: 11px;
+    line-height: 1.2;
+    letter-spacing: .02em;
+    text-align: center;
+  }
+  .team-section-icon { margin-inline-end: 0; }
+}
+
+/* Narrow screens: the competition buttons show only their logo (name stays for assistive tech and as a tooltip), so the group fits on one row. */
+@media (max-width: 760px) {
+  .team-filter .team-filter-logo { padding: 2px 8px 2px 8px; }
+  .team-filter-logo span {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    margin: -1px;
+    overflow: hidden;
+    clip-path: inset(50%);
+    white-space: nowrap;
+  }
 }

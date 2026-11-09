@@ -79,6 +79,7 @@ export function TeamPerformanceSection({
                 type="button"
                 aria-pressed={competition === item}
                 className="team-filter-logo"
+                title={t(competitionLabel(item))}
                 onClick={() => onCompetition(item)}
               >
                 <img src={FILTER_LOGOS[item]} alt="" />
