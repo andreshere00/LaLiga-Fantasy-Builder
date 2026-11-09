@@ -122,8 +122,8 @@ export function TeamPerformanceSection({
         </p>
       ) : (
         <>
-          <ResultSummary summary={summary} results={results} />
-          <div className="team-pair">
+          <div className="team-performance-board">
+            <ResultSummary summary={summary} results={results} />
             <MatchList
               title={t("Previous matches")}
               matches={view.previous}
@@ -155,50 +155,53 @@ function ResultSummary({
   const signed = difference > 0 ? `+${difference}` : String(difference);
   const tone = difference > 0 ? "positive" : difference < 0 ? "negative" : "even";
   return (
-    <div className="team-record">
-      <section className="team-record-group" aria-labelledby="team-record-results">
-        <h3 id="team-record-results" className="team-record-title">{t("Results")}</h3>
-        <dl className="team-record-primary">
-          <div><dd>{summary.won}</dd><dt>{t("Win")}</dt></div>
-          <div><dd>{summary.drawn}</dd><dt>{t("Draw")}</dt></div>
-          <div><dd>{summary.lost}</dd><dt>{t("Loss")}</dt></div>
-        </dl>
-      </section>
-      {results.length > 0 ? (
-        <section className="team-record-group" aria-labelledby="team-record-form">
-          <h3 id="team-record-form" className="team-record-title">{t("Recent form")}</h3>
-          <ol className="team-form" aria-label={t("Recent results, oldest to newest")}>
-            {results.map((match) => (
-              <li key={match.matchId} className={`team-result team-result--${match.outcome}`}>
-                <span aria-hidden="true">{resultLetter(match.outcome)}</span>
-                <span className="visually-hidden">{t(resultWord(match.outcome))}</span>
-              </li>
-            ))}
-          </ol>
+    <div className="team-match-group team-overview">
+      <h3>{t("Overview")}</h3>
+      <div className="team-record">
+        <section className="team-record-group" aria-labelledby="team-record-results">
+          <h4 id="team-record-results" className="team-record-title">{t("Results")}</h4>
+          <dl className="team-record-primary">
+            <div><dd>{summary.won}</dd><dt>{t("Win")}</dt></div>
+            <div><dd>{summary.drawn}</dd><dt>{t("Draw")}</dt></div>
+            <div><dd>{summary.lost}</dd><dt>{t("Loss")}</dt></div>
+          </dl>
         </section>
-      ) : null}
-      <section className="team-record-group" aria-labelledby="team-record-venue">
-        <h3 id="team-record-venue" className="team-record-title">{t("Home and away")}</h3>
-        <dl className="team-record-facts">
-          <div>
-            <dt>{t("Home")}</dt>
-            <dd>{summary.home.won}-{summary.home.drawn}-{summary.home.lost}</dd>
-          </div>
-          <div>
-            <dt>{t("Away")}</dt>
-            <dd>{summary.away.won}-{summary.away.drawn}-{summary.away.lost}</dd>
-          </div>
-        </dl>
-        <p className="team-record-hint">{t("Wins-draws-losses")}</p>
-      </section>
-      <section className="team-record-group" aria-labelledby="team-record-goals">
-        <h3 id="team-record-goals" className="team-record-title">{t("Goals")}</h3>
-        <dl className="team-record-facts">
-          <div><dt>{t("Goals scored")}</dt><dd>{summary.goalsFor}</dd></div>
-          <div><dt>{t("Goals conceded")}</dt><dd>{summary.goalsAgainst}</dd></div>
-          <div><dt>{t("Goals difference")}</dt><dd data-tone={tone}>{signed}</dd></div>
-        </dl>
-      </section>
+        {results.length > 0 ? (
+          <section className="team-record-group" aria-labelledby="team-record-form">
+            <h4 id="team-record-form" className="team-record-title">{t("Recent form")}</h4>
+            <ol className="team-form" aria-label={t("Recent results, oldest to newest")}>
+              {results.map((match) => (
+                <li key={match.matchId} className={`team-result team-result--${match.outcome}`}>
+                  <span aria-hidden="true">{resultLetter(match.outcome)}</span>
+                  <span className="visually-hidden">{t(resultWord(match.outcome))}</span>
+                </li>
+              ))}
+            </ol>
+          </section>
+        ) : null}
+        <section className="team-record-group" aria-labelledby="team-record-venue">
+          <h4 id="team-record-venue" className="team-record-title">{t("Home and away")}</h4>
+          <dl className="team-record-facts">
+            <div>
+              <dt>{t("Home")}</dt>
+              <dd>{summary.home.won}-{summary.home.drawn}-{summary.home.lost}</dd>
+            </div>
+            <div>
+              <dt>{t("Away")}</dt>
+              <dd>{summary.away.won}-{summary.away.drawn}-{summary.away.lost}</dd>
+            </div>
+          </dl>
+          <p className="team-record-hint">{t("Wins-draws-losses")}</p>
+        </section>
+        <section className="team-record-group" aria-labelledby="team-record-goals">
+          <h4 id="team-record-goals" className="team-record-title">{t("Goals")}</h4>
+          <dl className="team-record-facts team-record-goals">
+            <div><dt>{t("Goals scored")}</dt><dd>{summary.goalsFor}</dd></div>
+            <div><dt>{t("Goals conceded")}</dt><dd>{summary.goalsAgainst}</dd></div>
+            <div><dt>{t("Goals difference")}</dt><dd data-tone={tone}>{signed}</dd></div>
+          </dl>
+        </section>
+      </div>
     </div>
   );
 }

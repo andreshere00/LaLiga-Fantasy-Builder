@@ -181,6 +181,59 @@
 }
 .team-pair > * { min-width: 0; }
 .team-pair > :only-child { grid-column: 1 / -1; }
+/* Performance board: the record overview is a narrow column beside the two match lists, so no
+   group stretches across the page with empty space between its numbers. */
+.team-performance-board {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 20px 24px;
+  align-items: start;
+}
+.team-performance-board > * { min-width: 0; }
+.team-performance-board > .team-overview { grid-column: 1 / -1; }
+@media (min-width: 1181px) {
+  .team-performance-board { grid-template-columns: 17rem repeat(2, minmax(0, 1fr)); }
+  .team-performance-board .team-fixture { grid-template-columns: 6.75rem minmax(0, 1fr) 28px; gap: 4px 12px; }
+  .team-performance-board > .team-overview { grid-column: auto; }
+  .team-performance-board .team-record {
+    flex-direction: column;
+    flex-wrap: nowrap;
+    gap: 0;
+    padding: 0;
+  }
+  /* One height for all three columns: lists share it between their rows, the overview between its groups. */
+  .team-performance-board { align-items: stretch; }
+  .team-performance-board .team-match-group { grid-template-rows: auto 1fr; }
+  .team-performance-board .team-fixtures { grid-auto-rows: 1fr; }
+  .team-performance-board .team-record-group {
+    flex: 1 1 0;
+    align-content: center;
+    justify-items: center;
+    text-align: center;
+    padding: 12px 20px;
+    border-left: 0;
+    border-top: 1px solid var(--fb-line);
+  }
+  .team-performance-board .team-record-group:first-child { border-top: 0; }
+  /* Every cell is centred on both axes; values that share a row line up on one baseline. */
+  .team-performance-board .team-record-facts { justify-content: center; gap: 8px 24px; }
+  .team-performance-board .team-record-primary { justify-content: center; gap: 24px; }
+  .team-performance-board .team-record-primary > div { align-items: center; }
+  .team-performance-board .team-record-goals {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, auto));
+    grid-template-rows: auto auto;
+    gap: 4px 16px;
+  }
+  .team-performance-board .team-record-goals > div {
+    display: grid;
+    grid-row: span 2;
+    grid-template-rows: subgrid;
+    justify-items: center;
+  }
+  .team-performance-board .team-record-goals dt { align-self: end; line-height: 1.25; }
+  .team-performance-board .team-record-goals dd { margin: 0; }
+}
 
 /* ---- Shared small parts ---- */
 .team-pos {
@@ -527,7 +580,8 @@
   gap: 12px;
 }
 .team-fixture-side { display: flex; align-items: center; gap: 8px; min-width: 0; }
-.team-fixture-side:first-child { justify-content: flex-end; text-align: right; flex-direction: row-reverse; }
+/* Home side mirrors the away side: crest against the score, name reading outward, so crests line up in every row. */
+.team-fixture-side:first-child { justify-content: flex-start; text-align: right; flex-direction: row-reverse; }
 .team-fixture-side.is-link { color: inherit; text-decoration: none; }
 .team-fixture-side.is-link:hover .team-fixture-name { text-decoration: underline; text-underline-offset: 3px; }
 .team-fixture-side.is-link:focus-visible { outline: 2px solid var(--fb-focus); outline-offset: 2px; }
@@ -928,6 +982,7 @@
   .team-section-title { font-size: 24px; }
   .team-mvp-list,
   .team-pair,
+  .team-performance-board,
   .team-news-board,
   .team-lineup-board { grid-template-columns: 1fr; }
   .team-record { padding: 16px; gap: 16px; }
