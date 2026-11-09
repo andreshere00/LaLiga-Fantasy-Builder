@@ -36,6 +36,17 @@ export function publishedColumns(
   ));
 }
 
+/**
+ * Splits the squad into players who have been on the pitch and players with a published zero
+ * minutes, who add noise to the table. A blank is not a zero, so a player whose minutes are not
+ * published stays with the others. When nobody has played there is nothing to fold away.
+ */
+export function splitByMinutes(rows: readonly SquadRow[]): { played: SquadRow[]; idle: SquadRow[] } {
+  const idle = rows.filter((row) => row.stats.minutes === 0);
+  if (idle.length === rows.length) return { played: [...rows], idle: [] };
+  return { played: rows.filter((row) => row.stats.minutes !== 0), idle };
+}
+
 export function sortSquad(
   rows: readonly SquadRow[],
   column: SquadColumn | "position",

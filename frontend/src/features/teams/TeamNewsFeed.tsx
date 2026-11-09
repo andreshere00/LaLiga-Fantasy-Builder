@@ -4,7 +4,6 @@ import { dateFormatter, durationLabel } from "../../i18n/format";
 import { ScrapedText } from "../translation/ScrapedText";
 import type { ClubDossierDto } from "../../api/schemas";
 import { newsKindLabel, newsTitleLabel } from "./teamNewsLabels";
-import { newsSummary } from "./teamSummaries";
 import {
   collapseDepartures, feedChoices, feedSpanDays, groupByDay, limitFeed, type FeedLimit,
 } from "./teamNews";
@@ -12,19 +11,6 @@ import {
 export type NewsItem = NonNullable<NonNullable<ClubDossierDto["news"]>["items"][number]>;
 
 const DEFAULT_LIMIT: FeedLimit = 10;
-
-/** One-sentence reading of the whole feed, shown above it; null when there is nothing to read. */
-export function feedSummary(events: readonly NewsItem[]): string | null {
-  const items = collapseDepartures(events);
-  const newest = items[0];
-  return newsSummary(
-    items.length,
-    durationLabel(feedSpanDays(events) * 1440, true),
-    newest?.publishedAt
-      ? { kind: newsKindLabel(newest.kind), when: stampLabel(newest.publishedAt) }
-      : null,
-  );
-}
 
 export function TeamNewsFeed({ events, summaryId }: { events: readonly NewsItem[]; summaryId?: string }) {
   useTranslation();
@@ -106,14 +92,6 @@ function dayLabel(value: string | null | undefined): string {
   if (!Number.isFinite(parsed.getTime())) return "";
   return dateFormatter({
     weekday: "long", day: "numeric", month: "long", timeZone: "Europe/Madrid",
-  }).format(parsed);
-}
-
-function stampLabel(value: string): string {
-  const parsed = new Date(value);
-  if (!Number.isFinite(parsed.getTime())) return value;
-  return dateFormatter({
-    day: "numeric", month: "short", hour: "2-digit", minute: "2-digit", timeZone: "Europe/Madrid",
   }).format(parsed);
 }
 

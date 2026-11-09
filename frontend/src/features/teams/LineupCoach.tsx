@@ -3,7 +3,6 @@ import type { ClubDossierDto } from "../../api/schemas";
 import { ScrapedText } from "../translation/ScrapedText";
 import { TeamMeter } from "./TeamMeter";
 import { TeamSummary } from "./TeamSummary";
-import { coachSummary } from "./teamSummaries";
 import { predictabilityLabel, rotationsLabel, substituteRiskLabel } from "./teamLineupLabels";
 
 type Prediction = NonNullable<ClubDossierDto["prediction"]>;
@@ -37,18 +36,17 @@ export function LineupCoach({ prediction, heading, subtitle }: { prediction: Pre
     || Boolean(summary.substituteRisk)
   );
   if (!coach && !hasSummary) return null;
-  const overview = coachSummary(prediction);
   const predictability = predictabilityLabel(coach?.matchdayPredictability);
   const season = coach?.seasonPredictabilityPercent;
   return (
     <div className="team-coach-block">
       {heading ? <h3 id="team-coach-title">{heading}</h3> : null}
-      <TeamSummary id="team-summary-coach" text={overview} />
+      <TeamSummary id="team-summary-coach" widget="coach" />
       {subtitle ? <p className="team-note">{subtitle}</p> : null}
       <article
         className="team-coach"
         aria-labelledby={heading ? "team-coach-title" : undefined}
-        aria-describedby={overview ? "team-summary-coach" : undefined}
+        aria-describedby="team-summary-coach"
       >
       {coach ? (
         <>

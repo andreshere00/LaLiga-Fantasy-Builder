@@ -249,15 +249,17 @@ Performance shows the match window at the right end of the filter row on wide sc
 a narrow screen the competition buttons keep only their logo (the name stays as the accessible
 name and tooltip).
 
-Every widget opens with a **Summary**: one visible sentence under its heading that reads the
-widget's main takeaway, built in `teamSummaries.ts` from the data the widget draws and shown by
-`TeamSummary`. Overview, Previous and Upcoming matches, MVPs, Squad, Starters, Coach,
-Alternatives, Injured players, and News each have one (for example the record and goal
-difference, the newest result or next fixture, the points leader, the formation and least
-certain starter, or the event count and latest event). The sentences use fixed translated
-pieces with no counted nouns, so they need no plural forms, and a widget with nothing to
-report shows none. The widget's own list, table, or group points back to its summary with
-`aria-describedby`, so a screen reader announces it again when that element is entered.
+Every widget opens with an **About** line: one visible sentence under its heading that says
+what the widget is, not what it currently shows. The fixed, translated texts live in
+`teamSummaries.ts` (`widgetDescription`) and are shown by `TeamSummary` for Overview, Previous
+and Upcoming matches, MVPs, Squad, Hierarchy levels, Starters, Coach, Alternatives, Injured
+players, and News. They carry no numbers, so they stay true whatever the data says. The widget's
+own list, table, or group points back to its description with `aria-describedby`, so a screen
+reader announces it again when that element is entered.
+
+The squad table folds players with a published zero in the Minutes column behind a full-width
+"Show players without minutes" toggle (`splitByMinutes`); a blank is not a zero, and when nobody
+has played every row stays visible.
 
 Alternatives show each substitute's squad role (hierarchy) beside form and points when the
 player profile publishes one; the profile is read when its position group is opened, so a
@@ -267,7 +269,7 @@ player, Important, Rotation, Impact substitute, Other, Reserve, then Unknown and
 best scorers first inside each role, with photo, position, and points. The roles come from one
 player-profile read per player, so nothing is requested until the dialog is first opened; while
 they load, the dialog shows `Skeleton` placeholders shaped like the list. Once read, the block
-also shows a tally chip per level and a Summary.
+also shows a tally chip per level.
 
 Players lists the top three footballers by published season points as ranked
 cards: the player photo (from the shared players catalog, with a person icon

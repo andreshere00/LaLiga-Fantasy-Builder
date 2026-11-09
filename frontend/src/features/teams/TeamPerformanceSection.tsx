@@ -19,7 +19,6 @@ import {
 } from "./teamPerformance";
 import type { TeamCompetition, TeamWindow } from "./teamRoutes";
 import { TeamSummary } from "./TeamSummary";
-import { overviewSummary, previousSummary, upcomingSummary } from "./teamSummaries";
 
 import laliga from "../../assets/competitions/laliga.png";
 import copa from "../../assets/competitions/copa-del-rey.png";
@@ -133,7 +132,6 @@ export function TeamPerformanceSection({
             <MatchList
               id="previous"
               title={t("Previous matches")}
-              summary={previousSummary(view.previous)}
               matches={view.previous}
               nextId={null}
               clubs={clubs}
@@ -142,7 +140,6 @@ export function TeamPerformanceSection({
             <MatchList
               id="upcoming"
               title={t("Upcoming matches")}
-              summary={upcomingSummary(view.upcoming)}
               matches={view.upcoming}
               nextId={nextId}
               clubs={clubs}
@@ -167,7 +164,7 @@ function ResultSummary({
   return (
     <div className="team-match-group team-overview">
       <h3 id="team-overview-title">{t("Overview")}</h3>
-      <TeamSummary id="team-summary-overview" text={overviewSummary(summary)} />
+      <TeamSummary id="team-summary-overview" widget="overview" />
       <div
         className="team-record"
         role="group"
@@ -227,11 +224,10 @@ function resultLetter(outcome: ClubMatchView["outcome"]): string {
 }
 
 function MatchList({
-  id, title, summary, matches, nextId, clubs, showCompetition,
+  id, title, matches, nextId, clubs, showCompetition,
 }: {
   id: "previous" | "upcoming";
   title: string;
-  summary: string | null;
   matches: ClubMatchView[];
   nextId: string | null;
   clubs: readonly NamedClub[];
@@ -241,11 +237,11 @@ function MatchList({
   return (
     <div className="team-match-group">
       <h3 id={`team-${id}-title`}>{title}</h3>
-      <TeamSummary id={`team-summary-${id}`} text={summary} />
+      <TeamSummary id={`team-summary-${id}`} widget={id} />
       <ul
         className="team-fixtures"
         aria-labelledby={`team-${id}-title`}
-        aria-describedby={summary ? `team-summary-${id}` : undefined}
+        aria-describedby={`team-summary-${id}`}
       >
         {matches.map((match) => (
           <MatchRow

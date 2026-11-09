@@ -1,5 +1,5 @@
 import { MemoryRouter } from "react-router-dom";
-import { cleanup, render, screen, within } from "@testing-library/react";
+import { cleanup, fireEvent, render, screen, within } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { TeamPlayersSection, type SeasonStatsState } from "./TeamPlayersSection";
 
@@ -185,6 +185,35 @@ describe("TeamPlayersSection", () => {
     const totals = within(squad).getByRole("rowheader", { name: "Totals" }).closest("tr") as HTMLElement;
     expect(within(totals).getByText("550")).toBeTruthy();
     expect(screen.getByText(/Counts are blank for 1 player without a published profile/)).toBeTruthy();
+  });
+
+  it("TeamPlayersSection_players_with_zero_minutes_wait_behind_a_toggle", () => {
+    const data = season().data!;
+    renderSection(season({
+      data: {
+        ...data,
+        players: [
+          data.players[0]!,
+          { playerId: "2", available: true, stats: { ...blank, minutes: 0, goals: 0 } },
+        ],
+      },
+    }));
+    const squad = screen.getByRole("region", { name: "Squad" });
+    const toggle = within(squad).getByRole("button", { name: /Show players without minutes/ });
+    expect(toggle.getAttribute("aria-expanded")).toBe("false");
+    const idle = document.getElementById("team-squad-idle") as HTMLElement;
+    expect(idle.hidden).toBe(true);
+    expect(within(idle).getByRole("rowheader", { hidden: true, name: "Bea" })).toBeTruthy();
+    fireEvent.click(toggle);
+    expect(idle.hidden).toBe(false);
+    expect(within(squad).getByRole("button", { name: /Hide players without minutes/ })
+      .getAttribute("aria-expanded")).toBe("true");
+  });
+
+  it("TeamPlayersSection_without_published_minutes_shows_every_player_and_no_toggle", () => {
+    renderSection();
+    expect(screen.queryByRole("button", { name: /players without minutes/ })).toBeNull();
+    expect(screen.getByRole("rowheader", { name: "Bea" })).toBeTruthy();
   });
 
   it("TeamPlayersSection_squad_row_names_link_to_player_details", () => {

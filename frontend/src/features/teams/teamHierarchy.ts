@@ -1,4 +1,3 @@
-import { t } from "../../i18n";
 import { hierarchyPresentation, type HierarchyPresentation } from "../players/hierarchy";
 
 export type HierarchyEntry = {
@@ -44,12 +43,4 @@ export function hierarchyGroups(entries: readonly HierarchyEntry[]): HierarchyGr
     group.players.sort((a, b) => (b.points ?? -1) - (a.points ?? -1) || a.name.localeCompare(b.name));
   }
   return [...byLabel.values()].sort((a, b) => levelIndex(a.label) - levelIndex(b.label));
-}
-
-/** One sentence naming each level with its number of players, no counted nouns. */
-export function hierarchySummary(groups: readonly HierarchyGroup[]): string | null {
-  if (groups.length === 0) return null;
-  return t("Hierarchy levels: {{0}}.", {
-    0: groups.map((group) => `${t(group.label)} ${group.players.length}`).join(", "),
-  });
 }

@@ -56,11 +56,12 @@ describe("TeamHierarchySection", () => {
 
   // ---- Happy path ---- //
 
-  it("TeamHierarchySection_closed_requests_no_profiles_and_shows_no_summary", () => {
+  it("TeamHierarchySection_closed_requests_no_profiles_and_describes_the_list", () => {
     renderSection();
     expect(screen.getByRole("heading", { name: "Hierarchy levels" })).toBeTruthy();
     expect(state.requested.every((ids) => ids.length === 0)).toBe(true);
-    expect(document.querySelector(".team-summary")).toBeNull();
+    expect(document.querySelector("#team-summary-hierarchy")?.textContent)
+      .toContain("A list of every player grouped by squad role");
   });
 
   it("TeamHierarchySection_open_lists_every_player_under_their_level", () => {
@@ -76,11 +77,9 @@ describe("TeamHierarchySection", () => {
     expect(state.requested.at(-1)).toEqual(["1", "2", "3"]);
   });
 
-  it("TeamHierarchySection_loaded_shows_summary_and_level_tally_under_the_heading", () => {
+  it("TeamHierarchySection_loaded_shows_the_level_tally_under_the_heading", () => {
     renderSection();
     fireEvent.click(screen.getByRole("button", { name: "View hierarchy levels" }));
-    const summary = document.querySelector("#team-summary-hierarchy");
-    expect(summary?.textContent).toContain("Hierarchy levels: Key player 1, Reserve 1, Unavailable 1.");
     const tally = document.querySelector(".team-hier-chips");
     expect(tally?.getAttribute("aria-describedby")).toBe("team-summary-hierarchy");
     expect(tally?.querySelectorAll("li")).toHaveLength(3);

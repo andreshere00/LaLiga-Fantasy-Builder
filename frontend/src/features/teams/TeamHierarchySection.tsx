@@ -13,8 +13,9 @@ import { usePlayerOutlooks } from "../lineup/useSquadStats";
 import { positionAbbrev, positionLabel, positionTone } from "../market/positions";
 import { LineupFsyp } from "./LineupFsyp";
 import { TeamSummary } from "./TeamSummary";
+import { widgetDescription } from "./teamSummaries";
 import {
-  hierarchyGroups, hierarchySummary, type HierarchyEntry, type HierarchyGroup,
+  hierarchyGroups, type HierarchyEntry, type HierarchyGroup,
 } from "./teamHierarchy";
 
 type Squad = NonNullable<ClubDossierDto["roster"]>["players"];
@@ -45,16 +46,13 @@ export function TeamHierarchySection({ players, returnTo }: { players: Squad; re
     };
   })), [players, outlooks.profiles]);
   const ready = requested && !outlooks.isLoading;
-  const summary = ready ? hierarchySummary(groups) : null;
   if (players.length === 0) return null;
   return (
     <div className="team-block">
       <h3 id="team-hierarchy-title">{t("Hierarchy levels")}</h3>
-      <TeamSummary id="team-summary-hierarchy" text={summary} />
-      <p className="team-note">
-        {t("Each player's role in the squad, from most to least important. Roles are read when you open the list.")}
-      </p>
-      {ready ? <LevelChips groups={groups} summary={summary !== null} /> : null}
+      <TeamSummary id="team-summary-hierarchy" widget="hierarchy" />
+      <p className="team-note">{t("Roles are read when you open the list.")}</p>
+      {ready ? <LevelChips groups={groups} /> : null}
       <div className="team-hierarchy-actions">
         <Button
           ref={trigger}
@@ -68,7 +66,7 @@ export function TeamHierarchySection({ players, returnTo }: { players: Squad; re
       <Dialog
         open={open}
         title={t("Hierarchy levels")}
-        description={summary}
+        description={widgetDescription("hierarchy")}
         onClose={() => setOpen(false)}
         className="team-hierarchy-dialog"
         layout="sheet"
@@ -89,12 +87,12 @@ export function TeamHierarchySection({ players, returnTo }: { players: Squad; re
 }
 
 /** A compact tally of the levels under the heading, so the split is visible before opening. */
-function LevelChips({ groups, summary }: { groups: readonly HierarchyGroup[]; summary: boolean }) {
+function LevelChips({ groups }: { groups: readonly HierarchyGroup[] }) {
   return (
     <ul
       className="team-hier-chips"
       aria-labelledby="team-hierarchy-title"
-      aria-describedby={summary ? "team-summary-hierarchy" : undefined}
+      aria-describedby="team-summary-hierarchy"
     >
       {groups.map((group) => (
         <li key={group.label} className="team-hier-chip">

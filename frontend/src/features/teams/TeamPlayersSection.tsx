@@ -18,8 +18,7 @@ import { useRecentPoints, type RecentPoint } from "./useRecentPoints";
 import { TeamHierarchySection } from "./TeamHierarchySection";
 import { TeamMeter } from "./TeamMeter";
 import { TeamSummary } from "./TeamSummary";
-import { mvpSummary, squadSummary } from "./teamSummaries";
-import { publishedColumns, sortSquad, type SquadColumn, type SquadRow } from "./teamTable";
+import { publishedColumns, sortSquad, splitByMinutes, type SquadColumn, type SquadRow } from "./teamTable";
 
 type Roster = NonNullable<ClubDossierDto["roster"]>;
 
@@ -84,17 +83,49 @@ export function TeamPlayersSection({
   const weeks = roster.coverage.matchweeks.join(", ");
   const unavailable = season?.coverage.unavailable ?? 0;
   const maxPoints = Math.max(0, ...rows.map((row) => row.points ?? 0));
-  const mvpText = mvpSummary(roster.mvps);
-  const squadText = squadSummary(rows);
+  // Players with zero minutes add noise to the table, so they wait behind a toggle.
+  const { played, idle } = splitByMinutes(rows);
+  const foldIdle = idle.length > 0;
+  const [showIdle, setShowIdle] = useState(false);
+  const columns = 3 + statColumns.length;
+  const renderRow = (row: SquadRow) => (
+    <tr key={row.playerId}>
+      <th className="is-player" scope="row">
+        <Link
+          className="team-player-link"
+          to={`/players/${encodeURIComponent(row.playerId)}`}
+          state={{ returnTo }}
+        >
+          {row.name}
+        </Link>
+      </th>
+      <td className="is-position">
+        <span
+          className={`team-pos team-pos--${positionTone(row.positionId)}`}
+          title={positionLabel(row.positionId) ?? undefined}
+        >
+          {positionAbbrev(row.positionId)}
+        </span>
+      </td>
+      <td className="is-points">
+        <span className={row.points ? "" : "is-zero"}>{formatCount(row.points)}</span>
+        <TeamMeter percent={maxPoints > 0 && row.points ? (row.points / maxPoints) * 100 : 0} />
+      </td>
+      {statColumns.map((key) => (
+        <td key={key} className={row.stats[key] ? "" : "is-zero"}>
+          {formatCount(row.stats[key])}
+        </td>
+      ))}
+    </tr>
+  );
   return (
     <section id="team-players" tabIndex={-1} aria-labelledby="team-players-title">
       <h2 id="team-players-title" className="team-section-title">{t("Players")}</h2>
       <div className="team-block">
         <h3 id="team-mvps-title">{t("MVPs")}</h3>
-        <TeamSummary id="team-summary-mvps" text={mvpText} />
+        <TeamSummary id="team-summary-mvps" widget="mvps" />
         <MvpStrip
           players={roster.mvps}
-          described={mvpText !== null}
           outlooks={outlooks.profiles}
           media={media}
           recent={recent}
@@ -102,7 +133,7 @@ export function TeamPlayersSection({
       </div>
       <div className="team-block">
         <h3 id="team-squad-title">{t("Squad")}</h3>
-        <TeamSummary id="team-summary-squad" text={squadText} />
+        <TeamSummary id="team-summary-squad" widget="squad" />
         <p className="team-note">
           {season
             ? t("{{0}} players. LaLiga {{1}} season totals from FutbolFantasy.", {
@@ -139,7 +170,7 @@ export function TeamPlayersSection({
           tabIndex={0}
           role="region"
           aria-labelledby="team-squad-title"
-          aria-describedby={squadText ? "team-summary-squad" : undefined}
+          aria-describedby="team-summary-squad"
         >
           <table className="team-table team-squad-table">
             <thead>
@@ -173,38 +204,28 @@ export function TeamPlayersSection({
                 ))}
               </tr>
             </thead>
-            <tbody>
-              {rows.map((row) => (
-                <tr key={row.playerId}>
-                  <th className="is-player" scope="row">
-                    <Link
-                      className="team-player-link"
-                      to={`/players/${encodeURIComponent(row.playerId)}`}
-                      state={{ returnTo }}
-                    >
-                      {row.name}
-                    </Link>
-                  </th>
-                  <td className="is-position">
-                    <span
-                      className={`team-pos team-pos--${positionTone(row.positionId)}`}
-                      title={positionLabel(row.positionId) ?? undefined}
-                    >
-                      {positionAbbrev(row.positionId)}
-                    </span>
-                  </td>
-                  <td className="is-points">
-                    <span className={row.points ? "" : "is-zero"}>{formatCount(row.points)}</span>
-                    <TeamMeter percent={maxPoints > 0 && row.points ? (row.points / maxPoints) * 100 : 0} />
-                  </td>
-                  {statColumns.map((key) => (
-                    <td key={key} className={row.stats[key] ? "" : "is-zero"}>
-                      {formatCount(row.stats[key])}
+            <tbody>{(foldIdle ? played : rows).map(renderRow)}</tbody>
+            {foldIdle ? (
+              <>
+                <tbody className="team-idle-toggle">
+                  <tr>
+                    <td colSpan={columns}>
+                      <button
+                        type="button"
+                        aria-expanded={showIdle}
+                        aria-controls="team-squad-idle"
+                        onClick={() => setShowIdle((current) => !current)}
+                      >
+                        <span className="team-idle-chevron" aria-hidden="true" />
+                        {showIdle ? t("Hide players without minutes") : t("Show players without minutes")}
+                        <span className="team-count">{idle.length}</span>
+                      </button>
                     </td>
-                  ))}
-                </tr>
-              ))}
-            </tbody>
+                  </tr>
+                </tbody>
+                <tbody id="team-squad-idle" hidden={!showIdle}>{idle.map(renderRow)}</tbody>
+              </>
+            ) : null}
             <tfoot>
               <tr>
                 <th className="is-player" scope="row">{t("Totals")}</th>
@@ -244,13 +265,11 @@ export function isStarterFlagged(percent: number | null | undefined): boolean {
 
 function MvpStrip({
   players,
-  described,
   outlooks,
   media,
   recent,
 }: {
   players: Roster["mvps"];
-  described: boolean;
   outlooks: { get(playerId: string): unknown };
   media: ReadonlyMap<string, { photoUrl: string | null }>;
   recent: ReadonlyMap<string, readonly RecentPoint[]>;
@@ -272,7 +291,7 @@ function MvpStrip({
   return (
     <div>
       <ul className="team-mvp-list" aria-labelledby="team-mvps-title"
-        aria-describedby={described ? "team-summary-mvps" : undefined}>
+        aria-describedby="team-summary-mvps">
         {shown.map(({ player, radar, published }, index) => {
           const outlook = outlooks.get(player.playerId) as Outlook | undefined;
           const starter = outlook?.startProbability?.percent;

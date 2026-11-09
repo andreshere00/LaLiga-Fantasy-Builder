@@ -28,7 +28,6 @@ import { LineupPlayerDialog } from "./LineupPlayerDialog";
 import { RecentPoints } from "./RecentPoints";
 import { TeamMeter } from "./TeamMeter";
 import { TeamSummary } from "./TeamSummary";
-import { alternativesSummary, startersSummary } from "./teamSummaries";
 import { alternativeLines, pitchLineLabel, pitchLines, type PitchLine } from "./teamPitch";
 import { isStarterFlagged } from "./TeamPlayersSection";
 import { useRecentPoints } from "./useRecentPoints";
@@ -77,7 +76,6 @@ export function TeamLineupSection({
     (prediction?.alternatives ?? []).map((player) => resolve(asPlayer(player))),
   );
   const groups = alternativeLines(alternatives);
-  const startersText = startersSummary(starters);
   /** Every line starts wrapped; opening one loads its players' form. */
   const [open, setOpen] = useState<ReadonlySet<PitchLine> | null>(null);
   const expanded = open ?? new Set<PitchLine>();
@@ -118,13 +116,13 @@ export function TeamLineupSection({
           <div className="team-lineup-board">
             <div>
               <h3 id="team-starters-title">{t("Starters")}</h3>
-              <TeamSummary id="team-summary-starters" text={startersText} />
+              <TeamSummary id="team-summary-starters" widget="starters" />
               <p className="team-note">{t("Select a player for details and actions.")}</p>
               <div
                 className="team-pitch"
                 role="group"
                 aria-labelledby="team-starters-title"
-                aria-describedby={startersText ? "team-summary-starters" : undefined}
+                aria-describedby="team-summary-starters"
               >
                 <PitchMarkings />
                 <div className="team-pitch-rows">
@@ -166,8 +164,8 @@ export function TeamLineupSection({
               <div className="team-alternatives-head">
                 <div className="team-alternatives-title">
                   <h3 id="team-alternatives-title">{t("Alternatives")}</h3>
-                  <TeamSummary id="team-summary-alternatives" text={alternativesSummary(groups)} />
-                  <p className="team-note">{t("Likeliest substitutes by position. Open a group to compare them.")}</p>
+                  <TeamSummary id="team-summary-alternatives" widget="alternatives" />
+                  <p className="team-note">{t("Open a group to compare its players.")}</p>
                 </div>
                 {groups.length > 1 ? (
                   <Button

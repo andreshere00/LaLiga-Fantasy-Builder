@@ -82,7 +82,7 @@ describe("TeamPerformanceSection", () => {
     expect(onCompetition).toHaveBeenCalledWith("all");
   });
 
-  it("TeamPerformanceSection_each_widget_shows_a_summary_that_its_content_points_back_to", () => {
+  it("TeamPerformanceSection_each_widget_shows_a_description_that_its_content_points_back_to", () => {
     render(
       <MemoryRouter><TeamPerformanceSection
         performance={performance}
@@ -98,12 +98,12 @@ describe("TeamPerformanceSection", () => {
     const overview = screen.getByRole("group", { name: "Overview" });
     expect(overview.getAttribute("aria-describedby")).toBe("team-summary-overview");
     expect(document.getElementById("team-summary-overview")?.textContent)
-      .toContain("Played 1: won 0, drawn 0, lost 1.");
+      .toContain("Results, recent form, home and away record");
     const previous = screen.getByRole("list", { name: "Previous matches" });
     expect(document.getElementById(previous.getAttribute("aria-describedby") ?? "")?.textContent)
-      .toContain("Played 1, newest first.");
+      .toContain("Finished matches in the selected window");
     const upcoming = screen.getByRole("list", { name: "Upcoming matches" });
     expect(document.getElementById(upcoming.getAttribute("aria-describedby") ?? "")?.textContent)
-      .toContain("Scheduled 1. Next: Villarreal CF vs Getafe CF");
+      .toContain("Scheduled matches in the selected window");
   });
 });

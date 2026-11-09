@@ -489,6 +489,20 @@
 .team-squad-table .is-points .team-meter { margin-top: 4px; }
 .team-squad-table th:not(.is-player):not(.is-position) button { text-align: right; }
 .team-squad-table th.is-position button { text-align: left; }
+/* Players with zero minutes wait behind one full-width row; the button stays in view while the table scrolls. */
+.team-squad-table .team-idle-toggle td { padding: 0; text-align: left; background: var(--fb-subtle); }
+.team-squad-table .team-idle-toggle button {
+  position: sticky; left: 0; display: inline-flex; align-items: center; gap: 8px; min-height: 44px;
+  padding: 8px 12px; border: 0; background: transparent; color: var(--fb-muted);
+  font: 600 13px/1.2 var(--fb-font-body); cursor: pointer;
+}
+.team-squad-table .team-idle-toggle button:hover { color: var(--fb-text); }
+.team-idle-chevron {
+  flex: none; width: 7px; height: 7px; border-right: 2px solid currentColor; border-bottom: 2px solid currentColor;
+  transform: rotate(45deg); transition: transform var(--fb-color-duration, .15s);
+}
+.team-idle-toggle button[aria-expanded="true"] .team-idle-chevron { transform: rotate(-135deg); }
+@media (prefers-reduced-motion: reduce) { .team-idle-chevron { transition: none; } }
 
 /* ---- Performance ---- */
 .team-controls { display: flex; flex-wrap: wrap; gap: 16px 40px; }

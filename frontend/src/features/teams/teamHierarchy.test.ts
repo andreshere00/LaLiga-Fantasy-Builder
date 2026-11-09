@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { hierarchyGroups, hierarchySummary, type HierarchyEntry } from "./teamHierarchy";
+import { hierarchyGroups, type HierarchyEntry } from "./teamHierarchy";
 
 // ---- Mocks, fixtures & helpers ---- //
 
@@ -55,20 +55,5 @@ describe("hierarchyGroups", () => {
 
   it("hierarchyGroups_no_players_returns_no_groups", () => {
     expect(hierarchyGroups([])).toEqual([]);
-  });
-});
-
-describe("hierarchySummary", () => {
-  it("hierarchySummary_groups_names_each_level_with_its_count", () => {
-    const groups = hierarchyGroups([
-      entry({ name: "A", hierarchy: "Clave" }),
-      entry({ name: "B", hierarchy: "Clave" }),
-      entry({ name: "C", hierarchy: "Reserva" }),
-    ]);
-    expect(hierarchySummary(groups)).toBe("Hierarchy levels: Key player 2, Reserve 1.");
-  });
-
-  it("hierarchySummary_no_groups_returns_null", () => {
-    expect(hierarchySummary([])).toBeNull();
   });
 });
