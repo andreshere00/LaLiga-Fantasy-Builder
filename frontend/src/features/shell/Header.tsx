@@ -4,6 +4,7 @@ import { ThemeToggle } from "./ThemeToggle";
 import { Select } from "@base-ui/react/select";
 import { useLayoutEffect, useRef, useState } from "react";
 import { Link, NavLink } from "react-router-dom";
+import { preloadHandlers } from "../../app/routeModules";
 import { leagueId, leagueLabel } from "../../api/mappers";
 import { useAuth } from "../../auth/AuthProvider";
 import { Dialog } from "../../components/ui/Dialog";
@@ -52,9 +53,9 @@ export function Header() {
         </Link>
         <nav className="nav-tabs" aria-label={t("Sections")}>
           <NavLink to="/" end className="nav-tab"><NavIcon name="lineup" /><span>{t("Lineup")}</span></NavLink>
-          <NavLink to="/market" className="nav-tab"><NavIcon name="market" /><span>{t("Market")}</span></NavLink>
-          <NavLink to="/players" className="nav-tab"><NavIcon name="players" /><span>{t("Players")}</span></NavLink>
-          <NavLink to="/teams" className="nav-tab"><NavIcon name="teams" /><span>{t("Teams")}</span></NavLink>
+          <NavLink to="/market" className="nav-tab" {...preloadHandlers("/market")}><NavIcon name="market" /><span>{t("Market")}</span></NavLink>
+          <NavLink to="/players" className="nav-tab" {...preloadHandlers("/players")}><NavIcon name="players" /><span>{t("Players")}</span></NavLink>
+          <NavLink to="/teams" className="nav-tab" {...preloadHandlers("/teams")}><NavIcon name="teams" /><span>{t("Teams")}</span></NavLink>
         </nav>
         <div className={`nav-actions${optionsOpen ? " is-open" : ""}`}>
           {signedIn ? <><NotificationsButton /><ScoutingDialog /></> : null}
