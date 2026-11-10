@@ -10,7 +10,7 @@ from datetime import UTC, date, datetime
 from typing import Any
 from zoneinfo import ZoneInfo
 
-from pydantic import ValidationError
+from pydantic import BaseModel, ValidationError
 
 from fantasy_api.domain.club_pages import FutbolFantasyClubPages
 from fantasy_api.domain.errors import NotFoundError, UpstreamError
@@ -178,11 +178,23 @@ class ClubsService:
             )
         if news_error:
             errors.append(news_error)
+        prediction = None
+        if scraped is not None:
+            try:
+                prediction = _prediction(scraped)
+            except ValidationError:
+                errors.append(
+                    ClubSegmentError(
+                        segment="prediction",
+                        code="upstream_error",
+                        detail="the predicted lineup was unavailable",
+                    )
+                )
         return ClubDossier(
             club=summary,
             roster=roster,
             performance=performance,
-            prediction=None if scraped is None else _prediction(scraped),
+            prediction=prediction,
             injuries=None if scraped is None else _injuries(scraped),
             news=news,
             segment_errors=errors,
@@ -371,7 +383,7 @@ def _performance(
         if _involves(club_id, fixture) and (match := _laliga_match(club_id, fixture)) is not None
     ]
     if scraped is not None:
-        matches.extend(_other_matches(scraped, labels))
+        matches.extend(_other_matches(scraped, labels, now or datetime.now(tz=UTC)))
     finished = [
         match for match in matches if not match.scheduled and match.regulation_home is not None
     ]
@@ -382,21 +394,19 @@ def _performance(
     )
 
 
+def _own_fields[M: BaseModel](model: type[M], source: BaseModel) -> M:
+    """Build a response model from only the fields it declares, ignoring extra wire fields."""
+    return model.model_validate(source.model_dump(include=set(model.model_fields)))
+
+
 def _prediction(page: ScrapedClubPage) -> PredictionSection:
+    """Map the scraped predicted XI to the response section."""
     return PredictionSection(
         matchday=page.matchday,
-        coach=(
-            None if page.coach is None else PredictedCoach.model_validate(page.coach.model_dump())
-        ),
-        starters=[PredictedPlayer.model_validate(player.model_dump()) for player in page.starters],
-        alternatives=[
-            PredictedPlayer.model_validate(player.model_dump()) for player in page.alternatives
-        ],
-        summary=(
-            None
-            if page.summary is None
-            else PredictedSummary.model_validate(page.summary.model_dump())
-        ),
+        coach=None if page.coach is None else _own_fields(PredictedCoach, page.coach),
+        starters=[_own_fields(PredictedPlayer, player) for player in page.starters],
+        alternatives=[_own_fields(PredictedPlayer, player) for player in page.alternatives],
+        summary=None if page.summary is None else _own_fields(PredictedSummary, page.summary),
     )
 
 
@@ -545,7 +555,8 @@ def _own_names(page: ScrapedClubPage, labels: set[str]) -> set[str]:
     return (common & labels) or labels
 
 
-def _other_matches(page: ScrapedClubPage, labels: set[str]) -> list[ClubMatch]:
+def _other_matches(page: ScrapedClubPage, labels: set[str], now: datetime) -> list[ClubMatch]:
+    """Map club-page fixtures outside LaLiga, placing each printed kickoff on the calendar."""
     matches: list[ClubMatch] = []
     own = _own_names(page, labels)
     for fixture in page.fixtures:
@@ -562,6 +573,7 @@ def _other_matches(page: ScrapedClubPage, labels: set[str]) -> list[ClubMatch]:
                 away=fixture.away,
                 home_badge=fixture.home_badge,
                 away_badge=fixture.away_badge,
+                kickoff=_printed_kickoff(fixture.kickoff, now),
                 kickoff_text=fixture.kickoff,
                 round_label=fixture.round_label,
                 regulation_home=None if fixture.regulation is None else fixture.regulation.home,

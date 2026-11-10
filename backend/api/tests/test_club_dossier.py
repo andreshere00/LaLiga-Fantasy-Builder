@@ -16,7 +16,13 @@ from fantasy_api.main import create_app
 from fantasy_api.schemas.clubs import ClubMatch, ScrapedClubPage
 from fantasy_api.schemas.fixture_standings import SeasonFixture
 from fantasy_api.schemas.players import CatalogPlayer
-from fantasy_api.services.clubs import ClubsService, _next_match, _performance, _roster
+from fantasy_api.services.clubs import (
+    ClubsService,
+    _next_match,
+    _performance,
+    _prediction,
+    _roster,
+)
 from fastapi.testclient import TestClient
 from pydantic import SecretStr
 from test_container import TEST_FANTASY_ORIGIN, TEST_SERVICE_TOKEN
@@ -550,3 +556,51 @@ def test_next_match_ignores_finished_matches() -> None:
 
     # Act / Assert
     assert _next_match([played], now) is None
+
+
+def test_prediction_ignores_fields_the_response_does_not_declare() -> None:
+    # Arrange
+    scraped = ScrapedClubPage.model_validate(
+        {
+            "slug": "villarreal",
+            "coach": {"name": "Coach", "badge": "x"},
+            "starters": [{"name": "Moleiro", "role": "starter", "injured": False}],
+            "alternatives": [{"name": "Diatta", "role": "alternative", "slug": "diatta"}],
+            "summary": {"averageProbability": 70, "extra": 1},
+        }
+    )
+
+    # Act
+    prediction = _prediction(scraped)
+
+    # Assert
+    assert prediction.starters[0].name == "Moleiro"
+    assert prediction.alternatives[0].name == "Diatta"
+    assert prediction.summary is not None and prediction.summary.average_probability == 70
+
+
+def test_performance_gives_other_competitions_a_kickoff_from_the_printed_date() -> None:
+    # Arrange
+    scraped = ScrapedClubPage.model_validate(
+        {
+            "slug": "getafe",
+            "fixtures": [
+                {
+                    "competition": "champions_league",
+                    "home": "Getafe",
+                    "away": "Brighton",
+                    "kickoff": "Mié 11/11 21:00h",
+                    "scheduled": True,
+                },
+                {"competition": "champions_league", "home": "Getafe", "away": "Ajax"},
+            ],
+        }
+    )
+
+    # Act
+    performance = _performance(9, [], scraped, {"getafe"}, NOW)
+
+    # Assert
+    kickoffs = [match.kickoff for match in performance.matches]
+    assert kickoffs[0] == datetime(2026, 11, 11, 20, 0, tzinfo=UTC)
+    assert kickoffs[1] is None
