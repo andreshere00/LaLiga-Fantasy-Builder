@@ -1190,6 +1190,13 @@
     height: auto;
     max-height: none;
   }
+
+  /* Two wide columns would otherwise stretch each headshot to the whole frame and hide the
+     badges and the status marks; keep the face at a recognisable size with air around it. */
+  .squad-grid .player-photo-frame:not(.player-photo-frame-empty) {
+    padding-top: 30%;
+    box-sizing: border-box;
+  }
 }
 
 @media (prefers-reduced-motion: reduce) {
