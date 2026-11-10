@@ -1,5 +1,5 @@
 import { t, useTranslation } from "../../../i18n";
-import { PlayerLink } from "../../../components/links/EntityLinks";
+import { ManagerLink, PlayerLink } from "../../../components/links/EntityLinks";
 import { useEffect, useRef, useState } from "react";
 import { formatEuro } from "../../../api/format";
 import { Button } from "../../../components/ui/Button";
@@ -70,7 +70,7 @@ export function MarketBids({ board, actions, now }: Props) {
           return <li key={bid.key} className="market-bid" aria-label={t("Bid for {{0}}", { 0: bid.name })}>
             <div className="market-bid-player">
               {bid.photoUrl ? <img src={bid.photoUrl} alt="" /> : null}
-              <div><h3><PlayerLink playerId={bid.playerId} returnTo="/market">{bid.name}</PlayerLink></h3><p>{(bid.seller ?? t("Seller unavailable"))}</p></div>
+              <div><h3><PlayerLink playerId={bid.playerId} returnTo="/market">{bid.name}</PlayerLink></h3><p>{bid.seller == null ? t("Seller unavailable") : <ManagerLink teamId={bid.sellerTeamId}>{bid.seller}</ManagerLink>}</p></div>
             </div>
             <strong className="market-bid-money">{bid.money == null ? t("Amount unavailable") : formatEuro(bid.money)}</strong>
             <p>{bid.expiresAt == null ? t("Time left unavailable") : <>{t("Time left: ")}<time
