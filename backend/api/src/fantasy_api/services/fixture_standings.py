@@ -121,6 +121,9 @@ class FixtureStandingsService:
             for official_id, club in mapped.items()
         }
         clubs = {club.id: club for club in mapped.values()}
+        # Fixtures can be cached by the clubs dossier; a stale copy would disagree with the
+        # fresh official table, so a snapshot refresh always reads them again.
+        self._fixture_cache.clear()
         raw_fixtures = await self.get_season_fixtures()
         fixtures: list[FootballFixture] = []
         for match in raw_fixtures:

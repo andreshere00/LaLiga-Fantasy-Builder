@@ -253,3 +253,33 @@ def test_get_standings_official_aliases_resolves_espanyol_and_osasuna():
         assert rows[0]["team"]["id"] == 101
         assert rows[0]["team"]["name"] == "RCD Espanyol"
         assert rows[1]["team"]["name"] == "C.A. Osasuna"
+
+
+async def test_get_standings_stale_shared_fixture_cache_refreshes_fixtures_with_snapshot():
+    from fantasy_api.services.fixture_standings import FixtureStandingsService
+
+    table, fixtures, masters = inputs()
+    stale = deepcopy(fixtures)
+    next(row for row in stale if row["id"] == "1")["matchState"] = 10  # not finished yet
+
+    class Repository:
+        def __init__(self):
+            self.fixtures = stale
+
+        async def get_official_standings(self):
+            return table
+
+        async def get_fixtures(self):
+            return self.fixtures
+
+        async def get_clubs(self):
+            return masters
+
+    repository = Repository()
+    service = FixtureStandingsService(repository, competition_id=1, ttl_seconds=3600)
+    await service.get_season_fixtures()  # the clubs dossier fills the shared cache
+    repository.fixtures = fixtures  # the match has since finished
+
+    standings = await service.get_standings(1, None, "completed")
+
+    assert standings.rows[0].played == 6

@@ -85,7 +85,7 @@ export function LineupPage() {
 
 function LineupPageContent() {
   useTranslation();
-  const [searchParams] = useSearchParams();
+  const [searchParams, setSearchParams] = useSearchParams();
   const focusPlayer = searchParams.get("focusPlayer");
   const board = useLineupBoard({ initialTeamId: searchParams.get("team") });
   const squadOffers = useOwnSquadOffers();
@@ -131,23 +131,39 @@ function LineupPageContent() {
   const squadPageData = squadPageSlice(visibleSquad, filteredPage);
   const filterCount = activeSquadFilterCount(squadFilters);
   useEffect(() => { setFilteredPage(0); }, [board.selectedTeamId, picking, squadFilters]);
+  // A focus link pages to the player once and focuses the card once, then drops the param so
+  // later renders and manual paging are left alone.
+  const pagedFocus = useRef<string | null>(null);
+  const focusedPlayer = useRef<string | null>(null);
   useEffect(() => {
+    if (!focusPlayer || pagedFocus.current === focusPlayer) return;
     const page = squadPageForPlayer(
       visibleSquad.map((card) => card.masterPlayerId),
       focusPlayer,
     );
-    if (page != null) setFilteredPage(page);
+    if (page == null) return;
+    pagedFocus.current = focusPlayer;
+    setFilteredPage(page);
   }, [focusPlayer, visibleSquad]);
   useEffect(() => {
-    if (!focusPlayer) return;
+    if (!focusPlayer || pagedFocus.current !== focusPlayer) return;
+    if (focusedPlayer.current === focusPlayer) return;
     const node = document.getElementById(`squad-player-${focusPlayer}`);
     if (!(node instanceof HTMLElement)) return;
+    focusedPlayer.current = focusPlayer;
     if (typeof node.scrollIntoView === "function") node.scrollIntoView({ block: "nearest" });
     const button = node.querySelector("button");
     if (button instanceof HTMLButtonElement) button.focus();
-  }, [focusPlayer, squadPageData.page, squadPageData.pageItems]);
+    setSearchParams((current) => {
+      const next = new URLSearchParams(current);
+      next.delete("focusPlayer");
+      return next;
+    }, { replace: true });
+  }, [focusPlayer, squadPageData.pageItems, setSearchParams]);
   useEffect(() => {
-    setSquadFilters(createEmptySquadFilters());
+    setSquadFilters((current) => (
+      activeSquadFilterCount(current) === 0 ? current : createEmptySquadFilters()
+    ));
     setFilterOpen(false);
   }, [board.selectedTeamId]);
   useEffect(() => {
