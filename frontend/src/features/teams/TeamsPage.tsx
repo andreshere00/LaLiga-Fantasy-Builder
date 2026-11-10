@@ -133,7 +133,7 @@ export function TeamsPage({ opponentClubId = null }: { opponentClubId?: number |
           </Link>
         ))}
       </nav>
-      <nav className="team-sections" aria-label={t("Club sections")}>
+      <nav className="fb-section-tabs team-sections" aria-label={t("Club sections")}>
         {(Object.keys(SECTION_LABELS) as TeamSection[]).map((section) => (
           <a
             key={section}

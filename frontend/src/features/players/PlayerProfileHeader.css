@@ -159,29 +159,7 @@
   border-top: 1px solid var(--fb-line);
 }
 
-/* Centered section links, with a rectangular selection marker instead of an underline. */
-.player-detail-page .player-detail-sections { gap: 4px; padding: 6px; background: var(--fb-subtle); }
-.player-detail-sections a {
-  border: 1px solid transparent;
-  font-size: 13px;
-  transition: background-color .16s ease, color .16s ease, border-color .16s ease;
-}
-.player-detail-sections a::before {
-  content: "";
-  flex: 0 0 4px;
-  width: 4px;
-  height: 4px;
-  background: var(--fb-primary);
-  opacity: 0;
-}
-.player-detail-sections a:hover { background: var(--fb-surface); }
-.player-detail-sections a[aria-current="location"] {
-  border-color: var(--fb-control-line);
-  background: var(--fb-surface);
-  color: var(--fb-tertiary);
-}
-.player-detail-sections a[aria-current="location"]::before { opacity: 1; }
-.player-detail-sections .player-section-icon { width: 18px; height: 18px; }
+/* Headings clear the sticky header and section tabs when a tab jumps to them. */
 .player-detail-page :is(h1,h2)[id] { scroll-margin-top: 16px; }
 
 @media (max-width: 900px) {
@@ -202,13 +180,4 @@
   .player-averages-heading { align-items: flex-start; }
 
   .player-averages-heading .fb-button { padding-inline: 12px; }
-  .player-detail-page .player-detail-sections a { padding-inline: 8px; gap: 6px; }
-  .player-detail-page .player-detail-sections {
-    flex-wrap: nowrap;
-    overflow-x: auto;
-    justify-content: safe center;
-    scrollbar-width: thin;
-    scrollbar-color: var(--fb-control-line) var(--fb-subtle);
-  }
-  .player-detail-page .player-detail-sections a { flex: 0 0 auto; }
 }

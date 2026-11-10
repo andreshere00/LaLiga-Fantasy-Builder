@@ -166,3 +166,23 @@
 :is(.market-dialog-error,.squad-sale-error) { color:var(--fb-secondary); border-left:3px solid var(--fb-failure); padding-left:12px; line-height:1.5; }
 .fb-dialog button:disabled { cursor:not-allowed; opacity:.5; }
 .fb-tooltip span { display:block; }
+
+/* Section tabs: sticky in-page navigation shared by Teams and Player details. */
+.fb-section-tabs{display:flex;position:sticky;top:var(--app-header-height,0px);z-index:80;overflow-x:auto;scrollbar-width:none;background:var(--fb-surface);border-bottom:1px solid var(--fb-line)}
+.fb-section-tabs>:first-child{margin-inline-start:auto}
+.fb-section-tabs>:last-child{margin-inline-end:auto}
+.fb-section-tabs a{display:inline-flex;align-items:center;gap:8px;flex:0 0 auto;min-height:48px;padding:0 16px;color:var(--fb-secondary);font-size:14px;font-weight:500;letter-spacing:.01em;text-decoration:none;text-transform:uppercase;border-bottom:4px solid transparent;transition:background-color .16s ease,color .16s ease,border-color .16s ease}
+.fb-section-tabs a:hover{background:var(--fb-subtle)}
+.fb-section-tabs a:focus-visible{outline:2px solid var(--fb-focus);outline-offset:-2px}
+.fb-section-tabs a[aria-current]:not([aria-current="false"]){border-bottom-color:var(--fb-primary);color:var(--fb-tertiary)}
+.fb-section-tabs-icon{width:18px;height:18px;flex:none;fill:currentColor}
+@media(max-width:800px){.fb-section-tabs a{flex:1 1 auto;justify-content:center;padding-inline:10px}}
+/* Phones: equal tabs, icon above label, so a long label never changes a tab's size. */
+@media(max-width:640px){
+  .fb-section-tabs{display:grid;grid-auto-flow:column;grid-auto-columns:minmax(0,1fr);overflow-x:visible}
+  .fb-section-tabs>:is(:first-child,:last-child){margin-inline:0}
+  .fb-section-tabs a{flex-direction:column;justify-content:flex-start;gap:4px;min-height:60px;padding:8px 4px 6px;font-size:11px;line-height:1.2;letter-spacing:.02em;text-align:center}
+}
+/* Landscape phones: the tabs scroll away so the header and bottom bar leave room for content. */
+@media(max-height:500px){.fb-section-tabs{position:static}}
+@media(prefers-reduced-motion:reduce){.fb-section-tabs a{transition:none}}
