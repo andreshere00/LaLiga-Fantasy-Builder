@@ -94,3 +94,9 @@
 .fixture-matches-scroll > .fb-scroll-bar[data-orientation="horizontal"] { display:none; }
 @container (min-width:1100px) { .fixture-matches-list { grid-template-columns:repeat(5,minmax(0,1fr)); } .fixture-match { width:auto; } }
 @media(max-width:600px) { .fixture-matches-list { grid-template-columns:minmax(0,1fr); padding-inline:4px; } .fixture-match { width:auto; } }
+
+/* Matchweek change: enter from the side we moved towards. Short and small so it never delays reading. */
+.fixture-slide--next { animation:fixture-slide-next var(--fb-motion-base) var(--fb-ease-out) both; }
+.fixture-slide--prev { animation:fixture-slide-prev var(--fb-motion-base) var(--fb-ease-out) both; }
+@keyframes fixture-slide-next { from { opacity:0; transform:translateX(16px); } to { opacity:1; transform:none; } }
+@keyframes fixture-slide-prev { from { opacity:0; transform:translateX(-16px); } to { opacity:1; transform:none; } }

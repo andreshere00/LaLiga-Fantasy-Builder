@@ -104,6 +104,13 @@ function FixtureMatchesPanelContent() {
   const [announcement, setAnnouncement] = useState("");
   const lastAnnounced = useRef<{ week: number | undefined; label: string; language: string; scores: Map<string, string> } | null>(null);
   const week = panel.selection?.week;
+  // Direction of the last matchweek change, so the list can enter from the matching side.
+  const [slide, setSlide] = useState<{ week: number | undefined; dir: "next" | "prev" | null }>(
+    { week, dir: null },
+  );
+  if (slide.week !== week) {
+    setSlide({ week, dir: week != null && slide.week != null && week < slide.week ? "prev" : "next" });
+  }
   const matches = panel.round?.matches ?? [];
   const hasMatches = matches.length > 0;
   useEffect(() => {
@@ -176,7 +183,7 @@ function FixtureMatchesPanelContent() {
             event.currentTarget.scrollTo({ left: event.key === "Home" ? 0 : event.currentTarget.scrollWidth });
           },
         }}>
-          <ol className="fixture-matches-list">
+          <ol key={week} className={"fixture-matches-list" + (slide.dir ? ` fixture-slide--${slide.dir}` : "")}>
             {matches.flatMap((match, index) => {
               const day = match.kickoffMs == null ? t("Date TBC") : dayHeadingFormat.format(match.kickoffMs);
               const previous = matches[index - 1];
