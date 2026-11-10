@@ -136,7 +136,11 @@
 .fb-metric-grid dd { margin:4px 0 0; font-size:24px; font-weight:500; font-variant-numeric:tabular-nums; }
 @media(max-width:600px) { .fb-dialog-viewport { padding:12px; } .fb-dialog { padding:20px; max-height:calc(100dvh - 24px); } .fb-dialog-viewport--sheet { padding:0; place-items:end stretch; } .fb-dialog--sheet { width:100%; height:auto; max-height:85dvh; } }
 
-:root { --fb-color-duration:160ms; --fb-color-ease:ease; }
+:root {
+  --fb-color-duration:160ms; --fb-color-ease:ease;
+  --fb-motion-fast:120ms; --fb-motion-base:200ms; --fb-motion-slow:280ms;
+  --fb-ease-out:cubic-bezier(0,0,.2,1); --fb-ease-in:cubic-bezier(.4,0,1,1);
+}
 .fb-dialog button:not(.fb-button) { min-height:44px; border-radius:0; font-weight:600; }
 .fb-dialog-footer button:where(:not(.fb-button)) { padding:0 16px; border:1px solid var(--fb-control-line); background:var(--fb-surface); color:var(--fb-secondary); cursor:pointer; }
 .fb-dialog-footer button:not(:disabled):not([aria-disabled="true"]):hover { background:var(--fb-coral); color:var(--fb-on-coral); border-color:var(--fb-control-line); }
@@ -186,3 +190,13 @@
 /* Landscape phones: the tabs scroll away so the header and bottom bar leave room for content. */
 @media(max-height:500px){.fb-section-tabs{position:static}}
 @media(prefers-reduced-motion:reduce){.fb-section-tabs a{transition:none}}
+
+/* Dialog and sheet motion: enter ease-out, exit shorter and ease-in. Reduced motion is zeroed in global.css. */
+.fb-dialog-backdrop { transition:opacity var(--fb-motion-base) var(--fb-ease-out); }
+.fb-dialog-backdrop[data-starting-style], .fb-dialog-backdrop[data-ending-style] { opacity:0; }
+.fb-dialog-backdrop[data-ending-style] { transition-duration:var(--fb-motion-fast); transition-timing-function:var(--fb-ease-in); }
+.fb-dialog { transition:opacity var(--fb-motion-base) var(--fb-ease-out), transform var(--fb-motion-base) var(--fb-ease-out); }
+.fb-dialog[data-starting-style], .fb-dialog[data-ending-style] { opacity:0; transform:scale(.97); }
+.fb-dialog--sheet[data-starting-style], .fb-dialog--sheet[data-ending-style] { transform:translateX(24px); }
+.fb-dialog[data-ending-style] { transition-duration:var(--fb-motion-fast); transition-timing-function:var(--fb-ease-in); }
+@media(max-width:600px) { .fb-dialog--sheet[data-starting-style], .fb-dialog--sheet[data-ending-style] { transform:translateY(24px); } }
