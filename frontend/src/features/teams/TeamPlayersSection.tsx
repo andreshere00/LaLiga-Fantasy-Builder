@@ -13,6 +13,7 @@ import { usePlayersCatalogQuery } from "../../api/queries";
 import { catalogMediaByMasterId } from "../../api/mappers";
 import { usePlayerRadar } from "../players/radar/usePlayerRadar";
 import type { ClubDossierDto, ClubRosterStatsDto } from "../../api/schemas";
+import { BouncingBall } from "../../components/BouncingBall";
 import { RecentPoints } from "./RecentPoints";
 import { useRecentPoints, type RecentPoint } from "./useRecentPoints";
 import { TeamHierarchySection } from "./TeamHierarchySection";
@@ -158,7 +159,8 @@ export function TeamPlayersSection({
             : ""}
         </p>
         {seasonStats?.loading ? (
-          <p className="team-note" role="status">
+          <p className="team-note team-loading" role="status">
+            <BouncingBall size="sm" />
             {t("Loading season statistics. The first read of a club can take about half a minute.")}
           </p>
         ) : null}
