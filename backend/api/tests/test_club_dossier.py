@@ -233,12 +233,7 @@ def test_get_club_returns_roster_laliga_record_and_prediction() -> None:
     assert body["roster"]["totals"]["minutes"] == 90
     assert body["roster"]["totals"]["goals"] == 1
     assert body["roster"]["coverage"]["shortWindow"] is True
-    records = body["performance"]["records"]
-    laliga = next(record for record in records if record["competition"] == "laliga")
-    assert laliga["won"] == 1 and laliga["drawn"] == 1
-    assert laliga["home"]["won"] == 1
-    assert laliga["away"]["drawn"] == 1
-    assert laliga["goalsFor"] == 3 and laliga["goalsAgainst"] == 1
+    assert "records" not in body["performance"]
     assert body["performance"]["nextMatchId"] == "112"
     assert body["prediction"]["coach"]["name"] == "Íñigo Pérez"
     assert body["prediction"]["alternatives"][0]["probability"] == 0
@@ -399,10 +394,12 @@ def test_performance_home_and_away_splits_ignore_unfinished_matches() -> None:
         }
     )
     performance = _performance(20, fixtures, scraped, {"villarreal"}, NOW)
-    laliga = next(record for record in performance.records if record.competition == "laliga")
-    domestic = next(record for record in performance.records if record.competition == "domestic")
-    assert laliga.home.won == 1 and laliga.away.drawn == 1
-    assert domestic.away.won == 1
+    finished = [match for match in performance.matches if not match.scheduled]
+    assert [(m.group, m.venue, m.outcome) for m in finished] == [
+        ("laliga", "home", "win"),
+        ("laliga", "away", "draw"),
+        ("domestic", "away", "win"),
+    ]
     assert performance.next_match_id == "112"
 
 
@@ -432,9 +429,7 @@ def test_other_matches_venue_uses_the_name_shared_by_every_fixture() -> None:
 
     performance = _performance(9, [], scraped, {"getafe cf", "get"})
 
-    european = next(record for record in performance.records if record.competition == "european")
-    assert (european.home.won, european.away.won) == (1, 1)
-    assert (european.goals_for, european.goals_against) == (4, 0)
+    assert [match.venue for match in performance.matches] == ["home", "away"]
 
 
 def test_other_matches_venue_falls_back_to_labels_when_fixtures_are_ambiguous() -> None:
@@ -478,7 +473,6 @@ def test_performance_keeps_unrecognised_competitions_in_the_other_group() -> Non
     performance = _performance(9, [], scraped, {"getafe cf"})
 
     assert [match.group for match in performance.matches] == ["friendly"]
-    assert [record.competition for record in performance.records] == ["friendly"]
 
 
 def _scheduled(
@@ -604,3 +598,27 @@ def test_performance_gives_other_competitions_a_kickoff_from_the_printed_date() 
     kickoffs = [match.kickoff for match in performance.matches]
     assert kickoffs[0] == datetime(2026, 11, 11, 20, 0, tzinfo=UTC)
     assert kickoffs[1] is None
+
+
+async def test_catalog_repeated_reads_download_the_public_catalog_once() -> None:
+    # Arrange
+    from fantasy_api.repositories.clubs import ClubsRepository
+
+    class Players:
+        calls = 0
+
+        async def list_players(self) -> list[dict[str, object]]:
+            self.calls += 1
+            return _players()
+
+    repository = ClubsRepository(None, None, None, competition_id=1)  # type: ignore[arg-type]
+    players = Players()
+    repository._players = players  # type: ignore[assignment]
+
+    # Act
+    first = await repository.catalog()
+    second = await repository.catalog()
+
+    # Assert
+    assert players.calls == 1
+    assert first == second

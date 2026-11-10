@@ -8063,60 +8063,6 @@
         ],
         "title": "Competition"
       },
-      "CompetitionRecord": {
-        "properties": {
-          "competition": {
-            "type": "string",
-            "enum": [
-              "laliga",
-              "european",
-              "domestic",
-              "friendly"
-            ],
-            "title": "Competition"
-          },
-          "won": {
-            "type": "integer",
-            "title": "Won",
-            "default": 0
-          },
-          "drawn": {
-            "type": "integer",
-            "title": "Drawn",
-            "default": 0
-          },
-          "lost": {
-            "type": "integer",
-            "title": "Lost",
-            "default": 0
-          },
-          "home": {
-            "$ref": "#/components/schemas/VenueRecord"
-          },
-          "away": {
-            "$ref": "#/components/schemas/VenueRecord"
-          },
-          "goalsFor": {
-            "type": "integer",
-            "title": "Goalsfor",
-            "default": 0
-          },
-          "goalsAgainst": {
-            "type": "integer",
-            "title": "Goalsagainst",
-            "default": 0
-          }
-        },
-        "additionalProperties": false,
-        "type": "object",
-        "required": [
-          "competition",
-          "home",
-          "away"
-        ],
-        "title": "CompetitionRecord",
-        "description": "Results and goals for one competition group."
-      },
       "CompetitionStandings": {
         "properties": {
           "competition": {
@@ -11870,13 +11816,6 @@
             "type": "array",
             "title": "Matches"
           },
-          "records": {
-            "items": {
-              "$ref": "#/components/schemas/CompetitionRecord"
-            },
-            "type": "array",
-            "title": "Records"
-          },
           "nextMatchId": {
             "anyOf": [
               {
@@ -11892,8 +11831,7 @@
         "additionalProperties": false,
         "type": "object",
         "required": [
-          "matches",
-          "records"
+          "matches"
         ],
         "title": "PerformanceSection",
         "description": "LaLiga record plus other competitions published on the club page."
@@ -15916,29 +15854,6 @@
           "lon"
         ],
         "title": "Venue"
-      },
-      "VenueRecord": {
-        "properties": {
-          "won": {
-            "type": "integer",
-            "title": "Won",
-            "default": 0
-          },
-          "drawn": {
-            "type": "integer",
-            "title": "Drawn",
-            "default": 0
-          },
-          "lost": {
-            "type": "integer",
-            "title": "Lost",
-            "default": 0
-          }
-        },
-        "additionalProperties": false,
-        "type": "object",
-        "title": "VenueRecord",
-        "description": "Wins, draws, and losses at one venue."
       },
       "WatchWrite": {
         "properties": {

@@ -7,6 +7,7 @@ from pydantic import ValidationError
 from fantasy_api.clients.laliga_fantasy import LaligaFantasyClient
 from fantasy_api.clients.scraping import ScrapingClient
 from fantasy_api.domain.errors import UpstreamError
+from fantasy_api.domain.ttl_cache import AsyncTtlCache
 from fantasy_api.repositories.paths import segment
 from fantasy_api.repositories.players import PlayersRepository
 from fantasy_api.schemas.clubs import ScrapedClubNews, ScrapedClubPage
@@ -25,6 +26,7 @@ class ClubsRepository:
         scraping: Private scraping client.
         fixtures: Cached season fixtures and teams-master directory.
         competition_id: Fantasy competition id.
+        catalog_ttl_seconds: Freshness window of the cached public player catalog.
     """
 
     def __init__(
@@ -34,10 +36,12 @@ class ClubsRepository:
         fixtures: FixtureStandingsService,
         *,
         competition_id: int,
+        catalog_ttl_seconds: int = 900,
     ) -> None:
         self._players = PlayersRepository(fantasy, competition_id=competition_id)
         self._scraping = scraping
         self._fixtures = fixtures
+        self._catalog = AsyncTtlCache[list[CatalogPlayer]](catalog_ttl_seconds)
 
     async def clubs(self) -> list[TeamsMasterRow]:
         """Return the public teams-master directory."""
@@ -48,11 +52,15 @@ class ClubsRepository:
         return await self._fixtures.get_season_fixtures()
 
     async def catalog(self) -> list[CatalogPlayer]:
-        """Return the public player catalog.
+        """Return the public player catalog, cached so one page view reads it once.
 
         Raises:
             UpstreamError: The catalog is not a list of player objects.
         """
+        return await self._catalog.get_or_fetch(self._load_catalog)
+
+    async def _load_catalog(self) -> list[CatalogPlayer]:
+        """Read and validate the catalog from Fantasy."""
         try:
             rows = as_object_list(await self._players.list_players())
             return [CatalogPlayer.model_validate(row) for row in rows]

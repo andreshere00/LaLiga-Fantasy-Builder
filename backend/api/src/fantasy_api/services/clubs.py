@@ -4,8 +4,7 @@ from __future__ import annotations
 
 import asyncio
 import re
-from collections import defaultdict
-from collections.abc import Callable, Iterable, Mapping
+from collections.abc import Callable, Mapping
 from datetime import UTC, date, datetime
 from typing import Any
 from zoneinfo import ZoneInfo
@@ -23,7 +22,6 @@ from fantasy_api.schemas.clubs import (
     ClubSegmentError,
     ClubSummary,
     CompetitionGroup,
-    CompetitionRecord,
     InjuriesSection,
     InjuryItem,
     NewsItem,
@@ -42,7 +40,6 @@ from fantasy_api.schemas.clubs import (
     RosterStatsCoverage,
     RosterStatsPlayer,
     ScrapedClubPage,
-    VenueRecord,
 )
 from fantasy_api.schemas.fixture_standings import SeasonFixture
 from fantasy_api.schemas.player_stats import StatKey
@@ -140,7 +137,10 @@ class ClubsService:
             raise NotFoundError("club not found")
         summary = _summary(master, self._pages.slug_for(club_id))
         errors: list[ClubSegmentError] = []
-        fixtures, fixture_error = await self._fixtures()
+        reads = await asyncio.gather(
+            self._fixtures(), self._scraped(summary.slug), self._news(summary.slug)
+        )
+        (fixtures, fixture_error), (scraped, scrape_error), (news, news_error) = reads
         finalized = 0
         if fixtures is not None:
             finalized = sum(
@@ -151,8 +151,6 @@ class ClubsService:
         roster, roster_error = await self._roster(club_id, finalized)
         if roster_error:
             errors.append(roster_error)
-        scraped, scrape_error = await self._scraped(summary.slug)
-        news, news_error = await self._news(summary.slug)
         labels = {summary.name.casefold()}
         if summary.short_name:
             labels.add(summary.short_name.casefold())
@@ -259,6 +257,7 @@ class ClubsService:
         resolver: PlayerResolver,
         scraped: ScrapedPlayerProvider,
     ) -> RosterStatsPlayer:
+        """Read one player's season line from the scraped profile, or None when unavailable."""
         player_id = _player_id(player)
         try:
             resolved: ResolvedPlayer = await resolver.resolve(player_id)
@@ -272,6 +271,7 @@ class ClubsService:
         )
 
     async def _safe_clubs(self) -> list[TeamsMasterRow]:
+        """Read the club directory, turning bad data into a sanitised upstream error."""
         try:
             return await self._repository.clubs()
         except (UpstreamError, ValidationError, ValueError) as exc:
@@ -280,6 +280,7 @@ class ClubsService:
     async def _roster(
         self, club_id: int, finalized: int
     ) -> tuple[RosterSection | None, ClubSegmentError | None]:
+        """Build the roster section, or the segment error that explains why it is missing."""
         try:
             catalog = await self._repository.catalog()
             return _roster(club_id, catalog, finalized_count=finalized), None
@@ -287,6 +288,7 @@ class ClubsService:
             return None, _segment("roster", exc)
 
     async def _fixtures(self) -> tuple[list[SeasonFixture] | None, ClubSegmentError | None]:
+        """Read the season fixtures, or the segment error that explains why they are missing."""
         try:
             return await self._repository.fixtures(), None
         except (UpstreamError, ValidationError, ValueError) as exc:
@@ -295,6 +297,7 @@ class ClubsService:
     async def _scraped(
         self, slug: str | None
     ) -> tuple[ScrapedClubPage | None, ClubSegmentError | None]:
+        """Read the parsed club page, or the segment error that explains why it is missing."""
         if not slug:
             return None, ClubSegmentError(
                 segment="prediction",
@@ -307,6 +310,7 @@ class ClubsService:
             return None, _segment("prediction", exc)
 
     async def _news(self, slug: str | None) -> tuple[NewsSection | None, ClubSegmentError | None]:
+        """Read the club news, or the segment error that explains why it is missing."""
         if not slug:
             return None, ClubSegmentError(
                 segment="news",
@@ -384,12 +388,8 @@ def _performance(
     ]
     if scraped is not None:
         matches.extend(_other_matches(scraped, labels, now or datetime.now(tz=UTC)))
-    finished = [
-        match for match in matches if not match.scheduled and match.regulation_home is not None
-    ]
     return PerformanceSection(
         matches=matches,
-        records=_records(finished),
         next_match_id=_next_match(matches, now or datetime.now(tz=UTC)),
     )
 
@@ -411,6 +411,7 @@ def _prediction(page: ScrapedClubPage) -> PredictionSection:
 
 
 def _injuries(page: ScrapedClubPage) -> InjuriesSection:
+    """Map the scraped injury list to the response section."""
     if page.injuries is None:
         return InjuriesSection(published=False, items=[])
     return InjuriesSection(
@@ -432,6 +433,7 @@ def _injuries(page: ScrapedClubPage) -> InjuriesSection:
 
 
 def _mvps(players: list[CatalogPlayer]) -> list[RosterMvp]:
+    """Return the top three scorers by points, ties broken by name then id."""
     ranked = [player for player in players if isinstance(player.points, int)]
     ranked.sort(
         key=lambda player: (
@@ -452,6 +454,7 @@ def _mvps(players: list[CatalogPlayer]) -> list[RosterMvp]:
 
 
 def _counts(last_stats: object) -> tuple[dict[str, int], set[int]]:
+    """Sum the per-matchweek event counts and collect the matchweeks they cover."""
     totals: dict[str, int] = {}
     weeks: set[int] = set()
     if not isinstance(last_stats, list):
@@ -503,10 +506,12 @@ def _season_counts(season: Mapping[str, Any] | None) -> dict[str, int | None]:
 
 
 def _line(values: dict[str, int | None]) -> RosterStatLine:
+    """Validate one set of event counts as a roster stat line."""
     return RosterStatLine.model_validate(values)
 
 
 def _laliga_match(club_id: int, fixture: SeasonFixture) -> ClubMatch | None:
+    """Map one LaLiga fixture to a club match, or None for a finished one without scores."""
     home = fixture.local_id == club_id
     scheduled = fixture.match_state != _FINISHED
     scored = fixture.local_score is not None and fixture.visitor_score is not None
@@ -588,43 +593,6 @@ def _other_matches(page: ScrapedClubPage, labels: set[str], now: datetime) -> li
     return matches
 
 
-def _records(matches: Iterable[ClubMatch]) -> list[CompetitionRecord]:
-    grouped: dict[CompetitionGroup, list[ClubMatch]] = defaultdict(list)
-    for match in matches:
-        grouped[match.group].append(match)
-    order: tuple[CompetitionGroup, ...] = ("laliga", "european", "domestic", "friendly")
-    return [_record(group, grouped[group]) for group in order if group in grouped]
-
-
-def _record(group: CompetitionGroup, matches: list[ClubMatch]) -> CompetitionRecord:
-    home = VenueRecord()
-    away = VenueRecord()
-    goals_for = 0
-    goals_against = 0
-    for match in matches:
-        if match.regulation_home is None or match.regulation_away is None or match.outcome is None:
-            continue
-        venue = home if match.venue == "home" else away
-        if match.outcome == "win":
-            venue.won += 1
-        elif match.outcome == "draw":
-            venue.drawn += 1
-        else:
-            venue.lost += 1
-        goals_for += match.regulation_home if match.venue == "home" else match.regulation_away
-        goals_against += match.regulation_away if match.venue == "home" else match.regulation_home
-    return CompetitionRecord(
-        competition=group,
-        won=home.won + away.won,
-        drawn=home.drawn + away.drawn,
-        lost=home.lost + away.lost,
-        home=home,
-        away=away,
-        goals_for=goals_for,
-        goals_against=goals_against,
-    )
-
-
 def _next_match(matches: list[ClubMatch], now: datetime) -> str | None:
     """Return the scheduled match that kicks off soonest at or after ``now``, in any competition.
 
@@ -668,6 +636,7 @@ def _printed_kickoff(text: str | None, now: datetime) -> datetime | None:
 
 
 def _group(competition: str) -> CompetitionGroup:
+    """Return the competition group a scraped competition belongs to."""
     if competition in _EUROPEAN:
         return "european"
     if competition in _DOMESTIC:
@@ -679,14 +648,17 @@ def _group(competition: str) -> CompetitionGroup:
 
 
 def _involves(club_id: int, fixture: SeasonFixture) -> bool:
+    """Return True when the club plays in the fixture."""
     return fixture.local_id == club_id or fixture.visitor_id == club_id
 
 
 def _coach(player: CatalogPlayer) -> bool:
+    """Return True when the catalog entry is a coach."""
     return player.position_id == _COACH_POSITION
 
 
 def _team_id(player: CatalogPlayer) -> int | None:
+    """Return the catalog player's club id as an int, or None when it is not numeric."""
     raw = player.team_id
     if isinstance(raw, int):
         return raw
@@ -696,14 +668,17 @@ def _team_id(player: CatalogPlayer) -> int | None:
 
 
 def _player_id(player: CatalogPlayer) -> str:
+    """Return the catalog player's id as text."""
     return "" if player.id is None else str(player.id)
 
 
 def _player_name(player: CatalogPlayer) -> str:
+    """Return the catalog player's display name."""
     return player.nickname or player.name or _player_id(player)
 
 
 def _summary(master: TeamsMasterRow, slug: str | None) -> ClubSummary:
+    """Build the club summary from a teams-master row and its verified page slug."""
     extra = master.model_extra or {}
     badge = extra.get("badgeColor") or extra.get("badge_color")
     return ClubSummary(
@@ -716,10 +691,12 @@ def _summary(master: TeamsMasterRow, slug: str | None) -> ClubSummary:
 
 
 def _master_id(row: TeamsMasterRow) -> int:
+    """Return the teams-master row's club id."""
     return row.id or row.dsp_id or 0
 
 
 def _directory_error(exc: Exception) -> UpstreamError:
+    """Wrap a failed club-directory read in a sanitised upstream error."""
     if isinstance(exc, UpstreamError):
         return exc
     return UpstreamError(
@@ -730,6 +707,7 @@ def _directory_error(exc: Exception) -> UpstreamError:
 
 
 def _segment(name: str, exc: Exception) -> ClubSegmentError:
+    """Build a sanitised segment error from an exception."""
     code = exc.category if isinstance(exc, UpstreamError) else "upstream_error"
     detail = str(exc) if isinstance(exc, UpstreamError) else "upstream data was unavailable"
     return ClubSegmentError(segment=name, code=code, detail=detail[:200])  # type: ignore[arg-type]

@@ -129,27 +129,6 @@ class RosterStats(ClubModel):
     coverage: RosterStatsCoverage
 
 
-class VenueRecord(ClubModel):
-    """Wins, draws, and losses at one venue."""
-
-    won: int = 0
-    drawn: int = 0
-    lost: int = 0
-
-
-class CompetitionRecord(ClubModel):
-    """Results and goals for one competition group."""
-
-    competition: CompetitionGroup
-    won: int = 0
-    drawn: int = 0
-    lost: int = 0
-    home: VenueRecord
-    away: VenueRecord
-    goals_for: int = 0
-    goals_against: int = 0
-
-
 class ClubMatch(ClubModel):
     """One club match. A second score is present only when both were published."""
 
@@ -176,7 +155,6 @@ class PerformanceSection(ClubModel):
     """LaLiga record plus other competitions published on the club page."""
 
     matches: list[ClubMatch]
-    records: list[CompetitionRecord]
     next_match_id: str | None = None
 
 

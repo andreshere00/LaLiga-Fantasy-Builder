@@ -2164,19 +2164,6 @@ Type: `any`
 
 Type: `string`
 
-### `CompetitionRecord`
-
-| Field | Type | Required | Constraints | Description |
-|-------|------|----------|-------------|-------------|
-| `competition` | string | yes |  |  |
-| `won` | integer | no |  |  |
-| `drawn` | integer | no |  |  |
-| `lost` | integer | no |  |  |
-| `home` | VenueRecord | yes |  | Wins, draws, and losses at one venue. |
-| `away` | VenueRecord | yes |  | Wins, draws, and losses at one venue. |
-| `goalsFor` | integer | no |  |  |
-| `goalsAgainst` | integer | no |  |  |
-
 ### `CompetitionStandings`
 
 | Field | Type | Required | Constraints | Description |
@@ -2830,7 +2817,6 @@ Type: `string`
 | Field | Type | Required | Constraints | Description |
 |-------|------|----------|-------------|-------------|
 | `matches` | array[ClubMatch] | yes |  |  |
-| `records` | array[CompetitionRecord] | yes |  |  |
 | `nextMatchId` | string | no |  |  |
 
 ### `PlayerDetailResponse`
@@ -3551,14 +3537,6 @@ Type: `string`
 | `lat` | number | yes |  |  |
 | `lon` | number | yes |  |  |
 | `country` | string | no |  |  |
-
-### `VenueRecord`
-
-| Field | Type | Required | Constraints | Description |
-|-------|------|----------|-------------|-------------|
-| `won` | integer | no |  |  |
-| `drawn` | integer | no |  |  |
-| `lost` | integer | no |  |  |
 
 ### `WatchWrite`
 

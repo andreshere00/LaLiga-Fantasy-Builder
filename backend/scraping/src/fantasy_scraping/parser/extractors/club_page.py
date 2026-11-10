@@ -83,6 +83,7 @@ def parse_club_page(page: ScrapedPage) -> ClubPageDocument:
 
 
 def _as_of(page: ScrapedPage) -> Date:
+    """Return the date the page says its data is as of."""
     fetched = page.fetched_at
     if fetched.tzinfo is None:
         fetched = fetched.replace(tzinfo=UTC)
@@ -90,6 +91,7 @@ def _as_of(page: ScrapedPage) -> Date:
 
 
 def _matchday(root: HtmlElement) -> int | None:
+    """Return the matchday number the page describes."""
     nodes = root.cssselect("h2.lineup-title span.jornada")
     for node in nodes:
         if "jornada_label" in (node.get("class") or ""):
@@ -101,6 +103,7 @@ def _matchday(root: HtmlElement) -> int | None:
 
 
 def _coach(root: HtmlElement, base: str, matchday: int | None) -> ClubCoach | None:
+    """Parse the coach report block."""
     widget = root.cssselect(".entrenador-widget")
     if not widget:
         return None
@@ -125,6 +128,7 @@ def _coach(root: HtmlElement, base: str, matchday: int | None) -> ClubCoach | No
 
 
 def _matchday_predictability(box: HtmlElement) -> str | None:
+    """Return the matchday predictability label of the coach box."""
     for node in box.cssselect(".coach-metric"):
         classes = node.get("class") or ""
         if "coach-metric--rotations" in classes or "coach-metric--season" in classes:
@@ -137,6 +141,7 @@ def _matchday_predictability(box: HtmlElement) -> str | None:
 
 
 def _squad(root: HtmlElement, base: str, marker: str, role: ClubRole) -> list[ClubSquadPlayer]:
+    """Parse the players listed after one marker as starters or alternatives."""
     boxes = [node for node in root.cssselect("div") if marker in (node.get("class") or "")]
     if not boxes:
         return []
@@ -169,6 +174,7 @@ def _squad(root: HtmlElement, base: str, marker: str, role: ClubRole) -> list[Cl
 
 
 def _summary(root: HtmlElement) -> ClubXiSummary | None:
+    """Parse the published XI averages."""
     blocks = root.cssselect(".alineacion-totales .view.probability")
     if not blocks:
         return None
@@ -183,6 +189,7 @@ def _summary(root: HtmlElement) -> ClubXiSummary | None:
 
 
 def _fixtures(root: HtmlElement, base: str) -> list[ClubFixture]:
+    """Parse every fixture card on the page."""
     played = _fixture_cards(root, "section.ultimos", base, scheduled=False)
     upcoming = _fixture_cards(root, "section.proximos", base, scheduled=True)
     return played + upcoming
@@ -191,6 +198,7 @@ def _fixtures(root: HtmlElement, base: str) -> list[ClubFixture]:
 def _fixture_cards(
     root: HtmlElement, selector: str, base: str, *, scheduled: bool
 ) -> list[ClubFixture]:
+    """Parse the fixture cards matched by one selector."""
     section = root.cssselect(selector)
     if not section:
         return []
@@ -223,11 +231,13 @@ def _fixture_cards(
 
 
 def _competition_label(card: HtmlElement) -> str:
+    """Return the competition name printed on a fixture card."""
     images = card.cssselect(".logo img")
     return images[0].get("alt") or "" if images else ""
 
 
 def _competition(label: str) -> Competition:
+    """Map a printed competition name to its competition key."""
     key = clean_text(label).casefold()
     if key in {"laliga", "la liga"}:
         return Competition.LALIGA
@@ -240,6 +250,7 @@ def _competition(label: str) -> Competition:
 
 
 def _scores(card: HtmlElement) -> tuple[Score | None, Score | None]:
+    """Parse the regulation and final scores of a fixture card."""
     texts = [clean_text("".join(node.itertext())) for node in card.cssselect(".widget-score")]
     texts = [text for text in texts if text and text != "-"]
     if len(texts) == 4 and all(text.isdigit() for text in texts):
@@ -259,6 +270,7 @@ def _scores(card: HtmlElement) -> tuple[Score | None, Score | None]:
 
 
 def _outcome(card: HtmlElement) -> ClubOutcome | None:
+    """Return the win, draw or loss shown on a fixture card."""
     classes = set((card.get("class") or "").split())
     for token, outcome in _OUTCOME.items():
         if token in classes:
@@ -267,6 +279,7 @@ def _outcome(card: HtmlElement) -> ClubOutcome | None:
 
 
 def _injuries(root: HtmlElement, base: str, today: Date) -> list[ClubInjury] | None:
+    """Parse the injury table."""
     wrapper = root.cssselect(".lesionados_wrapper")
     if not wrapper:
         return None
@@ -293,11 +306,13 @@ def _injuries(root: HtmlElement, base: str, today: Date) -> list[ClubInjury] | N
 
 
 def _report(base: str, card: HtmlElement) -> str | None:
+    """Return the absolute link to an injury report."""
     links = card.cssselect(".links a.lesion")
     return http_url(base, links[0].get("href")) if links else None
 
 
 def _since(text: str, today: Date) -> Date | None:
+    """Parse the date an injury started from its printed text."""
     match = _SINCE.search(text)
     if match is None:
         return None
@@ -316,11 +331,13 @@ def _since(text: str, today: Date) -> Date | None:
 
 
 def _photo(base: str, node: HtmlElement) -> str | None:
+    """Return the absolute photo URL inside a node."""
     images = node.cssselect(".fotocontainer img")
     return _image_url(base, images[0]) if images else None
 
 
 def _image_url(base: str, image: HtmlElement) -> str | None:
+    """Return the absolute URL of an image."""
     raw = image.get("data-src") or image.get("src")
     if raw and "transp.png" in raw:
         raw = image.get("data-src") or raw
@@ -328,6 +345,7 @@ def _image_url(base: str, image: HtmlElement) -> str | None:
 
 
 def _widget_percent(node: HtmlElement) -> int | None:
+    """Return the percentage shown by a probability widget."""
     widgets = node.cssselect(".probabilidad-widget")
     if not widgets:
         return None
@@ -335,6 +353,7 @@ def _widget_percent(node: HtmlElement) -> int | None:
 
 
 def _percent_value(text: str) -> int | None:
+    """Parse a 0-100 percentage from text."""
     match = _PERCENT.search(text)
     if match is None:
         return None
@@ -345,6 +364,7 @@ def _percent_value(text: str) -> int | None:
 
 
 def _arrow(node: HtmlElement) -> int | None:
+    """Return the form arrow value of a node."""
     for span in node.cssselect("span.forma"):
         match = _ARROW.search(span.get("class") or "")
         if match is not None:
@@ -353,6 +373,7 @@ def _arrow(node: HtmlElement) -> int | None:
 
 
 def _plain(nodes: list[HtmlElement]) -> str | None:
+    """Return the cleaned text of the first node, or None when empty."""
     if not nodes:
         return None
     text = clean_text("".join(nodes[0].itertext()))

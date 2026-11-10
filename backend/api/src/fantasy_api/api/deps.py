@@ -146,7 +146,11 @@ def _clubs_service(
             ttl_seconds=cfg.standings_ttl_seconds,
         )
     repository = ClubsRepository(
-        fantasy, scraper, fixtures, competition_id=cfg.laliga_competition_id
+        fantasy,
+        scraper,
+        fixtures,
+        competition_id=cfg.laliga_competition_id,
+        catalog_ttl_seconds=cfg.player_catalog_ttl_seconds,
     )
     return ClubsService(
         repository,

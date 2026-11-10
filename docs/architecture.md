@@ -147,7 +147,7 @@ backend/api/src/fantasy_api/
 ├── domain/           # AppUser, UpstreamError, …
 ├── security/         # Internal JWT validation
 ├── openapi.py        # OpenAPI generation and ERROR_RESPONSES
-└── cli/              # fantasy-leagues, fantasy-teams, fantasy-players, fantasy-calendar, fantasy-market, fantasy-buyout
+└── cli/              # fantasy-leagues, fantasy-teams, fantasy-players, fantasy-calendar, fantasy-market, fantasy-buyout, fantasy-clubs
 ```
 
 Process-lifetime wiring lives in `api/deps.py` (`AppContainer`): one shared
