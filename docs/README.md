@@ -18,7 +18,7 @@ the signed-in application, covering lineup, market, players, player details,
 and the lineup builder in light and dark themes.
 
 Favorites, per-league scouting alerts and the deployment/storage upgrade are in
-[Unreleased](../CHANGELOG.md#unreleased). Existing installations need a third
+[v0.3.0](../CHANGELOG.md#030---2026-11-04). Existing installations need a third
 logical database and new runtime values; follow the
 [upgrade checklist](../infra/gcp/README.md#upgrading-an-existing-installation-for-scouting).
 

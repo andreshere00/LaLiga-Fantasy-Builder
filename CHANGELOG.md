@@ -4,7 +4,7 @@ Notable changes to LaLiga Fantasy Builder are recorded here. Version 0.1.0
 summarizes the application through 27 October 2026; it is the first changelog
 entry, not a claim that every optional provider or deployment gate is complete.
 
-## [Unreleased]
+## [0.4.0] - 2026-11-10
 
 ### Teams
 
