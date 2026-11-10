@@ -116,6 +116,18 @@ test("inbox stays unread until explicitly opened or marked", async ({ page }) =>
   expect(fixture.alerts[0].readAt).not.toBeNull();
 });
 
+test("navbar bell opens the alerts on the current page without navigating", async ({ page }) => {
+  await mockApplication(page);
+  const fixture = await mockScouting(page);
+  fixture.alerts.push({ id: "1", playerId: "1", playerName: "Player 01", leagueId: "l1", leagueName: "Demo League",
+    kind: "market", createdAt: "2026-10-12T12:00:00Z", readAt: null });
+  await page.goto("/players");
+  await page.getByRole("button", { name: "Alerts, 1 unread" }).click();
+  const dialog = page.getByRole("dialog", { name: "Favorites and scouting" });
+  await expect(dialog.getByRole("button", { name: "Alerts (1)", exact: true })).toBeVisible();
+  expect(new URL(page.url()).pathname).toBe("/players");
+});
+
 test("alert settings keep confirmed values after a failure and allow retry", async ({ page }) => {
   await mockApplication(page);
   const fixture = await mockScouting(page);

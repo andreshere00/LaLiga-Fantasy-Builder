@@ -28,17 +28,10 @@ describe("NotificationsButton", () => {
     expect(button.textContent).toBe("9+");
   });
 
-  it("click_otherPage_opensAlertsOnMarket", () => {
+  it("click_anyPage_staysOnPageAndAddsAlertsParam", () => {
     scouting.unread = 0;
-    setup("/players");
+    setup("/players?q=a");
     fireEvent.click(screen.getByRole("button", { name: "Alerts" }));
-    expect(screen.getByTestId("where").textContent).toBe("/market?scouting=alerts");
-  });
-
-  it("click_onMarket_keepsPageAndAddsParam", () => {
-    scouting.unread = 0;
-    setup("/market?q=a");
-    fireEvent.click(screen.getByRole("button", { name: "Alerts" }));
-    expect(screen.getByTestId("where").textContent).toBe("/market?q=a&scouting=alerts");
+    expect(screen.getByTestId("where").textContent).toBe("/players?q=a&scouting=alerts");
   });
 });
