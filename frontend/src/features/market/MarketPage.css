@@ -175,3 +175,34 @@
   .market-page:not(.players-page) .market-list :is(.market-head-cell-availability, .market-data-row > :nth-child(7)) { grid-column:7; grid-row:1; align-self:end; }
   .market-page:not(.players-page) .market-list :is(.market-head-cell-sealEnd, .market-data-row > :nth-child(8)) { grid-column:7; grid-row:2; align-self:start; }
 }
+
+/* Phone top panel: balance first as one compact row, then three equal destinations whose icon and
+   label share the same baseline; counts sit in the corner so they never push a label off line. */
+@media(max-width:700px) {
+  .market-page.comparison-page:not(.players-page) .market-balance-actions {
+    display:flex; flex-direction:column; align-items:stretch; flex-wrap:nowrap; gap:10px; width:100%;
+  }
+  .market-page.comparison-page:not(.players-page) .market-money-summary {
+    order:-1; display:flex; align-items:center; gap:12px; width:100%; max-width:none; flex-basis:auto;
+  }
+  .market-money-summary .market-money-heading { flex:0 0 auto; min-height:0; margin:0; }
+  .market-money-summary .market-balance-amount { flex:1 1 auto; width:auto; min-width:0; justify-content:flex-end; border:1px solid var(--fb-line); }
+  .market-money-summary .market-balance-amount strong { margin-right:0; }
+  .market-section-actions { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:8px; flex:none; width:100%; }
+  .market-section-actions > .fb-button {
+    position:relative; flex:none; min-width:0; min-height:68px; padding:10px 4px 8px;
+    flex-direction:column; justify-content:center; align-items:center; gap:6px; font-size:12px;
+  }
+  .market-section-actions > .fb-button > span { min-width:0; }
+  .market-section-actions > .fb-button > span:last-child { white-space:nowrap; text-align:center; line-height:1.2; }
+  .market-section-actions :is(.market-bids-count, .market-offers-count, .scouting-unread) {
+    position:absolute; top:6px; right:6px; min-width:18px; height:18px; font-size:11px;
+  }
+}
+@media(max-width:380px) {
+  .market-section-actions { gap:6px; }
+  .market-section-actions > .fb-button { font-size:10.5px; padding-inline:0; letter-spacing:0; }
+  .market-money-summary .market-money-heading { flex:0 1 auto; font-size:11px; line-height:1.2; }
+  .market-money-summary .market-balance-amount { gap:6px; padding-inline:8px; font-size:14px; }
+  .market-money-summary .market-money-icon { width:18px; height:18px; }
+}
