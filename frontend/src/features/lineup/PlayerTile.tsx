@@ -17,6 +17,7 @@ import {
 } from "./fixtureScoreLines";
 import { LINEUP_POSITION_NEEDED_LABEL, NOT_SELECTED_PLAYER_LABEL } from "./playerTileCopy";
 import { playerFormPresentation } from "../players/playerForm";
+import { materialIconPaths } from "../../assets/material-icons/paths";
 import { starterProbabilityTone } from "../players/starterProbability";
 import type { SquadPlayerStats } from "./useSquadStats";
 
@@ -44,6 +45,8 @@ type PlayerTileProps = {
   unplayedFixture?: boolean;
   /** Squad or empty pitch card for a position the lineup still needs. */
   positionNeeded?: boolean;
+  /** Squad card of one of the user's own players that is currently listed for sale. */
+  listedOnMarket?: boolean;
   isMvp?: boolean;
   selected?: boolean;
   interactive?: boolean;
@@ -157,6 +160,7 @@ export function PlayerTile({
   squadStats,
   unplayedFixture = false,
   positionNeeded = false,
+  listedOnMarket = false,
   isMvp = false,
   selected = false,
   interactive = false,
@@ -203,8 +207,9 @@ export function PlayerTile({
     : captain
       ? `${name}, ${t("Captain")}${scoreLabel}`
       : `${name}${scoreLabel}`;
+  const marketText = listedOnMarket && !empty ? t("On the market") : null;
   const label = [
-    playerLabel, highlightText, positionNeededText, ...scoreLineTexts,
+    playerLabel, marketText, highlightText, positionNeededText, ...scoreLineTexts,
     totalLabel, starterLabel, formLabel,
   ]
     .filter(Boolean)
@@ -239,6 +244,9 @@ export function PlayerTile({
       </span> : fixturePoints != null ? (
         <PlayerScoreBadge points={fixturePoints} isMvp={isMvp} />
       ) : null}
+      {marketText ? <span className="player-market-badge" aria-hidden="true">
+        <svg viewBox="0 0 24 24" focusable="false"><path d={materialIconPaths.euro_symbol} /></svg>
+      </span> : null}
       <TeamBadge key={teamBadgeUrl ?? "no-badge"} url={teamBadgeUrl} link={linkClub}
         teamId={clubTeamId} />
       {form ? <span className="player-starter-probability"
@@ -266,7 +274,7 @@ export function PlayerTile({
     ? t("Fixture {{0}} has not been played yet.", { 0: fixtureWeek == null ? "" : scoreWeekLabel(fixtureWeek) })
     : null;
   const helpLines = [
-    highlightText, positionNeededText, fixtureHelp, totalLabel, starterLabel,
+    marketText, highlightText, positionNeededText, fixtureHelp, totalLabel, starterLabel,
   ].filter((line): line is string => Boolean(line));
   const help = helpLines.length === 0 && scoreLineTexts.length === 0 && !formLabel ? null : (
     <>
@@ -289,7 +297,7 @@ export function PlayerTile({
       ) : null}
     </>
   );
-  const statusText = [highlightText, positionNeededText].filter(Boolean).map(fragment => fragment).join(", ");
+  const statusText = [marketText, highlightText, positionNeededText].filter(Boolean).map(fragment => fragment).join(", ");
   const visibleLabel = statusText
     ? [captain ? `${name}, ${t("Captain")}` : name, statusText].join(", ")
     : captain ? `${name}, ${t("Captain")}` : undefined;

@@ -677,6 +677,7 @@ function LineupPageContent() {
                           photoUrl={player.photoUrl}
                           teamBadgeUrl={player.teamBadgeUrl}
                           positionNeeded={positionNeeded}
+                          listedOnMarket={board.ownSquad && player.onMarket}
                           interactive
                           onSelect={onSelect}
                         />

@@ -155,3 +155,16 @@ for (const { device, width, height, columns } of [
     await page.screenshot({ path: info.outputPath(`squad-filter-${width}x${height}.png`) });
   });
 }
+
+test("own listed players carry a market mark on the squad cards only", async ({ page }) => {
+  await page.setViewportSize({ width: 375, height: 812 });
+  await mockApplication(page);
+  await page.goto("/");
+  const squad = page.locator(".squad-grid--ready");
+  await expect(squad.getByRole("button", { name: /^Player 01/ })).toBeVisible();
+  await expect(squad.locator(".player-market-badge")).toHaveCount(0);
+  await page.getByRole("button", { name: "Next squad page" }).click();
+  await expect(squad.getByRole("button", { name: /^Player 13.*On the market/ })).toBeVisible();
+  await expect(squad.locator(".player-market-badge")).toHaveCount(1);
+  await expect(page.locator(".pitch-tile .player-market-badge")).toHaveCount(0);
+});

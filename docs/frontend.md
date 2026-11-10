@@ -559,6 +559,9 @@ name on the left, with form on the right. The tooltip includes the probability's
 matchweek when supplied. Starter badges use the profile icon colors: red below
 50%, yellow from 50% to below 75%, and green from 75%. Missing values show a
 neutral dash; reported zeroes stay zero.
+On your own squad, a player listed for sale shows a red € mark under the season
+points, in the same colour as the market options. It appears only on squad cards
+(not the pitch) and adds "On the market" to the card's name and tooltip.
 **Filter squad** opens a dialog for position, season Fantasy points, club, start
 probability, form, and availability. Every selected condition applies together.
 The layout follows the screen. Phones (up to 700px) get a bottom sheet of

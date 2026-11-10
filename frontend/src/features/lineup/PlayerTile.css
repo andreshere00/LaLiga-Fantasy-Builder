@@ -359,3 +359,12 @@
 .player-badge-link:hover { transform: scale(1.12); }
 .player-badge-link:focus-visible { outline: 2px solid var(--fb-focus); outline-offset: 2px; }
 @media (prefers-reduced-motion: reduce) { .player-badge-link { transition: none; } .player-badge-link:hover { transform: none; } }
+
+/* Own player listed for sale: a market mark under the season points, in the market tone. */
+.player-market-badge {
+  position:absolute; z-index:5; left:6.6667%; top:calc(5% + 26px);
+  display:grid; place-items:center; width:20px; height:20px;
+  background:var(--fb-primary); border:1px solid var(--fb-primary);
+  color:var(--fb-ink-on-status); pointer-events:none;
+}
+.player-market-badge svg { width:14px; height:14px; fill:currentColor; }
