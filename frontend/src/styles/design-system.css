@@ -2,7 +2,7 @@
   --fb-primary:#FF4B44; --fb-secondary:#35353D; --fb-tertiary:#000000;
   --fb-cyan:#24CEE5; --fb-purple:#C04FFD; --fb-coral:#FFC2BF;
   --fb-success:#10BD00; --fb-warning:#FFC413; --fb-failure:#FF4B44;
-  --fb-bg:#F3F3F4; --fb-surface:#FFFFFF; --fb-subtle:#EDEDEF;
+  --fb-bg:#F3F3F4; --fb-bg-start:#FFFFFF; --fb-surface:#FFFFFF; --fb-subtle:#EDEDEF;
   --fb-line:#CDCDD2; --fb-control-line:#797981; --fb-muted:#5B5B64;
   --fb-on-brand:#000000; --fb-on-coral:#35353D; --fb-focus:#000000;
   --fb-selected:var(--fb-coral); --fb-selected-text:var(--fb-on-coral);
@@ -21,7 +21,7 @@
 :root[data-theme="dark"] {
   --fb-secondary:#E5E5E5; --fb-tertiary:#FFFFFF;
   --fb-purple:#E3AFFF; --fb-coral:#B85A55; --fb-warning:#FF9913;
-  --fb-bg:#18181C; --fb-surface:#24242B; --fb-subtle:#303039;
+  --fb-bg:#18181C; --fb-bg-start:#000000; --fb-surface:#24242B; --fb-subtle:#303039;
   --fb-line:#50505B; --fb-control-line:#9898A3; --fb-muted:#B7B7C2;
   --fb-on-coral:#FFFFFF; --fb-focus:#FFFFFF;
   color-scheme:dark;
