@@ -1911,5 +1911,19 @@
   "Show all positions": "Show all positions",
   "Show only {{0}}": "Show only {{0}}",
   "Balance below zero": "Balance below zero",
-  "The estimated balance stays below zero. These lineups do not make it worse: any purchase is paid for by sales. Before kickoff, raise the balance to zero or more, for example by withdrawing bids or selling players, or Fantasy may not score your team.": "The estimated balance stays below zero. These lineups do not make it worse: any purchase is paid for by sales. Before kickoff, raise the balance to zero or more, for example by withdrawing bids or selling players, or Fantasy may not score your team."
+  "The estimated balance stays below zero. These lineups do not make it worse: any purchase is paid for by sales. Before kickoff, raise the balance to zero or more, for example by withdrawing bids or selling players, or Fantasy may not score your team.": "The estimated balance stays below zero. These lineups do not make it worse: any purchase is paid for by sales. Before kickoff, raise the balance to zero or more, for example by withdrawing bids or selling players, or Fantasy may not score your team.",
+  "Value {{0}}": "Value {{0}}",
+  "Listed · {{0}}": "Listed · {{0}}",
+  "Change the price or withdraw the listing": "Change the price or withdraw the listing",
+  "List for sale or sell right away": "List for sale or sell right away",
+  "Offers other managers sent you": "Offers other managers sent you",
+  "Stats, matches and market value history": "Stats, matches and market value history",
+  "Pick who takes this place in your lineup": "Pick who takes this place in your lineup",
+  "Set a new asking price": "Set a new asking price",
+  "Keep the player and drop the offers": "Keep the player and drop the offers",
+  "Set your price, from {{0}}": "Set your price, from {{0}}",
+  "Withdraw the listing first": "Withdraw the listing first",
+  "Sell now for {{0}}": "Sell now for {{0}}",
+  "Team page": "Team page",
+  "Squad, results and predicted lineup": "Squad, results and predicted lineup"
 }

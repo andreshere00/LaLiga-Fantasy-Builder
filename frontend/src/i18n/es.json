@@ -1911,5 +1911,19 @@
   "Show all positions": "Mostrar todas las posiciones",
   "Show only {{0}}": "Mostrar solo {{0}}",
   "Balance below zero": "Saldo por debajo de cero",
-  "The estimated balance stays below zero. These lineups do not make it worse: any purchase is paid for by sales. Before kickoff, raise the balance to zero or more, for example by withdrawing bids or selling players, or Fantasy may not score your team.": "El saldo estimado sigue por debajo de cero. Estas alineaciones no lo empeoran: cualquier compra se paga con ventas. Antes del inicio de la jornada, deja el saldo en cero o más, por ejemplo retirando pujas o vendiendo jugadores, o Fantasy podría no puntuar a tu equipo."
+  "The estimated balance stays below zero. These lineups do not make it worse: any purchase is paid for by sales. Before kickoff, raise the balance to zero or more, for example by withdrawing bids or selling players, or Fantasy may not score your team.": "El saldo estimado sigue por debajo de cero. Estas alineaciones no lo empeoran: cualquier compra se paga con ventas. Antes del inicio de la jornada, deja el saldo en cero o más, por ejemplo retirando pujas o vendiendo jugadores, o Fantasy podría no puntuar a tu equipo.",
+  "Value {{0}}": "Valor {{0}}",
+  "Listed · {{0}}": "En el mercado · {{0}}",
+  "Change the price or withdraw the listing": "Cambia el precio o retira el anuncio",
+  "List for sale or sell right away": "Ponlo a la venta o véndelo al instante",
+  "Offers other managers sent you": "Ofertas que te han enviado otros mánagers",
+  "Stats, matches and market value history": "Estadísticas, partidos e historial de valor",
+  "Pick who takes this place in your lineup": "Elige quién ocupa este puesto en tu alineación",
+  "Set a new asking price": "Fija un nuevo precio de venta",
+  "Keep the player and drop the offers": "Conserva al jugador y descarta las ofertas",
+  "Set your price, from {{0}}": "Fija tu precio, desde {{0}}",
+  "Withdraw the listing first": "Retira antes el anuncio",
+  "Sell now for {{0}}": "Véndelo ahora por {{0}}",
+  "Team page": "Página del equipo",
+  "Squad, results and predicted lineup": "Plantilla, resultados y alineación probable"
 }

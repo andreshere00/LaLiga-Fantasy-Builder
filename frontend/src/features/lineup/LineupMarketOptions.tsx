@@ -6,7 +6,19 @@ import { MarketActionDialogs } from "../market/actions/MarketActionDialogs";
 import { resolveMarketActionOffers } from "../market/actions/marketActions";
 import { useMarketActions } from "../market/actions/useMarketActions";
 import { useMarketBoard } from "../market/useMarketBoard";
+import { formatEuro } from "../../api/format";
+import type { MarketActionOffer } from "../market/actions/marketActions";
+import { PlayerActionRow, type PlayerActionIcon, type PlayerActionTone } from "./PlayerActionRow";
 import "../../components/ui/RichList.css";
+import "./SquadPlayerActions.css";
+
+const OFFER_VISUAL: Record<MarketActionOffer["type"], { icon: PlayerActionIcon; tone: PlayerActionTone }> = {
+  bid: { icon: "euro_symbol", tone: "market" },
+  "pay-clause": { icon: "flash_on", tone: "market" },
+  "cancel-bid": { icon: "close", tone: "danger" },
+  withdraw: { icon: "close", tone: "danger" },
+  "immediate-sell": { icon: "flash_on", tone: "danger" },
+};
 
 type Props = { player: SquadCard; open: boolean; onClose: () => void };
 
@@ -44,9 +56,13 @@ function OpponentMarketOptions({ player, onClose }: Omit<Props, "open">) {
           <p>{t("No market actions are currently available for this player.")}</p>
         ) : (
           <div className="squad-sale-choices">
-            {offers.map((offer) => (
-              <div key={offer.type}>
-                <button type="button" className="squad-sale-choice"
+            {offers.map((offer) => {
+              const visual = OFFER_VISUAL[offer.type];
+              return (
+                <PlayerActionRow key={offer.type === "bid" ? `bid-${offer.kind}` : offer.type}
+                  icon={visual.icon} tone={visual.tone} label={t(offer.label)}
+                  hint={offer.disabledReason ? t(offer.disabledReason)
+                    : offer.type === "pay-clause" ? formatEuro(offer.amount) : null}
                   disabled={!offer.enabled || actions.actionPending}
                   onClick={() => {
                     if (!row || !offer.enabled || actions.actionPending) return;
@@ -54,12 +70,9 @@ function OpponentMarketOptions({ player, onClose }: Omit<Props, "open">) {
                     else if (offer.type === "cancel-bid") actions.cancelBid(row);
                     else if (offer.type === "withdraw") actions.openWithdraw(row);
                     else if (offer.type === "pay-clause") actions.openClause(row, offer.amount);
-                  }}>
-                  {t(offer.label)}
-                </button>
-                {offer.disabledReason ? <p className="squad-sale-note">{t(offer.disabledReason)}</p> : null}
-              </div>
-            ))}
+                  }} />
+              );
+            })}
           </div>
         )}
         {actions.message ? <p role="alert">{t(actions.message)}</p> : null}
