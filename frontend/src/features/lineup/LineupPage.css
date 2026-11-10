@@ -1176,8 +1176,8 @@
   }
 
   .squad-grid {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-    grid-template-rows: repeat(4, auto);
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    grid-template-rows: repeat(3, auto);
     justify-content: stretch;
     width: 100%;
     height: auto;
@@ -1189,13 +1189,6 @@
     width: 100%;
     height: auto;
     max-height: none;
-  }
-
-  /* Two wide columns would otherwise stretch each headshot to the whole frame and hide the
-     badges and the status marks; keep the face at a recognisable size with air around it. */
-  .squad-grid .player-photo-frame:not(.player-photo-frame-empty) {
-    padding-top: 30%;
-    box-sizing: border-box;
   }
 }
 
