@@ -907,9 +907,9 @@
 .team-coach-block { display: grid; gap: 16px; margin-bottom: 16px; }
 .team-coach-block > h3 { margin: 0; }
 .team-coach-block .team-coach { margin-bottom: 0; }
-.team-alternatives-head { display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; margin-bottom: 8px; }
-.team-alternatives-title { display: grid; gap: 16px; min-width: 0; }
-.team-alternatives-title h3 { margin: 0; }
+.team-alternatives-head { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 12px; }
+.team-alternatives-head h3 { margin: 0; min-width: 0; }
+.team-alternatives-intro { display: grid; gap: 12px; margin-bottom: 16px; }
 .team-alternatives-toggle { flex: none; width: auto; justify-content: center; gap: 8px; white-space: nowrap; padding: 4px 12px; font-size: 12px; letter-spacing: .04em; text-transform: uppercase; }
 .team-toggle-chevrons { display: block; position: relative; width: 10px; height: 14px; }
 .team-toggle-chevrons::before,

@@ -169,11 +169,7 @@ export function TeamLineupSection({
             <div className="team-alternatives">
               <LineupCoach prediction={prediction} heading={t("Coach")} subtitle={t("How predictable the XI is for this matchday.")} />
               <div className="team-alternatives-head">
-                <div className="team-alternatives-title">
-                  <h3 id="team-alternatives-title">{t("Alternatives")}</h3>
-                  <TeamSummary id="team-summary-alternatives" widget="alternatives" />
-                  <p className="team-note">{t("Open a group to compare its players.")}</p>
-                </div>
+                <h3 id="team-alternatives-title">{t("Alternatives")}</h3>
                 {groups.length > 1 ? (
                   <Button
                     variant="outline"
@@ -186,6 +182,10 @@ export function TeamLineupSection({
                     {allOpen ? t("Collapse all") : t("Expand all")}
                   </Button>
                 ) : null}
+              </div>
+              <div className="team-alternatives-intro">
+                <TeamSummary id="team-summary-alternatives" widget="alternatives" />
+                <p className="team-note">{t("Open a group to compare its players.")}</p>
               </div>
               {groups.map((group) => (
                 <Collapsible.Root
