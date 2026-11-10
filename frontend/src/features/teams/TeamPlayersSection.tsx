@@ -132,6 +132,7 @@ export function TeamPlayersSection({
           outlooksLoading={outlooks.isLoading}
           media={media}
           recent={recent}
+          returnTo={returnTo}
         />
       </div>
       <div className="team-block">
@@ -273,12 +274,14 @@ function MvpStrip({
   outlooksLoading,
   media,
   recent,
+  returnTo,
 }: {
   players: Roster["mvps"];
   outlooks: { get(playerId: string): unknown };
   outlooksLoading: boolean;
   media: ReadonlyMap<string, { photoUrl: string | null }>;
   recent: ReadonlyMap<string, readonly RecentPoint[]>;
+  returnTo: string;
 }) {
   const first = usePlayerRadar(players[0]?.playerId ?? "");
   const second = usePlayerRadar(players[1]?.playerId ?? "");
@@ -319,7 +322,7 @@ function MvpStrip({
                     fallback={<PersonIcon />}
                   />
                   <div className="team-mvp-name">
-                    <h4>{player.name}</h4>
+                    <h4><PlayerLink playerId={player.playerId} returnTo={returnTo}>{player.name}</PlayerLink></h4>
                     {position || age != null ? (
                       <p className="team-mvp-meta">
                         {[position ? t(position) : null, age != null ? `${age}${t(" years old")}` : null]

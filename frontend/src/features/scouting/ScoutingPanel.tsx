@@ -1,4 +1,5 @@
 import { useLayoutEffect, useRef } from "react";
+import { ClubLink } from "../../components/links/EntityLinks";
 import { useLocation, useNavigate, useSearchParams } from "react-router-dom";
 import { Collapsible } from "@base-ui/react/collapsible";
 import { Button } from "../../components/ui/Button";
@@ -48,7 +49,7 @@ function FavoriteCard({ favorite, row, details }: { favorite: Favorite; row?: Pl
         photoUrl={row.photoUrl} teamBadgeUrl={row.teamBadgeUrl} /> : null}
       <div className="scouting-player-title">
         <h3><button type="button" className="scouting-name" onClick={details}>{name}</button></h3>
-        <span><span>{row?.teamName ?? "—"}</span><PositionCell positionId={row?.positionId ?? null} /></span>
+        <span><span>{row?.teamName ? <ClubLink badgeUrl={row.teamBadgeUrl} name={row.teamName}>{row.teamName}</ClubLink> : "—"}</span><PositionCell positionId={row?.positionId ?? null} /></span>
       </div>
       <PlayerBookmarkButton pressed playerName={name} disabled={scouting.pending} onToggle={() => scouting.toggle(favorite.playerId)} />
     </div>

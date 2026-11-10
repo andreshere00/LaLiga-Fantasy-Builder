@@ -256,8 +256,10 @@ describe("TeamPlayersSection", () => {
 
   it("TeamPlayersSection_squad_row_names_link_to_player_details", () => {
     renderSection();
-    const link = screen.getByRole("link", { name: "Ana" });
+    const link = within(screen.getByRole("rowheader", { name: "Ana" })).getByRole("link");
     expect(link.getAttribute("href")).toBe("/players/1");
+    const mvp = screen.getByRole("heading", { name: "Ana", level: 4 });
+    expect(within(mvp).getByRole("link").getAttribute("href")).toBe("/players/1");
     expect(screen.queryAllByRole("link", { name: /Totals/ })).toHaveLength(0);
   });
 
