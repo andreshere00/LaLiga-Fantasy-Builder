@@ -52,8 +52,13 @@
   top: var(--app-header-height, 0px);
   z-index: 80;
   padding-block: 8px;
-  background: var(--fb-bg);
+  /* Same fixed gradient as the page so the sticky bar is seamless. */
+  background: var(--fb-bg) linear-gradient(180deg, var(--fb-bg-start), var(--fb-bg) 480px) no-repeat fixed;
   margin-bottom: 12px;
+  display: flex;
+  align-items: center;
+  min-height: 60px;
+  box-sizing: border-box;
 }
 
 .market-toolbar h1 {
