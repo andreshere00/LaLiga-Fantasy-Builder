@@ -90,3 +90,112 @@
 @media (prefers-reduced-motion:reduce) {
   .squad-filter-disclosure-chevron { transition:none; }
 }
+
+/* ---- Shared: the current value of a group stands out once it filters something ---- */
+.squad-filter-disclosure-value[data-active] { color:var(--fb-primary); font-weight:600; }
+.squad-filter-disclosure-value {
+  min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;
+}
+
+/* ---- Phone: bottom sheet, primary action full width in the thumb zone ---- */
+.squad-filter-dialog--compact .fb-dialog-footer {
+  display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:8px;
+  grid-template-areas:"apply apply" "reset cancel";
+}
+.squad-filter-dialog--compact .squad-filter-apply { grid-area:apply; width:100%; }
+.squad-filter-dialog--compact .squad-filter-reset { grid-area:reset; margin:0; width:100%; }
+.squad-filter-dialog--compact .squad-filter-cancel { grid-area:cancel; width:100%; }
+
+/* ---- iPad portrait and up: every group visible as a titled section ---- */
+.fb-dialog.squad-filter-dialog--wide { width:min(880px,100%); }
+.squad-filter-dialog--wide .fb-dialog-footer { flex-wrap:nowrap; align-items:center; }
+.squad-filter-dialog--wide .squad-filter-fields {
+  grid-template-columns:repeat(2,minmax(0,1fr)); gap:12px; align-items:start;
+  grid-template-areas:
+    "positions forms"
+    "points forms"
+    "minStarterProbability availability"
+    "clubs clubs";
+}
+.squad-filter-section {
+  display:flex; flex-direction:column; min-width:0;
+  border:1px solid var(--fb-line); background:var(--fb-surface);
+}
+.squad-filter-section[data-area="positions"] { grid-area:positions; }
+.squad-filter-section[data-area="points"] { grid-area:points; }
+.squad-filter-section[data-area="minStarterProbability"] { grid-area:minStarterProbability; }
+.squad-filter-section[data-area="forms"] { grid-area:forms; }
+.squad-filter-section[data-area="availability"] { grid-area:availability; }
+.squad-filter-section[data-area="clubs"] { grid-area:clubs; }
+.squad-filter-section-heading {
+  display:flex; align-items:baseline; justify-content:space-between; gap:12px;
+  min-height:40px; padding:10px 12px 0;
+}
+.squad-filter-section-heading h3 {
+  margin:0; color:var(--fb-secondary); font-family:inherit; font-size:12px; font-weight:600;
+  letter-spacing:.04em; text-transform:uppercase;
+}
+.squad-filter-section .squad-filter-group { border-top:0; padding-top:8px; min-height:0; }
+.squad-filter-section .fb-toggle-group { flex-wrap:wrap; }
+
+/* ---- iPad landscape and Mac: three columns, clubs scroll inside their own column ---- */
+@media (min-width:1000px) {
+  .fb-dialog.squad-filter-dialog--wide { width:min(1120px,100%); }
+  .squad-filter-dialog--wide .squad-filter-fields {
+    grid-template-columns:minmax(0,1fr) minmax(0,1fr) minmax(0,1.1fr);
+    grid-template-areas:
+      "positions forms clubs"
+      "points forms clubs"
+      "minStarterProbability availability clubs";
+  }
+  /* Size the grid by the other columns; the club list scrolls instead of stretching it. */
+  .squad-filter-dialog--wide .squad-filter-section[data-area="clubs"] {
+    align-self:stretch; height:0; min-height:100%;
+  }
+  .squad-filter-dialog--wide .squad-filter-section[data-area="clubs"] .squad-filter-group {
+    flex:1; overflow-y:auto; overscroll-behavior:contain;
+  }
+  .squad-filter-dialog--wide .squad-filter-clubs { grid-template-columns:minmax(0,1fr); }
+}
+/* The section heading already shows the minimum; drop the repeated line in open sections. */
+.squad-filter-section .squad-filter-probability { display:none; }
+
+/* ---- Applied filters on the squad panel: one removable chip per group ---- */
+.squad-filter-chips {
+  display:flex; flex-wrap:wrap; justify-content:center; gap:6px; margin:0 12px 12px; padding:0;
+  list-style:none;
+}
+.squad-filter-chip {
+  display:inline-flex; align-items:center; gap:6px; max-width:100%; min-height:32px;
+  padding:0 0 0 10px; border:1px solid var(--fb-primary);
+  background:color-mix(in srgb, var(--fb-primary) 10%, var(--fb-surface));
+  color:var(--fb-secondary); font-size:13px;
+}
+.squad-filter-chip-label { color:var(--fb-muted); font-size:11px; font-weight:600; text-transform:uppercase; }
+.squad-filter-chip-value {
+  min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; font-weight:600;
+}
+.squad-filter-chip-remove {
+  display:grid; place-items:center; width:32px; height:32px; margin:-1px -1px -1px 0; padding:0;
+  border:0; border-left:1px solid var(--fb-line); background:transparent; color:var(--fb-muted);
+  font:inherit; font-size:16px; cursor:pointer;
+}
+.squad-filter-chip-remove:hover { background:var(--fb-subtle); color:var(--fb-secondary); }
+.squad-filter-chip-remove:focus-visible { outline:2px solid var(--fb-focus); outline-offset:1px; }
+@media (pointer:coarse) {
+  .squad-filter-chip { min-height:44px; }
+  .squad-filter-chip-remove { width:44px; height:44px; }
+}
+
+/* ---- Phone: positions as one segmented row (short labels, full names for readers) ---- */
+.squad-filter-segmented {
+  display:grid; grid-template-columns:repeat(auto-fit,minmax(0,1fr)); grid-auto-flow:column; gap:0;
+}
+.squad-filter-segmented .fb-toggle-group-item {
+  min-width:0; padding:8px 4px; gap:4px; letter-spacing:.02em; white-space:nowrap;
+}
+.squad-filter-segmented .fb-toggle-group-item + .fb-toggle-group-item { margin-left:-1px; }
+.squad-filter-segmented .fb-toggle-group-item:is([data-pressed], :focus-visible) {
+  position:relative; z-index:1;
+}
+.squad-filter-dialog--compact .squad-filter-group { padding:10px 12px; }

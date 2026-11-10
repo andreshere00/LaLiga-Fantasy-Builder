@@ -1925,5 +1925,7 @@
   "Withdraw the listing first": "Retira antes el anuncio",
   "Sell now for {{0}}": "Véndelo ahora por {{0}}",
   "Team page": "Página del equipo",
-  "Squad, results and predicted lineup": "Plantilla, resultados y alineación probable"
+  "Squad, results and predicted lineup": "Plantilla, resultados y alineación probable",
+  "Applied filters": "Filtros aplicados",
+  "Remove filter: {{0}}": "Quitar filtro: {{0}}"
 }

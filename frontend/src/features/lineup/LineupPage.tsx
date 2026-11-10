@@ -20,11 +20,13 @@ import { pitchRowGapFraction, pitchRows } from "./pitchLayout";
 import { SQUAD_PICKER_EMPTY_MESSAGE } from "./playerTileCopy";
 import { squadCountLabel, squadPageForPlayer, squadPageSlice } from "./squadPanel";
 import { SquadFilterDialog } from "./SquadFilterDialog";
+import { activeSquadFilterChips } from "./squadFilterSummary";
 import { playerFormPresentation } from "../players/playerForm";
 import type { SquadPlayerStats } from "./useSquadStats";
 import {
   activeSquadFilterCount,
   applySquadFilters,
+  clearSquadFilter,
   cloneSquadFilters,
   createEmptySquadFilters,
   type SquadFilterPlayer,
@@ -582,6 +584,21 @@ function LineupPageContent() {
                   {t("Clear filters")}</button>
               ) : null}
             </div>
+            {filterCount > 0 ? (
+              <ul className="squad-filter-chips" aria-label={t("Applied filters")}>
+                {activeSquadFilterChips(squadFilters).map((chip) => (
+                  <li key={chip.key} className="squad-filter-chip">
+                    <span className="squad-filter-chip-label">{chip.label}</span>
+                    <span className="squad-filter-chip-value">{chip.value}</span>
+                    <button type="button" className="squad-filter-chip-remove"
+                      aria-label={t("Remove filter: {{0}}", { 0: chip.label })}
+                      onClick={() => setSquadFilters((current) => clearSquadFilter(current, chip.key))}>
+                      <span aria-hidden="true">×</span>
+                    </button>
+                  </li>
+                ))}
+              </ul>
+            ) : null}
             {filterCount > 0 ? (
               <p className="squad-filter-status" role="status">
                 {t("Showing ")}{visibleSquad.length} {t(" of ")}{squadSource.length} {t(" players")}</p>

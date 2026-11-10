@@ -1,16 +1,16 @@
 import { t, useTranslation } from "../../i18n";
-import { useMemo, useState, type ReactNode } from "react";
+import { useId, useMemo, useState, type ReactNode } from "react";
 import { clubMediaFromFixture } from "../../api/clubMedia";
 import { BadgeImage } from "../../components/BadgeImage";
 import { Button } from "../../components/ui/Button";
 import { Checkbox } from "../../components/ui/Checkbox";
 import { Dialog } from "../../components/ui/Dialog";
+import { Help } from "../../components/ui/Help";
 import { Slider } from "../../components/ui/Slider";
 import { ToggleGroup, ToggleGroupItem } from "../../components/ui/ToggleGroup";
+import { useMediaQuery } from "../../hooks/useMediaQuery";
 import { AVAILABILITY_FILTER_OPTIONS } from "../market/MarketFilterFields";
-import { POSITION_FILTER_OPTIONS } from "../market/positions";
 import {
-  SQUAD_FORM_OPTIONS,
   STARTER_PROBABILITY_STEP,
   activeSquadFilterCount,
   applySquadFilters,
@@ -18,10 +18,17 @@ import {
   createEmptySquadFilters,
   squadClubOptions,
   squadPointsBounds,
+  type SquadFilterKey,
   type SquadFilterPlayer,
   type SquadFilters,
   type SquadNumericRange,
 } from "./squadFilters";
+import {
+  POSITION_OPTIONS,
+  SQUAD_FILTER_LABELS,
+  squadFilterValue,
+  type FilterOption,
+} from "./squadFilterSummary";
 import "./SquadFilterDialog.css";
 
 type SquadFilterDialogProps = {
@@ -34,20 +41,20 @@ type SquadFilterDialogProps = {
   finalFocus?: () => HTMLElement | false;
 };
 
-type Option = { value: string; label: string };
+/** Phones keep the bottom sheet with collapsible groups; wider screens show every group. */
+export const SQUAD_FILTER_COMPACT_QUERY = "(max-width: 700px)";
 
-const POSITION_OPTIONS: readonly Option[] = POSITION_FILTER_OPTIONS.map((option) => ({
-  value: String(option.id), label: option.label,
-}));
-const FORM_OPTIONS: readonly Option[] = SQUAD_FORM_OPTIONS.map((form) => ({
-  value: form, label: form,
-}));
-
-/** Draft editor for the lineup squad. Apply commits; Cancel leaves the list unchanged. */
+/**
+ * Draft editor for the lineup squad. Apply commits; Cancel leaves the list unchanged.
+ *
+ * Phones get a bottom sheet with one open group at a time. Tablets and desktops get a
+ * centered panel with every group visible, in two or three columns (see the CSS).
+ */
 export function SquadFilterDialog({
   open, filters, players, pending, onClose, onApply, finalFocus,
 }: SquadFilterDialogProps) {
   useTranslation();
+  const compact = useMediaQuery(SQUAD_FILTER_COMPACT_QUERY);
   const [draft, setDraft] = useState<SquadFilters>(() => cloneSquadFilters(filters));
   const [session, setSession] = useState(0);
   const [wasOpen, setWasOpen] = useState(open);
@@ -61,12 +68,18 @@ export function SquadFilterDialog({
   const clubs = useMemo(() => squadClubOptions(players), [players]);
   const bounds = useMemo(() => squadPointsBounds(players), [players]);
   const matches = applySquadFilters(players, draft, pending).length;
+  const group = (key: SquadFilterKey, children: ReactNode, defaultOpen = false) => (
+    <FilterGroup key={key} area={key} compact={compact} defaultOpen={defaultOpen}
+      label={t(SQUAD_FILTER_LABELS[key])} summary={squadFilterValue(draft, key)}>
+      {children}
+    </FilterGroup>
+  );
 
   return (
     <Dialog
       open={open}
-      layout="sheet"
-      className="squad-filter-dialog"
+      layout={compact ? "sheet" : "dialog"}
+      className={"squad-filter-dialog squad-filter-dialog--" + (compact ? "compact" : "wide")}
       title={t("Filter squad")}
       description={t("Show players that match every condition you select.")}
       onClose={onClose}
@@ -76,40 +89,33 @@ export function SquadFilterDialog({
           disabled={activeSquadFilterCount(draft) === 0}
           onClick={() => setDraft(createEmptySquadFilters())}>
           {t("Clear filters")}</Button>
-        <Button shape="square" variant="outline" onClick={onClose}>{t("Cancel")}</Button>
-        <Button shape="square" onClick={() => onApply(cloneSquadFilters(draft))}>
+        <Button shape="square" variant="outline" className="squad-filter-cancel"
+          onClick={onClose}>{t("Cancel")}</Button>
+        <Button shape="square" className="squad-filter-apply"
+          onClick={() => onApply(cloneSquadFilters(draft))}>
           {t(matches === 1 ? "Show {{0}} player" : "Show {{0}} players", { 0: matches })}
         </Button>
       </>}
     >
       <div className="squad-filter-fields" key={session}>
-        <FilterGroup label={t("Position")} defaultOpen
-          summary={selectionSummary(POSITION_OPTIONS, new Set([...draft.positions].map(String)))}>
-          <OptionToggles options={POSITION_OPTIONS}
+        {group("positions", (
+          <OptionToggles options={POSITION_OPTIONS} compact={compact}
             selected={[...draft.positions].map(String)}
             onChange={(values) => setDraft({ ...draft, positions: new Set(values.map(Number)) })} />
-        </FilterGroup>
-        <FilterGroup label={t("FSYP")} summary={pointsSummary(draft.points)}>
+        ), true)}
+        {group("points", (
           <PointsRange bounds={bounds} range={draft.points}
             onChange={(points) => setDraft({ ...draft, points })} />
-        </FilterGroup>
-        <FilterGroup label={t("Club")} summary={selectionSummary(
-          clubs.map((club) => ({ value: club, label: club })), draft.clubs, false,
-        )}>
-          <ClubChecklist clubs={clubs} selected={draft.clubs}
-            onChange={(next) => setDraft({ ...draft, clubs: next })} />
-        </FilterGroup>
-        <FilterGroup label={t("Start probability")} summary={draft.minStarterProbability > 0
-          ? t("At least {{0}}%", { 0: draft.minStarterProbability }) : t("Any")}>
+        ))}
+        {group("minStarterProbability", (
           <StarterProbabilityField players={players} value={draft.minStarterProbability}
             onChange={(minStarterProbability) => setDraft({ ...draft, minStarterProbability })} />
-        </FilterGroup>
-        <FilterGroup label={t("Form")} summary={selectionSummary(FORM_OPTIONS, draft.forms)}>
+        ))}
+        {group("forms", (
           <FormScale selected={draft.forms}
             onChange={(forms) => setDraft({ ...draft, forms })} />
-        </FilterGroup>
-        <FilterGroup label={t("Availability")}
-          summary={selectionSummary(AVAILABILITY_FILTER_OPTIONS, draft.availability)}>
+        ))}
+        {group("availability", (
           <AvailabilityScale selected={[...draft.availability]}
             onChange={(values) => setDraft({
               ...draft,
@@ -117,31 +123,56 @@ export function SquadFilterDialog({
                 .filter((option) => values.includes(option.value))
                 .map((option) => option.value)),
             })} />
-        </FilterGroup>
+        ))}
+        {group("clubs", (
+          <ClubChecklist clubs={clubs} selected={draft.clubs}
+            onChange={(next) => setDraft({ ...draft, clubs: next })} />
+        ))}
       </div>
     </Dialog>
   );
 }
 
-function FilterGroup({ label, summary, children, defaultOpen = false }: {
+/** A collapsible group on phones; an always-open, titled section elsewhere. */
+function FilterGroup({ label, summary, area, compact, children, defaultOpen = false }: {
   label: string;
   summary: string;
+  area: SquadFilterKey;
+  compact: boolean;
   children: ReactNode;
   defaultOpen?: boolean;
 }) {
   const [expanded, setExpanded] = useState(defaultOpen);
+  const headingId = useId();
+  const active = summary !== t("Any");
+  const fields = (
+    <fieldset className="squad-filter-group">
+      <legend className="squad-filter-sr-only">{label}</legend>
+      {children}
+    </fieldset>
+  );
+  if (!compact) {
+    return (
+      <section className="squad-filter-section" data-area={area} aria-labelledby={headingId}>
+        <header className="squad-filter-section-heading">
+          <h3 id={headingId}>{label}</h3>
+          <span className="squad-filter-disclosure-value" data-active={active || undefined}>
+            {summary}</span>
+        </header>
+        {fields}
+      </section>
+    );
+  }
   return (
     <details className="squad-filter-disclosure" open={expanded}
       onToggle={(event) => setExpanded(event.currentTarget.open)}>
       <summary>
         <span>{label}</span>
-        <span className="squad-filter-disclosure-value">{summary}</span>
+        <span className="squad-filter-disclosure-value" data-active={active || undefined}>
+          {summary}</span>
         <span className="squad-filter-disclosure-chevron" aria-hidden="true">⌄</span>
       </summary>
-      <fieldset className="squad-filter-group">
-        <legend className="squad-filter-sr-only">{label}</legend>
-        {children}
-      </fieldset>
+      {fields}
     </details>
   );
 }
@@ -198,16 +229,25 @@ function AvailabilityScale({ selected, onChange }: {
   );
 }
 
-function OptionToggles({ options, selected, onChange }: {
-  options: readonly Option[];
+/** Multi-select toggles. On phones, options with a short label fit on one segmented row. */
+function OptionToggles({ options, selected, onChange, compact = false }: {
+  options: readonly FilterOption[];
   selected: readonly string[];
   onChange: (values: string[]) => void;
+  compact?: boolean;
 }) {
   useTranslation();
+  const segmented = compact && options.every((option) => option.short);
   return (
     <ToggleGroup multiple value={selected}
+      className={segmented ? "squad-filter-segmented" : undefined}
       onValueChange={(values) => onChange(values.map(String))}>
-      {options.map((option) => (
+      {options.map((option) => segmented ? (
+        <Help key={option.value} content={t(option.label)}
+          trigger={<ToggleGroupItem value={option.value} aria-label={t(option.label)} />}>
+          {t(option.short ?? option.label)}
+        </Help>
+      ) : (
         <ToggleGroupItem key={option.value} value={option.value}>{t(option.label)}</ToggleGroupItem>
       ))}
     </ToggleGroup>
@@ -304,19 +344,6 @@ function StarterProbabilityField({ players, value, onChange }: {
 
 function clamp(value: number, min: number, max: number): number {
   return Math.min(Math.max(value, min), max);
-}
-
-function selectionSummary(options: readonly Option[], selected: ReadonlySet<string>, translateLabels = true): string {
-  const labels = options.filter((option) => selected.has(option.value))
-    .map((option) => translateLabels ? t(option.label) : option.label);
-  if (labels.length === 0) return t("Any");
-  return labels.length <= 2 ? labels.join(", ") : t("{{0}} filters selected", { 0: labels.length });
-}
-
-function pointsSummary(range: SquadNumericRange): string {
-  if (range.min == null && range.max == null) return t("Any");
-  if (range.min != null && range.max != null) return `${range.min}–${range.max} pts`;
-  return range.min != null ? `${range.min}+ pts` : t("Up to {{0}} pts", { 0: range.max ?? 0 });
 }
 
 function clubInitials(club: string): string {

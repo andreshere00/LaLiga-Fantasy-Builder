@@ -121,3 +121,11 @@ function matchesSet<T>(value: T | null, selected: ReadonlySet<T>, pending: boole
   if (value == null) return pending;
   return selected.has(value);
 }
+
+export type SquadFilterKey =
+  | "positions" | "points" | "clubs" | "minStarterProbability" | "forms" | "availability";
+
+/** Returns a copy with one filter group reset to "any". */
+export function clearSquadFilter(filters: SquadFilters, key: SquadFilterKey): SquadFilters {
+  return { ...cloneSquadFilters(filters), [key]: createEmptySquadFilters()[key] };
+}

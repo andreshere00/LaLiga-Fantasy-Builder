@@ -561,8 +561,15 @@ matchweek when supplied. Starter badges use the profile icon colors: red below
 neutral dash; reported zeroes stay zero.
 **Filter squad** opens a dialog for position, season Fantasy points, club, start
 probability, form, and availability. Every selected condition applies together.
-The filter groups use expandable rows with a compact current-value summary;
-position opens first. Position and availability use toggle groups. Form is grouped
+The layout follows the screen. Phones (up to 700px) get a bottom sheet of
+expandable rows with a current-value summary; position opens first, club comes
+last, positions fit one segmented row of short labels (POR, DEF, MED, DEL, ENT;
+the full name is the accessible name and shows in the row summary), and
+**Show N players** spans the full width above Clear and Cancel. From
+701px every group is an open section with its value in the heading (highlighted
+once it filters): two columns on iPad portrait with clubs across the bottom, and
+three columns from 1000px (iPad landscape, Mac) where the club list scrolls in its
+own column so the whole panel fits without scrolling. Position and availability use toggle groups. Form is grouped
 into Poor, Average, and Good, with equal buttons inside each band. Availability
 is three equal rows for Available, Questionable, and Unavailable. Club
 choices are checkboxes with their crest and name. FSYP is a two-thumb slider
@@ -572,7 +579,8 @@ reports how many squad players qualify.
 **Show N players** previews the match count and updates the squad; **Cancel** and
 Escape leave it unchanged.
 **Clear filters** is available in the dialog and beside the button once a filter
-is active. An empty result explains that nothing matched and offers clear.
+is active. Applied groups also show as chips under the button (for example
+"Position Goalkeeper, Defense"); each chip's × removes just that group. An empty result explains that nothing matched and offers clear.
 Missing values stay visible while squad details are still loading, then drop out
 of an active filter. Changing team clears the filters.
 All squad profiles load in parallel and are cached for five minutes. A skeleton
