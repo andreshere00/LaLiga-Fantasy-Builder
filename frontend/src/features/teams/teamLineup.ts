@@ -1,4 +1,5 @@
 import { text } from "../../api/mappers";
+import { normalizeSearchText } from "../../searchText";
 import { catalogById } from "../market/model/listing";
 
 export type PredictedPlayer = {
@@ -113,6 +114,5 @@ export function fieldPlayerPath(playerId: string, teamId: string | null): string
 }
 
 function fold(value: string): string {
-  return value.normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/\./g, "")
-    .replace(/\s+/g, " ").trim().toLowerCase();
+  return normalizeSearchText(value.replace(/\./g, ""));
 }

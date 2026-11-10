@@ -1,13 +1,10 @@
 import { t } from "../../i18n";
 import { dateFormatter, durationLabel } from "../../i18n/format";
-
-function key(value: string): string {
-  return value.normalize("NFD").replace(/\p{M}/gu, "").trim().toLowerCase().replace(/\s+/g, " ");
-}
+import { normalizeSearchText } from "../../searchText";
 
 /** The recovery steps FutbolFantasy publishes, in order. Unknown text returns null. */
 export function injuryPhaseLabel(value: string | null | undefined): string | null {
-  switch (key(value ?? "")) {
+  switch (normalizeSearchText(value ?? "")) {
     case "pendiente pruebas": return t("Awaiting tests");
     case "tratamiento": return t("Treatment");
     case "postoperatorio": return t("Post-operative");
@@ -65,7 +62,7 @@ function capitalised(value: string): string {
 
 /** "Lesión de rodilla" becomes "Knee injury". Wording outside the known vocabulary returns null. */
 export function injuryDiagnosisLabel(value: string | null | undefined): string | null {
-  const text = key((value ?? "").replace(/\blig\./gi, "ligamento"));
+  const text = normalizeSearchText((value ?? "").replace(/\blig\./gi, "ligamento"));
   if (text === "gastroenteritis") return t("Gastroenteritis");
   if (text === "molestias sin determinar") return t("Undetermined discomfort");
   if (text === "molestias musculares") return t("Muscle discomfort");
@@ -99,7 +96,7 @@ function untilMonth(period: string | undefined, when: string): string {
  * Other wording returns null.
  */
 export function expectedReturnLabel(value: string | null | undefined): string | null {
-  const text = key(value ?? "");
+  const text = normalizeSearchText(value ?? "");
   const until = /^baja hasta (?:(principios|mediados|finales) de )?(\p{L}+)(?:\s+(?:de\s+)?(\d{4}))?$/u.exec(text);
   if (until) {
     const month = MONTHS.indexOf(until[2]);

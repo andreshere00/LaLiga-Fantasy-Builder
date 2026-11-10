@@ -1,3 +1,4 @@
+import { normalizeSearchText } from "../../searchText";
 import type { PredictedPlayer } from "./teamLineup";
 
 export const PITCH_LINES = ["delantero", "mediocampista", "defensa", "portero"] as const;
@@ -13,7 +14,7 @@ const LINE_LABELS: Record<PitchLine, string> = {
 };
 
 export function pitchLine(position: string | null): PitchLine {
-  const value = (position ?? "").normalize("NFD").replace(/\p{M}/gu, "").toLowerCase();
+  const value = normalizeSearchText(position ?? "");
   if (value.includes("porter") || value.includes("goalkeeper")) return "portero";
   if (value.includes("defens")) return "defensa";
   if (value.includes("medio") || value.includes("midfield")) return "mediocampista";

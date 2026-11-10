@@ -1,5 +1,6 @@
 import { Link } from "react-router-dom";
 import { t, useTranslation } from "../../i18n";
+import { normalizeSearchText } from "../../searchText";
 import { BadgeImage } from "../../components/BadgeImage";
 import type { ClubDossierDto } from "../../api/schemas";
 import {
@@ -316,12 +317,8 @@ function MatchRow({
 
 /** The club a fixture side names, matched on its name without case or accents. */
 function clubIdFor(name: string, clubs: readonly NamedClub[]): number | null {
-  const key = plain(name);
-  return clubs.find((club) => plain(club.name) === key)?.clubId ?? null;
-}
-
-function plain(value: string): string {
-  return value.normalize("NFD").replace(/[\u0300-\u036f]/g, "").trim().toLowerCase();
+  const key = normalizeSearchText(name);
+  return clubs.find((club) => normalizeSearchText(club.name) === key)?.clubId ?? null;
 }
 
 function Side({ name, badge, own, clubId }: {

@@ -1,3 +1,4 @@
+import { normalizeSearchText } from "../../searchText";
 import hierarchyGod from "../../assets/button_hierarchy_god.svg";
 import hierarchyKey from "../../assets/button_hierarchy_key.svg";
 import hierarchyImportant from "../../assets/button_hierarchy_important.svg";
@@ -33,12 +34,7 @@ export type HierarchyPresentation = {
 };
 
 export function normalizedFantasyValue(value: string): string {
-  return value
-    .normalize("NFD")
-    .replace(/[̀-ͯ]/g, "")
-    .trim()
-    .toLocaleLowerCase("en")
-    .replace(/[\s-]+/g, "_");
+  return normalizeSearchText(value).replace(/[\s-]+/g, "_");
 }
 
 /** The squad role the player details page shows, with its icon. */

@@ -1,4 +1,5 @@
 import { useQueries } from "@tanstack/react-query";
+import { useMemo } from "react";
 import { getJson, paths } from "../../api/client";
 import { clubDisplayName, clubMediaFromBadge, clubMediaFromId } from "../../api/clubMedia";
 import { asFiniteNumber, asRecord, idText, text, type SquadCard } from "../../api/mappers";
@@ -31,10 +32,16 @@ export function usePlayerOutlooks(ids: readonly string[]) {
     })),
   });
   useReauthOnError(queries.map((query) => query.error));
+  // Keep the same Map until a requested id or a profile changes, so memos built on it hold.
+  const idKey = unique.join("|");
+  const dataKey = queries.map((query) => query.dataUpdatedAt).join(",");
+  const profiles = useMemo(() => new Map(unique.map((id, index) => [
+    id, queries[index]?.data as PlayerProfileDto | undefined,
+  ])),
+  // eslint-disable-next-line react-hooks/exhaustive-deps -- idKey and dataKey stand for both
+  [idKey, dataKey]);
   return {
-    profiles: new Map(unique.map((id, index) => [
-      id, queries[index]?.data as PlayerProfileDto | undefined,
-    ])),
+    profiles,
     isLoading: unique.length > 0 && queries.some((query) => query.isPending),
     errors: queries.map((query) => query.error),
   };

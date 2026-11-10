@@ -1,14 +1,11 @@
 import { t } from "../../i18n";
-
-function key(value: string): string {
-  return value.normalize("NFD").replace(/\p{M}/gu, "").trim().toLowerCase().replace(/\s+/g, " ");
-}
+import { normalizeSearchText } from "../../searchText";
 
 export type Tone = "good" | "warn" | "neutral";
 
 /** Matchday predictability words FutbolFantasy publishes, in English. Unknown text returns null. */
 export function predictabilityLabel(value: string | null | undefined): { label: string; tone: Tone } | null {
-  switch (key(value ?? "")) {
+  switch (normalizeSearchText(value ?? "")) {
     case "muy previsible": return { label: t("Very predictable"), tone: "good" };
     case "previsible": return { label: t("Predictable"), tone: "good" };
     case "poco previsible": return { label: t("Hard to predict"), tone: "warn" };
@@ -20,7 +17,7 @@ export function predictabilityLabel(value: string | null | undefined): { label: 
 
 /** Short fixed rotation phrases. Longer free text stays with the translation widget. */
 export function rotationsLabel(value: string | null | undefined): string | null {
-  switch (key(value ?? "")) {
+  switch (normalizeSearchText(value ?? "")) {
     case "sin rotaciones": return t("No rotations");
     case "pocas rotaciones": return t("Few rotations");
     case "algunas rotaciones": return t("Some rotations");

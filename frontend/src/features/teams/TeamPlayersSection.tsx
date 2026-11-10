@@ -81,12 +81,12 @@ export function TeamPlayersSection({
       setDirection("asc");
     }
   }, [column, statColumns]);
-  const rows = sortSquad(source, column, direction);
+  const rows = useMemo(() => sortSquad(source, column, direction), [source, column, direction]);
   const weeks = roster.coverage.matchweeks.join(", ");
   const unavailable = season?.coverage.unavailable ?? 0;
   const maxPoints = Math.max(0, ...rows.map((row) => row.points ?? 0));
   // Players with zero minutes add noise to the table, so they wait behind a toggle.
-  const { played, idle } = splitIdle(rows);
+  const { played, idle } = useMemo(() => splitIdle(rows), [rows]);
   const foldIdle = idle.length > 0;
   const idleIds = useMemo(() => new Set(idle.map((row) => row.playerId)), [idle]);
   const [showIdle, setShowIdle] = useState(false);
