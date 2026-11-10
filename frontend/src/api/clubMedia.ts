@@ -181,6 +181,14 @@ export function teamsClubId(teamId: unknown, badgeUrl?: string | null): string |
     (badgeUrl ? CLUB_IDS.byBadge.get(badgeUrl) : undefined) ?? null;
 }
 
+/** The Teams screen club id for a club name, code or alias; null when it is unknown or ambiguous. */
+export function teamsClubIdFromName(name: string | null | undefined): string | null {
+  if (!name) return null;
+  const display = clubDisplayName(name) ?? name;
+  const media = CLUB_MEDIA.byName.get(normalizedClubName(display));
+  return media ? CLUB_IDS.byBadge.get(media.badge) ?? null : null;
+}
+
 /** Expands a known club code and otherwise returns its trimmed display value. */
 export function clubDisplayName(value: string | null | undefined): string | null {
   if (!value) return null;

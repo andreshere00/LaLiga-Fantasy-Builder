@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState, type Ref } from "react";
-import { Link, useLocation } from "react-router-dom";
+import { useLocation } from "react-router-dom";
+import { PlayerLink } from "../../components/links/EntityLinks";
 import { t, useTranslation } from "../../i18n";
 import { playerAge } from "../players/playerDetailFormat";
 import { positionAbbrev, positionLabel, positionTone } from "../market/positions";
@@ -96,13 +97,9 @@ export function TeamPlayersSection({
   const renderRow = (row: SquadRow) => (
     <tr key={row.playerId}>
       <th className="is-player" scope="row">
-        <Link
-          className="team-player-link"
-          to={`/players/${encodeURIComponent(row.playerId)}`}
-          state={{ returnTo }}
-        >
+        <PlayerLink className="team-player-link" playerId={row.playerId} returnTo={returnTo}>
           {row.name}
-        </Link>
+        </PlayerLink>
       </th>
       <td className="is-position">
         <span

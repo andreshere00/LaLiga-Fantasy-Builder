@@ -1,5 +1,6 @@
 import { useMemo, useRef, useState } from "react";
-import { Link, useLocation } from "react-router-dom";
+import { useLocation } from "react-router-dom";
+import { PlayerLink } from "../../components/links/EntityLinks";
 import { t, useTranslation } from "../../i18n";
 import { Button } from "../../components/ui/Button";
 import { Dialog } from "../../components/ui/Dialog";
@@ -178,13 +179,9 @@ function LevelGroup({ group, media, returnTo }: {
               url={media.get(player.playerId)?.photoUrl ?? null}
               fallback={<PersonIcon />}
             />
-            <Link
-              className="team-player-link"
-              to={`/players/${encodeURIComponent(player.playerId)}`}
-              state={{ returnTo }}
-            >
+            <PlayerLink className="team-player-link" playerId={player.playerId} returnTo={returnTo}>
               {player.name}
-            </Link>
+            </PlayerLink>
             {player.positionId != null ? (
               <span
                 className={`team-pos team-pos--${positionTone(player.positionId)}`}

@@ -12,6 +12,7 @@ import { useQueries } from "@tanstack/react-query";
 import { NumberPagination } from "../../components/ui/NumberPagination";
 import { useCallback, useMemo } from "react";
 import { Link, useSearchParams } from "react-router-dom";
+import { ManagerLink, PlayerLink } from "../../components/links/EntityLinks";
 
 import { getJson, paths } from "../../api/client";
 import { useAuth } from "../../auth/AuthProvider";
@@ -124,9 +125,9 @@ function PlayersListRow({
       <img src={availableIcon} alt="" aria-hidden="true" />
       {t("Free Agent")}</span>
   ) : row.ownerTeamId ? (
-    <Link className="players-owner-link" to={`/?team=${encodeURIComponent(row.ownerTeamId)}`}>
+    <ManagerLink className="players-owner-link" teamId={row.ownerTeamId}>
       <ManagerIdentity name={row.ownedBy} avatarUrl={row.ownerAvatarUrl} />
-    </Link>
+    </ManagerLink>
   ) : (
     row.ownedBy
   );
@@ -167,7 +168,7 @@ function PlayersListRow({
             onToggle={onToggleFavorite}
           />
           {row.positionId === 5 ? <span className={nameClass}>{row.name}</span> : (
-            <Link className={nameClass + " players-name-link"} to={"/players/" + encodeURIComponent(row.playerId)} state={{ returnTo: "/players" }}>{row.name}</Link>
+            <PlayerLink className={nameClass + " players-name-link"} playerId={row.playerId} returnTo="/players">{row.name}</PlayerLink>
           )}
           <span className="player-status-indicators">
             {protection ? <Help content={protection} className="market-clause-flag">
