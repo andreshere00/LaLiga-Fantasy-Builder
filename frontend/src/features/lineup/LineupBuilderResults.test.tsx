@@ -101,3 +101,13 @@ it("should hide the exclusions table when only other source diagnostics exist", 
   render(<LineupBuilderResults result={result} canApply={() => false} onApply={() => {}} playersById={new Map()} />);
   expect(screen.queryByRole("table", { name: "Source exclusions", hidden: true })).toBeNull();
 });
+
+it("should warn when the recommended lineups keep a balance below zero", () => {
+  const result = recommendations(1, 0);
+  result.candidates[0] = {
+    ...result.candidates[0], tradingPlan: { ...result.candidates[0].tradingPlan, projectedCash: -36_130_261 },
+  };
+  render(<LineupBuilderResults result={result} canApply={() => true} onApply={() => {}} playersById={new Map()} />);
+  expect(screen.getByText("Balance below zero")).toBeTruthy();
+  expect(screen.getAllByRole("article")).toHaveLength(1);
+});

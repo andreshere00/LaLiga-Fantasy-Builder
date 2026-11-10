@@ -132,7 +132,11 @@ not assume an unaffordable or oversized all-external XI.
 
 Multiple purchases and sales share one whole-squad budget. Their combined costs
 must be covered by current available cash plus verified eligible sales, with a
-nonnegative final projected balance. A sale cannot fund more than one purchase
+nonnegative final projected balance. When the starting balance is already negative
+(for example after conservative bid reserves), a plan may keep it but never end
+below it: an owned XI needs no trades, purchases must be funded by sales, and
+clauses still need positive cash. The results then warn that the balance stays
+below zero. A sale cannot fund more than one purchase
 independently or include a retained starter. Sale recommendations remain ranked
 by trading score; transaction steps follow actual settlement times before proceeds
 are spent. Existing buying/selling permissions and required offers still apply.

@@ -58,6 +58,9 @@ export function LineupBuilderResults({ result, playersById, canApply, onApply, o
       detail: "Club standings could not be verified. Position criteria are omitted; recent matches use verified previous-round results." },
     { visible: !result.searchComplete, title: "Search incomplete", tone: "warning",
       detail: "Search is incomplete. These candidates are feasible estimates; better choices may remain." },
+    { visible: result.candidates.some((candidate) => candidate.tradingPlan.projectedCash < 0),
+      title: "Balance below zero", tone: "warning",
+      detail: "The estimated balance stays below zero. These lineups do not make it worse: any purchase is paid for by sales. Before kickoff, raise the balance to zero or more, for example by withdrawing bids or selling players, or Fantasy may not score your team." },
     { visible: diagnostics.has("cash_conservative_bid_reserve"), title: "Cash after pending bids", tone: "info",
       detail: "Cash projections use a conservative lower bound: pending bid amounts are deducted from the reported balance, even if Fantasy may already reserve them. Pending bids remain unchanged." },
   ].filter((notice) => notice.visible);

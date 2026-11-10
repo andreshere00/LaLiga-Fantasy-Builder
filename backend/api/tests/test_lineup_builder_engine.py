@@ -1089,3 +1089,55 @@ def test_plan_trades_pending_bid_slots_cannot_exceed_squad_cap() -> None:
     )
     assert result is not None
     assert result.squad_count + result.reserved_squad_slots == 24
+
+
+def test_search_candidates_negative_cash_returns_owned_lineup_without_trades() -> None:
+    owned = pool()
+
+    result, complete, _ = search_candidates(
+        owned,
+        owned,
+        -360,
+        BuildPreferences(allow_buying=True, allow_selling=True),
+        ["4,4,2"],
+        TARGET,
+        NOW,
+        1,
+    )
+
+    assert complete
+    assert result
+    owned_only = [c for c in result if c.resource_group == "owned"]
+    assert owned_only
+    assert all(not c.trading_plan.sales and not c.trading_plan.steps for c in owned_only)
+    assert all(c.trading_plan.projected_cash == -360 for c in owned_only)
+
+
+def test_plan_trades_negative_cash_purchase_must_be_funded_by_sales() -> None:
+    facts = PlayerEvidence(status="available", market_growth=Decimal(0))
+    owned = [
+        score_player(p, facts, NOW, START).model_copy(update={"sale_settlement_at": NOW})
+        for p in pool()
+    ]
+    starters = owned[:1] + owned[2:6] + owned[7:11] + [player(99, 4, source="market"), owned[-1]]
+
+    unfunded = plan_trades(starters, owned, -50, BuildPreferences(allow_buying=True), TARGET, NOW)
+    funded = plan_trades(
+        starters, owned, -50, BuildPreferences(allow_buying=True, allow_selling=True), TARGET, NOW
+    )
+
+    assert unfunded is None
+    assert funded is not None
+    assert len(funded.sales) == 1
+    assert funded.projected_cash == -50
+
+
+def test_plan_trades_negative_cash_rejects_clause_purchase() -> None:
+    owned = [player(i, pos) for i, pos in enumerate([1, 2, 2, 2, 2, 3, 3, 3, 3, 4])]
+    clause = player(90, 4, source="opponents", value=10)
+
+    plan = plan_trades(
+        owned + [clause], owned, -5, BuildPreferences(allow_buying=True), TARGET, NOW
+    )
+
+    assert plan is None

@@ -1907,5 +1907,7 @@
   "Open {{0}} on Teams": "Open {{0}} on Teams",
   "See the squad hierarchy": "See the squad hierarchy",
   "Show all positions": "Show all positions",
-  "Show only {{0}}": "Show only {{0}}"
+  "Show only {{0}}": "Show only {{0}}",
+  "Balance below zero": "Balance below zero",
+  "The estimated balance stays below zero. These lineups do not make it worse: any purchase is paid for by sales. Before kickoff, raise the balance to zero or more, for example by withdrawing bids or selling players, or Fantasy may not score your team.": "The estimated balance stays below zero. These lineups do not make it worse: any purchase is paid for by sales. Before kickoff, raise the balance to zero or more, for example by withdrawing bids or selling players, or Fantasy may not score your team."
 }

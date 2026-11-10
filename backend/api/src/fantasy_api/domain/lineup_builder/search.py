@@ -109,7 +109,7 @@ def search_candidates(
     Args:
         players: Eligible source-filtered player pool.
         owned: Whole current roster, including retained bench.
-        cash: Verified current cash.
+        cash: Verified current cash; when negative, purchases must be funded by sales.
         preferences: Mandatory IDs, trade permissions and output limit.
         formations: Verified supported tactics.
         target: Target round deadlines.
@@ -187,7 +187,7 @@ def search_candidates(
         )
         return (
             sum(p.market_value for p in purchases) + completion_cost
-            <= cash + sum(p.market_value for p in available_sales)
+            <= max(cash, 0) + sum(p.market_value for p in available_sales)
             and len(owned) + reserved_squad_slots + len(purchases) - len(available_sales) <= 24
         )
 

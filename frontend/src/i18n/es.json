@@ -1907,5 +1907,7 @@
   "Open {{0}} on Teams": "Abrir {{0}} en Equipos",
   "See the squad hierarchy": "Ver la jerarquía de la plantilla",
   "Show all positions": "Mostrar todas las posiciones",
-  "Show only {{0}}": "Mostrar solo {{0}}"
+  "Show only {{0}}": "Mostrar solo {{0}}",
+  "Balance below zero": "Saldo por debajo de cero",
+  "The estimated balance stays below zero. These lineups do not make it worse: any purchase is paid for by sales. Before kickoff, raise the balance to zero or more, for example by withdrawing bids or selling players, or Fantasy may not score your team.": "El saldo estimado sigue por debajo de cero. Estas alineaciones no lo empeoran: cualquier compra se paga con ventas. Antes del inicio de la jornada, deja el saldo en cero o más, por ejemplo retirando pujas o vendiendo jugadores, o Fantasy podría no puntuar a tu equipo."
 }
