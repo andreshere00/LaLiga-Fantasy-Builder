@@ -5,6 +5,8 @@
 .nav-tabs { display:flex; align-self:stretch; flex-wrap:wrap; }
 .nav-tab { display:flex; align-items:center; min-height:56px; padding:0 16px; color:var(--fb-secondary); text-decoration:none; border-bottom:3px solid transparent; font-size:14px; font-weight:500; text-transform:uppercase; transition:background-color .16s; }
 .nav-tab[aria-current="page"] { border-bottom-color:var(--fb-primary); color:var(--fb-tertiary); }
+.nav-tab { gap:8px; }
+.nav-tab-icon { width:20px; height:20px; flex:none; }
 .nav-tab:hover { background:var(--fb-coral); color:var(--fb-on-coral); }
 .nav-actions { position:relative; display:flex; align-items:center; margin-left:auto; padding:8px 0; min-width:0; }
 .nav-options-trigger { display:flex; align-items:center; justify-content:center; gap:8px; min-width:44px; min-height:44px; padding:0 12px; border:1px solid var(--fb-control-line); background:var(--fb-surface); color:var(--fb-secondary); font:500 14px/1.4 var(--fb-font-body); cursor:pointer; }
@@ -57,7 +59,7 @@
   .header-content { display:grid; grid-template-columns:minmax(0,1fr) auto; gap:0 16px; }
   .brand-bar { grid-row:1; grid-column:1; }
   .nav-tabs { position:fixed; inset-inline:0; bottom:0; z-index:90; width:100%; height:var(--app-bottom-nav-height); margin:0; padding:4px max(16px,env(safe-area-inset-right,0px)) calc(4px + env(safe-area-inset-bottom,0px)) max(16px,env(safe-area-inset-left,0px)); flex-wrap:nowrap; justify-content:space-around; border-top:1px solid var(--fb-line); background:var(--fb-surface); }
-  .nav-tabs .nav-tab { flex:1; justify-content:center; min-width:44px; padding:0 12px; border-bottom:0; border-top:3px solid transparent; }
+  .nav-tabs .nav-tab { flex:1; flex-direction:column; justify-content:center; gap:2px; font-size:11px; min-width:44px; padding:0 12px; border-bottom:0; border-top:3px solid transparent; }
   .nav-tabs .nav-tab[aria-current="page"] { border-top-color:var(--fb-primary); font-weight:700; }
   .nav-tabs .nav-tab:focus-visible { outline-offset:-3px; }
   .nav-actions { grid-row:1; grid-column:2; width:auto; margin:0; padding:8px 0; }

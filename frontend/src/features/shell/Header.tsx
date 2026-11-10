@@ -8,7 +8,7 @@ import { leagueId, leagueLabel } from "../../api/mappers";
 import { useAuth } from "../../auth/AuthProvider";
 import { Dialog } from "../../components/ui/Dialog";
 import { useLeague } from "../lineup/LeagueProvider";
-import { PersonIcon } from "./icons";
+import { NavIcon, PersonIcon } from "./icons";
 import { ProfilePhoto } from "./ProfilePhoto";
 import { materialIconPaths } from "../../assets/material-icons/paths";
 import "./Header.css";
@@ -49,10 +49,10 @@ export function Header() {
           <span>{t("LALIGA Fantasy Builder")}</span>
         </Link>
         <nav className="nav-tabs" aria-label={t("Sections")}>
-          <NavLink to="/" end className="nav-tab">{t("Lineup")}</NavLink>
-          <NavLink to="/market" className="nav-tab">{t("Market")}</NavLink>
-          <NavLink to="/players" className="nav-tab">{t("Players")}</NavLink>
-          <NavLink to="/teams" className="nav-tab">{t("Teams")}</NavLink>
+          <NavLink to="/" end className="nav-tab"><NavIcon name="lineup" /><span>{t("Lineup")}</span></NavLink>
+          <NavLink to="/market" className="nav-tab"><NavIcon name="market" /><span>{t("Market")}</span></NavLink>
+          <NavLink to="/players" className="nav-tab"><NavIcon name="players" /><span>{t("Players")}</span></NavLink>
+          <NavLink to="/teams" className="nav-tab"><NavIcon name="teams" /><span>{t("Teams")}</span></NavLink>
         </nav>
         <div className={`nav-actions${optionsOpen ? " is-open" : ""}`}>
           <button

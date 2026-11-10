@@ -69,4 +69,20 @@ describe("Header", () => {
     expect(harness.selectLeague).toHaveBeenCalledWith("b");
     await waitFor(() => expect(document.activeElement).toBe(trigger));
   });
+
+  it("Header_sections_eachTabHasDecorativeIconAndTextName", () => {
+    const { container } = render(
+      <BrowserRouter>
+        <Header />
+      </BrowserRouter>,
+    );
+
+    const tabs = container.querySelectorAll(".nav-tabs .nav-tab");
+
+    expect(tabs.length).toBe(4);
+    tabs.forEach((tab) => {
+      expect(tab.querySelector("svg.nav-tab-icon")?.getAttribute("aria-hidden")).toBe("true");
+      expect(tab.textContent?.length).toBeGreaterThan(0);
+    });
+  });
 });
