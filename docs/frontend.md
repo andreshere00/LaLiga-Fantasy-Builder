@@ -12,6 +12,9 @@ directly and keeps the internal JWT in memory only.
 ## Spanish and English
 
 The header's Options button opens the league/account panel on mobile and desktop.
+The panel is grouped under captions instead of separate boxes: **Preferences**
+(language and theme), **League** (selector), and **Account** (a Profile row with
+avatar and chevron, then Log out/Log in), with hairline dividers between groups.
 The panel contains the 44 × 44px globe-only language selector beside the theme
 control; both stay hidden when Options is collapsed. The language selector’s
 accessible name and hover title follow the current language (Idioma/Language). The popup lists Español and English with the selected

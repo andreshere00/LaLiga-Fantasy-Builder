@@ -10,7 +10,10 @@ import { Dialog } from "../../components/ui/Dialog";
 import { useLeague } from "../lineup/LeagueProvider";
 import { PersonIcon } from "./icons";
 import { ProfilePhoto } from "./ProfilePhoto";
+import { materialIconPaths } from "../../assets/material-icons/paths";
 import "./Header.css";
+
+const LOGOUT_ICON = "M17 7l-1.41 1.41L18.17 11H8v2h10.17l-2.58 2.58L17 17l5-5zM4 5h8V3H4c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h8v-2H4V5z";
 
 export function Header() {
   useTranslation();
@@ -66,7 +69,12 @@ export function Header() {
             <span>{t("Options")}</span>
           </button>
           <div className="nav-actions-panel" id="nav-actions-panel">
-            <div className="appearance-controls"><LanguageSelector /><ThemeToggle /></div>
+            <section className="nav-group" aria-labelledby="nav-group-preferences">
+              <h2 className="nav-group-title" id="nav-group-preferences">{t("Preferences")}</h2>
+              <div className="appearance-controls"><LanguageSelector /><ThemeToggle /></div>
+            </section>
+            <section className="nav-group" aria-labelledby="nav-group-league">
+              <h2 className="nav-group-title" id="nav-group-league">{t("League")}</h2>
             <Select.Root items={items} value={selected ? leagueId(selected) : null}
               onValueChange={(value) => { if (value) selectLeague(value); }}
               disabled={leagues.length === 0}>
@@ -93,14 +101,27 @@ export function Header() {
                 </Select.Positioner>
               </Select.Portal>
             </Select.Root>
-            <button type="button" className="logout-btn" disabled={status === "loading"}
-              onClick={signedIn ? () => void logout() : login}>
-              {signedIn ? t("Log out") : t("Log in")}
-            </button>
+            </section>
+            <section className="nav-group nav-group--list" aria-labelledby="nav-group-account">
+              <h2 className="nav-group-title" id="nav-group-account">{t("Account")}</h2>
             <button type="button" className="profile-btn" aria-haspopup="dialog"
               aria-expanded={profileOpen} onClick={() => setProfileOpen(true)}>
-              <ProfilePhoto url={profilePhotoUrl} className="profile-btn-avatar" fallback={<PersonIcon />} />
-              {t("Profile")}</button>
+              <span className="nav-row-icon" aria-hidden="true">
+                <ProfilePhoto url={profilePhotoUrl} className="profile-btn-avatar" fallback={<PersonIcon />} />
+              </span>
+              <span className="nav-row-label">{t("Profile")}</span>
+              <svg className="nav-row-chevron" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+                <path d={materialIconPaths.chevron_right} />
+              </svg>
+            </button>
+            <button type="button" className="logout-btn" disabled={status === "loading"}
+              onClick={signedIn ? () => void logout() : login}>
+              <span className="nav-row-icon" aria-hidden="true">
+                <svg viewBox="0 0 24 24" focusable="false"><path d={LOGOUT_ICON} /></svg>
+              </span>
+              <span className="nav-row-label">{signedIn ? t("Log out") : t("Log in")}</span>
+            </button>
+            </section>
           </div>
         </div>
       </div>
