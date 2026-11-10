@@ -146,7 +146,8 @@ for (const width of [700, 701, 800, 801]) {
     const tableOverflows = await page.locator(".players-list").evaluate(
       (list) => list.scrollWidth > list.clientWidth,
     );
-    expect(tableOverflows).toBe(width > 700);
+    // Tablet widths use labelled cards, so the catalog never scrolls sideways.
+    expect(tableOverflows).toBe(false);
   });
 }
 
