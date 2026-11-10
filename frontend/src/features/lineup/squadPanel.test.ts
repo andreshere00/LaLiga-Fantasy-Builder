@@ -19,6 +19,14 @@ describe("squadPageSlice", () => {
     expect(page.pageItems).toEqual([24, 25, 26, 27, 28, 29, 30, 31]);
   });
 
+  it("squadPageSlice_narrowPageSize_fillsThreeByThreeRows", () => {
+    const items = Array.from({ length: 24 }, (_, index) => index);
+    const page = squadPageSlice(items, 2, 9);
+    expect(page.pageCount).toBe(3);
+    expect(page.pageItems).toEqual([18, 19, 20, 21, 22, 23]);
+    expect(squadPageForPlayer(items.map(String), "10", 9)).toBe(1);
+  });
+
   it("squadPageSlice_clamps_page_index", () => {
     expect(squadPageSlice([1, 2, 3], 99).page).toBe(0);
   });

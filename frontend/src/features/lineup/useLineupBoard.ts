@@ -98,7 +98,7 @@ import {
 } from "./lineupMessages";
 import { valueSeries } from "../market/model/valueSeries";
 import { useLeague } from "./LeagueProvider";
-import { squadPageSlice } from "./squadPanel";
+import { squadPageSlice, useSquadPageSize } from "./squadPanel";
 import {
   teamValueEvolutionSnapshot,
   type TeamValueEvolutionSnapshot,
@@ -708,7 +708,8 @@ export function useLineupBoard(options: UseLineupBoardOptions = {}): LineupBoard
       : [];
 
   const squadListForPanel = pitchSelection != null ? squadPicker : squad;
-  const squadPageData = squadPageSlice(squadListForPanel, squadPage);
+  const squadPageSize = useSquadPageSize();
+  const squadPageData = squadPageSlice(squadListForPanel, squadPage, squadPageSize);
 
   useEffect(() => {
     setSquadPage(0);
@@ -869,7 +870,7 @@ export function useLineupBoard(options: UseLineupBoardOptions = {}): LineupBoard
     squadPagePrev: () => setSquadPage((current) => Math.max(0, current - 1)),
     squadPageNext: () =>
       setSquadPage((current) => {
-        const { pageCount } = squadPageSlice(squadListForPanel, current);
+        const { pageCount } = squadPageSlice(squadListForPanel, current, squadPageSize);
         return Math.min(pageCount - 1, current + 1);
       }),
     squadSearch,

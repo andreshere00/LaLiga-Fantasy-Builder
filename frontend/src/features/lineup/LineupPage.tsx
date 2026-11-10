@@ -18,7 +18,7 @@ import originalFixtureWhiteUrl from "../../assets/button_original_fixture_white.
 import originalFixtureGrayUrl from "../../assets/button_original_fixture_gray.svg";
 import { pitchRowGapFraction, pitchRows } from "./pitchLayout";
 import { SQUAD_PICKER_EMPTY_MESSAGE } from "./playerTileCopy";
-import { squadCountLabel, squadPageForPlayer, squadPageSlice } from "./squadPanel";
+import { squadCountLabel, squadPageForPlayer, squadPageSlice, useSquadPageSize } from "./squadPanel";
 import { SquadFilterDialog } from "./SquadFilterDialog";
 import { activeSquadFilterChips } from "./squadFilterSummary";
 import { playerFormPresentation } from "../players/playerForm";
@@ -130,7 +130,8 @@ function LineupPageContent() {
       .map((row) => row.id));
     return squadSource.filter((card) => allowed.has(card.id));
   }, [filterRows, squadFilters, squadSource, squadStats.isLoading]);
-  const squadPageData = squadPageSlice(visibleSquad, filteredPage);
+  const squadPageSize = useSquadPageSize();
+  const squadPageData = squadPageSlice(visibleSquad, filteredPage, squadPageSize);
   const filterCount = activeSquadFilterCount(squadFilters);
   useEffect(() => { setFilteredPage(0); }, [board.selectedTeamId, picking, squadFilters]);
   // A focus link pages to the player once and focuses the card once, then drops the param so
@@ -142,11 +143,12 @@ function LineupPageContent() {
     const page = squadPageForPlayer(
       visibleSquad.map((card) => card.masterPlayerId),
       focusPlayer,
+      squadPageSize,
     );
     if (page == null) return;
     pagedFocus.current = focusPlayer;
     setFilteredPage(page);
-  }, [focusPlayer, visibleSquad]);
+  }, [focusPlayer, visibleSquad, squadPageSize]);
   useEffect(() => {
     if (!focusPlayer || pagedFocus.current !== focusPlayer) return;
     if (focusedPlayer.current === focusPlayer) return;

@@ -1,3 +1,4 @@
+import { useMediaQuery } from "../../hooks/useMediaQuery";
 import { t } from "../../i18n";
 /** Usual roster size shown in the squad count. Pagination includes every player. */
 export const SQUAD_DISPLAY_CAP = 24;
@@ -13,6 +14,15 @@ export function squadCountLabel(
 
 /** Players visible on one squad panel page (2×4 grid). */
 export const SQUAD_PAGE_SIZE = 8;
+/** Narrow layout shows three columns, so a page is 3×3 and never leaves a gap in the last row. */
+export const SQUAD_PAGE_SIZE_NARROW = 9;
+/** Mirrors the stacked-layout media query in `LineupPage.css`. */
+const NARROW_QUERY = "(max-width: 1099px), (max-aspect-ratio: 4/3)";
+
+/** Page size that matches the grid the current viewport renders. */
+export function useSquadPageSize(): number {
+  return useMediaQuery(NARROW_QUERY) ? SQUAD_PAGE_SIZE_NARROW : SQUAD_PAGE_SIZE;
+}
 
 export type SquadPageSlice<T> = {
   pageItems: T[];
@@ -24,20 +34,23 @@ export type SquadPageSlice<T> = {
 export function squadPageForPlayer(
   ids: readonly (string | null | undefined)[],
   playerId: string | null,
+  pageSize: number = SQUAD_PAGE_SIZE,
 ): number | null {
   if (!playerId) return null;
   const index = ids.findIndex((id) => id === playerId);
   if (index < 0) return null;
-  return Math.floor(index / SQUAD_PAGE_SIZE);
+  return Math.floor(index / pageSize);
 }
 
 /** Returns one page of squad cards. Every player stays reachable. */
-export function squadPageSlice<T>(items: readonly T[], page: number): SquadPageSlice<T> {
-  const pageCount = Math.max(1, Math.ceil(items.length / SQUAD_PAGE_SIZE));
+export function squadPageSlice<T>(
+  items: readonly T[], page: number, pageSize: number = SQUAD_PAGE_SIZE,
+): SquadPageSlice<T> {
+  const pageCount = Math.max(1, Math.ceil(items.length / pageSize));
   const safePage = Math.min(Math.max(0, page), pageCount - 1);
-  const start = safePage * SQUAD_PAGE_SIZE;
+  const start = safePage * pageSize;
   return {
-    pageItems: items.slice(start, start + SQUAD_PAGE_SIZE),
+    pageItems: items.slice(start, start + pageSize),
     page: safePage,
     pageCount,
   };
