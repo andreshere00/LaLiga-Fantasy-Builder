@@ -189,6 +189,7 @@ export function TeamsPage({ opponentClubId = null }: { opponentClubId?: number |
       {dossier.data?.roster ? (
         <TeamPlayersSection
           roster={dossier.data.roster}
+          clubName={dossier.data.club.name}
           seasonStats={{
             data: seasonStats.data,
             loading: seasonStats.isPending && seasonStats.fetchStatus !== "idle",

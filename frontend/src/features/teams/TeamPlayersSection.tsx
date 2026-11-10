@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState, type Ref } from "react";
-import { useLocation } from "react-router-dom";
+import { Link, useLocation } from "react-router-dom";
+import { playersFilterPath } from "../players/playersSearchParams";
 import { PlayerLink } from "../../components/links/EntityLinks";
 import { t, useTranslation } from "../../i18n";
 import { playerAge } from "../players/playerDetailFormat";
@@ -52,8 +53,10 @@ const COLUMN_LABELS: Record<SquadColumn, string> = {
 export function TeamPlayersSection({
   roster,
   seasonStats,
+  clubName,
 }: {
   roster: Roster;
+  clubName?: string | null;
   seasonStats?: SeasonStatsState;
 }) {
   useTranslation();
@@ -138,6 +141,13 @@ export function TeamPlayersSection({
       <div className="team-block">
         <h3 id="team-squad-title">{t("Squad")}</h3>
         <TeamSummary id="team-summary-squad" widget="squad" />
+        {clubName ? (
+          <p className="team-note">
+            <Link className="entity-link" to={playersFilterPath({ team: clubName })}>
+              {t("Compare all {{0}} players on Players →", { 0: clubName })}
+            </Link>
+          </p>
+        ) : null}
         <p className="team-note">
           {season
             ? t("{{0}} players. LaLiga {{1}} season totals from FutbolFantasy.", {
