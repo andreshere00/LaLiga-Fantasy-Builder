@@ -1935,5 +1935,6 @@
   "{{0}} selected": "{{0}} selected",
   "Ready to play the next matchday": "Ready to play the next matchday",
   "May miss the next matchday": "May miss the next matchday",
-  "Cannot play the next matchday": "Cannot play the next matchday"
+  "Cannot play the next matchday": "Cannot play the next matchday",
+  "Alerts, {{0}} unread": "Alerts, {{0}} unread"
 }

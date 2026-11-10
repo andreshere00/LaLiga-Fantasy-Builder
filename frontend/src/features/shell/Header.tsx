@@ -9,6 +9,7 @@ import { useAuth } from "../../auth/AuthProvider";
 import { Dialog } from "../../components/ui/Dialog";
 import { useLeague } from "../lineup/LeagueProvider";
 import { NavIcon, PersonIcon } from "./icons";
+import { NotificationsButton } from "./NotificationsButton";
 import { ProfilePhoto } from "./ProfilePhoto";
 import { materialIconPaths } from "../../assets/material-icons/paths";
 import "./Header.css";
@@ -55,6 +56,7 @@ export function Header() {
           <NavLink to="/teams" className="nav-tab"><NavIcon name="teams" /><span>{t("Teams")}</span></NavLink>
         </nav>
         <div className={`nav-actions${optionsOpen ? " is-open" : ""}`}>
+          {signedIn ? <NotificationsButton /> : null}
           <button
             type="button"
             className="nav-options-trigger"

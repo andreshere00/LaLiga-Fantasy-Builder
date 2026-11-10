@@ -78,3 +78,10 @@
 .appearance-controls { display:flex; align-items:center; gap:8px; }
 .language-select { position:relative; display:inline-flex; flex:none; align-items:center; justify-content:center; width:44px; height:44px; padding:0; border:1px solid var(--fb-control-line); background:var(--fb-surface); color:var(--fb-secondary); font:500 14px/1.4 var(--fb-font-body); cursor:pointer; }
 .language-select:hover { background:var(--fb-coral); color:var(--fb-on-coral); }
+
+.nav-actions { gap:8px; }
+.nav-alerts-btn { position:relative; display:inline-grid; place-items:center; flex:none; width:44px; height:44px; padding:0; border:1px solid var(--fb-control-line); border-radius:0; background:var(--fb-surface); color:var(--fb-secondary); cursor:pointer; }
+.nav-alerts-btn svg { width:22px; height:22px; }
+.nav-alerts-btn:hover { background:var(--fb-coral); color:var(--fb-on-coral); }
+.nav-alerts-btn:focus-visible { outline:2px solid var(--ring, var(--fb-primary)); outline-offset:2px; }
+.nav-alerts-badge { position:absolute; top:-6px; right:-6px; min-width:18px; height:18px; padding:0 4px; box-sizing:border-box; display:grid; place-items:center; background:var(--fb-primary); color:var(--fb-on-brand); font:700 11px/1 var(--fb-font-body); font-variant-numeric:tabular-nums; }

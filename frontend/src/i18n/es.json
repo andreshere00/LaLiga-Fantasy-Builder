@@ -1935,5 +1935,6 @@
   "{{0}} selected": "{{0}} seleccionados",
   "Ready to play the next matchday": "Listo para jugar la próxima jornada",
   "May miss the next matchday": "Puede perderse la próxima jornada",
-  "Cannot play the next matchday": "No puede jugar la próxima jornada"
+  "Cannot play the next matchday": "No puede jugar la próxima jornada",
+  "Alerts, {{0}} unread": "Alertas, {{0}} sin leer"
 }
