@@ -6,6 +6,35 @@ entry, not a claim that every optional provider or deployment gate is complete.
 
 ## [Unreleased]
 
+### Teams
+
+- Add a **Teams** tab (`/teams`, `/teams/{clubId}`) with one dossier per current LaLiga
+  club: a crest strip to switch clubs, league position and points, and sticky
+  Performance, Players, Lineup and News & Injuries sections. The club and the
+  `section`, `competition` and `window` filters live in the URL.
+- Performance shows wins, draws, losses, W/D/L form chips, the home/away split and goals
+  for a competition (National league, European, Domestic cup, Other) over the last 5, 10,
+  20 or whole-season matches, beside previous and upcoming matches with competition
+  logos, linked clubs and a highlighted next match.
+- Players shows the top three MVPs by FSYP with photo, age, form, last five LaLiga points,
+  starter likelihood and radar, a sortable squad table of LaLiga season totals that folds
+  players without minutes, and a Hierarchy levels dialog.
+- Lineup shows the predicted XI on the Lineup pitch with form and FSYP on each token, a
+  coach report, collapsible alternatives with hierarchy, and a starter dialog with a radar,
+  the last five matches and market buttons.
+- News & Injuries merges the club news feed and injured players. Known Spanish wording is
+  translated from local maps; other text uses on-demand translation.
+- Describe each widget with an About line, show a pulse ring and per-section skeletons
+  while a dossier loads, and announce a failed club index or dossier instead of drawing
+  an empty page. Phones get equal-width section tabs and icon-only competition filters.
+- Add the read-only clubs API (`GET /clubs`, `/clubs/{club_id}` and
+  `/clubs/{club_id}/roster-stats`) and private scraping routes for the club page and the
+  full capped news changelog. Cup and European matches take their venue from the club's
+  own printed name, and unrecognised competitions stay in the Other group.
+  See the [Clubs API](docs/api/clubs/README.md).
+- Refresh the README and frontend gallery with sixteen captures of Lineup, Market,
+  Players, Teams, player details and the lineup builder in both themes.
+
 ### Favorites and scouting
 
 - Confirm favorite saves and removals with localized success toasts after persistence;

@@ -62,6 +62,9 @@ export const paths = {
   weekWeather: (week: number): `/api/calendar/weeks/${number}/weather` => `/api/calendar/weeks/${weekNumber(week)}/weather`,
   weekStats: (week: number) => `/api/calendar/weeks/${weekNumber(week)}/stats`,
   playersCatalog: () => "/api/players",
+  clubs: () => "/api/clubs",
+  club: (clubId: string) => `/api/clubs/${weekNumber(Number(clubId))}`,
+  clubRosterStats: (clubId: string) => `/api/clubs/${weekNumber(Number(clubId))}/roster-stats`,
   playerLeague: (playerId: string, leagueId: string) =>
     `/api/players/${segment(playerId)}/league/${segment(leagueId)}`,
   market: (leagueId: string) => `/api/market/leagues/${segment(leagueId)}`,
@@ -83,6 +86,8 @@ export const paths = {
     `/api/players/${segment(playerId)}/stats/profile`,
   playerStatsFixtures: (playerId: string) =>
     `/api/players/${segment(playerId)}/stats/fixtures?competition=laliga&last=60`,
+  playerLaligaPoints: (playerId: string) =>
+    `/api/players/${segment(playerId)}/stats/fixtures?competition=laliga&last=5`,
   playerStatsDetail: (playerId: string, query?: PlayerStatsDetailQuery) => {
     const base = `/api/players/${segment(playerId)}/stats/detail`;
     if (!query) return base;

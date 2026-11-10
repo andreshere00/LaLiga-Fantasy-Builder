@@ -18,7 +18,7 @@ import originalFixtureWhiteUrl from "../../assets/button_original_fixture_white.
 import originalFixtureGrayUrl from "../../assets/button_original_fixture_gray.svg";
 import { pitchRowGapFraction, pitchRows } from "./pitchLayout";
 import { SQUAD_PICKER_EMPTY_MESSAGE } from "./playerTileCopy";
-import { squadCountLabel, squadPageSlice } from "./squadPanel";
+import { squadCountLabel, squadPageForPlayer, squadPageSlice } from "./squadPanel";
 import { SquadFilterDialog } from "./SquadFilterDialog";
 import { playerFormPresentation } from "../players/playerForm";
 import type { SquadPlayerStats } from "./useSquadStats";
@@ -85,7 +85,8 @@ export function LineupPage() {
 
 function LineupPageContent() {
   useTranslation();
-  const [searchParams] = useSearchParams();
+  const [searchParams, setSearchParams] = useSearchParams();
+  const focusPlayer = searchParams.get("focusPlayer");
   const board = useLineupBoard({ initialTeamId: searchParams.get("team") });
   const squadOffers = useOwnSquadOffers();
   const squadSales = useSquadSales();
@@ -130,8 +131,39 @@ function LineupPageContent() {
   const squadPageData = squadPageSlice(visibleSquad, filteredPage);
   const filterCount = activeSquadFilterCount(squadFilters);
   useEffect(() => { setFilteredPage(0); }, [board.selectedTeamId, picking, squadFilters]);
+  // A focus link pages to the player once and focuses the card once, then drops the param so
+  // later renders and manual paging are left alone.
+  const pagedFocus = useRef<string | null>(null);
+  const focusedPlayer = useRef<string | null>(null);
   useEffect(() => {
-    setSquadFilters(createEmptySquadFilters());
+    if (!focusPlayer || pagedFocus.current === focusPlayer) return;
+    const page = squadPageForPlayer(
+      visibleSquad.map((card) => card.masterPlayerId),
+      focusPlayer,
+    );
+    if (page == null) return;
+    pagedFocus.current = focusPlayer;
+    setFilteredPage(page);
+  }, [focusPlayer, visibleSquad]);
+  useEffect(() => {
+    if (!focusPlayer || pagedFocus.current !== focusPlayer) return;
+    if (focusedPlayer.current === focusPlayer) return;
+    const node = document.getElementById(`squad-player-${focusPlayer}`);
+    if (!(node instanceof HTMLElement)) return;
+    focusedPlayer.current = focusPlayer;
+    if (typeof node.scrollIntoView === "function") node.scrollIntoView({ block: "nearest" });
+    const button = node.querySelector("button");
+    if (button instanceof HTMLButtonElement) button.focus();
+    setSearchParams((current) => {
+      const next = new URLSearchParams(current);
+      next.delete("focusPlayer");
+      return next;
+    }, { replace: true });
+  }, [focusPlayer, squadPageData.pageItems, setSearchParams]);
+  useEffect(() => {
+    setSquadFilters((current) => (
+      activeSquadFilterCount(current) === 0 ? current : createEmptySquadFilters()
+    ));
     setFilterOpen(false);
   }, [board.selectedTeamId]);
   useEffect(() => {
@@ -633,14 +665,30 @@ function LineupPageContent() {
                         />
                       );
                       if (picking) {
-                        return <div className="squad-tile-slot" key={player.id}>{tile(() => board.pickSquadPlayer(player.id))}</div>;
+                        return (
+                          <div
+                            className="squad-tile-slot"
+                            id={player.masterPlayerId
+                              ? `squad-player-${player.masterPlayerId}`
+                              : undefined}
+                            key={player.id}
+                          >
+                            {tile(() => board.pickSquadPlayer(player.id))}
+                          </div>
+                        );
                       }
                       const pitchSlot = board.groups.flatMap((group) =>
                         group.players.map((slot) => ({ slot, role: group.role })),
                       ).find(({ slot }) => slot.id === player.id);
                       return (
-                        <SquadPlayerActions
+                        <div
+                          className="squad-tile-slot"
+                          id={player.masterPlayerId
+                            ? `squad-player-${player.masterPlayerId}`
+                            : undefined}
                           key={`${board.selectedTeamId}-${board.week}-${player.id}`}
+                        >
+                        <SquadPlayerActions
                           player={player}
                           sales={squadSales}
                           cardMenu
@@ -660,6 +708,7 @@ function LineupPageContent() {
                         >
                           {tile}
                         </SquadPlayerActions>
+                        </div>
                       );
                     })}
                   </div>

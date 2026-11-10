@@ -50,6 +50,6 @@ describe("endpoint contract coverage", () => {
       }
     }
 
-    expect(covered).toBe(59);
+    expect(covered).toBe(62);
   });
 });

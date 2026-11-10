@@ -147,7 +147,7 @@ backend/api/src/fantasy_api/
 ├── domain/           # AppUser, UpstreamError, …
 ├── security/         # Internal JWT validation
 ├── openapi.py        # OpenAPI generation and ERROR_RESPONSES
-└── cli/              # fantasy-leagues, fantasy-teams, fantasy-players, fantasy-calendar, fantasy-market, fantasy-buyout
+└── cli/              # fantasy-leagues, fantasy-teams, fantasy-players, fantasy-calendar, fantasy-market, fantasy-buyout, fantasy-clubs
 ```
 
 Process-lifetime wiring lives in `api/deps.py` (`AppContainer`): one shared
@@ -166,6 +166,7 @@ do not share a generic proxy class.
 | Leagues | `/leagues/...` | `{CMP}/leagues/...` | GET (reads) |
 | Lineup builder | `/lineup-builder/leagues/{league_id}/build` and `/build/stream` | Existing read-only services | POST planning only; JSON or request-scoped progress stream; JWT membership verified |
 | Teams | `/teams/...` | `{CMP}/teams/...` | GET + PUT (lineup write) |
+| Clubs | `/clubs`, `/clubs/{club_id}`, `/clubs/{club_id}/roster-stats` | Public teams-master, catalog, and calendar; private scraping club page | GET (internal JWT; no LaLiga bearer) |
 | Players | `/players/...` | `{CMP}/players`, `{CMP}/player/...` | GET (catalog + market value public; league card and stats authenticated) |
 | Calendar | `/calendar/...` | `{CMP}/week/...`, `{CMP}/calendar`, stats host; optional OpenWeather | GET (internal JWT; public Fantasy reads; per-match optional stadium forecasts) |
 | Standings | `/competitions/{id}/standings` | Public Fantasy calendar + teams-master; private official LaLiga scraper | GET (internal JWT; completed only) |

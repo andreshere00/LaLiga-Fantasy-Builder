@@ -17,11 +17,13 @@ from fantasy_api.clients.openweather import OpenWeatherClient
 from fantasy_api.clients.scouting_auth import ScoutingAuthClient
 from fantasy_api.clients.scraping import ScrapingClient
 from fantasy_api.config import Settings, get_settings
+from fantasy_api.domain.club_pages import load_futbolfantasy_club_pages
 from fantasy_api.domain.errors import UnauthorizedError
 from fantasy_api.domain.users import AppUser, extract_app_user_from_claims
 from fantasy_api.domain.venues import VenueDirectory
 from fantasy_api.repositories.buyout import BuyoutRepository
 from fantasy_api.repositories.calendar import CalendarRepository
+from fantasy_api.repositories.clubs import ClubsRepository
 from fantasy_api.repositories.fixture_standings import FixtureStandingsRepository
 from fantasy_api.repositories.leagues import LeaguesRepository
 from fantasy_api.repositories.lineup_builder import LineupBuilderRepository
@@ -38,6 +40,7 @@ from fantasy_api.security.internal_jwt import InternalJwtValidator
 from fantasy_api.services.buyout import BuyoutService
 from fantasy_api.services.calendar import CalendarService
 from fantasy_api.services.calendar_weather import CalendarWeatherService
+from fantasy_api.services.clubs import ClubsService
 from fantasy_api.services.fixture_standings import FixtureStandingsService
 from fantasy_api.services.leagues import LeaguesService
 from fantasy_api.services.lineup_builder import LineupBuilderService
@@ -84,6 +87,7 @@ class AppContainer:
         player_stats_service: Player stats orchestrator.
         football_client: Read-only football data provider client.
         standings_service: Real LALIGA classification orchestrator.
+        clubs_service: Real-club dossier orchestrator.
         calendar_weather_service: Optional matchday weather orchestrator.
     """
 
@@ -102,6 +106,7 @@ class AppContainer:
     player_stats_service: PlayerStatsService
     football_client: FootballClient
     standings_service: StandingsService | FixtureStandingsService
+    clubs_service: ClubsService
     calendar_weather_service: CalendarWeatherService
 
     scouting_service: ScoutingService | None = None
@@ -122,6 +127,37 @@ class AppContainer:
 
 
 _container: AppContainer | None = None
+
+
+def _clubs_service(
+    cfg: Settings,
+    fantasy: LaligaFantasyClient,
+    scraper: ScrapingClient,
+    standings: StandingsService | FixtureStandingsService,
+    resolver: PlayerResolver | None = None,
+    scraped: ScrapedPlayerProvider | None = None,
+) -> ClubsService:
+    """Wire the dossier onto the fixture cache when that source is active."""
+    fixtures = standings
+    if not isinstance(fixtures, FixtureStandingsService):
+        fixtures = FixtureStandingsService(
+            FixtureStandingsRepository(fantasy, scraper, competition_id=cfg.laliga_competition_id),
+            competition_id=cfg.laliga_competition_id,
+            ttl_seconds=cfg.standings_ttl_seconds,
+        )
+    repository = ClubsRepository(
+        fantasy,
+        scraper,
+        fixtures,
+        competition_id=cfg.laliga_competition_id,
+        catalog_ttl_seconds=cfg.player_catalog_ttl_seconds,
+    )
+    return ClubsService(
+        repository,
+        load_futbolfantasy_club_pages(),
+        resolver=resolver,
+        scraped=scraped,
+    )
 
 
 def build_container(
@@ -301,6 +337,7 @@ def build_container(
         player_stats_service=stats,
         football_client=football,
         standings_service=standings,
+        clubs_service=_clubs_service(cfg, fantasy, scraper, standings, resolver, scraped_provider),
         calendar_weather_service=CalendarWeatherService(
             CalendarRepository(fantasy, competition_id=cfg.laliga_competition_id),
             forecasts,

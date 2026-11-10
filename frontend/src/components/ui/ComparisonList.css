@@ -10,7 +10,8 @@
 .market-results-summary p { margin:0; }
 .market-page.comparison-page .market-list { border-color:var(--fb-line); }
 .market-page.comparison-page .market-row { column-gap:14px; padding:10px 14px; }
-.market-page.comparison-page .market-data-row { min-height:144px; padding-block:18px; box-sizing:border-box; }
+.market-page.comparison-page:not(.players-page) .market-data-row { min-height:96px; padding-block:8px; box-sizing:border-box; }
+.market-page.comparison-page.players-page .market-data-row { min-height:144px; padding-block:18px; box-sizing:border-box; }
 .market-page.comparison-page .market-head { min-height:52px; padding-block:4px; }
 .market-page.comparison-page .market-head-label { font-size:11px; letter-spacing:.025em; }
 .market-page.comparison-page .market-head-filter-icon { width:15px; height:15px; opacity:.7; }
@@ -18,7 +19,8 @@
 .market-page.comparison-page .market-head-filter.is-active .market-head-label { text-decoration:none; }
 .market-page.comparison-page .market-data-row:hover { background:var(--fb-subtle); }
 .market-page.comparison-page .market-data-row:focus-within { box-shadow:inset 3px 0 var(--fb-primary); }
-.market-page.comparison-page .market-card .player-tile { width:84px; height:112px; }
+.market-page.comparison-page:not(.players-page) .market-card .player-tile { width:64px; height:84px; }
+.market-page.comparison-page.players-page .market-card .player-tile { width:84px; height:112px; }
 .market-page.comparison-page .market-card .player-team-badge { max-width:24px; max-height:28px; }
 .market-page.comparison-page .market-name { font-size:14px; line-height:1.4; }
 .market-page.comparison-page .market-fsyp-primary { font-size:18px; }

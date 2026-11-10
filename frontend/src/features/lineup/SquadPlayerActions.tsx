@@ -61,7 +61,7 @@ export function SquadPlayerActions({
   onSwap?: () => void;
   opponentMarketOptions?: (open: boolean, onClose: () => void) => ReactNode;
   triggerText?: string;
-  detailsReturnTo?: "/market" | "/players";
+  detailsReturnTo?: string;
 }) {
   useTranslation();
   const offersMenu = useMarketOffersMenu();

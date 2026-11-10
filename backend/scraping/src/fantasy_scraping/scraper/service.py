@@ -43,7 +43,7 @@ from fantasy_scraping.scraper.probes import (
 )
 from fantasy_scraping.scraper.resolver import RouteResolver
 from fantasy_scraping.scraper.settings import ScraperSettings
-from fantasy_scraping.scraper.urls import check_season, laliga_slug, player_url
+from fantasy_scraping.scraper.urls import check_season, check_slug, laliga_slug, player_url
 
 LOGGER: logging.Logger = logging.getLogger(__name__)
 MAX_BATCH: int = 25
@@ -397,6 +397,42 @@ class ScraperService:
         if len(matches) > 1:
             raise AmbiguousPlayerError([candidate.slug for candidate in matches])
         return matches[0] if matches else None
+
+    async def download_club(
+        self, slug: str, *, season: str | None = None, options: ScrapeOptions | None = None
+    ) -> ScrapedPage:
+        """Download one club page.
+
+        Args:
+            slug: FutbolFantasy club slug.
+            season: Season key stored on the page. Defaults to the current season.
+            options: Per-request options.
+
+        Returns:
+            The cached or freshly downloaded club page.
+        """
+        return await self._club_page(season or current_season(), check_slug(slug), options)
+
+    async def download_club_news(
+        self, slug: str, *, season: str | None = None, options: ScrapeOptions | None = None
+    ) -> ScrapedPage:
+        """Download one club changelog.
+
+        Args:
+            slug: FutbolFantasy club slug.
+            season: Season key stored on the page. Defaults to the current season.
+            options: Per-request options.
+
+        Returns:
+            The cached or freshly downloaded ``ultimos-cambios`` page.
+        """
+        return await self._pages.download(
+            PageKind.CLUB_NEWS,
+            player_slug=check_slug(slug),
+            season=season or current_season(),
+            season_slug="",
+            options=options,
+        )
 
     async def _club_page(
         self, season: str, team: str, options: ScrapeOptions | None

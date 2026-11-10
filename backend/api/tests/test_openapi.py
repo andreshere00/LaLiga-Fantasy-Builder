@@ -5,6 +5,7 @@ from __future__ import annotations
 from pathlib import Path
 
 import pytest
+from fantasy_api.config import Settings
 from fantasy_api.endpoint_schemas_doc import generate_endpoint_schemas_doc
 from fantasy_api.main import create_app
 from fantasy_api.openapi import (
@@ -261,8 +262,8 @@ def test_openapi_cli_main_stdout(
 
 
 def test_swagger_openapi_route_matches_generated_schema() -> None:
-    # Arrange
-    app = create_app()
+    # Arrange — an empty scouting URL keeps the lifespan from dialing a developer's local Postgres
+    app = create_app(settings=Settings(scouting_database_url=""))
 
     # Act
     with TestClient(app) as client:

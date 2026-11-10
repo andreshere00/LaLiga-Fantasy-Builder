@@ -98,6 +98,8 @@ async def test_scrape_player_all_kinds_returns_profile_market_and_current_compet
         PageKind.CLUB,
         PageKind.COMPETITION,
     ]
+    assert PageKind.CLUB_NEWS in set(PageKind)
+    assert site.count("ultimos-cambios") == 0
     assert pages[2].player_slug == "barcelona" and pages[2].season_slug == ""
     assert pages[3].season_slug == "champions-26-27"
     assert site.count("copa-del-rey") == 0 and site.count("amistoso") == 0

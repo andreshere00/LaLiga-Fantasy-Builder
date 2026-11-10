@@ -20,6 +20,17 @@ export type SquadPageSlice<T> = {
   pageCount: number;
 };
 
+/** Page index that contains a master player, when that player is in the list. */
+export function squadPageForPlayer(
+  ids: readonly (string | null | undefined)[],
+  playerId: string | null,
+): number | null {
+  if (!playerId) return null;
+  const index = ids.findIndex((id) => id === playerId);
+  if (index < 0) return null;
+  return Math.floor(index / SQUAD_PAGE_SIZE);
+}
+
 /** Returns one page of squad cards. Every player stays reachable. */
 export function squadPageSlice<T>(items: readonly T[], page: number): SquadPageSlice<T> {
   const pageCount = Math.max(1, Math.ceil(items.length / SQUAD_PAGE_SIZE));

@@ -65,6 +65,7 @@ describe("Header", () => {
       expect(document.activeElement).toBe(screen.getByRole("option", { name: "Beta" }));
     });
     fireEvent.click(screen.getByRole("option", { name: "Beta" }));
+    expect(screen.getByRole("link", { name: "Teams" }).getAttribute("href")).toBe("/teams");
     expect(harness.selectLeague).toHaveBeenCalledWith("b");
     await waitFor(() => expect(document.activeElement).toBe(trigger));
   });

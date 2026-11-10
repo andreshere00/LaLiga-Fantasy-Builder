@@ -13,6 +13,7 @@ from fastapi.responses import JSONResponse
 from fantasy_api.api import (
     buyout,
     calendar,
+    clubs,
     leagues,
     lineup_builder,
     market,
@@ -94,6 +95,7 @@ def create_app(
     app.include_router(teams.router)
     app.include_router(calendar.router)
     app.include_router(standings.router)
+    app.include_router(clubs.router)
     app.include_router(players.router)
     app.include_router(player_stats.router)
     app.include_router(market.router)

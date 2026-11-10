@@ -1,0 +1,27 @@
+{
+  "verified_at": "2026-11-07",
+  "team_source": "https://fantasy-api.llt-services.com/api/v3/teams-master",
+  "slug_source": "https://www.futbolfantasy.com/sitemap-equipos.xml",
+  "clubs": [
+    {"team_id": 2, "name": "Atlético de Madrid", "slug": "atletico"},
+    {"team_id": 3, "name": "Athletic Club", "slug": "athletic"},
+    {"team_id": 4, "name": "FC Barcelona", "slug": "barcelona"},
+    {"team_id": 5, "name": "Real Betis", "slug": "betis"},
+    {"team_id": 6, "name": "Celta", "slug": "celta"},
+    {"team_id": 7, "name": "Elche CF", "slug": "elche"},
+    {"team_id": 8, "name": "RCD Espanyol", "slug": "espanyol"},
+    {"team_id": 9, "name": "Getafe CF", "slug": "getafe"},
+    {"team_id": 11, "name": "Levante UD", "slug": "levante"},
+    {"team_id": 12, "name": "Málaga CF", "slug": "malaga"},
+    {"team_id": 13, "name": "C.A. Osasuna", "slug": "osasuna"},
+    {"team_id": 14, "name": "Rayo Vallecano", "slug": "rayo-vallecano"},
+    {"team_id": 15, "name": "Real Madrid", "slug": "real-madrid"},
+    {"team_id": 16, "name": "Real Sociedad", "slug": "real-sociedad"},
+    {"team_id": 17, "name": "Sevilla FC", "slug": "sevilla"},
+    {"team_id": 18, "name": "Valencia CF", "slug": "valencia"},
+    {"team_id": 20, "name": "Villarreal CF", "slug": "villarreal"},
+    {"team_id": 21, "name": "Deportivo Alavés", "slug": "alaves"},
+    {"team_id": 26, "name": "RC Deportivo", "slug": "deportivo"},
+    {"team_id": 49, "name": "R. Racing Club", "slug": "racing"}
+  ]
+}

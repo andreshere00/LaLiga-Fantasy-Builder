@@ -1,0 +1,23 @@
+.bouncing-ball {
+  --ball-box: 2rem;
+  display: inline-flex; flex-direction: column; align-items: center; justify-content: flex-end;
+  width: var(--ball-box); height: var(--ball-box); flex: none;
+}
+.bouncing-ball--sm { --ball-box: 1rem; }
+.bouncing-ball--md { --ball-box: 2rem; }
+.bouncing-ball--lg { --ball-box: 3rem; }
+.bouncing-ball--xl { --ball-box: 4rem; }
+.bouncing-ball__ball {
+  width: 25%; height: 25%; border-radius: 50%; background: var(--fb-primary);
+  animation: bounceBall 0.6s ease-in-out infinite;
+}
+.bouncing-ball__shadow {
+  width: 25%; height: 2px; margin-top: 2px; border-radius: 50%; background: var(--fb-line);
+}
+@keyframes bounceBall {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-80%); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .bouncing-ball__ball { animation: none; }
+}

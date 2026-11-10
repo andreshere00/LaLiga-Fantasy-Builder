@@ -1,7 +1,7 @@
 # LaLiga Fantasy Builder
 
 Companion for a LaLiga Fantasy league: edit your lineup, browse player profiles,
-and manage market bids from the browser, backed by an API that proxies Fantasy
+study real LaLiga clubs, and manage market bids from the browser, backed by an API that proxies Fantasy
 data and user-confirmed writes with your linked account.
 
 | Topic | Doc |
@@ -11,7 +11,7 @@ data and user-confirmed writes with your linked account.
 | Backend, frontend, and cloud architecture | [ARCHITECTURE.md](ARCHITECTURE.md) |
 | Detailed service trust boundaries | [docs/architecture.md](docs/architecture.md) |
 | Google Cloud Terraform deployment | [infra/gcp/README.md](infra/gcp/README.md) |
-| UI behaviour (lineup, market, players) | [docs/frontend.md](docs/frontend.md) |
+| UI behaviour (lineup, market, players, teams) | [docs/frontend.md](docs/frontend.md) |
 | API routes and CLIs | [docs/api/README.md](docs/api/README.md) |
 | Agent / contributor rules | [AGENTS.md](AGENTS.md) |
 
@@ -77,6 +77,27 @@ requires reviewed inputs and deployment configuration. See
 [coverage](docs/scraping/radar-laliga-2026-27.md) and the
 [operations runbook](docs/scraping/radar-operations.md).
 
+### Teams (`/teams`)
+
+- Pick any of the 20 current LaLiga clubs from a crest strip; the page heading shows
+  the club's league position and points. The club, section, competition and match
+  window live in the URL, so refresh, Back and shared links keep the same view.
+- **Performance:** wins, draws and losses, W/D/L form chips and home/away split for a
+  competition (National league, European, Domestic cup, Other) and a 5, 10, 20 or
+  whole-season window, beside previous and upcoming matches with the next match
+  highlighted and each club linked.
+- **Players:** the club's three MVPs by FSYP with photo, age, form, last five LaLiga
+  scores, starter likelihood and radar, plus a sortable squad table of LaLiga season
+  totals and a Hierarchy levels dialog. Players without minutes fold away.
+- **Lineup:** the predicted XI on the Lineup pitch with starter chances, a coach
+  report, and alternatives per position with form, role and points. A player dialog
+  adds a radar, the last five matches and market actions.
+- **News & Injuries:** one merged feed of club news and injured players, with Spanish
+  wording translated locally and other text translated on demand.
+- Every widget opens with a short About line; sections show skeletons while the
+  dossier loads. The first read of a club can take about half a minute. See the
+  [Teams UI](docs/frontend.md#teams-screen) and [Clubs API](docs/api/clubs/README.md).
+
 ### Favorites and scouting
 
 - Save players with the bookmark before their name in Market or Players, or from
@@ -96,7 +117,7 @@ requires reviewed inputs and deployment configuration. See
 
 - **Identity** (`backend/identity`): Better Auth login, recovery, sessions and JWTs.
 - **LaLiga auth** (`backend/auth`): pairing, encrypted vault and refresh.
-- **API** (`backend/api`): leagues, teams, players, calendar, market,
+- **API** (`backend/api`): leagues, teams, clubs, players, calendar, market,
   buyout — OpenAPI at http://localhost:8001/docs when running locally. Player
   detail stats aggregate catalog, calendar, and private scraping data.
 - **Read-only CLIs** for market and buyout analysis; no automated bidding or
@@ -104,9 +125,11 @@ requires reviewed inputs and deployment configuration. See
 
 ## Screenshots
 
-These ten captures were taken from the signed-in application in a browser on
-27 October 2026 (Europe/Madrid), with real league and player data. Values and
-availability can change. See the [capture notes](docs/frontend.md#product-captures).
+These sixteen captures were taken from the signed-in application in a browser on
+9 November 2026 (Europe/Madrid), with real league and player data, and cover the
+Lineup, Market, Players and Teams tabs plus player details and the lineup builder.
+Values and availability can change. See the
+[capture notes](docs/frontend.md#product-captures).
 
 ### Light theme
 
@@ -115,6 +138,12 @@ availability can change. See the [capture notes](docs/frontend.md#product-captur
 ![Live market in light theme](docs/images/screenshots/market-live-light.jpg)
 
 ![Live players catalog in light theme](docs/images/screenshots/players-live-light.jpg)
+
+![Teams club dossier, Performance in light theme](docs/images/screenshots/teams-live-light.jpg)
+
+![Teams club dossier, Players in light theme](docs/images/screenshots/teams-players-live-light.jpg)
+
+![Teams club dossier, predicted lineup in light theme](docs/images/screenshots/teams-lineup-live-light.jpg)
 
 ![Ionut Radu player details in light theme](docs/images/screenshots/details-ionut-radu-live-light.jpg)
 
@@ -127,6 +156,12 @@ availability can change. See the [capture notes](docs/frontend.md#product-captur
 ![Live market in dark theme](docs/images/screenshots/market-live-dark.jpg)
 
 ![Live players catalog in dark theme](docs/images/screenshots/players-live-dark.jpg)
+
+![Teams club dossier, Performance in dark theme](docs/images/screenshots/teams-live-dark.jpg)
+
+![Teams club dossier, Players in dark theme](docs/images/screenshots/teams-players-live-dark.jpg)
+
+![Teams club dossier, predicted lineup in dark theme](docs/images/screenshots/teams-lineup-live-dark.jpg)
 
 ![Lamine Yamal player details in dark theme](docs/images/screenshots/details-lamine-yamal-live-dark.jpg)
 

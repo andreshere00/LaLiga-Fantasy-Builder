@@ -69,10 +69,11 @@ uv run fantasy-calendar --week 10 --weather --json
 uv run fantasy-standings --season 2026 --json
 uv run fantasy-market --league-id 123 --json
 uv run fantasy-buyout --league-id 123 --player-team-id pt-9 --json
+uv run fantasy-clubs 20 --json
 ```
 
 Signed-in analysis from auth: `uv run fantasy-browser-session leagues-analysis`.
-`fantasy-market` and `fantasy-buyout` are read-only.
+`fantasy-market`, `fantasy-buyout` and `fantasy-clubs` are read-only.
 
 `fantasy-calendar --weather` adds optional stadium kickoff forecasts using the
 existing `OPENWEATHER_API_KEY`. Calendar/weather reads need app login only,

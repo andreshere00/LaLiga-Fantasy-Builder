@@ -2,7 +2,8 @@
 
 React app in `frontend/` (Vite, Bun). It is the browser entry point for
 LaLiga Fantasy Builder: sign-in, league selection, lineup editing, player
-catalog and profiles, and an interactive market board. It never calls LaLiga
+catalog and profiles, an interactive market board, and a Teams tab with one dossier
+per real LaLiga club. It never calls LaLiga
 directly and keeps the internal JWT in memory only.
 
 - System map: [Architecture](architecture.md)
@@ -47,8 +48,10 @@ units, competition categories, partial-data errors, and accessible names also
 follow the selected language. Partial-data messages use stable error codes; raw
 provider details are not translation keys.
 
-Only FutbolFantasy injury diagnoses, free-form injury availability notes, and
-news headlines request machine translation. Spanish shows the original. English
+Known FutbolFantasy wording is translated from closed, tested maps
+(`teamInjuryLabels.ts`, `teamNewsLabels.ts`): recovery phases, diagnoses, return
+notes, and the generated changelog sentences. Only wording outside those maps (other
+diagnoses and return notes, article headlines) requests machine translation. Spanish shows the original. English
 uses GTranslate Free in a separate opaque sandbox document for each visible
 text block; no application credentials or whole API responses are passed in.
 Results are ephemeral presentation state. Show original and Retry translation
@@ -77,7 +80,7 @@ surfaces, thin borders and coral primary actions. All buttons and button-styled
 links have rectangular corners, enforced globally across pages and portaled
 overlays. The header's **Dark/Light** control switches the whole document,
 including portaled overlays and charts.
-At widths up to 1000px, the main **Lineup / Market / Players** navigation is
+At widths up to 1000px, the main **Lineup / Market / Players / Teams** navigation is
 fixed to the bottom of the viewport. It accounts for device safe areas, keeps
 the active destination visible, and reserves space below the footer so content
 is not covered. Branding and account options stay in the top header; desktop
@@ -143,50 +146,66 @@ or close-button dismissal until a result is available. Closing an idle dialog
 restores focus to its originating control. Date-range editing still uses an
 explicit Apply/Cancel workflow.
 
-Automated browser checks use fictional, deterministic account data. The ten
+Automated browser checks use fictional, deterministic account data. The sixteen
 product captures below come from a signed-in browser session with real league and
 player data. Screenshot assets live under [`docs/images/screenshots/`](images/screenshots/).
 Keep captions and screenshots in the same change.
 
 ### Product captures
 
-Captured on 27 October 2026 (Europe/Madrid) from the running local React app.
+Captured on 9 November 2026 (Europe/Madrid) from the running local React app.
 Each image shows the actual browser-rendered interface and live API data at capture
-time, including the account's league, lineup, market, and player profiles. Values,
-standings, availability, and market listings may change. The browser chrome was
-cropped away and the application viewport was reduced to 1512 × 760 pixels for
-documentation. The [project README](../README.md#screenshots) contains the same gallery.
+time, including the account's league, lineup, market, player profiles and the
+Athletic Club dossier on Teams. Values, standings, availability, market listings and
+published radar or profile data may change. The browser chrome was cropped away and
+the application viewport was set to 1512 × 782 pixels for documentation. The
+[project README](../README.md#screenshots) contains the same gallery.
 
 #### Light theme
 
-![Live lineup and squad in light theme](images/screenshots/lineup-live-light.jpg)
+![Live lineup in light theme](images/screenshots/lineup-live-light.jpg)
 
-![Live market listings in light theme](images/screenshots/market-live-light.jpg)
+![Live market in light theme](images/screenshots/market-live-light.jpg)
 
-![Live player catalog in light theme](images/screenshots/players-live-light.jpg)
+![Live players catalog in light theme](images/screenshots/players-live-light.jpg)
 
-![Ionut Radu profile in light theme](images/screenshots/details-ionut-radu-live-light.jpg)
+![Teams club dossier, Performance in light theme](images/screenshots/teams-live-light.jpg)
 
-![Lineup builder with the live squad in light theme](images/screenshots/lineup-builder-live-light.jpg)
+![Teams club dossier, Players in light theme](images/screenshots/teams-players-live-light.jpg)
+
+![Teams club dossier, predicted lineup in light theme](images/screenshots/teams-lineup-live-light.jpg)
+
+![Ionut Radu player details in light theme](images/screenshots/details-ionut-radu-live-light.jpg)
+
+![Live lineup builder in light theme](images/screenshots/lineup-builder-live-light.jpg)
 
 #### Dark theme
 
-![Live lineup and squad in dark theme](images/screenshots/lineup-live-dark.jpg)
+![Live lineup in dark theme](images/screenshots/lineup-live-dark.jpg)
 
-![Live market listings in dark theme](images/screenshots/market-live-dark.jpg)
+![Live market in dark theme](images/screenshots/market-live-dark.jpg)
 
-![Live player catalog in dark theme](images/screenshots/players-live-dark.jpg)
+![Live players catalog in dark theme](images/screenshots/players-live-dark.jpg)
 
-![Lamine Yamal profile in dark theme](images/screenshots/details-lamine-yamal-live-dark.jpg)
+![Teams club dossier, Performance in dark theme](images/screenshots/teams-live-dark.jpg)
 
-![Lineup builder with the live squad in dark theme](images/screenshots/lineup-builder-live-dark.jpg)
+![Teams club dossier, Players in dark theme](images/screenshots/teams-players-live-dark.jpg)
+
+![Teams club dossier, predicted lineup in dark theme](images/screenshots/teams-lineup-live-dark.jpg)
+
+![Lamine Yamal player details in dark theme](images/screenshots/details-lamine-yamal-live-dark.jpg)
+
+![Live lineup builder in dark theme](images/screenshots/lineup-builder-live-dark.jpg)
 
 #### Refreshing screenshots
 
 Open a signed-in local application session, select the intended league, and visit
-`/`, `/market`, `/players`, and each player's profile. Capture both themes and the
-builder setup dialog directly from the browser. Check that images and data have
-loaded, and review the ten resulting images together before updating captions.
+`/`, `/market`, `/players`, one player's profile, and a club on Teams (`/teams/{clubId}`
+for the Performance view, then `?section=players` and `?section=lineup`). Capture both
+themes (switch with the theme control in Options) and the builder setup dialog directly
+from the browser. The first read of a club scrapes every profile and can take about half
+a minute, so wait until the season statistics, MVP form and radar have loaded before
+capturing. Review the sixteen resulting images together before updating captions.
 The builder setup view is read-only; no build, bid, trade, or lineup save is needed.
 
 ## Running locally
@@ -207,8 +226,161 @@ and the API.
 | `/market` | Market — listings, bids, release clauses | [Market](api/market/README.md), [Buyout](api/buyout/README.md), [Players](api/players/README.md), [Calendar](api/calendar/README.md) |
 | `/players` | Players — catalog, filters, top-10 leaderboard | [Players](api/players/README.md), [Calendar](api/calendar/README.md) |
 | `/players/:playerId` | Player detail — stats aggregate | [Players](api/players/README.md) (`GET /players/{id}/stats/detail`) |
+| `/teams` | Teams — opens the first current club for the selected language | [Clubs](api/clubs/README.md) |
+| `/teams/:clubId` | One club dossier: players, results, predicted lineup, news and injuries | [Clubs](api/clubs/README.md) |
 
 The shell header switches routes. The league dropdown applies to lineup, market, and players.
+Teams reads the current club directory and one dossier; it does not use the manager-squad API.
+
+### Teams screen
+
+`/teams` opens the first current club in the selected language. `/teams/:clubId`
+keeps the club. The page heading is that club, with its crest and, when the LaLiga
+standings load, its league position and points. The crest
+strip chooses another club. Each club is a tile with its crest and the three-letter
+short name under it, so clubs stay recognisable by two cues; the current club's tile is
+tinted and outlined, and the strip scrolls it into view on narrow screens.
+The query keeps `section`, `competition`, and `window` when they differ from
+Performance, LaLiga, and five matches. Refresh restores that URL. A signed-out
+visit uses the same sign-in gate as Market and Players.
+While the club directory or the dossier loads, a `PulseRing` announces "Loading the club
+dossier." and each section that has not arrived is a `TeamSectionSkeleton`: the real
+heading and id (so deep links and the section bar still land) over skeleton blocks shaped
+like the finished content, marked `aria-busy`. The club strip shows skeleton tiles until the
+directory arrives. A section left empty after the load stays a plain anchor. Season
+statistics that are still loading show a small `PulseRing` above the squad table.
+The club strip and the Performance, Players, Lineup, and News & Injuries links (each with a
+decorative icon, in that order and in the same order down the page) stay available from the
+keyboard. That bar is named **Club sections**, separate
+from the header's Sections navigation. On a phone the four header destinations move to
+the bottom bar and keep their labels inside the safe area.
+
+The Club sections bar is sticky and follows the section being read as the page
+scrolls; selecting a link, or opening a `?section=` URL, jumps to that section and
+keeps the jump in place while images and radar chips finish loading, until the
+reader scrolls. Sections are separated by a rule and share one heading style.
+
+On a wide screen the three MVP cards share a row, the competition filter sits
+beside the match window, previous matches beside upcoming ones, and the coach
+report beside the XI summary. Predicted starters stand on the same pitch markings
+as Lineup, in the published position lines, with the bench beside the pitch. The
+squad table stays full width once event columns are published; with only FSYP it
+is capped so position and points stay beside the name. A phone stacks each pair.
+News & Injuries puts the injured players beside the news feed; a phone stacks them, injuries first.
+On a phone the four section links become equal-width tabs with the icon above the label.
+Performance shows the match window at the right end of the filter row on wide screens, and on
+a narrow screen the competition buttons keep only their logo (the name stays as the accessible
+name and tooltip).
+
+Every widget opens with an **About** line: one visible sentence under its heading that says
+what the widget is, not what it currently shows. The fixed, translated texts live in
+`teamSummaries.ts` (`widgetDescription`) and are shown by `TeamSummary` for Overview, Previous
+and Upcoming matches, MVPs, Squad, Hierarchy levels, Starters, Coach, Alternatives, Injured
+players, and News. They carry no numbers, so they stay true whatever the data says. The widget's
+own list, table, or group points back to its description with `aria-describedby`, so a screen
+reader announces it again when that element is entered. In Performance the three lines (Overview,
+Previous matches, Upcoming matches) share one **About** block under the section title (`TeamAbout`): a single line naming the
+widgets that opens to show each description, instead of repeating inside every card.
+
+The squad table folds players with a published zero in the Minutes column, or a published zero
+FSYP, behind a full-width "Show players without minutes" toggle (`splitIdle`); a blank is not a
+zero, and when every row would be folded they all stay visible. The Hierarchy levels dialog leaves
+the same players out (and any level that only held them) until its own toggle is used.
+
+Alternatives show each substitute's squad role (hierarchy) beside form and points when the
+player profile publishes one; the profile is read when its position group is opened, so a
+substitute without a matching profile shows no badge. Below the squad table, **Hierarchy levels**
+opens a dialog listing every squad player under their role, most important first (God, Key
+player, Important, Rotation, Impact substitute, Other, Reserve, then Unknown and Unavailable),
+best scorers first inside each role, with photo, position, and points. The roles come from one
+player-profile read per player, so nothing is requested until the dialog is first opened; while
+they load, the dialog shows `Skeleton` placeholders shaped like the list. Once read, the block
+also shows a tally chip per level.
+
+Players lists the top three footballers by published season points as ranked
+cards: the player photo (from the shared players catalog, with a person icon
+fallback), the position name and age (age from the profile birth date, omitted
+when not published), a position badge, FSYP with the Fantasy points of the last
+five LaLiga matches on its right (oldest first, with a colored base for negative, mid,
+and 10-plus scores, loaded per player), form with its icon and a colored stripe
+(red, amber, or green by rating), starter likelihood as a percentage with a bar,
+and the compact percentile radar chart that the player detail page also uses
+(`PlayerRadarChart`). Starter likelihood of 90% or more turns the percentage chip
+and bar red, with a hidden text cue. The exact radar percentiles stay available
+to screen readers in a hidden table. A player without a radar says so. The squad table leads with player, a position
+badge, and FSYP with a bar scaled to the squad's top score, then the twelve event
+columns (set one size smaller so player, position, and FSYP lead; each player name links to
+the player detail page and Back returns to the club): Minutes, Goals, Assists, Dribbles, Penalties committed, Penalties saved,
+Shots, Recoveries, Saves, Balls lost, Yellow cards, and Red cards. These are LaLiga
+season totals from `GET /api/clubs/{id}/roster-stats`, requested after the dossier
+because the first read of a club scrapes every profile (about half a minute); the
+table shows FSYP at once, a status line while the counts load, and a Retry on
+failure. A footballer without a published profile, or a count the page omits, stays a
+dash and is never summed as zero; the caption names how many players are blank. Zeros are muted so scorers stand out; a blank stays a dash. Only the
+player column is pinned, so event columns remain reachable on a phone. Sort headers
+are buttons. Totals skip unpublished counts. A short window and a missing matchweek
+list are named in the caption.
+
+Performance labels its two segmented controls, **Competition** and **Match window**.
+LaLiga is the default competition; European, Domestic, Friendlies, and All use the
+same control as the record. The window starts at five previous and five next
+matches and widens to 10, 20, or the whole season. One panel shows wins, draws and
+losses, the results as W/D/L chips from oldest to newest, the home and away split,
+and goals, all following the finished matches in that window. Matches are compact
+rows: date, the two clubs with crests (the viewed club in bold), the score or the
+kickoff time, and an outcome chip with a colored rail. The soonest scheduled
+kickoff inside the filter is labeled **Next match**. A kickoff that arrives as a
+date at midnight UTC is a date without a published time, so the row shows **vs**
+instead of an invented hour. The competition name appears only outside LaLiga. A
+score beyond 90 minutes shows the regulation score and the published final score.
+An empty filter names itself and offers all competitions. A failed cup or European
+read stays visible while LaLiga matches remain usable.
+
+Lineup opens with one coach card: season predictability leads, then the matchday
+predictability badge and the rotation note, then the XI averages (probability, form on a
+1 to 5 scale, substitute risk). Known Spanish wording (predictability, rotations, "2.64
+jugs") is translated locally; only unknown free text uses the translation widget.
+Starters stand on a larger pitch (up to 620px) whose photos, type and margins scale with
+its own width (container units), grouped by the published position line from attack to
+goalkeeper. Each token shows the probability, the form icon, and an FSYP tag (a squared
+two-tone label, so it reads apart from the round form icon). Selecting a token opens a
+dialog with probability, form, FSYP, a Market options block (every bid, direct offer, release
+clause, modify or cancel option the listing offers, as visible buttons with the reason when one
+is off; shown only when the league has a listing for that player), Player details, the bookmark,
+Field player, the last five LaLiga points, a collapsible per-match stat list (newest first, with
+the Fantasy points each stat earned) and the percentile radar. Starting a bid or clause closes
+the dialog first. Alternatives sit in a narrower column as one collapsible group per line (goalkeeper to
+attack), each header showing the translated line, a count and, when collapsed, the two
+likeliest names; the line holding the likeliest alternative starts open and Expand all
+opens the rest. Rows show form, FSYP, last five points, a probability bar (red from 90%)
+and a quiet bookmark toggle. Every resolved name links to the player page and Back returns to this club. Published names
+("I. Williams") are matched first inside the club squad (initial plus surname), then in the
+catalog; an unmatched name stays plain text marked "Details unavailable". Form loads for the XI and for open alternative lines; last-five points follow the same ids. Market actions use the
+existing menu and dialogs only when the selected league has a listing, bid, clause, or
+sale. **Field player** appears only for a player that league owns. It opens Lineup and
+focuses that squad card; it does not place the player or save the lineup.
+An unresolved scraped name stays visible and says that Fantasy actions are
+unavailable.
+
+**News & Injuries** (`section=news`) has two blocks with a heading and a one-line subtitle each.
+
+Injured players are cards ordered by squad role (the player profile's hierarchy, the same
+value and icon as the player details page), then FSYP. Each card shows the photo, name
+(linked to the player when the name matches the club squad), FSYP, hierarchy, injury type,
+recovery phase, expected return, and start date with elapsed days, plus the medical-report
+link when the source publishes one. Names are matched against the club squad
+(`matchRosterPlayer`); an unmatched player keeps the card with dashes for FSYP and
+hierarchy. The phase badge is neutral because severity is not published. An unpublished
+injury block stays distinct from a published empty list.
+
+News is the club's `ultimos-cambios` feed: about the last week of events, grouped by Madrid
+calendar day, each with a kind tag (injury update, lineup, squad list, international duty).
+It shows five events and offers 10, 20, and All (steps that would equal All are hidden, and the
+control disappears for five or fewer), with a live line such as "Showing 5 of 37 events,
+covering 7 days." The source publishes no season history, so All is the whole feed. Only
+events that open an article or a match show a link (marked as opening in a new tab);
+events that point back to the club page do not. A failed news or injury segment names
+itself and can be retried without clearing the sections that loaded.
 
 ### Fixture matches and stadium weather
 

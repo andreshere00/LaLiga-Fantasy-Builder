@@ -12,6 +12,7 @@ from fastapi import FastAPI, Request
 from fastapi.responses import JSONResponse
 from pydantic import BaseModel
 
+from fantasy_scraping.api.clubs import router as clubs_router
 from fantasy_scraping.api.players import router as players_router
 from fantasy_scraping.api.radar import router as radar_router
 from fantasy_scraping.api.schemas import ErrorResponse
@@ -135,6 +136,7 @@ def create_app(
     app.state.get_standings_service = get_standings_service
     app.include_router(scrape_router)
     app.include_router(players_router)
+    app.include_router(clubs_router)
     app.include_router(standings_router)
     app.include_router(radar_router)
     app.include_router(health_router)

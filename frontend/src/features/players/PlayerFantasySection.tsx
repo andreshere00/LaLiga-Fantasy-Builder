@@ -3,11 +3,6 @@ import { ScrapedText } from "../translation/ScrapedText";
 import { t, useTranslation } from "../../i18n";
 import { NumberPagination } from "../../components/ui/NumberPagination";
 import { Help } from "../../components/ui/Help";
-import hierarchyGod from "../../assets/button_hierarchy_god.svg";
-import hierarchyKey from "../../assets/button_hierarchy_key.svg";
-import hierarchyImportant from "../../assets/button_hierarchy_important.svg";
-import hierarchyRotation from "../../assets/button_hierarchy_rotation.svg";
-import hierarchyReserve from "../../assets/button_hierarchy_reserve.svg";
 import starterHigh from "../../assets/button_starter_high.svg";
 import starterMid from "../../assets/button_starter_mid.svg";
 import starterLow from "../../assets/button_starter_low.svg";
@@ -15,6 +10,7 @@ import injuryGreen from "../../assets/button_injury_green.svg";
 import injuryYellow from "../../assets/button_injury_yellow.svg";
 import injuryRed from "../../assets/button_injury_red.svg";
 import injuryGray from "../../assets/button_injury_gray.svg";
+import { hierarchyPresentation, normalizedFantasyValue } from "./hierarchy";
 import { playerFormPresentation } from "./playerForm";
 import { starterProbabilityTone } from "./starterProbability";
 import { useEffect, useId, useState } from "react";
@@ -28,21 +24,6 @@ type FantasySectionProps = {
 };
 
 const HISTORY_PAGE_SIZE = 5;
-const HIERARCHY_LABELS: Record<string, string> = {
-  dios: "God",
-  god: "God",
-  clave: "Key player",
-  key: "Key player",
-  importante: "Important",
-  important: "Important",
-  rotacion: "Rotation",
-  rotation: "Rotation",
-  revulsivo: "Impact substitute",
-  otro: "Other",
-  other: "Other",
-  reserva: "Reserve",
-  reserve: "Reserve",
-};
 
 const INJURY_RISK_LABELS: Record<string, string> = {
   unknown: "Unknown",
@@ -54,15 +35,6 @@ const INJURY_RISK_LABELS: Record<string, string> = {
   alto: "High",
   high: "High",
 };
-
-function normalizedFantasyValue(value: string): string {
-  return value
-    .normalize("NFD")
-    .replace(/[\u0300-\u036f]/g, "")
-    .trim()
-    .toLocaleLowerCase("en")
-    .replace(/[\s-]+/g, "_");
-}
 
 function HistoryNavigator({
   page,
@@ -122,11 +94,7 @@ export function PlayerFantasySummary({ profile }: FantasySectionProps) {
   const startProbability = asRecord(profile?.startProbability);
   const form = asRecord(profile?.form);
   const injuryRisk = asRecord(profile?.injuryRisk);
-  const hierarchyRaw = text(hierarchy?.label);
-  const hierarchyKeyValue = hierarchyRaw ? normalizedFantasyValue(hierarchyRaw) : "";
-  const hierarchyLabel = hierarchyRaw
-    ? HIERARCHY_LABELS[hierarchyKeyValue] ?? "Unknown"
-    : "Unavailable";
+  const role = hierarchyPresentation(text(hierarchy?.label));
   const reportedStartPercent = asFiniteNumber(startProbability?.percent);
   const startPercent = reportedStartPercent != null && reportedStartPercent >= 0 &&
     reportedStartPercent <= 100 ? reportedStartPercent : null;
@@ -139,16 +107,6 @@ export function PlayerFantasySummary({ profile }: FantasySectionProps) {
   const injuryLabel = injuryRaw
     ? INJURY_RISK_LABELS[normalizedFantasyValue(injuryRaw)] ?? "Unknown"
     : "Unavailable";
-  const hierarchyKeyText = hierarchyKeyValue;
-  const hierarchyIcon = hierarchyKeyText.includes("dios") || hierarchyKeyText === "god"
-    ? hierarchyGod
-    : hierarchyKeyText.includes("clave") || hierarchyKeyText.includes("key")
-      ? hierarchyKey
-    : hierarchyKeyText.includes("rotacion") || hierarchyKeyText.includes("rotation")
-        ? hierarchyRotation
-        : hierarchyKeyText.includes("reserva") || hierarchyKeyText.includes("reserve")
-          ? hierarchyReserve
-          : hierarchyImportant;
   const starterIcon = { low: starterLow, mid: starterMid, high: starterHigh }[
     starterProbabilityTone(startPercent) ?? "low"
   ];
@@ -188,11 +146,11 @@ export function PlayerFantasySummary({ profile }: FantasySectionProps) {
         <dd>
           <span className="player-fantasy-summary-value">
             <span className="player-outlook-icon" aria-hidden="true">
-              {hierarchyRaw ? <img src={hierarchyIcon} alt=""
-                className={hierarchyIcon === hierarchyImportant ? "player-outlook-neutral-icon" : undefined} /> : "—"}
+              {role.raw ? <img src={role.icon} alt=""
+                className={role.neutral ? "player-outlook-neutral-icon" : undefined} /> : "—"}
             </span>
-            <span>{t(hierarchyLabel)}</span>
-            {hierarchyRaw && !HIERARCHY_LABELS[hierarchyKeyValue] ? <small>{t("Original source label: {{0}}", { 0: hierarchyRaw })}</small> : null}
+            <span>{t(role.label)}</span>
+            {role.raw && !role.known ? <small>{t("Original source label: {{0}}", { 0: role.raw })}</small> : null}
           </span>
           <span className="player-outlook-caption">{t("Role in the squad")}</span>
         </dd>

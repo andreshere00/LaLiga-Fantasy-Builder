@@ -37,6 +37,14 @@ OPENAPI_TAGS: list[dict[str, str]] = [
         "description": "User-owned favorites, per-league watches and persistent alerts.",
     },
     {
+        "name": "clubs",
+        "description": (
+            "Real LaLiga club dossiers. Internal JWT; no LaLiga bearer. "
+            "Roster and LaLiga results are public Fantasy reads. "
+            "Predicted XI, injuries, and news come from the scraping service."
+        ),
+    },
+    {
         "name": "standings",
         "description": (
             "Real LALIGA club classification. Internal JWT; no LaLiga pairing. "
