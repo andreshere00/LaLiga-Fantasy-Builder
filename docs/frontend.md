@@ -255,7 +255,7 @@ keyboard. That bar is named **Club sections**, separate
 from the header's Sections navigation. On a phone the four header destinations move to
 the bottom bar and keep their labels inside the safe area.
 
-The Club sections bar is sticky and follows the section being read as the page
+The Club sections bar (the shared `.fb-section-tabs` style, also used by player details) is sticky and follows the section being read as the page
 scrolls; selecting a link, or opening a `?section=` URL, jumps to that section and
 keeps the jump in place while images and radar chips finish loading, until the
 reader scrolls. Sections are separated by a rule and share one heading style.
@@ -511,13 +511,14 @@ assists without a goal remain separate from key passes. Source definitions and
 calculation details remain available inside the dialog. No API contracts changed.
 
 Section shortcuts link directly to keyboard-focusable headings for Overview,
-Form, Market value, Matches, and News & injuries. Centered desktop shortcuts
-stay beneath the app header and identify the current reading section with a
-rectangular selection, a coral marker, and `aria-current="location"`.
+Form, Market value, Matches, and News & injuries. They use the shared
+`.fb-section-tabs` bar from the design system, the same one as the Teams club
+sections: a sticky bar beneath the app header whose current tab has a coral
+underline and `aria-current="location"`. On phones the tabs become equal-width
+cells with the icon above the label; on screens 500px tall or less (landscape
+phones) the bar scrolls with the page.
 The current section updates when scrolling, using links, or navigating history.
-On phones, the shortcuts form a horizontally scrollable strip that flows
-normally with the page; the active link scrolls into the strip's viewport
-without moving page focus. Links retain native heading focus and URL hashes.
+If the bar overflows, the active link scrolls into view without moving page focus. Links retain native heading focus and URL hashes.
 Phone profiles place the portrait beside the player's identity. This grouping
 applies [proximity](https://lawsofux.com/law-of-proximity/) and
 [chunking](https://lawsofux.com/chunking/) to the existing data and design system.
@@ -628,10 +629,12 @@ dividers without entrance motion. Filters edit a draft in a desktop side panel
 or mobile bottom panel; Apply writes the existing URL state, while Cancel or
 Escape discards edits. Catalog pagination uses a sliding three-number window.
 
-Above **700px**, the catalog retains all comparison columns through horizontal
-scrolling. At **700px or less**, labeled player cards retain points, form,
-market value, clause, availability, ownership, and actions. Column filters remain
-in a horizontally scrollable strip. Loading placeholders follow the row layout.
+Above **1280px**, the catalog shows every comparison column side by side. From
+**1001px to 1280px** (tablet landscape), Team sits under the player name and Owned
+by under Availability, so the table fits without horizontal scrolling. At
+**1000px or less**, labeled player cards retain points, form, market value, clause,
+availability, ownership, and actions, two per row above 700px and one per row
+below. Column filters wrap onto as many lines as needed instead of scrolling. Loading placeholders follow the row layout.
 
 Market value also groups **Your bid** (red, only for a current bid) and **Release
 clause**, including its shield and lock countdown. Phone cards keep these facts
@@ -902,8 +905,7 @@ Not applicable for a LaLiga listing without a clause, and Unavailable for other
 unknown values. The shield beside it follows the theme foreground (white in dark
 mode); the separate red protection icon stays red. The clause lock countdown stays
 with the clause value. Seller navigation remains in Sell options. Market value
-and clause details remain reachable by scrolling the table horizontally on smaller
-screens. Bid/direct-offer
+and clause details stay visible at every width; nothing scrolls sideways. Bid/direct-offer
 dialog actions, close and counter buttons have square corners, including disabled
 controls. Market and Players share typography, protection and score styling while
 keeping their own responsive column layouts.
@@ -998,9 +1000,9 @@ mobile retains horizontal scrolling with pinned team identities. The bounded
 vertical table area keeps its heading, refresh action and column headers nearby.
 
 The market uses comparison rows with a 144px minimum height on desktop and
-labeled player cards at 700px and below. Phone cards keep points, form history, market value, availability,
-expiry and seller actions visible; column filters remain in a horizontally
-scrollable strip. The result count reflects the active filters. Season averages
+labeled player cards at 1000px and below (two per row above 700px). From 1001px to 1100px
+Availability sits above Offer ends in one column. Cards keep points, form history, market value, availability,
+expiry and seller actions visible; column filters wrap instead of scrolling. The result count reflects the active filters. Season averages
 are labeled explicitly, and LaLiga listings omit the inapplicable release-clause
 line. Transaction dialogs and confirmations retain their existing behavior.
 
