@@ -1,4 +1,5 @@
 import { ScrapedText } from "../translation/ScrapedText";
+import { ClubLink } from "../../components/links/EntityLinks";
 import { t, useTranslation } from "../../i18n";
 import { PulseRing } from "../../components/ui/PulseRing";
 import { Button, buttonVariants } from "../../components/ui/Button";
@@ -411,7 +412,7 @@ function PlayerDetailBody({ masterId }: PlayerDetailBodyProps) {
           />
           <div className="player-detail-header-text">
             <div className="player-detail-header-facts">
-              <span>{teamName ?? MISSING_STAT}</span>
+              <span>{teamName ? <ClubLink teamId={clubTeamId} badgeUrl={shownBadgeUrl} name={teamName}>{teamName}</ClubLink> : MISSING_STAT}</span>
               <span className="player-profile-position">{(positionLabel(positionId) ?? MISSING_STAT)}</span>
               {age != null ? <span>{age} {t(" years old")}</span> : null}
             </div>

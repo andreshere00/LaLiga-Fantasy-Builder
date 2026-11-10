@@ -1,5 +1,5 @@
 import type { ReactNode } from "react";
-import { Link } from "react-router-dom";
+import { Link, useInRouterContext } from "react-router-dom";
 
 import { teamsClubId, teamsClubIdFromName } from "../../api/clubMedia";
 import { clubTeamPath } from "../../features/teams/teamRoutes";
@@ -15,8 +15,9 @@ function classes(base: string, extra?: string): string {
 export function ClubLink({ teamId, badgeUrl, name, className, children }: LinkProps & {
   teamId?: unknown; badgeUrl?: string | null; name?: string | null;
 }) {
+  const routed = useInRouterContext();
   const clubId = teamsClubId(teamId, badgeUrl) ?? teamsClubIdFromName(name);
-  if (!clubId) return <span className={className}>{children}</span>;
+  if (!clubId || !routed) return <span className={className}>{children}</span>;
   return <Link className={classes("entity-link", className)} to={clubTeamPath(clubId)}>{children}</Link>;
 }
 
@@ -24,7 +25,8 @@ export function ClubLink({ teamId, badgeUrl, name, className, children }: LinkPr
 export function PlayerLink({ playerId, returnTo, className, children }: LinkProps & {
   playerId?: string | number | null; returnTo?: string;
 }) {
-  if (playerId == null || playerId === "") return <span className={className}>{children}</span>;
+  const routed = useInRouterContext();
+  if (!routed || playerId == null || playerId === "") return <span className={className}>{children}</span>;
   return (
     <Link className={classes("entity-link", className)} to={`/players/${encodeURIComponent(String(playerId))}`}
       state={returnTo ? { returnTo } : undefined}>{children}</Link>
@@ -33,7 +35,8 @@ export function PlayerLink({ playerId, returnTo, className, children }: LinkProp
 
 /** A Fantasy manager that opens their lineup; plain text without a team id. */
 export function ManagerLink({ teamId, className, children }: LinkProps & { teamId?: string | number | null }) {
-  if (teamId == null || teamId === "") return <span className={className}>{children}</span>;
+  const routed = useInRouterContext();
+  if (!routed || teamId == null || teamId === "") return <span className={className}>{children}</span>;
   return (
     <Link className={classes("entity-link", className)} to={`/?team=${encodeURIComponent(String(teamId))}`}>
       {children}

@@ -1,4 +1,5 @@
 import { numberFormatter } from "../../i18n/format";
+import { ClubLink } from "../../components/links/EntityLinks";
 import { t, useTranslation } from "../../i18n";
 import { BadgeImage } from "../../components/BadgeImage";
 import { fixtureClubMedia, competitionMedia } from "../../api/clubMedia";
@@ -161,13 +162,13 @@ function MatchCard({
           <div className="player-match-crest-tile">
             <BadgeImage media={home} />
           </div>
-          <span className="player-match-team-name">{home?.name ?? text(fixture?.homeTeam) ?? t("Home")}</span>
+          <span className="player-match-team-name"><ClubLink name={home?.name ?? text(fixture?.homeTeam)} badgeUrl={home?.badge}>{home?.name ?? text(fixture?.homeTeam) ?? t("Home")}</ClubLink></span>
         </div>
         <div className="player-match-team">
           <div className="player-match-crest-tile">
             <BadgeImage media={away} />
           </div>
-          <span className="player-match-team-name">{away?.name ?? text(fixture?.awayTeam) ?? t("Away")}</span>
+          <span className="player-match-team-name"><ClubLink name={away?.name ?? text(fixture?.awayTeam)} badgeUrl={away?.badge}>{away?.name ?? text(fixture?.awayTeam) ?? t("Away")}</ClubLink></span>
         </div>
       </div>
       {!upcoming ? <p className="player-match-result">

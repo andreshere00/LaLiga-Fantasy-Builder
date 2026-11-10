@@ -12,7 +12,7 @@ import { useQueries } from "@tanstack/react-query";
 import { NumberPagination } from "../../components/ui/NumberPagination";
 import { useCallback, useMemo } from "react";
 import { Link, useSearchParams } from "react-router-dom";
-import { ManagerLink, PlayerLink } from "../../components/links/EntityLinks";
+import { ClubLink, ManagerLink, PlayerLink } from "../../components/links/EntityLinks";
 
 import { getJson, paths } from "../../api/client";
 import { useAuth } from "../../auth/AuthProvider";
@@ -177,7 +177,7 @@ function PlayersListRow({
           </span>
         </span>
       </span>
-      <span className="market-cell players-team-cell" data-column="team" data-label={t("Team")}>{row.teamName ?? "—"}</span>
+      <span className="market-cell players-team-cell" data-column="team" data-label={t("Team")}>{row.teamName ? <ClubLink badgeUrl={row.teamBadgeUrl} name={row.teamName}>{row.teamName}</ClubLink> : "—"}</span>
       <span className="market-cell" data-column="position" data-label={t("Position")}>
         <PositionCell positionId={row.positionId} />
       </span>

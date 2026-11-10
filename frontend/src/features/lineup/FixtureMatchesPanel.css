@@ -25,7 +25,7 @@
 .fixture-match-date { display:flex; justify-content:space-between; align-items:center; gap:8px; margin:0 0 9px; color:var(--fb-muted); font-size:var(--fb-widget-font-meta); }
 .fixture-match-date time { white-space:nowrap; }
 .fixture-match-team { display:grid; grid-template-columns:28px minmax(0,1fr) 28px; gap:9px; align-items:center; min-height:36px; font-size:var(--fb-widget-font-body); }
-.fixture-match-team > span:nth-child(2) { overflow-wrap:anywhere; }
+.fixture-match-team > :nth-child(2) { overflow-wrap:anywhere; }
 .fixture-match-crest { display:grid; place-items:center; width:28px; height:28px; min-width:0; overflow:hidden; }
 .fixture-match-crest > img { display:block; width:100%; height:100%; min-width:0; min-height:0; max-width:100%; max-height:100%; object-fit:contain; }
 .fixture-match-score { text-align:right; font-size:inherit; font-weight:500; font-variant-numeric:tabular-nums; }

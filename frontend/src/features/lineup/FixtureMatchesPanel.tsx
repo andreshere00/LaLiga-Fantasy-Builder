@@ -1,4 +1,5 @@
 import { durationLabel, numberFormatter, dateFormatter } from "../../i18n/format";
+import { ClubLink } from "../../components/links/EntityLinks";
 import { t, useTranslation, useLanguage } from "../../i18n";
 import { useEffect, useId, useRef, useState, type CSSProperties } from "react";
 import type { FixtureWeatherDto } from "../../api/schemas";
@@ -75,7 +76,7 @@ function FixtureMatch({ match, forecast, weatherLoading, weatherFailed, now }: {
       {([match.home, match.away] as const).map((team, index) => (
         <div className="fixture-match-team" key={index}>
           <span className="fixture-match-crest" aria-hidden="true"><BadgeImage media={clubMediaFromFixture(team)} fallback="—" /></span>
-          <span>{team.name}</span>
+          <ClubLink teamId={index === 0 ? match.homeId : match.awayId} badgeUrl={team.badge}>{team.name}</ClubLink>
           <span className="fixture-match-score" aria-label={t(index === 0 ? "Home goals: {{0}}" : "Away goals: {{0}}", { 0: (index === 0 ? match.homeScore : match.awayScore) ?? t("no result") })}>
             {((index === 0 ? match.homeScore : match.awayScore) ?? t("—"))}
           </span>

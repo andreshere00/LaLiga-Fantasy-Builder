@@ -49,3 +49,12 @@ describe("ClubLink", () => {
     expect(screen.queryByRole("link")).toBeNull();
   });
 });
+
+describe("links outside a router", () => {
+  it("render_without_router_falls_back_to_plain_text", () => {
+    render(<><ClubLink teamId="4">Club</ClubLink><PlayerLink playerId="1">Player</PlayerLink>
+      <ManagerLink teamId="t1">Manager</ManagerLink></>);
+    expect(screen.queryByRole("link")).toBeNull();
+    expect(screen.getByText("Manager")).toBeTruthy();
+  });
+});
