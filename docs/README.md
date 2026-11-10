@@ -3,7 +3,8 @@
 Start with the [project README](../README.md) for features and quick start.
 This folder is the detailed map.
 
-See the [v0.3.0 changelog](../CHANGELOG.md#030---2026-11-04) for Spanish and English
+The [Teams tab](../CHANGELOG.md#050---2026-11-10) arrived in v0.5.0. See the
+[v0.3.0 changelog](../CHANGELOG.md#030---2026-11-04) for Spanish and English
 localization and the [language guide](frontend-localization-plan.md) for selection,
 formatting and optional prose translation. The
 [v0.2.1 entry](../CHANGELOG.md#021---2026-11-03) covers weekly radar
@@ -18,7 +19,7 @@ the signed-in application, covering lineup, market, players, player details,
 and the lineup builder in light and dark themes.
 
 Favorites, per-league scouting alerts and the deployment/storage upgrade are in
-[v0.3.0](../CHANGELOG.md#030---2026-11-04). Existing installations need a third
+[v0.4.0](../CHANGELOG.md#040---2026-11-05). Existing installations need a third
 logical database and new runtime values; follow the
 [upgrade checklist](../infra/gcp/README.md#upgrading-an-existing-installation-for-scouting).
 

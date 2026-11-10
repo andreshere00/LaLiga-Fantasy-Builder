@@ -4,7 +4,7 @@ Notable changes to LaLiga Fantasy Builder are recorded here. Version 0.1.0
 summarizes the application through 27 October 2026; it is the first changelog
 entry, not a claim that every optional provider or deployment gate is complete.
 
-## [0.4.0] - 2026-11-10
+## [0.5.0] - 2026-11-10
 
 ### Teams
 
@@ -34,6 +34,8 @@ entry, not a claim that every optional provider or deployment gate is complete.
   See the [Clubs API](docs/api/clubs/README.md).
 - Refresh the README and frontend gallery with sixteen captures of Lineup, Market,
   Players, Teams, player details and the lineup builder in both themes.
+
+## [0.4.0] - 2026-11-05
 
 ### Favorites and scouting
 
