@@ -4,7 +4,7 @@ import { ThemeToggle } from "./ThemeToggle";
 import { Select } from "@base-ui/react/select";
 import { useLayoutEffect, useRef, useState } from "react";
 import { Link, NavLink } from "react-router-dom";
-import { preloadHandlers } from "../../app/routeModules";
+import { useRoutePrefetch } from "../../app/useRoutePrefetch";
 import { leagueId, leagueLabel } from "../../api/mappers";
 import { useAuth } from "../../auth/AuthProvider";
 import { Dialog } from "../../components/ui/Dialog";
@@ -40,6 +40,7 @@ export function Header() {
   const { leagues, selected, selectLeague } = useLeague();
   const [profileOpen, setProfileOpen] = useState(false);
   const [optionsOpen, setOptionsOpen] = useState(false);
+  const prefetchHandlers = useRoutePrefetch();
   const signedIn = status !== "signed-out" && status !== "loading";
   const profilePhotoUrl = managerAvatar?.trim() || selected?.team?.manager?.avatar?.trim()
     || selected?.team?.manager?.profileImage?.trim() || null;
@@ -53,9 +54,9 @@ export function Header() {
         </Link>
         <nav className="nav-tabs" aria-label={t("Sections")}>
           <NavLink to="/" end className="nav-tab"><NavIcon name="lineup" /><span>{t("Lineup")}</span></NavLink>
-          <NavLink to="/market" className="nav-tab" {...preloadHandlers("/market")}><NavIcon name="market" /><span>{t("Market")}</span></NavLink>
-          <NavLink to="/players" className="nav-tab" {...preloadHandlers("/players")}><NavIcon name="players" /><span>{t("Players")}</span></NavLink>
-          <NavLink to="/teams" className="nav-tab" {...preloadHandlers("/teams")}><NavIcon name="teams" /><span>{t("Teams")}</span></NavLink>
+          <NavLink to="/market" className="nav-tab" {...prefetchHandlers("/market")}><NavIcon name="market" /><span>{t("Market")}</span></NavLink>
+          <NavLink to="/players" className="nav-tab" {...prefetchHandlers("/players")}><NavIcon name="players" /><span>{t("Players")}</span></NavLink>
+          <NavLink to="/teams" className="nav-tab" {...prefetchHandlers("/teams")}><NavIcon name="teams" /><span>{t("Teams")}</span></NavLink>
         </nav>
         <div className={`nav-actions${optionsOpen ? " is-open" : ""}`}>
           {signedIn ? <><NotificationsButton /><ScoutingDialog /></> : null}

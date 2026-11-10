@@ -5,6 +5,8 @@ import { calendarFormContext } from "./model/form";
 import { getJson, paths } from "../../api/client";
 import {
   CALENDAR_STALE_MS,
+  leagueTeamsOptions,
+  marketOptions,
   useCurrentWeekQuery,
   usePlayersCatalogQuery,
   useReauthOnError,
@@ -98,10 +100,9 @@ export function useMarketBoard(): MarketBoard {
   const moneyQuery = useTeamMoneyQuery(id, teamId, enabled);
 
   const leagueTeamsQuery = useQuery({
-    queryKey: ["league-teams", id],
+    ...leagueTeamsOptions(id, token),
     enabled: enabled && id !== "",
     staleTime: CALENDAR_STALE_MS,
-    queryFn: ({ signal }) => getJson(paths.leagueTeams(id), token, { signal }),
   });
 
   const teamQuery = useQuery({
@@ -111,11 +112,7 @@ export function useMarketBoard(): MarketBoard {
     queryFn: ({ signal }) => getJson(paths.team(id, teamId ?? ""), token, { signal }),
   });
 
-  const marketQuery = useQuery({
-    queryKey: ["market", id],
-    enabled: enabled && id !== "",
-    queryFn: ({ signal }) => getJson(paths.market(id), token, { signal }),
-  });
+  const marketQuery = useQuery({ ...marketOptions(id, token), enabled: enabled && id !== "" });
   const pendingBids = usePendingBids(id);
   const market = useMemo(
     () => applyPendingBids(marketQuery.data, pendingBids, Date.now()).snapshot,

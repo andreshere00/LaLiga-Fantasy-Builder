@@ -1,6 +1,7 @@
 // ---- Mocks, fixtures & helpers ---- //
 
 import { fireEvent, render, screen, waitFor } from "@testing-library/react";
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter } from "react-router-dom";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
@@ -49,9 +50,11 @@ describe("Header", () => {
 
   it("Header_league_menu_announces_name_and_moves_with_arrows", async () => {
     render(
-      <BrowserRouter>
-        <Header />
-      </BrowserRouter>,
+      <QueryClientProvider client={new QueryClient()}>
+        <BrowserRouter>
+          <Header />
+        </BrowserRouter>
+      </QueryClientProvider>,
     );
 
     fireEvent.click(screen.getByRole("button", { name: "Open settings and account options" }));
@@ -72,9 +75,11 @@ describe("Header", () => {
 
   it("Header_sections_eachTabHasDecorativeIconAndTextName", () => {
     const { container } = render(
-      <BrowserRouter>
-        <Header />
-      </BrowserRouter>,
+      <QueryClientProvider client={new QueryClient()}>
+        <BrowserRouter>
+          <Header />
+        </BrowserRouter>
+      </QueryClientProvider>,
     );
 
     const tabs = container.querySelectorAll(".nav-tabs .nav-tab");
