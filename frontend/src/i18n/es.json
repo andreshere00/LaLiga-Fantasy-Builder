@@ -1930,5 +1930,10 @@
   "Remove filter: {{0}}": "Quitar filtro: {{0}}",
   "Preferences": "Preferencias",
   "Account": "Cuenta",
-  "Next up": "Siguiente"
+  "Next up": "Siguiente",
+  "Show players who are": "Mostrar jugadores que están",
+  "{{0}} selected": "{{0}} seleccionados",
+  "Ready to play the next matchday": "Listo para jugar la próxima jornada",
+  "May miss the next matchday": "Puede perderse la próxima jornada",
+  "Cannot play the next matchday": "No puede jugar la próxima jornada"
 }

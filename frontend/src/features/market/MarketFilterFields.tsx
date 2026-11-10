@@ -177,6 +177,13 @@ export function FilterPositionChips({
   );
 }
 
+const AVAILABILITY_HINTS: Record<Availability, string> = {
+  available: "Ready to play the next matchday",
+  questionable: "May miss the next matchday",
+  unavailable: "Cannot play the next matchday",
+};
+
+/** Multi-select as real checkboxes: the check mark, not colour alone, shows what is on. */
 export function FilterAvailabilityChips({
   selected,
   onChange,
@@ -193,22 +200,30 @@ export function FilterAvailabilityChips({
   };
 
   return (
-    <div className="market-filter-chips market-column-filter-chips">
-      {AVAILABILITY_FILTER_OPTIONS.map((option) => {
-        const active = selected.has(option.value);
-        return (
-          <button
-            key={option.value}
-            type="button"
-            className={`market-filter-chip${active ? " is-active" : ""}`}
-            aria-pressed={active}
-            onClick={() => toggle(option.value)}
-          >
-            {t(option.label)}
-          </button>
-        );
-      })}
-    </div>
+    <fieldset className="filter-checklist">
+      <legend className="filter-checklist-legend">
+        {t("Show players who are")}
+        <span className="filter-checklist-count" aria-live="polite">
+          {selected.size === 0 ? t("All") : t("{{0}} selected", { 0: selected.size })}
+        </span>
+      </legend>
+      {AVAILABILITY_FILTER_OPTIONS.map((option) => (
+        <label key={option.value} className={`filter-check filter-check--${option.value}`}>
+          <input
+            type="checkbox"
+            checked={selected.has(option.value)}
+            onChange={() => toggle(option.value)}
+          />
+          <span className="filter-check-box" aria-hidden="true">
+            <svg viewBox="0 0 24 24" focusable="false"><path d="M5 12.5l4.5 4.5L19 7.5" /></svg>
+          </span>
+          <span className="filter-check-text">
+            <span className="filter-check-label">{t(option.label)}</span>
+            <span className="filter-check-hint">{t(AVAILABILITY_HINTS[option.value])}</span>
+          </span>
+        </label>
+      ))}
+    </fieldset>
   );
 }
 

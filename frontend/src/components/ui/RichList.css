@@ -1192,3 +1192,27 @@ a.market-actions-item {
 .market-position-filter:focus-visible { outline:none; }
 .market-position-filter:focus-visible .market-position-badge { outline:2px solid var(--fb-focus); outline-offset:3px; }
 @media (prefers-reduced-motion: reduce) { .market-position-filter .market-position-badge { transition:none; } }
+
+/* Availability checklist (Market and Players column filters). */
+.filter-checklist { display:flex; flex-direction:column; gap:8px; margin:0; padding:0; border:0; min-width:0; }
+.filter-checklist-legend { display:flex; justify-content:space-between; align-items:baseline; width:100%; padding:0 0 4px; font-size:13px; font-weight:700; }
+.filter-checklist-count { color:var(--fb-muted); font-size:12px; font-weight:500; }
+.filter-check { position:relative; display:flex; align-items:center; gap:14px; min-height:56px; padding:8px 14px; border:1px solid var(--fb-line); border-left-width:4px; background:var(--fb-surface); cursor:pointer; transition:background-color var(--fb-color-duration) var(--fb-color-ease), border-color var(--fb-color-duration) var(--fb-color-ease); }
+.filter-check--available { border-left-color:var(--fb-success); }
+.filter-check--questionable { border-left-color:var(--fb-warning); }
+.filter-check--unavailable { border-left-color:var(--fb-primary); }
+.filter-check:hover { background:var(--fb-subtle); }
+.filter-check:has(input:checked) { background:color-mix(in srgb, var(--fb-primary) 8%, var(--fb-surface)); border-block-color:var(--fb-primary); border-inline-end-color:var(--fb-primary); }
+.filter-check:has(input:focus-visible) { outline:2px solid var(--ring, var(--fb-primary)); outline-offset:2px; }
+.filter-check input { position:absolute; opacity:0; inset:0; width:100%; height:100%; margin:0; cursor:pointer; }
+.filter-check-box { display:grid; place-items:center; flex:0 0 24px; width:24px; height:24px; border:2px solid var(--fb-secondary); background:var(--fb-surface); }
+.filter-check-box svg { width:18px; height:18px; fill:none; stroke:var(--fb-ink-on-status, #fff); stroke-width:3; stroke-linecap:round; stroke-linejoin:round; opacity:0; }
+.filter-check input:checked + .filter-check-box { background:var(--fb-primary); border-color:var(--fb-primary); }
+.filter-check input:checked + .filter-check-box svg { opacity:1; }
+.filter-check-text { display:flex; flex-direction:column; gap:2px; min-width:0; }
+.filter-check-label { font-size:15px; font-weight:600; }
+.filter-check-hint { font-size:12px; color:var(--fb-muted); line-height:1.35; }
+.market-column-filter-clear { margin-top:6px; width:auto; align-self:flex-start; min-height:44px; padding:8px 4px; border:0; background:none; font-size:14px; font-weight:600; text-decoration:underline; text-underline-offset:3px; color:var(--fb-secondary); }
+.market-column-filter-clear:is(:hover, :active) { background:none; color:var(--fb-primary); }
+.market-column-filter-clear:focus-visible { outline:2px solid var(--ring, var(--fb-primary)); outline-offset:2px; }
+@media (prefers-reduced-motion:reduce) { .filter-check { transition:none; } }
