@@ -1211,3 +1211,6 @@
   .team-skeleton-split { grid-template-columns: 1fr; }
   .team-skeleton-pitch { height: 260px; }
 }
+
+.team-mvp-skeleton-value { width: 4rem; height: 14px; }
+.team-mvp-skeleton-radar { width: 100%; height: 140px; }

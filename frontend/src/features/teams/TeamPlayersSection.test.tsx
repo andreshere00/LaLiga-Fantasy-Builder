@@ -8,7 +8,7 @@ import { TeamPlayersSection, type SeasonStatsState } from "./TeamPlayersSection"
 vi.mock("../lineup/useSquadStats", () => ({
   usePlayerOutlooks: () => ({
     profiles: new Map(outlookState.value ? [["1", outlookState.value]] : []),
-    isLoading: false,
+    isLoading: outlookState.loading,
     errors: [],
   }),
 }));
@@ -35,11 +35,14 @@ vi.mock("./useRecentPoints", async (importOriginal) => ({
 }));
 
 const outlookState = vi.hoisted(() => ({
+  loading: false,
+  radarLoading: false,
   value: { form: { rating: "good" }, startProbability: { percent: 95 }, birthDate: "1990-01-01" } as Record<string, unknown> | undefined,
 }));
 
 vi.mock("../players/radar/usePlayerRadar", () => ({
   usePlayerRadar: () => ({
+    query: { isLoading: outlookState.radarLoading, isSuccess: true, isError: false },
     displayed: {
       player: "Ana",
       axes: [
@@ -94,6 +97,8 @@ function season(overrides: Partial<SeasonStatsState> = {}): SeasonStatsState {
 describe("TeamPlayersSection", () => {
   beforeEach(() => {
     cleanup();
+    outlookState.loading = false;
+    outlookState.radarLoading = false;
     outlookState.value = { form: { rating: "good" }, startProbability: { percent: 95 }, birthDate: "1990-01-01" };
   });
 
@@ -157,6 +162,17 @@ describe("TeamPlayersSection", () => {
     const form = document.querySelector(".team-mvp-form");
     expect(form?.getAttribute("data-form")).toBe(code);
     expect(form?.textContent).toBe(label);
+  });
+
+  it("TeamPlayersSection_mvp_stats_loading_shows_skeletons_instead_of_dashes", () => {
+    outlookState.loading = true;
+    outlookState.radarLoading = true;
+    outlookState.value = undefined;
+    renderSection();
+    const card = document.querySelector(".team-mvp-card") as HTMLElement;
+    expect(card.getAttribute("aria-busy")).toBe("true");
+    expect(card.querySelectorAll(".fb-skeleton").length).toBe(3);
+    expect(card.querySelector(".team-mvp-facts")?.textContent).not.toContain("—");
   });
 
   it("TeamPlayersSection_unknown_form_and_missing_starter_render_dashes", () => {

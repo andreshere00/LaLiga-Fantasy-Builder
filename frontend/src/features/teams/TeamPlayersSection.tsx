@@ -14,6 +14,7 @@ import { catalogMediaByMasterId } from "../../api/mappers";
 import { usePlayerRadar } from "../players/radar/usePlayerRadar";
 import type { ClubDossierDto, ClubRosterStatsDto } from "../../api/schemas";
 import { BouncingBall } from "../../components/BouncingBall";
+import { Skeleton } from "../../components/ui/Skeleton";
 import { RecentPoints } from "./RecentPoints";
 import { useRecentPoints, type RecentPoint } from "./useRecentPoints";
 import { TeamHierarchySection } from "./TeamHierarchySection";
@@ -131,6 +132,7 @@ export function TeamPlayersSection({
         <MvpStrip
           players={roster.mvps}
           outlooks={outlooks.profiles}
+          outlooksLoading={outlooks.isLoading}
           media={media}
           recent={recent}
         />
@@ -271,11 +273,13 @@ export function isStarterFlagged(percent: number | null | undefined): boolean {
 function MvpStrip({
   players,
   outlooks,
+  outlooksLoading,
   media,
   recent,
 }: {
   players: Roster["mvps"];
   outlooks: { get(playerId: string): unknown };
+  outlooksLoading: boolean;
   media: ReadonlyMap<string, { photoUrl: string | null }>;
   recent: ReadonlyMap<string, readonly RecentPoint[]>;
 }) {
@@ -305,8 +309,10 @@ function MvpStrip({
           const displayed = radar.displayed;
           const age = playerAge(outlook?.birthDate, Date.now());
           const position = player.positionId != null ? positionLabel(player.positionId) : null;
+          const radarLoading = radar.query?.isLoading === true;
           return (
-            <li key={player.playerId} className="team-mvp-card">
+            <li key={player.playerId} className="team-mvp-card"
+              aria-busy={outlooksLoading || radarLoading || undefined}>
               <div ref={radar.section as Ref<HTMLDivElement>}>
                 <div className="team-mvp-head">
                   <span className="team-mvp-rank" aria-hidden="true">{index + 1}</span>
@@ -344,7 +350,9 @@ function MvpStrip({
                   <div>
                     <dt>{t("Form")}</dt>
                     <dd>
-                      {form ? (
+                      {outlooksLoading && !outlook ? (
+                        <Skeleton className="team-mvp-skeleton-value" />
+                      ) : form ? (
                         <span className="team-mvp-form" data-form={form.code}>
                           <img className="is-light" src={form.icons.light} alt="" />
                           <img className="is-dark" src={form.icons.dark} alt="" />
@@ -356,14 +364,25 @@ function MvpStrip({
                   <div>
                     <dt>{t("Starter likelihood")}</dt>
                     <dd data-level={flagged ? "high" : undefined}>
+                      {outlooksLoading && !outlook ? (
+                        <Skeleton className="team-mvp-skeleton-value" />
+                      ) : (
+                      <>
                       <span className="team-starter-value">
                         {starter == null ? "—" : `${starter}%`}
                         {flagged ? <span className="visually-hidden"> {t("(90% or more)")}</span> : null}
                       </span>
                       <TeamMeter percent={starter} tone={flagged ? "red" : undefined} />
+                      </>
+                      )}
                     </dd>
                   </div>
                 </dl>
+                {radarLoading ? (
+                  <div className="team-mvp-radar" aria-hidden="true">
+                    <Skeleton className="team-mvp-skeleton-radar" />
+                  </div>
+                ) : null}
                 {published && displayed ? (
                   <div className="team-mvp-radar">
                     <p>{t("Radar percentiles")}</p>
