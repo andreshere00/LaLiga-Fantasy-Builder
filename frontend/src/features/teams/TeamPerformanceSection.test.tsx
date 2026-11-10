@@ -165,6 +165,23 @@ describe("TeamPerformanceSection", () => {
     }
   });
 
+  it("TeamPerformanceSection_failed_without_results_says_results_could_not_be_loaded", () => {
+    render(
+      <MemoryRouter><TeamPerformanceSection
+        performance={null}
+        clubs={[]}
+        competition="all"
+        window="5"
+        failed
+        onCompetition={onCompetition}
+        onWindow={vi.fn()}
+        onRetry={vi.fn()}
+      /></MemoryRouter>,
+    );
+    expect(screen.getByRole("alert").textContent).toContain("Results could not be loaded.");
+    expect(screen.queryByText("Other competitions are unavailable.")).toBeNull();
+  });
+
   it("TeamPerformanceSection_about_block_is_a_one_line_toggle_that_opens_the_three_descriptions", () => {
     render(
       <MemoryRouter><TeamPerformanceSection

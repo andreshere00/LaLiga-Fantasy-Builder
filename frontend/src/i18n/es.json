@@ -1748,6 +1748,7 @@
   "Match window": "Ventana de partidos",
   "Whole season": "Temporada completa",
   "Other competitions are unavailable.": "El resto de competiciones no está disponible.",
+  "Results could not be loaded.": "No se han podido cargar los resultados.",
   "No {{0}} matches in this window.": "No hay partidos de {{0}} en esta ventana.",
   "Show all competitions": "Ver todas las competiciones",
   "Previous matches": "Partidos anteriores",

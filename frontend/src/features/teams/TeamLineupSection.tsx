@@ -15,6 +15,7 @@ import { useScouting } from "../scouting/ScoutingProvider";
 import { usePlayerOutlooks } from "../lineup/useSquadStats";
 import {
   catalogNames,
+  clubCatalogNames,
   matchCatalogPlayer,
   matchRosterPlayer,
   orderedAlternatives,
@@ -39,12 +40,15 @@ type Squad = readonly { playerId: string; name: string; points?: number | null }
 export function TeamLineupSection({
   prediction,
   squad = [],
+  clubId = null,
   failed,
   returnTo,
   onRetry,
 }: {
   prediction: Prediction | null;
   squad?: Squad;
+  /** Teams-master id of the club shown; the catalog fallback only looks at its footballers. */
+  clubId?: string | null;
   failed: boolean;
   returnTo: string;
   onRetry: () => void;
@@ -54,7 +58,10 @@ export function TeamLineupSection({
   const actions = useMarketActions();
   const scouting = useScouting();
   const catalogQuery = usePlayersCatalogQuery(true);
-  const catalog = useMemo(() => catalogNames(catalogQuery.data), [catalogQuery.data]);
+  const catalog = useMemo(
+    () => clubCatalogNames(catalogNames(catalogQuery.data), clubId),
+    [catalogQuery.data, clubId],
+  );
   const context: MarketActionContext = {
     money: board.money,
     now: Date.now(),

@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 import {
   alternativesBySlot,
   fieldPlayerPath,
+  clubCatalogNames,
   matchCatalogPlayer,
   matchRosterPlayer,
   orderedAlternatives,
@@ -77,5 +78,22 @@ describe("matchRosterPlayer", () => {
     expect(matchRosterPlayer("Williams", squad)).toBeNull();
     expect(matchRosterPlayer("Nobody", squad)).toBeNull();
     expect(matchRosterPlayer("", squad)).toBeNull();
+  });
+});
+
+describe("clubCatalogNames", () => {
+  const catalog = [
+    { playerId: "1", name: "Isco", nickname: null, teamId: "5" },
+    { playerId: "2", name: "Isco", nickname: null, teamId: "9" },
+    { playerId: "3", name: "Unknown club", nickname: null, teamId: null },
+  ];
+
+  it("clubCatalogNames_keeps_only_the_given_club_so_a_namesake_elsewhere_cannot_match", () => {
+    expect(clubCatalogNames(catalog, "5").map((player) => player.playerId)).toEqual(["1"]);
+    expect(matchCatalogPlayer("Isco", clubCatalogNames(catalog, "5"))).toBe("1");
+  });
+
+  it("clubCatalogNames_without_a_club_matches_nobody", () => {
+    expect(clubCatalogNames(catalog, null)).toEqual([]);
   });
 });

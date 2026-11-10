@@ -124,7 +124,7 @@ export function TeamPerformanceSection({
       </div>
       {failed ? (
         <p role="alert">
-          {t("Other competitions are unavailable.")}
+          {performance == null ? t("Results could not be loaded.") : t("Other competitions are unavailable.")}
           <button type="button" onClick={onRetry}>{t("Retry")}</button>
         </p>
       ) : null}

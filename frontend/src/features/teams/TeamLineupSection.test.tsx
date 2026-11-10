@@ -8,7 +8,7 @@ const toggle = vi.hoisted(() => vi.fn());
 
 vi.mock("../../api/queries", () => ({
   usePlayersCatalogQuery: () => ({
-    data: [{ id: "7", name: "Isco", nickname: "Isco" }],
+    data: [{ id: "7", name: "Isco", nickname: "Isco", teamId: 5 }],
     isLoading: false,
   }),
 }));
@@ -122,6 +122,7 @@ describe("TeamLineupSection", () => {
       <MemoryRouter>
         <TeamLineupSection
           prediction={prediction}
+          clubId="5"
           failed={false}
           returnTo="/teams/5?section=lineup"
           onRetry={vi.fn()}

@@ -13,6 +13,8 @@ export type CatalogName = {
   playerId: string;
   name: string;
   nickname: string | null;
+  /** Fantasy club id the footballer plays for, when the catalog publishes one. */
+  teamId?: string | null;
 };
 
 export function orderedAlternatives<T extends { probability: number | null }>(
@@ -32,6 +34,15 @@ export function alternativesBySlot<T extends { position: string | null }>(
     else groups.push({ position, players: [player] });
   }
   return groups;
+}
+
+/** Catalog names of one club's footballers, so a lookup cannot land on another club's player. */
+export function clubCatalogNames(
+  catalog: readonly CatalogName[],
+  clubId: string | null | undefined,
+): CatalogName[] {
+  if (!clubId) return [];
+  return catalog.filter((player) => player.teamId === clubId);
 }
 
 /** One catalog player, or none when the scraped name is missing or ambiguous. */
@@ -87,7 +98,10 @@ export function catalogNames(payload: unknown): CatalogName[] {
     const nickname = text(master.nickname);
     const name = text(master.name) ?? nickname;
     if (!name) continue;
-    names.push({ playerId, name, nickname });
+    const rawTeam = master.teamId ?? (master.team as { id?: unknown } | undefined)?.id;
+    const teamId = typeof rawTeam === "number" || typeof rawTeam === "string"
+      ? String(rawTeam) : null;
+    names.push({ playerId, name, nickname, teamId });
   }
   return names;
 }

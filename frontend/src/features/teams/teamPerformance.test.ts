@@ -116,12 +116,19 @@ describe("nextMatchId", () => {
     expect(nextMatchId([stale, upcoming], "soon")).toBe("soon");
   });
 
-  it("nextMatchId_api_pick_outside_the_filtered_list_falls_back_to_the_first_match", () => {
-    expect(nextMatchId([stale, upcoming], "elsewhere")).toBe("stale");
+  const now = Date.parse("2026-11-09T12:00:00Z");
+
+  it("nextMatchId_api_pick_outside_the_filtered_list_skips_a_stale_fixture", () => {
+    expect(nextMatchId([stale, upcoming], "elsewhere", now)).toBe("soon");
   });
 
-  it("nextMatchId_without_an_api_pick_or_matches_is_null_or_first", () => {
-    expect(nextMatchId([upcoming], null)).toBe("soon");
-    expect(nextMatchId([], "soon")).toBeNull();
+  it("nextMatchId_without_an_api_pick_uses_the_first_match_still_ahead", () => {
+    expect(nextMatchId([stale, upcoming], null, now)).toBe("soon");
+    expect(nextMatchId([upcoming], null, now)).toBe("soon");
+  });
+
+  it("nextMatchId_without_any_match_ahead_is_null", () => {
+    expect(nextMatchId([stale], null, now)).toBeNull();
+    expect(nextMatchId([], "soon", now)).toBeNull();
   });
 });

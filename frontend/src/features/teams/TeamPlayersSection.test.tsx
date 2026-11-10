@@ -188,6 +188,24 @@ describe("TeamPlayersSection", () => {
     expect(screen.getByText(/Counts are blank for 1 player without a published profile/)).toBeTruthy();
   });
 
+  it("TeamPlayersSection_player_without_a_profile_does_not_keep_short_window_counts", () => {
+    const withBea = {
+      ...roster,
+      players: [
+        roster.players[0],
+        { playerId: "2", name: "Bea", positionId: 2, points: 3, stats: { goals: 7 } },
+      ],
+    };
+    render(
+      <MemoryRouter initialEntries={["/teams/3?x=1"]}>
+        <TeamPlayersSection roster={withBea} seasonStats={season()} />
+      </MemoryRouter>,
+    );
+    const squad = screen.getByRole("region", { name: "Squad" });
+    const bea = within(squad).getByRole("rowheader", { name: "Bea" }).closest("tr") as HTMLElement;
+    expect(within(bea).queryByText("7")).toBeNull();
+  });
+
   it("TeamPlayersSection_players_with_zero_minutes_wait_behind_a_toggle", () => {
     const data = season().data!;
     renderSection(season({

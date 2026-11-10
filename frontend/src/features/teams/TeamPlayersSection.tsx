@@ -68,7 +68,9 @@ export function TeamPlayersSection({
     return roster.players.map((player) => {
       const row = toRow(player);
       const counted = byId.get(player.playerId);
-      return counted?.available ? { ...row, stats: counted.stats as SquadRow["stats"] } : row;
+      if (counted?.available) return { ...row, stats: counted.stats as SquadRow["stats"] };
+      // Season totals are in: a player without a profile must not keep short-window counts.
+      return season ? { ...row, stats: {} } : row;
     });
   }, [roster, season]);
   const totals = (season?.totals ?? roster.totals) as Record<string, unknown>;

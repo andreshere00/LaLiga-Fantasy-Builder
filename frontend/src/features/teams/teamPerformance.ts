@@ -122,14 +122,17 @@ export function scoreText(match: ClubMatchView): string | null {
 
 /**
  * The match to highlight as next: the API's pick when it is listed, since the API alone knows
- * which scheduled match has not already kicked off; otherwise the first listed match.
+ * which scheduled match has not already kicked off; otherwise the first listed match whose
+ * kickoff is still ahead. A scheduled match with a past or unknown kickoff is never highlighted.
  */
 export function nextMatchId(
   upcoming: readonly ClubMatchView[],
   apiNextId?: string | null,
+  now: number = Date.now(),
 ): string | null {
   if (apiNextId != null && upcoming.some((match) => match.matchId === apiNextId)) return apiNextId;
-  return upcoming[0]?.matchId ?? null;
+  const ahead = upcoming.find((match) => Date.parse(match.kickoff ?? "") >= now);
+  return ahead?.matchId ?? null;
 }
 
 function sideScore(regulation: number, final: number | null): string {
