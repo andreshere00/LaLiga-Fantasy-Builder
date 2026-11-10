@@ -75,7 +75,9 @@ export function TeamsPage({ opponentClubId = null }: { opponentClubId?: number |
     for (const name of events) window.addEventListener(name, stop, { once: true, passive: true });
     const jump = () => {
       if (cancelled) return;
-      const target = document.getElementById(teamSectionId(route.section));
+      const anchor = window.location.hash.slice(1);
+      const target = (anchor ? document.getElementById(anchor) : null) ??
+        document.getElementById(teamSectionId(route.section));
       if (typeof target?.scrollIntoView === "function") target.scrollIntoView();
     };
     jump();

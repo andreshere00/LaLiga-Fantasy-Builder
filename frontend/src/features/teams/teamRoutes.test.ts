@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
-import { initialClubId, teamPath, teamSearch } from "./teamRoutes";
+import { clubTeamPath, initialClubId, teamPath, teamSearch } from "./teamRoutes";
+import { teamsClubId } from "../../api/clubMedia";
 
 const clubs = [
   { clubId: 20, name: "Villarreal CF" },
@@ -33,5 +34,18 @@ describe("team routes", () => {
 
   it("initialClubId_unknown_opponent_opens_first_club_in_the_locale", () => {
     expect(initialClubId(clubs, "es")).toBe(4);
+  });
+
+  it("clubTeamPath_hierarchy_opens_players_section_with_anchor", () => {
+    expect(clubTeamPath(4)).toBe("/teams/4");
+    expect(clubTeamPath(4, "hierarchy")).toBe("/teams/4?section=players#team-hierarchy");
+  });
+
+  it("teamsClubId_resolves_team_id_dsp_id_and_crest", () => {
+    expect(teamsClubId("4")).toBe("4");
+    expect(teamsClubId(74)).toBe("4");
+    expect(teamsClubId(null,
+      "https://assets-fantasy.llt-services.com/teambadge/t174/color/t174_athletic-club.png")).toBe("3");
+    expect(teamsClubId(null, "https://example.com/unknown.png")).toBeNull();
   });
 });

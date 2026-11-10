@@ -1183,3 +1183,12 @@ a.market-actions-item {
 .market-page .is-favorite .market-card .player-tile:is(:hover, :active) {
   background-color:#FFC2BF;
 }
+
+/* On Market and Players a position badge filters the list; the button keeps a 44px touch target. */
+.market-position-filter { display:inline-flex; align-items:center; min-height:44px; padding:0; border:0; background:none; cursor:pointer; font:inherit; }
+.market-position-filter .market-position-badge { transition:box-shadow .16s ease; }
+.market-position-filter:hover .market-position-badge { box-shadow:0 0 0 2px var(--fb-surface), 0 0 0 4px var(--fb-control-line); }
+.market-position-filter[aria-pressed="true"] .market-position-badge { box-shadow:0 0 0 2px var(--fb-surface), 0 0 0 4px var(--fb-tertiary); }
+.market-position-filter:focus-visible { outline:none; }
+.market-position-filter:focus-visible .market-position-badge { outline:2px solid var(--fb-focus); outline-offset:3px; }
+@media (prefers-reduced-motion: reduce) { .market-position-filter .market-position-badge { transition:none; } }

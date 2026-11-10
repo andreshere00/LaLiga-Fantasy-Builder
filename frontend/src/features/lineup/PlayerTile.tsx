@@ -1,7 +1,9 @@
 import { t, useTranslation } from "../../i18n";
 import { BadgeImage } from "../../components/BadgeImage";
-import { clubMediaFromBadge } from "../../api/clubMedia";
+import { clubMediaFromBadge, teamsClubId } from "../../api/clubMedia";
 import { useState } from "react";
+import { Link } from "react-router-dom";
+import { clubTeamPath } from "../teams/teamRoutes";
 import { Help } from "../../components/ui/Help";
 import "./PlayerTile.css";
 
@@ -28,6 +30,10 @@ type PlayerTileProps = {
   photoUrl?: string | null;
   photoFallbackUrls?: readonly (string | null | undefined)[];
   teamBadgeUrl?: string | null;
+  /** Links the club crest to that club on the Teams screen; the crest URL is used when no id is given. */
+  linkClub?: boolean;
+  /** Fantasy team id of the player's club, when known. */
+  clubTeamId?: string | number | null;
   fixturePoints?: number | null;
   fixtureWeek?: number;
   /** Goal or clean sheet for the fixture shown on the lineup pitch. */
@@ -87,9 +93,20 @@ export function PlayerScoreBadge({
   );
 }
 
-function TeamBadge({ url }: { url: string | null | undefined }) {
+function TeamBadge({ url, link, teamId }: {
+  url: string | null | undefined; link: boolean; teamId: string | number | null;
+}) {
+  useTranslation();
   const media = clubMediaFromBadge(url);
   if (!media) return null;
+  const clubId = link ? teamsClubId(teamId, url) : null;
+  if (clubId) {
+    const name = media.name === "Club" ? t("this club") : media.name;
+    return <Link className="player-badge player-badge-link" to={clubTeamPath(clubId)}
+      aria-label={t("Open {{0}} on Teams", { 0: name })} title={t("Open {{0}} on Teams", { 0: name })}>
+      <BadgeImage className="player-team-badge" media={media} fallback="" />
+    </Link>;
+  }
   return <span className="player-badge" aria-hidden="true">
     <BadgeImage className="player-team-badge" media={media} fallback="" />
   </span>;
@@ -131,6 +148,8 @@ export function PlayerTile({
   photoUrl = null,
   photoFallbackUrls = [],
   teamBadgeUrl = null,
+  linkClub = false,
+  clubTeamId = null,
   fixturePoints = null,
   fixtureWeek,
   fixtureHighlight = null,
@@ -220,7 +239,8 @@ export function PlayerTile({
       </span> : fixturePoints != null ? (
         <PlayerScoreBadge points={fixturePoints} isMvp={isMvp} />
       ) : null}
-      <TeamBadge key={teamBadgeUrl ?? "no-badge"} url={teamBadgeUrl} />
+      <TeamBadge key={teamBadgeUrl ?? "no-badge"} url={teamBadgeUrl} link={linkClub}
+        teamId={clubTeamId} />
       {form ? <span className="player-starter-probability"
         data-tone={starterProbabilityTone(form.starterProbability) ?? undefined} aria-hidden="true">
         {form.starterProbability == null ? "—" : `${form.starterProbability}%`}

@@ -47,6 +47,16 @@ export function teamPath(clubId: number | string, state: TeamRouteState): string
   return `/teams/${clubId}${query ? `?${query}` : ""}`;
 }
 
+/** Id of the hierarchy block on the Players section; a link with this hash opens the level list. */
+export const TEAM_HIERARCHY_ANCHOR = "team-hierarchy";
+
+/** A club's Teams page with default filters, optionally opened on a section or the hierarchy list. */
+export function clubTeamPath(clubId: number | string, target: TeamSection | "hierarchy" = DEFAULT_SECTION): string {
+  const section = target === "hierarchy" ? "players" : target;
+  const path = teamPath(clubId, { section, competition: "laliga", window: "5" });
+  return target === "hierarchy" ? `${path}#${TEAM_HIERARCHY_ANCHOR}` : path;
+}
+
 export function initialClubId(
   clubs: readonly TeamClub[],
   locale: string,

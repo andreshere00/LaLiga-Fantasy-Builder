@@ -1902,5 +1902,10 @@
   "Roles are read when you open the list.": "Roles are read when you open the list.",
   "Open a group to compare its players.": "Open a group to compare its players.",
   "Show players without minutes": "Show players without minutes",
-  "Hide players without minutes": "Hide players without minutes"
+  "Hide players without minutes": "Hide players without minutes",
+  "this club": "this club",
+  "Open {{0}} on Teams": "Open {{0}} on Teams",
+  "See the squad hierarchy": "See the squad hierarchy",
+  "Show all positions": "Show all positions",
+  "Show only {{0}}": "Show only {{0}}"
 }

@@ -14,6 +14,8 @@ import { hierarchyPresentation, normalizedFantasyValue } from "./hierarchy";
 import { playerFormPresentation } from "./playerForm";
 import { starterProbabilityTone } from "./starterProbability";
 import { useEffect, useId, useState } from "react";
+import { Link } from "react-router-dom";
+import { clubTeamPath } from "../teams/teamRoutes";
 import { asFiniteNumber, asRecord, text } from "../../api/mappers";
 import { formatInjuryHistoryEntry, newsItemHref } from "./playerDetailFormat";
 import "./playerDetailWidgets.css";
@@ -88,7 +90,10 @@ function ArticleArrow() {
   </svg>;
 }
 
-export function PlayerFantasySummary({ profile }: FantasySectionProps) {
+export function PlayerFantasySummary({ profile, clubId = null }: FantasySectionProps & {
+  /** Teams screen club id; when known, the Hierarchy block links to the club's hierarchy levels. */
+  clubId?: string | null;
+}) {
   useTranslation();
   const hierarchy = asRecord(profile?.hierarchy);
   const startProbability = asRecord(profile?.startProbability);
@@ -141,7 +146,9 @@ export function PlayerFantasySummary({ profile }: FantasySectionProps) {
         </dd>
       </Help>
       <Help content={t("Indicates the player's role on the team. From highest to lowest importance: God, Key player, Important, Rotation, Impact substitute, Reserve.")}
-        trigger={<div tabIndex={0} className="player-fantasy-summary-block player-fantasy-summary-block--hierarchy" />}>
+        trigger={<div tabIndex={clubId ? undefined : 0}
+          className="player-fantasy-summary-block player-fantasy-summary-block--hierarchy"
+          data-linked={clubId ? true : undefined} />}>
         <dt>{t("Hierarchy")}<span className="player-outlook-help" aria-hidden="true" /></dt>
         <dd>
           <span className="player-fantasy-summary-value">
@@ -152,7 +159,12 @@ export function PlayerFantasySummary({ profile }: FantasySectionProps) {
             <span>{t(role.label)}</span>
             {role.raw && !role.known ? <small>{t("Original source label: {{0}}", { 0: role.raw })}</small> : null}
           </span>
-          <span className="player-outlook-caption">{t("Role in the squad")}</span>
+          {clubId ? (
+            // The link's ::after covers the whole block, so any click on Hierarchy follows it.
+            <Link className="player-outlook-caption player-hierarchy-link" to={clubTeamPath(clubId, "hierarchy")}>
+              {t("See the squad hierarchy")}<span aria-hidden="true"> →</span>
+            </Link>
+          ) : <span className="player-outlook-caption">{t("Role in the squad")}</span>}
         </dd>
       </Help>
       <Help content={t("The player's form and performance in recent matches: poor, average, good, or very good.")}

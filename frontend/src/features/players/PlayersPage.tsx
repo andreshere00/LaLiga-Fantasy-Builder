@@ -24,6 +24,7 @@ import { AvailabilityCell } from "../market/cells/AvailabilityCell";
 import { FormCell } from "../market/cells/FormCell";
 import { FsypCell } from "../market/cells/FsypCell";
 import { PositionCell } from "../market/cells/PositionCell";
+import { PositionFilterContext } from "../market/cells/positionFilter";
 import { ValueCell } from "../market/cells/ValueCell";
 import { ReleaseClauseDetail } from "../market/cells/ReleaseClauseDetail";
 import { protectionDescription } from "../market/model/protection";
@@ -154,6 +155,7 @@ function PlayersListRow({
           photoUrl={row.photoUrl}
           photoFallbackUrls={row.photoFallbackUrl ? [row.photoFallbackUrl] : []}
           teamBadgeUrl={row.teamBadgeUrl}
+          linkClub
         />
       </div>
       <span className="market-name-wrap" data-column="player" data-label={t("Player")}>
@@ -333,6 +335,11 @@ function PlayersListContent() {
     [searchParams, setSearchParams],
   );
 
+  const positionFilter = useMemo(() => ({
+    selected: urlState.filters.positions,
+    onFilter: (positions: ReadonlySet<number>) => setFilters({ positions }),
+  }), [urlState.filters.positions, setFilters]);
+
   const clearFilters = () => {
     setSearchParams(serializePlayersSearchParams({ filters: createEmptyPlayersFilters(), page: null }), {
       replace: true,
@@ -389,6 +396,7 @@ function PlayersListContent() {
         <p className="status-copy">{t("No players match your filters.")}</p>
       ) : (
         <>
+          <PositionFilterContext.Provider value={positionFilter}>
           <ul className="market-list players-list">
             <PlayersListHead
               headings={columnHeadings}
@@ -414,6 +422,7 @@ function PlayersListContent() {
               />
             ))}
           </ul>
+          </PositionFilterContext.Provider>
         </>
       )}
       {!leaderboard && filtered.length > PLAYERS_PAGE_SIZE ? (

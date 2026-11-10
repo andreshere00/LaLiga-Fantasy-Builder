@@ -292,7 +292,9 @@ player profile publishes one; the profile is read when its position group is ope
 substitute without a matching profile shows no badge. Below the squad table, **Hierarchy levels**
 opens a dialog listing every squad player under their role, most important first (God, Key
 player, Important, Rotation, Impact substitute, Other, Reserve, then Unknown and Unavailable),
-best scorers first inside each role, with photo, position, and points. The roles come from one
+best scorers first inside each role, with photo, position, and points. A link to
+`/teams/{clubId}?section=players#team-hierarchy` (the Hierarchy block on a player's detail screen)
+lands on this block with the dialog already open. The roles come from one
 player-profile read per player, so nothing is requested until the dialog is first opened; while
 they load, the dialog shows `Skeleton` placeholders shaped like the list. Once read, the block
 also shows a tally chip per level.
@@ -885,8 +887,8 @@ Future verified gross accounting uses `B - P`; verified net accounting uses `B`.
 
 | Column | Notes |
 |--------|--------|
-| Player | Photo and bold name/link; bid icon and amount tooltip when you have a bid. Shielded or future clause-locked names are red and bold, with textual protection help; expired locks revert unless shielding remains |
-| Position | Abbrev badge (`GKP`, `DEF`, `MDF`, `ATK`, `COA`); hover shows full role name |
+| Player | Photo and bold name/link; the club crest on the photo links to that club on Teams; bid icon and amount tooltip when you have a bid. Shielded or future clause-locked names are red and bold, with textual protection help; expired locks revert unless shielding remains |
+| Position | Abbrev badge (`GKP`, `DEF`, `MDF`, `ATK`, `COA`); hover shows full role name. Clicking it filters Market (and Players, via `?pos=`) to that position; clicking it again while it is the only position filter shows all |
 | FSYP | Bold 16px primary points plus secondary season average; hover panel: total, season average, form (last 3) |
 | Form | Five matchweeks at a time, oldest→newest, in compact 26px score squares; current pending fixtures show 0 with a warning and are excluded from averages; ‹ earlier, › later (full season) |
 | Market value | Price, 5-day change, your active bid amount when present, then release clause with protection and lock countdown; hover on the price: last, highest, lowest, 5d/14d ago with % vs current |

@@ -159,6 +159,28 @@ function buildClubMediaIndexes(): {
 
 const CLUB_MEDIA = buildClubMediaIndexes();
 
+/** Teams-master ids (the Teams screen club id) keyed by any Fantasy team id and by crest URL. */
+const CLUB_IDS = (() => {
+  const byTeamId = new Map<string, string>();
+  const byBadge = new Map<string, string>();
+  if (!Array.isArray(teamsMasterFile)) return { byTeamId, byBadge };
+  for (const team of teamsMasterFile) {
+    const record = asRecord(team);
+    const id = idText(record?.id);
+    if (!id) continue;
+    for (const alias of [id, idText(record?.dspId)]) if (alias && !byTeamId.has(alias)) byTeamId.set(alias, id);
+    for (const badge of [text(record?.badgeColor), text(record?.badgeWhite)]) if (badge) byBadge.set(badge, id);
+  }
+  return { byTeamId, byBadge };
+})();
+
+/** The Teams screen club id for a Fantasy team id, or else for the club's crest URL. */
+export function teamsClubId(teamId: unknown, badgeUrl?: string | null): string | null {
+  const id = idText(teamId);
+  return (id ? CLUB_IDS.byTeamId.get(id) : undefined) ??
+    (badgeUrl ? CLUB_IDS.byBadge.get(badgeUrl) : undefined) ?? null;
+}
+
 /** Expands a known club code and otherwise returns its trimmed display value. */
 export function clubDisplayName(value: string | null | undefined): string | null {
   if (!value) return null;

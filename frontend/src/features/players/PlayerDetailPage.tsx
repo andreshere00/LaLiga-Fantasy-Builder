@@ -15,6 +15,7 @@ import {
   callerTeamId,
   catalogMediaByMasterId,
   captainIdOf,
+  idText,
   leagueId,
   mediaFromPlayerMaster,
   playersOf,
@@ -28,6 +29,7 @@ import { parseMasterPlayerId, type MasterPlayerId } from "../../api/ids";
 import { useAuth } from "../../auth/AuthProvider";
 import { GatePanel } from "../gates/GatePanel";
 import { PlayerTile } from "../lineup/PlayerTile";
+import { teamsClubId } from "../../api/clubMedia";
 import { positionLabel } from "../market/positions";
 import { AvailabilityCell } from "../market/cells/AvailabilityCell";
 import { availabilityOf } from "../market/model/availability";
@@ -270,6 +272,11 @@ function PlayerDetailBody({ masterId }: PlayerDetailBodyProps) {
     text(asRecord(detail?.player)?.teamName) ??
     teamNameFromPlayerMaster(catalogMaster);
   const availability = availabilityOf(catalogMaster?.playerStatus);
+  const shownBadgeUrl = leagueMedia.teamBadgeUrl ?? marketListing.row?.teamBadgeUrl ??
+    media?.teamBadgeUrl ?? ownSquadCard?.teamBadgeUrl ?? null;
+  const clubTeamId = idText(asRecord(catalogMaster?.team)?.id) ?? idText(catalogMaster?.teamId) ??
+    idText(asRecord(leagueMaster?.team)?.id) ?? idText(leagueMaster?.teamId);
+  const clubId = teamsClubId(clubTeamId, shownBadgeUrl);
 
   const marketRow = marketListing.row;
 
@@ -398,13 +405,9 @@ function PlayerDetailBody({ masterId }: PlayerDetailBodyProps) {
               rosterPhotoUrl,
               ownSquadCard?.photoUrl,
             ]}
-            teamBadgeUrl={
-              leagueMedia.teamBadgeUrl ??
-              marketListing.row?.teamBadgeUrl ??
-              media?.teamBadgeUrl ??
-              ownSquadCard?.teamBadgeUrl ??
-              null
-            }
+            teamBadgeUrl={shownBadgeUrl}
+            linkClub
+            clubTeamId={clubTeamId}
           />
           <div className="player-detail-header-text">
             <div className="player-detail-header-facts">
@@ -457,7 +460,7 @@ function PlayerDetailBody({ masterId }: PlayerDetailBodyProps) {
             </div>
             <span className="player-outlook-source">{t("FutbolFantasy")}</span>
           </div>
-          <PlayerFantasySummary profile={profileBlock} />
+          <PlayerFantasySummary profile={profileBlock} clubId={clubId} />
         </section>
         {radarSection}
       </section>
