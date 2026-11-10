@@ -213,3 +213,13 @@ test("a player's hierarchy link opens the club's level list", async ({ page }) =
   await expect(levels).toHaveCount(0);
   await expect(page.getByRole("button", { name: "View hierarchy levels" })).toBeFocused();
 });
+
+test("the squad tab links to player details and to the club player list", async ({ page }) => {
+  await installClubs(page);
+  await page.setViewportSize({ width: 1440, height: 900 });
+  await page.goto("/teams/4?section=players");
+  const squadLink = page.locator(".team-table tbody tr th a").first();
+  await expect(squadLink).toHaveAttribute("href", /\/players\/\d+/);
+  const comparison = page.getByRole("link", { name: /Compare all FC Barcelona players/ });
+  await expect(comparison).toHaveAttribute("href", "/players?team=FC+Barcelona");
+});

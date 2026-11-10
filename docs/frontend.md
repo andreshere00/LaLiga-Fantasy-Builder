@@ -1143,3 +1143,26 @@ A lone status icon is centered vertically within the column; two icons remain
 stacked. Empty columns preserve alignment independently of name length. These controls sit alongside identity instead of beneath market actions, keeping
 transaction columns compact. Favorited Market and Players portrait tiles use `#FFC2BF` in
 both themes; comparison row backgrounds remain unchanged.
+
+## Linked data
+
+Wherever the UI names an entity it can resolve, the name is a link. The shared components
+in `frontend/src/components/links/EntityLinks.tsx` render plain text when the id is missing
+or the component is outside a router, so a name never becomes a dead link.
+
+| Entity | Component | Destination |
+|--------|-----------|-------------|
+| Club (name or crest) | `ClubLink` | `/teams/{clubId}`; resolved from the Fantasy team id, crest URL or club name (`teamsClubId`, `teamsClubIdFromName` in `api/clubMedia.ts`) |
+| Player name | `PlayerLink` | `/players/{id}`, with `state.returnTo` for the back link |
+| Fantasy manager | `ManagerLink` | `/?team={teamId}` (Lineup) |
+| Position, club squad | `playersFilterPath` | `/players?pos=…` / `/players?team=…` |
+
+Linked today: club names on Players, player details (header and match cards), Lineup
+fixtures and standings, and Scouting cards; player names on Market, Players, bids,
+received offers, Teams (squad table, MVP cards, hierarchy, injuries); bid sellers and
+Players owners (managers); the position on player details and the club's "Compare all
+players" link on Teams.
+
+Not linked on purpose: lineup builder results (the draft is not kept when leaving the page),
+received-offer senders (the payload carries a bidder name, not a verified team id) and form
+history fixtures (their rows are radio labels, so a nested link would be invalid).
