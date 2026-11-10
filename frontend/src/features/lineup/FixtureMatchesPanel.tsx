@@ -72,9 +72,9 @@ function FixtureMatch({ match, forecast, weatherLoading, weatherFailed, now, isN
   return (
     <li className={`fixture-match${match.status === "unconfirmed" ? " is-updating" : ""}${isNext ? " is-next" : ""}`}>
       <div className="fixture-match-date">
-        {isNext ? <span className="fixture-match-next">{t("Next up")}</span> : <span />}
         {match.kickoff ? <span className="visually-hidden">{dayFormat.format(new Date(match.kickoff))}. </span> : <span className="visually-hidden">{t("Date TBC")}. </span>}
         <span className={`fixture-match-status fixture-match-status--${match.status}`}>{t(status)}</span>
+        {isNext ? <span className="fixture-match-next">{t("Next up")}</span> : null}
       </div>
       {([match.home, match.away] as const).map((team, index) => (
         <div className="fixture-match-team" key={index}>

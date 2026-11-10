@@ -91,7 +91,7 @@
 .fixture-match.is-next { box-shadow:inset 0 3px var(--fb-primary); }
 .fixture-match-date { min-height:24px; }
 .fixture-match-next { margin:0; font-size:11px; font-weight:700; letter-spacing:.06em; text-transform:uppercase; color:var(--fb-secondary); }
-.fixture-match-date .fixture-match-status { margin-left:auto; }
+.fixture-match-date .fixture-match-next { margin-left:auto; padding:2px 8px; background:var(--fb-primary); color:var(--fb-on-brand); }
 .fixture-matches-panel .visually-hidden { position:absolute; width:1px; height:1px; overflow:hidden; clip-path:inset(50%); white-space:nowrap; }
 .fixture-matches-scroll > .fb-scroll-bar[data-orientation="horizontal"] { display:none; }
 @container (min-width:1100px) { .fixture-matches-list { grid-template-columns:repeat(5,minmax(0,1fr)); } .fixture-match { width:auto; } }
