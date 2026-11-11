@@ -7,6 +7,7 @@ import type { CurrentWeek } from "../../api/mappers";
 import { avatarsByTeamId, lastPlayedWeek } from "../../api/mappers";
 import {
   CALENDAR_STALE_MS,
+  leagueTeamsOptions,
   useCurrentWeekQuery,
   usePlayersCatalogQuery,
   useReauthOnError,
@@ -64,10 +65,8 @@ export function usePlayersBoard(): PlayersBoard {
   const catalogQuery = usePlayersCatalogQuery(enabled);
   const currentWeekQuery = useCurrentWeekQuery(enabled);
   const leagueTeamsQuery = useQuery({
-    queryKey: ["league-teams", leagueKey],
+    ...leagueTeamsOptions(leagueKey, token),
     enabled: enabled && leagueKey !== "",
-    staleTime: ROSTER_STALE_MS,
-    queryFn: ({ signal }) => getJson(paths.leagueTeams(leagueKey), token, { signal }),
   });
 
   const teamIds = useMemo(

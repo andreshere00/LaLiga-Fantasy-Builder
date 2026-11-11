@@ -1,4 +1,5 @@
 import { locale } from "../../i18n";
+import { ClubLink } from "../../components/links/EntityLinks";
 import { t, useTranslation, language } from "../../i18n";
 import { Popover } from "@base-ui/react/popover";
 import { useId } from "react";
@@ -131,7 +132,7 @@ export function LaligaStandingsPanel() {
                         <span className="standing-club-badge" aria-hidden="true">
                           <ProfilePhoto url={row.team.badgeUrl} fallback={row.team.name.slice(0, 2)} />
                         </span>
-                        <span className="standing-club-name">{row.team.name}</span>
+                        <ClubLink className="standing-club-name" teamId={row.team.id} badgeUrl={row.team.badgeUrl} name={row.team.name}>{row.team.name}</ClubLink>
                       </span>
                     </TableHead>
                     <TableCell className="standing-points">{row.points}</TableCell>

@@ -18,7 +18,9 @@ for (const [width, theme, language] of [[320, "light", "es"], [500, "dark", "en"
       if (width > 400) expect(bookmark!.x + bookmark!.width).toBeLessThanOrEqual(name!.x);
       else expect(name!.y).toBeGreaterThanOrEqual(bookmark!.y + bookmark!.height);
     }
-    const bookmarkPositions = await bookmarks.evaluateAll(buttons => buttons.map(button => button.getBoundingClientRect().right));
+    // Measured from each card's edge: tablets show two cards per row.
+    const bookmarkPositions = await bookmarks.evaluateAll(buttons => buttons.map(button =>
+      button.getBoundingClientRect().right - button.closest(".market-data-row")!.getBoundingClientRect().left));
     for (const right of bookmarkPositions) expect(right).toBeCloseTo(bookmarkPositions[0], 0);
     const actions = page.locator(".market-section-actions > button");
     await expect(actions).toHaveCount(3);

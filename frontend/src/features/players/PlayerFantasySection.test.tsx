@@ -4,7 +4,8 @@ import { vi } from "vitest";
 import { cleanup, fireEvent, render, screen, within } from "@testing-library/react";
 import { afterEach, describe, expect, it } from "vitest";
 
-import { PlayerFantasySection } from "./PlayerFantasySection";
+import { MemoryRouter } from "react-router-dom";
+import { PlayerFantasySection, PlayerFantasySummary } from "./PlayerFantasySection";
 
 afterEach(cleanup);
 
@@ -85,6 +86,14 @@ describe("PlayerFantasySection history pagination", () => {
     expect(screen.getByRole("heading", { name: title }).textContent).toBe(title);
     expect(screen.queryByRole("link", { name: "Invalid article URL" })).toBeNull();
     expect(screen.getByText("Article link unavailable")).toBeTruthy();
+  });
+
+  it("PlayerFantasySummary_linkedHierarchy_keyboardFocusShowsTheHelp", async () => {
+    render(<MemoryRouter><PlayerFantasySummary profile={profileWithHistory(0)} clubId="3" /></MemoryRouter>);
+
+    fireEvent.focus(screen.getByRole("link", { name: /See the squad hierarchy/ }));
+
+    expect(await screen.findByRole("tooltip")).toBeTruthy();
   });
 
   it("distinguishes empty records from an unavailable profile", () => {

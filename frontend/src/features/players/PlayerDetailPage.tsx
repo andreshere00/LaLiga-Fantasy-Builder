@@ -1,4 +1,6 @@
 import { ScrapedText } from "../translation/ScrapedText";
+import { playersFilterPath } from "./playersSearchParams";
+import { ClubLink } from "../../components/links/EntityLinks";
 import { t, useTranslation } from "../../i18n";
 import { PulseRing } from "../../components/ui/PulseRing";
 import { Button, buttonVariants } from "../../components/ui/Button";
@@ -15,6 +17,7 @@ import {
   callerTeamId,
   catalogMediaByMasterId,
   captainIdOf,
+  idText,
   leagueId,
   mediaFromPlayerMaster,
   playersOf,
@@ -28,6 +31,7 @@ import { parseMasterPlayerId, type MasterPlayerId } from "../../api/ids";
 import { useAuth } from "../../auth/AuthProvider";
 import { GatePanel } from "../gates/GatePanel";
 import { PlayerTile } from "../lineup/PlayerTile";
+import { teamsClubId } from "../../api/clubMedia";
 import { positionLabel } from "../market/positions";
 import { AvailabilityCell } from "../market/cells/AvailabilityCell";
 import { availabilityOf } from "../market/model/availability";
@@ -270,6 +274,12 @@ function PlayerDetailBody({ masterId }: PlayerDetailBodyProps) {
     text(asRecord(detail?.player)?.teamName) ??
     teamNameFromPlayerMaster(catalogMaster);
   const availability = availabilityOf(catalogMaster?.playerStatus);
+  const shownBadgeUrl = leagueMedia.teamBadgeUrl ?? marketListing.row?.teamBadgeUrl ??
+    media?.teamBadgeUrl ?? ownSquadCard?.teamBadgeUrl ?? null;
+  const clubTeamId = idText(asRecord(catalogMaster?.team)?.id) ?? idText(catalogMaster?.teamId) ??
+    idText(asRecord(leagueMaster?.team)?.id) ?? idText(leagueMaster?.teamId);
+  const clubId = teamsClubId(clubTeamId, shownBadgeUrl);
+  const position = positionLabel(positionId);
 
   const marketRow = marketListing.row;
 
@@ -398,18 +408,14 @@ function PlayerDetailBody({ masterId }: PlayerDetailBodyProps) {
               rosterPhotoUrl,
               ownSquadCard?.photoUrl,
             ]}
-            teamBadgeUrl={
-              leagueMedia.teamBadgeUrl ??
-              marketListing.row?.teamBadgeUrl ??
-              media?.teamBadgeUrl ??
-              ownSquadCard?.teamBadgeUrl ??
-              null
-            }
+            teamBadgeUrl={shownBadgeUrl}
+            linkClub
+            clubTeamId={clubTeamId}
           />
           <div className="player-detail-header-text">
             <div className="player-detail-header-facts">
-              <span>{teamName ?? MISSING_STAT}</span>
-              <span className="player-profile-position">{(positionLabel(positionId) ?? MISSING_STAT)}</span>
+              <span>{teamName ? <ClubLink teamId={clubTeamId} badgeUrl={shownBadgeUrl} name={teamName}>{teamName}</ClubLink> : MISSING_STAT}</span>
+              <span className="player-profile-position">{positionId != null && position ? <Link className="entity-link" to={playersFilterPath({ positionId })} title={t("See all {{0}} players", { 0: position })}>{position}</Link> : MISSING_STAT}</span>
               {age != null ? <span>{age} {t(" years old")}</span> : null}
             </div>
             <div className="player-detail-title-row"><h1 id="player-overview" tabIndex={-1}>{name}</h1>
@@ -457,7 +463,7 @@ function PlayerDetailBody({ masterId }: PlayerDetailBodyProps) {
             </div>
             <span className="player-outlook-source">{t("FutbolFantasy")}</span>
           </div>
-          <PlayerFantasySummary profile={profileBlock} />
+          <PlayerFantasySummary profile={profileBlock} clubId={clubId} />
         </section>
         {radarSection}
       </section>

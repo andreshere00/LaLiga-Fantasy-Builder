@@ -12,6 +12,12 @@ directly and keeps the internal JWT in memory only.
 ## Spanish and English
 
 The header's Options button opens the league/account panel on mobile and desktop.
+The panel is grouped under captions instead of separate boxes: **Preferences**
+(language and theme), **League** (selector), and **Account** (a Profile row with
+avatar and chevron, then Log out/Log in), with hairline dividers between groups.
+Each main navigation tab (Lineup, Market, Players, Teams) carries a decorative
+`NavIcon` from `features/shell/icons.tsx` that follows `currentColor`; on a phone
+it stacks above the label in the bottom bar.
 The panel contains the 44 × 44px globe-only language selector beside the theme
 control; both stay hidden when Options is collapsed. The language selector’s
 accessible name and hover title follow the current language (Idioma/Language). The popup lists Español and English with the selected
@@ -230,6 +236,17 @@ and the API.
 | `/teams/:clubId` | One club dossier: players, results, predicted lineup, news and injuries | [Clubs](api/clubs/README.md) |
 
 The shell header switches routes. The league dropdown applies to lineup, market, and players.
+Market, Players, Teams and player details load on demand. Hovering, focusing or first touching
+a header tab (`useRoutePrefetch`) warms the section's code chunk and its first read-only
+requests, using the same query options and `staleTime` as the screens so a prefetch never
+refetches data a screen would still treat as fresh. Links to a player's details warm only the
+code (`preloadHandlers`); both share `warmOnIntent` in `app/routeModules.ts`.
+
+The alerts bell and the **Favorites** button open the scouting dialog through the `?scouting=`
+URL parameter (`favorites` or `alerts`, with `scoutingQuery` and `scoutingFilter`). The dialog is
+mounted once in the header for signed-in users and returns focus to the Favorites button when it
+closes. A signed-out visit drops these parameters from the URL so a shared link does not open the
+dialog after the next login.
 Teams reads the current club directory and one dossier; it does not use the manager-squad API.
 
 ### Teams screen
@@ -255,7 +272,7 @@ keyboard. That bar is named **Club sections**, separate
 from the header's Sections navigation. On a phone the four header destinations move to
 the bottom bar and keep their labels inside the safe area.
 
-The Club sections bar is sticky and follows the section being read as the page
+The Club sections bar (the shared `.fb-section-tabs` style, also used by player details) is sticky and follows the section being read as the page
 scrolls; selecting a link, or opening a `?section=` URL, jumps to that section and
 keeps the jump in place while images and radar chips finish loading, until the
 reader scrolls. Sections are separated by a rule and share one heading style.
@@ -292,7 +309,9 @@ player profile publishes one; the profile is read when its position group is ope
 substitute without a matching profile shows no badge. Below the squad table, **Hierarchy levels**
 opens a dialog listing every squad player under their role, most important first (God, Key
 player, Important, Rotation, Impact substitute, Other, Reserve, then Unknown and Unavailable),
-best scorers first inside each role, with photo, position, and points. The roles come from one
+best scorers first inside each role, with photo, position, and points. A link to
+`/teams/{clubId}?section=players#team-hierarchy` (the Hierarchy block on a player's detail screen)
+lands on this block with the dialog already open. The roles come from one
 player-profile read per player, so nothing is requested until the dialog is first opened; while
 they load, the dialog shows `Skeleton` placeholders shaped like the list. Once read, the block
 also shows a tally chip per level.
@@ -394,7 +413,8 @@ remains clearly labeled, retries automatically, and offers retry after a failure
 complete**. Historical lineup navigation and manager selection do not change
 this competition panel or discard an unsaved draft. The panel has its own previous/next
 fixture navigation, bounded to weeks 1–38. Browsing keeps the chosen fixture visible.
-The horizontal scrollbar and previous/next fixture pager are the only navigation
+Matches are grouped by kickoff day: each day is an item of the list with its own
+heading and a nested list of that day's matches. The horizontal scrollbar and previous/next fixture pager are the only navigation
 controls. The pager is centered at phone widths. There is no manual refresh button.
 
 Matches include club names/crests, Madrid-local dates and times, and reported
@@ -511,13 +531,14 @@ assists without a goal remain separate from key passes. Source definitions and
 calculation details remain available inside the dialog. No API contracts changed.
 
 Section shortcuts link directly to keyboard-focusable headings for Overview,
-Form, Market value, Matches, and News & injuries. Centered desktop shortcuts
-stay beneath the app header and identify the current reading section with a
-rectangular selection, a coral marker, and `aria-current="location"`.
+Form, Market value, Matches, and News & injuries. They use the shared
+`.fb-section-tabs` bar from the design system, the same one as the Teams club
+sections: a sticky bar beneath the app header whose current tab has a coral
+underline and `aria-current="location"`. On phones the tabs become equal-width
+cells with the icon above the label; on screens 500px tall or less (landscape
+phones) the bar scrolls with the page.
 The current section updates when scrolling, using links, or navigating history.
-On phones, the shortcuts form a horizontally scrollable strip that flows
-normally with the page; the active link scrolls into the strip's viewport
-without moving page focus. Links retain native heading focus and URL hashes.
+If the bar overflows, the active link scrolls into view without moving page focus. Links retain native heading focus and URL hashes.
 Phone profiles place the portrait beside the player's identity. This grouping
 applies [proximity](https://lawsofux.com/law-of-proximity/) and
 [chunking](https://lawsofux.com/chunking/) to the existing data and design system.
@@ -556,10 +577,20 @@ name on the left, with form on the right. The tooltip includes the probability's
 matchweek when supplied. Starter badges use the profile icon colors: red below
 50%, yellow from 50% to below 75%, and green from 75%. Missing values show a
 neutral dash; reported zeroes stay zero.
+On your own squad, a player listed for sale shows a red € mark under the season
+points, in the same colour as the market options. It appears only on squad cards
+(not the pitch) and adds "On the market" to the card's name and tooltip.
 **Filter squad** opens a dialog for position, season Fantasy points, club, start
 probability, form, and availability. Every selected condition applies together.
-The filter groups use expandable rows with a compact current-value summary;
-position opens first. Position and availability use toggle groups. Form is grouped
+The layout follows the screen. Phones (up to 700px) get a bottom sheet of
+expandable rows with a current-value summary; position opens first, club comes
+last, positions fit one segmented row of short labels (POR, DEF, MED, DEL, ENT;
+the full name is the accessible name and shows in the row summary), and
+**Show N players** spans the full width above Clear and Cancel. From
+701px every group is an open section with its value in the heading (highlighted
+once the group has a selection, whatever the language): two columns on iPad portrait with clubs across the bottom, and
+three columns from 1000px (iPad landscape, Mac) where the club list scrolls in its
+own column so the whole panel fits without scrolling. Position and availability use toggle groups. Form is grouped
 into Poor, Average, and Good, with equal buttons inside each band. Availability
 is three equal rows for Available, Questionable, and Unavailable. Club
 choices are checkboxes with their crest and name. FSYP is a two-thumb slider
@@ -569,7 +600,8 @@ reports how many squad players qualify.
 **Show N players** previews the match count and updates the squad; **Cancel** and
 Escape leave it unchanged.
 **Clear filters** is available in the dialog and beside the button once a filter
-is active. An empty result explains that nothing matched and offers clear.
+is active. Applied groups also show as chips under the button (for example
+"Position Goalkeeper, Defense"); each chip's × removes just that group. An empty result explains that nothing matched and offers clear.
 Missing values stay visible while squad details are still loading, then drop out
 of an active filter. Changing team clears the filters.
 All squad profiles load in parallel and are cached for five minutes. A skeleton
@@ -628,10 +660,12 @@ dividers without entrance motion. Filters edit a draft in a desktop side panel
 or mobile bottom panel; Apply writes the existing URL state, while Cancel or
 Escape discards edits. Catalog pagination uses a sliding three-number window.
 
-Above **700px**, the catalog retains all comparison columns through horizontal
-scrolling. At **700px or less**, labeled player cards retain points, form,
-market value, clause, availability, ownership, and actions. Column filters remain
-in a horizontally scrollable strip. Loading placeholders follow the row layout.
+Above **1280px**, the catalog shows every comparison column side by side. From
+**1001px to 1280px** (tablet landscape), Team sits under the player name and Owned
+by under Availability, so the table fits without horizontal scrolling. At
+**1000px or less**, labeled player cards retain points, form, market value, clause,
+availability, ownership, and actions, two per row above 700px and one per row
+below. Column filters wrap onto as many lines as needed instead of scrolling. Loading placeholders follow the row layout.
 
 Market value also groups **Your bid** (red, only for a current bid) and **Release
 clause**, including its shield and lock countdown. Phone cards keep these facts
@@ -882,8 +916,8 @@ Future verified gross accounting uses `B - P`; verified net accounting uses `B`.
 
 | Column | Notes |
 |--------|--------|
-| Player | Photo and bold name/link; bid icon and amount tooltip when you have a bid. Shielded or future clause-locked names are red and bold, with textual protection help; expired locks revert unless shielding remains |
-| Position | Abbrev badge (`GKP`, `DEF`, `MDF`, `ATK`, `COA`); hover shows full role name |
+| Player | Photo and bold name/link; the club crest on the photo links to that club on Teams; bid icon and amount tooltip when you have a bid. Shielded or future clause-locked names are red and bold, with textual protection help; expired locks revert unless shielding remains |
+| Position | Abbrev badge (`GKP`, `DEF`, `MDF`, `ATK`, `COA`); hover shows full role name. Clicking it filters Market (and Players, via `?pos=`) to that position; clicking it again while it is the only position filter shows all |
 | FSYP | Bold 16px primary points plus secondary season average; hover panel: total, season average, form (last 3) |
 | Form | Five matchweeks at a time, oldest→newest, in compact 26px score squares; current pending fixtures show 0 with a warning and are excluded from averages; ‹ earlier, › later (full season) |
 | Market value | Price, 5-day change, your active bid amount when present, then release clause with protection and lock countdown; hover on the price: last, highest, lowest, 5d/14d ago with % vs current |
@@ -902,8 +936,7 @@ Not applicable for a LaLiga listing without a clause, and Unavailable for other
 unknown values. The shield beside it follows the theme foreground (white in dark
 mode); the separate red protection icon stays red. The clause lock countdown stays
 with the clause value. Seller navigation remains in Sell options. Market value
-and clause details remain reachable by scrolling the table horizontally on smaller
-screens. Bid/direct-offer
+and clause details stay visible at every width; nothing scrolls sideways. Bid/direct-offer
 dialog actions, close and counter buttons have square corners, including disabled
 controls. Market and Players share typography, protection and score styling while
 keeping their own responsive column layouts.
@@ -998,9 +1031,9 @@ mobile retains horizontal scrolling with pinned team identities. The bounded
 vertical table area keeps its heading, refresh action and column headers nearby.
 
 The market uses comparison rows with a 144px minimum height on desktop and
-labeled player cards at 700px and below. Phone cards keep points, form history, market value, availability,
-expiry and seller actions visible; column filters remain in a horizontally
-scrollable strip. The result count reflects the active filters. Season averages
+labeled player cards at 1000px and below (two per row above 700px). From 1001px to 1100px
+Availability sits above Offer ends in one column. Cards keep points, form history, market value, availability,
+expiry and seller actions visible; column filters wrap instead of scrolling. The result count reflects the active filters. Season averages
 are labeled explicitly, and LaLiga listings omit the inapplicable release-clause
 line. Transaction dialogs and confirmations retain their existing behavior.
 
@@ -1139,3 +1172,26 @@ A lone status icon is centered vertically within the column; two icons remain
 stacked. Empty columns preserve alignment independently of name length. These controls sit alongside identity instead of beneath market actions, keeping
 transaction columns compact. Favorited Market and Players portrait tiles use `#FFC2BF` in
 both themes; comparison row backgrounds remain unchanged.
+
+## Linked data
+
+Wherever the UI names an entity it can resolve, the name is a link. The shared components
+in `frontend/src/components/links/EntityLinks.tsx` render plain text when the id is missing
+or the component is outside a router, so a name never becomes a dead link.
+
+| Entity | Component | Destination |
+|--------|-----------|-------------|
+| Club (name or crest) | `ClubLink` | `/teams/{clubId}`; resolved from the Fantasy team id, crest URL or club name (`teamsClubId`, `teamsClubIdFromName` in `api/clubMedia.ts`); a crest URL shared by two clubs is ambiguous and resolves to none |
+| Player name | `PlayerLink` | `/players/{id}`, with `state.returnTo` for the back link |
+| Fantasy manager | `ManagerLink` | `/?team={teamId}` (Lineup) |
+| Position, club squad | `playersFilterPath` | `/players?pos=…` / `/players?team=…` |
+
+Linked today: club names on Players, player details (header and match cards), Lineup
+fixtures and standings, and Scouting cards; player names on Market, Players, bids,
+received offers, Teams (squad table, MVP cards, hierarchy, injuries); bid sellers and
+Players owners (managers); the position on player details and the club's "Compare all
+players" link on Teams.
+
+Not linked on purpose: lineup builder results (the draft is not kept when leaving the page),
+received-offer senders (the payload carries a bidder name, not a verified team id) and form
+history fixtures (their rows are radio labels, so a nested link would be invalid).

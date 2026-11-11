@@ -1,5 +1,7 @@
 import { useEffect, useMemo, useState, type Ref } from "react";
 import { Link, useLocation } from "react-router-dom";
+import { playersFilterPath } from "../players/playersSearchParams";
+import { PlayerLink } from "../../components/links/EntityLinks";
 import { t, useTranslation } from "../../i18n";
 import { playerAge } from "../players/playerDetailFormat";
 import { positionAbbrev, positionLabel, positionTone } from "../market/positions";
@@ -51,8 +53,10 @@ const COLUMN_LABELS: Record<SquadColumn, string> = {
 export function TeamPlayersSection({
   roster,
   seasonStats,
+  clubName,
 }: {
   roster: Roster;
+  clubName?: string | null;
   seasonStats?: SeasonStatsState;
 }) {
   useTranslation();
@@ -96,13 +100,9 @@ export function TeamPlayersSection({
   const renderRow = (row: SquadRow) => (
     <tr key={row.playerId}>
       <th className="is-player" scope="row">
-        <Link
-          className="team-player-link"
-          to={`/players/${encodeURIComponent(row.playerId)}`}
-          state={{ returnTo }}
-        >
+        <PlayerLink className="team-player-link" playerId={row.playerId} returnTo={returnTo}>
           {row.name}
-        </Link>
+        </PlayerLink>
       </th>
       <td className="is-position">
         <span
@@ -135,11 +135,19 @@ export function TeamPlayersSection({
           outlooksLoading={outlooks.isLoading}
           media={media}
           recent={recent}
+          returnTo={returnTo}
         />
       </div>
       <div className="team-block">
         <h3 id="team-squad-title">{t("Squad")}</h3>
         <TeamSummary id="team-summary-squad" widget="squad" />
+        {clubName ? (
+          <p className="team-note">
+            <Link className="entity-link" to={playersFilterPath({ team: clubName })}>
+              {t("Compare all {{0}} players on Players →", { 0: clubName })}
+            </Link>
+          </p>
+        ) : null}
         <p className="team-note">
           {season
             ? t("{{0}} players. LaLiga {{1}} season totals from FutbolFantasy.", {
@@ -276,12 +284,14 @@ function MvpStrip({
   outlooksLoading,
   media,
   recent,
+  returnTo,
 }: {
   players: Roster["mvps"];
   outlooks: { get(playerId: string): unknown };
   outlooksLoading: boolean;
   media: ReadonlyMap<string, { photoUrl: string | null }>;
   recent: ReadonlyMap<string, readonly RecentPoint[]>;
+  returnTo: string;
 }) {
   const first = usePlayerRadar(players[0]?.playerId ?? "");
   const second = usePlayerRadar(players[1]?.playerId ?? "");
@@ -322,7 +332,7 @@ function MvpStrip({
                     fallback={<PersonIcon />}
                   />
                   <div className="team-mvp-name">
-                    <h4>{player.name}</h4>
+                    <h4><PlayerLink playerId={player.playerId} returnTo={returnTo}>{player.name}</PlayerLink></h4>
                     {position || age != null ? (
                       <p className="team-mvp-meta">
                         {[position ? t(position) : null, age != null ? `${age}${t(" years old")}` : null]

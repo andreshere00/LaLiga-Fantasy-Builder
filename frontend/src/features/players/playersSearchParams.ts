@@ -149,3 +149,12 @@ export function withPlayersPage(base: URLSearchParams, page: number): URLSearchP
     page: page > 1 ? page : null,
   });
 }
+
+/** A Players list URL already filtered by position and/or club name. */
+export function playersFilterPath(patch: { positionId?: number | null; team?: string | null }): string {
+  const filters = createEmptyPlayersFilters();
+  if (patch.positionId != null) filters.positions = new Set([patch.positionId]);
+  if (patch.team) filters.team = patch.team;
+  const query = serializePlayersSearchParams({ filters, page: null }).toString();
+  return query ? `/players?${query}` : "/players";
+}

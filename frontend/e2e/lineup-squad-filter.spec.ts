@@ -9,12 +9,13 @@ test("squad filter keeps goalkeepers and can be cleared", async ({ page }, info)
   const squad = page.locator(".squad-grid--ready");
   await expect(squad.getByRole("button", { name: /^Player 06/ })).toBeVisible();
   await page.getByRole("button", { name: "Filter squad" }).click();
-  await page.locator("summary").filter({ hasText: "Club" }).click();
-  await page.locator("summary").filter({ hasText: "FSYP" }).click();
+  const filterDialog = page.getByRole("dialog", { name: "Filter squad" });
+  await expect(filterDialog.locator("summary")).toHaveCount(0);
+  await expect(filterDialog.getByRole("group", { name: "Club" })).toBeVisible();
   await expect(page.getByRole("slider", { name: /^(Minimum|Maximum) FSYP$/ })).toHaveCount(2);
   await page.screenshot({ path: info.outputPath("squad-filter-desktop-light.png") });
   await page.getByRole("button", { name: "Goalkeeper", exact: true }).click();
-  await expect(page.locator("summary").filter({ hasText: "Position" })).toContainText("Goalkeeper");
+  await expect(filterDialog.getByRole("region", { name: "Position" })).toContainText("Goalkeeper");
   await page.getByRole("button", { name: "Cancel" }).click();
   await expect(squad.getByRole("button", { name: /^Player 06/ })).toBeVisible();
 
@@ -25,8 +26,11 @@ test("squad filter keeps goalkeepers and can be cleared", async ({ page }, info)
   await expect(page.getByRole("status").filter({ hasText: "Showing" })).toBeVisible();
   await expect(squad.getByRole("button", { name: /^Player 01/ })).toBeVisible();
   await expect(squad.getByRole("button", { name: /^Player 06/ })).toHaveCount(0);
+  const applied = page.getByRole("list", { name: "Applied filters" });
+  await expect(applied.getByRole("listitem")).toHaveText(["PositionGoalkeeper×"]);
 
-  await page.getByRole("button", { name: "Clear filters" }).click();
+  await applied.getByRole("button", { name: "Remove filter: Position" }).click();
+  await expect(applied).toHaveCount(0);
   await expect(squad.getByRole("button", { name: /^Player 06/ })).toBeVisible();
 });
 
@@ -39,6 +43,21 @@ test("phone squad filter opens as a dialog", async ({ page }, info) => {
   const dialog = page.getByRole("dialog", { name: "Filter squad" });
   await expect(dialog.getByRole("group", { name: "Position" })).toBeVisible();
   await expect(dialog.locator("summary")).toHaveCount(6);
+  const positions = dialog.getByRole("group", { name: "Position" }).getByRole("button");
+  await expect(positions).toHaveText(["GKP", "DEF", "MDF", "ATK", "COA"]);
+  await expect(dialog.getByRole("button", { name: "Goalkeeper", exact: true })).toBeVisible();
+  const positionTops = await positions.evaluateAll((nodes) =>
+    new Set(nodes.map((node) => Math.round(node.getBoundingClientRect().top))).size);
+  expect(positionTops).toBe(1);
+  await dialog.getByRole("button", { name: "Midfielder", exact: true }).hover();
+  await expect(page.getByRole("tooltip")).toHaveText("Midfielder");
+  await page.mouse.move(5, 5);
+  await dialog.getByRole("button", { name: "Goalkeeper", exact: true }).focus();
+  await page.keyboard.press("ArrowRight");
+  await expect(page.getByRole("tooltip")).toHaveText("Defense");
+  await page.keyboard.press("Escape");
+  await expect(page.getByRole("tooltip")).toHaveCount(0);
+  await expect(dialog).toBeVisible();
   await expect(dialog.getByRole("group", { name: "Club" })).toBeHidden();
   const clubDisclosure = dialog.locator("summary").filter({ hasText: "Club" });
   await clubDisclosure.focus();
@@ -89,7 +108,6 @@ test("start probability slider keeps players at or above the minimum", async ({ 
   await expect(squad.getByRole("button", { name: /^Player 02/ })).toBeVisible();
   await page.getByRole("button", { name: "Filter squad" }).click();
   const dialog = page.getByRole("dialog", { name: "Filter squad" });
-  await dialog.locator("summary").filter({ hasText: "Start probability" }).click();
   const thumb = dialog.getByRole("slider", { name: "Minimum start probability" });
   await thumb.focus();
   for (const key of ["PageUp", "PageUp", "PageUp", "ArrowRight", "ArrowRight"]) {
@@ -97,11 +115,56 @@ test("start probability slider keeps players at or above the minimum", async ({ 
   }
   await expect(thumb).toHaveValue("85");
   await expect(dialog.getByRole("progressbar")).toHaveCount(0);
-  await expect(dialog.locator("summary").filter({ hasText: "Start probability" }))
+  await expect(dialog.getByRole("region", { name: "Start probability" }))
     .toContainText("At least 85%");
   await page.screenshot({ path: info.outputPath("squad-filter-probability.png") });
   await dialog.getByRole("button", { name: "Show 2 players" }).click();
   await expect(squad.getByRole("button", { name: /^Player 01/ })).toBeVisible();
   await expect(squad.getByRole("button", { name: /^Player 03/ })).toBeVisible();
   await expect(squad.getByRole("button", { name: /^Player 02/ })).toHaveCount(0);
+});
+
+for (const { device, width, height, columns } of [
+  { device: "iPhone 19.5:9", width: 393, height: 852, columns: 0 },
+  { device: "iPad 4:3 portrait", width: 768, height: 1024, columns: 2 },
+  { device: "iPad 4:3 landscape", width: 1024, height: 768, columns: 3 },
+  { device: "Mac 16:10", width: 1440, height: 900, columns: 3 },
+  { device: "Mac 16:9", width: 1920, height: 1080, columns: 3 },
+]) {
+  test(`squad filter layout fits ${device}`, async ({ page }, info) => {
+    await page.setViewportSize({ width, height });
+    await mockApplication(page);
+    await page.goto("/");
+    await page.getByRole("button", { name: "Filter squad" }).click();
+    const dialog = page.getByRole("dialog", { name: "Filter squad" });
+    await expect(dialog).toBeVisible();
+    const box = await dialog.boundingBox();
+    expect(box!.x).toBeGreaterThanOrEqual(0);
+    expect(box!.x + box!.width).toBeLessThanOrEqual(width + 1);
+    expect(box!.y + box!.height).toBeLessThanOrEqual(height + 1);
+    await expect(dialog.getByRole("button", { name: /^Show \d+ players?$/ })).toBeInViewport();
+    if (columns === 0) {
+      await expect(dialog.locator("summary")).toHaveCount(6);
+    } else {
+      const sections = dialog.locator(".squad-filter-section");
+      await expect(sections).toHaveCount(6);
+      const lefts = await sections.evaluateAll((nodes) =>
+        [...new Set(nodes.map((node) => Math.round(node.getBoundingClientRect().left)))]);
+      expect(lefts).toHaveLength(columns);
+    }
+    await page.screenshot({ path: info.outputPath(`squad-filter-${width}x${height}.png`) });
+  });
+}
+
+test("own listed players carry a market mark on the squad cards only", async ({ page }) => {
+  await page.setViewportSize({ width: 375, height: 812 });
+  await mockApplication(page);
+  await page.goto("/");
+  const squad = page.locator(".squad-grid--ready");
+  await expect(squad.getByRole("button", { name: /^Player 01/ })).toBeVisible();
+  await expect(squad.locator(".player-market-badge")).toHaveCount(0);
+  await page.getByRole("button", { name: "Next squad page" }).click();
+  await expect(squad.getByRole("button", { name: /^Player 13.*On the market/ })).toBeVisible();
+  await expect(squad.locator(".player-market-badge")).toHaveCount(1);
+  await expect(page.locator(".pitch-tile .player-market-badge")).toHaveCount(0);
 });

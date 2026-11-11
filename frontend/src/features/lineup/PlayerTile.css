@@ -346,3 +346,25 @@
   font-weight: 400;
   text-align: left;
 }
+
+/* A linked crest opens the club on Teams; the invisible margin gives touch a larger target. */
+.player-badge-link {
+  z-index: 7;
+  pointer-events: auto;
+  border-radius: 50%;
+  cursor: pointer;
+  transition: transform .16s ease;
+}
+.player-badge-link::after { content: ""; position: absolute; inset: -6px; }
+.player-badge-link:hover { transform: scale(1.12); }
+.player-badge-link:focus-visible { outline: 2px solid var(--fb-focus); outline-offset: 2px; }
+@media (prefers-reduced-motion: reduce) { .player-badge-link { transition: none; } .player-badge-link:hover { transform: none; } }
+
+/* Own player listed for sale: a market mark under the season points, in the market tone. */
+.player-market-badge {
+  position:absolute; z-index:5; left:6.6667%; top:calc(5% + 26px);
+  display:grid; place-items:center; width:20px; height:20px;
+  background:var(--fb-primary); border:1px solid var(--fb-primary);
+  color:var(--fb-ink-on-status); pointer-events:none;
+}
+.player-market-badge svg { width:14px; height:14px; fill:currentColor; }

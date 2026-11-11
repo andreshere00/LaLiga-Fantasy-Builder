@@ -1,4 +1,5 @@
 import { useLayoutEffect, useRef } from "react";
+import { ClubLink } from "../../components/links/EntityLinks";
 import { useLocation, useNavigate, useSearchParams } from "react-router-dom";
 import { Collapsible } from "@base-ui/react/collapsible";
 import { Button } from "../../components/ui/Button";
@@ -48,7 +49,7 @@ function FavoriteCard({ favorite, row, details }: { favorite: Favorite; row?: Pl
         photoUrl={row.photoUrl} teamBadgeUrl={row.teamBadgeUrl} /> : null}
       <div className="scouting-player-title">
         <h3><button type="button" className="scouting-name" onClick={details}>{name}</button></h3>
-        <span><span>{row?.teamName ?? "—"}</span><PositionCell positionId={row?.positionId ?? null} /></span>
+        <span><span>{row?.teamName ? <ClubLink badgeUrl={row.teamBadgeUrl} name={row.teamName}>{row.teamName}</ClubLink> : "—"}</span><PositionCell positionId={row?.positionId ?? null} /></span>
       </div>
       <PlayerBookmarkButton pressed playerName={name} disabled={scouting.pending} onToggle={() => scouting.toggle(favorite.playerId)} />
     </div>
@@ -171,14 +172,27 @@ function PanelContent({ details }: { details: (player: string, league?: string) 
   </div>;
 }
 
+/** Opens the scouting dialog by setting the URL param; the dialog itself lives in the header. */
 export function ScoutingPanel() {
   useTranslation();
   const scouting = useScouting();
   const [params, setParams] = useSearchParams();
+  return <Button variant="outline" data-scouting-trigger="" icon={
+    <svg viewBox="0 0 24 24" aria-hidden="true">
+      <path d="M6 3h12v18l-6-4-6 4V3Z" stroke="currentColor" strokeWidth="1.5" fill="none" />
+    </svg>
+  } onClick={() => { const next = new URLSearchParams(params); next.set("scouting", "favorites"); setParams(next, { replace: true }); }}>
+    {t("Favorites")} ({scouting.favorites.size}){scouting.unread > 0 ? <span className="scouting-unread" aria-label={t("{{0}} unread alerts", { 0: scouting.unread })}>{scouting.unread}</span> : null}
+  </Button>;
+}
+
+/** The favorites and alerts dialog, mounted once so any page can open it with `?scouting=`. */
+export function ScoutingDialog() {
+  useTranslation();
+  const [params, setParams] = useSearchParams();
   const navigate = useNavigate();
   const location = useLocation();
   const { selectLeague } = useLeague();
-  const trigger = useRef<HTMLButtonElement>(null);
   const pendingNavigation = useRef<{ player: string; league?: string; returnTo: string } | null>(null);
   const open = params.has("scouting");
   const close = () => {
@@ -186,17 +200,11 @@ export function ScoutingPanel() {
     next.delete("scouting"); next.delete("scoutingQuery"); next.delete("scoutingFilter");
     setParams(next, { replace: true });
   };
-  return <>
-    <Button ref={trigger} variant="outline" icon={
-      <svg viewBox="0 0 24 24" aria-hidden="true">
-        <path d="M6 3h12v18l-6-4-6 4V3Z" stroke="currentColor" strokeWidth="1.5" fill="none" />
-      </svg>
-    } onClick={() => { const next = new URLSearchParams(params); next.set("scouting", "favorites"); setParams(next, { replace: true }); }}>
-      {t("Favorites")} ({scouting.favorites.size}){scouting.unread > 0 ? <span className="scouting-unread" aria-label={t("{{0}} unread alerts", { 0: scouting.unread })}>{scouting.unread}</span> : null}
-    </Button>
-    <Dialog open={open} title={t("Favorites and scouting")} layout="sheet" className="scouting-panel" onClose={close}
+  return <Dialog open={open} title={t("Favorites and scouting")} layout="sheet" className="scouting-panel" onClose={close}
       footer={<Button variant="outline" onClick={close}>{t("Close")}</Button>}
-      finalFocus={() => trigger.current ?? false} onOpenChangeComplete={next => {
+      // The opener lives on the page and the dialog in the header, so hand focus back by marker.
+      finalFocus={() => document.querySelector<HTMLElement>("[data-scouting-trigger]") ?? false}
+      onOpenChangeComplete={next => {
         if (!next && pendingNavigation.current) {
           const target = pendingNavigation.current; pendingNavigation.current = null;
           if (target.league) selectLeague(target.league);
@@ -207,6 +215,5 @@ export function ScoutingPanel() {
         pendingNavigation.current = { player, league, returnTo: location.pathname + location.search };
         close();
       }} /> : null}
-    </Dialog>
-  </>;
+    </Dialog>;
 }

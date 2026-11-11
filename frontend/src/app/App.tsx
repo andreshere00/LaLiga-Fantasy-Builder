@@ -3,8 +3,8 @@ import { t, useTranslation } from "../i18n";
 import { Notifications } from "../components/ui/Notifications";
 import { PulseRing } from "../components/ui/PulseRing";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { lazy, Suspense } from "react";
-import { BrowserRouter, Route, Routes } from "react-router-dom";
+import { Suspense, type ReactNode } from "react";
+import { BrowserRouter, Route, Routes, useLocation } from "react-router-dom";
 
 import { NeedsReauthError } from "../api/errors";
 import { AuthPage } from "../auth/AuthPages";
@@ -14,20 +14,13 @@ import { AuthProvider, useAuth } from "../auth/AuthProvider";
 import { GatePanel } from "../features/gates/GatePanel";
 import { LeagueProvider } from "../features/lineup/LeagueProvider";
 import { LineupPage } from "../features/lineup/LineupPage";
-import { MarketPage } from "../features/market/MarketPage";
-import { PlayersPage } from "../features/players/PlayersPage";
-import { TeamsPage } from "../features/teams/TeamsPage";
 import { Footer } from "../features/shell/Footer";
 import { Header } from "../features/shell/Header";
 import { AppErrorBoundary } from "./AppErrorBoundary";
 import { ContactPage } from "./ContactPage";
+import { PlayerDetailScreenLoading } from "../features/players/PlayerScreenLoading";
 import { NotFoundPage } from "./NotFoundPage";
-
-const PlayerDetailPage = lazy(() =>
-  import("../features/players/PlayerDetailPage").then((module) => ({
-    default: module.PlayerDetailPage,
-  })),
-);
+import { MarketPage, PlayerDetailPage, PlayersPage, TeamsPage } from "./routeModules";
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -39,6 +32,18 @@ const queryClient = new QueryClient({
     },
   },
 });
+
+/** Pages that share one screen keep the same key so switching between them does not replay the fade. */
+export function routeSectionKey(pathname: string): string {
+  const [first = "", second] = pathname.split("/").filter(Boolean);
+  if (first === "players") return second ? "players-detail" : "players";
+  return first;
+}
+
+function AppMain({ children }: { children: ReactNode }) {
+  const { pathname } = useLocation();
+  return <main className="app-main route-enter" key={routeSectionKey(pathname)}>{children}</main>;
+}
 
 function LineupRoute() {
   const { status } = useAuth();
@@ -58,7 +63,8 @@ export function App() {
               <ScoutingProvider>
               <div className="app-shell">
                 <Header />
-                <main className="app-main">
+                <AppMain>
+                  <Suspense fallback={<PulseRing label={t("Loading…")} />}>
                   <Routes>
                     <Route path="/connect-laliga" element={<ConnectLaligaPage />} />
                     {["sign-in", "register", "verify-email", "forgot-password", "reset-password"].map(path => <Route key={path} path={`/${path}`} element={<AuthPage />} />)}
@@ -71,7 +77,7 @@ export function App() {
                     <Route
                       path="/players/:playerId"
                       element={
-                        <Suspense fallback={<PulseRing label={t("Loading player…")} />}>
+                        <Suspense fallback={<PlayerDetailScreenLoading />}>
                           <PlayerDetailPage />
                         </Suspense>
                       }
@@ -79,7 +85,8 @@ export function App() {
                     <Route path="/contact" element={<ContactPage />} />
                     <Route path="*" element={<NotFoundPage />} />
                   </Routes>
-                </main>
+                  </Suspense>
+                </AppMain>
                 <Footer />
               </div>
               </ScoutingProvider>

@@ -19,6 +19,10 @@ import {
   squadSaleErrorMessage,
 } from "./squadSale";
 import type { SquadSalesApi } from "./useSquadSales";
+import { PlayerActionRow } from "./PlayerActionRow";
+import { positionLabel } from "../market/positions";
+import { teamsClubId } from "../../api/clubMedia";
+import { clubTeamPath } from "../teams/teamRoutes";
 import infoIcon from "../../assets/button_info.svg";
 import infoRedIcon from "../../assets/button_info_red.svg";
 import "./SquadPlayerActions.css";
@@ -39,6 +43,32 @@ function ChoiceGroup({ label, children }: {
       <h3 id={titleId} className="squad-sale-choice-group-label">{label}</h3>
       <div className="squad-sale-choices">{items}</div>
     </section>
+  );
+}
+
+/** Who the options are for: crest, position, value and listing state. */
+function PlayerActionsSummary({ player }: { player: SquadCard }) {
+  const position = positionLabel(player.positionId);
+  const facts = [
+    position,
+    player.marketValue != null ? t("Value {{0}}", { 0: formatEuro(player.marketValue) }) : null,
+  ].filter(Boolean);
+  if (facts.length === 0 && !player.onMarket && !player.teamBadgeUrl) return null;
+  return (
+    <div className="player-actions-summary">
+      {player.teamBadgeUrl ? (
+        <img src={player.teamBadgeUrl} alt="" aria-hidden="true"
+          onError={(event) => { event.currentTarget.hidden = true; }} />
+      ) : null}
+      <span>{facts.join(" · ")}</span>
+      {player.onMarket ? (
+        <span className="player-actions-chip">
+          {player.salePrice != null
+            ? t("Listed · {{0}}", { 0: formatEuro(player.salePrice) })
+            : t("Listed")}
+        </span>
+      ) : null}
+    </div>
   );
 }
 
@@ -77,6 +107,7 @@ export function SquadPlayerActions({
     sales.cancelListing.isPending ||
     sales.sellImmediately.isPending;
   const minimum = minimumListingPrice(player.marketValue);
+  const clubId = teamsClubId(null, player.teamBadgeUrl);
   const half = immediateSalePrice(player.marketValue);
   const listed = player.onMarket;
   const priceBlocked = minimum == null ? "Market value is unavailable for this player." : null;
@@ -225,75 +256,74 @@ export function SquadPlayerActions({
       >
         {view === "options" ? (
           <div className="squad-sale-choice-groups">
+            <PlayerActionsSummary player={player} />
             <ChoiceGroup label={t("Market")}>
-              <button type="button" className="squad-sale-choice" onClick={() => setView("choose")}>
-                {t("Market options")}</button>
+              <PlayerActionRow icon="euro_symbol" tone="market" label={t("Market options")}
+                hint={listed ? t("Change the price or withdraw the listing") : t("List for sale or sell right away")}
+                onClick={() => setView("choose")} />
               {ownPlayer && offersMenu && !/^player-\d+$/.test(player.id) ? (
-                <button type="button" className="squad-sale-choice" onClick={() => {
-                  offersMenu.openForPlayer(player.id, player.name);
-                  close();
-                }}>
-                  {t("View offers for this player")}</button>
+                <PlayerActionRow icon="local_offer" tone="market" label={t("View offers for this player")}
+                  hint={t("Offers other managers sent you")}
+                  onClick={() => {
+                    offersMenu.openForPlayer(player.id, player.name);
+                    close();
+                  }} />
               ) : null}
             </ChoiceGroup>
             <ChoiceGroup label={t("Details")}>
               {player.masterPlayerId && player.positionId !== 5 ? (
-                <Link
-                  className="squad-sale-choice"
+                <PlayerActionRow icon="account_circle" tone="details" label={t("Player details")}
+                  hint={t("Stats, matches and market value history")}
                   to={`/players/${encodeURIComponent(player.masterPlayerId)}`}
-                  onClick={close}
-                >
-                  {t("Player details")}</Link>
+                  state={detailsReturnTo ? { returnTo: detailsReturnTo } : undefined}
+                  onClick={close} />
+              ) : null}
+              {clubId ? (
+                <PlayerActionRow icon="groups" tone="details" label={t("Team page")}
+                  hint={t("Squad, results and predicted lineup")}
+                  to={clubTeamPath(clubId)}
+                  onClick={close} />
               ) : null}
             </ChoiceGroup>
             <ChoiceGroup label={t("Lineup")}>
               {onSwap ? (
-                <button type="button" className="squad-sale-choice" onClick={() => {
-                  close();
-                  onSwap();
-                }}>
-                  {t("Swap player")}</button>
+                <PlayerActionRow icon="swap_horiz" tone="lineup" label={t("Swap player")}
+                  hint={t("Pick who takes this place in your lineup")}
+                  onClick={() => {
+                    close();
+                    onSwap();
+                  }} />
               ) : null}
             </ChoiceGroup>
           </div>
         ) : null}
         {view === "choose" ? (
           <div className="squad-sale-choices">
+            <PlayerActionsSummary player={player} />
             {listed ? (
               <>
-                <button
-                  type="button"
-                  className="squad-sale-choice"
-                  disabled={cancelBlocked != null}
-                  onClick={() => setView("cancel")}
-                >
-                  {t("Cancel bid")}</button>
-                <button
-                  type="button"
-                  className="squad-sale-choice"
+                <PlayerActionRow icon="edit" tone="market" label={t("Modify bid")}
+                  hint={t(priceBlocked ?? cancelBlocked ?? "Set a new asking price")}
                   disabled={priceBlocked != null || cancelBlocked != null}
-                  onClick={() => setView("modify")}
-                >
-                  {t("Modify bid")}</button>
+                  onClick={() => setView("modify")} />
+                <PlayerActionRow icon="close" tone="danger" label={t("Cancel bid")}
+                  hint={t(cancelBlocked ?? "Keep the player and drop the offers")}
+                  disabled={cancelBlocked != null}
+                  onClick={() => setView("cancel")} />
               </>
             ) : (
-              <button
-                type="button"
-                className="squad-sale-choice"
+              <PlayerActionRow icon="local_offer" tone="market" label={t("Bring to market")}
+                hint={priceBlocked ? t(priceBlocked) : minimum != null
+                  ? t("Set your price, from {{0}}", { 0: formatEuro(minimum) }) : null}
                 disabled={priceBlocked != null}
-                onClick={() => setView("list")}
-              >
-                {t("Bring to market")}</button>
+                onClick={() => setView("list")} />
             )}
-            <button
-              type="button"
-              className="squad-sale-choice"
+            <PlayerActionRow icon="flash_on" tone="danger" label={t("Send immediately to market")}
+              hint={listed ? t("Withdraw the listing first")
+                : half != null ? t("Sell now for {{0}}", { 0: formatEuro(half) })
+                  : t("Market value is unavailable for this player.")}
               disabled={half == null || listed}
-              onClick={() => setView("immediate")}
-            >
-              {t("Send immediately to market")}</button>
-            {priceBlocked && !listed ? <p className="squad-sale-note">{t(priceBlocked)}</p> : null}
-            {listed && cancelBlocked ? <p className="squad-sale-note">{t(cancelBlocked)}</p> : null}
+              onClick={() => setView("immediate")} />
           </div>
         ) : null}
         {view === "cancel" ? (

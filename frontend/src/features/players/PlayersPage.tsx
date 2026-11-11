@@ -12,6 +12,7 @@ import { useQueries } from "@tanstack/react-query";
 import { NumberPagination } from "../../components/ui/NumberPagination";
 import { useCallback, useMemo } from "react";
 import { Link, useSearchParams } from "react-router-dom";
+import { ClubLink, ManagerLink, PlayerLink } from "../../components/links/EntityLinks";
 
 import { getJson, paths } from "../../api/client";
 import { useAuth } from "../../auth/AuthProvider";
@@ -24,6 +25,7 @@ import { AvailabilityCell } from "../market/cells/AvailabilityCell";
 import { FormCell } from "../market/cells/FormCell";
 import { FsypCell } from "../market/cells/FsypCell";
 import { PositionCell } from "../market/cells/PositionCell";
+import { PositionFilterContext } from "../market/cells/positionFilter";
 import { ValueCell } from "../market/cells/ValueCell";
 import { ReleaseClauseDetail } from "../market/cells/ReleaseClauseDetail";
 import { protectionDescription } from "../market/model/protection";
@@ -123,9 +125,9 @@ function PlayersListRow({
       <img src={availableIcon} alt="" aria-hidden="true" />
       {t("Free Agent")}</span>
   ) : row.ownerTeamId ? (
-    <Link className="players-owner-link" to={`/?team=${encodeURIComponent(row.ownerTeamId)}`}>
+    <ManagerLink className="players-owner-link" teamId={row.ownerTeamId}>
       <ManagerIdentity name={row.ownedBy} avatarUrl={row.ownerAvatarUrl} />
-    </Link>
+    </ManagerLink>
   ) : (
     row.ownedBy
   );
@@ -154,6 +156,7 @@ function PlayersListRow({
           photoUrl={row.photoUrl}
           photoFallbackUrls={row.photoFallbackUrl ? [row.photoFallbackUrl] : []}
           teamBadgeUrl={row.teamBadgeUrl}
+          linkClub
         />
       </div>
       <span className="market-name-wrap" data-column="player" data-label={t("Player")}>
@@ -165,7 +168,7 @@ function PlayersListRow({
             onToggle={onToggleFavorite}
           />
           {row.positionId === 5 ? <span className={nameClass}>{row.name}</span> : (
-            <Link className={nameClass + " players-name-link"} to={"/players/" + encodeURIComponent(row.playerId)} state={{ returnTo: "/players" }}>{row.name}</Link>
+            <PlayerLink className={nameClass + " players-name-link"} playerId={row.playerId} returnTo="/players">{row.name}</PlayerLink>
           )}
           <span className="player-status-indicators">
             {protection ? <Help content={protection} className="market-clause-flag">
@@ -174,7 +177,7 @@ function PlayersListRow({
           </span>
         </span>
       </span>
-      <span className="market-cell players-team-cell" data-column="team" data-label={t("Team")}>{row.teamName ?? "—"}</span>
+      <span className="market-cell players-team-cell" data-column="team" data-label={t("Team")}>{row.teamName ? <ClubLink badgeUrl={row.teamBadgeUrl} name={row.teamName}>{row.teamName}</ClubLink> : "—"}</span>
       <span className="market-cell" data-column="position" data-label={t("Position")}>
         <PositionCell positionId={row.positionId} />
       </span>
@@ -333,6 +336,11 @@ function PlayersListContent() {
     [searchParams, setSearchParams],
   );
 
+  const positionFilter = useMemo(() => ({
+    selected: urlState.filters.positions,
+    onFilter: (positions: ReadonlySet<number>) => setFilters({ positions }),
+  }), [urlState.filters.positions, setFilters]);
+
   const clearFilters = () => {
     setSearchParams(serializePlayersSearchParams({ filters: createEmptyPlayersFilters(), page: null }), {
       replace: true,
@@ -389,6 +397,7 @@ function PlayersListContent() {
         <p className="status-copy">{t("No players match your filters.")}</p>
       ) : (
         <>
+          <PositionFilterContext.Provider value={positionFilter}>
           <ul className="market-list players-list">
             <PlayersListHead
               headings={columnHeadings}
@@ -414,6 +423,7 @@ function PlayersListContent() {
               />
             ))}
           </ul>
+          </PositionFilterContext.Provider>
         </>
       )}
       {!leaderboard && filtered.length > PLAYERS_PAGE_SIZE ? (

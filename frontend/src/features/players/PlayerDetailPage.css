@@ -454,42 +454,8 @@
 .player-detail-deltas strong { font-size:24px; font-weight:500; }
 .player-detail-deltas :is(.is-up,.is-mid,.is-down) { color:var(--fb-secondary); }
 
-/* Section shortcuts retain context on a long profile without hiding any panels. */
-.player-detail-sections {
-  display: flex;
-  justify-content: center;
-  flex-wrap: wrap;
-  gap: 4px;
-  position: sticky;
-  top: var(--app-header-height, 0px);
-  z-index: 80;
-  margin-bottom: 20px;
-  padding: 4px;
-  border: 1px solid var(--fb-line);
-  background: var(--fb-surface);
-}
-
-.player-detail-sections a {
-  display: inline-flex;
-  gap: 8px;
-  min-height: 44px;
-  align-items: center;
-  justify-content: center;
-  padding: 8px 16px;
-  color: var(--fb-secondary);
-  font-size: 14px;
-  font-weight: 600;
-  text-decoration: none;
-}
-
-.player-section-icon {
-  width: 20px;
-  height: 20px;
-  flex: none;
-  fill: currentColor;
-}
-
-.player-detail-sections a:hover { background: var(--fb-subtle); }
+/* Section tabs use the shared .fb-section-tabs style; this only spaces them from the profile. */
+.player-detail-page > .fb-section-tabs { margin-bottom: 20px; }
 .player-detail-header-text h1 { scroll-margin-top: 80px; }
 .player-detail-context { margin: 0 0 12px; color: var(--fb-muted); font-size: 12px; line-height: 1.6; }
 .player-detail-recovery { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 16px; border-left: 3px solid var(--fb-warning); }
@@ -508,9 +474,6 @@
 .player-market-history td { text-align: right; font-variant-numeric: tabular-nums; }
 
 @media (max-width: 800px) {
-  /* Keep screen space for the player on phones, where the app header also wraps. */
-  .player-detail-sections { position: static; }
-  .player-detail-sections a { flex: 1 0 auto; padding-inline: 8px; }
 }
 
 @media (max-width: 600px) {

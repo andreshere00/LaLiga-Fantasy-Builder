@@ -517,3 +517,11 @@
   height: 100%;
   object-fit: contain;
 }
+
+/* Hierarchy links to the club's level list on Teams; the whole block is the click target. */
+.player-detail-fantasy-summary > .player-fantasy-summary-block[data-linked] { cursor:pointer; }
+.player-hierarchy-link { color:var(--fb-secondary); text-decoration:underline; text-underline-offset:3px; }
+.player-hierarchy-link::after { content:""; position:absolute; inset:0; z-index:1; }
+.player-fantasy-summary-block[data-linked]:hover .player-hierarchy-link { color:var(--fb-primary); }
+.player-hierarchy-link:focus-visible { outline:none; }
+.player-hierarchy-link:focus-visible::after { outline:2px solid var(--fb-focus); outline-offset:-3px; }

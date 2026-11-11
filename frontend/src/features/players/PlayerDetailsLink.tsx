@@ -1,5 +1,6 @@
 import { t, useTranslation } from "../../i18n";
 import { Link, useMatch } from "react-router-dom";
+import { preloadHandlers } from "../../app/routeModules";
 
 import infoIcon from "../../assets/button_info.svg";
 import infoRedIcon from "../../assets/button_info_red.svg";
@@ -31,6 +32,7 @@ export function PlayerDetailsLink({
       state={returnTo ? { returnTo } : undefined}
       className={["player-details-link", className].filter(Boolean).join(" ")}
       aria-label={t("{{0}}, view details", { 0: playerName })}
+      {...preloadHandlers(`/players/${playerId}`)}
     >
       {card ? (
         <>

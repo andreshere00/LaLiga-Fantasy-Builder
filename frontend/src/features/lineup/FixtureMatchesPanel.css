@@ -1,6 +1,6 @@
 .fixture-matches-panel { grid-column:1 / -1; order:5; gap:0; min-width:0; container-type:inline-size; }
 .fixture-matches-panel > .fb-card-header { padding:16px 20px 12px; }
-.fixture-panel-heading { display:grid; grid-template-columns:minmax(0,1fr) auto minmax(0,1fr); align-items:center; gap:12px 20px; }
+.fixture-panel-heading { display:grid; grid-template-columns:minmax(0,1fr) auto; align-items:start; gap:12px 20px; }
 .fixture-panel-title { display:flex; align-items:center; gap:12px; flex-wrap:wrap; }
 .fixture-panel-title h2 { text-transform:uppercase; }
 .fixture-panel-title .fb-badge { background:var(--fb-subtle); padding:3px 8px; }
@@ -12,7 +12,7 @@
   font-weight:600; line-height:1.5;
 }
 .fixture-week-pagination { display:flex; align-items:center; gap:6px; }
-.fixture-week-pagination { justify-self:center; }
+.fixture-week-pagination { justify-self:end; }
 .fixture-week-label { min-width:64px; text-align:center; font-size:var(--fb-widget-font-meta); font-variant-numeric:tabular-nums; }
 .fixture-matches-panel > .fb-card-content { flex:0 1 auto; padding:0 12px; }
 .fixture-matches-scroll { height:auto; }
@@ -25,7 +25,7 @@
 .fixture-match-date { display:flex; justify-content:space-between; align-items:center; gap:8px; margin:0 0 9px; color:var(--fb-muted); font-size:var(--fb-widget-font-meta); }
 .fixture-match-date time { white-space:nowrap; }
 .fixture-match-team { display:grid; grid-template-columns:28px minmax(0,1fr) 28px; gap:9px; align-items:center; min-height:36px; font-size:var(--fb-widget-font-body); }
-.fixture-match-team > span:nth-child(2) { overflow-wrap:anywhere; }
+.fixture-match-team > :nth-child(2) { overflow-wrap:anywhere; }
 .fixture-match-crest { display:grid; place-items:center; width:28px; height:28px; min-width:0; overflow:hidden; }
 .fixture-match-crest > img { display:block; width:100%; height:100%; min-width:0; min-height:0; max-width:100%; max-height:100%; object-fit:contain; }
 .fixture-match-score { text-align:right; font-size:inherit; font-weight:500; font-variant-numeric:tabular-nums; }
@@ -46,16 +46,67 @@
 .fixture-panel-footer a { color:inherit; }
 .fixture-panel-sr-only { position:absolute; width:1px; height:1px; padding:0; margin:-1px; overflow:hidden; clip-path:inset(50%); white-space:nowrap; border:0; }
 @container (min-width:1100px) { .fixture-match { flex-basis:calc(100cqw / 5 - 24px / 5); width:calc(100cqw / 5 - 24px / 5); } }
-@container (max-width:850px) {
-  .fixture-panel-heading { grid-template-columns:minmax(0,1fr) auto; }
-  .fixture-week-pagination { grid-column:1 / -1; grid-row:2; }
+/* Narrow panel: the navigator takes its own row, arrows at the edges as large touch targets. */
+@container (max-width:520px) {
+  .fixture-panel-heading { grid-template-columns:minmax(0,1fr); }
+  .fixture-week-pagination { grid-row:2; width:100%; justify-self:stretch; justify-content:space-between; }
 }
 @media(max-width:600px) {
   .fixture-matches-panel > .fb-card-header { padding:14px 12px 10px; }
   .fixture-panel-heading { grid-template-columns:minmax(0,1fr); gap:10px; }
   .fixture-panel-heading > div:first-child { width:100%; }
-  .fixture-week-pagination { width:100%; justify-content:center; }
+  .fixture-week-pagination { width:100%; justify-content:space-between; }
   .fixture-matches-panel > .fb-card-content { padding:0 6px; }
   .fixture-match { flex-basis:248px; width:248px; padding-inline:12px; }
   .fixture-panel-footer { padding-inline:12px; }
 }
+
+/* Readability pass: time first, scores only emphasised when real, next match flagged. */
+.fixture-next-kickoff { display:inline-block; padding:6px 10px; background:var(--fb-subtle); border-left:3px solid var(--fb-primary); }
+.fixture-match { position:relative; padding-top:12px; }
+.fixture-match-date { margin-bottom:10px; }
+.fixture-match-date time { font-weight:500; }
+.fixture-match-status { color:var(--fb-text, inherit); font-weight:700; font-size:15px; font-variant-numeric:tabular-nums; }
+.fixture-match-status--finished, .fixture-match-status--unconfirmed {
+  padding:2px 8px; border:1px solid var(--fb-line); background:var(--fb-subtle); font-size:var(--fb-widget-font-meta); font-weight:600;
+}
+.fixture-match-team { min-height:44px; font-weight:500; border-top:1px solid transparent; }
+.fixture-match-team + .fixture-match-team { border-top-color:var(--fb-line); }
+.fixture-match-score { font-weight:700; font-size:17px; }
+.fixture-match-score.is-pending { color:var(--fb-muted); font-weight:400; }
+.fixture-match.is-next { background:var(--fb-subtle); box-shadow:inset 0 3px var(--fb-primary); }
+.fixture-match-next { margin:-4px 0 6px; font-size:11px; font-weight:700; letter-spacing:.06em; text-transform:uppercase; color:var(--fb-secondary); }
+.fixture-match-weather.is-placeholder .fixture-weather-meta { font-style:normal; line-height:1.4; }
+.fixture-weather-summary { min-height:32px; }
+.fixture-panel-footer { border-top:1px solid var(--fb-line); margin-top:4px; padding-top:10px; }
+.fixture-matches-list { scroll-snap-type:x proximity; }
+.fixture-match { scroll-snap-align:start; }
+
+/* Day-grouped wrapping grid: all ten matches visible, no sideways scrolling. */
+.fixture-matches-list { display:grid; grid-template-columns:minmax(0,1fr); width:auto; min-width:0; gap:10px; padding:4px 8px 14px; }
+.fixture-day + .fixture-day { margin-top:8px; }
+.fixture-day-matches { list-style:none; display:grid; grid-template-columns:repeat(auto-fill,minmax(240px,1fr)); min-width:0; gap:10px; margin:0; padding:0; }
+.fixture-day-heading { margin:0 0 10px; padding-bottom:6px; border-bottom:2px solid var(--fb-line); font-size:var(--fb-widget-font-body); font-weight:700; text-transform:none; }
+.fixture-day-heading::first-letter { text-transform:uppercase; }
+.fixture-match, .fixture-match:first-child { flex:none; width:auto; border:1px solid var(--fb-line); padding:10px 14px 12px; }
+.fixture-match.is-next { box-shadow:inset 0 3px var(--fb-primary); }
+.fixture-match-date { min-height:24px; }
+.fixture-match-next { margin:0; font-size:11px; font-weight:700; letter-spacing:.06em; text-transform:uppercase; color:var(--fb-secondary); }
+.fixture-match-date .fixture-match-next { margin-left:auto; padding:2px 8px; background:var(--fb-primary); color:var(--fb-on-brand); }
+.fixture-matches-panel .visually-hidden { position:absolute; width:1px; height:1px; overflow:hidden; clip-path:inset(50%); white-space:nowrap; }
+.fixture-matches-scroll > .fb-scroll-bar[data-orientation="horizontal"] { display:none; }
+@container (min-width:1100px) { .fixture-day-matches { grid-template-columns:repeat(5,minmax(0,1fr)); } .fixture-match { width:auto; } }
+@media(max-width:600px) {
+  .fixture-next-kickoff { display:block; font-size:var(--fb-widget-font-meta); line-height:1.4; padding:8px 10px; }
+  .fixture-match, .fixture-match:first-child { padding:8px 12px 10px; }
+  .fixture-match-date { min-height:0; margin-bottom:4px; }
+  .fixture-match-team { min-height:40px; }
+  .fixture-day + .fixture-day { margin-top:4px; }
+}
+@media(max-width:600px) { .fixture-matches-list { padding-inline:4px; } .fixture-day-matches { grid-template-columns:minmax(0,1fr); } .fixture-match { width:auto; } }
+
+/* Matchweek change: enter from the side we moved towards. Short and small so it never delays reading. */
+.fixture-slide--next { animation:fixture-slide-next var(--fb-motion-base) var(--fb-ease-out) both; }
+.fixture-slide--prev { animation:fixture-slide-prev var(--fb-motion-base) var(--fb-ease-out) both; }
+@keyframes fixture-slide-next { from { opacity:0; transform:translateX(16px); } to { opacity:1; transform:none; } }
+@keyframes fixture-slide-prev { from { opacity:0; transform:translateX(-16px); } to { opacity:1; transform:none; } }

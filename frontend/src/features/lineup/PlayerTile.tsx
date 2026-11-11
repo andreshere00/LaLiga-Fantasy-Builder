@@ -1,7 +1,9 @@
 import { t, useTranslation } from "../../i18n";
 import { BadgeImage } from "../../components/BadgeImage";
-import { clubMediaFromBadge } from "../../api/clubMedia";
+import { clubMediaFromBadge, teamsClubId } from "../../api/clubMedia";
 import { useState } from "react";
+import { Link } from "react-router-dom";
+import { clubTeamPath } from "../teams/teamRoutes";
 import { Help } from "../../components/ui/Help";
 import "./PlayerTile.css";
 
@@ -15,6 +17,7 @@ import {
 } from "./fixtureScoreLines";
 import { LINEUP_POSITION_NEEDED_LABEL, NOT_SELECTED_PLAYER_LABEL } from "./playerTileCopy";
 import { playerFormPresentation } from "../players/playerForm";
+import { materialIconPaths } from "../../assets/material-icons/paths";
 import { starterProbabilityTone } from "../players/starterProbability";
 import type { SquadPlayerStats } from "./useSquadStats";
 
@@ -28,6 +31,10 @@ type PlayerTileProps = {
   photoUrl?: string | null;
   photoFallbackUrls?: readonly (string | null | undefined)[];
   teamBadgeUrl?: string | null;
+  /** Links the club crest to that club on the Teams screen; the crest URL is used when no id is given. */
+  linkClub?: boolean;
+  /** Fantasy team id of the player's club, when known. */
+  clubTeamId?: string | number | null;
   fixturePoints?: number | null;
   fixtureWeek?: number;
   /** Goal or clean sheet for the fixture shown on the lineup pitch. */
@@ -38,6 +45,8 @@ type PlayerTileProps = {
   unplayedFixture?: boolean;
   /** Squad or empty pitch card for a position the lineup still needs. */
   positionNeeded?: boolean;
+  /** Squad card of one of the user's own players that is currently listed for sale. */
+  listedOnMarket?: boolean;
   isMvp?: boolean;
   selected?: boolean;
   interactive?: boolean;
@@ -87,9 +96,20 @@ export function PlayerScoreBadge({
   );
 }
 
-function TeamBadge({ url }: { url: string | null | undefined }) {
+function TeamBadge({ url, link, teamId }: {
+  url: string | null | undefined; link: boolean; teamId: string | number | null;
+}) {
+  useTranslation();
   const media = clubMediaFromBadge(url);
   if (!media) return null;
+  const clubId = link ? teamsClubId(teamId, url) : null;
+  if (clubId) {
+    const name = media.name === "Club" ? t("this club") : media.name;
+    return <Link className="player-badge player-badge-link" to={clubTeamPath(clubId)}
+      aria-label={t("Open {{0}} on Teams", { 0: name })} title={t("Open {{0}} on Teams", { 0: name })}>
+      <BadgeImage className="player-team-badge" media={media} fallback="" />
+    </Link>;
+  }
   return <span className="player-badge" aria-hidden="true">
     <BadgeImage className="player-team-badge" media={media} fallback="" />
   </span>;
@@ -131,6 +151,8 @@ export function PlayerTile({
   photoUrl = null,
   photoFallbackUrls = [],
   teamBadgeUrl = null,
+  linkClub = false,
+  clubTeamId = null,
   fixturePoints = null,
   fixtureWeek,
   fixtureHighlight = null,
@@ -138,6 +160,7 @@ export function PlayerTile({
   squadStats,
   unplayedFixture = false,
   positionNeeded = false,
+  listedOnMarket = false,
   isMvp = false,
   selected = false,
   interactive = false,
@@ -184,8 +207,9 @@ export function PlayerTile({
     : captain
       ? `${name}, ${t("Captain")}${scoreLabel}`
       : `${name}${scoreLabel}`;
+  const marketText = listedOnMarket && !empty ? t("On the market") : null;
   const label = [
-    playerLabel, highlightText, positionNeededText, ...scoreLineTexts,
+    playerLabel, marketText, highlightText, positionNeededText, ...scoreLineTexts,
     totalLabel, starterLabel, formLabel,
   ]
     .filter(Boolean)
@@ -220,7 +244,11 @@ export function PlayerTile({
       </span> : fixturePoints != null ? (
         <PlayerScoreBadge points={fixturePoints} isMvp={isMvp} />
       ) : null}
-      <TeamBadge key={teamBadgeUrl ?? "no-badge"} url={teamBadgeUrl} />
+      {marketText ? <span className="player-market-badge" aria-hidden="true">
+        <svg viewBox="0 0 24 24" focusable="false"><path d={materialIconPaths.euro_symbol} /></svg>
+      </span> : null}
+      <TeamBadge key={teamBadgeUrl ?? "no-badge"} url={teamBadgeUrl} link={linkClub}
+        teamId={clubTeamId} />
       {form ? <span className="player-starter-probability"
         data-tone={starterProbabilityTone(form.starterProbability) ?? undefined} aria-hidden="true">
         {form.starterProbability == null ? "—" : `${form.starterProbability}%`}
@@ -246,7 +274,7 @@ export function PlayerTile({
     ? t("Fixture {{0}} has not been played yet.", { 0: fixtureWeek == null ? "" : scoreWeekLabel(fixtureWeek) })
     : null;
   const helpLines = [
-    highlightText, positionNeededText, fixtureHelp, totalLabel, starterLabel,
+    marketText, highlightText, positionNeededText, fixtureHelp, totalLabel, starterLabel,
   ].filter((line): line is string => Boolean(line));
   const help = helpLines.length === 0 && scoreLineTexts.length === 0 && !formLabel ? null : (
     <>
@@ -269,7 +297,7 @@ export function PlayerTile({
       ) : null}
     </>
   );
-  const statusText = [highlightText, positionNeededText].filter(Boolean).map(fragment => fragment).join(", ");
+  const statusText = [marketText, highlightText, positionNeededText].filter(Boolean).map(fragment => fragment).join(", ");
   const visibleLabel = statusText
     ? [captain ? `${name}, ${t("Captain")}` : name, statusText].join(", ")
     : captain ? `${name}, ${t("Captain")}` : undefined;

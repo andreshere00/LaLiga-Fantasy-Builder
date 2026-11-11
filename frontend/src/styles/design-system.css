@@ -2,7 +2,7 @@
   --fb-primary:#FF4B44; --fb-secondary:#35353D; --fb-tertiary:#000000;
   --fb-cyan:#24CEE5; --fb-purple:#C04FFD; --fb-coral:#FFC2BF;
   --fb-success:#10BD00; --fb-warning:#FFC413; --fb-failure:#FF4B44;
-  --fb-bg:#F3F3F4; --fb-surface:#FFFFFF; --fb-subtle:#EDEDEF;
+  --fb-bg:#F3F3F4; --fb-bg-start:#FFFFFF; --fb-surface:#FFFFFF; --fb-subtle:#EDEDEF;
   --fb-line:#CDCDD2; --fb-control-line:#797981; --fb-muted:#5B5B64;
   --fb-on-brand:#000000; --fb-on-coral:#35353D; --fb-focus:#000000;
   --fb-selected:var(--fb-coral); --fb-selected-text:var(--fb-on-coral);
@@ -21,7 +21,7 @@
 :root[data-theme="dark"] {
   --fb-secondary:#E5E5E5; --fb-tertiary:#FFFFFF;
   --fb-purple:#E3AFFF; --fb-coral:#B85A55; --fb-warning:#FF9913;
-  --fb-bg:#18181C; --fb-surface:#24242B; --fb-subtle:#303039;
+  --fb-bg:#18181C; --fb-bg-start:#000000; --fb-surface:#24242B; --fb-subtle:#303039;
   --fb-line:#50505B; --fb-control-line:#9898A3; --fb-muted:#B7B7C2;
   --fb-on-coral:#FFFFFF; --fb-focus:#FFFFFF;
   color-scheme:dark;
@@ -136,7 +136,11 @@
 .fb-metric-grid dd { margin:4px 0 0; font-size:24px; font-weight:500; font-variant-numeric:tabular-nums; }
 @media(max-width:600px) { .fb-dialog-viewport { padding:12px; } .fb-dialog { padding:20px; max-height:calc(100dvh - 24px); } .fb-dialog-viewport--sheet { padding:0; place-items:end stretch; } .fb-dialog--sheet { width:100%; height:auto; max-height:85dvh; } }
 
-:root { --fb-color-duration:160ms; --fb-color-ease:ease; }
+:root {
+  --fb-color-duration:160ms; --fb-color-ease:ease;
+  --fb-motion-fast:120ms; --fb-motion-base:200ms; --fb-motion-slow:280ms;
+  --fb-ease-out:cubic-bezier(0,0,.2,1); --fb-ease-in:cubic-bezier(.4,0,1,1);
+}
 .fb-dialog button:not(.fb-button) { min-height:44px; border-radius:0; font-weight:600; }
 .fb-dialog-footer button:where(:not(.fb-button)) { padding:0 16px; border:1px solid var(--fb-control-line); background:var(--fb-surface); color:var(--fb-secondary); cursor:pointer; }
 .fb-dialog-footer button:not(:disabled):not([aria-disabled="true"]):hover { background:var(--fb-coral); color:var(--fb-on-coral); border-color:var(--fb-control-line); }
@@ -166,3 +170,33 @@
 :is(.market-dialog-error,.squad-sale-error) { color:var(--fb-secondary); border-left:3px solid var(--fb-failure); padding-left:12px; line-height:1.5; }
 .fb-dialog button:disabled { cursor:not-allowed; opacity:.5; }
 .fb-tooltip span { display:block; }
+
+/* Section tabs: sticky in-page navigation shared by Teams and Player details. */
+.fb-section-tabs{display:flex;position:sticky;top:var(--app-header-height,0px);z-index:80;overflow-x:auto;scrollbar-width:none;background:var(--fb-surface);border-bottom:1px solid var(--fb-line)}
+.fb-section-tabs>:first-child{margin-inline-start:auto}
+.fb-section-tabs>:last-child{margin-inline-end:auto}
+.fb-section-tabs a{display:inline-flex;align-items:center;gap:8px;flex:0 0 auto;min-height:48px;padding:0 16px;color:var(--fb-secondary);font-size:14px;font-weight:500;letter-spacing:.01em;text-decoration:none;text-transform:uppercase;border-bottom:4px solid transparent;transition:background-color .16s ease,color .16s ease,border-color .16s ease}
+.fb-section-tabs a:hover{background:var(--fb-subtle)}
+.fb-section-tabs a:focus-visible{outline:2px solid var(--fb-focus);outline-offset:-2px}
+.fb-section-tabs a[aria-current]:not([aria-current="false"]){border-bottom-color:var(--fb-primary);color:var(--fb-tertiary)}
+.fb-section-tabs-icon{width:18px;height:18px;flex:none;fill:currentColor}
+@media(max-width:800px){.fb-section-tabs a{flex:1 1 auto;justify-content:center;padding-inline:10px}}
+/* Phones: equal tabs, icon above label, so a long label never changes a tab's size. */
+@media(max-width:640px){
+  .fb-section-tabs{display:grid;grid-auto-flow:column;grid-auto-columns:minmax(0,1fr);overflow-x:visible}
+  .fb-section-tabs>:is(:first-child,:last-child){margin-inline:0}
+  .fb-section-tabs a{flex-direction:column;justify-content:flex-start;gap:4px;min-height:60px;padding:8px 4px 6px;font-size:11px;line-height:1.2;letter-spacing:.02em;text-align:center}
+}
+/* Landscape phones: the tabs scroll away so the header and bottom bar leave room for content. */
+@media(max-height:500px){.fb-section-tabs{position:static}}
+@media(prefers-reduced-motion:reduce){.fb-section-tabs a{transition:none}}
+
+/* Dialog and sheet motion: enter ease-out, exit shorter and ease-in. Reduced motion is zeroed in global.css. */
+.fb-dialog-backdrop { transition:opacity var(--fb-motion-base) var(--fb-ease-out); }
+.fb-dialog-backdrop[data-starting-style], .fb-dialog-backdrop[data-ending-style] { opacity:0; }
+.fb-dialog-backdrop[data-ending-style] { transition-duration:var(--fb-motion-fast); transition-timing-function:var(--fb-ease-in); }
+.fb-dialog { transition:opacity var(--fb-motion-base) var(--fb-ease-out), transform var(--fb-motion-base) var(--fb-ease-out); }
+.fb-dialog[data-starting-style], .fb-dialog[data-ending-style] { opacity:0; transform:scale(.97); }
+.fb-dialog--sheet[data-starting-style], .fb-dialog--sheet[data-ending-style] { transform:translateX(24px); }
+.fb-dialog[data-ending-style] { transition-duration:var(--fb-motion-fast); transition-timing-function:var(--fb-ease-in); }
+@media(max-width:600px) { .fb-dialog--sheet[data-starting-style], .fb-dialog--sheet[data-ending-style] { transform:translateY(24px); } }

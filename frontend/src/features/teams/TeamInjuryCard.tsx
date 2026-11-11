@@ -1,4 +1,4 @@
-import { Link } from "react-router-dom";
+import { PlayerLink } from "../../components/links/EntityLinks";
 import { t, useTranslation } from "../../i18n";
 import { Badge } from "../../components/ui/Badge";
 import type { ClubDossierDto } from "../../api/schemas";
@@ -42,8 +42,7 @@ export function TeamInjuryCard({
       <div className="team-injury-body">
         <div className="team-injury-head">
           {playerId ? (
-            <Link className="team-player-link" to={`/players/${encodeURIComponent(playerId)}`}
-              state={{ returnTo }}>{item.name}</Link>
+            <PlayerLink className="team-player-link" playerId={playerId} returnTo={returnTo}>{item.name}</PlayerLink>
           ) : <strong>{item.name}</strong>}
           <LineupFsyp points={points} />
         </div>

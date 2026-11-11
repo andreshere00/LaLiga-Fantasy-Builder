@@ -19,6 +19,7 @@ export type ActiveBid = {
   name: string;
   photoUrl: string | null;
   seller: string | null;
+  sellerTeamId: string | null;
   money: number | null;
   status: string | null;
   expiresAt: number | null;
@@ -117,6 +118,7 @@ export function normalizeActiveBids(snapshot: unknown, catalog: unknown, now: nu
       photoUrl: row?.photoUrl ?? null,
       seller: item && (items.includes(item) || item.sellerTeam || item.seller || item.playerTeam)
         ? row?.seller ?? null : null,
+      sellerTeamId: row?.sellerTeamId ?? null,
       money, status, expiresAt, confirmed, issues, actionRow });
   }
   bids.sort((a, b) => (a.expiresAt ?? Infinity) - (b.expiresAt ?? Infinity)

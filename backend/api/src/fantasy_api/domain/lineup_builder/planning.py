@@ -26,7 +26,9 @@ def plan_trades(
     Args:
         starters: Selected XI, containing unique master IDs.
         owned: Entire execution-time roster, including rejected starters.
-        cash: Verified cash, or explicitly labeled conservative cash after bid reserves.
+        cash: Verified cash, or explicitly labeled conservative cash after bid reserves. It can
+            already be negative (pending bids counted as spent); a plan may then keep that
+            balance but never end below it.
         preferences: Buy/sell permissions.
         target: Verified deadlines.
         now: Snapshot instant.
@@ -68,16 +70,18 @@ def plan_trades(
         if preferences.allow_selling
         else []
     )
+    # A balance already below zero is not this XI's doing: allow plans that do not worsen it.
+    floor = min(cash, 0)
     cost = sum(p.market_value for p in purchases)
     projected = cash - cost
     final_count = count + len(purchases)
     for player in salable:
-        if projected >= 0 and final_count + reserved_squad_slots <= 24:
+        if projected >= floor and final_count + reserved_squad_slots <= 24:
             break
         sales.append(player)
         projected += player.market_value
         final_count -= 1
-    if projected < 0 or final_count + reserved_squad_slots > 24:
+    if projected < floor or final_count + reserved_squad_slots > 24:
         return None
     steps: list[TradeStep] = []
     latest_sale = max((p.sale_settlement_at for p in sales), default=now)
@@ -85,7 +89,7 @@ def plan_trades(
         cash += player.market_value
         value -= player.market_value
         count -= 1
-        if cash < -(value // 5):
+        if cash < min(floor, -(value // 5)):
             return None
         steps.append(
             TradeStep(
@@ -132,7 +136,7 @@ def plan_trades(
         cash -= player.market_value
         value += player.market_value
         count += 1
-        if count + reserved_squad_slots > 24 or cash < -(value // 5):
+        if count + reserved_squad_slots > 24 or cash < min(floor, -(value // 5)):
             return None
         conditions = [
             "Acquisition estimate uses current market value",
@@ -158,7 +162,7 @@ def plan_trades(
             )
         )
         last_settlement = settlement
-    if cash < 0 or count + reserved_squad_slots > 24:
+    if cash < floor or count + reserved_squad_slots > 24:
         return None
     sold = {p.player_id for p in sales}
     retained = [p.player_id for p in owned if p.player_id not in sold]

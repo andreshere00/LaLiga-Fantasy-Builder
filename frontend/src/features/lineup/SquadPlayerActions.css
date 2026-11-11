@@ -85,18 +85,13 @@
   translate: -50% 0;
 }
 
-.squad-sale-choice-groups { display: grid; }
-.squad-sale-choice-group + .squad-sale-choice-group {
-  margin-top: 16px;
-  padding-top: 16px;
-  border-top: 1px solid var(--fb-line);
-}
+.squad-sale-choice-groups { display: grid; gap: 20px; }
 .squad-sale-choice-group-label {
   margin: 0 0 8px;
   color: var(--fb-muted);
   font-size: 12px;
   font-weight: 600;
-  letter-spacing: 0.03em;
+  letter-spacing: 0.06em;
   text-transform: uppercase;
 }
 .squad-sale-choices {
@@ -104,6 +99,87 @@
   flex-direction: column;
   gap: 8px;
 }
+
+/* Context strip: which player, where they play, what they are worth. */
+.player-actions-summary {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px 10px;
+  min-height: 28px;
+  color: var(--fb-muted);
+  font-size: 14px;
+  font-variant-numeric: tabular-nums;
+}
+.player-actions-summary img { width: 28px; height: 28px; object-fit: contain; }
+.player-actions-chip {
+  padding: 2px 8px;
+  border: 1px solid var(--fb-primary);
+  color: var(--fb-secondary);
+  font-size: 12px;
+  font-weight: 700;
+}
+
+/* One option: tone-coloured icon tile, label with a one-line hint, chevron. */
+.player-action {
+  --tone: var(--fb-primary);
+  display: grid;
+  grid-template-columns: 40px minmax(0, 1fr) 20px;
+  align-items: center;
+  gap: 14px;
+  box-sizing: border-box;
+  width: 100%;
+  min-height: 64px;
+  padding: 10px 12px 10px 10px;
+  border: 1px solid var(--fb-line);
+  border-left: 3px solid var(--tone);
+  border-radius: 0;
+  background: var(--fb-surface);
+  color: var(--fb-secondary);
+  font: inherit;
+  text-align: left;
+  text-decoration: none;
+  cursor: pointer;
+  transition:
+    background-color var(--fb-color-duration) var(--fb-color-ease),
+    border-color var(--fb-color-duration) var(--fb-color-ease);
+}
+.player-action--details { --tone: var(--fb-purple); }
+.player-action--lineup { --tone: color-mix(in srgb, var(--fb-cyan) 75%, var(--fb-secondary)); }
+.player-action--danger { --tone: var(--fb-warning); }
+.player-action-icon {
+  display: grid;
+  place-items: center;
+  width: 40px;
+  height: 40px;
+  background: color-mix(in srgb, var(--tone) 16%, transparent);
+  color: var(--tone);
+}
+.player-action-icon svg { width: 22px; height: 22px; fill: currentColor; }
+.player-action-text { display: grid; gap: 2px; min-width: 0; }
+.player-action-label { font-weight: 700; line-height: 1.25; }
+.player-action-hint { color: var(--fb-muted); font-size: 13px; font-weight: 400; line-height: 1.35; }
+.player-action-chevron {
+  width: 20px;
+  height: 20px;
+  fill: var(--fb-muted);
+  transition: translate var(--fb-color-duration) var(--fb-color-ease);
+}
+.player-action:is(:hover, :focus-visible):not(:disabled) {
+  border-color: var(--tone);
+  background: color-mix(in srgb, var(--tone) 8%, var(--fb-surface));
+}
+.player-action:is(:hover, :focus-visible):not(:disabled) .player-action-chevron {
+  fill: var(--tone);
+  translate: 2px 0;
+}
+.player-action:focus-visible { outline: 2px solid var(--fb-focus); outline-offset: 2px; }
+.player-action:disabled { cursor: not-allowed; }
+.player-action:disabled :is(.player-action-icon, .player-action-label, .player-action-chevron) { opacity: 0.45; }
+@media (prefers-reduced-motion: reduce) {
+  .player-action-chevron { transition: none; }
+}
+
 .squad-sale-choices .squad-sale-choice {
   display: flex;
   align-items: center;
@@ -195,9 +271,8 @@
 .fb-dialog.squad-player-actions-dialog button:not(.fb-button),
 .fb-dialog.squad-player-actions-dialog .fb-button,
 .fb-dialog.squad-player-actions-dialog .squad-sale-choice { border-radius:0; }
+/* Close is a way out, not the main action: keep it neutral so the options lead. */
 .fb-dialog.squad-player-actions-dialog--options .fb-dialog-footer .squad-sale-secondary,
 .fb-dialog.squad-player-actions-dialog--choose .fb-dialog-footer .squad-sale-secondary {
-  border-color:var(--fb-primary);
-  background:var(--fb-primary);
-  color:#fff;
+  border:1px solid var(--fb-control-line);
 }

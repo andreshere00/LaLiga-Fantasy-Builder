@@ -1,5 +1,6 @@
-import { useMemo, useRef, useState } from "react";
-import { Link } from "react-router-dom";
+import { useEffect, useMemo, useRef, useState } from "react";
+import { useLocation } from "react-router-dom";
+import { PlayerLink } from "../../components/links/EntityLinks";
 import { t, useTranslation } from "../../i18n";
 import { Button } from "../../components/ui/Button";
 import { Dialog } from "../../components/ui/Dialog";
@@ -17,6 +18,7 @@ import { widgetDescription } from "./teamSummaries";
 import {
   hierarchyGroups, visibleGroups, type HierarchyEntry, type HierarchyGroup,
 } from "./teamHierarchy";
+import { TEAM_HIERARCHY_ANCHOR } from "./teamRoutes";
 
 type Squad = NonNullable<ClubDossierDto["roster"]>["players"];
 
@@ -31,9 +33,17 @@ export function TeamHierarchySection({ players, returnTo, idleIds }: {
   idleIds?: ReadonlySet<string>;
 }) {
   useTranslation();
-  const [requested, setRequested] = useState(false);
-  const [open, setOpen] = useState(false);
+  // A link from a player's Hierarchy (…#team-hierarchy) lands on the open level list.
+  const linked = useLocation().hash === `#${TEAM_HIERARCHY_ANCHOR}`;
+  const [requested, setRequested] = useState(linked);
+  const [open, setOpen] = useState(linked);
   const [showIdle, setShowIdle] = useState(false);
+  // The section can stay mounted while the hash changes (in-app navigation to a deep link).
+  useEffect(() => {
+    if (!linked) return;
+    setRequested(true);
+    setOpen(true);
+  }, [linked]);
   const trigger = useRef<HTMLButtonElement>(null);
   const ids = useMemo(() => players.map((player) => player.playerId), [players]);
   const outlooks = usePlayerOutlooks(requested ? ids : []);
@@ -57,7 +67,7 @@ export function TeamHierarchySection({ players, returnTo, idleIds }: {
   const ready = requested && !outlooks.isLoading;
   if (players.length === 0) return null;
   return (
-    <div className="team-block">
+    <div className="team-block" id={TEAM_HIERARCHY_ANCHOR} tabIndex={-1}>
       <h3 id="team-hierarchy-title">{t("Hierarchy levels")}</h3>
       <TeamSummary id="team-summary-hierarchy" widget="hierarchy" />
       <p className="team-note">{t("Roles are read when you open the list.")}</p>
@@ -175,13 +185,9 @@ function LevelGroup({ group, media, returnTo }: {
               url={media.get(player.playerId)?.photoUrl ?? null}
               fallback={<PersonIcon />}
             />
-            <Link
-              className="team-player-link"
-              to={`/players/${encodeURIComponent(player.playerId)}`}
-              state={{ returnTo }}
-            >
+            <PlayerLink className="team-player-link" playerId={player.playerId} returnTo={returnTo}>
               {player.name}
-            </Link>
+            </PlayerLink>
             {player.positionId != null ? (
               <span
                 className={`team-pos team-pos--${positionTone(player.positionId)}`}

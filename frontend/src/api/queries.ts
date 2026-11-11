@@ -1,5 +1,5 @@
 import { useEffect } from "react";
-import { useQuery } from "@tanstack/react-query";
+import { queryOptions, useQuery } from "@tanstack/react-query";
 
 import { getJson, paths, type PlayerStatsDetailQuery } from "./client";
 import type { ClubDossierDto, ClubIndexDto, ClubRosterStatsDto } from "./schemas";
@@ -76,11 +76,8 @@ export function useWeekFixturesQuery(week: number | null, enabled: boolean, poll
 export function useClubIndexQuery(enabled = true) {
   const { accessToken, user } = useAuth();
   return useQuery({
-    queryKey: ["clubs", user?.userId ?? null],
+    ...clubIndexOptions(user?.userId ?? null, accessToken ?? ""),
     enabled: enabled && accessToken != null && user != null,
-    staleTime: CATALOG_STALE_MS,
-    queryFn: ({ signal }) =>
-      getJson(paths.clubs(), accessToken ?? "", { signal }) as Promise<ClubIndexDto>,
   });
 }
 
@@ -113,14 +110,37 @@ export function useClubRosterStatsQuery(clubId: string | null) {
   });
 }
 
+/**
+ * Shared by the screens' hooks and by route prefetching, so both fill the same cache entry
+ * and agree on freshness: a prefetch must not refetch what a screen would reuse. The market
+ * keeps the client default because its screens want it refreshed.
+ */
+export const playersCatalogOptions = (token: string) => queryOptions({
+  queryKey: ["players", "catalog"],
+  staleTime: CATALOG_STALE_MS,
+  queryFn: ({ signal }) => getJson(paths.playersCatalog(), token, { signal }),
+});
+export const leagueTeamsOptions = (leagueKey: string, token: string) => queryOptions({
+  queryKey: ["league-teams", leagueKey],
+  staleTime: CALENDAR_STALE_MS,
+  queryFn: ({ signal }) => getJson(paths.leagueTeams(leagueKey), token, { signal }),
+});
+export const marketOptions = (leagueKey: string, token: string) => queryOptions({
+  queryKey: ["market", leagueKey],
+  queryFn: ({ signal }) => getJson(paths.market(leagueKey), token, { signal }),
+});
+export const clubIndexOptions = (userId: string | null, token: string) => queryOptions({
+  queryKey: ["clubs", userId],
+  staleTime: CATALOG_STALE_MS,
+  queryFn: ({ signal }) => getJson(paths.clubs(), token, { signal }) as Promise<ClubIndexDto>,
+});
+
 export function usePlayersCatalogQuery(enabled: boolean, staleTime = CATALOG_STALE_MS) {
   const { accessToken } = useAuth();
-  const token = accessToken ?? "";
   return useQuery({
-    queryKey: ["players", "catalog"],
+    ...playersCatalogOptions(accessToken ?? ""),
     enabled: enabled && accessToken != null,
     staleTime,
-    queryFn: ({ signal }) => getJson(paths.playersCatalog(), token, { signal }),
   });
 }
 

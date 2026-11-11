@@ -50,10 +50,8 @@
   padding-bottom: 6px;
 }
 /* Auto margins centre the row yet keep the first item reachable when it overflows and scrolls. */
-.team-picker > :first-child,
-.team-sections > :first-child { margin-inline-start: auto; }
-.team-picker > :last-child,
-.team-sections > :last-child { margin-inline-end: auto; }
+.team-picker > :first-child { margin-inline-start: auto; }
+.team-picker > :last-child { margin-inline-end: auto; }
 /* Each club is a tile: badge for recognition at a glance, short name as the second cue. */
 .team-picker a {
   position: relative;
@@ -93,43 +91,12 @@
   color: var(--fb-selected-text);
 }
 .team-picker a:focus-visible,
-.team-sections a:focus-visible,
 .team-filter button:focus-visible,
 .team-table th button:focus-visible,
 .team-table-wrap:focus-visible,
 .team-news-read:focus-visible {
   outline: 2px solid var(--fb-focus);
   outline-offset: 2px;
-}
-.team-sections {
-  display: flex;
-  gap: 0;
-  position: sticky;
-  top: var(--app-header-height, 0px);
-  z-index: 3;
-  overflow-x: auto;
-  background: var(--fb-surface);
-  border-bottom: 1px solid var(--fb-line);
-}
-.team-sections a {
-  display: inline-flex;
-  align-items: center;
-  flex: 0 0 auto;
-  min-height: 48px;
-  padding: 0 16px;
-  color: var(--fb-secondary);
-  font-size: 14px;
-  font-weight: 500;
-  letter-spacing: .01em;
-  text-decoration: none;
-  text-transform: uppercase;
-  border-bottom: 4px solid transparent;
-}
-.team-sections a:hover { background: var(--fb-subtle); }
-.team-section-icon { width: 18px; height: 18px; flex: none; margin-inline-end: 8px; fill: currentColor; }
-.team-sections a[aria-current="true"] {
-  border-bottom-color: var(--fb-primary);
-  color: var(--fb-tertiary);
 }
 .team-note { margin: 0; color: var(--fb-muted); font-size: 14px; }
 .team-loading { display: flex; align-items: center; gap: 8px; }
@@ -1125,7 +1092,6 @@
 }
 @media (max-width: 800px) {
   .team-page { padding-inline: 16px; }
-  .team-sections a { flex: 1 1 auto; justify-content: center; padding-inline: 10px; }
   .team-section-title { font-size: 24px; }
   .team-mvp-list,
   .team-pair,
@@ -1149,29 +1115,10 @@
   .team-feed-item { grid-template-columns: auto minmax(0, 1fr); grid-template-areas: "time kind" "title title" "link link"; }
 }
 @media (prefers-reduced-motion: reduce) {
-  .team-sections a,
   .team-picker a { transition: none; }
   .team-picker a:hover { transform: none; }
 }
 
-/* Phones: four equal tabs, icon above label, so no tab changes height or width when its label is long. */
-@media (max-width: 640px) {
-  .team-sections { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); overflow-x: visible; }
-  .team-sections > :first-child,
-  .team-sections > :last-child { margin-inline: 0; }
-  .team-sections a {
-    flex-direction: column;
-    justify-content: flex-start;
-    gap: 4px;
-    min-height: 60px;
-    padding: 8px 4px 6px;
-    font-size: 11px;
-    line-height: 1.2;
-    letter-spacing: .02em;
-    text-align: center;
-  }
-  .team-section-icon { margin-inline-end: 0; }
-}
 
 /* Narrow screens: the competition buttons show only their logo (name stays for assistive tech and as a tooltip), so the group fits on one row. */
 @media (max-width: 760px) {

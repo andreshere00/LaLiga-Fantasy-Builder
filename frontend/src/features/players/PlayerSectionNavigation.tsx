@@ -78,10 +78,10 @@ export function PlayerSectionNavigation({ detailReady }: { detailReady: boolean 
   }, [current]);
 
   return (
-    <nav ref={navigation} className="player-detail-sections" aria-label={t("Player sections")}>
+    <nav ref={navigation} className="fb-section-tabs player-detail-sections" aria-label={t("Player sections")}>
       {sections.map(({ id, label, icon }) => (
         <a key={id} href={`#${id}`} aria-current={current === id ? "location" : undefined}>
-          <svg className="player-section-icon" aria-hidden="true" focusable="false" viewBox="0 0 24 24">
+          <svg className="fb-section-tabs-icon" aria-hidden="true" focusable="false" viewBox="0 0 24 24">
             <path d={icon} />
           </svg>
           {t(label)}

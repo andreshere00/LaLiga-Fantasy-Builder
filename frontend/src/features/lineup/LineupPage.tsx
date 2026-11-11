@@ -18,13 +18,15 @@ import originalFixtureWhiteUrl from "../../assets/button_original_fixture_white.
 import originalFixtureGrayUrl from "../../assets/button_original_fixture_gray.svg";
 import { pitchRowGapFraction, pitchRows } from "./pitchLayout";
 import { SQUAD_PICKER_EMPTY_MESSAGE } from "./playerTileCopy";
-import { squadCountLabel, squadPageForPlayer, squadPageSlice } from "./squadPanel";
+import { squadCountLabel, squadPageForPlayer, squadPageSlice, useSquadPageSize } from "./squadPanel";
 import { SquadFilterDialog } from "./SquadFilterDialog";
+import { activeSquadFilterChips } from "./squadFilterSummary";
 import { playerFormPresentation } from "../players/playerForm";
 import type { SquadPlayerStats } from "./useSquadStats";
 import {
   activeSquadFilterCount,
   applySquadFilters,
+  clearSquadFilter,
   cloneSquadFilters,
   createEmptySquadFilters,
   type SquadFilterPlayer,
@@ -128,7 +130,8 @@ function LineupPageContent() {
       .map((row) => row.id));
     return squadSource.filter((card) => allowed.has(card.id));
   }, [filterRows, squadFilters, squadSource, squadStats.isLoading]);
-  const squadPageData = squadPageSlice(visibleSquad, filteredPage);
+  const squadPageSize = useSquadPageSize();
+  const squadPageData = squadPageSlice(visibleSquad, filteredPage, squadPageSize);
   const filterCount = activeSquadFilterCount(squadFilters);
   useEffect(() => { setFilteredPage(0); }, [board.selectedTeamId, picking, squadFilters]);
   // A focus link pages to the player once and focuses the card once, then drops the param so
@@ -140,11 +143,12 @@ function LineupPageContent() {
     const page = squadPageForPlayer(
       visibleSquad.map((card) => card.masterPlayerId),
       focusPlayer,
+      squadPageSize,
     );
     if (page == null) return;
     pagedFocus.current = focusPlayer;
     setFilteredPage(page);
-  }, [focusPlayer, visibleSquad]);
+  }, [focusPlayer, visibleSquad, squadPageSize]);
   useEffect(() => {
     if (!focusPlayer || pagedFocus.current !== focusPlayer) return;
     if (focusedPlayer.current === focusPlayer) return;
@@ -583,6 +587,21 @@ function LineupPageContent() {
               ) : null}
             </div>
             {filterCount > 0 ? (
+              <ul className="squad-filter-chips" aria-label={t("Applied filters")}>
+                {activeSquadFilterChips(squadFilters).map((chip) => (
+                  <li key={chip.key} className="squad-filter-chip">
+                    <span className="squad-filter-chip-label">{chip.label}</span>
+                    <span className="squad-filter-chip-value">{chip.value}</span>
+                    <button type="button" className="squad-filter-chip-remove"
+                      aria-label={t("Remove filter: {{0}}", { 0: chip.label })}
+                      onClick={() => setSquadFilters((current) => clearSquadFilter(current, chip.key))}>
+                      <span aria-hidden="true">×</span>
+                    </button>
+                  </li>
+                ))}
+              </ul>
+            ) : null}
+            {filterCount > 0 ? (
               <p className="squad-filter-status" role="status">
                 {t("Showing ")}{visibleSquad.length} {t(" of ")}{squadSource.length} {t(" players")}</p>
             ) : null}
@@ -660,6 +679,7 @@ function LineupPageContent() {
                           photoUrl={player.photoUrl}
                           teamBadgeUrl={player.teamBadgeUrl}
                           positionNeeded={positionNeeded}
+                          listedOnMarket={board.ownSquad && player.onMarket}
                           interactive
                           onSelect={onSelect}
                         />

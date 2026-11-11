@@ -189,7 +189,7 @@ test("refresh bids recovers a failed catalog request", async ({ page }) => {
   await page.getByRole("dialog", { name: "My bids", exact: true })
     .getByRole("button", { name: "Refresh bids", exact: true }).click();
   await page.keyboard.press("Escape");
-  await expect(page.getByRole("link", { name: "Player 14", exact: true })).toBeVisible();
+  await expect(page.locator(".market-list").getByRole("link", { name: "Player 14", exact: true })).toBeVisible();
   await expect(error).toHaveCount(0);
   expect(catalogReads).toBe(failedReads + 1);
   await bidTrigger(page).click();

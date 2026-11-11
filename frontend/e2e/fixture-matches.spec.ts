@@ -125,13 +125,8 @@ for (const theme of ["light", "dark"]) {
       await summary.click();
       await expect(panel.getByText("Rain 0% · Wind 0 km/h")).toBeVisible();
       await summary.click();
-      await viewport.focus();
-      await page.keyboard.press("ArrowRight");
-      await expect.poll(() => viewport.evaluate((node) => node.scrollLeft)).toBeGreaterThan(0);
-      await viewport.focus(); await page.keyboard.press("End");
-      await expect(panel.getByText("Real Valladolid CF", { exact: true })).toBeInViewport();
-      await page.keyboard.press("Home");
-      await expect.poll(() => viewport.evaluate((node) => node.scrollLeft)).toBe(0);
+      // The grid wraps, so every match is reachable without sideways scrolling.
+      await expect(panel.getByText("Real Valladolid CF", { exact: true })).toBeVisible();
       expect(api.calls.fixtures.get(8)).toBe(1);
       expect(api.calls.writes).toEqual([]);
       await page.evaluate(() => document.fonts.ready);
@@ -173,7 +168,7 @@ test("active scores, saved kickoff forecasts, failed handoff, then next schedule
   api.nextFailure(false); await page.clock.runFor(30_100);
   await expect(panel.getByRole("heading", { name: "LALIGA · Fixture 9" })).toBeVisible();
   await expect(panel.getByLabel("Home goals: no result")).toHaveCount(10);
-  await expect(panel.getByText("Forecast closer to kickoff", { exact: true })).toHaveCount(10);
+  await expect(panel.getByText("Forecast closer to kickoff", { exact: true })).toHaveCount(1);
   expect(api.calls.writes).toEqual([]);
 });
 
@@ -253,7 +248,7 @@ test("browse previous and next fixtures without changing the lineup week", async
   await expect(panel.getByRole("heading", { name: "LALIGA · Fixture 8" })).toBeVisible();
   await panel.getByRole("button", { name: "Next matchweek" }).click();
   await expect(panel.getByRole("heading", { name: "LALIGA · Fixture 9" })).toBeVisible();
-  await expect(panel.getByText("Forecast closer to kickoff", { exact: true })).toHaveCount(10);
+  await expect(panel.getByText("Forecast closer to kickoff", { exact: true })).toHaveCount(1);
   await panel.getByRole("button", { name: "Previous matchweek" }).click();
   await expect(panel.getByRole("heading", { name: "LALIGA · Fixture 8" })).toBeVisible();
   await expect(panel.getByRole("button", { name: "Current fixture" })).toHaveCount(0);

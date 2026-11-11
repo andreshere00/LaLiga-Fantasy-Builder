@@ -15,6 +15,7 @@ import { useMarketActions } from "./actions/useMarketActions";
 import { marketColumnHeadings } from "./marketColumnHeadings";
 import { MarketListHead } from "./MarketListHead";
 import { MarketRowCells } from "./MarketRowView";
+import { PositionFilterContext } from "./cells/positionFilter";
 import { MarketScreenLoading } from "./MarketScreenLoading";
 import { MARKET_CLEAR_FILTERS_LABEL, MARKET_SEARCH_NO_MATCHES } from "./marketMessages";
 import {
@@ -58,6 +59,10 @@ function MarketListContent() {
     setTickMs(soon ? 1_000 : 60_000);
   }, [visibleRows, now]);
   const filterCount = useMemo(() => activeFilterCount(filters), [filters]);
+  const positionFilter = useMemo(() => ({
+    selected: filters.positions,
+    onFilter: (positions: ReadonlySet<number>) => setFilters((current) => ({ ...current, positions })),
+  }), [filters.positions]);
   const columnHeadings = marketColumnHeadings(deferredFilters);
   const sellers = useMemo(() => sellerOptions(board.rows), [board.rows]);
   const marketActions = useMarketActions();
@@ -125,6 +130,7 @@ function MarketListContent() {
           ) : null}
         </div>
       ) : (
+        <PositionFilterContext.Provider value={positionFilter}>
         <ul className="market-list">
           <MarketListHead
             headings={columnHeadings}
@@ -148,6 +154,7 @@ function MarketListContent() {
             </RichRow>
           ))}
         </ul>
+        </PositionFilterContext.Provider>
       )}
       <MarketActionDialogs
         actions={marketActions}

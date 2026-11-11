@@ -1,4 +1,5 @@
 import { locale } from "../../../i18n";
+import { PlayerLink } from "../../../components/links/EntityLinks";
 import { t, useTranslation } from "../../../i18n";
 import { useMutation, useQueries, useQueryClient } from "@tanstack/react-query";
 import { useEffect, useRef, useState } from "react";
@@ -229,7 +230,7 @@ function OffersPanel({ cards, squadAvailable, showTrigger, leagueKey, teamId }: 
             aria-busy={response.isPending && response.variables?.offer.key === offer.key || undefined}>
             <div className="market-offer-player">
               {offer.player.photoUrl ? <img src={offer.player.photoUrl} alt="" /> : null}
-              <div><h3>{offer.player.name}</h3><p>{offer.sender}</p></div>
+              <div><h3><PlayerLink playerId={offer.player.masterPlayerId} returnTo="/market">{offer.player.name}</PlayerLink></h3><p>{offer.sender}</p></div>
             </div>
             <strong className="market-offer-money">{formatEuro(offer.money)}</strong>
             <p className={`market-offer-expiry${offer.expiresAt == null ? " is-unknown"

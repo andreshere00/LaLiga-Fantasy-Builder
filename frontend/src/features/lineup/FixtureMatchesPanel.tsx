@@ -1,6 +1,7 @@
 import { durationLabel, numberFormatter, dateFormatter } from "../../i18n/format";
+import { ClubLink } from "../../components/links/EntityLinks";
 import { t, useTranslation, useLanguage } from "../../i18n";
-import { useEffect, useId, useRef, useState, type CSSProperties } from "react";
+import { useEffect, useId, useRef, useState, type CSSProperties, type ReactElement } from "react";
 import type { FixtureWeatherDto } from "../../api/schemas";
 import { useAuth } from "../../auth/AuthProvider";
 import { Badge } from "../../components/ui/Badge";
@@ -20,6 +21,7 @@ import { useFixturePanel } from "./useFixturePanel";
 import "./FixtureMatchesPanel.css";
 
 const dayFormat = dateFormatter({ timeZone: FIXTURE_TIME_ZONE, weekday: "short", day: "numeric", month: "short" });
+const dayHeadingFormat = dateFormatter({ timeZone: FIXTURE_TIME_ZONE, weekday: "long", day: "numeric", month: "long" });
 const timeFormat = dateFormatter({ timeZone: FIXTURE_TIME_ZONE, hour: "2-digit", minute: "2-digit", hourCycle: "h23" });
 const updatedFormat = dateFormatter({ timeZone: FIXTURE_TIME_ZONE, day: "numeric", month: "short", hour: "2-digit", minute: "2-digit", timeZoneName: "short" });
 
@@ -38,7 +40,8 @@ function MatchForecast({ match, row, loading, failed, now }: {
   const message = loading && !row ? "Loading forecast…" : row?.weather.reason === "beyond_forecast_horizon"
     ? "Forecast closer to kickoff" : past && !snapshot ? "Kickoff forecast unavailable"
       : failed && !row ? "Forecast unavailable" : weatherReason(row?.weather.reason);
-  if (!snapshot) return <div className="fixture-match-weather"><p className="fixture-weather-meta">{t(message)}</p></div>;
+  if (!snapshot) return row?.weather.reason === "beyond_forecast_horizon" ? null
+    : <div className="fixture-match-weather is-placeholder"><p className="fixture-weather-meta">{t(message)}</p></div>;
   return (
     <details className="fixture-match-weather">
       <summary className="fixture-weather-summary">
@@ -59,24 +62,25 @@ function MatchForecast({ match, row, loading, failed, now }: {
   );
 }
 
-function FixtureMatch({ match, forecast, weatherLoading, weatherFailed, now }: {
-  match: PanelMatch; forecast: FixtureWeatherDto | undefined; weatherLoading: boolean; weatherFailed: boolean;
+function FixtureMatch({ match, forecast, weatherLoading, weatherFailed, now, isNext }: {
+  match: PanelMatch; isNext: boolean; forecast: FixtureWeatherDto | undefined; weatherLoading: boolean; weatherFailed: boolean;
   now: number;
 }) {
   useTranslation();
   const status = match.status === "finished" ? "Finished" : match.status === "unconfirmed"
     ? "Status unconfirmed" : match.kickoffMs != null ? timeFormat.format(match.kickoffMs) : "Time TBC";
   return (
-    <li className={`fixture-match${match.status === "unconfirmed" ? " is-updating" : ""}`}>
+    <li className={`fixture-match${match.status === "unconfirmed" ? " is-updating" : ""}${isNext ? " is-next" : ""}`}>
       <div className="fixture-match-date">
-        {match.kickoff ? <time dateTime={match.kickoff}>{dayFormat.format(new Date(match.kickoff))}</time> : <span>{t("Date TBC")}</span>}
-        <span>{t(status)}</span>
+        {match.kickoff ? <span className="visually-hidden">{dayFormat.format(new Date(match.kickoff))}. </span> : <span className="visually-hidden">{t("Date TBC")}. </span>}
+        <span className={`fixture-match-status fixture-match-status--${match.status}`}>{t(status)}</span>
+        {isNext ? <span className="fixture-match-next">{t("Next up")}</span> : null}
       </div>
       {([match.home, match.away] as const).map((team, index) => (
         <div className="fixture-match-team" key={index}>
           <span className="fixture-match-crest" aria-hidden="true"><BadgeImage media={clubMediaFromFixture(team)} fallback="—" /></span>
-          <span>{team.name}</span>
-          <span className="fixture-match-score" aria-label={t(index === 0 ? "Home goals: {{0}}" : "Away goals: {{0}}", { 0: (index === 0 ? match.homeScore : match.awayScore) ?? t("no result") })}>
+          <ClubLink teamId={index === 0 ? match.homeId : match.awayId} badgeUrl={team.badge}>{team.name}</ClubLink>
+          <span className={`fixture-match-score${(index === 0 ? match.homeScore : match.awayScore) == null ? " is-pending" : ""}`} aria-label={t(index === 0 ? "Home goals: {{0}}" : "Away goals: {{0}}", { 0: (index === 0 ? match.homeScore : match.awayScore) ?? t("no result") })}>
             {((index === 0 ? match.homeScore : match.awayScore) ?? t("—"))}
           </span>
         </div>
@@ -100,6 +104,13 @@ function FixtureMatchesPanelContent() {
   const [announcement, setAnnouncement] = useState("");
   const lastAnnounced = useRef<{ week: number | undefined; label: string; language: string; scores: Map<string, string> } | null>(null);
   const week = panel.selection?.week;
+  // Direction of the last matchweek change, so the list can enter from the matching side.
+  const [slide, setSlide] = useState<{ week: number | undefined; dir: "next" | "prev" | null }>(
+    { week, dir: null },
+  );
+  if (slide.week !== week) {
+    setSlide({ week, dir: week != null && slide.week != null && week < slide.week ? "prev" : "next" });
+  }
   const matches = panel.round?.matches ?? [];
   const hasMatches = matches.length > 0;
   useEffect(() => {
@@ -159,6 +170,8 @@ function FixtureMatchesPanelContent() {
         {panel.pendingNext ? <p className="fixture-panel-meta" role="status">
           {panel.nextUnavailable ? <>{t("Next fixture unavailable. Retrying automatically. ")}<Button variant="ghost" size="sm" shape="square" onClick={() => void panel.refresh()}>{t("Retry fixture matches")}</Button></> : t("Loading next fixture…")}
         </p> : null}
+        {hasMatches && matches.some((match) => weatherRows.find((row) => weatherMatchesFixture(row, match))?.weather.reason === "beyond_forecast_horizon")
+          ? <p className="fixture-panel-meta">{t("Forecast closer to kickoff")}</p> : null}
         {hasMatches && !panel.round?.consistent ? <p className="fixture-panel-meta">{t("Round data incomplete. Awaiting verified final results.")}</p> : null}
       </CardHeader>
       <CardContent>
@@ -170,10 +183,23 @@ function FixtureMatchesPanelContent() {
             event.currentTarget.scrollTo({ left: event.key === "Home" ? 0 : event.currentTarget.scrollWidth });
           },
         }}>
-          <ol className="fixture-matches-list">
-            {matches.map((match) => <FixtureMatch key={match.key} match={match} now={panel.now}
-              forecast={weatherRows.find((row) => weatherMatchesFixture(row, match))}
-              weatherLoading={panel.weather.isFetching} weatherFailed={panel.weather.isError} />)}
+          <ol key={week} className={"fixture-matches-list" + (slide.dir ? ` fixture-slide--${slide.dir}` : "")}>
+            {matches.reduce<{ day: string; items: ReactElement[] }[]>((days, match) => {
+              const day = match.kickoffMs == null ? t("Date TBC") : dayHeadingFormat.format(match.kickoffMs);
+              const item = <FixtureMatch key={match.key} match={match} now={panel.now}
+                isNext={upcoming?.matchKeys.includes(match.key) ?? false}
+                forecast={weatherRows.find((row) => weatherMatchesFixture(row, match))}
+                weatherLoading={panel.weather.isFetching} weatherFailed={panel.weather.isError} />;
+              const last = days[days.length - 1];
+              if (last?.day === day) last.items.push(item);
+              else days.push({ day, items: [item] });
+              return days;
+            }, []).map(({ day, items }, index) => (
+              <li key={`${day}-${index}`} className="fixture-day">
+                <h3 className="fixture-day-heading">{day}</h3>
+                <ol className="fixture-day-matches">{items}</ol>
+              </li>
+            ))}
           </ol>
         </ScrollArea> : panel.loading ? <PulseRing label={t("Loading fixture matches…")} /> : !panel.error ?
           <p className="fixture-panel-empty">{mode === "unavailable" ? t("Fixture status unavailable.") : t("No matches available for this fixture.")}</p> : null}

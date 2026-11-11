@@ -17,7 +17,7 @@ const SECTION_ICON: Record<TeamSection, { viewBox: string; paths: string[] }> = 
 export function TeamSectionIcon({ section }: { section: TeamSection }) {
   const { viewBox, paths } = SECTION_ICON[section];
   return (
-    <svg className="team-section-icon" aria-hidden="true" focusable="false" viewBox={viewBox}>
+    <svg className="fb-section-tabs-icon team-section-icon" aria-hidden="true" focusable="false" viewBox={viewBox}>
       {paths.map((d) => <path key={d} d={d} fillRule="evenodd" />)}
     </svg>
   );

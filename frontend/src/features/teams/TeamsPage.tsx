@@ -75,7 +75,9 @@ export function TeamsPage({ opponentClubId = null }: { opponentClubId?: number |
     for (const name of events) window.addEventListener(name, stop, { once: true, passive: true });
     const jump = () => {
       if (cancelled) return;
-      const target = document.getElementById(teamSectionId(route.section));
+      const anchor = window.location.hash.slice(1);
+      const target = (anchor ? document.getElementById(anchor) : null) ??
+        document.getElementById(teamSectionId(route.section));
       if (typeof target?.scrollIntoView === "function") target.scrollIntoView();
     };
     jump();
@@ -133,7 +135,7 @@ export function TeamsPage({ opponentClubId = null }: { opponentClubId?: number |
           </Link>
         ))}
       </nav>
-      <nav className="team-sections" aria-label={t("Club sections")}>
+      <nav className="fb-section-tabs team-sections" aria-label={t("Club sections")}>
         {(Object.keys(SECTION_LABELS) as TeamSection[]).map((section) => (
           <a
             key={section}
@@ -187,6 +189,7 @@ export function TeamsPage({ opponentClubId = null }: { opponentClubId?: number |
       {dossier.data?.roster ? (
         <TeamPlayersSection
           roster={dossier.data.roster}
+          clubName={dossier.data.club.name}
           seasonStats={{
             data: seasonStats.data,
             loading: seasonStats.isPending && seasonStats.fetchStatus !== "idle",

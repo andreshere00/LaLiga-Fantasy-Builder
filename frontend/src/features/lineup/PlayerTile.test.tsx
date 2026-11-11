@@ -137,4 +137,23 @@ describe("PlayerTile", () => {
 
     expect(container.querySelector(".is-fixture-highlight")).toBeNull();
   });
+
+  it("PlayerTile_listedOnMarket_showsMarkAndNamesItForScreenReaders", () => {
+    const { container } = render(
+      <PlayerTile name="Ionut Radu" captain={false} variant="squad" interactive
+        listedOnMarket onSelect={() => undefined} />,
+    );
+
+    expect(container.querySelector(".player-market-badge")).not.toBeNull();
+    expect(container.querySelector("button")?.getAttribute("aria-label")).toContain("On the market");
+  });
+
+  it("PlayerTile_notListed_hasNoMarketMark", () => {
+    const { container } = render(
+      <PlayerTile name="Ionut Radu" captain={false} variant="squad" interactive
+        onSelect={() => undefined} />,
+    );
+
+    expect(container.querySelector(".player-market-badge")).toBeNull();
+  });
 });

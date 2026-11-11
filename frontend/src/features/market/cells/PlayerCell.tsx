@@ -51,6 +51,7 @@ export function PlayerCell({ row, now, columnLabel = t("Player"), bookmark }: Pl
           showName={false}
           photoUrl={row.photoUrl}
           teamBadgeUrl={row.teamBadgeUrl}
+          linkClub
         />
       </div>
       <span className="market-name-wrap" data-label={columnLabel}>
