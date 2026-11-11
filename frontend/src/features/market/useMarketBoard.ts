@@ -102,7 +102,6 @@ export function useMarketBoard(): MarketBoard {
   const leagueTeamsQuery = useQuery({
     ...leagueTeamsOptions(id, token),
     enabled: enabled && id !== "",
-    staleTime: CALENDAR_STALE_MS,
   });
 
   const teamQuery = useQuery({

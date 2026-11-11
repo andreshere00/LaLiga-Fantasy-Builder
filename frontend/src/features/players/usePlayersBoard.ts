@@ -67,7 +67,6 @@ export function usePlayersBoard(): PlayersBoard {
   const leagueTeamsQuery = useQuery({
     ...leagueTeamsOptions(leagueKey, token),
     enabled: enabled && leagueKey !== "",
-    staleTime: ROSTER_STALE_MS,
   });
 
   const teamIds = useMemo(

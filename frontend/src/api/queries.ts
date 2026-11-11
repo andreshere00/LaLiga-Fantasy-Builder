@@ -78,7 +78,6 @@ export function useClubIndexQuery(enabled = true) {
   return useQuery({
     ...clubIndexOptions(user?.userId ?? null, accessToken ?? ""),
     enabled: enabled && accessToken != null && user != null,
-    staleTime: CATALOG_STALE_MS,
   });
 }
 
@@ -111,13 +110,19 @@ export function useClubRosterStatsQuery(clubId: string | null) {
   });
 }
 
-/** Shared by the screens' hooks and by route prefetching, so both fill the same cache entry. */
+/**
+ * Shared by the screens' hooks and by route prefetching, so both fill the same cache entry
+ * and agree on freshness: a prefetch must not refetch what a screen would reuse. The market
+ * keeps the client default because its screens want it refreshed.
+ */
 export const playersCatalogOptions = (token: string) => queryOptions({
   queryKey: ["players", "catalog"],
+  staleTime: CATALOG_STALE_MS,
   queryFn: ({ signal }) => getJson(paths.playersCatalog(), token, { signal }),
 });
 export const leagueTeamsOptions = (leagueKey: string, token: string) => queryOptions({
   queryKey: ["league-teams", leagueKey],
+  staleTime: CALENDAR_STALE_MS,
   queryFn: ({ signal }) => getJson(paths.leagueTeams(leagueKey), token, { signal }),
 });
 export const marketOptions = (leagueKey: string, token: string) => queryOptions({
@@ -126,6 +131,7 @@ export const marketOptions = (leagueKey: string, token: string) => queryOptions(
 });
 export const clubIndexOptions = (userId: string | null, token: string) => queryOptions({
   queryKey: ["clubs", userId],
+  staleTime: CATALOG_STALE_MS,
   queryFn: ({ signal }) => getJson(paths.clubs(), token, { signal }) as Promise<ClubIndexDto>,
 });
 
