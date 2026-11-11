@@ -1,5 +1,6 @@
 import { t, useTranslation } from "../../i18n";
-import { Button } from "../../components/ui/Button";
+import { Link } from "react-router-dom";
+import { Button, buttonVariants } from "../../components/ui/Button";
 import { PulseRing } from "../../components/ui/PulseRing";
 import type { AuthStatus } from "../../auth/types";
 import { useAuth } from "../../auth/AuthProvider";
@@ -44,7 +45,7 @@ const COPY: Record<Exclude<AuthStatus, "ready">, GateCopy> = {
 
 export function GatePanel({ status }: { status: Exclude<AuthStatus, "ready"> }) {
   useTranslation();
-  const { login, connectLaliga, reload } = useAuth();
+  const { login, reload } = useAuth();
   const copy = COPY[status];
 
   return (
@@ -59,8 +60,9 @@ export function GatePanel({ status }: { status: Exclude<AuthStatus, "ready"> }) 
           {t("Log in")}</Button>
       ) : null}
       {copy.action === "laliga" ? (
-        <Button type="button" onClick={connectLaliga}>
-          {t("Connect LaLiga")}</Button>
+        // The connect page picks whichever linking method this installation enables.
+        <Link className={buttonVariants()} to="/connect-laliga">
+          {t("Connect LaLiga")}</Link>
       ) : null}
       {copy.action === "retry" ? (
         <Button type="button" onClick={() => void reload()}>
