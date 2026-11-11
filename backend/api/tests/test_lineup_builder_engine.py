@@ -1132,6 +1132,29 @@ def test_plan_trades_negative_cash_purchase_must_be_funded_by_sales() -> None:
     assert funded.projected_cash == -50
 
 
+def test_plan_trades_cash_below_debt_limit_allows_sale_that_does_not_worsen_it() -> None:
+    facts = PlayerEvidence(status="available", market_growth=Decimal(0))
+    owned = [
+        score_player(p, facts, NOW, START).model_copy(update={"sale_settlement_at": NOW})
+        for p in pool()
+    ]
+    cash = -sum(p.market_value for p in owned)
+
+    plan = plan_trades(
+        owned[:11],
+        owned,
+        cash,
+        BuildPreferences(allow_selling=True),
+        TARGET,
+        NOW,
+        reserved_squad_slots=9,
+    )
+
+    assert plan is not None
+    assert plan.sales
+    assert plan.projected_cash >= cash
+
+
 def test_plan_trades_negative_cash_rejects_clause_purchase() -> None:
     owned = [player(i, pos) for i, pos in enumerate([1, 2, 2, 2, 2, 3, 3, 3, 3, 4])]
     clause = player(90, 4, source="opponents", value=10)

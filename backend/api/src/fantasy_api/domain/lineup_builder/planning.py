@@ -89,7 +89,7 @@ def plan_trades(
         cash += player.market_value
         value -= player.market_value
         count -= 1
-        if cash < -(value // 5):
+        if cash < min(floor, -(value // 5)):
             return None
         steps.append(
             TradeStep(
@@ -136,7 +136,7 @@ def plan_trades(
         cash -= player.market_value
         value += player.market_value
         count += 1
-        if count + reserved_squad_slots > 24 or cash < -(value // 5):
+        if count + reserved_squad_slots > 24 or cash < min(floor, -(value // 5)):
             return None
         conditions = [
             "Acquisition estimate uses current market value",
