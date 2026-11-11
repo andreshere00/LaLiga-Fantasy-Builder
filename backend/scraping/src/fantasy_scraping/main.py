@@ -124,7 +124,7 @@ def create_app(
     serve_docs = cfg.debug or cfg.expose_docs
     app = FastAPI(
         title="LaLiga Fantasy Builder Scraping",
-        version="0.3.0",
+        version="0.6.0",
         lifespan=lifespan,
         docs_url="/docs" if serve_docs else None,
         redoc_url="/redoc" if serve_docs else None,

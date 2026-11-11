@@ -4,6 +4,48 @@ Notable changes to LaLiga Fantasy Builder are recorded here. Version 0.1.0
 summarizes the application through 27 October 2026; it is the first changelog
 entry, not a claim that every optional provider or deployment gate is complete.
 
+## [0.6.0] - 2026-11-11
+
+### Frontend UX pass
+
+- Link names across the app: club names and crests, player names, bid sellers, managers,
+  positions and a club's squad now open their Teams, Players or Lineup views through shared
+  `ClubLink`, `PlayerLink` and `ManagerLink` components. A crest shared by two clubs
+  resolves to neither. See [Linked data](docs/frontend.md).
+- Group the Lineup fixture matches by day, each day with its own heading and list, mark the
+  next match, put the kickoff time first on the cards and move the matchweek navigator to the
+  panel's right edge. The list slides in the direction of the matchweek change.
+- Add icons to the section tabs, swap the Players and Teams icons and group the mobile options
+  menu into preferences, league and account. A persistent alerts bell opens the scouting
+  dialog on the current page; signed-out visits drop a stale `?scouting=` link and the dialog
+  returns focus to its opener.
+- Show the availability column filter as an accessible checkbox list with hints and let the
+  squad filter adapt to phone, iPad and Mac; a group is highlighted by its selection, not by
+  its translated text. Redesign the player option dialogs with a team page entry and mark your
+  own listed players on the squad cards.
+- Fit the Players, Market and squad lists on tablets and phones: three players per row and
+  nine at a time on narrow screens, compact fixture cards, a reworked Market top panel with
+  the balance first and a shared Teams section tab bar.
+- Load Market, Players, Teams and player details on demand and warm their code and first
+  read-only requests on hover, focus or touch. Prefetch and screens share one `staleTime`, so
+  hovering never refetches fresh data. Content fades in on section change and dialogs and
+  sheets animate with shared `--fb-motion-*` tokens, all zeroed under reduced motion.
+- Open the Teams hierarchy list when its `#team-hierarchy` link is followed while the section
+  is already mounted.
+
+### Lineup builder
+
+- Generate lineups when the estimated balance is already negative. The trade planner keeps
+  each sale and purchase step at or above `min(starting balance, -20% of squad value)`, so a
+  plan that does not worsen a deficit already past the debt limit is accepted, while purchases
+  still need `market value <= cash + 20% of squad value`. See the
+  [lineup builder](docs/api/lineup-builder.md).
+
+### Versioning
+
+- Set the application, API, auth and scraping packages, their OpenAPI documents and the
+  scraper user agent to 0.6.0.
+
 ## [0.5.0] - 2026-11-10
 
 ### Teams

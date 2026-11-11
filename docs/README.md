@@ -3,7 +3,9 @@
 Start with the [project README](../README.md) for features and quick start.
 This folder is the detailed map.
 
-The [Teams tab](../CHANGELOG.md#050---2026-11-10) arrived in v0.5.0. See the
+The [v0.6.0 entry](../CHANGELOG.md#060---2026-11-11) covers linked names, the fixture
+day grouping, on-demand route loading and the negative-balance builder fix. The
+[Teams tab](../CHANGELOG.md#050---2026-11-10) arrived in v0.5.0. See the
 [v0.3.0 changelog](../CHANGELOG.md#030---2026-11-04) for Spanish and English
 localization and the [language guide](frontend-localization-plan.md) for selection,
 formatting and optional prose translation. The
