@@ -236,6 +236,17 @@ and the API.
 | `/teams/:clubId` | One club dossier: players, results, predicted lineup, news and injuries | [Clubs](api/clubs/README.md) |
 
 The shell header switches routes. The league dropdown applies to lineup, market, and players.
+Market, Players, Teams and player details load on demand. Hovering, focusing or first touching
+a header tab (`useRoutePrefetch`) warms the section's code chunk and its first read-only
+requests, using the same query options and `staleTime` as the screens so a prefetch never
+refetches data a screen would still treat as fresh. Links to a player's details warm only the
+code (`preloadHandlers`); both share `warmOnIntent` in `app/routeModules.ts`.
+
+The alerts bell and the **Favorites** button open the scouting dialog through the `?scouting=`
+URL parameter (`favorites` or `alerts`, with `scoutingQuery` and `scoutingFilter`). The dialog is
+mounted once in the header for signed-in users and returns focus to the Favorites button when it
+closes. A signed-out visit drops these parameters from the URL so a shared link does not open the
+dialog after the next login.
 Teams reads the current club directory and one dossier; it does not use the manager-squad API.
 
 ### Teams screen
@@ -402,7 +413,8 @@ remains clearly labeled, retries automatically, and offers retry after a failure
 complete**. Historical lineup navigation and manager selection do not change
 this competition panel or discard an unsaved draft. The panel has its own previous/next
 fixture navigation, bounded to weeks 1–38. Browsing keeps the chosen fixture visible.
-The horizontal scrollbar and previous/next fixture pager are the only navigation
+Matches are grouped by kickoff day: each day is an item of the list with its own
+heading and a nested list of that day's matches. The horizontal scrollbar and previous/next fixture pager are the only navigation
 controls. The pager is centered at phone widths. There is no manual refresh button.
 
 Matches include club names/crests, Madrid-local dates and times, and reported
@@ -576,7 +588,7 @@ last, positions fit one segmented row of short labels (POR, DEF, MED, DEL, ENT;
 the full name is the accessible name and shows in the row summary), and
 **Show N players** spans the full width above Clear and Cancel. From
 701px every group is an open section with its value in the heading (highlighted
-once it filters): two columns on iPad portrait with clubs across the bottom, and
+once the group has a selection, whatever the language): two columns on iPad portrait with clubs across the bottom, and
 three columns from 1000px (iPad landscape, Mac) where the club list scrolls in its
 own column so the whole panel fits without scrolling. Position and availability use toggle groups. Form is grouped
 into Poor, Average, and Good, with equal buttons inside each band. Availability
@@ -1169,7 +1181,7 @@ or the component is outside a router, so a name never becomes a dead link.
 
 | Entity | Component | Destination |
 |--------|-----------|-------------|
-| Club (name or crest) | `ClubLink` | `/teams/{clubId}`; resolved from the Fantasy team id, crest URL or club name (`teamsClubId`, `teamsClubIdFromName` in `api/clubMedia.ts`) |
+| Club (name or crest) | `ClubLink` | `/teams/{clubId}`; resolved from the Fantasy team id, crest URL or club name (`teamsClubId`, `teamsClubIdFromName` in `api/clubMedia.ts`); a crest URL shared by two clubs is ambiguous and resolves to none |
 | Player name | `PlayerLink` | `/players/{id}`, with `state.returnTo` for the back link |
 | Fantasy manager | `ManagerLink` | `/?team={teamId}` (Lineup) |
 | Position, club squad | `playersFilterPath` | `/players?pos=…` / `/players?team=…` |

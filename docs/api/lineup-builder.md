@@ -136,7 +136,11 @@ nonnegative final projected balance. When the starting balance is already negati
 (for example after conservative bid reserves), a plan may keep it but never end
 below it: an owned XI needs no trades, purchases must be funded by sales, and
 clauses still need positive cash. The results then warn that the balance stays
-below zero. A sale cannot fund more than one purchase
+below zero. Each sale and purchase step must keep the running balance at or above
+`min(starting balance, -20% of squad value)`, so a balance that already sits below
+the 20% debt limit is not worsened but also does not make every sale fail; a
+purchase still needs `market value <= cash + 20% of squad value`, so a squad past
+the debt limit can only sell. A sale cannot fund more than one purchase
 independently or include a retained starter. Sale recommendations remain ranked
 by trading score; transaction steps follow actual settlement times before proceeds
 are spent. Existing buying/selling permissions and required offers still apply.
