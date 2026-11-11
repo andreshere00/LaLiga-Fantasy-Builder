@@ -1,4 +1,4 @@
-import { MemoryRouter } from "react-router-dom";
+import { Link, MemoryRouter } from "react-router-dom";
 import { cleanup, fireEvent, render, screen, within } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { TeamHierarchySection } from "./TeamHierarchySection";
@@ -64,6 +64,21 @@ describe("TeamHierarchySection", () => {
     expect(state.requested.every((ids) => ids.length === 0)).toBe(true);
     expect(document.querySelector("#team-summary-hierarchy")?.textContent)
       .toContain("A list of every player grouped by squad role");
+  });
+
+  it("TeamHierarchySection_hash_link_followed_while_mounted_opens_the_list", () => {
+    render(
+      <MemoryRouter initialEntries={["/teams/3"]}>
+        <Link to="/teams/3#team-hierarchy">Hierarchy link</Link>
+        <TeamHierarchySection players={players} returnTo="/teams/3" />
+      </MemoryRouter>,
+    );
+    expect(screen.queryByRole("dialog")).toBeNull();
+
+    fireEvent.click(screen.getByRole("link", { name: "Hierarchy link" }));
+
+    expect(screen.getByRole("dialog")).toBeTruthy();
+    expect(state.requested.at(-1)).toEqual(["1", "2", "3"]);
   });
 
   it("TeamHierarchySection_open_lists_every_player_under_their_level", () => {

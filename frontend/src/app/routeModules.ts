@@ -30,10 +30,17 @@ export function routeForPath(path: string): PreloadableRoute | null {
   return null;
 }
 
-/** Event props that warm a link target's code on hover, keyboard focus or first touch. */
+/** The one wiring for "warm on intent": hover, keyboard focus and first touch. */
+export function warmOnIntent(warm: () => void) {
+  return { onPointerEnter: warm, onFocus: warm, onTouchStart: warm };
+}
+
+/**
+ * Event props that warm only a link target's code. Links to a route that also has data to warm
+ * use `useRoutePrefetch`, which shares `warmOnIntent`.
+ */
 export function preloadHandlers(path: string) {
   const route = routeForPath(path);
   if (route == null) return {};
-  const warm = () => preloadRoute(route);
-  return { onPointerEnter: warm, onFocus: warm, onTouchStart: warm };
+  return warmOnIntent(() => preloadRoute(route));
 }

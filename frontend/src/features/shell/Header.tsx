@@ -2,8 +2,8 @@ import { t, useTranslation } from "../../i18n";
 import { LanguageSelector } from "./LanguageSelector";
 import { ThemeToggle } from "./ThemeToggle";
 import { Select } from "@base-ui/react/select";
-import { useLayoutEffect, useRef, useState } from "react";
-import { Link, NavLink } from "react-router-dom";
+import { useEffect, useLayoutEffect, useRef, useState } from "react";
+import { Link, NavLink, useSearchParams } from "react-router-dom";
 import { useRoutePrefetch } from "../../app/useRoutePrefetch";
 import { leagueId, leagueLabel } from "../../api/mappers";
 import { useAuth } from "../../auth/AuthProvider";
@@ -42,6 +42,15 @@ export function Header() {
   const [optionsOpen, setOptionsOpen] = useState(false);
   const prefetchHandlers = useRoutePrefetch();
   const signedIn = status !== "signed-out" && status !== "loading";
+  const [params, setParams] = useSearchParams();
+  // The scouting dialog only exists for signed-in users: a shared `?scouting=` link must not
+  // linger in the URL and pop the sheet open after the next login.
+  useEffect(() => {
+    if (status !== "signed-out" || !params.has("scouting")) return;
+    const next = new URLSearchParams(params);
+    next.delete("scouting"); next.delete("scoutingQuery"); next.delete("scoutingFilter");
+    setParams(next, { replace: true });
+  }, [status, params, setParams]);
   const profilePhotoUrl = managerAvatar?.trim() || selected?.team?.manager?.avatar?.trim()
     || selected?.team?.manager?.profileImage?.trim() || null;
   const items = leagues.map((league) => ({ value: leagueId(league), label: leagueLabel(league) }));

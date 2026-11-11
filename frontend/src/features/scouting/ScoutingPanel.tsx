@@ -177,7 +177,7 @@ export function ScoutingPanel() {
   useTranslation();
   const scouting = useScouting();
   const [params, setParams] = useSearchParams();
-  return <Button variant="outline" icon={
+  return <Button variant="outline" data-scouting-trigger="" icon={
     <svg viewBox="0 0 24 24" aria-hidden="true">
       <path d="M6 3h12v18l-6-4-6 4V3Z" stroke="currentColor" strokeWidth="1.5" fill="none" />
     </svg>
@@ -202,6 +202,8 @@ export function ScoutingDialog() {
   };
   return <Dialog open={open} title={t("Favorites and scouting")} layout="sheet" className="scouting-panel" onClose={close}
       footer={<Button variant="outline" onClick={close}>{t("Close")}</Button>}
+      // The opener lives on the page and the dialog in the header, so hand focus back by marker.
+      finalFocus={() => document.querySelector<HTMLElement>("[data-scouting-trigger]") ?? false}
       onOpenChangeComplete={next => {
         if (!next && pendingNavigation.current) {
           const target = pendingNavigation.current; pendingNavigation.current = null;

@@ -49,18 +49,22 @@ export function squadFilterValue(filters: SquadFilters, key: SquadFilterKey): st
   }
 }
 
+/** Whether one filter group narrows the list, read from the selection and never from its text. */
+export function squadFilterActive(filters: SquadFilters, key: SquadFilterKey): boolean {
+  switch (key) {
+    case "positions": return filters.positions.size > 0;
+    case "points": return filters.points.min != null || filters.points.max != null;
+    case "clubs": return filters.clubs.size > 0;
+    case "minStarterProbability": return filters.minStarterProbability > 0;
+    case "forms": return filters.forms.size > 0;
+    case "availability": return filters.availability.size > 0;
+  }
+}
+
 /** One chip per active group, in dialog order, for the applied-filters bar. */
 export function activeSquadFilterChips(filters: SquadFilters): SquadFilterChip[] {
-  const active: Record<SquadFilterKey, boolean> = {
-    positions: filters.positions.size > 0,
-    points: filters.points.min != null || filters.points.max != null,
-    clubs: filters.clubs.size > 0,
-    minStarterProbability: filters.minStarterProbability > 0,
-    forms: filters.forms.size > 0,
-    availability: filters.availability.size > 0,
-  };
   return (Object.keys(SQUAD_FILTER_LABELS) as SquadFilterKey[])
-    .filter((key) => active[key])
+    .filter((key) => squadFilterActive(filters, key))
     .map((key) => ({ key, label: t(SQUAD_FILTER_LABELS[key]), value: squadFilterValue(filters, key) }));
 }
 

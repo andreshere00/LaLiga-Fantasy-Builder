@@ -26,6 +26,7 @@ import {
 import {
   POSITION_OPTIONS,
   SQUAD_FILTER_LABELS,
+  squadFilterActive,
   squadFilterValue,
   type FilterOption,
 } from "./squadFilterSummary";
@@ -70,7 +71,8 @@ export function SquadFilterDialog({
   const matches = applySquadFilters(players, draft, pending).length;
   const group = (key: SquadFilterKey, children: ReactNode, defaultOpen = false) => (
     <FilterGroup key={key} area={key} compact={compact} defaultOpen={defaultOpen}
-      label={t(SQUAD_FILTER_LABELS[key])} summary={squadFilterValue(draft, key)}>
+      label={t(SQUAD_FILTER_LABELS[key])} summary={squadFilterValue(draft, key)}
+      active={squadFilterActive(draft, key)}>
       {children}
     </FilterGroup>
   );
@@ -134,9 +136,10 @@ export function SquadFilterDialog({
 }
 
 /** A collapsible group on phones; an always-open, titled section elsewhere. */
-function FilterGroup({ label, summary, area, compact, children, defaultOpen = false }: {
+function FilterGroup({ label, summary, active, area, compact, children, defaultOpen = false }: {
   label: string;
   summary: string;
+  active: boolean;
   area: SquadFilterKey;
   compact: boolean;
   children: ReactNode;
@@ -144,7 +147,6 @@ function FilterGroup({ label, summary, area, compact, children, defaultOpen = fa
 }) {
   const [expanded, setExpanded] = useState(defaultOpen);
   const headingId = useId();
-  const active = summary !== t("Any");
   const fields = (
     <fieldset className="squad-filter-group">
       <legend className="squad-filter-sr-only">{label}</legend>

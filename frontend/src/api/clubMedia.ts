@@ -163,13 +163,22 @@ const CLUB_MEDIA = buildClubMediaIndexes();
 const CLUB_IDS = (() => {
   const byTeamId = new Map<string, string>();
   const byBadge = new Map<string, string>();
+  const ambiguousBadges = new Set<string>();
   if (!Array.isArray(teamsMasterFile)) return { byTeamId, byBadge };
   for (const team of teamsMasterFile) {
     const record = asRecord(team);
     const id = idText(record?.id);
     if (!id) continue;
     for (const alias of [id, idText(record?.dspId)]) if (alias && !byTeamId.has(alias)) byTeamId.set(alias, id);
-    for (const badge of [text(record?.badgeColor), text(record?.badgeWhite)]) if (badge) byBadge.set(badge, id);
+    for (const badge of [text(record?.badgeColor), text(record?.badgeWhite)]) {
+      if (!badge || ambiguousBadges.has(badge)) continue;
+      const owner = byBadge.get(badge);
+      // A crest shared by two clubs names neither of them, so it resolves to nobody.
+      if (owner !== undefined && owner !== id) {
+        byBadge.delete(badge);
+        ambiguousBadges.add(badge);
+      } else byBadge.set(badge, id);
+    }
   }
   return { byTeamId, byBadge };
 })();

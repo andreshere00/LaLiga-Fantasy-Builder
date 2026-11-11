@@ -1,7 +1,7 @@
 import { durationLabel, numberFormatter, dateFormatter } from "../../i18n/format";
 import { ClubLink } from "../../components/links/EntityLinks";
 import { t, useTranslation, useLanguage } from "../../i18n";
-import { useEffect, useId, useRef, useState, type CSSProperties } from "react";
+import { useEffect, useId, useRef, useState, type CSSProperties, type ReactElement } from "react";
 import type { FixtureWeatherDto } from "../../api/schemas";
 import { useAuth } from "../../auth/AuthProvider";
 import { Badge } from "../../components/ui/Badge";
@@ -184,17 +184,22 @@ function FixtureMatchesPanelContent() {
           },
         }}>
           <ol key={week} className={"fixture-matches-list" + (slide.dir ? ` fixture-slide--${slide.dir}` : "")}>
-            {matches.flatMap((match, index) => {
+            {matches.reduce<{ day: string; items: ReactElement[] }[]>((days, match) => {
               const day = match.kickoffMs == null ? t("Date TBC") : dayHeadingFormat.format(match.kickoffMs);
-              const previous = matches[index - 1];
-              const previousDay = index === 0 ? null : previous.kickoffMs == null ? t("Date TBC") : dayHeadingFormat.format(previous.kickoffMs);
               const item = <FixtureMatch key={match.key} match={match} now={panel.now}
                 isNext={upcoming?.matchKeys.includes(match.key) ?? false}
                 forecast={weatherRows.find((row) => weatherMatchesFixture(row, match))}
                 weatherLoading={panel.weather.isFetching} weatherFailed={panel.weather.isError} />;
-              return day === previousDay ? [item]
-                : [<li key={`day-${match.key}`} role="presentation" className="fixture-day-heading">{day}</li>, item];
-            })}
+              const last = days[days.length - 1];
+              if (last?.day === day) last.items.push(item);
+              else days.push({ day, items: [item] });
+              return days;
+            }, []).map(({ day, items }, index) => (
+              <li key={`${day}-${index}`} className="fixture-day">
+                <h3 className="fixture-day-heading">{day}</h3>
+                <ol className="fixture-day-matches">{items}</ol>
+              </li>
+            ))}
           </ol>
         </ScrollArea> : panel.loading ? <PulseRing label={t("Loading fixture matches…")} /> : !panel.error ?
           <p className="fixture-panel-empty">{mode === "unavailable" ? t("Fixture status unavailable.") : t("No matches available for this fixture.")}</p> : null}

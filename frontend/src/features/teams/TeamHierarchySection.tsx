@@ -1,4 +1,4 @@
-import { useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useLocation } from "react-router-dom";
 import { PlayerLink } from "../../components/links/EntityLinks";
 import { t, useTranslation } from "../../i18n";
@@ -38,6 +38,12 @@ export function TeamHierarchySection({ players, returnTo, idleIds }: {
   const [requested, setRequested] = useState(linked);
   const [open, setOpen] = useState(linked);
   const [showIdle, setShowIdle] = useState(false);
+  // The section can stay mounted while the hash changes (in-app navigation to a deep link).
+  useEffect(() => {
+    if (!linked) return;
+    setRequested(true);
+    setOpen(true);
+  }, [linked]);
   const trigger = useRef<HTMLButtonElement>(null);
   const ids = useMemo(() => players.map((player) => player.playerId), [players]);
   const outlooks = usePlayerOutlooks(requested ? ids : []);

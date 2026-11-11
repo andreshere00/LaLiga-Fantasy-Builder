@@ -73,6 +73,20 @@ describe("Header", () => {
     await waitFor(() => expect(document.activeElement).toBe(trigger));
   });
 
+  it("Header_signedOut_dropsStaleScoutingParams", async () => {
+    window.history.replaceState(null, "", "/?scouting=alerts&scoutingQuery=ana&keep=1");
+    render(
+      <QueryClientProvider client={new QueryClient()}>
+        <BrowserRouter>
+          <Header />
+        </BrowserRouter>
+      </QueryClientProvider>,
+    );
+
+    await waitFor(() => expect(window.location.search).toBe("?keep=1"));
+    window.history.replaceState(null, "", "/");
+  });
+
   it("Header_sections_eachTabHasDecorativeIconAndTextName", () => {
     const { container } = render(
       <QueryClientProvider client={new QueryClient()}>

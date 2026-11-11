@@ -7,7 +7,7 @@ import {
 import { leagueId } from "../api/mappers";
 import { useAuth } from "../auth/AuthProvider";
 import { useLeague } from "../features/lineup/LeagueProvider";
-import { preloadRoute, routeForPath, type PreloadableRoute } from "./routeModules";
+import { preloadRoute, routeForPath, warmOnIntent, type PreloadableRoute } from "./routeModules";
 
 /**
  * Warms what a section needs before the click: its code chunk and the first data requests.
@@ -39,7 +39,6 @@ export function useRoutePrefetch() {
   return useCallback((path: string) => {
     const route = routeForPath(path);
     if (route == null) return {};
-    const warm = () => { preloadRoute(route); prefetchData(route); };
-    return { onPointerEnter: warm, onFocus: warm, onTouchStart: warm };
+    return warmOnIntent(() => { preloadRoute(route); prefetchData(route); });
   }, [prefetchData]);
 }
