@@ -127,6 +127,7 @@ class ScoredPlayer(FlexibleModel):
     clause_price: int | None = None
     sale_settlement_at: AwareDatetime | None = None
     sale_offer_id: str | None = None
+    sale_offer_market_id: str | None = None
     sale_offer_amount: int | None = Field(default=None, ge=0)
     sale_offer_expires_at: AwareDatetime | None = None
     listed_for_sale: bool = False
@@ -172,6 +173,7 @@ class TradeStep(FlexibleModel):
     conditions: list[str]
     market_value: int | None = None
     offer_id: str | None = None
+    offer_market_id: str | None = None
     offer_expires_at: AwareDatetime | None = None
     bid_suggestion: BidSuggestion | None = None
     alternatives: list[TradeAlternative] = Field(default_factory=list)

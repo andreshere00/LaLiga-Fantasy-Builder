@@ -3282,6 +3282,7 @@ Type: `string`
 | `clause_price` | integer | no |  |  |
 | `sale_settlement_at` | string | no |  |  |
 | `sale_offer_id` | string | no |  |  |
+| `sale_offer_market_id` | string | no |  |  |
 | `sale_offer_amount` | integer | no |  |  |
 | `sale_offer_expires_at` | string | no |  |  |
 | `listed_for_sale` | boolean | no |  |  |
@@ -3548,6 +3549,7 @@ Type: `string`
 | `conditions` | array[string] | yes |  |  |
 | `market_value` | integer | no |  |  |
 | `offer_id` | string | no |  |  |
+| `offer_market_id` | string | no |  |  |
 | `offer_expires_at` | string | no |  |  |
 | `bid_suggestion` | BidSuggestion | no |  | Suggested market bid and the evidence behind it; never placed by the builder. |
 | `alternatives` | array[TradeAlternative] | no |  |  |

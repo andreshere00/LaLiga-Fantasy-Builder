@@ -146,6 +146,7 @@ def _sale_step(
         conditions=conditions,
         market_value=player.market_value,
         offer_id=player.sale_offer_id if method == "accept_offer" else None,
+        offer_market_id=player.sale_offer_market_id if method == "accept_offer" else None,
         offer_expires_at=player.sale_offer_expires_at if method == "accept_offer" else None,
     )
 

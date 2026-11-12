@@ -2,12 +2,14 @@
 
 import asyncio
 import logging
+from dataclasses import asdict
 from datetime import datetime
 from decimal import Decimal
 
 from pydantic import BaseModel, ValidationError
 
 from fantasy_api.domain.errors import BuilderError, NotFoundError, UpstreamError
+from fantasy_api.domain.lineup_builder.bidding import HistoryPoint, horizon_values, suggest_bid
 from fantasy_api.domain.lineup_builder.progress import ProgressCallback
 from fantasy_api.domain.lineup_builder.scoring import PlayerEvidence, score_player
 from fantasy_api.domain.lineup_builder.target import instant, resolve_target
@@ -21,6 +23,7 @@ from fantasy_api.schemas.leagues import FantasyLeague, PlayerMaster, SquadPlayer
 from fantasy_api.schemas.lineup_builder import (
     FREE_FORMATIONS,
     PREMIUM_FORMATIONS,
+    BidSuggestion,
     BuilderDiagnostic,
     BuildPreferences,
     BuildProgress,
@@ -321,6 +324,13 @@ class LineupBuilderRepository:
             slots[player.player_id] = slot
         if len(slots) != len(owned):
             raise UpstreamError("duplicate master identity in roster", category="fantasy_error")
+        # Owned players already on the market: a listing suggestion then means "no offer yet".
+        listed = {
+            row.player_master.id
+            for row in market.market_players or []
+            if row.player_master is not None and row.player_master.id in slots
+        }
+        owned = [p.model_copy(update={"listed_for_sale": p.player_id in listed}) for p in owned]
         pool = list(owned) if "owned" in preferences.sources else []
         owned_ids = set(slots)
         source_context = CandidateSourceContext(
@@ -438,13 +448,19 @@ class LineupBuilderRepository:
                 )
             )
         eligible = [p for p in evaluated if p is not None]
+        if any(p.acquisition_method == "bid" for p in eligible):
+            eligible = list(
+                await asyncio.gather(
+                    *(self._with_bid(p, preferences, semaphore, diagnostics) for p in eligible)
+                )
+            )
         score_map = {p.player_id: p for p in eligible if p.source == "owned"}
         # Unscoreable bench still remains in every squad projection, but cannot finance a sale.
         owned = [score_map.get(p.player_id, p) for p in owned]
         if preferences.allow_selling:
 
             async def sale_route(player: ScoredPlayer) -> ScoredPlayer:
-                """Credit only an existing offer with a verified manual acceptance route."""
+                """Credit the best pending offer at its amount, or prepare an immediate sale."""
                 async with semaphore:
                     try:
                         offers = parse_payload(
@@ -456,19 +472,35 @@ class LineupBuilderRepository:
                                 ),
                             ),
                         )
-                        if any(
-                            offer.status == "pending"
+                        usable = [
+                            offer
+                            for offer in offers.offers or []
+                            if offer.status == "pending"
                             and offer.money is not None
-                            and offer.money >= player.market_value
+                            and offer.money > 0
                             and instant(offer.expiration_date) is not None
                             and instant(offer.expiration_date) > now
-                            for offer in offers.offers or []
-                        ):
-                            if not player.sections:
-                                player = await self._trading_only(
-                                    player, slots[player.player_id], target, now
-                                )
-                            return player.model_copy(update={"sale_settlement_at": now})
+                        ]
+                        best = max(usable, key=lambda offer: offer.money, default=None)
+                        if best is None and not preferences.allow_immediate_sale:
+                            return player
+                        if not player.sections:
+                            player = await self._trading_only(
+                                player, slots[player.player_id], target, now
+                            )
+                        if best is None:
+                            return player
+                        return player.model_copy(
+                            update={
+                                "sale_settlement_at": now,
+                                "sale_offer_id": None if best.id is None else str(best.id),
+                                "sale_offer_market_id": (
+                                    None if best.market_id is None else str(best.market_id)
+                                ),
+                                "sale_offer_amount": best.money,
+                                "sale_offer_expires_at": instant(best.expiration_date),
+                            }
+                        )
                     except (UpstreamError, NotFoundError):
                         diagnostics.append(
                             BuilderDiagnostic(
@@ -488,6 +520,45 @@ class LineupBuilderRepository:
             reserved_squad_slots=reserved_slots,
             diagnostics=diagnostics,
         )
+
+    async def _with_bid(
+        self,
+        player: ScoredPlayer,
+        preferences: BuildPreferences,
+        semaphore: asyncio.Semaphore,
+        diagnostics: list[BuilderDiagnostic],
+    ) -> ScoredPlayer:
+        """Attach the suggested bid; MPB history is read only when that strategy is on."""
+        if player.acquisition_method != "bid":
+            return player
+        values = None
+        if preferences.bid_strategy == "max_profitable":
+            async with semaphore:
+                try:
+                    detail = await self._stats.detail(
+                        player.player_id,
+                        PlayerDetailQuery(preset=MarketPreset.D14, include=["market"]),
+                    )
+                    window = detail.market.window if detail.market is not None else None
+                    if window is not None:
+                        values = horizon_values(
+                            [HistoryPoint(p.date, p.value, p.filled) for p in window.series],
+                            window.to,
+                        )
+                except (UpstreamError, NotFoundError):
+                    values = None
+            if values is None:
+                diagnostics.append(
+                    BuilderDiagnostic(code="bid_history_unavailable", player_id=player.player_id)
+                )
+        choice = suggest_bid(
+            player.market_value,
+            player.competing_bids or 0,
+            preferences.bid_strategy,
+            preferences.min_bid_return or Decimal(0),
+            values,
+        )
+        return player.model_copy(update={"bid_suggestion": BidSuggestion(**asdict(choice))})
 
     async def _previous_club_fixtures(
         self, current_week: int, club_ids: set[int], now: datetime

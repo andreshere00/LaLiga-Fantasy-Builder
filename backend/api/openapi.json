@@ -14465,6 +14465,17 @@
             ],
             "title": "Sale Offer Id"
           },
+          "sale_offer_market_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Sale Offer Market Id"
+          },
           "sale_offer_amount": {
             "anyOf": [
               {
@@ -15884,6 +15895,17 @@
               }
             ],
             "title": "Offer Id"
+          },
+          "offer_market_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Offer Market Id"
           },
           "offer_expires_at": {
             "anyOf": [
