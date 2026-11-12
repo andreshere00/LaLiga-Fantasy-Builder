@@ -214,6 +214,7 @@ function BuilderDialogSession({
   const minBidReturn = parsedReturn !== undefined && Number.isFinite(parsedReturn)
     && parsedReturn >= 0 && parsedReturn <= 1 ? parsedReturn : undefined;
   const invalidReturn = bidStrategy === "max_profitable" && minBidReturnPercent.trim() !== "" && minBidReturn === undefined;
+  const advancedActive = Number(allowSelling && allowImmediateSale) + Number(bidStrategy === "max_profitable");
 
   /** Local draft gate: refreshed ownership, editable round and, when required, cash >= 0. */
   function draftable(candidate: BuilderCandidate, build: LineupBuildDto): boolean {
@@ -306,7 +307,18 @@ function BuilderDialogSession({
             disabled={!allowSelling} onChange={(e) => setRequireNonnegativeCash(e.target.checked)} /> {t(" Non-negative balance at kickoff")}</label>
           <p className="lineup-builder-section-help">{t("Plans may otherwise end with debt, down to 20% of your squad value. With this option every plan includes the sales needed to reach a balance of 0 or more.")}</p>
           <details className="lineup-builder-advanced">
-            <summary>{t("Advanced options")}</summary>
+            <summary>
+              <span className="lineup-builder-advanced-text">
+                <span className="lineup-builder-advanced-title">{t("Advanced options")}</span>
+                <small>{t("Immediate sales and bid amount")}</small>
+              </span>
+              {advancedActive > 0 && <span className="lineup-builder-advanced-count">
+                {t("{{0}} active", { 0: advancedActive })}</span>}
+              <svg className="lineup-builder-advanced-chevron" aria-hidden="true" viewBox="0 0 16 16" width="16" height="16">
+                <path d="M4 6l4 4 4-4" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+              </svg>
+            </summary>
+            <div className="lineup-builder-advanced-body">
             <label className="lineup-builder-trading-option"><input type="checkbox" checked={allowSelling && allowImmediateSale}
               disabled={!allowSelling} onChange={(e) => setAllowImmediateSale(e.target.checked)} /> {t(" Allow immediate sales (half market value)")}</label>
             <p className="lineup-builder-section-help">{t("Only used for the shortfall that offers on your players cannot cover. You lose half of each player's market value.")}</p>
@@ -324,6 +336,7 @@ function BuilderDialogSession({
                 aria-invalid={invalidReturn} onChange={(e) => setMinBidReturnPercent(e.target.value)} />
               {invalidReturn && <small role="alert">{t("Enter a percentage between 0 and 100.")}</small>}
             </label>}
+            </div>
           </details>
           {!allowBuying && scope.some((source) => source !== "owned") && <p role="status" className="lineup-builder-scope-hint">
             {t("Enable purchase recommendations to include market or opponent players in proposed lineups.")}</p>}

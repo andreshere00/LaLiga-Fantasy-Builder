@@ -2001,5 +2001,7 @@
   "The player's club fixture for the target round could not be identified.": "No se ha podido identificar el partido del club del jugador en la jornada objetivo.",
   "The player's profile could not be found.": "No se ha encontrado el perfil del jugador.",
   "Offers on this player could not be read; no sale is planned.": "No se han podido leer las ofertas por este jugador; no se planifica su venta.",
-  "Market history for the maximum profitable bid is incomplete; the default bid is suggested.": "El historial de mercado para la puja máxima rentable está incompleto; se sugiere la puja por defecto."
+  "Market history for the maximum profitable bid is incomplete; the default bid is suggested.": "El historial de mercado para la puja máxima rentable está incompleto; se sugiere la puja por defecto.",
+  "Immediate sales and bid amount": "Ventas inmediatas e importe de puja",
+  "{{0}} active": "{{0}} activas"
 }

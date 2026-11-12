@@ -2001,5 +2001,7 @@
   "The player's club fixture for the target round could not be identified.": "The player's club fixture for the target round could not be identified.",
   "The player's profile could not be found.": "The player's profile could not be found.",
   "Offers on this player could not be read; no sale is planned.": "Offers on this player could not be read; no sale is planned.",
-  "Market history for the maximum profitable bid is incomplete; the default bid is suggested.": "Market history for the maximum profitable bid is incomplete; the default bid is suggested."
+  "Market history for the maximum profitable bid is incomplete; the default bid is suggested.": "Market history for the maximum profitable bid is incomplete; the default bid is suggested.",
+  "Immediate sales and bid amount": "Immediate sales and bid amount",
+  "{{0}} active": "{{0}} active"
 }

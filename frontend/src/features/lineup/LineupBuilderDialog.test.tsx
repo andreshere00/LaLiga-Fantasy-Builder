@@ -167,6 +167,19 @@ it("opens with purchases and sales allowed and every advanced option off", () =>
   client.clear();
 });
 
+it("summarises the advanced options and counts the ones in use while collapsed", () => {
+  const client = renderDialog();
+  const summary = screen.getByText("Advanced options").closest("summary")!;
+  expect(summary.textContent).toContain("Immediate sales and bid amount");
+  expect(summary.textContent).not.toContain("active");
+
+  fireEvent.click(screen.getByRole("checkbox", { name: /Allow immediate sales/ }));
+  fireEvent.change(screen.getByRole("combobox", { name: "Bid amount" }), { target: { value: "max_profitable" } });
+
+  expect(summary.textContent).toContain("2 active");
+  client.clear();
+});
+
 it("sends the funding and bid options with the build request", async () => {
   vi.mocked(streamLineupBuild).mockReturnValueOnce(new Promise(() => {}));
   const client = renderDialog();
