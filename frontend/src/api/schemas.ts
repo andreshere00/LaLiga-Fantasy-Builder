@@ -21,7 +21,11 @@ function snakeCase(value: string): string {
 }
 
 function addCamelAliases(value: unknown, schema: z.ZodType, context: z.RefinementCtx): unknown {
-  if (schema instanceof z.ZodOptional || schema instanceof z.ZodNullable) {
+  // A ``.default(...)`` wrapper must not hide nested objects from snake_case aliasing.
+  if (
+    schema instanceof z.ZodOptional || schema instanceof z.ZodNullable
+    || schema instanceof z.ZodDefault
+  ) {
     return addCamelAliases(value, schema.unwrap() as z.ZodType, context);
   }
   if (schema instanceof z.ZodArray) {

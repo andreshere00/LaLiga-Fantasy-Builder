@@ -55,6 +55,33 @@ describe("streamLineupBuild", () => {
     });
   });
 
+  it("reads snake_case bid suggestions, alternatives and listing suggestions nested under defaults", async () => {
+    const payload = structuredClone(response.payload) as Record<string, any>;
+    const candidate = payload.candidates[0];
+    const suggestion = { strategy: "market_value", amount: 101, default_bid: 101,
+      competing_bids: 2, mpb: null, return_rate: null, min_return: null, status: "default" };
+    candidate.starters[0].bid_suggestion = suggestion;
+    candidate.trading_plan.steps = [{
+      action: "buy", player_id: candidate.starters[0].player_id, method: "market_bid",
+      player_team_id: null, estimate: 101, settlement_at: "2026-11-13T10:00:00Z",
+      cash_after: 0, squad_value_after: 1, squad_count_after: 1, debt_limit: 0, conditions: [],
+      market_value: 100, offer_id: null, offer_market_id: null, offer_expires_at: null,
+      bid_suggestion: suggestion,
+      alternatives: [{ method: "direct_offer", suggested_amount: 150, conditions: [] }],
+    }];
+    candidate.trading_plan.listing_suggestions = [{ player_id: "7", player_team_id: "70",
+      suggested_price: 90, reason: "not_listed" }];
+    const fetchFn = vi.fn(async () => streamed([JSON.stringify({ type: "result", result: payload }) + "\n"]));
+
+    const built = await streamLineupBuild("l1", "jwt", preferences, vi.fn(), { fetchFn });
+
+    const plan = built.candidates[0].tradingPlan;
+    expect(plan.steps[0].bidSuggestion).toMatchObject({ defaultBid: 101, competingBids: 2 });
+    expect(plan.steps[0].alternatives[0].suggestedAmount).toBe(150);
+    expect(plan.listingSuggestions[0]).toMatchObject({ playerTeamId: "70", suggestedPrice: 90 });
+    expect(built.candidates[0].starters[0].bidSuggestion?.defaultBid).toBe(101);
+  });
+
   it("maps terminal error events and diagnostic aliases to API errors", async () => {
     const fetchFn = vi.fn(async () => streamed([JSON.stringify({ type: "error", status: 503,
       error: "standings_unavailable", diagnostics: [{ code: "standings_unavailable", player_id: null }],
