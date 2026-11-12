@@ -6,6 +6,8 @@ import { useLineupBuilder } from "./useLineupBuilder";
 import { LINEUP_RECOMMENDATION_LIMIT, LineupBuilderResults } from "./LineupBuilderResults";
 import type { BuilderCandidate, LineupBuildDto, LineupBuildProgress } from "../../api/schemas";
 import { LineupBuilderPlayerActions } from "./LineupBuilderPlayerActions";
+import { LineupBuilderSaleActions, type BuilderSaleAction } from "./LineupBuilderSaleActions";
+import { useMarketBoard } from "../market/useMarketBoard";
 import { getJson, paths } from "../../api/client";
 import {
   leagueId,
@@ -107,9 +109,19 @@ function BuilderDialogSession({
   const [changedResult, setChangedResult] = useState<LineupBuildDto | null>(null);
   const [search, setSearch] = useState("");
   const [chosen, setChosen] = useState<string[]>([]);
-  const [allowBuying, setAllowBuying] = useState(false);
-  const [allowSelling, setAllowSelling] = useState(false);
+  const [allowBuying, setAllowBuying] = useState(true);
+  const [allowSelling, setAllowSelling] = useState(true);
   const [includeTradingPurchases, setIncludeTradingPurchases] = useState(false);
+  const [requireNonnegativeCash, setRequireNonnegativeCash] = useState(false);
+  const [allowImmediateSale, setAllowImmediateSale] = useState(false);
+  const [bidStrategy, setBidStrategy] = useState<"market_value" | "max_profitable">("market_value");
+  const [minBidReturnPercent, setMinBidReturnPercent] = useState("");
+  const [builtRequireNonnegative, setBuiltRequireNonnegative] = useState(false);
+  const [saleAction, setSaleAction] = useState<BuilderSaleAction | null>(null);
+  const [confirmedSales, setConfirmedSales] = useState<ReadonlySet<string>>(new Set());
+  const board = useMarketBoard();
+  // Refreshed cash minus pending bids: the same conservative bound the builder plans with.
+  const availableCash = board.projection.available;
   const catalogQuery = usePlayersCatalogQuery(open);
   const [scope, setScope] = useState<string[]>(["owned"]);
   const [lineupPreferences, setLineupPreferences] = useState<string[]>([]);
@@ -198,6 +210,18 @@ function BuilderDialogSession({
     return option ? [option] : [];
   });
 
+  const parsedReturn = minBidReturnPercent.trim() === "" ? undefined : Number(minBidReturnPercent) / 100;
+  const minBidReturn = parsedReturn !== undefined && Number.isFinite(parsedReturn)
+    && parsedReturn >= 0 && parsedReturn <= 1 ? parsedReturn : undefined;
+  const invalidReturn = bidStrategy === "max_profitable" && minBidReturnPercent.trim() !== "" && minBidReturn === undefined;
+
+  /** Local draft gate: refreshed ownership, editable round and, when required, cash >= 0. */
+  function draftable(candidate: BuilderCandidate, build: LineupBuildDto): boolean {
+    return changedResult !== build && !builder.pending && !builder.error
+      && canApply(candidate, build.target.week)
+      && (!builtRequireNonnegative || (availableCash != null && availableCash >= 0));
+  }
+
   function toggleChoice(value: string) {
     setScope((current) => current.includes(value)
       ? current.filter((item) => item !== value)
@@ -232,12 +256,17 @@ function BuilderDialogSession({
           </Progress>
         </div>}
         {builder.pending ? <Button shape="square" variant="destructive" onClick={builder.cancel}>{t("Cancel build")}</Button> : <Button shape="square"
-          disabled={scope.length === 0 || !token} onClick={() => {
+          disabled={scope.length === 0 || !token || invalidReturn} onClick={() => {
             setReplacement(null);
+            setBuiltRequireNonnegative(allowSelling && requireNonnegativeCash);
             void builder.build({
               sources: scope as ("owned" | "market" | "opponents")[], mandatoryPlayerIds: chosen,
               formations: lineupPreferences, allowBuying, allowSelling,
               includeTradingPurchases: allowBuying && includeTradingPurchases,
+              requireNonnegativeCash: allowSelling && requireNonnegativeCash,
+              allowImmediateSale: allowSelling && allowImmediateSale,
+              bidStrategy,
+              ...(bidStrategy === "max_profitable" && minBidReturn !== undefined ? { minBidReturn } : {}),
               maxCandidates: LINEUP_RECOMMENDATION_LIMIT, explanation: { enabled: false },
             });
           }}>{t("Build")}</Button>}
@@ -274,6 +303,29 @@ function BuilderDialogSession({
             <label><input type="checkbox" checked={allowSelling} onChange={(e) => setAllowSelling(e.target.checked)} /> {t(" Allow sale recommendations")}</label>
           </div>
           {allowBuying && <label className="lineup-builder-trading-option"><input type="checkbox" checked={includeTradingPurchases} onChange={(e) => setIncludeTradingPurchases(e.target.checked)} /> {t(" Include trading-only purchases")}</label>}
+          <label className="lineup-builder-trading-option"><input type="checkbox" checked={allowSelling && requireNonnegativeCash}
+            disabled={!allowSelling} onChange={(e) => setRequireNonnegativeCash(e.target.checked)} /> {t(" Non-negative balance at kickoff")}</label>
+          <p className="lineup-builder-section-help">{t("Plans may otherwise end with debt, down to 20% of your squad value. With this option every plan includes the sales needed to reach a balance of 0 or more.")}</p>
+          <details className="lineup-builder-advanced">
+            <summary>{t("Advanced options")}</summary>
+            <label className="lineup-builder-trading-option"><input type="checkbox" checked={allowSelling && allowImmediateSale}
+              disabled={!allowSelling} onChange={(e) => setAllowImmediateSale(e.target.checked)} /> {t(" Allow immediate sales (half market value)")}</label>
+            <p className="lineup-builder-section-help">{t("Only used for the shortfall that offers on your players cannot cover. You lose half of each player's market value.")}</p>
+            <label className="lineup-builder-field">
+              <span>{t("Bid amount")}</span>
+              <select value={bidStrategy} aria-label={t("Bid amount")}
+                onChange={(e) => setBidStrategy(e.target.value as "market_value" | "max_profitable")}>
+                <option value="market_value">{t("Market value (+1 € when others have bid)")}</option>
+                <option value="max_profitable">{t("Maximum profitable bid")}</option>
+              </select>
+            </label>
+            {bidStrategy === "max_profitable" && <label className="lineup-builder-field">
+              <span>{t("Minimum return (%)")}</span>
+              <Input inputMode="decimal" value={minBidReturnPercent} placeholder="0" aria-label={t("Minimum return (%)")}
+                aria-invalid={invalidReturn} onChange={(e) => setMinBidReturnPercent(e.target.value)} />
+              {invalidReturn && <small role="alert">{t("Enter a percentage between 0 and 100.")}</small>}
+            </label>}
+          </details>
           {!allowBuying && scope.some((source) => source !== "owned") && <p role="status" className="lineup-builder-scope-hint">
             {t("Enable purchase recommendations to include market or opponent players in proposed lineups.")}</p>}
           <p className="lineup-builder-preview-note">{t("Preview only. Building never buys, sells or saves players.")}</p>
@@ -349,7 +401,9 @@ function BuilderDialogSession({
         {builder.result && <LineupBuilderResults key={builder.result.buildId} result={builder.result} playersById={playersById}
           ownedPlayerIds={new Set(ownSquad.flatMap((player) => player.masterPlayerId ? [player.masterPlayerId] : []))}
           onAcquire={setAcquiring}
-          canApply={(candidate) => !builder.pending && !builder.error && changedResult !== builder.result && canApply(candidate, builder.result!.target.week)}
+          requireNonnegativeCash={builtRequireNonnegative} availableCash={availableCash}
+          confirmedSales={confirmedSales} onSaleAction={setSaleAction}
+          canApply={(candidate) => draftable(candidate, builder.result!)}
           onApply={(candidate) => {
             if (isDraftDirty(builder.result!.target.week)) setReplacement({ candidate, build: builder.result! });
             else onApply(candidate, builder.result!.target.week);
@@ -358,11 +412,14 @@ function BuilderDialogSession({
           player={acquiring} opponentTeamIds={opponents.map((team) => team.teamId)}
           clausesDeadline={builder.result.target.clausesDeadline} onClose={() => setAcquiring(null)}
           onSuccess={() => { builder.cancel(); setChangedResult(builder.result); }} />}
+        {saleAction && <LineupBuilderSaleActions key={`${saleAction.kind}-${saleAction.playerId}`}
+          action={saleAction} squad={ownSquad} onClose={() => setSaleAction(null)}
+          onDone={(done) => setConfirmedSales((current) => new Set([...current, `${done.kind}:${done.playerId}`]))} />}
         {replacement && replacement.build === builder.result && <section aria-label={t("Replace draft confirmation")}>
           <p>{t("Replace your unsaved lineup draft?")}</p>
           <Button shape="square" onClick={() => {
             const { candidate, build } = replacement;
-            if (changedResult !== build && !builder.pending && !builder.error && canApply(candidate, build.target.week)) onApply(candidate, build.target.week);
+            if (draftable(candidate, build)) onApply(candidate, build.target.week);
             setReplacement(null);
           }}>{t("Replace draft")}</Button>
           <Button shape="square" variant="secondary" onClick={() => setReplacement(null)}>{t("Keep my draft")}</Button>

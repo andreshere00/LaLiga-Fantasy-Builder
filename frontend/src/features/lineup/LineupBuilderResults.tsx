@@ -12,6 +12,7 @@ import { builderScoreTone } from "./builderScoreTone";
 import { builderDiagnosticMessage } from "./builderDiagnosticCopy";
 import { Help } from "../../components/ui/Help";
 import { LineupBuilderTradeDetails } from "./LineupBuilderTradeDetails";
+import type { BuilderSaleAction } from "./LineupBuilderSaleActions";
 
 const money = (value: number) => new Intl.NumberFormat(locale(), { style: "currency", currency: "EUR", maximumFractionDigits: 0 }).format(value);
 export const LINEUP_RECOMMENDATION_LIMIT = 7;
@@ -21,13 +22,34 @@ const ACQUISITION_SOURCES: Record<string, string> = {
   owned: "Your squad", market: "Market", opponent: "Opponent squad",
 };
 
-export function LineupBuilderResults({ result, playersById, canApply, onApply, ownedPlayerIds, onAcquire }: {
+const FUNDING: Record<BuilderCandidate["tradingPlan"]["fundingStatus"], { title: string; detail: string } | null> = {
+  funded: null,
+  debt_within_limit: {
+    title: "Ends in debt",
+    detail: "The balance at kickoff stays below zero, within the 20% debt limit. Fantasy may not score a team that starts the round in debt.",
+  },
+  needs_sales: {
+    title: "Needs more sales",
+    detail: "Confirmed offers cannot bring the balance to zero. List the suggested players and accept offers before kickoff.",
+  },
+};
+
+export function LineupBuilderResults({
+  result, playersById, canApply, onApply, ownedPlayerIds, onAcquire,
+  requireNonnegativeCash = false, availableCash = null, confirmedSales, onSaleAction,
+}: {
   result: LineupBuildDto;
   playersById: ReadonlyMap<string, { name: string; photoUrl: string | null }>;
   canApply: (candidate: BuilderCandidate) => boolean;
   onApply: (candidate: BuilderCandidate) => void;
   ownedPlayerIds?: ReadonlySet<string>;
   onAcquire?: (player: BuilderCandidate["starters"][number]) => void;
+  /** The build required a balance of 0 or more at kickoff. */
+  requireNonnegativeCash?: boolean;
+  /** Refreshed cash minus pending bids, or null while unknown. */
+  availableCash?: number | null;
+  confirmedSales?: ReadonlySet<string>;
+  onSaleAction?: (action: BuilderSaleAction) => void;
 }) {
   useTranslation();
   const recommendations = result.candidates.slice(0, LINEUP_RECOMMENDATION_LIMIT);
@@ -58,9 +80,6 @@ export function LineupBuilderResults({ result, playersById, canApply, onApply, o
       detail: "Club standings could not be verified. Position criteria are omitted; recent matches use verified previous-round results." },
     { visible: !result.searchComplete, title: "Search incomplete", tone: "warning",
       detail: "Search is incomplete. These candidates are feasible estimates; better choices may remain." },
-    { visible: result.candidates.some((candidate) => candidate.tradingPlan.projectedCash < 0),
-      title: "Balance below zero", tone: "warning",
-      detail: "The estimated balance stays below zero. These lineups do not make it worse: any purchase is paid for by sales. Before kickoff, raise the balance to zero or more, for example by withdrawing bids or selling players, or Fantasy may not score your team." },
     { visible: diagnostics.has("cash_conservative_bid_reserve"), title: "Cash after pending bids", tone: "info",
       detail: "Cash projections use a conservative lower bound: pending bid amounts are deducted from the reported balance, even if Fantasy may already reserve them. Pending bids remain unchanged." },
   ].filter((notice) => notice.visible);
@@ -117,6 +136,11 @@ export function LineupBuilderResults({ result, playersById, canApply, onApply, o
     {candidates.length === 0 && <p role="status">{group === "owned" ? t("No lineup using only your current squad was found for these settings.") : t("No improving external lineups were found for these settings.")}</p>}
     {candidates.map(({ candidate, rank }) => <article key={candidate.candidateId} className="lineup-builder-candidate">
       <h4>{rank}. {candidate.formation.replaceAll(",", "-")} · {candidate.resourceGroup === "owned" ? t("Owned starting XI") : t("Acquisitions required")}</h4>
+      {FUNDING[candidate.tradingPlan.fundingStatus] && <p className="lineup-builder-funding" data-tone="warning" role="note">
+        <strong>{t(FUNDING[candidate.tradingPlan.fundingStatus]!.title)}</strong>{" "}
+        {t(FUNDING[candidate.tradingPlan.fundingStatus]!.detail)}
+        {candidate.tradingPlan.shortfall > 0 && <> {t("Shortfall: {{0}}.", { 0: money(candidate.tradingPlan.shortfall) })}</>}
+      </p>}
       <p>{t("Lineup score ")}{decimal(candidate.totalLineupScore, 3)} {t(" · Cash estimate ")}{money(candidate.tradingPlan.projectedCash)} {t(" · Squad ")}{candidate.tradingPlan.squadCount}{t("/24 · Pending bid slots ")}{candidate.tradingPlan.reservedSquadSlots} {t(" · Value ")}{money(candidate.tradingPlan.squadValue)}</p>
       <div className="lineup-builder-preview" aria-label={t("Starting XI preview")}>
         <PitchMarkings stretch />
@@ -139,9 +163,13 @@ export function LineupBuilderResults({ result, playersById, canApply, onApply, o
         {candidate.starters.map((player) => <LineupBuilderScoreDetails key={player.playerId} player={player} />)}
       </details>
       <LineupBuilderTradeDetails plan={candidate.tradingPlan} target={result.target}
-        playerName={playerName} playersById={playersById} />
+        playerName={playerName} playersById={playersById}
+        confirmedSales={confirmedSales} onSaleAction={onSaleAction} />
       {result.explanations[candidate.candidateId] && <details><summary>{t("Original generated explanation")}</summary><p lang="en">{result.explanations[candidate.candidateId]}</p></details>}
       <Button shape="square" disabled={!canApply(candidate)} onClick={() => onApply(candidate)}>{t("Use as draft")}</Button>
+      {!canApply(candidate) && candidate.resourceGroup === "owned" && requireNonnegativeCash
+        && availableCash != null && availableCash < 0 && <p className="fb-helper" role="status">
+        {t("Your balance after pending bids is {{0}}. Confirm the suggested sales to reach 0 before using this draft.", { 0: money(availableCash) })}</p>}
       {!canApply(candidate) && <p className="fb-helper">{candidate.resourceGroup === "external" ? t("Proposal only: acquire these players first. Draft use requires every starter in your refreshed squad and the matching editable round.") : t("Draft use requires all players in your refreshed squad and the matching editable round.")}</p>}
     </article>)}
     {result.explanationStatus === "unavailable" && <p>{t("Optional explanation is unavailable; deterministic scores are unchanged.")}</p>}

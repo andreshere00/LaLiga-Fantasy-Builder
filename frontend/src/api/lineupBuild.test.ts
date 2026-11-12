@@ -50,6 +50,7 @@ describe("streamLineupBuild", () => {
       headers: { Authorization: "Bearer jwt", Accept: "application/x-ndjson", "Content-Type": "application/json" },
       body: JSON.stringify({ sources: ["owned"], mandatory_player_ids: [], formations: [],
         allow_buying: false, allow_selling: false, include_trading_purchases: false,
+        require_nonnegative_cash: false, allow_immediate_sale: false, bid_strategy: "market_value",
         max_candidates: 5, explanation: { enabled: false } }),
     });
   });

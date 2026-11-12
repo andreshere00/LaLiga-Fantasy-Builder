@@ -139,3 +139,63 @@ it("translates builder source labels and counts without losing selected formatio
     expect((screen.getByLabelText("4-3-3") as HTMLInputElement).checked).toBe(true);
   } finally { void i18n.changeLanguage("en"); client.clear(); }
 });
+
+function renderDialog(canApply: () => boolean = () => true) {
+  const client = new QueryClient({ defaultOptions: { queries: { retry: false } } });
+  render(<QueryClientProvider client={client}>
+    <LineupBuilderDialog open onClose={vi.fn()} ranking={[]} squad={[]} selectedTeamId="t1"
+      formations={[]} canApply={canApply} onApply={vi.fn()} isDraftDirty={() => false} />
+  </QueryClientProvider>);
+  return client;
+}
+
+it("opens with purchases and sales allowed and every advanced option off", () => {
+  const client = renderDialog();
+  const buy = screen.getByRole("checkbox", { name: /Allow purchase recommendations/ }) as HTMLInputElement;
+  const sell = screen.getByRole("checkbox", { name: /Allow sale recommendations/ }) as HTMLInputElement;
+  const nonnegative = screen.getByRole("checkbox", { name: /Non-negative balance at kickoff/ }) as HTMLInputElement;
+  const immediate = screen.getByRole("checkbox", { name: /Allow immediate sales/ }) as HTMLInputElement;
+  expect(buy.checked).toBe(true);
+  expect(sell.checked).toBe(true);
+  expect(nonnegative.checked).toBe(false);
+  expect(immediate.checked).toBe(false);
+  expect((screen.getByRole("combobox", { name: "Bid amount" }) as HTMLSelectElement).value).toBe("market_value");
+
+  fireEvent.click(sell);
+  expect(nonnegative.disabled).toBe(true);
+  expect(immediate.disabled).toBe(true);
+  client.clear();
+});
+
+it("sends the funding and bid options with the build request", async () => {
+  vi.mocked(streamLineupBuild).mockReturnValueOnce(new Promise(() => {}));
+  const client = renderDialog();
+  fireEvent.click(screen.getByRole("checkbox", { name: /Non-negative balance at kickoff/ }));
+  fireEvent.click(screen.getByRole("checkbox", { name: /Allow immediate sales/ }));
+  fireEvent.change(screen.getByRole("combobox", { name: "Bid amount" }), { target: { value: "max_profitable" } });
+  fireEvent.change(screen.getByRole("textbox", { name: "Minimum return (%)" }), { target: { value: "5" } });
+
+  fireEvent.click(screen.getByRole("button", { name: "Build" }));
+
+  expect(vi.mocked(streamLineupBuild).mock.calls[0][2]).toMatchObject({
+    allowBuying: true, allowSelling: true, requireNonnegativeCash: true,
+    allowImmediateSale: true, bidStrategy: "max_profitable", minBidReturn: 0.05,
+  });
+  client.clear();
+});
+
+it("keeps the draft disabled while a required non-negative balance is still below zero", async () => {
+  const result = lineupBuildResponseSchema.parse(response.payload);
+  vi.mocked(streamLineupBuild).mockResolvedValueOnce(result);
+  vi.mocked(getJson).mockImplementation(async (path: string) =>
+    path.endsWith("/money") ? { teamMoney: -50 } : []);
+  const client = renderDialog();
+  fireEvent.click(screen.getByRole("checkbox", { name: /Non-negative balance at kickoff/ }));
+
+  await act(async () => { fireEvent.click(screen.getByRole("button", { name: "Build" })); });
+
+  for (const button of screen.getAllByRole("button", { name: "Use as draft" })) {
+    expect((button as HTMLButtonElement).disabled).toBe(true);
+  }
+  client.clear();
+});

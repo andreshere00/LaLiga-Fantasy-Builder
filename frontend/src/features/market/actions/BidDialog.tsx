@@ -53,7 +53,8 @@ export function BidDialog({
 
   useEffect(() => {
     if (!open || !row) return;
-    if (kind === "modify" && initialAmount != null) {
+    // A modify keeps the current bid; a new bid may start from a suggested amount.
+    if (initialAmount != null) {
       setRaw(formatIntegerAmount(initialAmount));
       return;
     }
