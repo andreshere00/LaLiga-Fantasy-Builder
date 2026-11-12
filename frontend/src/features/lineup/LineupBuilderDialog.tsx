@@ -210,16 +210,20 @@ function BuilderDialogSession({
     return option ? [option] : [];
   });
 
+  const squadByEntryId = useMemo(
+    () => new Map(ownSquad.map((card) => [card.id, card] as const)), [ownSquad]);
   const parsedReturn = minBidReturnPercent.trim() === "" ? undefined : Number(minBidReturnPercent) / 100;
   const minBidReturn = parsedReturn !== undefined && Number.isFinite(parsedReturn)
     && parsedReturn >= 0 && parsedReturn <= 1 ? parsedReturn : undefined;
   const invalidReturn = bidStrategy === "max_profitable" && minBidReturnPercent.trim() !== "" && minBidReturn === undefined;
 
-  /** Local draft gate: refreshed ownership, editable round and, when required, cash >= 0. */
+  /**
+   * Local draft gate: refreshed ownership and an editable round. Setting a lineup costs no
+   * cash, so a negative balance never blocks it.
+   */
   function draftable(candidate: BuilderCandidate, build: LineupBuildDto): boolean {
     return changedResult !== build && !builder.pending && !builder.error
-      && canApply(candidate, build.target.week)
-      && (!builtRequireNonnegative || (availableCash != null && availableCash >= 0));
+      && canApply(candidate, build.target.week);
   }
 
   function toggleChoice(value: string) {
@@ -441,6 +445,7 @@ function BuilderDialogSession({
           onAcquire={setAcquiring}
           requireNonnegativeCash={builtRequireNonnegative} availableCash={availableCash}
           confirmedSales={confirmedSales} onSaleAction={setSaleAction}
+          squadByEntryId={squadByEntryId}
           canApply={(candidate) => draftable(candidate, builder.result!)}
           onApply={(candidate) => {
             if (isDraftDirty(builder.result!.target.week)) setReplacement({ candidate, build: builder.result! });

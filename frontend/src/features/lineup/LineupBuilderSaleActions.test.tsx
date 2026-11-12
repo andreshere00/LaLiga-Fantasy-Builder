@@ -2,6 +2,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { act, cleanup, fireEvent, render, screen } from "@testing-library/react";
 import { afterEach, beforeEach, expect, it, vi } from "vitest";
 import { getJson, postJson } from "../../api/client";
+import type { SquadCard } from "../../api/mappers";
 import { LineupBuilderSaleActions, resolvePlannedOffer, type BuilderSaleAction } from "./LineupBuilderSaleActions";
 
 vi.mock("../../api/client", async (importOriginal) => ({
@@ -22,10 +23,10 @@ const accept: Extract<BuilderSaleAction, { kind: "accept_offer" }> = {
   amount: 80, marketValue: 100, offerId: "o1", marketId: "m1",
 };
 
-function renderAction(action: BuilderSaleAction, onDone = vi.fn()) {
+function renderAction(action: BuilderSaleAction, onDone = vi.fn(), squad: SquadCard[] = []) {
   const client = new QueryClient({ defaultOptions: { queries: { retry: false } } });
   render(<QueryClientProvider client={client}>
-    <LineupBuilderSaleActions action={action} squad={[]} onClose={vi.fn()} onDone={onDone} />
+    <LineupBuilderSaleActions action={action} squad={squad} onClose={vi.fn()} onDone={onDone} />
   </QueryClientProvider>);
   return { client, onDone };
 }
@@ -77,6 +78,16 @@ it("prefills the listing price and rejects a price below market value", () => {
   const price = screen.getByRole("textbox", { name: "Sale price" }) as HTMLInputElement;
   expect(price.value).toBe("100");
   fireEvent.change(price, { target: { value: "99" } });
+  expect((screen.getByRole("button", { name: "List for sale" }) as HTMLButtonElement).disabled).toBe(true);
+  client.clear();
+});
+
+it("does not list a player that is already on the market", () => {
+  const { client } = renderAction({
+    kind: "listing", playerId: "7", playerTeamId: "123", name: "Bench player", amount: 100, marketValue: 100,
+  }, vi.fn(), [{ id: "123", marketValue: 100, listingId: "m9" } as SquadCard]);
+
+  expect(screen.getByText(/already on the market/)).toBeTruthy();
   expect((screen.getByRole("button", { name: "List for sale" }) as HTMLButtonElement).disabled).toBe(true);
   client.clear();
 });

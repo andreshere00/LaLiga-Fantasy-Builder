@@ -760,8 +760,11 @@ Code: `frontend/src/features/lineup/`.
   market value and cannot be undone. Listing suggestions open **List for sale**
   with the suggested price, still editable. Each is one confirmation; nothing is
   confirmed automatically. After a write the squad, cash and offers refresh, and
-  **Use as draft** is re-evaluated locally: every starter owned and, when the build
-  required a non-negative balance, refreshed cash minus pending bids ≥ 0.
+  **Use as draft** is re-evaluated locally: every starter owned and the round
+  editable. Cash never blocks it; when the build required a non-negative balance
+  and refreshed cash minus pending bids is still below 0, a note says so. Sale
+  steps also offer **Put on the market**, or **Market options** (change the price
+  or withdraw the listing) when the player is already listed.
   Acquiring a starter still marks the result stale.
 - **Acquire** opens the existing bid dialog prefilled with the suggested bid (or the
   market value for a direct offer to an opponent); the amount stays editable.

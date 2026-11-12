@@ -72,6 +72,8 @@ export function LineupBuilderSaleActions({ action, squad, onClose, onDone }: {
   const [pending, setPending] = useState(false);
   const [message, setMessage] = useState<string | null>(null);
   const listingPrice = Number(price);
+  // A second listing for the same squad entry would be rejected upstream.
+  const alreadyListed = action.kind === "listing" && card?.listingId != null;
 
   async function refresh() {
     await Promise.all([
@@ -133,7 +135,7 @@ export function LineupBuilderSaleActions({ action, squad, onClose, onDone }: {
       : t("List {{0}} for sale", { 0: action.name });
   const ready = action.kind === "accept_offer" ? offer != null && offer !== "checking"
     : action.kind === "immediate_sale" ? half != null
-      : isValidListingPrice(Number.isFinite(listingPrice) ? listingPrice : null, currentValue);
+      : !alreadyListed && isValidListingPrice(Number.isFinite(listingPrice) ? listingPrice : null, currentValue);
   return <Dialog open title={title} onClose={onClose} closeOnBackdrop={!pending}
     className="lineup-builder-dialog" footer={<>
       <Button variant="secondary" shape="square" disabled={pending} onClick={onClose}>{t("Cancel")}</Button>
@@ -159,6 +161,7 @@ export function LineupBuilderSaleActions({ action, squad, onClose, onDone }: {
         onChange={(event) => setPrice(event.target.value.replace(/[^\d]/g, ""))} />
       <small className="fb-helper">{t("Listing money only counts once someone makes an offer you accept.")}</small>
     </label>}
+    {alreadyListed && <p role="note">{t("This player is already on the market. Cancel or change that listing from your squad.")}</p>}
     {message && <p role="alert">{t(message)}</p>}
   </Dialog>;
 }

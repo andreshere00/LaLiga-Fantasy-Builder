@@ -3,6 +3,7 @@ import { locale } from "../../i18n";
 import { t, useTranslation } from "../../i18n";
 import { useState } from "react";
 import type { BuilderCandidate, LineupBuildDto } from "../../api/schemas";
+import type { SquadCard } from "../../api/mappers";
 import { Button } from "../../components/ui/Button";
 import { ProfilePhoto } from "../shell/ProfilePhoto";
 import { PersonIcon } from "../shell/icons";
@@ -38,7 +39,7 @@ const FUNDING: Record<BuilderCandidate["tradingPlan"]["fundingStatus"], { title:
 
 export function LineupBuilderResults({
   result, playersById, canApply, onApply, ownedPlayerIds, onAcquire,
-  requireNonnegativeCash = false, availableCash = null, confirmedSales, onSaleAction,
+  requireNonnegativeCash = false, availableCash = null, confirmedSales, onSaleAction, squadByEntryId,
 }: {
   result: LineupBuildDto;
   playersById: ReadonlyMap<string, { name: string; photoUrl: string | null }>;
@@ -52,6 +53,7 @@ export function LineupBuilderResults({
   availableCash?: number | null;
   confirmedSales?: ReadonlySet<string>;
   onSaleAction?: (action: BuilderSaleAction) => void;
+  squadByEntryId?: ReadonlyMap<string, SquadCard>;
 }) {
   useTranslation();
   const recommendations = result.candidates.slice(0, LINEUP_RECOMMENDATION_LIMIT);
@@ -175,12 +177,12 @@ export function LineupBuilderResults({
       </details>
       <LineupBuilderTradeDetails plan={candidate.tradingPlan} target={result.target}
         playerName={playerName} playersById={playersById}
-        confirmedSales={confirmedSales} onSaleAction={onSaleAction} />
+        confirmedSales={confirmedSales} onSaleAction={onSaleAction} squadByEntryId={squadByEntryId} />
       {result.explanations[candidate.candidateId] && <details className="lineup-builder-candidate-details"><summary>{t("Original generated explanation")}</summary><p lang="en">{result.explanations[candidate.candidateId]}</p></details>}
       <Button shape="square" disabled={!canApply(candidate)} onClick={() => onApply(candidate)}>{t("Use as draft")}</Button>
-      {!canApply(candidate) && candidate.resourceGroup === "owned" && requireNonnegativeCash
+      {candidate.resourceGroup === "owned" && requireNonnegativeCash
         && availableCash != null && availableCash < 0 && <p className="fb-helper" role="status">
-        {t("Your balance after pending bids is {{0}}. Confirm the suggested sales to reach 0 before using this draft.", { 0: money(availableCash) })}</p>}
+        {t("Your balance after pending bids is {{0}}. Confirm the suggested sales to reach 0 before kickoff; you can still use this draft.", { 0: money(availableCash) })}</p>}
       {!canApply(candidate) && <p className="fb-helper">{candidate.resourceGroup === "external" ? t("Proposal only: acquire these players first. Draft use requires every starter in your refreshed squad and the matching editable round.") : t("Draft use requires all players in your refreshed squad and the matching editable round.")}</p>}
     </article>)}
     {result.explanationStatus === "unavailable" && <p>{t("Optional explanation is unavailable; deterministic scores are unchanged.")}</p>}

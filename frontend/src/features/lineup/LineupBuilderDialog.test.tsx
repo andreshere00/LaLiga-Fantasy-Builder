@@ -201,7 +201,7 @@ it("sends the funding and bid options with the build request", async () => {
   client.clear();
 });
 
-it("keeps the draft disabled while a required non-negative balance is still below zero", async () => {
+it("keeps the draft usable while a required non-negative balance is still below zero", async () => {
   const result = lineupBuildResponseSchema.parse(response.payload);
   vi.mocked(streamLineupBuild).mockResolvedValueOnce(result);
   vi.mocked(getJson).mockImplementation(async (path: string) =>
@@ -211,8 +211,9 @@ it("keeps the draft disabled while a required non-negative balance is still belo
 
   await act(async () => { fireEvent.click(screen.getByRole("button", { name: "Build" })); });
 
+  expect(screen.getAllByText(/you can still use this draft/).length).toBeGreaterThan(0);
   for (const button of screen.getAllByRole("button", { name: "Use as draft" })) {
-    expect((button as HTMLButtonElement).disabled).toBe(true);
+    expect((button as HTMLButtonElement).disabled).toBe(false);
   }
   client.clear();
 });

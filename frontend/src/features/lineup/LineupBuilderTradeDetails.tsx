@@ -4,6 +4,8 @@ import type { BuilderCandidate, LineupBuildDto } from "../../api/schemas";
 import { ProfilePhoto } from "../shell/ProfilePhoto";
 import { PersonIcon } from "../shell/icons";
 import { Button } from "../../components/ui/Button";
+import type { SquadCard } from "../../api/mappers";
+import { LineupBuilderMarketOptions } from "./LineupBuilderMarketOptions";
 import type { BuilderSaleAction } from "./LineupBuilderSaleActions";
 
 const euro = (value: number) => new Intl.NumberFormat(locale(), {
@@ -38,7 +40,7 @@ const BID_STATUS: Record<string, string> = {
 
 /** Present the projected squad, deadlines and ordered conditional transactions. */
 export function LineupBuilderTradeDetails({
-  plan, target, playerName, playersById, confirmedSales, onSaleAction,
+  plan, target, playerName, playersById, confirmedSales, onSaleAction, squadByEntryId,
 }: {
   plan: BuilderCandidate["tradingPlan"];
   target: LineupBuildDto["target"];
@@ -47,6 +49,8 @@ export function LineupBuilderTradeDetails({
   /** ``kind:playerId`` keys of sales the manager already confirmed. */
   confirmedSales?: ReadonlySet<string>;
   onSaleAction?: (action: BuilderSaleAction) => void;
+  /** Own squad entries by ``playerTeamId``, to tell which players are already on the market. */
+  squadByEntryId?: ReadonlyMap<string, SquadCard>;
 }) {
   useTranslation();
   const photo = (id: string) => <ProfilePhoto className="lineup-builder-option-photo"
@@ -125,16 +129,31 @@ export function LineupBuilderTradeDetails({
             </div>}
             {onSaleAction && step.action === "sell" && step.playerTeamId
               && (step.method === "accept_offer" || step.method === "immediate_sale") && (
-              confirmedSales?.has(`${step.method}:${step.playerId}`)
-                ? <p role="status" className="fb-helper">{t("Sale confirmed. Your squad and cash were refreshed.")}</p>
-                : <Button size="sm" shape="square" variant={step.method === "immediate_sale" ? "destructive" : "secondary"}
-                  onClick={() => onSaleAction(step.method === "accept_offer"
-                    ? { kind: "accept_offer", playerId: step.playerId, playerTeamId: step.playerTeamId!, name: playerName(step.playerId),
-                      amount: step.estimate, marketValue: step.marketValue ?? step.estimate, offerId: step.offerId, marketId: step.offerMarketId }
-                    : { kind: "immediate_sale", playerId: step.playerId, playerTeamId: step.playerTeamId!, name: playerName(step.playerId),
-                      amount: step.estimate, marketValue: step.marketValue ?? step.estimate * 2 })}>
-                  {step.method === "accept_offer" ? t("Accept offer ({{0}})", { 0: euro(step.estimate) }) : t("Sell now ({{0}})", { 0: euro(step.estimate) })}
-                </Button>)}
+              <div className="lineup-builder-trade-actions">
+                {confirmedSales?.has(`${step.method}:${step.playerId}`)
+                  ? <p role="status" className="fb-helper">{t("Sale confirmed. Your squad and cash were refreshed.")}</p>
+                  : <>
+                    <Button size="sm" shape="square" variant={step.method === "immediate_sale" ? "destructive" : "secondary"}
+                      onClick={() => onSaleAction(step.method === "accept_offer"
+                        ? { kind: "accept_offer", playerId: step.playerId, playerTeamId: step.playerTeamId!, name: playerName(step.playerId),
+                          amount: step.estimate, marketValue: step.marketValue ?? step.estimate, offerId: step.offerId, marketId: step.offerMarketId }
+                        : { kind: "immediate_sale", playerId: step.playerId, playerTeamId: step.playerTeamId!, name: playerName(step.playerId),
+                          amount: step.estimate, marketValue: step.marketValue ?? step.estimate * 2 })}>
+                      {step.method === "accept_offer" ? t("Accept offer ({{0}})", { 0: euro(step.estimate) }) : t("Sell now ({{0}})", { 0: euro(step.estimate) })}
+                    </Button>
+                    {squadByEntryId?.get(step.playerTeamId)?.onMarket
+                      ? <LineupBuilderMarketOptions player={squadByEntryId.get(step.playerTeamId)!} />
+                      : confirmedSales?.has(`listing:${step.playerId}`)
+                        ? <p role="status" className="fb-helper">{t("Listed on the market. Its money only counts once someone makes an offer you accept.")}</p>
+                        : <Button size="sm" shape="square" variant="secondary"
+                          onClick={() => onSaleAction({
+                            kind: "listing", playerId: step.playerId, playerTeamId: step.playerTeamId!, name: playerName(step.playerId),
+                            amount: step.marketValue ?? step.estimate, marketValue: step.marketValue ?? step.estimate,
+                          })}>
+                          {t("Put on the market")}
+                        </Button>}
+                  </>}
+              </div>)}
           </li>)}
         </ol> : <p className="fb-helper">{t("No trades are needed for this lineup.")}</p>}
       </section>

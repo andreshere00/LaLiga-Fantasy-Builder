@@ -82,6 +82,7 @@ export function SquadPlayerActions({
   ownPlayer = true,
   onSwap,
   opponentMarketOptions,
+  startView = "options",
 }: {
   player: SquadCard;
   sales: SquadSalesApi;
@@ -90,6 +91,8 @@ export function SquadPlayerActions({
   ownPlayer?: boolean;
   onSwap?: () => void;
   opponentMarketOptions?: (open: boolean, onClose: () => void) => ReactNode;
+  /** Screen the ``children`` callback opens first; ``choose`` skips the summary. */
+  startView?: Extract<SaleView, "options" | "choose">;
   triggerText?: string;
   detailsReturnTo?: string;
 }) {
@@ -155,7 +158,7 @@ export function SquadPlayerActions({
     <>
       <div className="squad-tile-slot squad-player-hit-area">
         {typeof children === "function" ? children(() => {
-          setView("options");
+          setView(startView);
           setOpen(true);
         }) : children}
         {!cardMenu ? <div className="squad-tile-controls">

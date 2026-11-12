@@ -155,6 +155,7 @@
 .lineup-builder-trade-conditions { margin-top:12px; border-left:2px solid var(--fb-warning); padding-left:10px; font-size:12px; }
 .lineup-builder-trade-conditions > span { font-weight:600; }
 .lineup-builder-trade-conditions ul { margin:6px 0 0; padding-left:16px; color:var(--fb-muted); line-height:1.6; }
+.lineup-builder-trade-actions { display:flex; flex-wrap:wrap; gap:8px; margin-top:12px; }
 @media(max-width:700px) {
   .lineup-builder-projection,.lineup-builder-transaction-balances { grid-template-columns:repeat(2,minmax(0,1fr)); }
   .lineup-builder-retained { grid-template-columns:repeat(2,minmax(0,1fr)); }
