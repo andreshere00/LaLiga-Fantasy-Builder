@@ -24,16 +24,12 @@ const COPY: Record<Exclude<AuthStatus, "ready">, GateCopy> = {
   },
   unlinked: {
     title: "Connect LaLiga",
-    body:
-      "Your session is active. Continue to LaLiga to link your account. " +
-      "You will return to this app when sign-in finishes.",
+    body: "Your session is active. Connect your LaLiga account to continue.",
     action: "laliga",
   },
   "needs-reauth": {
     title: "Reconnect LaLiga",
-    body:
-      "LaLiga needs to be connected again. Continue to LaLiga and you will " +
-      "return to this app when sign-in finishes.",
+    body: "Your LaLiga connection expired. Connect it again to continue.",
     action: "laliga",
   },
   unavailable: {

@@ -4,6 +4,7 @@ import { cleanup, fireEvent, render, screen } from "@testing-library/react";
 import { MemoryRouter, Route, Routes } from "react-router-dom";
 import { afterEach, describe, expect, it, vi } from "vitest";
 
+import { i18n } from "../../i18n";
 import { GatePanel } from "./GatePanel";
 
 const harness = vi.hoisted(() => ({ connectLaliga: vi.fn() }));
@@ -24,7 +25,10 @@ function renderGate(status: "unlinked" | "needs-reauth") {
 }
 
 describe("GatePanel", () => {
-  afterEach(cleanup);
+  afterEach(async () => {
+    cleanup();
+    await i18n.changeLanguage("en");
+  });
 
   // ---- Happy path ---- //
 
@@ -42,4 +46,20 @@ describe("GatePanel", () => {
       expect(harness.connectLaliga).not.toHaveBeenCalled();
     },
   );
+
+  // ---- Edge cases ---- //
+
+  it.each([
+    ["unlinked", "Tu sesión está activa. Conecta tu cuenta de LaLiga para continuar."],
+    ["needs-reauth", "Tu conexión con LaLiga ha caducado. Vuelve a conectarla para continuar."],
+  ] as const)("body_%s_isTranslatedInSpanish", async (status, expected) => {
+    // Arrange
+    await i18n.changeLanguage("es");
+
+    // Act
+    renderGate(status);
+
+    // Assert
+    expect(screen.getByText(expected)).toBeTruthy();
+  });
 });

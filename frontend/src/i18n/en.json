@@ -516,7 +516,6 @@
   "LaLiga connection request failed. Try again.": "LaLiga connection request failed. Try again.",
   "LaLiga fixtures shown · Oldest to newest": "LaLiga fixtures shown · Oldest to newest",
   "LaLiga linking is not available in this installation yet. You can browse public player information while setup is completed.": "LaLiga linking is not available in this installation yet. You can browse public player information while setup is completed.",
-  "LaLiga needs to be connected again. Continue to LaLiga and you will ": "LaLiga needs to be connected again. Continue to LaLiga and you will ",
   "LaLiga or manager": "LaLiga or manager",
   "LaLiga rejected this action (forbidden). Check your balance, the listing type, and that bidding is allowed in this league.": "LaLiga rejected this action (forbidden). Check your balance, the listing type, and that bidding is allowed in this league.",
   "LaLiga rejected this bid. A negative balance or the wrong offer type can cause this.": "LaLiga rejected this bid. A negative balance or the wrong offer type can cause this.",
@@ -1321,7 +1320,6 @@
   "You cannot change players for fixtures that have already been played.": "You cannot change players for fixtures that have already been played.",
   "You don't have any other players in the squad for this position.": "You don't have any other players in the squad for this position.",
   "You need fewer than 24 squad players and room for another bid (players plus active bids must stay under 24).": "You need fewer than 24 squad players and room for another bid (players plus active bids must stay under 24).",
-  "You will return to this app when sign-in finishes.": "You will return to this app when sign-in finishes.",
   "Your": "Your",
   "Your Fantasy Builder account was deleted.": "Your Fantasy Builder account was deleted.",
   "Your Fantasy squad": "Your Fantasy squad",
@@ -1340,7 +1338,6 @@
   "Your reported balance.": "Your reported balance.",
   "Your session ended. Sign in again.": "Your session ended. Sign in again.",
   "Your session expired. Log in again.": "Your session expired. Log in again.",
-  "Your session is active. Continue to LaLiga to link your account. ": "Your session is active. Continue to LaLiga to link your account. ",
   "Your squad data could not be loaded.": "Your squad data could not be loaded.",
   "Your squad has no verified space for another player, including pending bids.": "Your squad has no verified space for another player, including pending bids.",
   "arithmetic mean (NIST)": "arithmetic mean (NIST)",
@@ -1936,5 +1933,7 @@
   "Ready to play the next matchday": "Ready to play the next matchday",
   "May miss the next matchday": "May miss the next matchday",
   "Cannot play the next matchday": "Cannot play the next matchday",
-  "Alerts, {{0}} unread": "Alerts, {{0}} unread"
+  "Alerts, {{0}} unread": "Alerts, {{0}} unread",
+  "Your session is active. Connect your LaLiga account to continue.": "Your session is active. Connect your LaLiga account to continue.",
+  "Your LaLiga connection expired. Connect it again to continue.": "Your LaLiga connection expired. Connect it again to continue."
 }
