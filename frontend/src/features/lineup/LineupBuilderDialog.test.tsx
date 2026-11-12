@@ -199,3 +199,19 @@ it("keeps the draft disabled while a required non-negative balance is still belo
   }
   client.clear();
 });
+
+it("keeps the funding gate of the build that produced the results after a failed rebuild", async () => {
+  const result = lineupBuildResponseSchema.parse(response.payload);
+  vi.mocked(streamLineupBuild).mockResolvedValueOnce(result).mockRejectedValueOnce(new Error("contract"));
+  vi.mocked(getJson).mockImplementation(async (path: string) =>
+    path.endsWith("/money") ? { teamMoney: -50 } : []);
+  const client = renderDialog();
+  await act(async () => { fireEvent.click(screen.getByRole("button", { name: "Build" })); });
+  fireEvent.click(screen.getByRole("checkbox", { name: /Non-negative balance at kickoff/ }));
+
+  await act(async () => { fireEvent.click(screen.getByRole("button", { name: "Build" })); });
+
+  expect(screen.queryByText(/Confirm the suggested sales to reach 0/)).toBeNull();
+  expect(screen.getByText("Previous results are stale. Rebuild before applying a draft.")).toBeTruthy();
+  client.clear();
+});

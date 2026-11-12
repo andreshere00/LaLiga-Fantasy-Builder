@@ -213,7 +213,9 @@ suggested_bid = max(floor(MPB), default_bid)   when R ≥ τ
               = default_bid                    otherwise (non_profitable)
 ```
 
-`V_t` is the history point dated exactly `t` days before the window's last day
+`return_rate` is reported rounded to 6 decimal places (never in exponent form);
+the profitability decision uses the exact value. `V_t` is the history point dated
+exactly `t` days before the window's last day
 (`V_0`). A missing or gap-filled point, or `V_0 ≤ 0`, gives `insufficient_history`
 and the diagnostic `bid_history_unavailable`. All arithmetic uses `Decimal`; the
 MPB is rounded down to whole euros. Unlike the scoring growth, `δV_t` divides by
@@ -335,7 +337,12 @@ This implementation deliberately limits recommendations to established facts:
   When the FútbolFantasy widget is absent, explicit Fantasy catalog statuses
   (`ok`, `doubtful`, `injured`, `suspended`) supply availability with source
   provenance; missing status never defaults to available, and active injury
-  evidence still excludes a contradictory `ok` status.
+  evidence still excludes a contradictory `ok` status. A FútbolFantasy
+  availability forecast for the target round (`available` or `doubtful` with
+  that matchday) takes precedence over an injury the history still marks as
+  ongoing: minor knocks often stay open there while the player is expected to
+  start. The injury criterion still scores the recent injury. Without a
+  target-round forecast, an ongoing injury excludes the player.
   An available-for-round date derived from the player's fixture is not a medical
   recovery timestamp. Unavailable players with only that prediction are excluded.
 - Injury-history bands require complete parsed coverage; missing or dropped
@@ -352,11 +359,13 @@ missing/naive expiry, an expired listing and settlement at/after kickoff. Oppone
 diagnostics distinguish league settings, protection expiry, active/unknown shield
 state, and missing clause prices. The conservative pending-bid reserve is an
 informational cash bound and is not counted as a player/source exclusion.
-The frontend exclusions table shows only unavailable players and verified clause
-locks that expire after the target matchday's first kickoff. A lock expiring
+The frontend exclusions table shows every exclusion reason for the caller's own
+players, plus unavailable external players and verified clause locks that expire
+after the target matchday's first kickoff. A lock expiring
 exactly at kickoff is free at that instant and is not included in this table.
-The separate 48-hour eligibility buffer and other source diagnostics remain in
-the build response; they are not displayed as matchday availability exclusions.
+For external players, the separate 48-hour eligibility buffer and other source
+diagnostics remain in the build response; they are not displayed as matchday
+availability exclusions.
 
 Further authenticated read-only
 captures are needed for exact gross/net reservation accounting and timed shield expiries;

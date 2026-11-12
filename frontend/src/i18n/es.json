@@ -1996,5 +1996,10 @@
   "Incomplete history: default bid": "Historial incompleto: puja por defecto",
   "The offer is no longer pending at this amount. Rebuild to update the plan.": "La oferta ya no está pendiente por este importe. Vuelve a generar el plan.",
   "The offer could not be checked. Try again.": "No se ha podido comprobar la oferta. Inténtalo de nuevo.",
-  "The sale could not be confirmed. Your squad has been refreshed; check it before retrying.": "No se ha podido confirmar la venta. Tu plantilla se ha actualizado; revísala antes de reintentar."
+  "The sale could not be confirmed. Your squad has been refreshed; check it before retrying.": "No se ha podido confirmar la venta. Tu plantilla se ha actualizado; revísala antes de reintentar.",
+  "The player's five-day market value history is incomplete.": "El historial de valor de mercado de cinco días del jugador está incompleto.",
+  "The player's club fixture for the target round could not be identified.": "No se ha podido identificar el partido del club del jugador en la jornada objetivo.",
+  "The player's profile could not be found.": "No se ha encontrado el perfil del jugador.",
+  "Offers on this player could not be read; no sale is planned.": "No se han podido leer las ofertas por este jugador; no se planifica su venta.",
+  "Market history for the maximum profitable bid is incomplete; the default bid is suggested.": "El historial de mercado para la puja máxima rentable está incompleto; se sugiere la puja por defecto."
 }

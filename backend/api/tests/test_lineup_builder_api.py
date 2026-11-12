@@ -140,6 +140,8 @@ def _client(
     offer_money: int = 100,
     number_of_bids: int | None = None,
     bid_history: Literal["rising", "filled"] | None = None,
+    ongoing_injury: bool = False,
+    forecast_matchday: int | None = None,
 ) -> tuple[TestClient, str, list[httpx.Request]]:
     """Wire real auth/Fantasy clients with typed football segment stubs."""
     private, public = rsa_pems
@@ -464,6 +466,10 @@ def _client(
             )
             current_match.stats.dazn_points.dazn_points = 99
             detail.fixtures.fixtures.insert(0, current_match)
+        if ongoing_injury:
+            detail.profile.injury.active = True
+        if forecast_matchday is not None:
+            detail.profile.availability = {"status": "available", "matchday": forecast_matchday}
         detail.profile.fantasy_season_total = season_total
         detail.profile.fantasy_season_matches = season_matches
         detail.profile.injury_history_coverage = injury_history_coverage
@@ -1471,3 +1477,28 @@ def test_build_lineup_immediate_sale_enabled_credits_half_market_value(rsa_pems)
     assert all(s["method"] == "immediate_sale" and s["estimate"] == 50 for s in sales)
     assert plan["funding_status"] in {"funded", "needs_sales"}
     assert all(request.method == "GET" for request in requests)
+
+
+def test_build_lineup_target_round_forecast_overrides_ongoing_minor_injury(rsa_pems) -> None:
+    # FutbolFantasy can list a player as available for the round (95% start probability)
+    # while a minor knock stays "ongoing" in the injury history.
+    client, jwt, _ = _client(rsa_pems, ongoing_injury=True, forecast_matchday=10)
+
+    body = _build(client, jwt)
+
+    assert body["candidates"]
+    assert not any(d["code"] == "player_unavailable" for d in body["diagnostics"])
+
+
+def test_build_lineup_ongoing_injury_without_round_forecast_excludes_player(rsa_pems) -> None:
+    client, jwt, _ = _client(rsa_pems, ongoing_injury=True)
+
+    with client:
+        result = client.post(
+            "/lineup-builder/leagues/league/build",
+            headers={"Authorization": f"Bearer {jwt}"},
+            json={"formations": ["4,4,2"]},
+        )
+
+    assert result.status_code == 409
+    assert {"code": "player_unavailable", "player_id": "1"} in result.json()["diagnostics"]

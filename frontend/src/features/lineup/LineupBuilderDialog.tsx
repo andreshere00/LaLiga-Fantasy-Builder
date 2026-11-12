@@ -116,7 +116,6 @@ function BuilderDialogSession({
   const [allowImmediateSale, setAllowImmediateSale] = useState(false);
   const [bidStrategy, setBidStrategy] = useState<"market_value" | "max_profitable">("market_value");
   const [minBidReturnPercent, setMinBidReturnPercent] = useState("");
-  const [builtRequireNonnegative, setBuiltRequireNonnegative] = useState(false);
   const [saleAction, setSaleAction] = useState<BuilderSaleAction | null>(null);
   const [confirmedSales, setConfirmedSales] = useState<ReadonlySet<string>>(new Set());
   const board = useMarketBoard();
@@ -188,6 +187,7 @@ function BuilderDialogSession({
     return players;
   }, [allOptions, catalogQuery.data]);
   const builder = useLineupBuilder(id, token, playersById);
+  const builtRequireNonnegative = builder.resultRequest?.requireNonnegativeCash === true;
   const scopeOptions = [...new Map(allOptions.filter((option) =>
     scope.includes(option.sourceKind))
     .map((option) => [option.id, option])).values()];
@@ -258,7 +258,6 @@ function BuilderDialogSession({
         {builder.pending ? <Button shape="square" variant="destructive" onClick={builder.cancel}>{t("Cancel build")}</Button> : <Button shape="square"
           disabled={scope.length === 0 || !token || invalidReturn} onClick={() => {
             setReplacement(null);
-            setBuiltRequireNonnegative(allowSelling && requireNonnegativeCash);
             void builder.build({
               sources: scope as ("owned" | "market" | "opponents")[], mandatoryPlayerIds: chosen,
               formations: lineupPreferences, allowBuying, allowSelling,

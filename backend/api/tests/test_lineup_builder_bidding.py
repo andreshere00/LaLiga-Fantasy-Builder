@@ -144,3 +144,19 @@ def test_max_profitable_bid_return_equal_to_threshold_is_profitable() -> None:
     flat = {0: 100, 3: 100, 5: 100, 7: 100, 10: 100, 14: 100}
 
     assert suggest_bid(100, 0, "max_profitable", Decimal(0), flat).status == "profitable"
+
+
+def test_suggest_bid_tiny_return_rate_never_uses_exponent_notation() -> None:
+    tiny = {
+        0: 100_000_000,
+        3: 99_999_999,
+        5: 100_000_000,
+        7: 100_000_000,
+        10: 100_000_000,
+        14: 100_000_000,
+    }
+
+    choice = suggest_bid(100_000_000, 0, "max_profitable", Decimal(0), tiny)
+
+    assert choice.status == "profitable"
+    assert str(choice.return_rate) == "0.000000"

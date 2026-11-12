@@ -16,6 +16,8 @@ import type { BuilderSaleAction } from "./LineupBuilderSaleActions";
 
 const money = (value: number) => new Intl.NumberFormat(locale(), { style: "currency", currency: "EUR", maximumFractionDigits: 0 }).format(value);
 export const LINEUP_RECOMMENDATION_LIMIT = 7;
+/** Player diagnostics that annotate a route but do not remove the player from the pool. */
+const NOT_EXCLUSIONS = new Set(["sale_route_unavailable", "bid_history_unavailable"]);
 
 /** Read-only candidate comparisons and complete rule/transaction evidence. */
 const ACQUISITION_SOURCES: Record<string, string> = {
@@ -68,8 +70,11 @@ export function LineupBuilderResults({
     }
   }
   const playerName = (id: string) => names.get(id) ?? t("Unknown player");
-  const exclusions = result.diagnostics.filter((item) => item.playerId != null &&
-    (item.code === "player_unavailable" || item.code === "opponent_protection_active_at_kickoff"));
+  // Every reason one of your own players was left out, plus the most relevant external ones.
+  const exclusions = result.diagnostics.filter((item) => item.playerId != null
+    && !NOT_EXCLUSIONS.has(item.code)
+    && (ownedPlayerIds?.has(item.playerId) || item.code === "player_unavailable"
+      || item.code === "opponent_protection_active_at_kickoff"));
   const needsAcquisition = (player: BuilderCandidate["starters"][number]) =>
     player.source !== "owned" && !ownedPlayerIds?.has(player.playerId);
   const diagnostics = new Set(result.diagnostics.map((item) => item.code));

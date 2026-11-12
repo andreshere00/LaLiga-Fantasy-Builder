@@ -109,6 +109,14 @@ def max_profitable_bid(values: Mapping[int, int]) -> MaxProfitableBid | None:
     return MaxProfitableBid(return_rate=rate, amount=base * (1 + rate))
 
 
+RATE_QUANTUM = Decimal("0.000001")
+
+
+def _reported_rate(rate: Decimal) -> Decimal:
+    """Round the reported return to 6 places so it never serializes in exponent form."""
+    return rate.quantize(RATE_QUANTUM) + 0
+
+
 def suggest_bid(
     market_value: int,
     competing_bids: int,
@@ -151,7 +159,7 @@ def suggest_bid(
             fallback,
             competing_bids,
             mpb,
-            result.return_rate,
+            _reported_rate(result.return_rate),
             min_return,
             "non_profitable",
         )
@@ -161,7 +169,7 @@ def suggest_bid(
         fallback,
         competing_bids,
         mpb,
-        result.return_rate,
+        _reported_rate(result.return_rate),
         min_return,
         "profitable",
     )

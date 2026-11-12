@@ -1996,5 +1996,10 @@
   "Incomplete history: default bid": "Incomplete history: default bid",
   "The offer is no longer pending at this amount. Rebuild to update the plan.": "The offer is no longer pending at this amount. Rebuild to update the plan.",
   "The offer could not be checked. Try again.": "The offer could not be checked. Try again.",
-  "The sale could not be confirmed. Your squad has been refreshed; check it before retrying.": "The sale could not be confirmed. Your squad has been refreshed; check it before retrying."
+  "The sale could not be confirmed. Your squad has been refreshed; check it before retrying.": "The sale could not be confirmed. Your squad has been refreshed; check it before retrying.",
+  "The player's five-day market value history is incomplete.": "The player's five-day market value history is incomplete.",
+  "The player's club fixture for the target round could not be identified.": "The player's club fixture for the target round could not be identified.",
+  "The player's profile could not be found.": "The player's profile could not be found.",
+  "Offers on this player could not be read; no sale is planned.": "Offers on this player could not be read; no sale is planned.",
+  "Market history for the maximum profitable bid is incomplete; the default bid is suggested.": "Market history for the maximum profitable bid is incomplete; the default bid is suggested."
 }

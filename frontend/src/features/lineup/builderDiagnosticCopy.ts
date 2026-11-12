@@ -26,6 +26,11 @@ const MESSAGES: Record<string, string> = {
   player_unavailable: "The player is unavailable for the target round.",
   no_recent_appearance: "No played match was found among the recent LaLiga match slots.",
   recent_matches_unavailable: "Recent LaLiga match history could not be verified for this player.",
+  market_history_unavailable: "The player's five-day market value history is incomplete.",
+  target_fixture_ambiguous: "The player's club fixture for the target round could not be identified.",
+  player_source_missing: "The player's profile could not be found.",
+  sale_route_unavailable: "Offers on this player could not be read; no sale is planned.",
+  bid_history_unavailable: "Market history for the maximum profitable bid is incomplete; the default bid is suggested.",
 };
 
 /** Explain source gates while retaining readable fallback text for future codes. */

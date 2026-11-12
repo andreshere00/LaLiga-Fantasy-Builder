@@ -890,7 +890,8 @@ export type PayBuyoutWriteDto = z.infer<typeof payBuyoutWriteSchema>;
 export type IncreaseBuyoutWriteDto = z.infer<typeof increaseBuyoutWriteSchema>;
 export type ShieldWriteDto = z.infer<typeof shieldWriteSchema>;
 
-const scoreNumber = z.union([z.number(), z.string().regex(/^-?\d+(\.\d+)?$/)]).transform(Number);
+// Decimal strings may use exponent notation (for example "3.5E-9" or "0E-10").
+const scoreNumber = z.union([z.number(), z.string().regex(/^-?\d+(\.\d+)?([eE][-+]?\d+)?$/)]).transform(Number);
 const builderCriterionSchema = readObject({
   ruleId: z.string(), source: z.string(), observed: z.string(),
   lineup: scoreNumber.nullable(), trading: scoreNumber.nullable(),

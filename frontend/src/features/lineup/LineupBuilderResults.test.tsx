@@ -112,3 +112,25 @@ it("should warn per candidate when a plan ends within the debt limit", () => {
   expect(screen.getByText("Ends in debt")).toBeTruthy();
   expect(screen.getAllByRole("article")).toHaveLength(1);
 });
+
+it("should list every reason an owned player was left out of the pool", () => {
+  const result = recommendations(1, 0);
+  result.diagnostics = [
+    { code: "market_history_unavailable", playerId: "owned-1" },
+    { code: "no_recent_appearance", playerId: "owned-2" },
+    { code: "sale_route_unavailable", playerId: "owned-3" },
+    { code: "market_listing_expired", playerId: "market-1" },
+  ];
+  render(<LineupBuilderResults result={result} canApply={() => true} onApply={() => {}}
+    playersById={new Map()} ownedPlayerIds={new Set(["owned-1", "owned-2", "owned-3"])} />);
+  expect(screen.getByText("2 source exclusions")).toBeTruthy();
+  expect(screen.getByText("The player's five-day market value history is incomplete.")).toBeTruthy();
+  expect(screen.getByText("No played match was found among the recent LaLiga match slots.")).toBeTruthy();
+});
+
+it("should accept Decimal strings in exponent notation from the builder", () => {
+  const payload = structuredClone(response.payload) as { candidates: { starters: { lineup_score: string }[] }[] };
+  payload.candidates[0].starters[0].lineup_score = "3.5E-9";
+  const result = lineupBuildResponseSchema.parse(payload);
+  expect(result.candidates[0].starters[0].lineupScore).toBeCloseTo(3.5e-9);
+});

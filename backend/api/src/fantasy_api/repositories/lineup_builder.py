@@ -667,9 +667,15 @@ class LineupBuilderRepository:
             week = profile.availability.get("matchday")
         if week is not None and week != target.week:
             raise UpstreamError("availability forecast is stale", category="availability_unknown")
-        if availability == "available" and profile.injury.active is not True:
+        # A matchday forecast for the target round is the most specific evidence: it already
+        # accounts for minor knocks that stay "ongoing" in the injury history (for example a
+        # player listed as available with a 95% start probability). The injury section still
+        # scores the recent injury. Without such a forecast, an ongoing injury still excludes.
+        forecast = week == target.week
+        injured = profile.injury.active is True and not forecast
+        if availability == "available" and not injured:
             status = "available"
-        elif availability == "doubtful" and profile.injury.active is not True:
+        elif availability == "doubtful" and not injured:
             status = "questionable"
         else:
             # The existing derived expected-return date is not a medical timestamp.
