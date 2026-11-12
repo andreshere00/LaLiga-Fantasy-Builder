@@ -4,6 +4,28 @@ Notable changes to LaLiga Fantasy Builder are recorded here. Version 0.1.0
 summarizes the application through 27 October 2026; it is the first changelog
 entry, not a claim that every optional provider or deployment gate is complete.
 
+## [Unreleased]
+
+### Lineup builder
+
+- Plans may end in debt, down to 20% of the final squad value (rules version
+  `2026-11-12.1`). Each plan reports `funding_status`: funded, within the debt limit,
+  or needing more sales.
+- Add a **Non-negative balance at kickoff** option. Plans then sell until the balance
+  reaches 0, crediting accepted offers at their amount (including offers below market
+  value) and, with the advanced option, immediate sales at half the market value.
+  When that is not enough, plans list players to put on sale; listing money is never
+  counted as cash.
+- Result cards offer **Accept offer** and **Sell now** confirmations and listing
+  suggestions. **Use as draft** unlocks without rebuilding once refreshed cash minus
+  pending bids reaches 0.
+- Suggest bid amounts: market value, plus 1 € when other managers have bid, or the
+  advanced Maximum Profitable Bid from 14-day market momentum with a minimum return.
+  The bid dialog starts from the suggestion. Clause steps show a conditional direct
+  offer that never funds a plan.
+- Purchase and sale recommendations start checked in the builder dialog. External
+  starters must also outscore the owned player they replace.
+
 ## [0.5.0] - 2026-11-10
 
 ### Teams

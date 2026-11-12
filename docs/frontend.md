@@ -753,6 +753,18 @@ Code: `frontend/src/features/lineup/`.
   Acquisition lineups must score strictly higher than the strongest feasible
   current-squad lineup; fewer than seven total may qualify. If the current squad cannot
   form a valid XI, acquisitions can still complete one.
+- Each result card shows its funding status: **Ends in debt** (within the 20% limit)
+  or **Needs more sales** with the shortfall. Sale steps offer **Accept offer (€X)**,
+  which re-reads the offer and accepts it only if still pending at that amount or
+  higher, and **Sell now (€X)**, which warns that an immediate sale pays half the
+  market value and cannot be undone. Listing suggestions open **List for sale**
+  with the suggested price, still editable. Each is one confirmation; nothing is
+  confirmed automatically. After a write the squad, cash and offers refresh, and
+  **Use as draft** is re-evaluated locally: every starter owned and, when the build
+  required a non-negative balance, refreshed cash minus pending bids ≥ 0.
+  Acquiring a starter still marks the result stale.
+- **Acquire** opens the existing bid dialog prefilled with the suggested bid (or the
+  market value for a direct offer to an opponent); the amount stays editable.
 - **Players Ranking** lists the user and opponents. The season total stays the
   only figure on the right, with its `p` suffix. Each manager’s matchweek score
   sits under the name as the score alone. Hovering that score names the fixture,
@@ -1021,7 +1033,10 @@ Builder setup groups player sources into selectable tiles, separates optional
 trade recommendations, and keeps Build/Close outside the scrolling content.
 Mandatory player search expands on demand, with a persistent selection count;
 formations remain visible as individual checkboxes. Trading-only purchases are
-shown when purchase recommendations are enabled. Empty source selection explains
+shown when purchase recommendations are enabled. Purchase and sale recommendations
+start checked. **Non-negative balance at kickoff** and the **Advanced options**
+(immediate sales, bid amount strategy, minimum return as a percentage) start off;
+the balance and immediate-sale options are disabled while sales are not allowed. Empty source selection explains
 why Build is unavailable. These controls retain their configuration while users
 explore options and generated previews.
 
