@@ -516,7 +516,6 @@
   "LaLiga connection request failed. Try again.": "Falló la solicitud de conexión con LaLiga. Reinténtalo.",
   "LaLiga fixtures shown · Oldest to newest": "Jornadas de LaLiga mostradas · De más antigua a más reciente",
   "LaLiga linking is not available in this installation yet. You can browse public player information while setup is completed.": "La vinculación con LaLiga aún no está disponible en esta instalación. Puedes consultar los datos públicos de jugadores mientras se completa la configuración.",
-  "LaLiga needs to be connected again. Continue to LaLiga and you will ": "Vuelve a conectar LaLiga. Continúa en LaLiga para ",
   "LaLiga or manager": "LaLiga o mánager",
   "LaLiga rejected this action (forbidden). Check your balance, the listing type, and that bidding is allowed in this league.": "LaLiga ha rechazado esta acción. Comprueba tu saldo, el tipo de anuncio y si se permiten pujas en esta liga.",
   "LaLiga rejected this bid. A negative balance or the wrong offer type can cause this.": "LaLiga rechazó la puja. Puede deberse a un saldo negativo o a un tipo de oferta incorrecto.",
@@ -1321,7 +1320,6 @@
   "You cannot change players for fixtures that have already been played.": "No puedes cambiar jugadores en jornadas ya disputadas.",
   "You don't have any other players in the squad for this position.": "No tienes otros jugadores en plantilla para esta posición.",
   "You need fewer than 24 squad players and room for another bid (players plus active bids must stay under 24).": "Necesitas menos de 24 jugadores y una plaza para otra puja (plantilla y pujas activas deben sumar menos de 24).",
-  "You will return to this app when sign-in finishes.": "Volverás a esta aplicación cuando termine el inicio de sesión.",
   "Your": "Tu",
   "Your Fantasy Builder account was deleted.": "Tu cuenta de Fantasy Builder se ha eliminado.",
   "Your Fantasy squad": "Tu plantilla de Fantasy",
@@ -1340,7 +1338,6 @@
   "Your reported balance.": "Tu saldo indicado.",
   "Your session ended. Sign in again.": "Tu sesión ha terminado. Vuelve a iniciarla.",
   "Your session expired. Log in again.": "Tu sesión ha caducado. Vuelve a iniciarla.",
-  "Your session is active. Continue to LaLiga to link your account. ": "Tu sesión está activa. Continúa en LaLiga para vincular tu cuenta. ",
   "Your squad data could not be loaded.": "No se pudieron cargar los datos de tu plantilla.",
   "Your squad has no verified space for another player, including pending bids.": "No hay una plaza verificada en tu plantilla para otro jugador, contando las pujas pendientes.",
   "arithmetic mean (NIST)": "media aritmética (NIST)",
@@ -1936,5 +1933,7 @@
   "Ready to play the next matchday": "Listo para jugar la próxima jornada",
   "May miss the next matchday": "Puede perderse la próxima jornada",
   "Cannot play the next matchday": "No puede jugar la próxima jornada",
-  "Alerts, {{0}} unread": "Alertas, {{0}} sin leer"
+  "Alerts, {{0}} unread": "Alertas, {{0}} sin leer",
+  "Your session is active. Connect your LaLiga account to continue.": "Tu sesión está activa. Conecta tu cuenta de LaLiga para continuar.",
+  "Your LaLiga connection expired. Connect it again to continue.": "Tu conexión con LaLiga ha caducado. Vuelve a conectarla para continuar."
 }
