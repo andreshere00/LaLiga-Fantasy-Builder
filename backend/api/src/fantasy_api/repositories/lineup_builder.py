@@ -449,11 +449,10 @@ class LineupBuilderRepository:
             )
         eligible = [p for p in evaluated if p is not None]
         if any(p.acquisition_method == "bid" for p in eligible):
-            eligible = list(
-                await asyncio.gather(
-                    *(self._with_bid(p, preferences, semaphore, diagnostics) for p in eligible)
-                )
+            with_bids = await asyncio.gather(
+                *(self._with_bid(p, preferences, semaphore, diagnostics) for p in eligible)
             )
+            eligible = [p for p in with_bids if p is not None]
         score_map = {p.player_id: p for p in eligible if p.source == "owned"}
         # Unscoreable bench still remains in every squad projection, but cannot finance a sale.
         owned = [score_map.get(p.player_id, p) for p in owned]
@@ -527,8 +526,13 @@ class LineupBuilderRepository:
         preferences: BuildPreferences,
         semaphore: asyncio.Semaphore,
         diagnostics: list[BuilderDiagnostic],
-    ) -> ScoredPlayer:
-        """Attach the suggested bid; MPB history is read only when that strategy is on."""
+    ) -> ScoredPlayer | None:
+        """Attach the suggested bid, or drop a player whose MPB misses the minimum return.
+
+        MPB history is read only when that strategy is on. A bid below the manager's
+        minimum return is never planned: the player leaves the pool with the
+        ``bid_below_min_return`` diagnostic.
+        """
         if player.acquisition_method != "bid":
             return player
         values = None
@@ -558,6 +562,11 @@ class LineupBuilderRepository:
             preferences.min_bid_return or Decimal(0),
             values,
         )
+        if choice.status == "non_profitable":
+            diagnostics.append(
+                BuilderDiagnostic(code="bid_below_min_return", player_id=player.player_id)
+            )
+            return None
         return player.model_copy(update={"bid_suggestion": BidSuggestion(**asdict(choice))})
 
     async def _previous_club_fixtures(

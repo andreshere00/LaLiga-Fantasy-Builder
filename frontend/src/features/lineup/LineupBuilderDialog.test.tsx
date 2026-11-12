@@ -174,6 +174,7 @@ it("separates purchase options from sale options and disables each group with it
   expect(purchases.contains(screen.getByRole("radiogroup", { name: "Bid amount" }))).toBe(true);
   expect(purchases.contains(screen.getByRole("checkbox", { name: /Allow immediate sales/ }))).toBe(false);
   expect(sales.contains(screen.getByRole("checkbox", { name: /Allow immediate sales/ }))).toBe(true);
+  expect(sales.contains(screen.getByRole("checkbox", { name: /Non-negative balance at kickoff/ }))).toBe(false);
 
   fireEvent.click(screen.getByRole("checkbox", { name: /Allow purchase recommendations/ }));
 

@@ -160,10 +160,7 @@ def _buy_step(
     if player.acquisition_method == "bid":
         conditions.append("winning_bid_required")
         suggestion = player.bid_suggestion
-        if suggestion is not None and suggestion.status in {
-            "non_profitable",
-            "insufficient_history",
-        }:
+        if suggestion is not None and suggestion.status == "insufficient_history":
             conditions.append(suggestion.status)
     else:
         conditions.append("clause_paid_from_cash")

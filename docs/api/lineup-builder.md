@@ -188,8 +188,10 @@ Purchases:
   the Maximum Profitable Bid below. The buy step's `estimate` is the suggested bid
   and `bid_suggestion` holds `{strategy, amount, default_bid, competing_bids, mpb,
   return_rate, min_return, status}`, with status `default`, `profitable`,
-  `non_profitable` or `insufficient_history`. Non-profitable players and players
-  with incomplete history stay candidates at the default bid, with that condition.
+  `non_profitable` or `insufficient_history`. A player whose return is below
+  `min_bid_return` is never bid on: they leave the pool and the diagnostic
+  `bid_below_min_return` is reported. Players with incomplete history stay
+  candidates at the default bid, with the `insufficient_history` condition.
 - **Opponents.** Release clauses keep every gate (buyouts enabled, unshielded,
   lock expiry ≤ kickoff − 48 h, paid from cash). Each clause step also lists a
   `direct_offer` alternative at market value. It needs the owner's acceptance, so
@@ -210,7 +212,8 @@ For horizons `t ∈ {3, 5, 7, 10, 14}` days and weights
 R    = Σ α_t · δV_t
 MPB  = V_0 · (1 + R)
 suggested_bid = max(floor(MPB), default_bid)   when R ≥ τ
-              = default_bid                    otherwise (non_profitable)
+              = no bid (player excluded,       otherwise
+                bid_below_min_return)
 ```
 
 `return_rate` is reported rounded to 6 decimal places (never in exponent form);

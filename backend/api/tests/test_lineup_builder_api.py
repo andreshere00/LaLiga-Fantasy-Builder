@@ -1457,6 +1457,26 @@ def test_build_lineup_max_profitable_gap_filled_history_falls_back_to_default(rs
     assert {"code": "bid_history_unavailable", "player_id": "99"} in body["diagnostics"]
 
 
+def test_build_lineup_max_profitable_below_min_return_does_not_bid(rsa_pems) -> None:
+    client, jwt, _ = _client(rsa_pems, source_players=True, bid_history="rising")
+
+    body = _build(
+        client,
+        jwt,
+        sources=["owned", "market"],
+        allow_buying=True,
+        bid_strategy="max_profitable",
+        min_bid_return="0.99",
+    )
+
+    assert {"code": "bid_below_min_return", "player_id": "99"} in body["diagnostics"]
+    assert all(
+        step["player_id"] != "99"
+        for candidate in body["candidates"]
+        for step in candidate["trading_plan"]["steps"]
+    )
+
+
 def test_build_lineup_immediate_sale_enabled_credits_half_market_value(rsa_pems) -> None:
     client, jwt, requests = _client(rsa_pems, source_players=True, extra_owned=True, cash=0)
 

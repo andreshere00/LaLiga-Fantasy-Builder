@@ -30,6 +30,7 @@ const MESSAGES: Record<string, string> = {
   target_fixture_ambiguous: "The player's club fixture for the target round could not be identified.",
   player_source_missing: "The player's profile could not be found.",
   sale_route_unavailable: "Offers on this player could not be read; no sale is planned.",
+  bid_below_min_return: "The maximum profitable bid is below your minimum return, so this player is not bid on.",
   bid_history_unavailable: "Market history for the maximum profitable bid is incomplete; the default bid is suggested.",
 };
 

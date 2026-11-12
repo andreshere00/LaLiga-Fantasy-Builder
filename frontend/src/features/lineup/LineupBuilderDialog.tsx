@@ -330,7 +330,7 @@ function BuilderDialogSession({
                     onChange={(e) => setMinBidReturnPercent(e.target.value)} />
                   <span aria-hidden="true">%</span>
                 </span>
-                <small id="builder-return-help">{t("Below this expected return, the market value is bid instead.")}</small>
+                <small id="builder-return-help">{t("Players whose maximum profitable bid returns less than this are not bid on.")}</small>
                 {invalidReturn && <small role="alert" className="lineup-builder-field-error">{t("Enter a percentage between 0 and 100.")}</small>}
               </label>}
             </div>
@@ -339,24 +339,32 @@ function BuilderDialogSession({
 
         <section className="lineup-builder-section" aria-labelledby="builder-sales-title">
           <div className="lineup-builder-section-heading">
-            <h3 id="builder-sales-title">{t("Sales and balance")}</h3>
+            <h3 id="builder-sales-title">{t("Sales")}</h3>
             <span>{t("Your own players")}</span>
           </div>
           <label className="lineup-builder-master-option"><input type="checkbox" checked={allowSelling}
             onChange={(e) => setAllowSelling(e.target.checked)} /> {t(" Allow sale recommendations")}</label>
           <fieldset className="lineup-builder-dependent" disabled={!allowSelling} aria-label={t("Sale options")}>
             {!allowSelling && <p className="lineup-builder-dependent-hint">{t("Available when sale recommendations are allowed.")}</p>}
-            <div className="lineup-builder-option">
-              <label><input type="checkbox" checked={allowSelling && requireNonnegativeCash} disabled={!allowSelling}
-                onChange={(e) => setRequireNonnegativeCash(e.target.checked)} /> {t(" Non-negative balance at kickoff")}</label>
-              <p className="lineup-builder-section-help">{t("Plans may otherwise end with debt, down to 20% of your squad value. With this option every plan includes the sales needed to reach a balance of 0 or more.")}</p>
-            </div>
             <div className="lineup-builder-option" data-tone="warning">
               <label><input type="checkbox" checked={allowSelling && allowImmediateSale} disabled={!allowSelling}
                 onChange={(e) => setAllowImmediateSale(e.target.checked)} /> {t(" Allow immediate sales (half market value)")}</label>
               <p className="lineup-builder-section-help">{t("Only used for the shortfall that offers on your players cannot cover. You lose half of each player's market value.")}</p>
             </div>
           </fieldset>
+        </section>
+
+        <section className="lineup-builder-section" aria-labelledby="builder-balance-title">
+          <div className="lineup-builder-section-heading">
+            <h3 id="builder-balance-title">{t("Balance")}</h3>
+            <span>{t("Cash at kickoff")}</span>
+          </div>
+          <div className="lineup-builder-option">
+            <label><input type="checkbox" checked={allowSelling && requireNonnegativeCash} disabled={!allowSelling}
+              onChange={(e) => setRequireNonnegativeCash(e.target.checked)} /> {t(" Non-negative balance at kickoff")}</label>
+            <p className="lineup-builder-section-help">{t("Plans may otherwise end with debt, down to 20% of your squad value. With this option every plan includes the sales needed to reach a balance of 0 or more.")}</p>
+            {!allowSelling && <p className="lineup-builder-dependent-hint">{t("Needs sale recommendations to reach a balance of 0 or more.")}</p>}
+          </div>
         </section>
 
         <section className="lineup-builder-section" aria-labelledby="builder-player-title">

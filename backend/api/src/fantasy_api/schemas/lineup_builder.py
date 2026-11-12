@@ -157,7 +157,7 @@ class TradeStep(FlexibleModel):
     """Conditional estimate with balances after settlement.
 
     ``conditions`` holds machine-readable codes (for example ``below_market_value``,
-    ``loses_half_market_value``, ``non_profitable`` or ``insufficient_history``).
+    ``loses_half_market_value`` or ``insufficient_history``).
     """
 
     action: Literal["sell", "buy"]

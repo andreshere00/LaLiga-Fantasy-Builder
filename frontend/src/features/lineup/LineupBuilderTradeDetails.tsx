@@ -25,7 +25,6 @@ const CONDITIONS: Record<string, string> = {
   refresh_before_transaction: "Refresh cash, ownership and restrictions before any manual transaction.",
   winning_bid_required: "Your bid must win and the player must be assigned before kickoff.",
   clause_paid_from_cash: "The release clause must be paid entirely from cash.",
-  non_profitable: "The maximum profitable bid is below the minimum return, so the default bid is suggested.",
   insufficient_history: "Market history is incomplete, so the default bid is suggested.",
   seller_acceptance_required: "The owner must accept the offer.",
   not_counted_in_cash: "Not counted in the projected cash.",

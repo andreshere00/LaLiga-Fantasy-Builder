@@ -1978,7 +1978,6 @@
   "An immediate sale cannot be undone.": "Una venta inmediata no se puede deshacer.",
   "Your bid must win and the player must be assigned before kickoff.": "Tu puja debe ganar y el jugador debe asignarse antes del inicio de la jornada.",
   "The release clause must be paid entirely from cash.": "La cláusula debe pagarse íntegramente con saldo.",
-  "The maximum profitable bid is below the minimum return, so the default bid is suggested.": "La puja máxima rentable no alcanza la rentabilidad mínima, así que se sugiere la puja por defecto.",
   "Market history is incomplete, so the default bid is suggested.": "El historial de mercado está incompleto, así que se sugiere la puja por defecto.",
   "The owner must accept the offer.": "El propietario debe aceptar la oferta.",
   "Not counted in the projected cash.": "No cuenta en el saldo previsto.",
@@ -2000,9 +1999,13 @@
   "Also buys players who will not start, to resell them at a profit.": "Compra también jugadores que no serán titulares, para revenderlos con beneficio.",
   "Bids the market value, plus 1 € when other managers have already bid.": "Puja el valor de mercado, más 1 € si otros mánagers ya han pujado.",
   "Bids up to the value its recent rise suggests you can recover. Without enough history it bids the market value.": "Puja hasta el valor que su subida reciente indica que puedes recuperar. Sin historial suficiente, puja el valor de mercado.",
-  "Below this expected return, the market value is bid instead.": "Por debajo de esta rentabilidad esperada, se puja el valor de mercado.",
-  "Sales and balance": "Ventas y saldo",
   "Your own players": "Tus propios jugadores",
   "Sale options": "Opciones de venta",
-  "Available when sale recommendations are allowed.": "Disponible si permites recomendaciones de venta."
+  "Available when sale recommendations are allowed.": "Disponible si permites recomendaciones de venta.",
+  "Players whose maximum profitable bid returns less than this are not bid on.": "No se puja por los jugadores cuya puja máxima rentable da menos que esto.",
+  "The maximum profitable bid is below your minimum return, so this player is not bid on.": "La puja máxima rentable queda por debajo de tu rentabilidad mínima, así que no se puja por este jugador.",
+  "Sales": "Ventas",
+  "Balance": "Saldo",
+  "Cash at kickoff": "Caja al inicio de la jornada",
+  "Needs sale recommendations to reach a balance of 0 or more.": "Necesita las recomendaciones de venta para llegar a un saldo de 0 o más."
 }

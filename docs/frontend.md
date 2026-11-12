@@ -1033,8 +1033,11 @@ Builder setup groups player sources into selectable tiles and splits trade optio
 by domain, and keeps Build/Close outside the scrolling content. **Purchases** holds
 its switch, trading-only purchases and the bid amount (market value or maximum
 profitable bid as two described choices, plus a minimum return in percent).
-**Sales and balance** holds its switch, **Non-negative balance at kickoff** and
-immediate sales, which are highlighted because they lose half the market value.
+**Sales** holds its switch and immediate sales, which are highlighted because they
+lose half the market value. **Balance** is its own section with **Non-negative balance
+at kickoff**, a constraint on the outcome that is only reachable through sales, so it
+is disabled with a hint while sales are not allowed. A minimum return below which a
+maximum profitable bid is skipped excludes that player instead of bidding the market value.
 Each group's dependent options stay visible but disabled, with a hint, while its
 switch is off. Purchase and sale recommendations start checked; every dependent
 option starts off. Mandatory player search expands on demand, with a persistent

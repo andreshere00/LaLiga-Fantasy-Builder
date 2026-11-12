@@ -15952,7 +15952,7 @@
           "conditions"
         ],
         "title": "TradeStep",
-        "description": "Conditional estimate with balances after settlement.\n\n``conditions`` holds machine-readable codes (for example ``below_market_value``,\n``loses_half_market_value``, ``non_profitable`` or ``insufficient_history``)."
+        "description": "Conditional estimate with balances after settlement.\n\n``conditions`` holds machine-readable codes (for example ``below_market_value``,\n``loses_half_market_value`` or ``insufficient_history``)."
       },
       "Travel": {
         "properties": {

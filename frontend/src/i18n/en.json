@@ -1978,7 +1978,6 @@
   "An immediate sale cannot be undone.": "An immediate sale cannot be undone.",
   "Your bid must win and the player must be assigned before kickoff.": "Your bid must win and the player must be assigned before kickoff.",
   "The release clause must be paid entirely from cash.": "The release clause must be paid entirely from cash.",
-  "The maximum profitable bid is below the minimum return, so the default bid is suggested.": "The maximum profitable bid is below the minimum return, so the default bid is suggested.",
   "Market history is incomplete, so the default bid is suggested.": "Market history is incomplete, so the default bid is suggested.",
   "The owner must accept the offer.": "The owner must accept the offer.",
   "Not counted in the projected cash.": "Not counted in the projected cash.",
@@ -2000,9 +1999,13 @@
   "Also buys players who will not start, to resell them at a profit.": "Also buys players who will not start, to resell them at a profit.",
   "Bids the market value, plus 1 € when other managers have already bid.": "Bids the market value, plus 1 € when other managers have already bid.",
   "Bids up to the value its recent rise suggests you can recover. Without enough history it bids the market value.": "Bids up to the value its recent rise suggests you can recover. Without enough history it bids the market value.",
-  "Below this expected return, the market value is bid instead.": "Below this expected return, the market value is bid instead.",
-  "Sales and balance": "Sales and balance",
   "Your own players": "Your own players",
   "Sale options": "Sale options",
-  "Available when sale recommendations are allowed.": "Available when sale recommendations are allowed."
+  "Available when sale recommendations are allowed.": "Available when sale recommendations are allowed.",
+  "Players whose maximum profitable bid returns less than this are not bid on.": "Players whose maximum profitable bid returns less than this are not bid on.",
+  "The maximum profitable bid is below your minimum return, so this player is not bid on.": "The maximum profitable bid is below your minimum return, so this player is not bid on.",
+  "Sales": "Sales",
+  "Balance": "Balance",
+  "Cash at kickoff": "Cash at kickoff",
+  "Needs sale recommendations to reach a balance of 0 or more.": "Needs sale recommendations to reach a balance of 0 or more."
 }
