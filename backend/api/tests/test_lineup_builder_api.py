@@ -598,7 +598,14 @@ def test_build_lineup_injury_history_coverage_scores_only_verified_history(
 
 @pytest.mark.parametrize(
     "body,status",
-    [({"user_id": "other"}, 422), ({"sources": []}, 422), ({"max_candidates": True}, 422)],
+    [
+        ({"user_id": "other"}, 422),
+        ({"sources": []}, 422),
+        ({"max_candidates": True}, 422),
+        ({"require_nonnegative_cash": True}, 422),
+        ({"allow_immediate_sale": True}, 422),
+        ({"min_bid_return": "0.1"}, 422),
+    ],
 )
 def test_build_lineup_invalid_body_rejects_before_upstream(rsa_pems, body, status) -> None:
     client, jwt, requests = _client(rsa_pems)

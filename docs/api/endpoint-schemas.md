@@ -823,6 +823,10 @@ Build read-only lineup recommendations
 | body | `allow_buying` | boolean | no |  |  |
 | body | `allow_selling` | boolean | no |  |  |
 | body | `include_trading_purchases` | boolean | no |  |  |
+| body | `require_nonnegative_cash` | boolean | no |  |  |
+| body | `allow_immediate_sale` | boolean | no |  |  |
+| body | `bid_strategy` | string | no |  |  |
+| body | `min_bid_return` | number \| string | no |  |  |
 | body | `max_candidates` | integer | no | min=1, max=20 |  |
 | body | `explanation` | ExplanationPreferences | no |  |  |
 
@@ -868,6 +872,10 @@ Stream read-only lineup build progress and result
 | body | `allow_buying` | boolean | no |  |  |
 | body | `allow_selling` | boolean | no |  |  |
 | body | `include_trading_purchases` | boolean | no |  |  |
+| body | `require_nonnegative_cash` | boolean | no |  |  |
+| body | `allow_immediate_sale` | boolean | no |  |  |
+| body | `bid_strategy` | string | no |  |  |
+| body | `min_bid_return` | number \| string | no |  |  |
 | body | `max_candidates` | integer | no | min=1, max=20 |  |
 | body | `explanation` | ExplanationPreferences | no |  |  |
 
@@ -1938,6 +1946,19 @@ Nested models referenced by the operations above. All Fantasy proxy models use `
 | `label` | string | yes |  |  |
 | `value` | number | no |  |  |
 
+### `BidSuggestion`
+
+| Field | Type | Required | Constraints | Description |
+|-------|------|----------|-------------|-------------|
+| `strategy` | string | yes |  |  |
+| `amount` | integer | yes | min=0 |  |
+| `default_bid` | integer | yes | min=0 |  |
+| `competing_bids` | integer | yes | min=0 |  |
+| `mpb` | integer | no |  |  |
+| `return_rate` | string | no |  |  |
+| `min_return` | string | no |  |  |
+| `status` | string | yes |  |  |
+
 ### `BidWrite`
 
 | Field | Type | Required | Constraints | Description |
@@ -1971,6 +1992,10 @@ Nested models referenced by the operations above. All Fantasy proxy models use `
 | `allow_buying` | boolean | no |  |  |
 | `allow_selling` | boolean | no |  |  |
 | `include_trading_purchases` | boolean | no |  |  |
+| `require_nonnegative_cash` | boolean | no |  |  |
+| `allow_immediate_sale` | boolean | no |  |  |
+| `bid_strategy` | string | no |  |  |
+| `min_bid_return` | number \| string | no |  |  |
 | `max_candidates` | integer | no | min=1, max=20 |  |
 | `explanation` | ExplanationPreferences | no |  | Optional prose settings; credentials and model remain server-owned. |
 
@@ -2571,6 +2596,15 @@ Type: `string`
 | `coach` | string \| integer | no |  |  |
 | `captain` | string \| integer | no |  |  |
 | `bench` | JsonObject-Input | no |  |  |
+
+### `ListingSuggestion`
+
+| Field | Type | Required | Constraints | Description |
+|-------|------|----------|-------------|-------------|
+| `player_id` | string | yes |  |  |
+| `player_team_id` | string | yes |  |  |
+| `suggested_price` | integer | yes | min=0 |  |
+| `reason` | string | yes |  |  |
 
 ### `ListingWrite`
 
@@ -3247,6 +3281,12 @@ Type: `string`
 | `settlement_at` | string | no |  |  |
 | `clause_price` | integer | no |  |  |
 | `sale_settlement_at` | string | no |  |  |
+| `sale_offer_id` | string | no |  |  |
+| `sale_offer_amount` | integer | no |  |  |
+| `sale_offer_expires_at` | string | no |  |  |
+| `listed_for_sale` | boolean | no |  |  |
+| `competing_bids` | integer | no |  |  |
+| `bid_suggestion` | BidSuggestion | no |  | Suggested market bid and the evidence behind it; never placed by the builder. |
 
 ### `ScoutingNotification`
 
@@ -3464,6 +3504,14 @@ Type: `string`
 | `teamMoney` | integer | no |  |  |
 | `teamInvestment` | integer | no |  |  |
 
+### `TradeAlternative`
+
+| Field | Type | Required | Constraints | Description |
+|-------|------|----------|-------------|-------------|
+| `method` | string | yes |  |  |
+| `suggested_amount` | integer | yes | min=0 |  |
+| `conditions` | array[string] | yes |  |  |
+
 ### `TradePlan`
 
 | Field | Type | Required | Constraints | Description |
@@ -3478,6 +3526,10 @@ Type: `string`
 | `squad_value` | integer | yes |  |  |
 | `squad_count` | integer | yes |  |  |
 | `reserved_squad_slots` | integer | no | min=0 |  |
+| `funding_status` | string | no |  |  |
+| `final_floor` | integer | no |  |  |
+| `shortfall` | integer | no | min=0 |  |
+| `listing_suggestions` | array[ListingSuggestion] | no |  |  |
 
 ### `TradeStep`
 
@@ -3485,6 +3537,7 @@ Type: `string`
 |-------|------|----------|-------------|-------------|
 | `action` | string | yes |  |  |
 | `player_id` | string | yes |  |  |
+| `player_team_id` | string | no |  |  |
 | `method` | string | yes |  |  |
 | `estimate` | integer | yes |  |  |
 | `settlement_at` | string | yes |  |  |
@@ -3493,6 +3546,11 @@ Type: `string`
 | `squad_count_after` | integer | yes |  |  |
 | `debt_limit` | integer | yes |  |  |
 | `conditions` | array[string] | yes |  |  |
+| `market_value` | integer | no |  |  |
+| `offer_id` | string | no |  |  |
+| `offer_expires_at` | string | no |  |  |
+| `bid_suggestion` | BidSuggestion | no |  | Suggested market bid and the evidence behind it; never placed by the builder. |
+| `alternatives` | array[TradeAlternative] | no |  |  |
 
 ### `Travel`
 

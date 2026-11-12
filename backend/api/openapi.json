@@ -6871,6 +6871,89 @@
         "title": "AveragePerMatch",
         "description": "One published per-match average from the scraped season block."
       },
+      "BidSuggestion": {
+        "properties": {
+          "strategy": {
+            "type": "string",
+            "enum": [
+              "market_value",
+              "max_profitable"
+            ],
+            "title": "Strategy"
+          },
+          "amount": {
+            "type": "integer",
+            "minimum": 0.0,
+            "title": "Amount"
+          },
+          "default_bid": {
+            "type": "integer",
+            "minimum": 0.0,
+            "title": "Default Bid"
+          },
+          "competing_bids": {
+            "type": "integer",
+            "minimum": 0.0,
+            "title": "Competing Bids"
+          },
+          "mpb": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Mpb"
+          },
+          "return_rate": {
+            "anyOf": [
+              {
+                "type": "string",
+                "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Return Rate"
+          },
+          "min_return": {
+            "anyOf": [
+              {
+                "type": "string",
+                "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Min Return"
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "default",
+              "profitable",
+              "non_profitable",
+              "insufficient_history"
+            ],
+            "title": "Status"
+          }
+        },
+        "additionalProperties": true,
+        "type": "object",
+        "required": [
+          "strategy",
+          "amount",
+          "default_bid",
+          "competing_bids",
+          "status"
+        ],
+        "title": "BidSuggestion",
+        "description": "Suggested market bid and the evidence behind it; never placed by the builder."
+      },
       "BidWrite": {
         "properties": {
           "money": {
@@ -6997,6 +7080,42 @@
             "type": "boolean",
             "title": "Include Trading Purchases",
             "default": false
+          },
+          "require_nonnegative_cash": {
+            "type": "boolean",
+            "title": "Require Nonnegative Cash",
+            "default": false
+          },
+          "allow_immediate_sale": {
+            "type": "boolean",
+            "title": "Allow Immediate Sale",
+            "default": false
+          },
+          "bid_strategy": {
+            "type": "string",
+            "enum": [
+              "market_value",
+              "max_profitable"
+            ],
+            "title": "Bid Strategy",
+            "default": "market_value"
+          },
+          "min_bid_return": {
+            "anyOf": [
+              {
+                "type": "number",
+                "maximum": 1.0,
+                "minimum": 0.0
+              },
+              {
+                "type": "string",
+                "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Min Bid Return"
           },
           "max_candidates": {
             "type": "integer",
@@ -10397,6 +10516,41 @@
         ],
         "title": "LineupWrite",
         "description": "Request body for ``PUT /teams/{teamId}/lineup``.\n\nSlot values are ``playerTeamId`` roster identifiers, not master\n``playerId`` values. All base lineup slots are required because Fantasy\ntreats PUT as a full replace. Premium leagues may also send ``coach``,\n``captain``, and ``bench`` (unverified unofficial-client fields)."
+      },
+      "ListingSuggestion": {
+        "properties": {
+          "player_id": {
+            "type": "string",
+            "title": "Player Id"
+          },
+          "player_team_id": {
+            "type": "string",
+            "title": "Player Team Id"
+          },
+          "suggested_price": {
+            "type": "integer",
+            "minimum": 0.0,
+            "title": "Suggested Price"
+          },
+          "reason": {
+            "type": "string",
+            "enum": [
+              "not_listed",
+              "listed_without_offer"
+            ],
+            "title": "Reason"
+          }
+        },
+        "additionalProperties": true,
+        "type": "object",
+        "required": [
+          "player_id",
+          "player_team_id",
+          "suggested_price",
+          "reason"
+        ],
+        "title": "ListingSuggestion",
+        "description": "Owned non-starter worth listing; listing money is never counted as cash."
       },
       "ListingWrite": {
         "properties": {
@@ -14299,6 +14453,68 @@
               }
             ],
             "title": "Sale Settlement At"
+          },
+          "sale_offer_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Sale Offer Id"
+          },
+          "sale_offer_amount": {
+            "anyOf": [
+              {
+                "type": "integer",
+                "minimum": 0.0
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Sale Offer Amount"
+          },
+          "sale_offer_expires_at": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Sale Offer Expires At"
+          },
+          "listed_for_sale": {
+            "type": "boolean",
+            "title": "Listed For Sale",
+            "default": false
+          },
+          "competing_bids": {
+            "anyOf": [
+              {
+                "type": "integer",
+                "minimum": 0.0
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Competing Bids"
+          },
+          "bid_suggestion": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/BidSuggestion"
+              },
+              {
+                "type": "null"
+              }
+            ]
           }
         },
         "additionalProperties": true,
@@ -15449,6 +15665,36 @@
         "title": "TeamMoney",
         "description": "Cash and investment from ``GET /teams/{teamId}/money``.\n\nRival teams often return empty or sparse objects; fields may be absent."
       },
+      "TradeAlternative": {
+        "properties": {
+          "method": {
+            "type": "string",
+            "const": "direct_offer",
+            "title": "Method"
+          },
+          "suggested_amount": {
+            "type": "integer",
+            "minimum": 0.0,
+            "title": "Suggested Amount"
+          },
+          "conditions": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Conditions"
+          }
+        },
+        "additionalProperties": true,
+        "type": "object",
+        "required": [
+          "method",
+          "suggested_amount",
+          "conditions"
+        ],
+        "title": "TradeAlternative",
+        "description": "Lower-certainty route shown beside a step; never counted in projected cash."
+      },
       "TradePlan": {
         "properties": {
           "acquisitions": {
@@ -15510,6 +15756,34 @@
             "minimum": 0.0,
             "title": "Reserved Squad Slots",
             "default": 0
+          },
+          "funding_status": {
+            "type": "string",
+            "enum": [
+              "funded",
+              "debt_within_limit",
+              "needs_sales"
+            ],
+            "title": "Funding Status",
+            "default": "funded"
+          },
+          "final_floor": {
+            "type": "integer",
+            "title": "Final Floor",
+            "default": 0
+          },
+          "shortfall": {
+            "type": "integer",
+            "minimum": 0.0,
+            "title": "Shortfall",
+            "default": 0
+          },
+          "listing_suggestions": {
+            "items": {
+              "$ref": "#/components/schemas/ListingSuggestion"
+            },
+            "type": "array",
+            "title": "Listing Suggestions"
           }
         },
         "additionalProperties": true,
@@ -15541,6 +15815,17 @@
           "player_id": {
             "type": "string",
             "title": "Player Id"
+          },
+          "player_team_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Player Team Id"
           },
           "method": {
             "type": "string",
@@ -15577,6 +15862,57 @@
             },
             "type": "array",
             "title": "Conditions"
+          },
+          "market_value": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Market Value"
+          },
+          "offer_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Offer Id"
+          },
+          "offer_expires_at": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Offer Expires At"
+          },
+          "bid_suggestion": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/BidSuggestion"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "alternatives": {
+            "items": {
+              "$ref": "#/components/schemas/TradeAlternative"
+            },
+            "type": "array",
+            "title": "Alternatives"
           }
         },
         "additionalProperties": true,
@@ -15594,7 +15930,7 @@
           "conditions"
         ],
         "title": "TradeStep",
-        "description": "Conditional market-value estimate with balances after settlement."
+        "description": "Conditional estimate with balances after settlement.\n\n``conditions`` holds machine-readable codes (for example ``below_market_value``,\n``loses_half_market_value``, ``non_profitable`` or ``insufficient_history``)."
       },
       "Travel": {
         "properties": {

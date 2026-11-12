@@ -1004,11 +1004,41 @@ def test_search_candidates_reversed_settlement_scores_returns_feasible_lineup(
         {"formations": ["bad"]},
         {"include_trading_purchases": True},
         {"explanation": {"reasoning_effort": "low"}},
+        {"require_nonnegative_cash": True},
+        {"allow_immediate_sale": True},
+        {"min_bid_return": "0.1"},
+        {"bid_strategy": "max_profitable", "min_bid_return": "1.5"},
+        {"bid_strategy": "max_profitable", "min_bid_return": "-0.1"},
+        {"bid_strategy": "highest"},
     ],
 )
 def test_build_preferences_invalid_body_rejects_before_work(body: dict) -> None:
     with pytest.raises(ValidationError):
         BuildPreferences.model_validate(body)
+
+
+def test_build_preferences_require_nonnegative_without_selling_returns_422() -> None:
+    with pytest.raises(ValidationError, match="selling permission"):
+        BuildPreferences(require_nonnegative_cash=True)
+
+
+def test_build_preferences_immediate_sale_without_selling_returns_422() -> None:
+    with pytest.raises(ValidationError, match="selling permission"):
+        BuildPreferences(allow_immediate_sale=True)
+
+
+def test_build_preferences_min_bid_return_without_max_profitable_returns_422() -> None:
+    with pytest.raises(ValidationError, match="max_profitable"):
+        BuildPreferences(min_bid_return=Decimal("0.05"))
+
+
+def test_build_preferences_advanced_options_default_off() -> None:
+    preferences = BuildPreferences()
+
+    assert not preferences.require_nonnegative_cash
+    assert not preferences.allow_immediate_sale
+    assert preferences.bid_strategy == "market_value"
+    assert preferences.min_bid_return is None
 
 
 def test_search_candidates_budget_exhausted_does_not_prove_infeasibility() -> None:
