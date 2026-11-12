@@ -1029,14 +1029,19 @@ catalog/scraped, and verified local football-logos.cc fallbacks. Source manifest
 refresh instructions and attribution are documented in
 [badge sources](frontend-club-crest-sources.md).
 
-Builder setup groups player sources into selectable tiles, separates optional
-trade recommendations, and keeps Build/Close outside the scrolling content.
-Mandatory player search expands on demand, with a persistent selection count;
-formations remain visible as individual checkboxes. Trading-only purchases are
-shown when purchase recommendations are enabled. Purchase and sale recommendations
-start checked. **Non-negative balance at kickoff** and the **Advanced options**
-(immediate sales, bid amount strategy, minimum return as a percentage) start off;
-the balance and immediate-sale options are disabled while sales are not allowed. Empty source selection explains
+Builder setup groups player sources into selectable tiles and splits trade options
+by domain, and keeps Build/Close outside the scrolling content. **Purchases** holds
+its switch, trading-only purchases and the bid amount (market value or maximum
+profitable bid as two described choices, plus a minimum return in percent).
+**Sales and balance** holds its switch, **Non-negative balance at kickoff** and
+immediate sales, which are highlighted because they lose half the market value.
+Each group's dependent options stay visible but disabled, with a hint, while its
+switch is off. Purchase and sale recommendations start checked; every dependent
+option starts off. Mandatory player search expands on demand, with a persistent
+selection count; formations remain visible as individual checkboxes. Every
+disclosure in the builder uses the same ▸/▾ marker, and each candidate shows its
+score, projected cash, squad size, squad value and pending bid slots as a metric row.
+Empty source selection explains
 why Build is unavailable. These controls retain their configuration while users
 explore options and generated previews.
 

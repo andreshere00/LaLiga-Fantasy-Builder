@@ -146,7 +146,13 @@ export function LineupBuilderResults({
         {t(FUNDING[candidate.tradingPlan.fundingStatus]!.detail)}
         {candidate.tradingPlan.shortfall > 0 && <> {t("Shortfall: {{0}}.", { 0: money(candidate.tradingPlan.shortfall) })}</>}
       </p>}
-      <p>{t("Lineup score ")}{decimal(candidate.totalLineupScore, 3)} {t(" · Cash estimate ")}{money(candidate.tradingPlan.projectedCash)} {t(" · Squad ")}{candidate.tradingPlan.squadCount}{t("/24 · Pending bid slots ")}{candidate.tradingPlan.reservedSquadSlots} {t(" · Value ")}{money(candidate.tradingPlan.squadValue)}</p>
+      <dl className="lineup-builder-candidate-metrics">
+        <div><dt>{t("Lineup score")}</dt><dd>{decimal(candidate.totalLineupScore, 3)}</dd></div>
+        <div><dt>{t("Projected cash")}</dt><dd data-negative={candidate.tradingPlan.projectedCash < 0}>{money(candidate.tradingPlan.projectedCash)}</dd></div>
+        <div><dt>{t("Squad after trades")}</dt><dd>{candidate.tradingPlan.squadCount}<small> / 24</small></dd></div>
+        <div><dt>{t("Squad value")}</dt><dd>{money(candidate.tradingPlan.squadValue)}</dd></div>
+        <div><dt>{t("Pending bid slots")}</dt><dd>{candidate.tradingPlan.reservedSquadSlots}</dd></div>
+      </dl>
       <div className="lineup-builder-preview" aria-label={t("Starting XI preview")}>
         <PitchMarkings stretch />
         {[4, 3, 2, 1].map((position) => <div key={position}>{candidate.starters.filter((p) => p.position === position).map((player) => <Help key={player.playerId}
@@ -163,14 +169,14 @@ export function LineupBuilderResults({
             aria-label={t("Acquire {{0}}", { 0: player.name })} onClick={() => onAcquire(player)}>{t("Acquire")}</Button>}
         </Help>)}</div>)}
       </div>
-      <details><summary>{t("Player scores and selection reasons")}</summary>
+      <details className="lineup-builder-candidate-details"><summary>{t("Player scores and selection reasons")}</summary>
         <p className="fb-helper">{t("These are suitability scores, not predicted Fantasy points. Higher scores rank better. Combined adds lineup and trading scores. Rule points are normalized within each category; lineup contributions also apply the category weight.")}</p>
         {candidate.starters.map((player) => <LineupBuilderScoreDetails key={player.playerId} player={player} />)}
       </details>
       <LineupBuilderTradeDetails plan={candidate.tradingPlan} target={result.target}
         playerName={playerName} playersById={playersById}
         confirmedSales={confirmedSales} onSaleAction={onSaleAction} />
-      {result.explanations[candidate.candidateId] && <details><summary>{t("Original generated explanation")}</summary><p lang="en">{result.explanations[candidate.candidateId]}</p></details>}
+      {result.explanations[candidate.candidateId] && <details className="lineup-builder-candidate-details"><summary>{t("Original generated explanation")}</summary><p lang="en">{result.explanations[candidate.candidateId]}</p></details>}
       <Button shape="square" disabled={!canApply(candidate)} onClick={() => onApply(candidate)}>{t("Use as draft")}</Button>
       {!canApply(candidate) && candidate.resourceGroup === "owned" && requireNonnegativeCash
         && availableCash != null && availableCash < 0 && <p className="fb-helper" role="status">

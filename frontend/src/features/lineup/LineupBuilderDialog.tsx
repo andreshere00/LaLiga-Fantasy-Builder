@@ -214,7 +214,6 @@ function BuilderDialogSession({
   const minBidReturn = parsedReturn !== undefined && Number.isFinite(parsedReturn)
     && parsedReturn >= 0 && parsedReturn <= 1 ? parsedReturn : undefined;
   const invalidReturn = bidStrategy === "max_profitable" && minBidReturnPercent.trim() !== "" && minBidReturn === undefined;
-  const advancedActive = Number(allowSelling && allowImmediateSale) + Number(bidStrategy === "max_profitable");
 
   /** Local draft gate: refreshed ownership, editable round and, when required, cash >= 0. */
   function draftable(candidate: BuilderCandidate, build: LineupBuildDto): boolean {
@@ -293,61 +292,78 @@ function BuilderDialogSession({
           {scope.length === 0 && <p role="status" className="lineup-builder-scope-hint">{t("Select a player source to enable Build.")}</p>}
         </section>
 
-        <section className="lineup-builder-section" aria-labelledby="builder-trades-title">
+        <section className="lineup-builder-section" aria-labelledby="builder-purchases-title">
           <div className="lineup-builder-section-heading">
-            <h3 id="builder-trades-title">{t("Trade recommendations")}</h3>
-            <span>{t("Optional")}</span>
+            <h3 id="builder-purchases-title">{t("Purchases")}</h3>
+            <span>{t("Market and rival players")}</span>
           </div>
-          <div className="lineup-builder-trade-options">
-            <label><input type="checkbox" checked={allowBuying} onChange={(e) => setAllowBuying(e.target.checked)} /> {t(" Allow purchase recommendations")}</label>
-            <label><input type="checkbox" checked={allowSelling} onChange={(e) => setAllowSelling(e.target.checked)} /> {t(" Allow sale recommendations")}</label>
-          </div>
-          {allowBuying && <label className="lineup-builder-trading-option"><input type="checkbox" checked={includeTradingPurchases} onChange={(e) => setIncludeTradingPurchases(e.target.checked)} /> {t(" Include trading-only purchases")}</label>}
-          <label className="lineup-builder-trading-option"><input type="checkbox" checked={allowSelling && requireNonnegativeCash}
-            disabled={!allowSelling} onChange={(e) => setRequireNonnegativeCash(e.target.checked)} /> {t(" Non-negative balance at kickoff")}</label>
-          <p className="lineup-builder-section-help">{t("Plans may otherwise end with debt, down to 20% of your squad value. With this option every plan includes the sales needed to reach a balance of 0 or more.")}</p>
-          <details className="lineup-builder-advanced">
-            <summary>
-              <span className="lineup-builder-advanced-text">
-                <span className="lineup-builder-advanced-title">{t("Advanced options")}</span>
-                <small>{t("Immediate sales and bid amount")}</small>
-              </span>
-              {advancedActive > 0 && <span className="lineup-builder-advanced-count">
-                {t("{{0}} active", { 0: advancedActive })}</span>}
-              <svg className="lineup-builder-advanced-chevron" aria-hidden="true" viewBox="0 0 16 16" width="16" height="16">
-                <path d="M4 6l4 4 4-4" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
-              </svg>
-            </summary>
-            <div className="lineup-builder-advanced-body">
-            <label className="lineup-builder-trading-option"><input type="checkbox" checked={allowSelling && allowImmediateSale}
-              disabled={!allowSelling} onChange={(e) => setAllowImmediateSale(e.target.checked)} /> {t(" Allow immediate sales (half market value)")}</label>
-            <p className="lineup-builder-section-help">{t("Only used for the shortfall that offers on your players cannot cover. You lose half of each player's market value.")}</p>
-            <label className="lineup-builder-field">
-              <span>{t("Bid amount")}</span>
-              <select value={bidStrategy} aria-label={t("Bid amount")}
-                onChange={(e) => setBidStrategy(e.target.value as "market_value" | "max_profitable")}>
-                <option value="market_value">{t("Market value (+1 € when others have bid)")}</option>
-                <option value="max_profitable">{t("Maximum profitable bid")}</option>
-              </select>
-            </label>
-            {bidStrategy === "max_profitable" && <label className="lineup-builder-field">
-              <span>{t("Minimum return (%)")}</span>
-              <Input inputMode="decimal" value={minBidReturnPercent} placeholder="0" aria-label={t("Minimum return (%)")}
-                aria-invalid={invalidReturn} onChange={(e) => setMinBidReturnPercent(e.target.value)} />
-              {invalidReturn && <small role="alert">{t("Enter a percentage between 0 and 100.")}</small>}
-            </label>}
-            </div>
-          </details>
+          <label className="lineup-builder-master-option"><input type="checkbox" checked={allowBuying}
+            onChange={(e) => setAllowBuying(e.target.checked)} /> {t(" Allow purchase recommendations")}</label>
           {!allowBuying && scope.some((source) => source !== "owned") && <p role="status" className="lineup-builder-scope-hint">
             {t("Enable purchase recommendations to include market or opponent players in proposed lineups.")}</p>}
-          <p className="lineup-builder-preview-note">{t("Preview only. Building never buys, sells or saves players.")}</p>
+          <fieldset className="lineup-builder-dependent" disabled={!allowBuying} aria-label={t("Purchase options")}>
+            {!allowBuying && <p className="lineup-builder-dependent-hint">{t("Available when purchase recommendations are allowed.")}</p>}
+            <div className="lineup-builder-option">
+              <label><input type="checkbox" checked={allowBuying && includeTradingPurchases} disabled={!allowBuying}
+                onChange={(e) => setIncludeTradingPurchases(e.target.checked)} /> {t(" Include trading-only purchases")}</label>
+              <p className="lineup-builder-section-help">{t("Also buys players who will not start, to resell them at a profit.")}</p>
+            </div>
+            <div className="lineup-builder-bid" role="radiogroup" aria-labelledby="builder-bid-title">
+              <span id="builder-bid-title" className="lineup-builder-subheading">{t("Bid amount")}</span>
+              <div className="lineup-builder-choices">
+                {([
+                  ["market_value", "Market value", "Bids the market value, plus 1 € when other managers have already bid."],
+                  ["max_profitable", "Maximum profitable bid", "Bids up to the value its recent rise suggests you can recover. Without enough history it bids the market value."],
+                ] as const).map(([value, label, hint]) => (
+                  <label key={value} className="lineup-builder-choice" data-selected={bidStrategy === value}>
+                    <input type="radio" name="builder-bid-strategy" value={value} checked={bidStrategy === value} disabled={!allowBuying}
+                      onChange={() => setBidStrategy(value)} />
+                    <span><strong>{t(label)}</strong><small>{t(hint)}</small></span>
+                  </label>
+                ))}
+              </div>
+              {bidStrategy === "max_profitable" && <label className="lineup-builder-field lineup-builder-return">
+                <span>{t("Minimum return (%)")}</span>
+                <span className="lineup-builder-return-input">
+                  <Input inputMode="decimal" value={minBidReturnPercent} placeholder="0" aria-label={t("Minimum return (%)")}
+                    aria-invalid={invalidReturn} aria-describedby="builder-return-help" disabled={!allowBuying}
+                    onChange={(e) => setMinBidReturnPercent(e.target.value)} />
+                  <span aria-hidden="true">%</span>
+                </span>
+                <small id="builder-return-help">{t("Below this expected return, the market value is bid instead.")}</small>
+                {invalidReturn && <small role="alert" className="lineup-builder-field-error">{t("Enter a percentage between 0 and 100.")}</small>}
+              </label>}
+            </div>
+          </fieldset>
+        </section>
+
+        <section className="lineup-builder-section" aria-labelledby="builder-sales-title">
+          <div className="lineup-builder-section-heading">
+            <h3 id="builder-sales-title">{t("Sales and balance")}</h3>
+            <span>{t("Your own players")}</span>
+          </div>
+          <label className="lineup-builder-master-option"><input type="checkbox" checked={allowSelling}
+            onChange={(e) => setAllowSelling(e.target.checked)} /> {t(" Allow sale recommendations")}</label>
+          <fieldset className="lineup-builder-dependent" disabled={!allowSelling} aria-label={t("Sale options")}>
+            {!allowSelling && <p className="lineup-builder-dependent-hint">{t("Available when sale recommendations are allowed.")}</p>}
+            <div className="lineup-builder-option">
+              <label><input type="checkbox" checked={allowSelling && requireNonnegativeCash} disabled={!allowSelling}
+                onChange={(e) => setRequireNonnegativeCash(e.target.checked)} /> {t(" Non-negative balance at kickoff")}</label>
+              <p className="lineup-builder-section-help">{t("Plans may otherwise end with debt, down to 20% of your squad value. With this option every plan includes the sales needed to reach a balance of 0 or more.")}</p>
+            </div>
+            <div className="lineup-builder-option" data-tone="warning">
+              <label><input type="checkbox" checked={allowSelling && allowImmediateSale} disabled={!allowSelling}
+                onChange={(e) => setAllowImmediateSale(e.target.checked)} /> {t(" Allow immediate sales (half market value)")}</label>
+              <p className="lineup-builder-section-help">{t("Only used for the shortfall that offers on your players cannot cover. You lose half of each player's market value.")}</p>
+            </div>
+          </fieldset>
         </section>
 
         <section className="lineup-builder-section" aria-labelledby="builder-player-title">
           <div className="lineup-builder-section-heading"><h3 id="builder-player-title">{t("Mandatory players")}</h3><span>{t("{{0}} / 11 selected", { 0: chosen.length })}</span></div>
           <p className="lineup-builder-section-help">{t("Lock players into the starting XI. Leave empty for the best available combination.")}</p>
           <details className="lineup-builder-locks">
-            <summary>{t("Choose mandatory players ")}<span aria-hidden="true">＋</span></summary>
+            <summary>{t("Choose mandatory players")}</summary>
             <div className="lineup-builder-player-picker">
               <div className="lineup-builder-player-search">
                 <label className="lineup-builder-field">
@@ -401,6 +417,8 @@ function BuilderDialogSession({
             ))}
           </div>
         </section>
+
+        <p className="lineup-builder-preview-note">{t("Preview only. Building never buys, sells or saves players.")}</p>
 
         {builder.error && <div className="lineup-builder-error" role="alert">
           <h3>{t("Could not build a lineup")}</h3>

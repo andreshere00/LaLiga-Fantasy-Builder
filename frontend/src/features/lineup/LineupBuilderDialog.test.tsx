@@ -149,7 +149,7 @@ function renderDialog(canApply: () => boolean = () => true) {
   return client;
 }
 
-it("opens with purchases and sales allowed and every advanced option off", () => {
+it("opens with purchases and sales allowed and every dependent option off", () => {
   const client = renderDialog();
   const buy = screen.getByRole("checkbox", { name: /Allow purchase recommendations/ }) as HTMLInputElement;
   const sell = screen.getByRole("checkbox", { name: /Allow sale recommendations/ }) as HTMLInputElement;
@@ -159,7 +159,7 @@ it("opens with purchases and sales allowed and every advanced option off", () =>
   expect(sell.checked).toBe(true);
   expect(nonnegative.checked).toBe(false);
   expect(immediate.checked).toBe(false);
-  expect((screen.getByRole("combobox", { name: "Bid amount" }) as HTMLSelectElement).value).toBe("market_value");
+  expect((screen.getByRole("radio", { name: /Market value/ }) as HTMLInputElement).checked).toBe(true);
 
   fireEvent.click(sell);
   expect(nonnegative.disabled).toBe(true);
@@ -167,16 +167,19 @@ it("opens with purchases and sales allowed and every advanced option off", () =>
   client.clear();
 });
 
-it("summarises the advanced options and counts the ones in use while collapsed", () => {
+it("separates purchase options from sale options and disables each group with its switch", () => {
   const client = renderDialog();
-  const summary = screen.getByText("Advanced options").closest("summary")!;
-  expect(summary.textContent).toContain("Immediate sales and bid amount");
-  expect(summary.textContent).not.toContain("active");
+  const purchases = screen.getByRole("group", { name: "Purchase options" }) as HTMLFieldSetElement;
+  const sales = screen.getByRole("group", { name: "Sale options" }) as HTMLFieldSetElement;
+  expect(purchases.contains(screen.getByRole("radiogroup", { name: "Bid amount" }))).toBe(true);
+  expect(purchases.contains(screen.getByRole("checkbox", { name: /Allow immediate sales/ }))).toBe(false);
+  expect(sales.contains(screen.getByRole("checkbox", { name: /Allow immediate sales/ }))).toBe(true);
 
-  fireEvent.click(screen.getByRole("checkbox", { name: /Allow immediate sales/ }));
-  fireEvent.change(screen.getByRole("combobox", { name: "Bid amount" }), { target: { value: "max_profitable" } });
+  fireEvent.click(screen.getByRole("checkbox", { name: /Allow purchase recommendations/ }));
 
-  expect(summary.textContent).toContain("2 active");
+  expect(purchases.disabled).toBe(true);
+  expect(sales.disabled).toBe(false);
+  expect(purchases.textContent).toContain("Available when purchase recommendations are allowed.");
   client.clear();
 });
 
@@ -185,7 +188,7 @@ it("sends the funding and bid options with the build request", async () => {
   const client = renderDialog();
   fireEvent.click(screen.getByRole("checkbox", { name: /Non-negative balance at kickoff/ }));
   fireEvent.click(screen.getByRole("checkbox", { name: /Allow immediate sales/ }));
-  fireEvent.change(screen.getByRole("combobox", { name: "Bid amount" }), { target: { value: "max_profitable" } });
+  fireEvent.click(screen.getByRole("radio", { name: /Maximum profitable bid/ }));
   fireEvent.change(screen.getByRole("textbox", { name: "Minimum return (%)" }), { target: { value: "5" } });
 
   fireEvent.click(screen.getByRole("button", { name: "Build" }));
