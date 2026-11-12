@@ -537,7 +537,7 @@ def test_build_lineup_authenticated_reads_only_returns_owned_xi(rsa_pems) -> Non
         )
     assert result.status_code == 200, result.text
     body = result.json()
-    assert body["rules_version"] == "2026-10-15.1"
+    assert body["rules_version"] == "2026-11-12.1"
     assert body["team_id"] == "caller"
     assert body["search_complete"] is True
     assert len(body["candidates"][0]["starters"]) == 11
@@ -1015,6 +1015,7 @@ def test_build_lineup_sales_permission_does_not_execute_offer_acceptance(rsa_pem
                 "sources": ["owned", "market"],
                 "allow_buying": True,
                 "allow_selling": True,
+                "require_nonnegative_cash": True,
                 "mandatory_player_ids": ["99"],
             },
         )

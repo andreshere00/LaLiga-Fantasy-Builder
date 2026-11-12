@@ -18,6 +18,7 @@ from fantasy_api.domain.lineup_builder.target import instant, resolve_target
 from fantasy_api.schemas.calendar import CurrentWeek, Fixture
 from fantasy_api.schemas.lineup_builder import (
     FREE_FORMATIONS,
+    BidSuggestion,
     BuildPreferences,
     ScoredPlayer,
     TargetWeek,
@@ -538,7 +539,7 @@ def test_search_candidates_sales_can_finance_external_comparisons() -> None:
         owned + [external],
         owned,
         0,
-        BuildPreferences(allow_buying=True, allow_selling=True),
+        BuildPreferences(allow_buying=True, allow_selling=True, require_nonnegative_cash=True),
         ["4,4,2"],
         TARGET,
         NOW,
@@ -568,7 +569,7 @@ def test_search_candidates_budgeted_multi_player_upgrades_keep_cash_nonnegative(
         for p in pool()
     ]
     unaffordable = [
-        player(1000 + i, 1 + i % 4, source=source, value=1000, score=".95") for i in range(48)
+        player(1000 + i, 1 + i % 4, source=source, value=10_000, score=".95") for i in range(48)
     ]
     upgrades = [
         player(9000 + i, position, source=source, value=250, score=".8")
@@ -579,21 +580,33 @@ def test_search_candidates_budgeted_multi_player_upgrades_keep_cash_nonnegative(
         owned + unaffordable + upgrades,
         owned,
         60,
-        BuildPreferences(allow_buying=True, allow_selling=allow_selling, max_candidates=7),
+        BuildPreferences(
+            allow_buying=True,
+            allow_selling=allow_selling,
+            require_nonnegative_cash=allow_selling,
+            max_candidates=7,
+        ),
         ["4,4,2"],
         TARGET,
         NOW,
         1,
-        max_states=1000,
+        max_states=2000,
         max_seconds=30,
     )
 
     assert complete
-    assert states <= 1000
+    assert states <= 2000
     assert len(result) == 7
     external = [c for c in result if c.resource_group == "external"]
     if not allow_selling:
-        assert not external
+        # Without sales only debt finances a purchase: one bid fits the 20% limit, while
+        # clauses must be paid from cash alone.
+        assert bool(external) == (source == "market")
+        for candidate in external:
+            plan = candidate.trading_plan
+            assert not plan.sales
+            assert plan.funding_status == "debt_within_limit"
+            assert plan.projected_cash >= plan.final_floor
         return
     assert len(external) == 3
     assert external[0].total_lineup_score == Decimal("4.6")
@@ -902,9 +915,15 @@ def test_plan_trades_retained_bench_and_sales_accounted_at_every_stage() -> None
         + [player(99, 4, source="market", value=150), owned[-1]]
     )
     plan = plan_trades(
-        starters, owned, 10, BuildPreferences(allow_buying=True, allow_selling=True), TARGET, NOW
+        starters,
+        owned,
+        10,
+        BuildPreferences(allow_buying=True, allow_selling=True, require_nonnegative_cash=True),
+        TARGET,
+        NOW,
     )
     assert plan is not None
+    assert plan.funding_status == "funded"
     assert len(plan.sales) == 2
     assert plan.projected_cash == 60
     assert plan.squad_count == len(owned) - 1
@@ -949,7 +968,12 @@ def test_plan_trades_multiple_sales_follow_settlement_times_before_spending_proc
     starters = owned[:1] + owned[2:6] + owned[7:11] + [purchase, owned[-1]]
 
     plan = plan_trades(
-        starters, owned, 10, BuildPreferences(allow_buying=True, allow_selling=True), TARGET, NOW
+        starters,
+        owned,
+        10,
+        BuildPreferences(allow_buying=True, allow_selling=True, require_nonnegative_cash=True),
+        TARGET,
+        NOW,
     )
 
     assert plan is not None
@@ -1150,16 +1174,19 @@ def test_plan_trades_negative_cash_purchase_must_be_funded_by_sales() -> None:
         for p in pool()
     ]
     starters = owned[:1] + owned[2:6] + owned[7:11] + [player(99, 4, source="market"), owned[-1]]
+    # The squad sits at its debt limit: -(1600 // 5) = -320.
 
-    unfunded = plan_trades(starters, owned, -50, BuildPreferences(allow_buying=True), TARGET, NOW)
+    unfunded = plan_trades(starters, owned, -320, BuildPreferences(allow_buying=True), TARGET, NOW)
     funded = plan_trades(
-        starters, owned, -50, BuildPreferences(allow_buying=True, allow_selling=True), TARGET, NOW
+        starters, owned, -320, BuildPreferences(allow_buying=True, allow_selling=True), TARGET, NOW
     )
 
     assert unfunded is None
     assert funded is not None
-    assert len(funded.sales) == 1
-    assert funded.projected_cash == -50
+    # One sale settles the final floor; the bid itself needs a second (cost <= cash + 20%).
+    assert len(funded.sales) == 2
+    assert funded.projected_cash == -220
+    assert funded.funding_status == "debt_within_limit"
 
 
 def test_plan_trades_cash_below_debt_limit_allows_sale_that_does_not_worsen_it() -> None:
@@ -1194,3 +1221,326 @@ def test_plan_trades_negative_cash_rejects_clause_purchase() -> None:
     )
 
     assert plan is None
+
+
+# ---- Happy path: debt-tolerant funding, sale routes and bid amounts ---- #
+
+
+def _scored_squad() -> list[ScoredPlayer]:
+    """Score the 16-player pool (value 100 each) so every bench player can be sold."""
+    facts = PlayerEvidence(status="available", market_growth=Decimal(0))
+    return [
+        score_player(p, facts, NOW, START).model_copy(update={"lineup_score": p.lineup_score})
+        for p in pool()
+    ]
+
+
+def _xi_with(owned: list[ScoredPlayer], forward: ScoredPlayer) -> list[ScoredPlayer]:
+    """Best owned 4,4,2 with its weakest forward replaced by ``forward``."""
+    by_position = {
+        pos: sorted((p for p in owned if p.position == pos), key=lambda p: -p.lineup_score)
+        for pos in range(1, 5)
+    }
+    return (
+        by_position[1][:1]
+        + by_position[2][:4]
+        + by_position[3][:4]
+        + by_position[4][:1]
+        + [forward]
+    )
+
+
+def _with_offers(
+    owned: list[ScoredPlayer], amounts: dict[str, int], starters: list[ScoredPlayer]
+) -> list[ScoredPlayer]:
+    """Attach pending offers to bench players only."""
+    starter_ids = {p.player_id for p in starters}
+    return [
+        (
+            p.model_copy(
+                update={"sale_settlement_at": NOW, "sale_offer_amount": amounts[p.player_id]}
+            )
+            if p.player_id in amounts and p.player_id not in starter_ids
+            else p
+        )
+        for p in owned
+    ]
+
+
+def test_plan_trades_final_balance_within_debt_limit_returns_debt_within_limit() -> None:
+    owned = _scored_squad()
+    starters = _xi_with(owned, player(99, 4, source="market", value=200, score=".9"))
+
+    plan = plan_trades(starters, owned, 0, BuildPreferences(allow_buying=True), TARGET, NOW)
+
+    assert plan is not None
+    assert plan.projected_cash == -200
+    assert plan.final_floor == -(1800 // 5)
+    assert plan.funding_status == "debt_within_limit"
+    assert not plan.sales
+
+
+def test_plan_trades_funded_plan_returns_funded_status() -> None:
+    owned = _scored_squad()
+    starters = _xi_with(owned, player(99, 4, source="market", value=200, score=".9"))
+
+    plan = plan_trades(starters, owned, 500, BuildPreferences(allow_buying=True), TARGET, NOW)
+
+    assert plan is not None
+    assert plan.funding_status == "funded"
+    assert plan.projected_cash == 300
+
+
+def test_plan_trades_require_nonnegative_uses_offer_amount_not_market_value() -> None:
+    owned = _scored_squad()
+    starters = _xi_with(owned, player(99, 4, source="market", value=150, score=".9"))
+    owned = _with_offers(owned, {"10": 150, "20": 150}, starters)
+    preferences = BuildPreferences(
+        allow_buying=True, allow_selling=True, require_nonnegative_cash=True
+    )
+
+    plan = plan_trades(starters, owned, 0, preferences, TARGET, NOW)
+
+    assert plan is not None
+    assert len(plan.sales) == 1
+    sale = plan.steps[0]
+    assert sale.method == "accept_offer"
+    assert sale.estimate == 150
+    assert sale.market_value == 100
+    assert plan.projected_cash == 0
+    assert plan.funding_status == "funded"
+
+
+def test_plan_trades_offer_below_market_value_counts_and_is_flagged() -> None:
+    owned = _scored_squad()
+    starters = _xi_with(owned, player(99, 4, source="market", value=50, score=".9"))
+    owned = _with_offers(owned, {"10": 60}, starters)
+    preferences = BuildPreferences(
+        allow_buying=True, allow_selling=True, require_nonnegative_cash=True
+    )
+
+    plan = plan_trades(starters, owned, 0, preferences, TARGET, NOW)
+
+    assert plan is not None
+    sale = next(step for step in plan.steps if step.action == "sell")
+    assert sale.estimate == 60
+    assert "below_market_value" in sale.conditions
+    assert plan.projected_cash == 10
+
+
+def test_plan_trades_immediate_sale_enabled_credits_half_market_value_after_offers() -> None:
+    owned = _scored_squad()
+    starters = _xi_with(owned, player(99, 4, source="market", value=180, score=".9"))
+    owned = _with_offers(owned, {"10": 100}, starters)
+    preferences = BuildPreferences(
+        allow_buying=True,
+        allow_selling=True,
+        require_nonnegative_cash=True,
+        allow_immediate_sale=True,
+    )
+
+    plan = plan_trades(starters, owned, 0, preferences, TARGET, NOW)
+
+    assert plan is not None
+    sales = [step for step in plan.steps if step.action == "sell"]
+    assert [step.method for step in sales] == ["accept_offer", "immediate_sale", "immediate_sale"]
+    assert [step.estimate for step in sales] == [100, 50, 50]
+    assert all("loses_half_market_value" in step.conditions for step in sales[1:])
+    assert plan.projected_cash == 20
+    assert plan.funding_status == "funded"
+
+
+def test_plan_trades_bid_estimate_uses_suggested_bid() -> None:
+    owned = _scored_squad()
+    suggestion = BidSuggestion(
+        strategy="max_profitable",
+        amount=150,
+        default_bid=101,
+        competing_bids=2,
+        mpb=150,
+        return_rate=Decimal("0.5"),
+        min_return=Decimal(0),
+        status="profitable",
+    )
+    bid = player(99, 4, source="market", value=100, score=".9").model_copy(
+        update={"bid_suggestion": suggestion}
+    )
+
+    plan = plan_trades(
+        _xi_with(owned, bid), owned, 1000, BuildPreferences(allow_buying=True), TARGET, NOW
+    )
+
+    assert plan is not None
+    buy = plan.steps[-1]
+    assert buy.estimate == 150
+    assert buy.cash_after == 850
+    assert buy.bid_suggestion == suggestion
+    assert plan.squad_value == 1700
+
+
+def test_plan_trades_direct_offer_never_counts_as_funded() -> None:
+    owned = _scored_squad()
+    clause = player(99, 4, source="opponents", value=100, score=".9")
+    starters = _xi_with(owned, clause)
+
+    plan = plan_trades(starters, owned, 150, BuildPreferences(allow_buying=True), TARGET, NOW)
+    unpaid = plan_trades(starters, owned, 50, BuildPreferences(allow_buying=True), TARGET, NOW)
+
+    assert plan is not None
+    buy = plan.steps[-1]
+    assert buy.method == "clause"
+    assert [a.method for a in buy.alternatives] == ["direct_offer"]
+    assert buy.alternatives[0].suggested_amount == 100
+    assert plan.projected_cash == 50
+    # A seller-dependent direct offer never replaces a clause the manager cannot pay.
+    assert unpaid is None
+
+
+# ---- Error paths: debt-tolerant funding, sale routes and bid amounts ---- #
+
+
+def test_plan_trades_final_balance_below_debt_limit_returns_none() -> None:
+    owned = _scored_squad()
+    starters = _xi_with(owned, player(99, 4, source="market", value=500, score=".9"))
+
+    assert plan_trades(starters, owned, 0, BuildPreferences(allow_buying=True), TARGET, NOW) is None
+
+
+def test_plan_trades_immediate_sale_disabled_is_never_used() -> None:
+    owned = _scored_squad()
+    starters = _xi_with(owned, player(99, 4, source="market", value=100, score=".9"))
+    preferences = BuildPreferences(
+        allow_buying=True, allow_selling=True, require_nonnegative_cash=True
+    )
+
+    plan = plan_trades(starters, owned, 0, preferences, TARGET, NOW)
+
+    assert plan is not None
+    assert not plan.sales
+    assert all(step.method != "immediate_sale" for step in plan.steps)
+
+
+def test_plan_trades_require_nonnegative_insufficient_sales_returns_needs_sales_with_listings() -> (
+    None
+):
+    owned = _scored_squad()
+    starters = _xi_with(owned, player(99, 4, source="market", value=150, score=".9"))
+    preferences = BuildPreferences(
+        allow_buying=True, allow_selling=True, require_nonnegative_cash=True
+    )
+
+    plan = plan_trades(starters, owned, 0, preferences, TARGET, NOW)
+
+    assert plan is not None
+    assert plan.funding_status == "needs_sales"
+    assert plan.shortfall == 150
+    assert len(plan.listing_suggestions) == 2
+    assert all(s.suggested_price == 100 for s in plan.listing_suggestions)
+    assert all(s.reason == "not_listed" for s in plan.listing_suggestions)
+
+
+def test_plan_trades_listing_suggestion_never_counts_toward_projected_cash() -> None:
+    owned = _scored_squad()
+    starters = _xi_with(owned, player(99, 4, source="market", value=150, score=".9"))
+    preferences = BuildPreferences(
+        allow_buying=True, allow_selling=True, require_nonnegative_cash=True
+    )
+
+    plan = plan_trades(starters, owned, 0, preferences, TARGET, NOW)
+
+    assert plan is not None
+    assert plan.projected_cash == -150
+    assert plan.steps[-1].cash_after == -150
+
+
+def test_plan_trades_require_nonnegative_listings_cannot_cover_returns_none() -> None:
+    owned = _scored_squad()
+    starters = _xi_with(owned, player(99, 4, source="market", value=300, score=".9"))
+    preferences = BuildPreferences(
+        allow_buying=True, allow_selling=True, require_nonnegative_cash=True
+    )
+
+    # Five bench players could only list for 500, short of the 2_000 deficit.
+    assert plan_trades(starters, owned, -1_700, preferences, TARGET, NOW) is None
+
+
+def test_plan_trades_starter_never_sold_or_listed() -> None:
+    owned = _scored_squad()
+    starters = _xi_with(owned, player(99, 4, source="market", value=300, score=".9"))
+    starter_ids = {p.player_id for p in starters}
+    bench = sorted(p.player_id for p in owned if p.player_id not in starter_ids)[:2]
+    # Starters carry offers too; only the two bench offers may be accepted.
+    owned = [
+        (
+            p.model_copy(update={"sale_settlement_at": NOW, "sale_offer_amount": 10})
+            if p.player_id in starter_ids | set(bench)
+            else p
+        )
+        for p in owned
+    ]
+    preferences = BuildPreferences(
+        allow_buying=True, allow_selling=True, require_nonnegative_cash=True
+    )
+
+    plan = plan_trades(starters, owned, 0, preferences, TARGET, NOW)
+
+    assert plan is not None
+    assert plan.funding_status == "needs_sales"
+    assert {p.player_id for p in plan.sales} == set(bench)
+    assert plan.listing_suggestions
+    assert not starter_ids & {p.player_id for p in plan.sales}
+    assert not starter_ids & {s.player_id for s in plan.listing_suggestions}
+
+
+def test_search_external_player_not_better_than_replaced_owned_is_discarded() -> None:
+    owned = [
+        player(1, 1, score=".5"),
+        *(player(10 + i, 2, score=".5") for i in range(4)),
+        *(player(20 + i, 3, score=".5") for i in range(4)),
+        player(30, 4, score=".3"),
+        player(31, 4, score=".2"),
+    ]
+    strong = player(90, 4, source="market", score=".9")
+    weak = player(91, 4, source="market", score=".15")
+
+    results, complete, _ = search_candidates(
+        owned + [strong, weak],
+        owned,
+        1000,
+        BuildPreferences(allow_buying=True, max_candidates=7),
+        ["4,4,2"],
+        TARGET,
+        NOW,
+        1,
+    )
+
+    assert complete
+    external = [c for c in results if c.resource_group == "external"]
+    assert external
+    # {strong, weak} beats the owned total (1.05 > .5) but weak loses to the forward it drops.
+    assert all(weak.player_id not in {p.player_id for p in c.starters} for c in external)
+
+
+def test_search_external_without_owned_formation_compares_weakest_owned_of_position() -> None:
+    owned = [
+        player(1, 1, score=".5"),
+        *(player(10 + i, 2, score=".5") for i in range(4)),
+        *(player(20 + i, 3, score=".5") for i in range(4)),
+        player(30, 4, score=".3"),
+    ]
+    strong = player(90, 4, source="market", score=".9")
+    weak = player(91, 4, source="market", score=".05")
+
+    results, _, _ = search_candidates(
+        owned + [strong, weak],
+        owned,
+        1000,
+        BuildPreferences(allow_buying=True, max_candidates=7),
+        ["4,4,2"],
+        TARGET,
+        NOW,
+        1,
+    )
+
+    assert results
+    assert all(weak.player_id not in {p.player_id for p in c.starters} for c in results)

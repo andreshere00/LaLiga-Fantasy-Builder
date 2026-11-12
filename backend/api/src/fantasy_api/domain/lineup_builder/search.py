@@ -10,7 +10,12 @@ from threading import Event
 from typing import NamedTuple
 
 from fantasy_api.domain.lineup_builder.formations import FormationSpec
-from fantasy_api.domain.lineup_builder.planning import plan_trades
+from fantasy_api.domain.lineup_builder.planning import (
+    plan_trades,
+    purchase_cost,
+    sale_proceeds,
+    sale_routes,
+)
 from fantasy_api.schemas.lineup_builder import BuildPreferences, Candidate, ScoredPlayer, TargetWeek
 
 
@@ -89,6 +94,45 @@ def _upper_bound(
     return min(upper, capped_upper)
 
 
+def _improves_replaced(
+    candidate: Candidate, baseline: Candidate | None, owned: list[ScoredPlayer]
+) -> bool:
+    """Require every external starter to outscore the owned player it displaces.
+
+    Externals are paired, strongest first, with the owned starters of the same position that the
+    best owned XI in this formation fields and this XI drops. Without such an owned XI, each
+    external starter must beat the weakest owned player of their position.
+    """
+    for position in range(1, 5):
+        external = sorted(
+            (
+                p.lineup_score
+                for p in candidate.starters
+                if p.position == position and p.source != "owned"
+            ),
+            reverse=True,
+        )
+        if not external:
+            continue
+        if baseline is None:
+            weakest = min((p.lineup_score for p in owned if p.position == position), default=None)
+            if weakest is not None and external[-1] <= weakest:
+                return False
+            continue
+        kept = {p.player_id for p in candidate.starters}
+        displaced = sorted(
+            (
+                p.lineup_score
+                for p in baseline.starters
+                if p.position == position and p.player_id not in kept
+            ),
+            reverse=True,
+        )
+        if any(new <= old for new, old in zip(external, displaced, strict=False)):
+            return False
+    return True
+
+
 def search_candidates(
     players: list[ScoredPlayer],
     owned: list[ScoredPlayer],
@@ -139,15 +183,11 @@ def search_candidates(
     formation_specs = {code: FormationSpec.parse(code) for code in formations}
     turns = cycle(heaps)
     truncated = False
-    salable = [
-        p
-        for p in owned
-        if preferences.allow_selling
-        and p.sections
-        and p.sale_settlement_at is not None
-        and now <= p.sale_settlement_at <= target.sales_deadline
-    ]
-    salable_ids = {p.player_id for p in salable}
+    routes = sale_routes(owned, set(), preferences, now, target)
+    salable = [p for p, _ in routes]
+    proceeds = {p.player_id: sale_proceeds(p, method) for p, method in routes}
+    salable_ids = set(proceeds)
+    owned_value = sum(p.market_value for p in owned)
 
     def purchase_capacity(selected: tuple[ScoredPlayer, ...]) -> int:
         """Count acquisition slots after every still-possible eligible bench sale."""
@@ -166,7 +206,7 @@ def search_candidates(
         remaining: tuple[int, ...] = (),
         offsets: tuple[int, ...] = (),
     ) -> bool:
-        """Reject only partial selections that even optimistic sales cannot finance."""
+        """Reject only partial selections that even optimistic sales and debt cannot finance."""
         ids = {p.player_id for p in selected}
         available_sales = [p for p in salable if p.player_id not in ids]
         purchases = [p for p in selected if p.source != "owned"]
@@ -177,7 +217,7 @@ def search_candidates(
                 heapq.nsmallest(
                     amount,
                     (
-                        p.market_value if p.source != "owned" or p.player_id in salable_ids else 0
+                        (purchase_cost(p) if p.source != "owned" else proceeds.get(p.player_id, 0))
                         for p in bucket[start:]
                     ),
                 )
@@ -185,9 +225,16 @@ def search_candidates(
             for bucket, amount, start in zip(buckets, remaining, offsets, strict=True)
             if amount
         )
+        spend = sum(purchase_cost(p) for p in purchases) + completion_cost
+        # Purchase estimates never undercut market value, so the final squad value (and the
+        # 20% debt allowance on it) is at most the owned value plus everything spent.
+        allowance = (owned_value + spend) // 5
+        income = max(cash, 0) + sum(proceeds[p.player_id] for p in available_sales)
+        # Clauses are paid from cash alone, so debt never finances them.
+        clauses = sum(purchase_cost(p) for p in purchases if p.acquisition_method == "clause")
         return (
-            sum(p.market_value for p in purchases) + completion_cost
-            <= max(cash, 0) + sum(p.market_value for p in available_sales)
+            spend <= income + allowance
+            and clauses <= income
             and len(owned) + reserved_squad_slots + len(purchases) - len(available_sales) <= 24
         )
 
@@ -395,6 +442,15 @@ def search_candidates(
         # Acquiring starters must improve on the strongest feasible owned XI.
         baseline = owned_results[0].total_lineup_score
         external_results = [r for r in external_results if r.total_lineup_score > baseline]
+    best_owned: dict[str, Candidate] = {}
+    for result in owned_results:
+        best_owned.setdefault(result.formation, result)
+    owned_pool = [p for p in players if p.source == "owned"] or owned
+    external_results = [
+        r
+        for r in external_results
+        if _improves_replaced(r, best_owned.get(r.formation), owned_pool)
+    ]
     # Reserve external comparisons without exceeding the caller's total result limit.
     external_slots = min(len(external_results), preferences.max_candidates // 2)
     owned_slots = min(len(owned_results), preferences.max_candidates - external_slots)
