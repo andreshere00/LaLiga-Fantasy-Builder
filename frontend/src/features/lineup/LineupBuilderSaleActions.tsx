@@ -56,7 +56,7 @@ export function LineupBuilderSaleActions({ action, squad, onClose, onDone }: {
   action: BuilderSaleAction;
   squad: readonly SquadCard[];
   onClose: () => void;
-  /** Called after a write succeeded or ended with an uncertain result. */
+  /** Called only after the write succeeded; a failed write leaves the sale retryable. */
   onDone: (action: BuilderSaleAction) => void;
 }) {
   useTranslation();
@@ -121,9 +121,9 @@ export function LineupBuilderSaleActions({ action, squad, onClose, onDone }: {
     } catch (error) {
       if (error instanceof NeedsReauthError) markNeedsReauth();
       setMessage("The sale could not be confirmed. Your squad has been refreshed; check it before retrying.");
-      await refresh();
-      // The write may still have been applied: recompute draftability from the refreshed squad.
-      onDone(action);
+      // The write may still have been applied: refresh so the squad shows the truth, but never
+      // report the sale as done, which would hide its button and the retry.
+      await refresh().catch(() => undefined);
     } finally {
       setPending(false);
     }

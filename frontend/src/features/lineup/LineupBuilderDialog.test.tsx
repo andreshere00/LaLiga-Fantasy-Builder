@@ -201,6 +201,19 @@ it("sends the funding and bid options with the build request", async () => {
   client.clear();
 });
 
+it("accepts a decimal comma in the minimum return", () => {
+  vi.mocked(streamLineupBuild).mockReturnValueOnce(new Promise(() => {}));
+  const client = renderDialog();
+  fireEvent.click(screen.getByRole("radio", { name: /Maximum profitable bid/ }));
+  fireEvent.change(screen.getByRole("textbox", { name: "Minimum return (%)" }), { target: { value: "2,5" } });
+
+  expect(screen.queryByText("Enter a percentage between 0 and 100.")).toBeNull();
+  fireEvent.click(screen.getByRole("button", { name: "Build" }));
+
+  expect(vi.mocked(streamLineupBuild).mock.calls[0][2]).toMatchObject({ minBidReturn: 0.025 });
+  client.clear();
+});
+
 it("keeps the draft usable while a required non-negative balance is still below zero", async () => {
   const result = lineupBuildResponseSchema.parse(response.payload);
   vi.mocked(streamLineupBuild).mockResolvedValueOnce(result);

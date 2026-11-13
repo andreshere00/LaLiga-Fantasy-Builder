@@ -91,3 +91,18 @@ it("does not list a player that is already on the market", () => {
   expect((screen.getByRole("button", { name: "List for sale" }) as HTMLButtonElement).disabled).toBe(true);
   client.clear();
 });
+
+it("does not report a sale as done when the write fails, so it can be retried", async () => {
+  vi.mocked(postJson).mockRejectedValue(new Error("rejected by upstream"));
+  const { client, onDone } = renderAction({
+    kind: "immediate_sale", playerId: "7", playerTeamId: "123", name: "Bench player", amount: 50, marketValue: 100,
+  });
+
+  await act(async () => { fireEvent.click(screen.getByRole("button", { name: "Sell now" })); });
+
+  expect(postJson).toHaveBeenCalledTimes(1);
+  expect(onDone).not.toHaveBeenCalled();
+  expect(screen.getByRole("alert").textContent).toMatch(/could not be confirmed/);
+  expect((screen.getByRole("button", { name: "Sell now" }) as HTMLButtonElement).disabled).toBe(false);
+  client.clear();
+});

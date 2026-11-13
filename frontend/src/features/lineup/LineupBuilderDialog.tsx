@@ -212,7 +212,9 @@ function BuilderDialogSession({
 
   const squadByEntryId = useMemo(
     () => new Map(ownSquad.map((card) => [card.id, card] as const)), [ownSquad]);
-  const parsedReturn = minBidReturnPercent.trim() === "" ? undefined : Number(minBidReturnPercent) / 100;
+  // Spanish keyboards type a decimal comma.
+  const parsedReturn = minBidReturnPercent.trim() === ""
+    ? undefined : Number(minBidReturnPercent.trim().replace(",", ".")) / 100;
   const minBidReturn = parsedReturn !== undefined && Number.isFinite(parsedReturn)
     && parsedReturn >= 0 && parsedReturn <= 1 ? parsedReturn : undefined;
   const invalidReturn = bidStrategy === "max_profitable" && minBidReturnPercent.trim() !== "" && minBidReturn === undefined;
