@@ -106,7 +106,14 @@ class LineupBuilderSourceLoader:
             try:
                 player = _identity(await context.complete_master(master), "market")
                 players.append(
-                    player.model_copy(update={"acquisition_method": "bid", "settlement_at": expiry})
+                    player.model_copy(
+                        update={
+                            "acquisition_method": "bid",
+                            "settlement_at": expiry,
+                            # The caller's own bids are excluded above (pending_master_ids).
+                            "competing_bids": max(listing.number_of_bids or 0, 0),
+                        }
+                    )
                 )
             except (ValueError, ValidationError, UpstreamError):
                 diagnostics.append(

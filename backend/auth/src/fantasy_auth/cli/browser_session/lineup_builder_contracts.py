@@ -36,6 +36,10 @@ class BuildPreferences(BaseModel):
     allow_buying: bool = False
     allow_selling: bool = False
     include_trading_purchases: bool = False
+    require_nonnegative_cash: bool = False
+    allow_immediate_sale: bool = False
+    bid_strategy: Literal["market_value", "max_profitable"] = "market_value"
+    min_bid_return: Decimal | None = Field(default=None, ge=0, le=1)
     max_candidates: int = Field(default=5, ge=1, le=20, strict=True)
     explanation: ExplanationPreferences = Field(default_factory=ExplanationPreferences)
 
@@ -53,6 +57,12 @@ class BuildPreferences(BaseModel):
             raise ValueError("trading purchases require buying permission")
         if self.explanation.reasoning_effort and not self.explanation.enabled:
             raise ValueError("reasoning effort requires explanations")
+        if self.require_nonnegative_cash and not self.allow_selling:
+            raise ValueError("a non-negative balance requires selling permission")
+        if self.allow_immediate_sale and not self.allow_selling:
+            raise ValueError("immediate sales require selling permission")
+        if self.min_bid_return is not None and self.bid_strategy != "max_profitable":
+            raise ValueError("a minimum bid return requires the max_profitable bid strategy")
         return self
 
 
@@ -146,6 +156,9 @@ class TradePlan(FlexibleModel):
     squad_value: int
     squad_count: int
     reserved_squad_slots: int = Field(default=0, ge=0)
+    funding_status: Literal["funded", "debt_within_limit", "needs_sales"] = "funded"
+    final_floor: int = 0
+    shortfall: int = Field(default=0, ge=0)
 
 
 class Candidate(FlexibleModel):
@@ -171,7 +184,7 @@ class BuildResponse(FlexibleModel):
     """Replayable recommendations and truthful bounded-search status."""
 
     build_id: str
-    rules_version: str = "2026-10-15.1"
+    rules_version: str = "2026-11-12.1"
     generated_at: datetime
     league_id: str
     team_id: str

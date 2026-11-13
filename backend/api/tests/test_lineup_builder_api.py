@@ -137,6 +137,11 @@ def _client(
     weather_description: str | None = None,
     injury_history_coverage: Literal["complete", "partial", "unknown"] = "unknown",
     injury_history_days: tuple[int, ...] = (),
+    offer_money: int = 100,
+    number_of_bids: int | None = None,
+    bid_history: Literal["rising", "filled"] | None = None,
+    ongoing_injury: bool = False,
+    forecast_matchday: int | None = None,
 ) -> tuple[TestClient, str, list[httpx.Request]]:
     """Wire real auth/Fantasy clients with typed football segment stubs."""
     private, public = rsa_pems
@@ -249,6 +254,7 @@ def _client(
                             "discr": "market_player",
                             "directOffer": False,
                             "expirationDate": (now + timedelta(days=1)).isoformat(),
+                            "numberOfBids": number_of_bids,
                             "playerMaster": {
                                 "id": "99",
                                 "name": "Market player",
@@ -382,7 +388,15 @@ def _client(
             return httpx.Response(
                 200,
                 json=(
-                    [{"money": 100, "status": "pending", "expirationDate": first.isoformat()}]
+                    [
+                        {
+                            "id": "offer-1",
+                            "marketId": "market-1",
+                            "money": offer_money,
+                            "status": "pending",
+                            "expirationDate": first.isoformat(),
+                        }
+                    ]
                     if offers
                     else []
                 ),
@@ -414,6 +428,30 @@ def _client(
 
     def source_detail(pid, query):
         """Simulate source failure while retaining other detail segments."""
+        if query.preset == MarketPreset.D14:
+            assert bid_history is not None, "MPB history is read only with max_profitable"
+            envelope = dict(player_id=pid, season="2026-27", generated_at=now)
+            return PlayerDetailResponse(
+                **envelope,
+                player=PlayerRef(id=pid),
+                market=PlayerMarketResponse(
+                    **envelope,
+                    window=MarketWindow(
+                        preset=MarketPreset.D14,
+                        **{"from": (now - timedelta(days=14)).date()},
+                        to=now.date(),
+                        days=14,
+                        series=[
+                            MarketSeriesPoint(
+                                date=(now - timedelta(days=i)).date(),
+                                value=100 - i,
+                                filled=bid_history == "filled" and i == 7,
+                            )
+                            for i in range(15)
+                        ],
+                    ),
+                ),
+            )
         detail = _detail(pid, first, now)
         if started_round:
             detail.fixtures.fixtures[0].stats.dazn_points.dazn_points = 1
@@ -428,6 +466,10 @@ def _client(
             )
             current_match.stats.dazn_points.dazn_points = 99
             detail.fixtures.fixtures.insert(0, current_match)
+        if ongoing_injury:
+            detail.profile.injury.active = True
+        if forecast_matchday is not None:
+            detail.profile.availability = {"status": "available", "matchday": forecast_matchday}
         detail.profile.fantasy_season_total = season_total
         detail.profile.fantasy_season_matches = season_matches
         detail.profile.injury_history_coverage = injury_history_coverage
@@ -537,7 +579,7 @@ def test_build_lineup_authenticated_reads_only_returns_owned_xi(rsa_pems) -> Non
         )
     assert result.status_code == 200, result.text
     body = result.json()
-    assert body["rules_version"] == "2026-10-15.1"
+    assert body["rules_version"] == "2026-11-12.1"
     assert body["team_id"] == "caller"
     assert body["search_complete"] is True
     assert len(body["candidates"][0]["starters"]) == 11
@@ -598,7 +640,14 @@ def test_build_lineup_injury_history_coverage_scores_only_verified_history(
 
 @pytest.mark.parametrize(
     "body,status",
-    [({"user_id": "other"}, 422), ({"sources": []}, 422), ({"max_candidates": True}, 422)],
+    [
+        ({"user_id": "other"}, 422),
+        ({"sources": []}, 422),
+        ({"max_candidates": True}, 422),
+        ({"require_nonnegative_cash": True}, 422),
+        ({"allow_immediate_sale": True}, 422),
+        ({"min_bid_return": "0.1"}, 422),
+    ],
 )
 def test_build_lineup_invalid_body_rejects_before_upstream(rsa_pems, body, status) -> None:
     client, jwt, requests = _client(rsa_pems)
@@ -1008,6 +1057,7 @@ def test_build_lineup_sales_permission_does_not_execute_offer_acceptance(rsa_pem
                 "sources": ["owned", "market"],
                 "allow_buying": True,
                 "allow_selling": True,
+                "require_nonnegative_cash": True,
                 "mandatory_player_ids": ["99"],
             },
         )
@@ -1308,3 +1358,167 @@ def test_build_lineup_identity_conflict_reports_cause_without_claiming_injury(rs
     codes = {item["code"] for item in response.json()["diagnostics"]}
     assert "player_identity_ambiguous" in codes
     assert "player_unavailable" not in codes
+
+
+def _build(client: TestClient, jwt: str, **preferences: object) -> dict:
+    """Post one build and return the decoded successful body."""
+    with client:
+        result = client.post(
+            "/lineup-builder/leagues/league/build",
+            headers={"Authorization": f"Bearer {jwt}"},
+            json={"formations": ["4,4,2"], **preferences},
+        )
+    assert result.status_code == 200, result.text
+    return result.json()
+
+
+def _market_buy(body: dict) -> dict:
+    """Return the market buy step of the first candidate that acquires player 99."""
+    candidate = next(
+        c for c in body["candidates"] if any(p["player_id"] == "99" for p in c["starters"])
+    )
+    return next(s for s in candidate["trading_plan"]["steps"] if s["player_id"] == "99")
+
+
+def test_build_lineup_offer_below_market_value_credits_offer_amount(rsa_pems) -> None:
+    client, jwt, requests = _client(
+        rsa_pems, offers=True, offer_money=80, source_players=True, extra_owned=True, cash=0
+    )
+
+    body = _build(
+        client,
+        jwt,
+        sources=["owned", "market"],
+        allow_buying=True,
+        allow_selling=True,
+        require_nonnegative_cash=True,
+        mandatory_player_ids=["99"],
+    )
+
+    plan = body["candidates"][0]["trading_plan"]
+    sale = next(s for s in plan["steps"] if s["action"] == "sell")
+    assert sale["method"] == "accept_offer"
+    assert sale["estimate"] == 80
+    assert sale["offer_id"] == "offer-1"
+    assert sale["offer_market_id"] == "market-1"
+    assert "below_market_value" in sale["conditions"]
+    assert body["rules_version"] == "2026-11-12.1"
+    assert all(request.method == "GET" for request in requests)
+
+
+def test_build_lineup_competing_bids_suggests_market_value_plus_one(rsa_pems) -> None:
+    client, jwt, _ = _client(rsa_pems, source_players=True, number_of_bids=2)
+
+    body = _build(
+        client, jwt, sources=["owned", "market"], allow_buying=True, mandatory_player_ids=["99"]
+    )
+
+    buy = _market_buy(body)
+    assert buy["estimate"] == 101
+    assert buy["bid_suggestion"]["status"] == "default"
+    assert buy["bid_suggestion"]["competing_bids"] == 2
+
+
+def test_build_lineup_max_profitable_strategy_reads_fourteen_day_history(rsa_pems) -> None:
+    client, jwt, _ = _client(rsa_pems, source_players=True, bid_history="rising")
+
+    body = _build(
+        client,
+        jwt,
+        sources=["owned", "market"],
+        allow_buying=True,
+        mandatory_player_ids=["99"],
+        bid_strategy="max_profitable",
+        min_bid_return="0.01",
+    )
+
+    suggestion = _market_buy(body)["bid_suggestion"]
+    assert suggestion["status"] == "profitable"
+    assert suggestion["mpb"] > 100
+    assert suggestion["amount"] == suggestion["mpb"]
+
+
+def test_build_lineup_max_profitable_gap_filled_history_falls_back_to_default(rsa_pems) -> None:
+    client, jwt, _ = _client(rsa_pems, source_players=True, bid_history="filled")
+
+    body = _build(
+        client,
+        jwt,
+        sources=["owned", "market"],
+        allow_buying=True,
+        mandatory_player_ids=["99"],
+        bid_strategy="max_profitable",
+    )
+
+    buy = _market_buy(body)
+    assert buy["bid_suggestion"]["status"] == "insufficient_history"
+    assert buy["estimate"] == 100
+    assert "insufficient_history" in buy["conditions"]
+    assert {"code": "bid_history_unavailable", "player_id": "99"} in body["diagnostics"]
+
+
+def test_build_lineup_max_profitable_below_min_return_does_not_bid(rsa_pems) -> None:
+    client, jwt, _ = _client(rsa_pems, source_players=True, bid_history="rising")
+
+    body = _build(
+        client,
+        jwt,
+        sources=["owned", "market"],
+        allow_buying=True,
+        bid_strategy="max_profitable",
+        min_bid_return="0.99",
+    )
+
+    assert {"code": "bid_below_min_return", "player_id": "99"} in body["diagnostics"]
+    assert all(
+        step["player_id"] != "99"
+        for candidate in body["candidates"]
+        for step in candidate["trading_plan"]["steps"]
+    )
+
+
+def test_build_lineup_immediate_sale_enabled_credits_half_market_value(rsa_pems) -> None:
+    client, jwt, requests = _client(rsa_pems, source_players=True, extra_owned=True, cash=0)
+
+    body = _build(
+        client,
+        jwt,
+        sources=["owned", "market"],
+        allow_buying=True,
+        allow_selling=True,
+        require_nonnegative_cash=True,
+        allow_immediate_sale=True,
+        mandatory_player_ids=["99"],
+    )
+
+    plan = body["candidates"][0]["trading_plan"]
+    sales = [s for s in plan["steps"] if s["action"] == "sell"]
+    assert sales
+    assert all(s["method"] == "immediate_sale" and s["estimate"] == 50 for s in sales)
+    assert plan["funding_status"] in {"funded", "needs_sales"}
+    assert all(request.method == "GET" for request in requests)
+
+
+def test_build_lineup_target_round_forecast_overrides_ongoing_minor_injury(rsa_pems) -> None:
+    # FutbolFantasy can list a player as available for the round (95% start probability)
+    # while a minor knock stays "ongoing" in the injury history.
+    client, jwt, _ = _client(rsa_pems, ongoing_injury=True, forecast_matchday=10)
+
+    body = _build(client, jwt)
+
+    assert body["candidates"]
+    assert not any(d["code"] == "player_unavailable" for d in body["diagnostics"])
+
+
+def test_build_lineup_ongoing_injury_without_round_forecast_excludes_player(rsa_pems) -> None:
+    client, jwt, _ = _client(rsa_pems, ongoing_injury=True)
+
+    with client:
+        result = client.post(
+            "/lineup-builder/leagues/league/build",
+            headers={"Authorization": f"Bearer {jwt}"},
+            json={"formations": ["4,4,2"]},
+        )
+
+    assert result.status_code == 409
+    assert {"code": "player_unavailable", "player_id": "1"} in result.json()["diagnostics"]

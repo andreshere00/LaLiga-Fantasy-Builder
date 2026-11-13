@@ -71,3 +71,14 @@ it("localizes the seller acceptance requirement for a direct offer", () => {
     onClose={() => {}} onConfirm={() => {}} />);
   expect(screen.getByText("El propietario debe aceptar tu oferta para que el jugador pase a tu plantilla.", { exact: false })).toBeTruthy();
 });
+
+it("should start a new bid from the suggested amount and keep it editable", () => {
+  const confirm = vi.fn();
+  render(<BidDialog open row={row} kind="hire" money={1000} squadMarketValue={1000}
+    initialAmount={180} pending={false} onClose={() => {}} onConfirm={confirm} />);
+  const input = screen.getByRole("textbox", { name: "Bid amount" }) as HTMLInputElement;
+  expect(input.value).toBe("180");
+  fireEvent.change(input, { target: { value: "160" } });
+  fireEvent.click(screen.getByRole("button", { name: "Place bid" }));
+  expect(confirm).toHaveBeenCalledExactlyOnceWith(160);
+});

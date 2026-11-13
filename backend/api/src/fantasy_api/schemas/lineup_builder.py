@@ -32,6 +32,10 @@ class BuildPreferences(BaseModel):
     allow_buying: bool = False
     allow_selling: bool = False
     include_trading_purchases: bool = False
+    require_nonnegative_cash: bool = False
+    allow_immediate_sale: bool = False
+    bid_strategy: Literal["market_value", "max_profitable"] = "market_value"
+    min_bid_return: Decimal | None = Field(default=None, ge=0, le=1)
     max_candidates: int = Field(default=5, ge=1, le=20, strict=True)
     explanation: ExplanationPreferences = Field(default_factory=ExplanationPreferences)
 
@@ -49,6 +53,12 @@ class BuildPreferences(BaseModel):
             raise ValueError("trading purchases require buying permission")
         if self.explanation.reasoning_effort and not self.explanation.enabled:
             raise ValueError("reasoning effort requires explanations")
+        if self.require_nonnegative_cash and not self.allow_selling:
+            raise ValueError("a non-negative balance requires selling permission")
+        if self.allow_immediate_sale and not self.allow_selling:
+            raise ValueError("immediate sales require selling permission")
+        if self.min_bid_return is not None and self.bid_strategy != "max_profitable":
+            raise ValueError("a minimum bid return requires the max_profitable bid strategy")
         return self
 
 
@@ -82,6 +92,19 @@ class SectionScore(FlexibleModel):
     effective_weight: Decimal
 
 
+class BidSuggestion(FlexibleModel):
+    """Suggested market bid and the evidence behind it; never placed by the builder."""
+
+    strategy: Literal["market_value", "max_profitable"]
+    amount: int = Field(ge=0)
+    default_bid: int = Field(ge=0)
+    competing_bids: int = Field(ge=0)
+    mpb: int | None = None
+    return_rate: Decimal | None = None
+    min_return: Decimal | None = None
+    status: Literal["default", "profitable", "non_profitable", "insufficient_history"]
+
+
 class ScoredPlayer(FlexibleModel):
     """Master identity, eligibility and executable read-only route metadata."""
 
@@ -103,6 +126,13 @@ class ScoredPlayer(FlexibleModel):
     settlement_at: AwareDatetime | None = None
     clause_price: int | None = None
     sale_settlement_at: AwareDatetime | None = None
+    sale_offer_id: str | None = None
+    sale_offer_market_id: str | None = None
+    sale_offer_amount: int | None = Field(default=None, ge=0)
+    sale_offer_expires_at: AwareDatetime | None = None
+    listed_for_sale: bool = False
+    competing_bids: int | None = Field(default=None, ge=0)
+    bid_suggestion: BidSuggestion | None = None
 
 
 class TargetWeek(FlexibleModel):
@@ -115,11 +145,24 @@ class TargetWeek(FlexibleModel):
     protection_deadline: AwareDatetime
 
 
+class TradeAlternative(FlexibleModel):
+    """Lower-certainty route shown beside a step; never counted in projected cash."""
+
+    method: Literal["direct_offer"]
+    suggested_amount: int = Field(ge=0)
+    conditions: list[str]
+
+
 class TradeStep(FlexibleModel):
-    """Conditional market-value estimate with balances after settlement."""
+    """Conditional estimate with balances after settlement.
+
+    ``conditions`` holds machine-readable codes (for example ``below_market_value``,
+    ``loses_half_market_value`` or ``insufficient_history``).
+    """
 
     action: Literal["sell", "buy"]
     player_id: str
+    player_team_id: str | None = None
     method: str
     estimate: int
     settlement_at: AwareDatetime
@@ -128,6 +171,21 @@ class TradeStep(FlexibleModel):
     squad_count_after: int
     debt_limit: int
     conditions: list[str]
+    market_value: int | None = None
+    offer_id: str | None = None
+    offer_market_id: str | None = None
+    offer_expires_at: AwareDatetime | None = None
+    bid_suggestion: BidSuggestion | None = None
+    alternatives: list[TradeAlternative] = Field(default_factory=list)
+
+
+class ListingSuggestion(FlexibleModel):
+    """Owned non-starter worth listing; listing money is never counted as cash."""
+
+    player_id: str
+    player_team_id: str
+    suggested_price: int = Field(ge=0)
+    reason: Literal["not_listed", "listed_without_offer"]
 
 
 class TradePlan(FlexibleModel):
@@ -143,6 +201,10 @@ class TradePlan(FlexibleModel):
     squad_value: int
     squad_count: int
     reserved_squad_slots: int = Field(default=0, ge=0)
+    funding_status: Literal["funded", "debt_within_limit", "needs_sales"] = "funded"
+    final_floor: int = 0
+    shortfall: int = Field(default=0, ge=0)
+    listing_suggestions: list[ListingSuggestion] = Field(default_factory=list)
 
 
 class Candidate(FlexibleModel):
@@ -168,7 +230,7 @@ class BuildResponse(FlexibleModel):
     """Replayable recommendations and truthful bounded-search status."""
 
     build_id: str
-    rules_version: str = "2026-10-15.1"
+    rules_version: str = "2026-11-12.1"
     generated_at: datetime
     league_id: str
     team_id: str

@@ -1,7 +1,7 @@
 {
   "payload": {
     "build_id": "fixture",
-    "rules_version": "2026-10-15.1",
+    "rules_version": "2026-11-12.1",
     "generated_at": "2026-10-14T12:00:00Z",
     "league_id": "l1",
     "team_id": "t1",
@@ -41,7 +41,14 @@
             "acquisition_method": null,
             "settlement_at": null,
             "clause_price": null,
-            "sale_settlement_at": null
+            "sale_settlement_at": null,
+            "sale_offer_id": null,
+            "sale_offer_market_id": null,
+            "sale_offer_amount": null,
+            "sale_offer_expires_at": null,
+            "listed_for_sale": false,
+            "competing_bids": null,
+            "bid_suggestion": null
           },
           {
             "player_id": "24",
@@ -61,7 +68,14 @@
             "acquisition_method": null,
             "settlement_at": null,
             "clause_price": null,
-            "sale_settlement_at": null
+            "sale_settlement_at": null,
+            "sale_offer_id": null,
+            "sale_offer_market_id": null,
+            "sale_offer_amount": null,
+            "sale_offer_expires_at": null,
+            "listed_for_sale": false,
+            "competing_bids": null,
+            "bid_suggestion": null
           },
           {
             "player_id": "23",
@@ -81,7 +95,14 @@
             "acquisition_method": null,
             "settlement_at": null,
             "clause_price": null,
-            "sale_settlement_at": null
+            "sale_settlement_at": null,
+            "sale_offer_id": null,
+            "sale_offer_market_id": null,
+            "sale_offer_amount": null,
+            "sale_offer_expires_at": null,
+            "listed_for_sale": false,
+            "competing_bids": null,
+            "bid_suggestion": null
           },
           {
             "player_id": "22",
@@ -101,7 +122,14 @@
             "acquisition_method": null,
             "settlement_at": null,
             "clause_price": null,
-            "sale_settlement_at": null
+            "sale_settlement_at": null,
+            "sale_offer_id": null,
+            "sale_offer_market_id": null,
+            "sale_offer_amount": null,
+            "sale_offer_expires_at": null,
+            "listed_for_sale": false,
+            "competing_bids": null,
+            "bid_suggestion": null
           },
           {
             "player_id": "21",
@@ -121,7 +149,14 @@
             "acquisition_method": null,
             "settlement_at": null,
             "clause_price": null,
-            "sale_settlement_at": null
+            "sale_settlement_at": null,
+            "sale_offer_id": null,
+            "sale_offer_market_id": null,
+            "sale_offer_amount": null,
+            "sale_offer_expires_at": null,
+            "listed_for_sale": false,
+            "competing_bids": null,
+            "bid_suggestion": null
           },
           {
             "player_id": "34",
@@ -141,7 +176,14 @@
             "acquisition_method": null,
             "settlement_at": null,
             "clause_price": null,
-            "sale_settlement_at": null
+            "sale_settlement_at": null,
+            "sale_offer_id": null,
+            "sale_offer_market_id": null,
+            "sale_offer_amount": null,
+            "sale_offer_expires_at": null,
+            "listed_for_sale": false,
+            "competing_bids": null,
+            "bid_suggestion": null
           },
           {
             "player_id": "33",
@@ -161,7 +203,14 @@
             "acquisition_method": null,
             "settlement_at": null,
             "clause_price": null,
-            "sale_settlement_at": null
+            "sale_settlement_at": null,
+            "sale_offer_id": null,
+            "sale_offer_market_id": null,
+            "sale_offer_amount": null,
+            "sale_offer_expires_at": null,
+            "listed_for_sale": false,
+            "competing_bids": null,
+            "bid_suggestion": null
           },
           {
             "player_id": "32",
@@ -181,7 +230,14 @@
             "acquisition_method": null,
             "settlement_at": null,
             "clause_price": null,
-            "sale_settlement_at": null
+            "sale_settlement_at": null,
+            "sale_offer_id": null,
+            "sale_offer_market_id": null,
+            "sale_offer_amount": null,
+            "sale_offer_expires_at": null,
+            "listed_for_sale": false,
+            "competing_bids": null,
+            "bid_suggestion": null
           },
           {
             "player_id": "31",
@@ -201,7 +257,14 @@
             "acquisition_method": null,
             "settlement_at": null,
             "clause_price": null,
-            "sale_settlement_at": null
+            "sale_settlement_at": null,
+            "sale_offer_id": null,
+            "sale_offer_market_id": null,
+            "sale_offer_amount": null,
+            "sale_offer_expires_at": null,
+            "listed_for_sale": false,
+            "competing_bids": null,
+            "bid_suggestion": null
           },
           {
             "player_id": "43",
@@ -221,7 +284,14 @@
             "acquisition_method": null,
             "settlement_at": null,
             "clause_price": null,
-            "sale_settlement_at": null
+            "sale_settlement_at": null,
+            "sale_offer_id": null,
+            "sale_offer_market_id": null,
+            "sale_offer_amount": null,
+            "sale_offer_expires_at": null,
+            "listed_for_sale": false,
+            "competing_bids": null,
+            "bid_suggestion": null
           },
           {
             "player_id": "42",
@@ -241,7 +311,14 @@
             "acquisition_method": null,
             "settlement_at": null,
             "clause_price": null,
-            "sale_settlement_at": null
+            "sale_settlement_at": null,
+            "sale_offer_id": null,
+            "sale_offer_market_id": null,
+            "sale_offer_amount": null,
+            "sale_offer_expires_at": null,
+            "listed_for_sale": false,
+            "competing_bids": null,
+            "bid_suggestion": null
           }
         ],
         "total_lineup_score": "2.6",
@@ -290,7 +367,11 @@
           "projected_cash": 1000,
           "squad_value": 1600,
           "squad_count": 16,
-          "reserved_squad_slots": 0
+          "reserved_squad_slots": 0,
+          "funding_status": "funded",
+          "final_floor": 0,
+          "shortfall": 0,
+          "listing_suggestions": []
         }
       },
       {
@@ -316,7 +397,14 @@
             "acquisition_method": null,
             "settlement_at": null,
             "clause_price": null,
-            "sale_settlement_at": null
+            "sale_settlement_at": null,
+            "sale_offer_id": null,
+            "sale_offer_market_id": null,
+            "sale_offer_amount": null,
+            "sale_offer_expires_at": null,
+            "listed_for_sale": false,
+            "competing_bids": null,
+            "bid_suggestion": null
           },
           {
             "player_id": "24",
@@ -336,7 +424,14 @@
             "acquisition_method": null,
             "settlement_at": null,
             "clause_price": null,
-            "sale_settlement_at": null
+            "sale_settlement_at": null,
+            "sale_offer_id": null,
+            "sale_offer_market_id": null,
+            "sale_offer_amount": null,
+            "sale_offer_expires_at": null,
+            "listed_for_sale": false,
+            "competing_bids": null,
+            "bid_suggestion": null
           },
           {
             "player_id": "23",
@@ -356,7 +451,14 @@
             "acquisition_method": null,
             "settlement_at": null,
             "clause_price": null,
-            "sale_settlement_at": null
+            "sale_settlement_at": null,
+            "sale_offer_id": null,
+            "sale_offer_market_id": null,
+            "sale_offer_amount": null,
+            "sale_offer_expires_at": null,
+            "listed_for_sale": false,
+            "competing_bids": null,
+            "bid_suggestion": null
           },
           {
             "player_id": "22",
@@ -376,7 +478,14 @@
             "acquisition_method": null,
             "settlement_at": null,
             "clause_price": null,
-            "sale_settlement_at": null
+            "sale_settlement_at": null,
+            "sale_offer_id": null,
+            "sale_offer_market_id": null,
+            "sale_offer_amount": null,
+            "sale_offer_expires_at": null,
+            "listed_for_sale": false,
+            "competing_bids": null,
+            "bid_suggestion": null
           },
           {
             "player_id": "20",
@@ -396,7 +505,14 @@
             "acquisition_method": null,
             "settlement_at": null,
             "clause_price": null,
-            "sale_settlement_at": null
+            "sale_settlement_at": null,
+            "sale_offer_id": null,
+            "sale_offer_market_id": null,
+            "sale_offer_amount": null,
+            "sale_offer_expires_at": null,
+            "listed_for_sale": false,
+            "competing_bids": null,
+            "bid_suggestion": null
           },
           {
             "player_id": "34",
@@ -416,7 +532,14 @@
             "acquisition_method": null,
             "settlement_at": null,
             "clause_price": null,
-            "sale_settlement_at": null
+            "sale_settlement_at": null,
+            "sale_offer_id": null,
+            "sale_offer_market_id": null,
+            "sale_offer_amount": null,
+            "sale_offer_expires_at": null,
+            "listed_for_sale": false,
+            "competing_bids": null,
+            "bid_suggestion": null
           },
           {
             "player_id": "33",
@@ -436,7 +559,14 @@
             "acquisition_method": null,
             "settlement_at": null,
             "clause_price": null,
-            "sale_settlement_at": null
+            "sale_settlement_at": null,
+            "sale_offer_id": null,
+            "sale_offer_market_id": null,
+            "sale_offer_amount": null,
+            "sale_offer_expires_at": null,
+            "listed_for_sale": false,
+            "competing_bids": null,
+            "bid_suggestion": null
           },
           {
             "player_id": "32",
@@ -456,7 +586,14 @@
             "acquisition_method": null,
             "settlement_at": null,
             "clause_price": null,
-            "sale_settlement_at": null
+            "sale_settlement_at": null,
+            "sale_offer_id": null,
+            "sale_offer_market_id": null,
+            "sale_offer_amount": null,
+            "sale_offer_expires_at": null,
+            "listed_for_sale": false,
+            "competing_bids": null,
+            "bid_suggestion": null
           },
           {
             "player_id": "31",
@@ -476,7 +613,14 @@
             "acquisition_method": null,
             "settlement_at": null,
             "clause_price": null,
-            "sale_settlement_at": null
+            "sale_settlement_at": null,
+            "sale_offer_id": null,
+            "sale_offer_market_id": null,
+            "sale_offer_amount": null,
+            "sale_offer_expires_at": null,
+            "listed_for_sale": false,
+            "competing_bids": null,
+            "bid_suggestion": null
           },
           {
             "player_id": "43",
@@ -496,7 +640,14 @@
             "acquisition_method": null,
             "settlement_at": null,
             "clause_price": null,
-            "sale_settlement_at": null
+            "sale_settlement_at": null,
+            "sale_offer_id": null,
+            "sale_offer_market_id": null,
+            "sale_offer_amount": null,
+            "sale_offer_expires_at": null,
+            "listed_for_sale": false,
+            "competing_bids": null,
+            "bid_suggestion": null
           },
           {
             "player_id": "42",
@@ -516,7 +667,14 @@
             "acquisition_method": null,
             "settlement_at": null,
             "clause_price": null,
-            "sale_settlement_at": null
+            "sale_settlement_at": null,
+            "sale_offer_id": null,
+            "sale_offer_market_id": null,
+            "sale_offer_amount": null,
+            "sale_offer_expires_at": null,
+            "listed_for_sale": false,
+            "competing_bids": null,
+            "bid_suggestion": null
           }
         ],
         "total_lineup_score": "2.5",
@@ -565,7 +723,11 @@
           "projected_cash": 1000,
           "squad_value": 1600,
           "squad_count": 16,
-          "reserved_squad_slots": 0
+          "reserved_squad_slots": 0,
+          "funding_status": "funded",
+          "final_floor": 0,
+          "shortfall": 0,
+          "listing_suggestions": []
         }
       },
       {
@@ -591,7 +753,14 @@
             "acquisition_method": null,
             "settlement_at": null,
             "clause_price": null,
-            "sale_settlement_at": null
+            "sale_settlement_at": null,
+            "sale_offer_id": null,
+            "sale_offer_market_id": null,
+            "sale_offer_amount": null,
+            "sale_offer_expires_at": null,
+            "listed_for_sale": false,
+            "competing_bids": null,
+            "bid_suggestion": null
           },
           {
             "player_id": "24",
@@ -611,7 +780,14 @@
             "acquisition_method": null,
             "settlement_at": null,
             "clause_price": null,
-            "sale_settlement_at": null
+            "sale_settlement_at": null,
+            "sale_offer_id": null,
+            "sale_offer_market_id": null,
+            "sale_offer_amount": null,
+            "sale_offer_expires_at": null,
+            "listed_for_sale": false,
+            "competing_bids": null,
+            "bid_suggestion": null
           },
           {
             "player_id": "23",
@@ -631,7 +807,14 @@
             "acquisition_method": null,
             "settlement_at": null,
             "clause_price": null,
-            "sale_settlement_at": null
+            "sale_settlement_at": null,
+            "sale_offer_id": null,
+            "sale_offer_market_id": null,
+            "sale_offer_amount": null,
+            "sale_offer_expires_at": null,
+            "listed_for_sale": false,
+            "competing_bids": null,
+            "bid_suggestion": null
           },
           {
             "player_id": "22",
@@ -651,7 +834,14 @@
             "acquisition_method": null,
             "settlement_at": null,
             "clause_price": null,
-            "sale_settlement_at": null
+            "sale_settlement_at": null,
+            "sale_offer_id": null,
+            "sale_offer_market_id": null,
+            "sale_offer_amount": null,
+            "sale_offer_expires_at": null,
+            "listed_for_sale": false,
+            "competing_bids": null,
+            "bid_suggestion": null
           },
           {
             "player_id": "21",
@@ -671,7 +861,14 @@
             "acquisition_method": null,
             "settlement_at": null,
             "clause_price": null,
-            "sale_settlement_at": null
+            "sale_settlement_at": null,
+            "sale_offer_id": null,
+            "sale_offer_market_id": null,
+            "sale_offer_amount": null,
+            "sale_offer_expires_at": null,
+            "listed_for_sale": false,
+            "competing_bids": null,
+            "bid_suggestion": null
           },
           {
             "player_id": "34",
@@ -691,7 +888,14 @@
             "acquisition_method": null,
             "settlement_at": null,
             "clause_price": null,
-            "sale_settlement_at": null
+            "sale_settlement_at": null,
+            "sale_offer_id": null,
+            "sale_offer_market_id": null,
+            "sale_offer_amount": null,
+            "sale_offer_expires_at": null,
+            "listed_for_sale": false,
+            "competing_bids": null,
+            "bid_suggestion": null
           },
           {
             "player_id": "33",
@@ -711,7 +915,14 @@
             "acquisition_method": null,
             "settlement_at": null,
             "clause_price": null,
-            "sale_settlement_at": null
+            "sale_settlement_at": null,
+            "sale_offer_id": null,
+            "sale_offer_market_id": null,
+            "sale_offer_amount": null,
+            "sale_offer_expires_at": null,
+            "listed_for_sale": false,
+            "competing_bids": null,
+            "bid_suggestion": null
           },
           {
             "player_id": "32",
@@ -731,7 +942,14 @@
             "acquisition_method": null,
             "settlement_at": null,
             "clause_price": null,
-            "sale_settlement_at": null
+            "sale_settlement_at": null,
+            "sale_offer_id": null,
+            "sale_offer_market_id": null,
+            "sale_offer_amount": null,
+            "sale_offer_expires_at": null,
+            "listed_for_sale": false,
+            "competing_bids": null,
+            "bid_suggestion": null
           },
           {
             "player_id": "31",
@@ -751,7 +969,14 @@
             "acquisition_method": null,
             "settlement_at": null,
             "clause_price": null,
-            "sale_settlement_at": null
+            "sale_settlement_at": null,
+            "sale_offer_id": null,
+            "sale_offer_market_id": null,
+            "sale_offer_amount": null,
+            "sale_offer_expires_at": null,
+            "listed_for_sale": false,
+            "competing_bids": null,
+            "bid_suggestion": null
           },
           {
             "player_id": "43",
@@ -771,7 +996,14 @@
             "acquisition_method": null,
             "settlement_at": null,
             "clause_price": null,
-            "sale_settlement_at": null
+            "sale_settlement_at": null,
+            "sale_offer_id": null,
+            "sale_offer_market_id": null,
+            "sale_offer_amount": null,
+            "sale_offer_expires_at": null,
+            "listed_for_sale": false,
+            "competing_bids": null,
+            "bid_suggestion": null
           },
           {
             "player_id": "42",
@@ -791,7 +1023,14 @@
             "acquisition_method": null,
             "settlement_at": null,
             "clause_price": null,
-            "sale_settlement_at": null
+            "sale_settlement_at": null,
+            "sale_offer_id": null,
+            "sale_offer_market_id": null,
+            "sale_offer_amount": null,
+            "sale_offer_expires_at": null,
+            "listed_for_sale": false,
+            "competing_bids": null,
+            "bid_suggestion": null
           }
         ],
         "total_lineup_score": "2.5",
@@ -840,7 +1079,11 @@
           "projected_cash": 1000,
           "squad_value": 1600,
           "squad_count": 16,
-          "reserved_squad_slots": 0
+          "reserved_squad_slots": 0,
+          "funding_status": "funded",
+          "final_floor": 0,
+          "shortfall": 0,
+          "listing_suggestions": []
         }
       },
       {
@@ -866,7 +1109,14 @@
             "acquisition_method": null,
             "settlement_at": null,
             "clause_price": null,
-            "sale_settlement_at": null
+            "sale_settlement_at": null,
+            "sale_offer_id": null,
+            "sale_offer_market_id": null,
+            "sale_offer_amount": null,
+            "sale_offer_expires_at": null,
+            "listed_for_sale": false,
+            "competing_bids": null,
+            "bid_suggestion": null
           },
           {
             "player_id": "24",
@@ -886,7 +1136,14 @@
             "acquisition_method": null,
             "settlement_at": null,
             "clause_price": null,
-            "sale_settlement_at": null
+            "sale_settlement_at": null,
+            "sale_offer_id": null,
+            "sale_offer_market_id": null,
+            "sale_offer_amount": null,
+            "sale_offer_expires_at": null,
+            "listed_for_sale": false,
+            "competing_bids": null,
+            "bid_suggestion": null
           },
           {
             "player_id": "23",
@@ -906,7 +1163,14 @@
             "acquisition_method": null,
             "settlement_at": null,
             "clause_price": null,
-            "sale_settlement_at": null
+            "sale_settlement_at": null,
+            "sale_offer_id": null,
+            "sale_offer_market_id": null,
+            "sale_offer_amount": null,
+            "sale_offer_expires_at": null,
+            "listed_for_sale": false,
+            "competing_bids": null,
+            "bid_suggestion": null
           },
           {
             "player_id": "22",
@@ -926,7 +1190,14 @@
             "acquisition_method": null,
             "settlement_at": null,
             "clause_price": null,
-            "sale_settlement_at": null
+            "sale_settlement_at": null,
+            "sale_offer_id": null,
+            "sale_offer_market_id": null,
+            "sale_offer_amount": null,
+            "sale_offer_expires_at": null,
+            "listed_for_sale": false,
+            "competing_bids": null,
+            "bid_suggestion": null
           },
           {
             "player_id": "21",
@@ -946,7 +1217,14 @@
             "acquisition_method": null,
             "settlement_at": null,
             "clause_price": null,
-            "sale_settlement_at": null
+            "sale_settlement_at": null,
+            "sale_offer_id": null,
+            "sale_offer_market_id": null,
+            "sale_offer_amount": null,
+            "sale_offer_expires_at": null,
+            "listed_for_sale": false,
+            "competing_bids": null,
+            "bid_suggestion": null
           },
           {
             "player_id": "34",
@@ -966,7 +1244,14 @@
             "acquisition_method": null,
             "settlement_at": null,
             "clause_price": null,
-            "sale_settlement_at": null
+            "sale_settlement_at": null,
+            "sale_offer_id": null,
+            "sale_offer_market_id": null,
+            "sale_offer_amount": null,
+            "sale_offer_expires_at": null,
+            "listed_for_sale": false,
+            "competing_bids": null,
+            "bid_suggestion": null
           },
           {
             "player_id": "33",
@@ -986,7 +1271,14 @@
             "acquisition_method": null,
             "settlement_at": null,
             "clause_price": null,
-            "sale_settlement_at": null
+            "sale_settlement_at": null,
+            "sale_offer_id": null,
+            "sale_offer_market_id": null,
+            "sale_offer_amount": null,
+            "sale_offer_expires_at": null,
+            "listed_for_sale": false,
+            "competing_bids": null,
+            "bid_suggestion": null
           },
           {
             "player_id": "32",
@@ -1006,7 +1298,14 @@
             "acquisition_method": null,
             "settlement_at": null,
             "clause_price": null,
-            "sale_settlement_at": null
+            "sale_settlement_at": null,
+            "sale_offer_id": null,
+            "sale_offer_market_id": null,
+            "sale_offer_amount": null,
+            "sale_offer_expires_at": null,
+            "listed_for_sale": false,
+            "competing_bids": null,
+            "bid_suggestion": null
           },
           {
             "player_id": "30",
@@ -1026,7 +1325,14 @@
             "acquisition_method": null,
             "settlement_at": null,
             "clause_price": null,
-            "sale_settlement_at": null
+            "sale_settlement_at": null,
+            "sale_offer_id": null,
+            "sale_offer_market_id": null,
+            "sale_offer_amount": null,
+            "sale_offer_expires_at": null,
+            "listed_for_sale": false,
+            "competing_bids": null,
+            "bid_suggestion": null
           },
           {
             "player_id": "43",
@@ -1046,7 +1352,14 @@
             "acquisition_method": null,
             "settlement_at": null,
             "clause_price": null,
-            "sale_settlement_at": null
+            "sale_settlement_at": null,
+            "sale_offer_id": null,
+            "sale_offer_market_id": null,
+            "sale_offer_amount": null,
+            "sale_offer_expires_at": null,
+            "listed_for_sale": false,
+            "competing_bids": null,
+            "bid_suggestion": null
           },
           {
             "player_id": "42",
@@ -1066,7 +1379,14 @@
             "acquisition_method": null,
             "settlement_at": null,
             "clause_price": null,
-            "sale_settlement_at": null
+            "sale_settlement_at": null,
+            "sale_offer_id": null,
+            "sale_offer_market_id": null,
+            "sale_offer_amount": null,
+            "sale_offer_expires_at": null,
+            "listed_for_sale": false,
+            "competing_bids": null,
+            "bid_suggestion": null
           }
         ],
         "total_lineup_score": "2.5",
@@ -1115,7 +1435,11 @@
           "projected_cash": 1000,
           "squad_value": 1600,
           "squad_count": 16,
-          "reserved_squad_slots": 0
+          "reserved_squad_slots": 0,
+          "funding_status": "funded",
+          "final_floor": 0,
+          "shortfall": 0,
+          "listing_suggestions": []
         }
       },
       {
@@ -1141,7 +1465,14 @@
             "acquisition_method": null,
             "settlement_at": null,
             "clause_price": null,
-            "sale_settlement_at": null
+            "sale_settlement_at": null,
+            "sale_offer_id": null,
+            "sale_offer_market_id": null,
+            "sale_offer_amount": null,
+            "sale_offer_expires_at": null,
+            "listed_for_sale": false,
+            "competing_bids": null,
+            "bid_suggestion": null
           },
           {
             "player_id": "24",
@@ -1161,7 +1492,14 @@
             "acquisition_method": null,
             "settlement_at": null,
             "clause_price": null,
-            "sale_settlement_at": null
+            "sale_settlement_at": null,
+            "sale_offer_id": null,
+            "sale_offer_market_id": null,
+            "sale_offer_amount": null,
+            "sale_offer_expires_at": null,
+            "listed_for_sale": false,
+            "competing_bids": null,
+            "bid_suggestion": null
           },
           {
             "player_id": "23",
@@ -1181,7 +1519,14 @@
             "acquisition_method": null,
             "settlement_at": null,
             "clause_price": null,
-            "sale_settlement_at": null
+            "sale_settlement_at": null,
+            "sale_offer_id": null,
+            "sale_offer_market_id": null,
+            "sale_offer_amount": null,
+            "sale_offer_expires_at": null,
+            "listed_for_sale": false,
+            "competing_bids": null,
+            "bid_suggestion": null
           },
           {
             "player_id": "22",
@@ -1201,7 +1546,14 @@
             "acquisition_method": null,
             "settlement_at": null,
             "clause_price": null,
-            "sale_settlement_at": null
+            "sale_settlement_at": null,
+            "sale_offer_id": null,
+            "sale_offer_market_id": null,
+            "sale_offer_amount": null,
+            "sale_offer_expires_at": null,
+            "listed_for_sale": false,
+            "competing_bids": null,
+            "bid_suggestion": null
           },
           {
             "player_id": "21",
@@ -1221,7 +1573,14 @@
             "acquisition_method": null,
             "settlement_at": null,
             "clause_price": null,
-            "sale_settlement_at": null
+            "sale_settlement_at": null,
+            "sale_offer_id": null,
+            "sale_offer_market_id": null,
+            "sale_offer_amount": null,
+            "sale_offer_expires_at": null,
+            "listed_for_sale": false,
+            "competing_bids": null,
+            "bid_suggestion": null
           },
           {
             "player_id": "34",
@@ -1241,7 +1600,14 @@
             "acquisition_method": null,
             "settlement_at": null,
             "clause_price": null,
-            "sale_settlement_at": null
+            "sale_settlement_at": null,
+            "sale_offer_id": null,
+            "sale_offer_market_id": null,
+            "sale_offer_amount": null,
+            "sale_offer_expires_at": null,
+            "listed_for_sale": false,
+            "competing_bids": null,
+            "bid_suggestion": null
           },
           {
             "player_id": "33",
@@ -1261,7 +1627,14 @@
             "acquisition_method": null,
             "settlement_at": null,
             "clause_price": null,
-            "sale_settlement_at": null
+            "sale_settlement_at": null,
+            "sale_offer_id": null,
+            "sale_offer_market_id": null,
+            "sale_offer_amount": null,
+            "sale_offer_expires_at": null,
+            "listed_for_sale": false,
+            "competing_bids": null,
+            "bid_suggestion": null
           },
           {
             "player_id": "32",
@@ -1281,7 +1654,14 @@
             "acquisition_method": null,
             "settlement_at": null,
             "clause_price": null,
-            "sale_settlement_at": null
+            "sale_settlement_at": null,
+            "sale_offer_id": null,
+            "sale_offer_market_id": null,
+            "sale_offer_amount": null,
+            "sale_offer_expires_at": null,
+            "listed_for_sale": false,
+            "competing_bids": null,
+            "bid_suggestion": null
           },
           {
             "player_id": "31",
@@ -1301,7 +1681,14 @@
             "acquisition_method": null,
             "settlement_at": null,
             "clause_price": null,
-            "sale_settlement_at": null
+            "sale_settlement_at": null,
+            "sale_offer_id": null,
+            "sale_offer_market_id": null,
+            "sale_offer_amount": null,
+            "sale_offer_expires_at": null,
+            "listed_for_sale": false,
+            "competing_bids": null,
+            "bid_suggestion": null
           },
           {
             "player_id": "43",
@@ -1321,7 +1708,14 @@
             "acquisition_method": null,
             "settlement_at": null,
             "clause_price": null,
-            "sale_settlement_at": null
+            "sale_settlement_at": null,
+            "sale_offer_id": null,
+            "sale_offer_market_id": null,
+            "sale_offer_amount": null,
+            "sale_offer_expires_at": null,
+            "listed_for_sale": false,
+            "competing_bids": null,
+            "bid_suggestion": null
           },
           {
             "player_id": "41",
@@ -1341,7 +1735,14 @@
             "acquisition_method": null,
             "settlement_at": null,
             "clause_price": null,
-            "sale_settlement_at": null
+            "sale_settlement_at": null,
+            "sale_offer_id": null,
+            "sale_offer_market_id": null,
+            "sale_offer_amount": null,
+            "sale_offer_expires_at": null,
+            "listed_for_sale": false,
+            "competing_bids": null,
+            "bid_suggestion": null
           }
         ],
         "total_lineup_score": "2.5",
@@ -1390,7 +1791,11 @@
           "projected_cash": 1000,
           "squad_value": 1600,
           "squad_count": 16,
-          "reserved_squad_slots": 0
+          "reserved_squad_slots": 0,
+          "funding_status": "funded",
+          "final_floor": 0,
+          "shortfall": 0,
+          "listing_suggestions": []
         }
       }
     ],

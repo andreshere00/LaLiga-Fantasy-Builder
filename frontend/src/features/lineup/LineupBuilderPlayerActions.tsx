@@ -7,6 +7,7 @@ import type { BuilderCandidate } from "../../api/schemas";
 import { useAuth } from "../../auth/AuthProvider";
 import { Button } from "../../components/ui/Button";
 import { Dialog } from "../../components/ui/Dialog";
+import { formatEuro } from "../../api/format";
 import { useNow } from "../../hooks/useNow";
 import { MarketActionDialogs } from "../market/actions/MarketActionDialogs";
 import { resolveMarketActionOffers, squadSlotAvailableForNewBid } from "../market/actions/marketActions";
@@ -89,10 +90,17 @@ export function LineupBuilderPlayerActions({ player, opponentTeamIds, clausesDea
       className="lineup-builder-dialog" footer={<Button variant="secondary" shape="square" onClick={onClose}>{t("Close")}</Button>}>
       {loading ? <p role="status">{t("Checking current acquisition options…")}</p> : owned ? <p>{t("This player is already in your squad. Rebuild to update the recommendation.")}</p>
         : offers.length === 0 ? <p role="status">{t("No verified acquisition route is currently available. Refresh your league and try again.")}</p>
-          : <div className="lineup-builder-section">{offers.map((offer) => <div key={offer.type}>
+          : <div className="lineup-builder-section">{player.bidSuggestion && <p className="fb-helper">
+            {t("Suggested bid: {{0}}", { 0: formatEuro(player.bidSuggestion.amount) })}
+            {player.bidSuggestion.returnRate != null && t(" · expected return {{0}}%", { 0: (player.bidSuggestion.returnRate * 100).toFixed(1) })}
+          </p>}
+          {player.source === "opponents" && <p className="fb-helper">{t("A direct offer depends on the owner accepting it, so it never counts toward your plan's cash.")}</p>}
+          {offers.map((offer) => <div key={offer.type}>
             <Button shape="square" disabled={!offer.enabled || actions.actionPending} onClick={() => {
               if (!row || !offer.enabled) return;
-              if (offer.type === "bid") actions.openBid(row, offer.kind);
+              // Prefill the builder's suggested bid (or the market value for a direct offer).
+              if (offer.type === "bid") actions.openBid(row, offer.kind, player.source === "opponents"
+                ? player.marketValue : player.bidSuggestion?.amount);
               else actions.openClause(row, offer.amount);
             }}>{t(offer.label)}</Button>
             {offer.disabledReason && <p className="fb-helper">{t(offer.disabledReason)}</p>}

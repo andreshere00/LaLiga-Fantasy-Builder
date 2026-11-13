@@ -243,12 +243,12 @@ export function useMarketActions(onAcquisitionSuccess?: () => void) {
     },
   });
 
-  const openBid = useCallback((row: MarketRow, kind: BidActionKind) => {
+  const openBid = useCallback((row: MarketRow, kind: BidActionKind, suggestedAmount?: number) => {
     setMessage(null);
     setPendingBid({
       row,
       kind,
-      initialAmount: kind === "modify" ? (row.myBid?.money ?? null) : null,
+      initialAmount: kind === "modify" ? (row.myBid?.money ?? null) : (suggestedAmount ?? null),
     });
   }, []);
 

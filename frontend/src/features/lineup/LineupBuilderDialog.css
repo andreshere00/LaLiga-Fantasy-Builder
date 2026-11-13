@@ -94,9 +94,6 @@
 }
 .lineup-builder-exclusions { min-width:0; border:1px solid var(--fb-line); background:var(--fb-surface); }
 .lineup-builder-exclusions > summary { display:flex; align-items:center; gap:12px; min-height:48px; padding:12px 16px; list-style:none; color:var(--fb-secondary); background:var(--fb-subtle); font-size:14px; font-weight:600; cursor:pointer; }
-.lineup-builder-exclusions > summary::-webkit-details-marker { display:none; }
-.lineup-builder-exclusions > summary::before { content:"▸"; color:var(--fb-primary); }
-.lineup-builder-exclusions[open] > summary::before { content:"▾"; }
 .lineup-builder-exclusions > summary:hover { background:var(--fb-coral); color:var(--fb-on-coral); }
 .lineup-builder-exclusions-hint { margin-left:auto; font-size:12px; font-weight:400; }
 .lineup-builder-exclusions-scroll { max-height:360px; overflow:auto; }
@@ -126,12 +123,8 @@
 .lineup-builder-preview-player > span:not(.fb-avatar) { font-weight:600; }
 .lineup-builder-preview small { color:var(--fb-muted); }
 .lineup-builder-candidate details { margin:12px 0; }
-.lineup-builder-candidate summary { cursor:pointer; }
 .lineup-builder-trades { border:1px solid var(--fb-line); background:var(--fb-surface); }
 .lineup-builder-trades > summary { display:flex; align-items:center; gap:10px; padding:12px; min-height:48px; background:var(--fb-subtle); font-size:14px; font-weight:600; list-style:none; }
-.lineup-builder-trades > summary::-webkit-details-marker { display:none; }
-.lineup-builder-trades > summary::before { content:"▸"; color:var(--fb-primary); }
-.lineup-builder-trades[open] > summary::before { content:"▾"; }
 .lineup-builder-trade-count { margin-left:auto; white-space:nowrap; color:var(--fb-muted); font-size:12px; font-weight:400; }
 .lineup-builder-trades-body { display:grid; gap:20px; padding:16px; }
 .lineup-builder-projection,.lineup-builder-deadlines,.lineup-builder-transaction-balances { display:grid; grid-template-columns:repeat(4,minmax(0,1fr)); gap:12px; margin:0; }
@@ -162,6 +155,7 @@
 .lineup-builder-trade-conditions { margin-top:12px; border-left:2px solid var(--fb-warning); padding-left:10px; font-size:12px; }
 .lineup-builder-trade-conditions > span { font-weight:600; }
 .lineup-builder-trade-conditions ul { margin:6px 0 0; padding-left:16px; color:var(--fb-muted); line-height:1.6; }
+.lineup-builder-trade-actions { display:flex; flex-wrap:wrap; gap:8px; margin-top:12px; }
 @media(max-width:700px) {
   .lineup-builder-projection,.lineup-builder-transaction-balances { grid-template-columns:repeat(2,minmax(0,1fr)); }
   .lineup-builder-retained { grid-template-columns:repeat(2,minmax(0,1fr)); }
@@ -178,9 +172,6 @@
 
 .lineup-builder-player-reasoning { border:1px solid var(--fb-line); background:var(--fb-surface); }
 .lineup-builder-player-reasoning > summary { padding:12px; display:flex; align-items:center; flex-wrap:wrap; gap:12px; }
-.lineup-builder-player-reasoning > summary::before { content:"▸"; }
-.lineup-builder-player-reasoning[open] > summary::before { content:"▾"; }
-.lineup-builder-player-reasoning > summary::-webkit-details-marker { display:none; }
 .lineup-builder-player-reasoning > summary:focus-visible { outline:2px solid var(--fb-focus); outline-offset:2px; }
 .lineup-builder-score-summary { display:flex; flex-wrap:wrap; gap:8px; margin-left:auto; font-size:12px; }
 .lineup-builder-score-summary > span { padding:6px 8px; }
@@ -235,8 +226,7 @@
 .lineup-builder-dialog .lineup-builder input[type="checkbox"]:checked::after { content:""; width:8px; height:4px; border:solid var(--fb-on-brand); border-width:0 0 2px 2px; transform:rotate(-45deg) translateY(-1px); }
 .lineup-builder input[type="checkbox"]:focus-visible { outline:2px solid var(--fb-focus); outline-offset:3px; }
 .lineup-builder-source:focus-within { outline:2px solid var(--fb-focus); outline-offset:2px; }
-.lineup-builder-trade-options { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:4px 16px; }
-.lineup-builder-trade-options label,.lineup-builder-section > .lineup-builder-trading-option { display:flex; align-items:center; gap:10px; min-height:44px; font-size:13px; cursor:pointer; }
+.lineup-builder-master-option,.lineup-builder-option > label { display:flex; align-items:center; gap:10px; min-height:44px; font-size:13px; cursor:pointer; }
 .lineup-builder-preview-note { margin:0; padding:10px 12px; background:var(--fb-subtle); color:var(--fb-muted); font-size:12px; line-height:1.5; border-left:2px solid var(--fb-control-line); }
 .lineup-builder-scope-hint { margin:0; color:var(--fb-secondary); font-size:13px; line-height:1.5; }
 .lineup-builder-section-help { margin:0; color:var(--fb-muted); font-size:13px; line-height:1.5; }
@@ -255,7 +245,7 @@
   .lineup-builder-dialog .fb-dialog-heading { padding:16px; }
   .lineup-builder-dialog .fb-dialog-body { padding:14px 16px 20px; }
   .lineup-builder-dialog .fb-dialog-footer { padding:12px 16px max(12px,env(safe-area-inset-bottom)); }
-  .lineup-builder-checks,.lineup-builder-trade-options,.lineup-builder-player-picker { grid-template-columns:1fr; }
+  .lineup-builder-checks,.lineup-builder-choices,.lineup-builder-player-picker { grid-template-columns:1fr; }
   .lineup-builder-checks .lineup-builder-source { align-items:center; min-height:60px; padding:10px 12px; }
   .lineup-builder-source small { margin-top:2px; }
   .lineup-builder-player-picker { gap:12px; }
@@ -263,12 +253,10 @@
   .lineup-builder-dialog .fb-dialog-footer > .fb-button { flex:1; }
 }
 .lineup-builder-locks { min-width:0; }
-.lineup-builder-locks > summary { display:flex; align-items:center; justify-content:space-between; gap:12px; min-height:44px; padding:10px 12px; border:1px solid var(--fb-control-line); cursor:pointer; list-style:none; font-size:13px; font-weight:600; }
-.lineup-builder-locks > summary::-webkit-details-marker { display:none; }
+.lineup-builder-locks > summary { display:flex; align-items:center; gap:12px; min-height:44px; padding:10px 12px; border:1px solid var(--fb-control-line); cursor:pointer; list-style:none; font-size:13px; font-weight:600; }
 .lineup-builder-locks > summary:focus-visible { outline:2px solid var(--fb-focus); outline-offset:2px; }
 .lineup-builder-locks > summary:hover { background:var(--fb-subtle); }
 .lineup-builder-locks[open] > summary { margin-bottom:12px; }
-.lineup-builder-locks[open] > summary > span { transform:rotate(45deg); }
 
 .lineup-builder-error { padding:16px; border:1px solid var(--fb-line); border-left:3px solid var(--fb-primary); background:var(--fb-subtle); font-size:13px; line-height:1.6; }
 .lineup-builder-error h3 { margin:0 0 8px; font:700 15px/1.4 var(--fb-font-body); }
@@ -276,3 +264,44 @@
 .lineup-builder-error ul { margin:12px 0; padding-left:20px; }
 .lineup-builder-error li + li { margin-top:6px; }
 .lineup-builder-error-recovery { font-weight:600; }
+.lineup-builder-funding { margin:8px 0; padding:10px 12px; border-left:3px solid var(--fb-warning); background:var(--fb-subtle); font-size:13px; }
+
+/* One disclosure convention for the whole builder: a ▸/▾ marker before the label. */
+.lineup-builder-dialog summary { cursor:pointer; list-style:none; }
+.lineup-builder-dialog summary::-webkit-details-marker { display:none; }
+.lineup-builder-dialog summary::before { content:"▸"; flex:none; color:var(--fb-primary); }
+.lineup-builder-dialog details[open] > summary::before { content:"▾"; }
+.lineup-builder-dialog summary:focus-visible { outline:2px solid var(--fb-focus); outline-offset:2px; }
+.lineup-builder-candidate-details > summary { display:flex; align-items:center; gap:10px; min-height:44px; font-size:14px; font-weight:600; }
+
+/* Purchases and sales are separate domains: a master switch, then its dependent options. */
+.lineup-builder-master-option { font-weight:600; }
+.lineup-builder-dependent { display:grid; gap:12px; min-width:0; margin:0; padding:4px 0 4px 14px; border:0; border-left:2px solid var(--fb-control-line); }
+.lineup-builder-dependent:disabled { opacity:.55; }
+.lineup-builder-dependent:disabled :is(label,input) { cursor:not-allowed; }
+.lineup-builder-dependent-hint { margin:0; color:var(--fb-secondary); font-size:12px; }
+.lineup-builder-option { display:grid; gap:2px; }
+.lineup-builder-option > label { min-height:36px; }
+.lineup-builder-option > .lineup-builder-section-help { padding-left:26px; }
+.lineup-builder-option[data-tone="warning"] { padding:8px 10px; border-left:3px solid var(--fb-warning); background:var(--fb-subtle); }
+.lineup-builder-subheading { font-size:13px; font-weight:600; }
+.lineup-builder-bid { display:grid; gap:8px; }
+.lineup-builder-choices { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:8px; }
+.lineup-builder-choice { display:flex; align-items:flex-start; gap:10px; padding:12px; border:1px solid var(--fb-control-line); background:var(--fb-surface); cursor:pointer; }
+.lineup-builder-choice[data-selected="true"] { border-color:var(--fb-primary); box-shadow:inset 0 -2px var(--fb-primary); background:var(--fb-subtle); }
+.lineup-builder-choice:focus-within { outline:2px solid var(--fb-focus); outline-offset:2px; }
+.lineup-builder-choice > span { min-width:0; }
+.lineup-builder-choice strong { display:block; font-size:13px; font-weight:600; }
+.lineup-builder-choice small { display:block; margin-top:4px; color:var(--fb-muted); font-size:12px; line-height:1.4; }
+.lineup-builder-return { max-width:280px; }
+.lineup-builder-return-input { display:flex; align-items:center; gap:8px; }
+.lineup-builder-return-input .fb-input { width:100px; }
+.lineup-builder-field-error { color:var(--fb-failure) !important; }
+
+/* Candidate headline numbers, scannable instead of one run-on sentence. */
+.lineup-builder-candidate-metrics { display:grid; grid-template-columns:repeat(auto-fit,minmax(120px,1fr)); gap:8px; margin:12px 0; }
+.lineup-builder-candidate-metrics > div { padding:8px 10px; background:var(--fb-subtle); min-width:0; }
+.lineup-builder-candidate-metrics dt { color:var(--fb-muted); font-size:12px; }
+.lineup-builder-candidate-metrics dd { margin:2px 0 0; font-size:15px; font-weight:600; font-variant-numeric:tabular-nums; }
+.lineup-builder-candidate-metrics dd small { color:var(--fb-muted); font-size:12px; font-weight:400; }
+.lineup-builder-candidate-metrics dd[data-negative="true"] { color:var(--fb-failure); }

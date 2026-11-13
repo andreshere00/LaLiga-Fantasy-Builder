@@ -21,7 +21,11 @@ function snakeCase(value: string): string {
 }
 
 function addCamelAliases(value: unknown, schema: z.ZodType, context: z.RefinementCtx): unknown {
-  if (schema instanceof z.ZodOptional || schema instanceof z.ZodNullable) {
+  // A ``.default(...)`` wrapper must not hide nested objects from snake_case aliasing.
+  if (
+    schema instanceof z.ZodOptional || schema instanceof z.ZodNullable
+    || schema instanceof z.ZodDefault
+  ) {
     return addCamelAliases(value, schema.unwrap() as z.ZodType, context);
   }
   if (schema instanceof z.ZodArray) {
@@ -890,7 +894,8 @@ export type PayBuyoutWriteDto = z.infer<typeof payBuyoutWriteSchema>;
 export type IncreaseBuyoutWriteDto = z.infer<typeof increaseBuyoutWriteSchema>;
 export type ShieldWriteDto = z.infer<typeof shieldWriteSchema>;
 
-const scoreNumber = z.union([z.number(), z.string().regex(/^-?\d+(\.\d+)?$/)]).transform(Number);
+// Decimal strings may use exponent notation (for example "3.5E-9" or "0E-10").
+const scoreNumber = z.union([z.number(), z.string().regex(/^-?\d+(\.\d+)?([eE][-+]?\d+)?$/)]).transform(Number);
 const builderCriterionSchema = readObject({
   ruleId: z.string(), source: z.string(), observed: z.string(),
   lineup: scoreNumber.nullable(), trading: scoreNumber.nullable(),
@@ -903,6 +908,14 @@ const builderSectionSchema = readObject({
   lineupUpper: scoreNumber, tradingLower: scoreNumber, tradingUpper: scoreNumber,
   lineupNormalized: scoreNumber, tradingNormalized: scoreNumber, effectiveWeight: scoreNumber,
 });
+const builderBidSuggestionSchema = readObject({
+  strategy: z.enum(["market_value", "max_profitable"]), amount: z.number().int().nonnegative(),
+  defaultBid: z.number().int().nonnegative(), competingBids: z.number().int().nonnegative(),
+  mpb: z.number().int().nullable(), returnRate: scoreNumber.nullable(),
+  minReturn: scoreNumber.nullable(),
+  status: z.enum(["default", "profitable", "non_profitable", "insufficient_history"]),
+});
+export type BuilderBidSuggestion = z.infer<typeof builderBidSuggestionSchema>;
 const builderPlayerSchema = readObject({
   playerId: z.string().min(1), name: z.string(), position: z.number().int().min(1).max(4),
   clubId: z.number().int(), source: z.enum(["owned", "market", "opponents"]),
@@ -912,6 +925,13 @@ const builderPlayerSchema = readObject({
   protectionAdvice: z.boolean(), acquisitionMethod: z.enum(["bid", "clause"]).nullable(),
   settlementAt: z.string().nullable(), clausePrice: z.number().nullable(),
   saleSettlementAt: z.string().nullable(),
+  saleOfferId: z.string().nullable().default(null),
+  saleOfferMarketId: z.string().nullable().default(null),
+  saleOfferAmount: z.number().int().nonnegative().nullable().default(null),
+  saleOfferExpiresAt: z.string().nullable().default(null),
+  listedForSale: z.boolean().default(false),
+  competingBids: z.number().int().nonnegative().nullable().default(null),
+  bidSuggestion: builderBidSuggestionSchema.nullable().default(null),
 });
 export const builderCandidateSchema = readObject({
   candidateId: z.string(), formation: z.string(), resourceGroup: z.enum(["owned", "external"]),
@@ -920,12 +940,30 @@ export const builderCandidateSchema = readObject({
     acquisitions: z.array(builderPlayerSchema), tradingPurchases: z.array(builderPlayerSchema),
     sales: z.array(builderPlayerSchema), steps: z.array(readObject({
       action: z.enum(["sell", "buy"]), playerId: z.string(), method: z.string(),
+      playerTeamId: z.string().nullable().default(null),
       estimate: z.number().int(), settlementAt: z.string(), cashAfter: z.number().int(),
       squadValueAfter: z.number().int(), squadCountAfter: z.number().int(),
       debtLimit: z.number().int(), conditions: z.array(z.string()),
+      marketValue: z.number().int().nullable().default(null),
+      offerId: z.string().nullable().default(null),
+      offerMarketId: z.string().nullable().default(null),
+      offerExpiresAt: z.string().nullable().default(null),
+      bidSuggestion: builderBidSuggestionSchema.nullable().default(null),
+      alternatives: z.array(readObject({
+        method: z.literal("direct_offer"), suggestedAmount: z.number().int().nonnegative(),
+        conditions: z.array(z.string()),
+      })).default([]),
     })), retainedPlayerIds: z.array(z.string()), resultingPlayerIds: z.array(z.string()),
-    projectedCash: z.number().int().nonnegative(), squadValue: z.number().int().nonnegative(),
+    // Plans may end in debt, down to 20% of the final squad value.
+    projectedCash: z.number().int(), squadValue: z.number().int().nonnegative(),
     squadCount: z.number().int().max(24), reservedSquadSlots: z.number().int().nonnegative().default(0),
+    fundingStatus: z.enum(["funded", "debt_within_limit", "needs_sales"]).default("funded"),
+    finalFloor: z.number().int().default(0),
+    shortfall: z.number().int().nonnegative().default(0),
+    listingSuggestions: z.array(readObject({
+      playerId: z.string(), playerTeamId: z.string(), suggestedPrice: z.number().int().nonnegative(),
+      reason: z.enum(["not_listed", "listed_without_offer"]),
+    })).default([]),
   }),
 });
 export const lineupBuildResponseSchema = responseSchema(readObject({
@@ -943,6 +981,9 @@ export const lineupBuildRequestSchema = z.object({
   sources: z.array(z.enum(["owned", "market", "opponents"])).min(1).max(3),
   mandatoryPlayerIds: z.array(z.string().trim().min(1)).max(11), formations: z.array(z.string()),
   allowBuying: z.boolean(), allowSelling: z.boolean(), includeTradingPurchases: z.boolean(),
+  requireNonnegativeCash: z.boolean().default(false), allowImmediateSale: z.boolean().default(false),
+  bidStrategy: z.enum(["market_value", "max_profitable"]).default("market_value"),
+  minBidReturn: z.number().min(0).max(1).optional(),
   maxCandidates: z.number().int().min(1).max(20),
   explanation: z.object({ enabled: z.boolean(), reasoningEffort: z.enum(["low", "medium", "high"]).optional() }).strict(),
 }).strict().superRefine((value, ctx) => {
@@ -950,10 +991,12 @@ export const lineupBuildRequestSchema = z.object({
     if (new Set(choices).size !== choices.length) ctx.addIssue({ code: "custom", message: "Duplicate choices" });
   }
   if (value.includeTradingPurchases && !value.allowBuying) ctx.addIssue({ code: "custom", message: "Buying permission required" });
+  if ((value.requireNonnegativeCash || value.allowImmediateSale) && !value.allowSelling) ctx.addIssue({ code: "custom", message: "Selling permission required" });
+  if (value.minBidReturn !== undefined && value.bidStrategy !== "max_profitable") ctx.addIssue({ code: "custom", message: "Maximum profitable bid strategy required" });
 });
 export type LineupBuildDto = z.infer<typeof lineupBuildResponseSchema>;
 export type BuilderCandidate = z.infer<typeof builderCandidateSchema>;
-export type LineupBuildRequest = z.infer<typeof lineupBuildRequestSchema>;
+export type LineupBuildRequest = z.input<typeof lineupBuildRequestSchema>;
 
 export const lineupBuildProgressSchema = responseSchema(readObject({
   stage: z.enum(["sources", "players", "trades", "search", "explanation", "complete"]),
@@ -1282,7 +1325,11 @@ export function serializeEndpointRequest(method: string, path: string, body: unk
     const value = lineupBuildRequestSchema.parse(checkedBody);
     return { sources: value.sources, mandatory_player_ids: value.mandatoryPlayerIds,
       formations: value.formations, allow_buying: value.allowBuying, allow_selling: value.allowSelling,
-      include_trading_purchases: value.includeTradingPurchases, max_candidates: value.maxCandidates,
+      include_trading_purchases: value.includeTradingPurchases,
+      require_nonnegative_cash: value.requireNonnegativeCash, allow_immediate_sale: value.allowImmediateSale,
+      bid_strategy: value.bidStrategy,
+      ...(value.minBidReturn === undefined ? {} : { min_bid_return: value.minBidReturn }),
+      max_candidates: value.maxCandidates,
       explanation: { enabled: value.explanation.enabled, reasoning_effort: value.explanation.reasoningEffort } };
   }
   return checkedBody;

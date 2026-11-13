@@ -3,6 +3,10 @@ import { t, useTranslation } from "../../i18n";
 import type { BuilderCandidate, LineupBuildDto } from "../../api/schemas";
 import { ProfilePhoto } from "../shell/ProfilePhoto";
 import { PersonIcon } from "../shell/icons";
+import { Button } from "../../components/ui/Button";
+import type { SquadCard } from "../../api/mappers";
+import { LineupBuilderMarketOptions } from "./LineupBuilderMarketOptions";
+import type { BuilderSaleAction } from "./LineupBuilderSaleActions";
 
 const euro = (value: number) => new Intl.NumberFormat(locale(), {
   style: "currency", currency: "EUR", maximumFractionDigits: 0,
@@ -12,14 +16,41 @@ const date = (value: string) => new Date(value).toLocaleString(locale(), {
 });
 const METHODS: Record<string, string> = {
   bid: "Market bid", clause: "Release clause", accepted_offer: "Accepted sale offer",
+  accept_offer: "Accept an existing offer", immediate_sale: "Immediate sale to LaLiga",
+};
+/** Machine-readable step conditions from the planner, as user-facing copy. */
+const CONDITIONS: Record<string, string> = {
+  offer_acceptance_required: "The offer must still be pending when you accept it.",
+  below_market_value: "This offer is below the player's market value.",
+  loses_half_market_value: "Immediate sales pay half the market value.",
+  cannot_be_undone: "An immediate sale cannot be undone.",
+  refresh_before_transaction: "Refresh cash, ownership and restrictions before any manual transaction.",
+  winning_bid_required: "Your bid must win and the player must be assigned before kickoff.",
+  clause_paid_from_cash: "The release clause must be paid entirely from cash.",
+  insufficient_history: "Market history is incomplete, so the default bid is suggested.",
+  seller_acceptance_required: "The owner must accept the offer.",
+  not_counted_in_cash: "Not counted in the projected cash.",
+};
+const BID_STATUS: Record<string, string> = {
+  default: "Market value, plus 1 € when other managers have bid",
+  profitable: "Maximum profitable bid",
+  non_profitable: "Not profitable: default bid",
+  insufficient_history: "Incomplete history: default bid",
 };
 
 /** Present the projected squad, deadlines and ordered conditional transactions. */
-export function LineupBuilderTradeDetails({ plan, target, playerName, playersById }: {
+export function LineupBuilderTradeDetails({
+  plan, target, playerName, playersById, confirmedSales, onSaleAction, squadByEntryId,
+}: {
   plan: BuilderCandidate["tradingPlan"];
   target: LineupBuildDto["target"];
   playerName: (id: string) => string;
   playersById: ReadonlyMap<string, { name: string; photoUrl: string | null }>;
+  /** ``kind:playerId`` keys of sales the manager already confirmed. */
+  confirmedSales?: ReadonlySet<string>;
+  onSaleAction?: (action: BuilderSaleAction) => void;
+  /** Own squad entries by ``playerTeamId``, to tell which players are already on the market. */
+  squadByEntryId?: ReadonlyMap<string, SquadCard>;
 }) {
   useTranslation();
   const photo = (id: string) => <ProfilePhoto className="lineup-builder-option-photo"
@@ -52,6 +83,21 @@ export function LineupBuilderTradeDetails({ plan, target, playerName, playersByI
             <span>{player.name}<small>{euro(player.marketValue)}</small></span></li>)}
         </ul> : <p className="fb-helper">{t("No additional purchases for trading.")}</p>}
       </section>
+      {plan.listingSuggestions.length > 0 && <section className="lineup-builder-trade-section" aria-label={t("Listing suggestions")}>
+        <h5>{t("Players to list ")}<span>{plan.listingSuggestions.length}</span></h5>
+        <p className="fb-helper">{t("Listings are not counted in the projected cash until someone makes an offer you accept. Shortfall: {{0}}.", { 0: euro(plan.shortfall) })}</p>
+        <ul className="lineup-builder-retained" aria-label={t("Listing suggestions")}>
+          {plan.listingSuggestions.map((listing) => <li key={listing.playerId}>{photo(listing.playerId)}
+            <span>{playerName(listing.playerId)}<small>{euro(listing.suggestedPrice)}{listing.reason === "listed_without_offer" ? t(" · already listed, no offer yet") : ""}</small></span>
+            {onSaleAction && (confirmedSales?.has(`listing:${listing.playerId}`)
+              ? <small role="status">{t("Listed")}</small>
+              : <Button size="sm" shape="square" variant="secondary" onClick={() => onSaleAction({
+                kind: "listing", playerId: listing.playerId, playerTeamId: listing.playerTeamId,
+                name: playerName(listing.playerId), amount: listing.suggestedPrice, marketValue: listing.suggestedPrice,
+              })}>{t("List for sale")}</Button>)}
+          </li>)}
+        </ul>
+      </section>}
       <section className="lineup-builder-trade-section" aria-label={t("Planned transactions")}>
         <h5>{t("Transaction plan")}</h5>
         {plan.steps.length ? <ol className="lineup-builder-transactions">
@@ -70,9 +116,44 @@ export function LineupBuilderTradeDetails({ plan, target, playerName, playersByI
               <div><dt>{t("Squad value")}</dt><dd>{euro(step.squadValueAfter)}</dd></div>
               <div><dt>{t("Debt limit")}</dt><dd>{euro(step.debtLimit)}</dd></div>
             </dl>
+            {step.bidSuggestion && <p className="fb-helper">
+              {t("Suggested bid {{0}} · {{1}}", { 0: euro(step.bidSuggestion.amount), 1: t(BID_STATUS[step.bidSuggestion.status] ?? step.bidSuggestion.status) })}
+              {step.bidSuggestion.returnRate != null && t(" · expected return {{0}}%", { 0: (step.bidSuggestion.returnRate * 100).toFixed(1) })}
+              {step.bidSuggestion.competingBids > 0 && t(" · {{0}} competing bids", { 0: step.bidSuggestion.competingBids })}
+            </p>}
+            {step.alternatives.map((alternative) => <p key={alternative.method} className="fb-helper">
+              {t("Alternative: direct offer of {{0}} to the owner (not counted in cash).", { 0: euro(alternative.suggestedAmount) })}
+            </p>)}
             {step.conditions.length > 0 && <div className="lineup-builder-trade-conditions"><span>{t("Conditions")}</span>
-              <ul>{step.conditions.map((condition, i) => <li key={i}>{t(condition)}</li>)}</ul>
+              <ul>{step.conditions.map((condition, i) => <li key={i}>{t(CONDITIONS[condition] ?? condition)}</li>)}</ul>
             </div>}
+            {onSaleAction && step.action === "sell" && step.playerTeamId
+              && (step.method === "accept_offer" || step.method === "immediate_sale") && (
+              <div className="lineup-builder-trade-actions">
+                {confirmedSales?.has(`${step.method}:${step.playerId}`)
+                  ? <p role="status" className="fb-helper">{t("Sale confirmed. Your squad and cash were refreshed.")}</p>
+                  : <>
+                    <Button size="sm" shape="square" variant={step.method === "immediate_sale" ? "destructive" : "secondary"}
+                      onClick={() => onSaleAction(step.method === "accept_offer"
+                        ? { kind: "accept_offer", playerId: step.playerId, playerTeamId: step.playerTeamId!, name: playerName(step.playerId),
+                          amount: step.estimate, marketValue: step.marketValue ?? step.estimate, offerId: step.offerId, marketId: step.offerMarketId }
+                        : { kind: "immediate_sale", playerId: step.playerId, playerTeamId: step.playerTeamId!, name: playerName(step.playerId),
+                          amount: step.estimate, marketValue: step.marketValue ?? step.estimate * 2 })}>
+                      {step.method === "accept_offer" ? t("Accept offer ({{0}})", { 0: euro(step.estimate) }) : t("Sell now ({{0}})", { 0: euro(step.estimate) })}
+                    </Button>
+                    {squadByEntryId?.get(step.playerTeamId)?.onMarket
+                      ? <LineupBuilderMarketOptions player={squadByEntryId.get(step.playerTeamId)!} />
+                      : confirmedSales?.has(`listing:${step.playerId}`)
+                        ? <p role="status" className="fb-helper">{t("Listed on the market. Its money only counts once someone makes an offer you accept.")}</p>
+                        : <Button size="sm" shape="square" variant="secondary"
+                          onClick={() => onSaleAction({
+                            kind: "listing", playerId: step.playerId, playerTeamId: step.playerTeamId!, name: playerName(step.playerId),
+                            amount: step.marketValue ?? step.estimate, marketValue: step.marketValue ?? step.estimate,
+                          })}>
+                          {t("Put on the market")}
+                        </Button>}
+                  </>}
+              </div>)}
           </li>)}
         </ol> : <p className="fb-helper">{t("No trades are needed for this lineup.")}</p>}
       </section>

@@ -80,15 +80,22 @@ Generated request/response models are in [endpoint schemas](endpoint-schemas.md)
   "mandatory_player_ids": [],
   "formations": [],
   "allow_buying": true,
-  "allow_selling": false,
+  "allow_selling": true,
   "include_trading_purchases": false,
+  "require_nonnegative_cash": false,
+  "allow_immediate_sale": false,
+  "bid_strategy": "market_value",
   "max_candidates": 5,
   "explanation": {"enabled": false}
 }
 ```
 
 API defaults use owned players, all verified supported formations, no trades, five
-results and no explanation. The browser requests up to seven results total. The
+results and no explanation. API and CLI defaults keep `allow_buying` and
+`allow_selling` false so stored preference files keep working; the browser dialog
+starts with both checked. `require_nonnegative_cash` and `allow_immediate_sale`
+need `allow_selling` (422 otherwise). `min_bid_return` (τ, `0 ≤ τ ≤ 1`) needs
+`bid_strategy="max_profitable"` (422 otherwise). The browser requests up to seven results total. The
 filters **Only current squad** and **Squad with external players** narrow this
 same list, preserving the original ranks without rebuilding or adding results.
 Unknown keys, duplicate choices and invalid bounds
@@ -130,22 +137,99 @@ removes their potential proceeds from the available budget. Score bounds account
 for remaining acquisition slots, including pending bid reservations, so they do
 not assume an unaffordable or oversized all-external XI.
 
-Multiple purchases and sales share one whole-squad budget. Their combined costs
-must be covered by current available cash plus verified eligible sales, with a
-nonnegative final projected balance. When the starting balance is already negative
-(for example after conservative bid reserves), a plan may keep it but never end
-below it: an owned XI needs no trades, purchases must be funded by sales, and
-clauses still need positive cash. The results then warn that the balance stays
-below zero. Each sale and purchase step must keep the running balance at or above
-`min(starting balance, -20% of squad value)`, so a balance that already sits below
-the 20% debt limit is not worsened but also does not make every sale fail; a
-purchase still needs `market value <= cash + 20% of squad value`, so a squad past
-the debt limit can only sell. A sale cannot fund more than one purchase
-independently or include a retained starter. Sale recommendations remain ranked
-by trading score; transaction steps follow actual settlement times before proceeds
-are spent. Existing buying/selling permissions and required offers still apply.
-Completed plans pass every financial and settlement check, and interrupted
-ranking remains labeled incomplete.
+Multiple purchases and sales share one whole-squad budget.
+
+### Financial rules (rules version `2026-11-12.1`)
+
+- **Running balance.** Every sale and purchase step keeps the balance at or above
+  `min(starting balance, 0, -(squad value // 5))`. A balance that already sits
+  below the 20% debt limit is never worsened. A bid needs
+  `suggested bid <= cash + squad value // 5`; a release clause is paid from cash
+  alone, so a squad past the debt limit can only sell.
+- **Final balance.** Without `require_nonnegative_cash` a plan may end in debt,
+  down to the same floor on the final squad value. With it, the plan must reach a
+  balance of 0 or more at kickoff (`≥ 0`, not `> 0`).
+- **`funding_status`.** `funded` (final balance ≥ 0), `debt_within_limit`
+  (below 0 but within the debt floor) or `needs_sales` (only with
+  `require_nonnegative_cash`; see below). `final_floor`, `shortfall` and
+  `listing_suggestions` complete the plan.
+- **Starting cash** is the conservative reserve: reported cash minus distinct
+  pending bids.
+
+Sale routes, used in this order. A sale never removes a starter, and the squad
+stays at 24 players or fewer, counting pending-bid slots:
+
+1. **Accept an existing offer** (`method="accept_offer"`). Proceeds are the
+   highest pending, unexpired offer amount, including offers below market value
+   (condition `below_market_value`). The step carries `offer_id`,
+   `offer_market_id` and `offer_expires_at`.
+2. **Immediate sale** (`method="immediate_sale"`, only with
+   `allow_immediate_sale`). Proceeds are `market_value // 2`, settled at the
+   snapshot instant (conditions `loses_half_market_value`, `cannot_be_undone`).
+   Used only for the shortfall offers cannot cover, lowest trading score first,
+   then lowest lost value, then player id.
+3. **Listing suggestion** (`listing_suggestions`). Suggested price is the market
+   value. Listing money is never counted in `projected_cash`.
+
+Sales are added only when a purchase needs funding, the squad cap requires it, or
+`require_nonnegative_cash` needs the balance at 0. A bid made before the last sale
+settles can still need more cash than the final balance shows, so the planner adds
+one more sale at a time until every step is legal. With `require_nonnegative_cash`,
+when confirmed routes A and B cannot reach 0, the candidate is kept as
+`needs_sales` with enough listing suggestions to cover the shortfall; if listing
+every eligible non-starter still cannot cover it, the candidate is dropped.
+
+Purchases:
+
+- **Market (free LaLiga auction).** `default_bid` is the market value, plus 1 €
+  when `numberOfBids` shows another manager's bid (the caller's own bid listings
+  are already excluded). With `bid_strategy="max_profitable"` the builder reads a
+  14-day market history (`MarketPreset.D14`) for each market candidate and computes
+  the Maximum Profitable Bid below. The buy step's `estimate` is the suggested bid
+  and `bid_suggestion` holds `{strategy, amount, default_bid, competing_bids, mpb,
+  return_rate, min_return, status}`, with status `default`, `profitable`,
+  `non_profitable` or `insufficient_history`. A player whose return is below
+  `min_bid_return` is never bid on: they leave the pool and the diagnostic
+  `bid_below_min_return` is reported. Players with incomplete history stay
+  candidates at the default bid, with the `insufficient_history` condition.
+- **Opponents.** Release clauses keep every gate (buyouts enabled, unshielded,
+  lock expiry ≤ kickoff − 48 h, paid from cash). Each clause step also lists a
+  `direct_offer` alternative at market value. It needs the owner's acceptance, so
+  it never funds a plan or makes a starter draftable.
+
+External proposals must also beat the owned player they displace: each external
+starter's lineup score must exceed that of the owned starter in the same position
+of the best owned XI with that formation (paired strongest first). Without such
+an owned XI, it must beat the weakest owned player of that position.
+
+### Maximum Profitable Bid
+
+For horizons `t ∈ {3, 5, 7, 10, 14}` days and weights
+`α = (0.35, 0.25, 0.20, 0.15, 0.05)`:
+
+```text
+δV_t = (V_0 − V_t) / V_0          (signed)
+R    = Σ α_t · δV_t
+MPB  = V_0 · (1 + R)
+suggested_bid = max(floor(MPB), default_bid)   when R ≥ τ
+              = no bid (player excluded,       otherwise
+                bid_below_min_return)
+```
+
+`return_rate` is reported rounded to 6 decimal places (never in exponent form);
+the profitability decision uses the exact value. `V_t` is the history point dated
+exactly `t` days before the window's last day
+(`V_0`). A missing or gap-filled point, or `V_0 ≤ 0`, gives `insufficient_history`
+and the diagnostic `bid_history_unavailable`. All arithmetic uses `Decimal`; the
+MPB is rounded down to whole euros. Unlike the scoring growth, `δV_t` divides by
+the current value. Code: `domain/lineup_builder/bidding.py`.
+
+Sale recommendations remain ranked by trading score; transaction steps follow
+actual settlement times before proceeds are spent. Existing buying/selling
+permissions still apply. Completed plans pass every financial and settlement check,
+and interrupted ranking remains labeled incomplete. Building never accepts, lists,
+sells, bids, offers or pays a clause: every write is a single manual confirmation
+in the browser.
 
 The six scoring sections follow the versioned workflow. Probability, squad role
 and impact-substitute bonus share enumerated achievable bounds. Minutes and rest
@@ -256,7 +340,12 @@ This implementation deliberately limits recommendations to established facts:
   When the FútbolFantasy widget is absent, explicit Fantasy catalog statuses
   (`ok`, `doubtful`, `injured`, `suspended`) supply availability with source
   provenance; missing status never defaults to available, and active injury
-  evidence still excludes a contradictory `ok` status.
+  evidence still excludes a contradictory `ok` status. A FútbolFantasy
+  availability forecast for the target round (`available` or `doubtful` with
+  that matchday) takes precedence over an injury the history still marks as
+  ongoing: minor knocks often stay open there while the player is expected to
+  start. The injury criterion still scores the recent injury. Without a
+  target-round forecast, an ongoing injury excludes the player.
   An available-for-round date derived from the player's fixture is not a medical
   recovery timestamp. Unavailable players with only that prediction are excluded.
 - Injury-history bands require complete parsed coverage; missing or dropped
@@ -273,11 +362,13 @@ missing/naive expiry, an expired listing and settlement at/after kickoff. Oppone
 diagnostics distinguish league settings, protection expiry, active/unknown shield
 state, and missing clause prices. The conservative pending-bid reserve is an
 informational cash bound and is not counted as a player/source exclusion.
-The frontend exclusions table shows only unavailable players and verified clause
-locks that expire after the target matchday's first kickoff. A lock expiring
+The frontend exclusions table shows every exclusion reason for the caller's own
+players, plus unavailable external players and verified clause locks that expire
+after the target matchday's first kickoff. A lock expiring
 exactly at kickoff is free at that instant and is not included in this table.
-The separate 48-hour eligibility buffer and other source diagnostics remain in
-the build response; they are not displayed as matchday availability exclusions.
+For external players, the separate 48-hour eligibility buffer and other source
+diagnostics remain in the build response; they are not displayed as matchday
+availability exclusions.
 
 Further authenticated read-only
 captures are needed for exact gross/net reservation accounting and timed shield expiries;

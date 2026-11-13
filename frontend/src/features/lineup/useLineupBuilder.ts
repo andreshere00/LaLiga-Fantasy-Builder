@@ -39,6 +39,8 @@ export function useLineupBuilder(
   const [pending, setPending] = useState(false);
   const [progress, setProgress] = useState<LineupBuildProgress | null>(null);
   const [result, setResult] = useState<LineupBuildDto | null>(null);
+  // The preferences that produced ``result``; a later failed rebuild must not change them.
+  const [resultRequest, setResultRequest] = useState<LineupBuildRequest | null>(null);
   const [failure, setFailure] = useState<ApiError | NeedsReauthError | "unknown" | null>(null);
   useReauthOnError([failure]);
   let error: string | null = null;
@@ -88,7 +90,10 @@ export function useLineupBuilder(
       const response = await streamLineupBuild(leagueId, token, preferences, (update) => {
         if (current.current === controller && !controller.signal.aborted) setProgress(update);
       }, { signal: controller.signal });
-      if (!controller.signal.aborted) setResult(response);
+      if (!controller.signal.aborted) {
+        setResult(response);
+        setResultRequest(preferences);
+      }
     } catch (caught) {
       if (!controller.signal.aborted) {
         setFailure(caught instanceof ApiError || caught instanceof NeedsReauthError ? caught : "unknown");
@@ -101,5 +106,5 @@ export function useLineupBuilder(
       }
     }
   }
-  return { pending, progress, result, error, errorSummary: errorSummary ?? (error ? t(error) : null), errorDetails, errorRecovery, build, cancel };
+  return { pending, progress, result, resultRequest, error, errorSummary: errorSummary ?? (error ? t(error) : null), errorDetails, errorRecovery, build, cancel };
 }

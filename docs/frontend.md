@@ -753,6 +753,21 @@ Code: `frontend/src/features/lineup/`.
   Acquisition lineups must score strictly higher than the strongest feasible
   current-squad lineup; fewer than seven total may qualify. If the current squad cannot
   form a valid XI, acquisitions can still complete one.
+- Each result card shows its funding status: **Ends in debt** (within the 20% limit)
+  or **Needs more sales** with the shortfall. Sale steps offer **Accept offer (€X)**,
+  which re-reads the offer and accepts it only if still pending at that amount or
+  higher, and **Sell now (€X)**, which warns that an immediate sale pays half the
+  market value and cannot be undone. Listing suggestions open **List for sale**
+  with the suggested price, still editable. Each is one confirmation; nothing is
+  confirmed automatically. After a write the squad, cash and offers refresh, and
+  **Use as draft** is re-evaluated locally: every starter owned and the round
+  editable. Cash never blocks it; when the build required a non-negative balance
+  and refreshed cash minus pending bids is still below 0, a note says so. Sale
+  steps also offer **Put on the market**, or **Market options** (change the price
+  or withdraw the listing) when the player is already listed.
+  Acquiring a starter still marks the result stale.
+- **Acquire** opens the existing bid dialog prefilled with the suggested bid (or the
+  market value for a direct offer to an opponent); the amount stays editable.
 - **Players Ranking** lists the user and opponents. The season total stays the
   only figure on the right, with its `p` suffix. Each manager’s matchweek score
   sits under the name as the score alone. Hovering that score names the fixture,
@@ -1017,11 +1032,22 @@ catalog/scraped, and verified local football-logos.cc fallbacks. Source manifest
 refresh instructions and attribution are documented in
 [badge sources](frontend-club-crest-sources.md).
 
-Builder setup groups player sources into selectable tiles, separates optional
-trade recommendations, and keeps Build/Close outside the scrolling content.
-Mandatory player search expands on demand, with a persistent selection count;
-formations remain visible as individual checkboxes. Trading-only purchases are
-shown when purchase recommendations are enabled. Empty source selection explains
+Builder setup groups player sources into selectable tiles and splits trade options
+by domain, and keeps Build/Close outside the scrolling content. **Purchases** holds
+its switch, trading-only purchases and the bid amount (market value or maximum
+profitable bid as two described choices, plus a minimum return in percent).
+**Sales** holds its switch and immediate sales, which are highlighted because they
+lose half the market value. **Balance** is its own section with **Non-negative balance
+at kickoff**, a constraint on the outcome that is only reachable through sales, so it
+is disabled with a hint while sales are not allowed. A minimum return below which a
+maximum profitable bid is skipped excludes that player instead of bidding the market value.
+Each group's dependent options stay visible but disabled, with a hint, while its
+switch is off. Purchase and sale recommendations start checked; every dependent
+option starts off. Mandatory player search expands on demand, with a persistent
+selection count; formations remain visible as individual checkboxes. Every
+disclosure in the builder uses the same ▸/▾ marker, and each candidate shows its
+score, projected cash, squad size, squad value and pending bid slots as a metric row.
+Empty source selection explains
 why Build is unavailable. These controls retain their configuration while users
 explore options and generated previews.
 
