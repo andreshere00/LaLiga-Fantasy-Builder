@@ -6,6 +6,8 @@ data and user-confirmed writes with your linked account.
 
 | Topic | Doc |
 |-------|-----|
+| Changes in v0.6.1 | [CHANGELOG.md](CHANGELOG.md#061---2026-11-13) |
+| Changes in v0.6.0 | [CHANGELOG.md](CHANGELOG.md#060---2026-11-11) |
 | Changes in v0.5.0 | [CHANGELOG.md](CHANGELOG.md#050---2026-11-10) |
 | Changes in v0.4.0 | [CHANGELOG.md](CHANGELOG.md#040---2026-11-05) |
 | Backend, frontend, and cloud architecture | [ARCHITECTURE.md](ARCHITECTURE.md) |

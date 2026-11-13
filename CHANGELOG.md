@@ -4,27 +4,84 @@ Notable changes to LaLiga Fantasy Builder are recorded here. Version 0.1.0
 summarizes the application through 27 October 2026; it is the first changelog
 entry, not a claim that every optional provider or deployment gate is complete.
 
-## [Unreleased]
+## [0.6.1] - 2026-11-13
 
 ### Lineup builder
 
 - Plans may end in debt, down to 20% of the final squad value (rules version
-  `2026-11-12.1`). Each plan reports `funding_status`: funded, within the debt limit,
-  or needing more sales.
+  `2026-11-12.1`). Each plan reports `funding_status` (funded, within the debt limit,
+  or needing more sales), its `final_floor`, any `shortfall` and `listing_suggestions`.
 - Add a **Non-negative balance at kickoff** option. Plans then sell until the balance
-  reaches 0, crediting accepted offers at their amount (including offers below market
-  value) and, with the advanced option, immediate sales at half the market value.
-  When that is not enough, plans list players to put on sale; listing money is never
-  counted as cash.
-- Result cards offer **Accept offer** and **Sell now** confirmations and listing
-  suggestions. **Use as draft** unlocks without rebuilding once refreshed cash minus
-  pending bids reaches 0.
-- Suggest bid amounts: market value, plus 1 € when other managers have bid, or the
-  advanced Maximum Profitable Bid from 14-day market momentum with a minimum return.
-  The bid dialog starts from the suggestion. Clause steps show a conditional direct
-  offer that never funds a plan.
-- Purchase and sale recommendations start checked in the builder dialog. External
-  starters must also outscore the owned player they replace.
+  reaches 0, crediting the highest pending offer at its amount (including offers below
+  market value) and, with the advanced **immediate sale** option, selling at half the
+  market value for the remaining shortfall. When that is not enough, plans list players
+  to put on the market; listing money is never counted as cash. Starters are never sold
+  or listed. The new request fields are validated against their prerequisite (422
+  otherwise); API and CLI defaults are unchanged.
+- Suggest bid amounts: the market value, plus 1 € when other managers have bid, or the
+  advanced **Maximum profitable bid** from 14-day market momentum. A bid below the
+  minimum return is not planned and the build reports `bid_below_min_return`; incomplete
+  history keeps the default bid. The bid dialog starts from the suggestion, and clause
+  steps show a conditional direct offer that never funds a plan.
+- Result cards offer **Accept offer**, **Sell now** and **List for sale** confirmations,
+  one per action. **Use as draft** no longer depends on cash, since setting a lineup costs
+  nothing; a negative balance only shows a note.
+- Purchase and sale recommendations start checked in the builder dialog, and the options
+  are grouped into Purchases, Sales and Balance. External starters must also outscore the
+  owned player they replace.
+- A forecast for the target round now takes precedence over an ongoing injury in the
+  injury history. Without such a forecast, an ongoing injury still excludes the player.
+- Fix a failed accept, sale or listing showing as confirmed in the results, which hid
+  its button and the retry. Accept a decimal comma in **Minimum return (%)**.
+- Fix a suggested bid's return rate serializing in exponent form, which the browser
+  rejected as an invalid response. See the [lineup builder](docs/api/lineup-builder.md).
+
+### Versioning
+
+- Set the application, API, auth and scraping packages, their OpenAPI documents and the
+  scraper user agent to 0.6.1.
+
+## [0.6.0] - 2026-11-11
+
+### Frontend UX pass
+
+- Link names across the app: club names and crests, player names, bid sellers, managers,
+  positions and a club's squad now open their Teams, Players or Lineup views through shared
+  `ClubLink`, `PlayerLink` and `ManagerLink` components. A crest shared by two clubs
+  resolves to neither. See [Linked data](docs/frontend.md).
+- Group the Lineup fixture matches by day, each day with its own heading and list, mark the
+  next match, put the kickoff time first on the cards and move the matchweek navigator to the
+  panel's right edge. The list slides in the direction of the matchweek change.
+- Add icons to the section tabs, swap the Players and Teams icons and group the mobile options
+  menu into preferences, league and account. A persistent alerts bell opens the scouting
+  dialog on the current page; signed-out visits drop a stale `?scouting=` link and the dialog
+  returns focus to its opener.
+- Show the availability column filter as an accessible checkbox list with hints and let the
+  squad filter adapt to phone, iPad and Mac; a group is highlighted by its selection, not by
+  its translated text. Redesign the player option dialogs with a team page entry and mark your
+  own listed players on the squad cards.
+- Fit the Players, Market and squad lists on tablets and phones: three players per row and
+  nine at a time on narrow screens, compact fixture cards, a reworked Market top panel with
+  the balance first and a shared Teams section tab bar.
+- Load Market, Players, Teams and player details on demand and warm their code and first
+  read-only requests on hover, focus or touch. Prefetch and screens share one `staleTime`, so
+  hovering never refetches fresh data. Content fades in on section change and dialogs and
+  sheets animate with shared `--fb-motion-*` tokens, all zeroed under reduced motion.
+- Open the Teams hierarchy list when its `#team-hierarchy` link is followed while the section
+  is already mounted.
+
+### Lineup builder
+
+- Generate lineups when the estimated balance is already negative. The trade planner keeps
+  each sale and purchase step at or above `min(starting balance, -20% of squad value)`, so a
+  plan that does not worsen a deficit already past the debt limit is accepted, while purchases
+  still need `market value <= cash + 20% of squad value`. See the
+  [lineup builder](docs/api/lineup-builder.md).
+
+### Versioning
+
+- Set the application, API, auth and scraping packages, their OpenAPI documents and the
+  scraper user agent to 0.6.0.
 
 ## [0.5.0] - 2026-11-10
 
