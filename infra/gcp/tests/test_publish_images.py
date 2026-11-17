@@ -29,8 +29,14 @@ class PublishImagesTests(unittest.TestCase):
             'echo "$*" >> "$DOCKER_LOG"\n'
             'if [[ "$1" == push && "$*" == *"${FAIL_SERVICE:-never-match}"* ]]; then '
             "exit 1; fi\n"
-            'if [[ "$1" == image ]]; then\n'
+            'if [[ "$1" == push ]]; then\n'
+            '  echo "sha-$GITHUB_SHA: digest: sha256:$MOCK_DIGEST size: 2188"\n'
+            "fi\n"
+            'if [[ "$1" == image && -z "${MOCK_NO_REPO_DIGESTS:-}" ]]; then\n'
             '  image="${@: -1}"\n'
+            '  if [[ -n "${MOCK_FOREIGN_DIGEST:-}" ]]; then\n'
+            '    printf "other.example/%s@sha256:%s\\n" "${image##*/}" "$MOCK_FOREIGN_DIGEST"\n'
+            "  fi\n"
             '  printf "%s@sha256:%s\\n" "${image%:sha-*}" "$MOCK_DIGEST"\n'
             "fi\n"
         )
@@ -69,6 +75,21 @@ class PublishImagesTests(unittest.TestCase):
         )
         self.assertEqual((self.folder / "release-images.env").read_text(), expected)
         self.assertEqual(self.log.read_text().count(f":sha-{SHA}"), 15)
+
+    def test_publish_foreign_repo_digest_listed_first_uses_registry_digest(self) -> None:
+        """A RepoDigests entry from another repository never becomes the pinned image."""
+        result = self.publish(MOCK_FOREIGN_DIGEST="c" * 64)
+        self.assertEqual(result.returncode, 0, result.stderr)
+        manifest = (self.folder / "release-images.env").read_text()
+        self.assertNotIn("c" * 64, manifest)
+        self.assertEqual(manifest.count(f"@sha256:{DIGEST}"), 5)
+
+    def test_publish_empty_repo_digests_falls_back_to_push_output(self) -> None:
+        """Image stores that omit RepoDigests still pin the digest the push reported."""
+        result = self.publish(MOCK_NO_REPO_DIGESTS="1")
+        self.assertEqual(result.returncode, 0, result.stderr)
+        manifest = (self.folder / "release-images.env").read_text()
+        self.assertEqual(manifest.count(f"@sha256:{DIGEST}"), 5)
 
     # ---- Error paths ---- #
 

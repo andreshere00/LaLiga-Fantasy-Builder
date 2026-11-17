@@ -129,7 +129,9 @@ protected from container HTTP access by the installed Docker metadata guard.
 
 1. GitHub Actions runs `test` then `build` for branch pushes and pull requests.
 2. On a main push, `deploy` uses keyless federation to publish the exact five
-   checked images. It produces `release-images.env` with pinned digests.
+   checked images. It produces `release-images.env` with pinned digests, read from the
+   image's Artifact Registry `RepoDigests` entry or, when the local image store lists none,
+   from the digest the push reported.
 3. The operator configures the five Secret Manager payloads for the initial
    installation. Subsequent main releases update only the runtime image entries.
 4. The serialized `activate-development` job uses a separate federated identity

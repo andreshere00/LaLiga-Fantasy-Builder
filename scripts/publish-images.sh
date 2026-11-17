@@ -20,9 +20,18 @@ rm -f release-images.env
 for service in identity auth api scraping frontend; do
   image="$GCP_ARTIFACT_REGISTRY/$service:sha-$GITHUB_SHA"
   docker tag "fantasybuilder/$service:$GITHUB_SHA" "$image"
-  docker push "$image"
-  reference=$(docker image inspect --format '{{index .RepoDigests 0}}' "$image")
+  push_log=$(mktemp)
+  docker push "$image" 2>&1 | tee "$push_log"
   prefix="$GCP_ARTIFACT_REGISTRY/$service@sha256:"
+  # RepoDigests may list other repositories (or be empty on some image stores),
+  # so select the entry for this registry path and fall back to the push output.
+  reference=$(docker image inspect --format '{{range .RepoDigests}}{{println .}}{{end}}' "$image" \
+    | grep -F -m1 "$prefix" || true)
+  if [[ -z "$reference" ]]; then
+    pushed=$(sed -nE "s/^sha-${GITHUB_SHA}: digest: (sha256:[a-f0-9]{64}) .*/\1/p" "$push_log" | tail -n1)
+    [[ -n "$pushed" ]] && reference="$GCP_ARTIFACT_REGISTRY/$service@$pushed"
+  fi
+  rm -f "$push_log"
   digest=${reference#"$prefix"}
   if [[ "$reference" != "$prefix"* || ! "$digest" =~ ^[a-f0-9]{64}$ ]]; then
     echo "No valid published digest for $service." >&2

@@ -4,6 +4,21 @@ Notable changes to LaLiga Fantasy Builder are recorded here. Version 0.1.0
 summarizes the application through 27 October 2026; it is the first changelog
 entry, not a claim that every optional provider or deployment gate is complete.
 
+## [0.6.2] - 2026-11-17
+
+### Deployment
+
+- Fix image publishing failing with `No valid published digest` after a successful push.
+  `scripts/publish-images.sh` read the first `RepoDigests` entry, which is not always the
+  Artifact Registry one. It now selects the entry for the target registry path and falls
+  back to the digest printed by `docker push`. It still fails closed and leaves no
+  `release-images.env` unless all five digests are valid.
+
+### Versioning
+
+- Set the application, API, auth and scraping packages, their OpenAPI documents and the
+  scraper user agent to 0.6.2.
+
 ## [0.6.1] - 2026-11-13
 
 ### Lineup builder
