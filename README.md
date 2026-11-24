@@ -6,6 +6,7 @@ data and user-confirmed writes with your linked account.
 
 | Topic | Doc |
 |-------|-----|
+| Changes in v0.7.0 | [CHANGELOG.md](CHANGELOG.md#070---2026-11-24) |
 | Changes in v0.6.2 | [CHANGELOG.md](CHANGELOG.md#062---2026-11-17) |
 | Changes in v0.6.1 | [CHANGELOG.md](CHANGELOG.md#061---2026-11-13) |
 | Changes in v0.6.0 | [CHANGELOG.md](CHANGELOG.md#060---2026-11-11) |

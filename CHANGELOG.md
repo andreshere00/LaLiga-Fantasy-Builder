@@ -6,6 +6,8 @@ entry, not a claim that every optional provider or deployment gate is complete.
 
 ## [Unreleased]
 
+## [0.7.0] - 2026-11-24
+
 ### Auto-market
 
 - Worker: a rate-limited write keeps its rule armed, unexpected write errors fail the rule once
@@ -59,6 +61,11 @@ entry, not a claim that every optional provider or deployment gate is complete.
 - Document the policy change: arming an auto-market rule is the user's confirmation, and
   its worker is the only background process allowed to write. Scouting, CLIs and
   browser-session flows remain read-only.
+
+### Versioning
+
+- Set the application, API, auth and scraping packages, their OpenAPI documents and the
+  scraper user agent to 0.7.0.
 
 ## [0.6.2] - 2026-11-17
 

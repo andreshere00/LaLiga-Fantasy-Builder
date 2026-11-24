@@ -76,7 +76,7 @@ def create_app(
     cfg = settings or get_settings()
     app = FastAPI(
         title=cfg.app_name,
-        version="0.6.2",
+        version="0.7.0",
         description=API_DESCRIPTION,
         openapi_tags=OPENAPI_TAGS,
         lifespan=_lifespan,
