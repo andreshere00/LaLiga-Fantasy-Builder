@@ -64,11 +64,17 @@ SCRAPING_BASE_URL="${SCRAPING_BASE_URL:-http://localhost:8002}"
 SCRAPING_SERVICE_TOKEN="${SCRAPING_SERVICE_TOKEN:-$(sed -n 's/^SCRAPING_SERVICE_TOKEN=//p' backend/scraping/.env | head -n 1)}"
 export SCRAPING_BASE_URL SCRAPING_SERVICE_TOKEN
 
+# The auto-market worker redeems write grants with the token Auth holds.
+# Scoped to the worker: the HTTP API never holds it.
+AUTO_MARKET_WORKER_TOKEN="${AUTO_MARKET_SERVICE_TOKEN:-$(sed -n 's/^AUTO_MARKET_SERVICE_TOKEN=//p' backend/auth/.env | head -n 1)}"
+
 uv run --directory backend/auth uvicorn fantasy_auth.main:app --reload --port 8000 &
 children+=("$!")
 uv run --directory backend/api uvicorn fantasy_api.main:app --reload --port 8001 &
 children+=("$!")
 (cd backend/api && exec uv run fantasy-scouting-worker) &
+children+=("$!")
+(cd backend/api && AUTO_MARKET_SERVICE_TOKEN="$AUTO_MARKET_WORKER_TOKEN" exec uv run fantasy-auto-market-worker) &
 children+=("$!")
 uv run --directory backend/scraping uvicorn fantasy_scraping.main:create_app --factory --reload --port 8002 &
 children+=("$!")

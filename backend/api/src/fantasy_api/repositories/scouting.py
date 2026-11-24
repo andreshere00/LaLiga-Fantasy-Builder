@@ -2,15 +2,12 @@
 
 from __future__ import annotations
 
-import asyncio
 from collections.abc import AsyncIterator
 from contextlib import asynccontextmanager
-from pathlib import Path
 from typing import Any
 
-import asyncpg
-
-from fantasy_api.domain.errors import NotFoundError, UpstreamError
+from fantasy_api.domain.errors import NotFoundError
+from fantasy_api.repositories.application_database import ApplicationDatabase
 from fantasy_api.schemas.scouting import (
     Favorite,
     FavoritesResponse,
@@ -21,51 +18,11 @@ from fantasy_api.schemas.scouting import (
 )
 
 
-class ScoutingRepository:
+class ScoutingRepository(ApplicationDatabase):
     """Own a separate application pool; never fall back to volatile storage."""
 
     def __init__(self, database_url: str) -> None:
-        self._url = database_url
-        self._pool: Any = None
-        self._init_lock = asyncio.Lock()
-
-    async def start(self) -> None:
-        """Connect and apply ordered migrations under a database lock."""
-        if self._pool is not None:
-            return
-        if not self._url:
-            raise UpstreamError("scouting storage is not configured", status_code=503)
-        async with self._init_lock:
-            if self._pool is not None:
-                return
-            try:
-                pool = await asyncpg.create_pool(self._url, min_size=1, max_size=5)
-            except (OSError, asyncpg.PostgresError) as exc:
-                raise UpstreamError("scouting storage unavailable", status_code=503) from exc
-            try:
-                async with pool.acquire() as conn, conn.transaction():
-                    await conn.execute("SELECT pg_advisory_xact_lock(18271301)")
-                    await conn.execute(
-                        "CREATE TABLE IF NOT EXISTS schema_migrations "
-                        "(version TEXT PRIMARY KEY, applied_at TIMESTAMPTZ DEFAULT now())"
-                    )
-                    for path in sorted((Path(__file__).parents[1] / "migrations").glob("*.sql")):
-                        if not await conn.fetchval(
-                            "SELECT 1 FROM schema_migrations WHERE version=$1", path.name
-                        ):
-                            await conn.execute(path.read_text())
-                            await conn.execute(
-                                "INSERT INTO schema_migrations(version) VALUES ($1)", path.name
-                            )
-            except BaseException:
-                await pool.close()
-                raise
-            self._pool = pool
-
-    async def aclose(self) -> None:
-        """Close application connections."""
-        if self._pool is not None:
-            await self._pool.close()
+        super().__init__(database_url, "scouting")
 
     @asynccontextmanager
     async def session(self, owner: str) -> AsyncIterator[ScoutingSession]:
@@ -74,14 +31,6 @@ class ScoutingRepository:
         async with self._pool.acquire() as conn, conn.transaction():
             await conn.execute("SELECT pg_advisory_xact_lock(hashtextextended($1, 0))", owner)
             yield ScoutingSession(conn, owner)
-
-    async def ready(self) -> None:
-        """Check the application database without returning connection details."""
-        await self.start()
-        try:
-            await self._pool.fetchval("SELECT 1")
-        except (OSError, asyncpg.PostgresError) as exc:
-            raise UpstreamError("scouting storage unavailable", status_code=503) from exc
 
     async def metrics(self) -> dict[str, object]:
         """Return aggregate lag, paused-watch count and latest successful check."""

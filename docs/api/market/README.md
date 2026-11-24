@@ -70,7 +70,9 @@ notification panel using the existing squad-entry offer read and accept/reject r
 metadata; unknown upstream fields are still preserved. UI
 behaviour (eligibility, bidded state, tooltips, pending-bid cache) is documented
 there — not duplicated here. Automated `fantasy-market` and browser-session
-flows remain **read-only**.
+flows remain **read-only**. The one exception is an
+[armed auto-market rule](../auto-market/README.md), which its worker executes through the
+existing listing, offer-accept and bid repositories after the user confirmed it.
 
 Market UI captured from a signed-in application session on 27 October 2026:
 
@@ -103,7 +105,8 @@ That upstream path is **Medium** confidence (community capture of
   Fantasy enforces access. Obtain ids from `GET /leagues`, team squads, or
   market reads.
 - **CLI:** `fantasy-market` and `fantasy-browser-session market-analysis` are
-  **read-only** (no bids, sales, or offers in automated flows).
+  **read-only** (no bids, sales, or offers in automated flows), except rules armed
+  and confirmed through [auto-market](../auto-market/README.md).
 
 ```bash
 cd backend/api

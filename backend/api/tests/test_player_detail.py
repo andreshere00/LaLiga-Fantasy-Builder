@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import json
+from datetime import UTC, datetime
 from pathlib import Path
 
 import httpx
@@ -18,6 +19,8 @@ from test_container import build_test_container
 from test_container import test_settings as base_test_settings
 
 GOLDEN = Path(__file__).parent / "fixtures" / "scraping" / "futbolfantasy_raphinha.json"
+# The golden scrape was captured on 2026-10-04; tests pin the clock there.
+FIXTURE_NOW = datetime(2026, 10, 4, 12, tzinfo=UTC)
 
 
 @pytest.fixture
@@ -97,6 +100,8 @@ def make_client(
         weather_transport=weather_handler or httpx.MockTransport(default_weather),
         settings=resolved_settings,
     )
+    # Pin the clock so the golden scrape's upcoming fixtures stay in the future.
+    container.player_stats_service._clock = lambda: FIXTURE_NOW
     app = create_app(settings=resolved_settings, container=container)
     set_container(container)
     client = TestClient(app)

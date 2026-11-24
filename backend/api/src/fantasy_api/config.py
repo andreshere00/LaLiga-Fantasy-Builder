@@ -29,6 +29,8 @@ class Settings(BaseSettings):
     internal_service_token: str = ""
     scouting_service_token: str = ""
     scouting_database_url: str = ""
+    auto_market_service_token: str = ""
+    auto_market_database_url: str = ""
 
     laliga_fantasy_origin: str = "https://fantasy-api.llt-services.com"
     laliga_competition_id: int = 1

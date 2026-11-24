@@ -1,5 +1,5 @@
 import { test, expect, type Page } from "@playwright/test";
-import { catalog, mockMarketBids } from "./fixtures";
+import { catalog, chooseMarketOption, marketOptionsTrigger, mockMarketBids } from "./fixtures";
 
 async function summaryValue(page: Page, label: string) {
   const trigger = page.getByRole("button", { name: /Show balance details/ });
@@ -7,7 +7,15 @@ async function summaryValue(page: Page, label: string) {
   return page.getByRole("dialog", { name: "Balance details", exact: true })
     .locator("dl > div").filter({ has: page.getByText(label, { exact: true }) }).locator("dd");
 }
-const bidTrigger = (page: Page, count = 3) => page.getByRole("button", { name: `My bids, ${count} active`, exact: true, includeHidden: true });
+const bidsName = (count: number) => `My bids, ${count} active`;
+const openBids = (page: Page, count = 3) => chooseMarketOption(page, bidsName(count));
+/** The count lives inside the menu, so open it, read it, and close it again. */
+async function expectBidCount(page: Page, count: number) {
+  await marketOptionsTrigger(page).click();
+  await expect(page.getByRole("menuitem", { name: bidsName(count), exact: true })).toBeVisible();
+  await page.keyboard.press("Escape");
+  await expect(marketOptionsTrigger(page)).toBeFocused();
+}
 
 test("filtering preserves all commitments; modifying and cancelling reconcile every view", async ({ page }) => {
   const fixture = await mockMarketBids(page);
@@ -17,7 +25,7 @@ test("filtering preserves all commitments; modifying and cancelling reconcile ev
   await page.getByRole("combobox", { name: "Search market" }).fill("No match");
   await expect(page.locator(".market-data-row")).toHaveCount(0);
   await expect(await summaryValue(page, "Projected spending")).toHaveText("11,000,000 €");
-  await bidTrigger(page).click();
+  await openBids(page);
   const panel = page.getByRole("dialog", { name: "My bids", exact: true });
   await expect(panel.getByRole("listitem")).toHaveCount(3);
   await expect(panel.getByRole("heading", { name: "Player 22", exact: true })).toBeVisible();
@@ -29,19 +37,18 @@ test("filtering preserves all commitments; modifying and cancelling reconcile ev
   fixture.lag(2);
   await dialog.getByRole("button", { name: "Update bid", exact: true }).click();
   await expect(dialog).toHaveCount(0);
-  await expect(bidTrigger(page)).toBeFocused();
+  await expect(marketOptionsTrigger(page)).toBeFocused();
   await expect(await summaryValue(page, "Projected spending")).toHaveText("13,000,000 €");
   await expect(page.getByText(/Refreshing balance and bids/).first()).toBeVisible();
   await page.getByRole("combobox", { name: "Search market" }).fill("");
   await expect(page.locator(".market-data-row .market-value").getByText("Your bid: 6,000,000 €", { exact: true })).toBeVisible();
-  await bidTrigger(page).click();
+  await openBids(page);
   await expect(panel.getByRole("button", { name: "Cancel bid for Player 14", exact: true })).toBeEnabled();
   await panel.getByRole("button", { name: "Cancel bid for Player 14", exact: true }).click();
-  await expect(bidTrigger(page, 2)).toBeVisible();
   await expect(panel.getByRole("listitem")).toHaveCount(2);
   await expect(panel.getByRole("button", { name: "Refresh bids", exact: true })).toBeEnabled();
   await page.keyboard.press("Escape");
-  await expect(bidTrigger(page, 2)).toBeFocused();
+  await expect(marketOptionsTrigger(page)).toBeFocused();
   await expect(await summaryValue(page, "Projected spending")).toHaveText("7,000,000 €");
   await page.keyboard.press("Escape");
   await page.getByRole("combobox", { name: "Search market" }).fill("");
@@ -58,12 +65,11 @@ test("failed cancellation restores rows, count and spending; failed refresh reta
   const fixture = await mockMarketBids(page);
   fixture.rejectCancellation(true);
   await page.goto("/market");
-  await bidTrigger(page).click();
+  await openBids(page);
   const panel = page.getByRole("dialog", { name: "My bids", exact: true });
   await panel.getByRole("button", { name: "Cancel bid for Player 14", exact: true }).click();
   await expect(panel.getByRole("heading", { name: "Player 14", exact: true })).toBeVisible();
   await expect(panel.locator(".market-bids-total strong")).toHaveText("11,000,000 €");
-  await expect(bidTrigger(page)).toBeVisible();
   fixture.failRead(true);
   await panel.getByRole("button", { name: "Refresh bids", exact: true }).click();
   await expect(panel.getByText(/Cached bids may be stale/)).toBeVisible();
@@ -82,14 +88,14 @@ test("league switching isolates bids, totals and dialog state", async ({ page })
   ] }));
   await page.route("**/api/market/leagues/l2", (route) => route.fulfill({ json: { marketPlayers: [], userBids: [] } }));
   await page.goto("/market");
-  await bidTrigger(page).click();
+  await openBids(page);
   await page.keyboard.press("Escape");
   await page.locator(".nav-options-trigger").click();
   await page.getByRole("combobox", { name: "League", exact: true }).click();
   await page.getByRole("option", { name: "Other League", exact: true }).click();
   await page.locator(".nav-options-trigger").click();
   await expect(await summaryValue(page, "Projected spending")).toHaveText("0 €");
-  await bidTrigger(page, 0).click();
+  await openBids(page, 0);
   await expect(page.getByText("No active bids.", { exact: true })).toBeVisible();
   await expect(page.getByRole("dialog").getByRole("listitem")).toHaveCount(0);
 });
@@ -102,9 +108,9 @@ test("new bids update known counts once through delayed server confirmation", as
   await row.getByRole("button", { name: "Options", exact: true }).click();
   await page.getByRole("menuitem", { name: "Hire", exact: true }).click();
   await page.getByRole("dialog").getByRole("button", { name: "Place bid", exact: true }).click();
-  await expect(bidTrigger(page, 4)).toBeVisible();
+  await expectBidCount(page, 4);
   await expect(row.getByText("Bids: 1", { exact: true })).toBeVisible();
-  await bidTrigger(page, 4).click();
+  await openBids(page, 4);
   await expect(page.getByRole("button", { name: "Cancel bid for Player 16", exact: true })).toBeDisabled();
   await expect(page.getByRole("button", { name: "Cancel bid for Player 16", exact: true })).toBeEnabled();
   expect(fixture.writes).toHaveLength(1);
@@ -126,7 +132,7 @@ test("first load and incomplete bids stay visible without authorizing unavailabl
     ] } });
   });
   await page.goto("/market");
-  await page.getByRole("button", { name: "My bids, 0 active, incomplete", exact: true }).click();
+  await chooseMarketOption(page, "My bids, 0 active, incomplete");
   const panel = page.getByRole("dialog", { name: "My bids", exact: true });
   await expect(panel.getByText("Loading bids…", { exact: true })).toBeVisible();
   release();
@@ -156,7 +162,7 @@ test("modify waits for catalog metadata while cancellation stays available", asy
     }], userBids: [],
   } }));
   await page.goto("/market");
-  await bidTrigger(page, 1).click();
+  await openBids(page, 1);
   const panel = page.getByRole("dialog", { name: "My bids", exact: true });
   const modify = panel.getByRole("button", { name: "Modify bid for Player 14", exact: true });
   await expect(modify).toBeDisabled();
@@ -185,14 +191,14 @@ test("refresh bids recovers a failed catalog request", async ({ page }) => {
   await expect(error).toBeVisible();
   const failedReads = catalogReads;
   failed = false;
-  await bidTrigger(page).click();
+  await openBids(page);
   await page.getByRole("dialog", { name: "My bids", exact: true })
     .getByRole("button", { name: "Refresh bids", exact: true }).click();
   await page.keyboard.press("Escape");
   await expect(page.locator(".market-list").getByRole("link", { name: "Player 14", exact: true })).toBeVisible();
   await expect(error).toHaveCount(0);
   expect(catalogReads).toBe(failedReads + 1);
-  await bidTrigger(page).click();
+  await openBids(page);
   const refresh = page.getByRole("dialog", { name: "My bids", exact: true })
     .getByRole("button", { name: "Refresh bids", exact: true });
   await expect(refresh).toBeEnabled();
@@ -227,7 +233,7 @@ test("a successful direct offer never creates a synthetic market bid", async ({ 
   }
   await dialog.getByRole("button", { name: "Send offer", exact: true }).click();
   await expect(dialog).toHaveCount(0);
-  await expect(bidTrigger(page, 0)).toBeVisible();
+  await expectBidCount(page, 0);
   await expect(await summaryValue(page, "Projected spending")).toHaveText("0 €");
   expect(writes).toBe(1);
 });
@@ -287,7 +293,7 @@ for (const theme of ["light", "dark"]) {
       await page.screenshot({ path: info.outputPath(`market-${theme}-${width}.png`), fullPage: true });
       const balanceTrigger = page.getByRole("button", { name: /Show balance details/ });
       const balanceBox = await balanceTrigger.boundingBox();
-      const bidsBox = await bidTrigger(page).boundingBox();
+      const bidsBox = await marketOptionsTrigger(page).boundingBox();
       if (width > 600) expect(Math.abs(balanceBox!.y - bidsBox!.y)).toBeLessThan(2);
       await balanceTrigger.click();
       const balanceDetails = page.getByRole("dialog", { name: "Balance details", exact: true });
@@ -307,7 +313,7 @@ for (const theme of ["light", "dark"]) {
       await page.clock.fastForward(60_000);
       await expect(lockedName).not.toHaveCSS("color", "rgb(255, 75, 68)");
       await expect(name).toHaveCSS("color", "rgb(255, 75, 68)");
-      await bidTrigger(page).click();
+      await openBids(page);
       const panel = page.getByRole("dialog", { name: "My bids", exact: true });
       await expect(panel.getByRole("listitem")).toHaveCount(3);
       await panel.getByRole("heading", { name: "My bids", exact: true }).hover();
@@ -318,8 +324,8 @@ for (const theme of ["light", "dark"]) {
         await expect.poll(() => page.evaluate(() => !!document.activeElement?.closest('[role="dialog"]'))).toBe(true);
       }
       await page.keyboard.press("Escape");
-      await expect(bidTrigger(page)).toBeFocused();
-      await bidTrigger(page).click();
+      await expect(marketOptionsTrigger(page)).toBeFocused();
+      await openBids(page);
       await panel.getByRole("button", { name: "Modify bid for Player 14", exact: true }).click();
       const dialog = page.getByRole("dialog", { name: "Modify bid", exact: true });
       await expect(dialog).toBeVisible();
@@ -330,7 +336,7 @@ for (const theme of ["light", "dark"]) {
       await expect(dialog.getByRole("button", { name: "Update bid", exact: true })).toBeDisabled();
       await expect(dialog.getByRole("button", { name: "Update bid", exact: true })).toHaveCSS("border-radius", "0px");
       await page.keyboard.press("Escape");
-      await expect(bidTrigger(page)).toBeFocused();
+      await expect(marketOptionsTrigger(page)).toBeFocused();
       await page.goto("/players?q=Player");
       await expect(page.getByRole("heading", { name: "Players", exact: true })).toBeVisible();
       await expect(page.locator(".market-name").first()).toHaveCSS("font-weight", "700");

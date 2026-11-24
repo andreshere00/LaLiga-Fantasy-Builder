@@ -229,4 +229,11 @@ configured. Favorites still save without a running worker, but alerts cannot
 advance. See [storage, existing-volume provisioning and recovery](../../docs/api/scouting/README.md#storage-and-operation)
 and the [production upgrade checklist](../../infra/gcp/README.md#upgrading-an-existing-installation-for-scouting).
 
+`fantasy-auto-market-worker` is likewise a separate, port-less process from the API image. It
+executes armed auto-market rules, so without it rules stay `armed`. Compose starts it after API
+readiness, host development starts it via `uv run poe dev`, and standalone use is
+`uv run fantasy-auto-market-worker` with `AUTO_MARKET_SERVICE_TOKEN` (the value Auth holds),
+`AUTO_MARKET_DATABASE_URL` (Compose requires it; host development falls back to
+`SCOUTING_DATABASE_URL`) and `AUTH_INTERNAL_BASE_URL` set. See [automatic market rules](../../docs/api/auto-market/README.md#worker-and-deployment).
+
 Read-only CLI: `uv run fantasy-scouting --league-id LEAGUE`.

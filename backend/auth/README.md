@@ -99,3 +99,14 @@ grant + dedicated `SCOUTING_SERVICE_TOKEN`. Migration 0006 persists grants; unli
 and re-pairing revoke them. `fantasy-browser-session scouting-analysis --json` reads
 favorites/alerts without pairing or changing read state. See
 [scouting](../../docs/api/scouting/README.md) for the full trust boundary.
+
+## Auto-market write delegation
+
+Armed auto-market rules need unattended market writes, so Auth issues a second, separate
+grant kind. `PUT/DELETE /internal/auto-market/leagues/{league_id}/grant` require the
+subject JWT + ordinary service token. `POST .../bearer` redeems an existing, unexpired
+(30 days, renewed on each arm) grant with the dedicated `AUTO_MARKET_SERVICE_TOKEN`, which
+must differ from `INTERNAL_SERVICE_TOKEN` and `SCOUTING_SERVICE_TOKEN`. A scouting grant
+cannot redeem a write bearer. Migration 0007 persists grants; unlinking, re-pairing and
+connection changes revoke them. See [automatic market rules](../../docs/api/auto-market/README.md)
+for the trust boundary.

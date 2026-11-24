@@ -11,7 +11,7 @@ fi
 
 # Docker may still own the published ports from `poe up`.
 if command -v docker >/dev/null 2>&1; then
-  docker compose --profile apps stop identity auth api scouting-worker scraping frontend >/dev/null 2>&1 || true
+  docker compose --profile apps stop identity auth api scouting-worker auto-market-worker scraping frontend >/dev/null 2>&1 || true
 fi
 
 service_for_port() {
@@ -80,7 +80,7 @@ done
 
 # Scouting has no listening port, so identify only this checkout's worker by cwd.
 while read -r pid command; do
-  [[ "$command" == *"fantasy-scouting-worker"* ]] || continue
+  [[ "$command" == *"fantasy-scouting-worker"* || "$command" == *"fantasy-auto-market-worker"* ]] || continue
   process_dir="$(lsof -a -p "$pid" -d cwd -Fn 2>/dev/null | sed -n 's/^n//p')"
   [[ "$process_dir" == "$ROOT/backend/api" ]] || continue
   kill -TERM "$pid" 2>/dev/null || true

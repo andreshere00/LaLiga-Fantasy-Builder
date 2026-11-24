@@ -612,6 +612,173 @@ Get optional stadium forecasts for a matchday
 Full nested fields: [`WeekWeather`](#weekweather).
 
 
+## Tag: `auto-market`
+
+### `DELETE` `/auto-market/account`
+
+Delete Account
+
+**Security:** HTTP Bearer (internal JWT)
+
+#### Inputs
+
+No path, query, or body parameters.
+
+#### Outputs
+
+**HTTP 200:** `AutoMarketResult`
+
+| Field | Type | Required | Constraints | Description |
+|-------|------|----------|-------------|-------------|
+| `ok` | boolean | no |  |  |
+
+Full nested fields: [`AutoMarketResult`](#automarketresult).
+
+
+### `GET` `/auto-market/leagues/{league_id}/executions`
+
+List Executions
+
+**Security:** HTTP Bearer (internal JWT)
+
+#### Inputs
+
+| Source | Name | Type | Required | Constraints | Description |
+|--------|------|------|----------|-------------|-------------|
+| path | `league_id` | string | yes | minLength=1 |  |
+| query | `limit` | integer | no | min=1, max=100 |  |
+
+#### Outputs
+
+**HTTP 200:** `AutoExecutionsResponse`
+
+| Field | Type | Required | Constraints | Description |
+|-------|------|----------|-------------|-------------|
+| `executions` | array[AutoExecution] | yes |  |  |
+
+Full nested fields: [`AutoExecutionsResponse`](#autoexecutionsresponse).
+
+
+### `GET` `/auto-market/leagues/{league_id}/rules`
+
+List Rules
+
+**Security:** HTTP Bearer (internal JWT)
+
+#### Inputs
+
+| Source | Name | Type | Required | Constraints | Description |
+|--------|------|------|----------|-------------|-------------|
+| path | `league_id` | string | yes | minLength=1 |  |
+
+#### Outputs
+
+**HTTP 200:** `AutoRulesResponse`
+
+| Field | Type | Required | Constraints | Description |
+|-------|------|----------|-------------|-------------|
+| `rules` | array[AutoRule] | yes |  |  |
+| `status` | string | no |  |  |
+| `checkedAt` | string | no |  |  |
+
+Full nested fields: [`AutoRulesResponse`](#autorulesresponse).
+
+
+### `POST` `/auto-market/leagues/{league_id}/rules`
+
+Arm Rule
+
+**Security:** HTTP Bearer (internal JWT)
+
+#### Inputs
+
+| Source | Name | Type | Required | Constraints | Description |
+|--------|------|------|----------|-------------|-------------|
+| path | `league_id` | string | yes | minLength=1 |  |
+| body | `side` | string | yes |  |  |
+| body | `target` | string | no |  |  |
+| body | `playerId` | string | yes |  |  |
+| body | `playerTeamId` | string | no |  |  |
+| body | `triggerKind` | string | yes |  |  |
+| body | `triggerPercent` | number | no |  |  |
+| body | `triggerAmount` | integer | no |  |  |
+| body | `priceMode` | string | no |  |  |
+| body | `bidAmount` | integer | no |  |  |
+| body | `maxSpend` | integer | no |  |  |
+| body | `expiresAt` | string | no |  |  |
+| body | `listNow` | boolean | no |  |  |
+
+#### Outputs
+
+**HTTP 200:** `AutoMarketResult`
+
+| Field | Type | Required | Constraints | Description |
+|-------|------|----------|-------------|-------------|
+| `ok` | boolean | no |  |  |
+
+Full nested fields: [`AutoMarketResult`](#automarketresult).
+
+
+### `PUT` `/auto-market/leagues/{league_id}/rules/{rule_id}`
+
+Replace Rule
+
+**Security:** HTTP Bearer (internal JWT)
+
+#### Inputs
+
+| Source | Name | Type | Required | Constraints | Description |
+|--------|------|------|----------|-------------|-------------|
+| path | `league_id` | string | yes | minLength=1 |  |
+| path | `rule_id` | integer | yes |  |  |
+| body | `side` | string | yes |  |  |
+| body | `target` | string | no |  |  |
+| body | `playerId` | string | yes |  |  |
+| body | `playerTeamId` | string | no |  |  |
+| body | `triggerKind` | string | yes |  |  |
+| body | `triggerPercent` | number | no |  |  |
+| body | `triggerAmount` | integer | no |  |  |
+| body | `priceMode` | string | no |  |  |
+| body | `bidAmount` | integer | no |  |  |
+| body | `maxSpend` | integer | no |  |  |
+| body | `expiresAt` | string | no |  |  |
+| body | `listNow` | boolean | no |  |  |
+
+#### Outputs
+
+**HTTP 200:** `AutoMarketResult`
+
+| Field | Type | Required | Constraints | Description |
+|-------|------|----------|-------------|-------------|
+| `ok` | boolean | no |  |  |
+
+Full nested fields: [`AutoMarketResult`](#automarketresult).
+
+
+### `DELETE` `/auto-market/leagues/{league_id}/rules/{rule_id}`
+
+Cancel Rule
+
+**Security:** HTTP Bearer (internal JWT)
+
+#### Inputs
+
+| Source | Name | Type | Required | Constraints | Description |
+|--------|------|------|----------|-------------|-------------|
+| path | `league_id` | string | yes | minLength=1 |  |
+| path | `rule_id` | integer | yes |  |  |
+
+#### Outputs
+
+**HTTP 200:** `AutoMarketResult`
+
+| Field | Type | Required | Constraints | Description |
+|-------|------|----------|-------------|-------------|
+| `ok` | boolean | no |  |  |
+
+Full nested fields: [`AutoMarketResult`](#automarketresult).
+
+
 ## Tag: `buyout`
 
 LaLiga Fantasy buyout clauses and player shielding. Thin authenticated proxies of competition league buyout resources.
@@ -1937,6 +2104,83 @@ Nested models referenced by the operations above. All Fantasy proxy models use `
 | `msg` | string | no |  |  |
 | `message` | string | no |  |  |
 | `description` | string | no |  |  |
+
+### `AutoExecution`
+
+| Field | Type | Required | Constraints | Description |
+|-------|------|----------|-------------|-------------|
+| `id` | integer | yes |  |  |
+| `ruleId` | integer | yes |  |  |
+| `action` | string | yes |  |  |
+| `amount` | integer | no |  |  |
+| `outcome` | string | yes |  |  |
+| `reason` | string | no |  |  |
+| `createdAt` | string | yes |  |  |
+
+### `AutoExecutionsResponse`
+
+| Field | Type | Required | Constraints | Description |
+|-------|------|----------|-------------|-------------|
+| `executions` | array[AutoExecution] | yes |  |  |
+
+### `AutoMarketResult`
+
+| Field | Type | Required | Constraints | Description |
+|-------|------|----------|-------------|-------------|
+| `ok` | boolean | no |  |  |
+
+### `AutoRule`
+
+| Field | Type | Required | Constraints | Description |
+|-------|------|----------|-------------|-------------|
+| `id` | integer | yes |  |  |
+| `leagueId` | string | yes |  |  |
+| `side` | string | yes |  |  |
+| `target` | string | yes |  |  |
+| `playerId` | string | yes |  |  |
+| `playerTeamId` | string | no |  |  |
+| `playerName` | string | yes |  |  |
+| `triggerKind` | string | yes |  |  |
+| `triggerPercent` | number | no |  |  |
+| `triggerAmount` | integer | no |  |  |
+| `baselineValue` | integer | yes |  |  |
+| `thresholdAmount` | integer | yes |  |  |
+| `priceMode` | string | yes |  |  |
+| `bidAmount` | integer | no |  |  |
+| `maxSpend` | integer | no |  |  |
+| `listNow` | boolean | no |  |  |
+| `state` | string | yes |  |  |
+| `armedAt` | string | yes |  |  |
+| `expiresAt` | string | no |  |  |
+| `listedPrice` | integer | no |  |  |
+| `acceptFloor` | integer | no |  |  |
+| `listedAt` | string | no |  |  |
+| `lastExecution` | AutoExecution | no |  | One attempted market write; upstream bodies are never stored. |
+
+### `AutoRuleWrite`
+
+| Field | Type | Required | Constraints | Description |
+|-------|------|----------|-------------|-------------|
+| `side` | string | yes |  |  |
+| `target` | string | no |  |  |
+| `playerId` | string | yes |  |  |
+| `playerTeamId` | string | no |  |  |
+| `triggerKind` | string | yes |  |  |
+| `triggerPercent` | number | no |  |  |
+| `triggerAmount` | integer | no |  |  |
+| `priceMode` | string | no |  |  |
+| `bidAmount` | integer | no |  |  |
+| `maxSpend` | integer | no |  |  |
+| `expiresAt` | string | no |  |  |
+| `listNow` | boolean | no |  |  |
+
+### `AutoRulesResponse`
+
+| Field | Type | Required | Constraints | Description |
+|-------|------|----------|-------------|-------------|
+| `rules` | array[AutoRule] | yes |  |  |
+| `status` | string | no |  |  |
+| `checkedAt` | string | no |  |  |
 
 ### `AveragePerMatch`
 

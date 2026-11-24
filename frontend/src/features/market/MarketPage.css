@@ -188,7 +188,7 @@
   .market-money-summary .market-money-heading { flex:0 0 auto; min-height:0; margin:0; }
   .market-money-summary .market-balance-amount { flex:1 1 auto; width:auto; min-width:0; justify-content:flex-end; border:1px solid var(--fb-line); }
   .market-money-summary .market-balance-amount strong { margin-right:0; }
-  .market-section-actions { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:8px; flex:none; width:100%; }
+  .market-section-actions { display:grid; grid-template-columns:repeat(auto-fit,minmax(0,1fr)); gap:8px; flex:none; width:100%; }
   .market-section-actions > .fb-button {
     position:relative; flex:none; min-width:0; min-height:68px; padding:10px 4px 8px;
     flex-direction:column; justify-content:center; align-items:center; gap:6px; font-size:12px;
@@ -205,4 +205,13 @@
   .market-money-summary .market-money-heading { flex:0 1 auto; font-size:11px; line-height:1.2; }
   .market-money-summary .market-balance-amount { gap:6px; padding-inline:8px; font-size:14px; }
   .market-money-summary .market-money-icon { width:18px; height:18px; }
+}
+
+/* Tablet and desktop: the destinations hug their content and share one baseline with the balance
+   instead of stretching across a row of their own. */
+@media(min-width:701px) {
+  .market-page.comparison-page:not(.players-page) .market-balance-actions { flex-wrap:nowrap; align-items:flex-end; gap:12px; }
+  .market-section-actions { flex:0 1 auto; flex-wrap:nowrap; gap:12px; }
+  .market-section-actions > .fb-button { flex:0 0 auto; min-width:0; padding-inline:16px; }
+  .market-section-actions > .fb-button > span:last-child { white-space:nowrap; }
 }

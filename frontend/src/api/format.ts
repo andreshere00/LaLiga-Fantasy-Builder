@@ -20,6 +20,14 @@ export function parseIntegerAmount(raw: string): number | null {
   return Number.isSafeInteger(value) ? value : null;
 }
 
+/** Parses a percentage typed with either a decimal point or the decimal comma Spanish keyboards use. */
+export function parsePercent(raw: string): number | null {
+  const trimmed = raw.trim().replace(/\s/g, "").replace(/%$/, "");
+  if (!/^\d+(?:[.,]\d+)?$/.test(trimmed)) return null;
+  const value = Number(trimmed.replace(",", "."));
+  return Number.isFinite(value) ? value : null;
+}
+
 /** @deprecated Use formatEuro; kept for lineup "team value" wording. */
 export function formatTeamValue(value: number | null | undefined): string {
   return formatEuro(value);

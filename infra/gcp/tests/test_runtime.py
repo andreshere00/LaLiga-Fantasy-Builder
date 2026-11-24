@@ -253,6 +253,8 @@ class RuntimeTests(unittest.TestCase):
                 "VAULT_DB_PASSWORD",
                 "APP_DB_PASSWORD",
                 "SCOUTING_SERVICE_TOKEN",
+                "AUTO_MARKET_SERVICE_TOKEN",
+                "AUTO_MARKET_DATABASE_URL",
                 "INTERNAL_SERVICE_TOKEN",
                 "SCRAPING_SERVICE_TOKEN",
             ]
@@ -303,6 +305,12 @@ class RuntimeTests(unittest.TestCase):
         for name in ["api", "scraping", "frontend"]:
             self.assertNotIn("DATABASE_URL", services[name].get("environment", {}))
         self.assertEqual(services["auth"]["environment"]["USE_MEMORY_STORE"], "false")
+        for name, service in services.items():
+            holds_write_token = "AUTO_MARKET_SERVICE_TOKEN" in service.get("environment", {})
+            self.assertEqual(holds_write_token, name in {"auth", "auto-market-worker"}, name)
+        self.assertEqual(
+            services["auto-market-worker"]["command"], ["fantasy-auto-market-worker"]
+        )
         self.assertEqual(
             services["identity"]["environment"]["BETTER_AUTH_URL"], "https://example.com"
         )

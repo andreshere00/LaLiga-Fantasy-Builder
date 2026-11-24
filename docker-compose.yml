@@ -87,6 +87,7 @@ services:
     env_file: [./backend/auth/.env]
     environment:
       SCOUTING_SERVICE_TOKEN: ${SCOUTING_SERVICE_TOKEN:-local-scouting-worker-token}
+      AUTO_MARKET_SERVICE_TOKEN: ${AUTO_MARKET_SERVICE_TOKEN:-}
       AUTH_JWKS_URL: http://identity:8003/auth/jwks
       INTERNAL_JWT_ISSUER: ${INTERNAL_JWT_ISSUER:-http://localhost:3000/auth}
       FRONTEND_ORIGIN: ${FRONTEND_ORIGIN:-http://localhost:3000}
@@ -145,6 +146,23 @@ services:
     environment:
       SCOUTING_DATABASE_URL: postgresql://fantasy_api:${APP_DB_PASSWORD:-app_dev}@postgres:5432/fantasy_app
       SCOUTING_SERVICE_TOKEN: ${SCOUTING_SERVICE_TOKEN:-local-scouting-worker-token}
+      AUTH_INTERNAL_BASE_URL: http://auth:8000
+    depends_on:
+      api:
+        condition: service_healthy
+    networks: [internal, egress]
+    profiles: [apps, full]
+
+  auto-market-worker:
+    build: ./backend/api
+    env_file: [./backend/api/.env]
+    restart: unless-stopped
+    command: ["fantasy-auto-market-worker"]
+    healthcheck:
+      disable: true
+    environment:
+      AUTO_MARKET_DATABASE_URL: ${AUTO_MARKET_DATABASE_URL:?Set AUTO_MARKET_DATABASE_URL}
+      AUTO_MARKET_SERVICE_TOKEN: ${AUTO_MARKET_SERVICE_TOKEN:?Set AUTO_MARKET_SERVICE_TOKEN}
       AUTH_INTERNAL_BASE_URL: http://auth:8000
     depends_on:
       api:

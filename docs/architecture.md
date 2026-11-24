@@ -163,6 +163,7 @@ do not share a generic proxy class.
 | Domain | Public prefix | Upstream prefix | Methods |
 |--------|---------------|-----------------|---------|
 | Scouting | `/scouting/...` | Application PostgreSQL; worker uses existing read repositories | GET + PUT/POST/DELETE (app records only) |
+| Auto-market | `/auto-market/...` | Application PostgreSQL; armed rules executed by a private worker | GET + POST/PUT/DELETE (app records only) |
 | Leagues | `/leagues/...` | `{CMP}/leagues/...` | GET (reads) |
 | Lineup builder | `/lineup-builder/leagues/{league_id}/build` and `/build/stream` | Existing read-only services | POST planning only; JSON or request-scoped progress stream; JWT membership verified |
 | Teams | `/teams/...` | `{CMP}/teams/...` | GET + PUT (lineup write) |
@@ -388,10 +389,10 @@ Run commands live in the [root README](../README.md).
   `python:3.14-slim-trixie` with uv only in the builder. The frontend image
   builds with Bun and serves static files plus `/auth`, `/laliga`, and `/api`
   proxies from Nginx.
-- Compose profile `apps` runs identity, auth, API, scraping, scouting-worker and frontend, with
+- Compose profile `apps` runs identity, auth, API, scraping, scouting-worker, auto-market-worker and frontend, with
   PostgreSQL and Redis. Identity sends email through configured SMTP. `full` adds OTEL.
   Identity, Auth and API own separate logical databases and roles. The scouting
-  worker reuses the API image and application database without a published port.
+  and auto-market workers reuse the API image and application database without a published port.
 - API and auth share a private network for `/internal/*`. Scraping joins that
   network and an `egress` network so a future downloader can reach the public
   internet without putting the API on egress.
@@ -417,3 +418,23 @@ A private worker redeems explicit Auth-owned league grants with a dedicated serv
 credential; it never stores browser JWTs or LaLiga bearers. Existing bearer exchange
 requirements are unchanged. See [scouting](api/scouting/README.md) for the delegation
 trust boundary, revocation, event semantics, database provisioning and recovery.
+
+## Automatic market rules and background writes
+
+The JWT-owned `/auto-market` domain stores one-shot sell and buy rules in the same
+application database. **Arming a rule in its confirmation dialog is the explicit
+confirmation** for the single write it names. A private `auto-market-worker` then lists
+the player, accepts an offer, bids, or pays a clause when the rule's threshold is met.
+
+This is the only background path that writes to Fantasy, and it is narrower than scouting:
+
+- It redeems a separate `auto_market_write` grant (expiring after 30 days, renewed on arm)
+  with its own `AUTO_MARKET_SERVICE_TOKEN`, held only by Auth and the worker. A scouting
+  read grant cannot redeem it.
+- `AutoMarketWriter` exposes four writes. It cannot increase clauses or activate shields.
+- Each write is claimed with a version guard first and is never retried; the owner, league
+  and player come from the stored rule and verified JWT, never from a caller field.
+- Scouting, CLIs and `fantasy-browser-session` remain read-only.
+
+See [automatic market rules](api/auto-market/README.md) for the contract, evaluation rules
+and failure semantics.
