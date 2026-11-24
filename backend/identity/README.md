@@ -26,8 +26,11 @@ To skip SMTP and the verification email locally, run `uv run poe seed-dev-user` 
 `bun run seed:dev-user` in this directory). It creates or resets a verified user
 `dev@example.com` (username `devuser`) and prints a random password. Override with
 `DEV_USER_EMAIL`, `DEV_USER_USERNAME`, `DEV_USER_NAME` and `DEV_USER_PASSWORD` (at least
-12 characters, passing the password policy). It sends no mail and refuses a non-local
-database or `NODE_ENV=production`.
+12 characters, passing the password policy, which is checked before any write). It sends
+no mail. It runs only against `localhost`, `127.0.0.1` or `[::1]`; the Compose host
+`postgres` also needs `ALLOW_DEV_SEED=1`, and `NODE_ENV=production` is always refused. An
+existing account is reset only if it is `dev@example.com`; any other email needs
+`DEV_USER_FORCE=1`.
 Account settings at `/account` support username and password changes, a verified
 email change by one-time code, provider linking, and permanent deletion. Deletion
 calls LaLiga Auth to remove the user's sealed connection before removing their
