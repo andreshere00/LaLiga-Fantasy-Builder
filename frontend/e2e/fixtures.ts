@@ -202,3 +202,12 @@ export async function mockScouting(page: Page) {
   });
   return { favorites, alerts, setFailWatch: (value: boolean) => { failWatch = value; } };
 }
+
+/** The Market options trigger that groups favorites, auto market and my bids. */
+export const marketOptionsTrigger = (page: Page) => page.locator("[data-market-options-trigger]");
+
+/** Open the Market options menu and choose one entry by its accessible name. */
+export async function chooseMarketOption(page: Page, name: string | RegExp) {
+  await marketOptionsTrigger(page).click();
+  await page.getByRole("menuitem", { name, exact: typeof name === "string" }).click();
+}

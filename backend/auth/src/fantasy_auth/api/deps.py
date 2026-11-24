@@ -22,6 +22,7 @@ from fantasy_auth.adapters.memory import (
 )
 from fantasy_auth.adapters.redis import MemoryRefreshLock
 from fantasy_auth.adapters.vault_aesgcm import AesGcmTokenVault
+from fantasy_auth.application.auto_market import AutoMarketGrants
 from fantasy_auth.application.credentials import CredentialProvider
 from fantasy_auth.application.pairing import PairingService
 from fantasy_auth.application.scouting import ScoutingGrants
@@ -56,6 +57,7 @@ class AppContainer:
     browser_pairings: BrowserPairingStore
     refresh_lock: RefreshLock
     scouting_grants: ScoutingGrants | None = None
+    auto_market_grants: AutoMarketGrants | None = None
     pg_pool: Any | None = None
     redis: Any | None = None
 
@@ -126,6 +128,12 @@ def build_container(
     )
 
     grants = ScoutingGrants(resolved_connections, pg_pool)
+    write_grants = AutoMarketGrants(resolved_connections, pg_pool)
+
+    async def revoke_delegations(owner: str) -> None:
+        await grants.revoke_all(owner)
+        await write_grants.revoke_all(owner)
+
     pairings = PairingService(
         pairings=resolved_pairings,
         connections=resolved_connections,
@@ -140,7 +148,7 @@ def build_container(
         b2c=b2c,
         redirect_uri=cfg.laliga_redirect_uri,
         operation_lock=resolved_refresh_lock,
-        on_connection_change=grants.revoke_all,
+        on_connection_change=revoke_delegations,
     )
     credentials = CredentialProvider(
         connections=resolved_connections,
@@ -161,6 +169,7 @@ def build_container(
         browser_pairings=resolved_browser,
         refresh_lock=resolved_refresh_lock,
         scouting_grants=grants,
+        auto_market_grants=write_grants,
         pg_pool=pg_pool,
         redis=redis,
     )

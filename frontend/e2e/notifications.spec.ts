@@ -1,5 +1,5 @@
 import { expect, test } from "@playwright/test";
-import { mockApplication } from "./fixtures";
+import { chooseMarketOption, mockApplication } from "./fixtures";
 
 for (const [width, theme, touch] of [[375, "light", true], [1440, "dark", false]] as const) {
   test(`stacked urgent notifications dismiss with pointer and keyboard: ${theme}`, async ({ browser }) => {
@@ -36,7 +36,7 @@ for (const [width, theme, touch] of [[375, "light", true], [1440, "dark", false]
     await expect(toasts.locator("button")).toBeFocused();
     await page.keyboard.press("Enter");
     await expect(toasts).toHaveCount(0);
-    await page.getByRole("button", { name: "Favorites (0)", exact: true }).click();
+    await chooseMarketOption(page, "Favorites (0)");
     await expect(page.getByRole("dialog", { name: "Favorites and scouting" })).toBeVisible();
     await context.close();
   });

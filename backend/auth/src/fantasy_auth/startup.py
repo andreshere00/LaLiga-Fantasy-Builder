@@ -62,6 +62,15 @@ def validate_settings(settings: Settings) -> None:
         raise StartupError("AUTH_JWKS_URL is required in production mode")
     if not settings.internal_service_token:
         raise StartupError("INTERNAL_SERVICE_TOKEN is required when USE_MEMORY_STORE=false")
+    write_token = settings.auto_market_service_token
+    if write_token and write_token in (
+        settings.internal_service_token,
+        settings.scouting_service_token,
+    ):
+        raise StartupError(
+            "AUTO_MARKET_SERVICE_TOKEN must differ from INTERNAL_SERVICE_TOKEN "
+            "and SCOUTING_SERVICE_TOKEN"
+        )
 
 
 def log_vault_key_status(*, used_dev_fallback: bool) -> None:

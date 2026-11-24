@@ -1,4 +1,7 @@
 import { z } from "zod";
+import {
+  autoExecutionsQuerySchema, autoExecutionsSchema, autoResultSchema, autoRulesSchema, autoRuleWriteSchema,
+} from "./autoMarket";
 import { favoritesSchema, inboxSchema, resultSchema, watchSchema, favoritesImportSchema, favoritesQuerySchema, inboxQuerySchema } from "./scouting";
 import { radarResponseShape, radarQuerySchema, type PlayerRadarResponseDto } from "./radar";
 export { radarQuerySchema } from "./radar";
@@ -1214,6 +1217,9 @@ export type ApiResponseDto =
   | MarketHistoryDto
   | PlayerTeamOffersDto
   | MarketMutationResultDto
+  | z.infer<typeof autoRulesSchema>
+  | z.infer<typeof autoExecutionsSchema>
+  | z.infer<typeof autoResultSchema>
   | ShieldStatusDto
   | BuyoutMutationResultDto;
 
@@ -1234,6 +1240,12 @@ const endpointContracts: Array<{
   { method: "GET", path: /^\/api\/scouting\/notifications$/, response: inboxSchema, query: inboxQuerySchema },
   { method: "PUT", path: /^\/api\/scouting\/notifications\/[^/]+\/read$/, response: resultSchema },
   { method: "DELETE", path: /^\/api\/scouting\/account$/, response: resultSchema },
+  { method: "GET", path: /^\/api\/auto-market\/leagues\/[^/]+\/rules$/, response: autoRulesSchema },
+  { method: "POST", path: /^\/api\/auto-market\/leagues\/[^/]+\/rules$/, response: autoResultSchema, request: autoRuleWriteSchema },
+  { method: "PUT", path: /^\/api\/auto-market\/leagues\/[^/]+\/rules\/[^/]+$/, response: autoResultSchema, request: autoRuleWriteSchema },
+  { method: "DELETE", path: /^\/api\/auto-market\/leagues\/[^/]+\/rules\/[^/]+$/, response: autoResultSchema },
+  { method: "GET", path: /^\/api\/auto-market\/leagues\/[^/]+\/executions$/, response: autoExecutionsSchema, query: autoExecutionsQuerySchema },
+  { method: "DELETE", path: /^\/api\/auto-market\/account$/, response: autoResultSchema },
   { method: "POST", path: /^\/api\/lineup-builder\/leagues\/[^/]+\/build$/, response: lineupBuildResponseSchema, request: lineupBuildRequestSchema },
   { method: "POST", path: /^\/api\/lineup-builder\/leagues\/[^/]+\/build\/stream$/, response: lineupBuildStreamEventSchema, request: lineupBuildRequestSchema },
   { method: "GET", path: /^\/api\/competitions\/\d+\/standings$/, response: competitionStandingsSchema, query: standingsQuerySchema },

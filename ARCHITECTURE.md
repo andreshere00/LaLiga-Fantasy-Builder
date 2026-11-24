@@ -27,7 +27,11 @@ The API owns favorites, league watches and alerts in `fantasy_app` using the
 `fantasy_api` role. A separate `scouting-worker` process reuses the API image
 without exposing a port. It redeems explicit Auth-owned grants with a dedicated
 service token and holds LaLiga bearers only transiently; it never places bids or
-pays clauses. See the [scouting contract](docs/api/scouting/README.md).
+pays clauses. A second process, `auto-market-worker`, also reuses the API image. It
+redeems separate, expiring Auth write grants with its own service token and performs
+only the market write that a user armed in a rule: listing, accepting an offer, bidding
+or paying a clause. See the [scouting contract](docs/api/scouting/README.md) and the
+[automatic market rules](docs/api/auto-market/README.md).
 
 ```mermaid
 sequenceDiagram
@@ -81,8 +85,10 @@ uses TTL caches and circuit breakers. Its current cache and limiter live in one
 process, so the initial deployment runs one worker. The API also uses in-process
 TTL caches. Lineup planning bounds source retrieval and search, moves CPU search
 off the event loop, allows at most two builds per process, and has a 120-second
-request budget. A recommendation does not execute Fantasy transactions. CLIs and
-browser-session automation remain read-only for bids, clauses, and shields.
+request budget. A recommendation does not execute Fantasy transactions. CLIs,
+browser-session automation and the scouting worker remain read-only for bids, clauses,
+and shields. The only unattended writes are those a user explicitly armed as an
+auto-market rule, executed once by `auto-market-worker`.
 
 Detailed guides: [backend architecture](docs/architecture.md),
 [API domains](docs/api/README.md), [identity](backend/identity/README.md),

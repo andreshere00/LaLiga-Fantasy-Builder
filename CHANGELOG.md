@@ -4,6 +4,62 @@ Notable changes to LaLiga Fantasy Builder are recorded here. Version 0.1.0
 summarizes the application through 27 October 2026; it is the first changelog
 entry, not a claim that every optional provider or deployment gate is complete.
 
+## [Unreleased]
+
+### Auto-market
+
+- Worker: a rate-limited write keeps its rule armed, unexpected write errors fail the rule once
+  instead of leaving it running, a rejected service token degrades the league instead of asking
+  users to relink, and buy rules skip closed listings to bid on an open one.
+- Rules: an edit that clashes with another live rule returns 409, re-saving a rule resumes a
+  paused league, and cancelling no longer fails when the unused grant cannot be revoked.
+- Compose: only the worker requires `AUTO_MARKET_SERVICE_TOKEN`; Auth starts without it.
+- Market screen: when a polled rule turns `listed` or `executed`, reload the league's market,
+  offers, squad, lineup and money. The worker writes in the background, so its listings were
+  invisible until a manual page reload.
+- Fix sell rules failing with `left_squad` when the league player card omits `playerTeamId`: the
+  worker now confirms the squad entry on the roster instead of comparing it with `None`.
+- Start `fantasy-auto-market-worker` from `scripts/dev-local.sh` (and stop it in
+  `dev-clean.sh`): without it, armed rules were never executed in local development.
+- Add list-only and list-now sell rules (`triggerKind: none`, `listNow`, migration
+  `0004_auto_market_list_now.sql`): the worker lists a player on the next pass without
+  waiting for its threshold, and a list-only rule never accepts an offer. A player that is
+  already on the market is adopted instead of listed twice.
+- Market screen: add an **Auto market** sheet (with a cycle icon) (rules grouped by selling, buying and history),
+  **Auto-buy…** in each row's Options menu, and an arm dialog with a live preview of the
+  threshold. Arming names the effect and asks for the spending cap on buys. English and
+  Spanish copy included. See [frontend](docs/frontend.md#automatic-rules).
+- Auto market: sort the sheet by concern. *Selling* holds the player list, **List all my players…**, the sell favorites and the active auto-sells; *Buying* holds the player search, the buy favorites and the active auto-buys; *History* follows. Each section says when it has no active rules.
+- Auto market: show each player's photo, club badge, FSYP and market value when choosing a player to sell.
+- Auto market: add **List all my players…** to put every squad player that is not on the market yet there at once (players already listed are left alone), and show the player's photo and club in the arm dialog. Players are only listed by default; one general rule (sell to an offer at a gain, or list when each value rises) can be applied to all of them, and any single player can have their own. When none of the rules can be armed, the message now reflects the real failure instead of always saying the rule was rejected.
+- Auto market: the sell arm dialog can list a player right away and either never sell automatically or accept an offer from a gain or amount.
+- Auto market: search any player to auto-buy them even when they are not on the market (the rule waits and bids only within the target value), and add the **Auto market** button to the Players page.
+- Market screen: group **Favorites**, **Auto market** and **My bids** into one **Market options** menu beside Offers, keeping the balance on the same line on desktop and the two buttons side by side on phones.
+- Auto market: add **Auto-buy favorites…** and **Auto-sell favorites…** to arm rules for several favorite players at once, at their market value or at an amount (no backend change: they use absolute-trigger rules).
+- Auto market: flag the feature with **New!** until it is opened once in this browser.
+- Auto market: list players already on the market (or with an offer) in the sell picker and adopt their listing, and relist a player automatically when its listing lapses without an accepted offer instead of closing the rule.
+
+- Auth issues a separate, expiring `auto_market_write` delegation (migration 0007) that a
+  user JWT creates and revokes per league. Redemption needs the new
+  `AUTO_MARKET_SERVICE_TOKEN`, which must differ from the scouting and ordinary service
+  tokens. Unlinking, re-pairing and connection changes revoke these grants.
+- Add the `/auto-market` API: users arm one-shot sell and buy rules with a relative or
+  absolute market-value threshold, priced at the threshold or at market value, and stored
+  in application PostgreSQL (migration `0002_auto_market.sql`). Rules, their derived
+  threshold and attempt history are readable, replaceable and cancellable; cancelling the
+  last live rule revokes the write delegation. See
+  [automatic market rules](docs/api/auto-market/README.md).
+- Add the auto-market executor: a pass lists a player when its value reaches a sell
+  threshold and accepts the best pending offer at or above a stored floor, bids on market
+  listings, and pays unlocked, unshielded release clauses, within `maxSpend`, cash, bidding
+  and squad-size limits. Each write is claimed first and never retried.
+- Add the `fantasy-auto-market-worker` process and `auto-market-worker` Compose service
+  (local and Google Cloud). The new `AUTO_MARKET_SERVICE_TOKEN` is provisioned to Auth and the
+  worker only; existing installations must add it before upgrading.
+- Document the policy change: arming an auto-market rule is the user's confirmation, and
+  its worker is the only background process allowed to write. Scouting, CLIs and
+  browser-session flows remain read-only.
+
 ## [0.6.2] - 2026-11-17
 
 ### Deployment

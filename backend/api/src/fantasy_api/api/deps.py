@@ -21,6 +21,9 @@ from fantasy_api.domain.club_pages import load_futbolfantasy_club_pages
 from fantasy_api.domain.errors import UnauthorizedError
 from fantasy_api.domain.users import AppUser, extract_app_user_from_claims
 from fantasy_api.domain.venues import VenueDirectory
+from fantasy_api.repositories.auto_market import AutoMarketRepository
+from fantasy_api.repositories.auto_market_sources import AutoMarketSources
+from fantasy_api.repositories.auto_market_writer import AutoMarketWriter
 from fantasy_api.repositories.buyout import BuyoutRepository
 from fantasy_api.repositories.calendar import CalendarRepository
 from fantasy_api.repositories.clubs import ClubsRepository
@@ -37,6 +40,8 @@ from fantasy_api.repositories.standings import StandingsRepository
 from fantasy_api.repositories.teams import TeamsRepository
 from fantasy_api.repositories.weather import WeatherRepository
 from fantasy_api.security.internal_jwt import InternalJwtValidator
+from fantasy_api.services.auto_market import AutoMarketService
+from fantasy_api.services.auto_market_executor import AutoMarketExecutor
 from fantasy_api.services.buyout import BuyoutService
 from fantasy_api.services.calendar import CalendarService
 from fantasy_api.services.calendar_weather import CalendarWeatherService
@@ -110,6 +115,8 @@ class AppContainer:
     calendar_weather_service: CalendarWeatherService
 
     scouting_service: ScoutingService | None = None
+    auto_market_service: AutoMarketService | None = None
+    auto_market_executor: AutoMarketExecutor | None = None
     player_radar_service: PlayerRadarService | None = None
     lineup_builder_service: LineupBuilderService | None = None
 
@@ -119,6 +126,8 @@ class AppContainer:
             await self.lineup_builder_service.aclose()
         if self.scouting_service is not None:
             await self.scouting_service.aclose()
+        if self.auto_market_service is not None:
+            await self.auto_market_service.aclose()
         await self.credentials.aclose()
         await self.laliga_client.aclose()
         await self.scraping_client.aclose()
@@ -321,6 +330,27 @@ def build_container(
             ttl_seconds=cfg.standings_ttl_seconds,
             club_ids=cfg.standings_club_ids,
         )
+    auto_market_repository = AutoMarketRepository(
+        cfg.auto_market_database_url or cfg.scouting_database_url
+    )
+    auto_market_sources = AutoMarketSources(
+        ScoutingSources(fantasy, cfg.laliga_competition_id), fantasy, cfg.laliga_competition_id
+    )
+    auto_market_grants = ScoutingAuthClient(
+        cfg.auth_internal_base_url,
+        cfg.internal_service_token,
+        cfg.auto_market_service_token,
+        scope="auto-market",
+    )
+    auto_market_service = AutoMarketService(
+        auto_market_repository, auto_market_sources, creds, auto_market_grants
+    )
+    auto_market_executor = AutoMarketExecutor(
+        auto_market_repository,
+        auto_market_sources,
+        AutoMarketWriter(fantasy, cfg.laliga_competition_id),
+        auto_market_grants,
+    )
     return AppContainer(
         settings=cfg,
         jwt_validator=validator,
@@ -353,6 +383,8 @@ def build_container(
                 cfg.auth_internal_base_url, cfg.internal_service_token, cfg.scouting_service_token
             ),
         ),
+        auto_market_service=auto_market_service,
+        auto_market_executor=auto_market_executor,
         player_radar_service=PlayerRadarService(
             PlayerRadarRepository(
                 dataset_root=cfg.radar_dataset_root,

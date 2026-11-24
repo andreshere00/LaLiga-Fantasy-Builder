@@ -62,7 +62,12 @@ return upstream bodies.
 JWT tests for auth-critical paths: missing Bearer, malformed, expired, wrong
 `iss`/`aud`, bad signature, missing `sub`.
 
-## Explicit background scouting delegation
+## Explicit background delegation
+
+Scouting and auto-market are the explicit exceptions to requiring a live user JWT on
+**redemption**. Scouting grants are read-only; auto-market grants (`auto_market_write`)
+allow the worker to perform the single write a user armed, expire after 30 days and use a
+different service token that scouting cannot redeem. The rules below apply to both.
 
 Scouting is the explicit exception to requiring a live user JWT on **redemption**:
 creation/revocation still require verified JWT + ordinary service credential. Auth

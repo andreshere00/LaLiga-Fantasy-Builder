@@ -74,7 +74,8 @@ Background access uses an **explicit opaque grant**, never a persisted browser J
 4. Deleting the last watch revokes the league grant through JWT + ordinary service token.
    Unlinking, re-pairing (even the same manager), connection identity changes and account
    deletion revoke delegations. Ordinary `/internal/laliga/bearer` still requires JWT +
-   service token. The worker only uses read repositories, with bearers held transiently.
+   service token. The worker only uses read repositories, with bearers held transiently. Unattended market
+writes belong to the separate [auto-market worker](../auto-market/README.md).
 
 All internal routes remain private-network-only. Auth owns grant mappings and encrypted
 credentials; the API owns application records. No refresh tokens or grants reach browser

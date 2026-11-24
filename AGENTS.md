@@ -40,6 +40,7 @@ New LaLiga features go in `backend/api`: `api/` → `services/` →
 
 | Domain | Prefix | Auth | Notes |
 |--------|--------|------|-------|
+| Auto-market | `/auto-market` | JWT | Armed sell/buy rules in app storage; the worker executes them via a write grant |
 | Leagues | `/leagues` | JWT + bearer | Reads |
 | Teams | `/teams` | JWT + bearer | Lineup PUT is a full replace |
 | Players | `/players` | Mixed | Catalog and market value are public; `/players/{id}/stats/*` needs JWT (scraped segments use scraping service). **`GET .../stats/detail`** aggregates segments; partial segment failure is **200** + `segment_errors` (see [Players API](docs/api/players/README.md)). |
@@ -67,8 +68,14 @@ Do not proxy a route marked **Low** confidence or hosted on
   or `[]`.
 - Encode every path segment with `repositories/paths.py` (and `path_segment`
   in CLIs).
-- Automated CLIs and `fantasy-browser-session` must not place bids, pay
-  clauses, increase clauses, or activate shields. Auth must not import
+- Fantasy writes need explicit user confirmation. Arming a rule in the auto-market
+  confirmation dialog is that confirmation for the one write it names. Only
+  `fantasy-auto-market-worker`, holding an `auto_market_write` grant, may list a
+  player, accept an offer, place a bid or pay a clause, and only for an armed rule
+  that names that write. It must never increase clauses or activate shields, and its
+  writes are claimed first and never retried.
+- Automated CLIs, `fantasy-browser-session` and the scouting worker must not place
+  bids, pay clauses, increase clauses, or activate shields. Auth must not import
   `fantasy_api`. Auth must not import `fantasy_scraping`. Scraping holds no
   LaLiga tokens. `fantasy-scraper` and `fantasy-parse` must not disable robots,
   rate limits, or place Fantasy bids.

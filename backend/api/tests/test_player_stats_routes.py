@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import json
+from datetime import UTC, datetime
 from pathlib import Path
 
 import httpx
@@ -17,6 +18,8 @@ from pydantic import SecretStr
 from test_container import build_test_container, test_settings
 
 GOLDEN = Path(__file__).parent / "fixtures" / "scraping" / "futbolfantasy_raphinha.json"
+# The golden scrape was captured on 2026-10-04; tests pin the clock there.
+FIXTURE_NOW = datetime(2026, 10, 4, 12, tzinfo=UTC)
 
 
 @pytest.fixture
@@ -95,6 +98,7 @@ def make_client(
         scraping_transport=httpx.MockTransport(scraping_handler),
         settings=settings,
     )
+    container.player_stats_service._clock = lambda: FIXTURE_NOW
     app = create_app(settings=settings, container=container)
     set_container(container)
     client = TestClient(app)

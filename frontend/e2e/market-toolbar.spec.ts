@@ -23,7 +23,7 @@ for (const [width, theme, language] of [[320, "light", "es"], [500, "dark", "en"
       button.getBoundingClientRect().right - button.closest(".market-data-row")!.getBoundingClientRect().left));
     for (const right of bookmarkPositions) expect(right).toBeCloseTo(bookmarkPositions[0], 0);
     const actions = page.locator(".market-section-actions > button");
-    await expect(actions).toHaveCount(3);
+    await expect(actions).toHaveCount(2);
     const boxes = await actions.evaluateAll(buttons => buttons.map(button => {
       const rect = button.getBoundingClientRect();
       return { y: rect.y, height: rect.height, width: rect.width, scroll: button.scrollWidth, client: button.clientWidth };
@@ -35,17 +35,22 @@ for (const [width, theme, language] of [[320, "light", "es"], [500, "dark", "en"
       expect(box.scroll).toBeLessThanOrEqual(box.client);
     }
     const labelLines = await actions.first().locator("span").last().evaluate(label => {
-      const range = document.createRange();
-      range.selectNodeContents(label);
-      return new Set(Array.from(range.getClientRects(), rect => Math.round(rect.y))).size;
+      // Text only: the chevron beside the label is an icon, not a second line.
+      const lines = new Set<number>();
+      for (const node of Array.from(label.childNodes).filter(node => node.nodeType === Node.TEXT_NODE)) {
+        const range = document.createRange();
+        range.selectNodeContents(node);
+        for (const rect of Array.from(range.getClientRects())) lines.add(Math.round(rect.y));
+      }
+      return lines.size;
     });
     expect(labelLines).toBe(1);
     await expect(page.locator("body")).toHaveJSProperty("scrollWidth", width);
     await page.screenshot({ path: `/tmp/lfb-market-toolbar-${width}.png` });
-    await actions.nth(2).focus();
+    await actions.nth(1).focus();
     await page.keyboard.press("Enter");
     await expect(page.getByRole("dialog")).toBeVisible();
     await page.keyboard.press("Escape");
-    await expect(actions.nth(2)).toBeFocused();
+    await expect(actions.nth(1)).toBeFocused();
   });
 }

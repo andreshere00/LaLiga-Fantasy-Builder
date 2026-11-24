@@ -254,6 +254,18 @@ mode are enforced by the production Compose file. Only the matching service's
 dotenv file is passed to each backend. The root runtime dotenv is used for
 Compose interpolation, not injected wholesale into containers.
 
+### Upgrading an existing installation for automatic market rules
+
+The same API image also runs `auto-market-worker`; no sixth image, public port or
+database is added. Rules are stored in the existing `fantasy_app` database (migrations
+apply on start). Before activating the new images, add an independent URL-safe
+`AUTO_MARKET_SERVICE_TOKEN` to the private runtime dotenv payload. It must differ from
+`INTERNAL_SERVICE_TOKEN` and `SCOUTING_SERVICE_TOKEN`. Also add `AUTO_MARKET_DATABASE_URL`, the
+full `fantasy_api` URL for `fantasy_app` built with the existing `APP_DB_PASSWORD`, so no
+credential URL is written in the template. Compose supplies the token only to Auth and the
+worker; the HTTP API never holds it. Refresh the installed Compose template through the
+provisioning/bootstrap path, as an image-only CI activation does not update it.
+
 ### Upgrading an existing installation for scouting
 
 The existing API image also runs `scouting-worker`; no sixth image, public port,

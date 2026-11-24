@@ -18,7 +18,7 @@ class GrantResponse(BaseModel):
 
 
 class ScoutingAuthClient:
-    """Keep JWTs transient and redeem only saved opaque grants for background reads."""
+    """Keep JWTs transient and redeem only saved opaque grants for one delegation scope."""
 
     def __init__(
         self,
@@ -26,10 +26,12 @@ class ScoutingAuthClient:
         service_token: str,
         worker_token: str,
         transport: httpx.AsyncBaseTransport | None = None,
+        scope: str = "scouting",
     ) -> None:
         self._http = httpx.AsyncClient(base_url=base_url, timeout=30, transport=transport)
         self._service_token = service_token
         self._worker_token = worker_token
+        self._scope = scope
 
     async def aclose(self) -> None:
         """Close the shared private client."""
@@ -49,17 +51,34 @@ class ScoutingAuthClient:
         try:
             response = await self._http.request(
                 method,
-                f"/internal/scouting/leagues/{segment(league)}/{action}",
+                f"/internal/{self._scope}/leagues/{segment(league)}/{action}",
                 headers=headers,
                 json=body,
             )
             if response.status_code == 401:
+                if jwt is None and self._error_code(response) != "needs_reauth":
+                    # A rejected service credential is a deployment fault, not a reconnection.
+                    raise UpstreamError(
+                        "delegation service credential rejected",
+                        status_code=502,
+                        category="service_credential",
+                    )
                 raise NeedsReauthError("scouting delegation requires reconnection")
             if not response.is_success:
                 raise UpstreamError("scouting delegation failed", status_code=502)
             return response.json()
         except (httpx.HTTPError, ValueError) as exc:
             raise UpstreamError("scouting delegation unavailable", status_code=502) from exc
+
+    @staticmethod
+    def _error_code(response: httpx.Response) -> str | None:
+        """Read Auth's stable error code from a failure body, if it has one."""
+        try:
+            body = response.json()
+        except ValueError:
+            return None
+        code = body.get("error") if isinstance(body, dict) else None
+        return code if isinstance(code, str) else None
 
     async def create(self, jwt: str, league: str) -> str:
         """Create a delegation using the verified caller's JWT."""

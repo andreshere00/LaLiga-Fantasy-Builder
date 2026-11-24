@@ -1,3 +1,5 @@
+import { AutoMarketPanel } from "../autoMarket/AutoMarketPanel";
+import { AutoMarketProvider } from "../autoMarket/AutoMarketProvider";
 import { ScoutingPanel } from "../scouting/ScoutingPanel";
 import { useScouting } from "../scouting/ScoutingProvider";
 import { t, useTranslation } from "../../i18n";
@@ -361,10 +363,11 @@ function PlayersListContent() {
   }
 
   return (
-    <>
+    <AutoMarketProvider money={marketBoard.money}>
       <div className="market-toolbar scouting-toolbar">
         <h1>{t("Players")}</h1>
         <ScoutingPanel />
+        <AutoMarketPanel squad={marketBoard.ownSquadCards} />
       </div>
       <MarketOffers showTrigger={false} cards={marketBoard.ownSquadCards}
         squadAvailable={marketBoard.ownSquadAvailable} />
@@ -436,7 +439,7 @@ function PlayersListContent() {
         money={marketBoard.money}
         squadMarketValue={marketBoard.squadMarketValue}
       />
-    </>
+    </AutoMarketProvider>
   );
 }
 

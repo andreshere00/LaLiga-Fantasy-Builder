@@ -78,6 +78,7 @@ services:
     env_file: ["${CONFIG_DIR:-/etc/fantasybuilder/current}/auth.env"]
     environment:
       SCOUTING_SERVICE_TOKEN: ${SCOUTING_SERVICE_TOKEN:?Set SCOUTING_SERVICE_TOKEN}
+      AUTO_MARKET_SERVICE_TOKEN: ${AUTO_MARKET_SERVICE_TOKEN:?Set AUTO_MARKET_SERVICE_TOKEN}
       DEBUG: "false"
       USE_MEMORY_STORE: "false"
       DATABASE_URL: postgresql://fantasy_vault:${VAULT_DB_PASSWORD:?Set VAULT_DB_PASSWORD}@postgres:5432/fantasy_auth
@@ -133,6 +134,22 @@ services:
     environment:
       SCOUTING_DATABASE_URL: postgresql://fantasy_api:${APP_DB_PASSWORD:?Set APP_DB_PASSWORD}@postgres:5432/fantasy_app
       SCOUTING_SERVICE_TOKEN: ${SCOUTING_SERVICE_TOKEN:?Set SCOUTING_SERVICE_TOKEN}
+      AUTH_INTERNAL_BASE_URL: http://auth:8000
+    depends_on:
+      api:
+        condition: service_healthy
+    networks: [internal, egress]
+
+  auto-market-worker:
+    <<: *runtime
+    image: ${API_IMAGE:?Set API_IMAGE}
+    env_file: ["${CONFIG_DIR:-/etc/fantasybuilder/current}/api.env"]
+    command: ["fantasy-auto-market-worker"]
+    healthcheck:
+      disable: true
+    environment:
+      AUTO_MARKET_DATABASE_URL: ${AUTO_MARKET_DATABASE_URL:?Set AUTO_MARKET_DATABASE_URL}
+      AUTO_MARKET_SERVICE_TOKEN: ${AUTO_MARKET_SERVICE_TOKEN:?Set AUTO_MARKET_SERVICE_TOKEN}
       AUTH_INTERNAL_BASE_URL: http://auth:8000
     depends_on:
       api:
