@@ -4,6 +4,14 @@ Notable changes to LaLiga Fantasy Builder are recorded here. Version 0.1.0
 summarizes the application through 27 October 2026; it is the first changelog
 entry, not a claim that every optional provider or deployment gate is complete.
 
+## [Unreleased]
+
+### Infrastructure
+
+- Add `infra/config-schema.json`, a locator that maps every secret to its local dotenv
+  file, Secret Manager payload, consuming services and provider console, with a test that
+  keeps it aligned with the dotenv templates. It holds no secret values.
+
 ## [0.6.2] - 2026-11-17
 
 ### Deployment

@@ -205,6 +205,11 @@ it is older than the three most recent versions.
 
 ## 3. Configure application secrets
 
+[`infra/config-schema.json`](../config-schema.json) lists every secret, the local file and
+Secret Manager payload that hold it, the services that consume it and where to create or
+rotate it. It contains names and locations only, never values. Update it whenever a secret
+is added to an example dotenv file; `infra/gcp/tests/test_config_schema.py` enforces this.
+
 Copy the examples to an ignored directory on your workstation:
 
 ```bash

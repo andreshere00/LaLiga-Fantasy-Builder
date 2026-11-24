@@ -1,0 +1,161 @@
+{
+  "$comment": "Locator for every secret. Names and locations only: never put a value here. Verified by infra/gcp/tests/test_config_schema.py.",
+  "version": 1,
+  "stores": {
+    "local-root-env": {
+      "description": "Ignored .env at the repository root (copy of .env.template). Read by Docker Compose interpolation and by Identity's local startup.",
+      "path": ".env"
+    },
+    "local-service-env": {
+      "description": "Ignored per-service .env (copy of that service's .env.example).",
+      "path": "backend/<service>/.env"
+    },
+    "gcp-secret-manager": {
+      "description": "One dotenv payload per Secret Manager secret, named <name_prefix>-<payload>-env (default prefix: fantasybuilder). Terraform creates the containers only; versions are uploaded by hand.",
+      "update": "gcloud secrets versions add <prefix>-<payload>-env --project=$PROJECT_ID --data-file=<file>, then deploy with fantasybuilder-deploy (hosts only read the latest version during a deployment).",
+      "docs": "infra/gcp/README.md#3-configure-application-secrets",
+      "templates": "infra/gcp/examples/<payload>.env.example"
+    },
+    "gcp-host": {
+      "description": "Where the VM runs the active payloads: /etc/fantasybuilder/current/<payload>.env (root-only). Fetched by infra/gcp/templates/fetch-secrets.sh.",
+      "path": "/etc/fantasybuilder/current"
+    },
+    "github-actions": {
+      "description": "Repository variables only (GCP_* and DEPLOY_URL, no application secrets). Application secrets never live in GitHub.",
+      "docs": "infra/gcp/README.md"
+    },
+    "provider-console": {
+      "description": "Where a third-party credential is created or revoked. Not stored in this repository."
+    }
+  },
+  "secrets": [
+    {
+      "name": "POSTGRES_PASSWORD",
+      "purpose": "PostgreSQL bootstrap/admin role password.",
+      "generate": "openssl rand -hex 32 (URL-safe)",
+      "local": [".env"],
+      "production": {"payload": "runtime", "secret": "<prefix>-runtime-env"},
+      "consumers": ["postgres"],
+      "rotation": "Changing the dotenv does not change existing PostgreSQL roles."
+    },
+    {
+      "name": "IDENTITY_DB_PASSWORD",
+      "purpose": "Password of the fantasy_identity database role.",
+      "generate": "openssl rand -hex 32 (URL-safe)",
+      "local": [".env"],
+      "production": {"payload": "runtime", "secret": "<prefix>-runtime-env"},
+      "consumers": ["postgres", "identity-migrate", "identity"],
+      "rotation": "Changing the dotenv does not change existing PostgreSQL roles."
+    },
+    {
+      "name": "APP_DB_PASSWORD",
+      "purpose": "Password of the fantasy_api role (fantasy_app database: scouting).",
+      "generate": "openssl rand -hex 32 (URL-safe)",
+      "local": [".env"],
+      "production": {"payload": "runtime", "secret": "<prefix>-runtime-env"},
+      "consumers": ["postgres", "api", "scouting-worker"],
+      "rotation": "Changing the dotenv does not change existing PostgreSQL roles."
+    },
+    {
+      "name": "VAULT_DB_PASSWORD",
+      "purpose": "Password of the fantasy_vault role used by Auth.",
+      "generate": "openssl rand -hex 32 (URL-safe)",
+      "local": [".env"],
+      "production": {"payload": "runtime", "secret": "<prefix>-runtime-env"},
+      "consumers": ["postgres", "auth"],
+      "rotation": "Changing the dotenv does not change existing PostgreSQL roles."
+    },
+    {
+      "name": "INTERNAL_SERVICE_TOKEN",
+      "purpose": "Service token for Auth's /internal/* routes (LaLiga bearer exchange).",
+      "generate": "openssl rand -hex 32 (URL-safe)",
+      "local": [".env", "backend/api/.env", "backend/auth/.env"],
+      "production": {"payload": "runtime", "secret": "<prefix>-runtime-env"},
+      "consumers": ["auth", "api"],
+      "rotation": "Must differ from SCOUTING_SERVICE_TOKEN."
+    },
+    {
+      "name": "SCOUTING_SERVICE_TOKEN",
+      "purpose": "Lets the scouting worker redeem its read grant at Auth.",
+      "generate": "openssl rand -hex 32 (URL-safe)",
+      "local": [".env", "backend/api/.env", "backend/auth/.env"],
+      "production": {"payload": "runtime", "secret": "<prefix>-runtime-env"},
+      "consumers": ["auth", "api", "scouting-worker"],
+      "rotation": "Must differ from INTERNAL_SERVICE_TOKEN."
+    },
+    {
+      "name": "SCRAPING_SERVICE_TOKEN",
+      "purpose": "Service token for the scraping service's /internal/scrape/* routes.",
+      "generate": "openssl rand -hex 32 (URL-safe)",
+      "local": [".env", "backend/api/.env", "backend/scraping/.env"],
+      "production": {"payload": "runtime", "secret": "<prefix>-runtime-env"},
+      "consumers": ["api", "radar-job", "scraping"]
+    },
+    {
+      "name": "BETTER_AUTH_SECRET",
+      "purpose": "Better Auth signing/encryption secret for Identity.",
+      "generate": "openssl rand -hex 32",
+      "local": ["backend/identity/.env"],
+      "production": {"payload": "identity", "secret": "<prefix>-identity-env"},
+      "consumers": ["identity"],
+      "rotation": "Preserve it across releases and restarts; never rotate without a plan."
+    },
+    {
+      "name": "SMTP_PASSWORD",
+      "purpose": "Resend API key used by Identity to send verification and recovery mail.",
+      "origin": {"store": "provider-console", "where": "Resend dashboard > API Keys (domain fantasybuilder.es must be verified)"},
+      "local": [".env"],
+      "production": {"payload": "identity", "secret": "<prefix>-identity-env"},
+      "consumers": ["identity"],
+      "rotation": "Local and production hold independent copies; revoking a key in Resend breaks every place that still uses it. Never commit it, including to .env.template."
+    },
+    {
+      "name": "TOKEN_VAULT_KEY_BASE64",
+      "purpose": "AES-256 key that seals stored LaLiga connections in Auth's vault.",
+      "generate": "openssl rand -base64 32",
+      "local": ["backend/auth/.env"],
+      "production": {"payload": "auth", "secret": "<prefix>-auth-env"},
+      "consumers": ["auth"],
+      "rotation": "Changing it makes stored vault data unreadable. Coordinate any rotation separately."
+    },
+    {
+      "name": "OPENWEATHER_API_KEY",
+      "optional": true,
+      "purpose": "Optional weather provider for the calendar.",
+      "origin": {"store": "provider-console", "where": "OpenWeather account > API keys"},
+      "local": ["backend/api/.env"],
+      "production": {"payload": "api", "secret": "<prefix>-api-env"},
+      "consumers": ["api"]
+    },
+    {
+      "name": "GOOGLE_CLIENT_SECRET",
+      "optional": true,
+      "purpose": "Optional Google sign-in (set together with GOOGLE_CLIENT_ID).",
+      "origin": {"store": "provider-console", "where": "Google Cloud console > OAuth client"},
+      "local": ["backend/identity/.env"],
+      "production": {"payload": "identity", "secret": "<prefix>-identity-env"},
+      "consumers": ["identity"],
+      "rotation": "Omit unused provider keys entirely rather than setting them blank."
+    },
+    {
+      "name": "FACEBOOK_CLIENT_SECRET",
+      "optional": true,
+      "purpose": "Optional Facebook sign-in (set together with FACEBOOK_CLIENT_ID).",
+      "origin": {"store": "provider-console", "where": "Meta for Developers app settings"},
+      "local": ["backend/identity/.env"],
+      "production": {"payload": "identity", "secret": "<prefix>-identity-env"},
+      "consumers": ["identity"],
+      "rotation": "Omit unused provider keys entirely rather than setting them blank."
+    },
+    {
+      "name": "APPLE_PRIVATE_KEY",
+      "optional": true,
+      "purpose": "Optional Apple sign-in key (with APPLE_CLIENT_ID, APPLE_TEAM_ID, APPLE_KEY_ID). PEM with literal \\n.",
+      "origin": {"store": "provider-console", "where": "Apple Developer > Keys"},
+      "local": ["backend/identity/.env"],
+      "production": {"payload": "identity", "secret": "<prefix>-identity-env"},
+      "consumers": ["identity"],
+      "rotation": "Omit unused provider keys entirely rather than setting them blank."
+    }
+  ]
+}
