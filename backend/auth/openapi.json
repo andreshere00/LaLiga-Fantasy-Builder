@@ -3,7 +3,7 @@
   "info": {
     "title": "LaLiga Fantasy Builder Auth",
     "description": "LaLiga Fantasy Builder **auth** service.\n\nApplication authentication is owned by Better Auth at ``/auth`` on the identity\nservice. LaLiga connection and pairing creation require its Ed25519 Bearer JWT.\nThe registered HTTPS browser callback and native helper completion use single-use\nserver challenges, not browser cookies. Browser linking is unavailable until its\nexact HTTPS redirect URI is configured and registered with LaLiga.\n\n``/internal/*`` routes require the internal JWT **and** ``X-Service-Token`` on\na private network. They must not be exposed on the public internet.",
-    "version": "0.6.2"
+    "version": "0.7.0"
   },
   "paths": {
     "/internal/laliga/bearer": {
@@ -232,6 +232,227 @@
         "summary": "Redeem Scouting Grant",
         "description": "Redeem an explicit grant; owner is resolved from Auth storage only.",
         "operationId": "redeem_scouting_grant_internal_scouting_leagues__league_id__bearer_post",
+        "parameters": [
+          {
+            "name": "league_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "League Id"
+            }
+          },
+          {
+            "name": "X-Service-Token",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Service-Token"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ScoutingRedemption"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/LaligaBearerResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/internal/auto-market/leagues/{league_id}/grant": {
+      "put": {
+        "tags": [
+          "internal"
+        ],
+        "summary": "Create Auto Market Grant",
+        "description": "Delegate unattended market writes for the verified subject and requested league.",
+        "operationId": "create_auto_market_grant_internal_auto_market_leagues__league_id__grant_put",
+        "parameters": [
+          {
+            "name": "league_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "League Id"
+            }
+          },
+          {
+            "name": "authorization",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Authorization"
+            }
+          },
+          {
+            "name": "X-Service-Token",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Service-Token"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ScoutingGrantResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "internal"
+        ],
+        "summary": "Revoke Auto Market Grant",
+        "description": "Revoke the verified subject's write delegation.",
+        "operationId": "revoke_auto_market_grant_internal_auto_market_leagues__league_id__grant_delete",
+        "parameters": [
+          {
+            "name": "league_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "League Id"
+            }
+          },
+          {
+            "name": "authorization",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Authorization"
+            }
+          },
+          {
+            "name": "X-Service-Token",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Service-Token"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "additionalProperties": {
+                    "type": "boolean"
+                  },
+                  "title": "Response Revoke Auto Market Grant Internal Auto Market Leagues  League Id  Grant Delete"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/internal/auto-market/leagues/{league_id}/bearer": {
+      "post": {
+        "tags": [
+          "internal"
+        ],
+        "summary": "Redeem Auto Market Grant",
+        "description": "Redeem an explicit write grant; owner is resolved from Auth storage only.",
+        "operationId": "redeem_auto_market_grant_internal_auto_market_leagues__league_id__bearer_post",
         "parameters": [
           {
             "name": "league_id",

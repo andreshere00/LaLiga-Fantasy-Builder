@@ -839,7 +839,14 @@ Code: `frontend/src/features/market/` (`model/`, `cells/`, `actions/`,
   borrowing allowance are excluded. Missing balance, missing/conflicting amounts or
   unclassifiable bids show unavailable/incomplete projections. Negative projected
   cash has its own explanation, separate from the reported-balance warning.
-- **My bids** beside Offers shows the active count and opens a side/bottom sheet.
+- **Market options** is one menu button beside Offers that groups **Favorites**, **Auto market**
+  and **My bids**, each with its count; choosing an entry opens its sheet, and focus returns to the
+  menu button when the sheet closes. From 701px up the menu button, Offers and the balance share one
+  line, bottom-aligned; on phones the two buttons split the row and the balance sits above them.
+  The menu button shows the unread alert count. The Players page keeps its own Favorites and Auto
+  market buttons. Auto market carries a **New!** flag (on the menu button, the menu entry and the
+  Players-page button) until it is opened once in this browser.
+- **My bids**, opened from Market options, shows the active count and opens a side/bottom sheet.
   It lists player, amount, seller, time remaining/status and eligible Modify/Cancel
   actions, sorted by nearest known expiry with unknown expiries last. Missing display
   metadata uses explicit fallback labels without discarding a known commitment.
@@ -959,7 +966,9 @@ keeping their own responsive column layouts.
 ### Actions (user-confirmed only)
 
 Each row’s menu depends on listing type and your bid state. Dialogs use grouped
-euro amounts (es-ES). CLIs and browser-session flows stay read-only.
+euro amounts (es-ES). CLIs and browser-session flows stay read-only. The only unattended
+writes are armed [automatic market rules](api/auto-market/README.md), which you confirm
+when arming them.
 
 | Action | When | API |
 |--------|------|-----|
@@ -992,6 +1001,59 @@ message when listing state changed (`marketActionErrors.ts`).
 
 User-facing copy constants: `marketMessages.ts`, `marketActionErrors.ts`,
 `bidTooltip.ts`.
+
+### Automatic rules
+
+The **Auto market** entry in the Market options menu (a button on the Players page) opens a sheet sorted by concern into three
+sections. *Selling* holds everything for your own players, then the active auto-sells. *Buying*
+holds everything for players you want, then the active auto-buys. *History* lists finished rules.
+The *Selling* section has a list of selectable players (photo, name, club badge, FSYP and
+market value) to start an auto-sell for one of your squad players that is not already on the
+market. **List all my players…** puts every player that is not on the market yet, and has no live sell rule,
+on the market by default (players already listed are left as they are) (*Only list them*, at market value, with no automatic sale, so you choose which offer
+to accept). It can also apply one general rule to all of them: *List and sell at a gain* lists
+them now and accepts an offer that reaches the percentage, and *List when each value rises*
+lists each one only after its own value rises. Any single player can still get their own rule
+from the player list, or have their armed rule edited. **Sell my favorites** (in *Selling*) and **Buy my favorites** (in *Buying*) arm rules for several favorite players at once. **Auto-sell favorites…**
+covers the favorites in your squad and **Auto-buy favorites…** the others (players with a live rule
+are left out), each with a checklist so you can drop any of them. The price is *At market value*
+(each player's own value; players with no known value are disabled) or *At an amount* (one amount
+for all). A sell lists the player on the next check at that price and accepts an offer that reaches
+it; a buy bids that price, never more, only while the market value is not higher.
+**Buy any player automatically**, in *Buying*, searches the whole player catalog; a player who is not on the
+market gets an auto-buy that waits and bids only while the market value is at or below the
+target. The same **Auto market** button also sits in the Players page toolbar. The arm dialog
+shows the player's photo and club badge. Each market row's **Options** menu gains
+**Auto-buy…** (or **Edit auto-buy…** while a rule is armed). The rule contract and the
+server-side execution are documented in [automatic market rules](api/auto-market/README.md).
+
+The arm dialog (`features/autoMarket/AutoRuleDialog.tsx`) asks only what a rule needs:
+
+- **Sell only, put it on the market:** *Right away* lists the player on the next check;
+  *When the value is reached* waits for the trigger first. With *Right away*, *Accept offers
+  automatically* offers *Never, I choose* (the player is only listed at market value and the
+  price and trigger fields are hidden, confirm button **Arm auto-listing**), a gain on the
+  value or an amount.
+- **Trigger:** a percentage (decimal point or comma, 0.1–500% to sell, 0.1–99% to buy) or a
+  whole-euro amount. Sells wait for a rise (or, when listed right away, for an offer that
+  reaches it), buys for a drop.
+- **Price:** at your threshold, or at the market value (hidden for a release clause, which
+  always costs its clause price, and for a list-only sell).
+- **Buy only:** *bid on the market* or *pay the release clause* when both are possible, plus
+  the most the rule may ever spend. The cap starts at the current market value and the
+  dialog shows your cash and the 20% squad-value allowance beside it.
+- **Optional deadline:** a day, taken as the end of that local day.
+
+A live sentence previews the amount the rule waits for, warns when that is already true, and
+states that the rule acts once, on its own, even with the app closed. Initial focus is on
+**Cancel**; the confirm button names the effect (**Arm auto-sell** / **Arm auto-buy**) and
+dismissal is blocked while the request is pending. Arming is the confirmation: nothing is
+sent until you press it, and an armed rule can be edited or cancelled until it acts.
+
+State is polled every 60 seconds and on focus. A rule that lists, completes, fails or
+expires after the first load raises a toast; the sheet shows the latest reason in plain
+language (for example *Your squad is full*), never raw upstream text. Rules are paused with
+an explanation when LaLiga must be linked again or the account left the league.
 
 ### Tests
 

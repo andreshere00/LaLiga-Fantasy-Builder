@@ -2,11 +2,10 @@ import { t, useTranslation } from "../../i18n";
 import { useDeferredValue, useEffect, useMemo, useState } from "react";
 
 import { useAuth } from "../../auth/AuthProvider";
-import { ScoutingPanel } from "../scouting/ScoutingPanel";
 import { useScouting } from "../scouting/ScoutingProvider";
 import { leagueId } from "../../api/mappers";
 import { useLeague } from "../lineup/LeagueProvider";
-import { MarketBids } from "./bids/MarketBids";
+import { MarketOptions } from "./MarketOptions";
 import { favoriteMarketRowClass } from "../players/favorites";
 import { useNow } from "../../hooks/useNow";
 import { GatePanel } from "../gates/GatePanel";
@@ -30,6 +29,7 @@ import { useMarketBoard } from "./useMarketBoard";
 import "./MarketPage.css";
 import "../../components/ui/ComparisonList.css";
 import { MarketOffers } from "./offers/MarketOffers";
+import { AutoMarketProvider } from "../autoMarket/AutoMarketProvider";
 import { MarketOffersProvider } from "./offers/MarketOffersContext";
 
 function MarketList() {
@@ -87,7 +87,7 @@ function MarketListContent() {
   if (board.noLeague) return <p className="status-copy">{t("No leagues found for this account.")}</p>;
 
   return (
-    <>
+    <AutoMarketProvider money={board.money}>
       <MarketToolbar
         money={board.money}
         projection={board.projection}
@@ -99,9 +99,9 @@ function MarketListContent() {
         activeFilterCount={filterCount}
         onClearFilters={clearFilters}
         suggestions={board.rows.map((row) => row.name)}
-        notifications={<><ScoutingPanel /><MarketOffers cards={board.ownSquadCards}
-          squadAvailable={board.ownSquadAvailable} />
-          <MarketBids board={board} actions={marketActions} now={now} /></>}
+        notifications={<><MarketOptions board={board} actions={marketActions} now={now}
+          squad={board.ownSquadCards} /><MarketOffers cards={board.ownSquadCards}
+          squadAvailable={board.ownSquadAvailable} /></>}
       />
       {!board.isLoading && !board.hasError && board.rows.length > 0 ? <div className="market-results-summary">
         <p role="status">{visibleRows.length} {t(" of ")}{board.rows.length} {t(" players")}{filterCount > 0 ? t(" · Filters active") : t(" available")}</p>
@@ -161,7 +161,7 @@ function MarketListContent() {
         money={board.money}
         squadMarketValue={board.squadMarketValue}
       />
-    </>
+    </AutoMarketProvider>
   );
 }
 

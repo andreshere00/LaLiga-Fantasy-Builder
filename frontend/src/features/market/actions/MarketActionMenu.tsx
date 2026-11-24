@@ -20,6 +20,8 @@ import {
 } from "./marketActions";
 import type { MarketActionsApi } from "./useMarketActions";
 import { useMarketOffersMenu } from "../offers/MarketOffersContext";
+import { useAutoMarket } from "../../autoMarket/AutoMarketProvider";
+import { autoBuyTarget } from "../../autoMarket/autoBuyTarget";
 
 type MarketActionMenuProps = {
   row: MarketRow;
@@ -54,6 +56,7 @@ export function MarketActionMenu({ row, context, actions, detailsPlayer, details
   useTranslation();
   const trigger = useRef<HTMLButtonElement>(null);
   const offersMenu = useMarketOffersMenu();
+  const auto = useAutoMarket();
   const offers = resolveMarketActionOffers(row, context);
   const showPlayerDetails = detailsPlayer != null && row.positionId !== 5;
   const showPlayerOffers = offersMenu != null && row.sellerKind === "self"
@@ -61,7 +64,10 @@ export function MarketActionMenu({ row, context, actions, detailsPlayer, details
   const bidded = row.myBid != null;
   const clauseTimeLocked = isClauseTimeLocked(row, context.now);
   const unlockLabel = clauseTimeLocked ? clauseUnlockCountdown(row.clauseUnlockAt, context.now) : null;
-  if (offers.length === 0 && !showPlayerDetails && !showPlayerOffers) return null;
+  const autoBuy = auto != null && row.sellerKind !== "self" && row.playerId != null && row.marketValue != null
+    ? autoBuyTarget(row) : null;
+  const autoRule = autoBuy && row.playerId ? auto?.liveRuleFor(row.playerId, "buy") ?? null : null;
+  if (offers.length === 0 && !showPlayerDetails && !showPlayerOffers && !autoBuy) return null;
   return (
     <div className="market-actions">
       <Menu.Root>
@@ -89,6 +95,16 @@ export function MarketActionMenu({ row, context, actions, detailsPlayer, details
                 </Menu.Item>
               );
             })}
+            {autoBuy && auto ? (
+              <Menu.Item className="market-actions-item" disabled={actions.actionPending || autoRule?.state === "executing"}
+                onClick={() => {
+                  trigger.current?.focus();
+                  auto.openRule(autoBuy, autoRule?.state === "armed" ? autoRule : null);
+                }}>
+                <span>{t(autoRule ? "Edit auto-buy…" : "Auto-buy…")}</span>
+                <span className="fb-helper">{t(autoRule ? "A rule is already armed for this player." : "Buy automatically when the value reaches a threshold.")}</span>
+              </Menu.Item>
+            ) : null}
             {showPlayerOffers ? (
               <Menu.Item className="market-actions-item" onClick={() => {
                 trigger.current?.focus();

@@ -120,3 +120,60 @@ async def redeem_scouting_grant(
     bearer, expires = await container.credentials.get_valid_bearer(owner)
     await container.scouting_grants.resolve(body.grant_id, league_id)
     return LaligaBearerResponse(bearer_token=bearer, expires_at=expires)
+
+
+@router.put("/internal/auto-market/leagues/{league_id}/grant", response_model=ScoutingGrantResponse)
+async def create_auto_market_grant(
+    league_id: str,
+    authorization: str | None = Header(default=None),
+    x_service_token: str | None = Header(default=None, alias="X-Service-Token"),
+) -> ScoutingGrantResponse:
+    """Delegate unattended market writes for the verified subject and requested league."""
+    require_service_token(x_service_token)
+    user = await require_internal_user(authorization)
+    grants = get_container().auto_market_grants
+    assert grants is not None
+    lock = get_container().refresh_lock
+    if not await lock.acquire(user.user_id):
+        raise SessionError("connection operation in progress")
+    try:
+        return ScoutingGrantResponse(grant_id=await grants.create(user.user_id, league_id))
+    finally:
+        await lock.release(user.user_id)
+
+
+@router.delete("/internal/auto-market/leagues/{league_id}/grant")
+async def revoke_auto_market_grant(
+    league_id: str,
+    authorization: str | None = Header(default=None),
+    x_service_token: str | None = Header(default=None, alias="X-Service-Token"),
+) -> dict[str, bool]:
+    """Revoke the verified subject's write delegation."""
+    require_service_token(x_service_token)
+    user = await require_internal_user(authorization)
+    grants = get_container().auto_market_grants
+    assert grants is not None
+    await grants.revoke(user.user_id, league_id)
+    return {"ok": True}
+
+
+@router.post(
+    "/internal/auto-market/leagues/{league_id}/bearer", response_model=LaligaBearerResponse
+)
+async def redeem_auto_market_grant(
+    league_id: str,
+    body: ScoutingRedemption,
+    x_service_token: str | None = Header(default=None, alias="X-Service-Token"),
+) -> LaligaBearerResponse:
+    """Redeem an explicit write grant; owner is resolved from Auth storage only."""
+    container = get_container()
+    expected = container.settings.auto_market_service_token
+    if not expected or not x_service_token or not secrets.compare_digest(x_service_token, expected):
+        raise SessionError("invalid auto-market service credential")
+    assert container.auto_market_grants is not None
+    owner = await container.auto_market_grants.resolve(body.grant_id, league_id)
+    if body.retry_unauthorized:
+        await container.credentials.retry_after_unauthorized(owner)
+    bearer, expires = await container.credentials.get_valid_bearer(owner)
+    await container.auto_market_grants.resolve(body.grant_id, league_id)
+    return LaligaBearerResponse(bearer_token=bearer, expires_at=expires)

@@ -1,5 +1,5 @@
 import { expect, test } from "@playwright/test";
-import { mockApplication, mockScouting } from "./fixtures";
+import { chooseMarketOption, marketOptionsTrigger, mockApplication, mockScouting } from "./fixtures";
 
 for (const [theme, width] of [["light", 1440], ["dark", 375]] as const) {
   test(`favorites sync, accessible sheet and detail return: ${theme}`, async ({ page }) => {
@@ -18,7 +18,7 @@ for (const [theme, width] of [["light", 1440], ["dark", 375]] as const) {
     await expect(page.locator(".market-data-row").filter({ has: bookmark }).locator(".player-tile"))
       .toHaveCSS("background-color", "rgb(255, 194, 191)");
     await expect(page.locator(".market-name-wrap").filter({ has: bookmark })).toBeVisible();
-    await page.getByRole("button", { name: "Favorites (1)", exact: true }).click();
+    await chooseMarketOption(page, "Favorites (1)");
     const dialog = page.getByRole("dialog", { name: "Favorites and scouting" });
     await expect(dialog).toBeVisible();
     const settings = dialog.getByRole("button", { name: /Alerts in this league/ });
@@ -40,7 +40,7 @@ for (const [theme, width] of [["light", 1440], ["dark", 375]] as const) {
     await expect(page.locator("body")).toHaveJSProperty("scrollWidth", width);
     await page.keyboard.press("Escape");
     await expect(dialog).toBeHidden();
-    await expect(page.getByRole("button", { name: "Favorites (1)", exact: true })).toBeFocused();
+    await expect(marketOptionsTrigger(page)).toBeFocused();
     await page.goto("/players");
     await page.getByRole("button", { name: "Favorites (1)", exact: true }).click();
     await dialog.getByRole("searchbox", { name: "Search favorites" }).fill("Player 14");

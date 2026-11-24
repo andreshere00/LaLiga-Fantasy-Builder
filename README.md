@@ -6,6 +6,7 @@ data and user-confirmed writes with your linked account.
 
 | Topic | Doc |
 |-------|-----|
+| Changes in v0.7.0 | [CHANGELOG.md](CHANGELOG.md#070---2026-11-24) |
 | Changes in v0.6.2 | [CHANGELOG.md](CHANGELOG.md#062---2026-11-17) |
 | Changes in v0.6.1 | [CHANGELOG.md](CHANGELOG.md#061---2026-11-13) |
 | Changes in v0.6.0 | [CHANGELOG.md](CHANGELOG.md#060---2026-11-11) |
@@ -209,7 +210,8 @@ uv run poe dev-clean
 
 `dev-clean` stops Compose app containers and stale project Uvicorn servers,
 then starts auth (`:8000`), API (`:8001`), scraping (`:8002`), identity (`:8003`), and Vite
-(`:3000`) with reload enabled, plus the scouting worker (no listening port).
+(`:3000`) with reload enabled, plus the scouting and auto-market workers (no listening port; the latter takes
+`AUTO_MARKET_SERVICE_TOKEN` from `backend/auth/.env`, so armed rules execute locally).
 It reports occupied ports owned by other processes instead of stopping them. The command creates missing service
 `.env` files. Set `SCRAPER_CONTACT` in `backend/scraping/.env` to a contact
 address before using the scraper against FutbolFantasy. Scraping API calls use
@@ -217,6 +219,12 @@ the shared token in `backend/scraping/.env`; the command passes it to the API
 automatically. It also prepares missing local scouting settings with a shared token
 and provisions the default Compose application database without replacing existing
 credentials or data.
+
+Auto-market write grants live in Auth. With `USE_MEMORY_STORE=true` (the `.env.example` default) they and
+the LaLiga pairing vanish whenever Auth restarts or reloads, and the worker then marks the league
+`needs_reauth`. To keep armed rules working across restarts locally, set `USE_MEMORY_STORE=false`
+and a `TOKEN_VAULT_KEY_BASE64` (`openssl rand -base64 32`) in `backend/auth/.env`, then pair LaLiga
+and arm the rules again.
 
 From `frontend/` only: `bun install && bun run dev:all` (or `npm`).
 

@@ -11,6 +11,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 
 from fantasy_api.api import (
+    auto_market,
     buyout,
     calendar,
     clubs,
@@ -50,6 +51,10 @@ async def _lifespan(app: FastAPI) -> AsyncIterator[None]:
     try:
         if container.settings.scouting_database_url and container.scouting_service:
             await container.scouting_service.repository.start()
+        if container.auto_market_service and (
+            container.settings.auto_market_database_url or container.settings.scouting_database_url
+        ):
+            await container.auto_market_service.repository.start()
         yield
     finally:
         await container.aclose()
@@ -71,7 +76,7 @@ def create_app(
     cfg = settings or get_settings()
     app = FastAPI(
         title=cfg.app_name,
-        version="0.6.2",
+        version="0.7.0",
         description=API_DESCRIPTION,
         openapi_tags=OPENAPI_TAGS,
         lifespan=_lifespan,
@@ -89,6 +94,7 @@ def create_app(
         allow_headers=["Authorization", "Content-Type", "X-Request-Id"],
     )
     app.include_router(scouting.router)
+    app.include_router(auto_market.router)
     app.include_router(me.router)
     app.include_router(leagues.router)
     app.include_router(lineup_builder.router)
@@ -129,6 +135,10 @@ def create_app(
         runtime = app.state.container
         if runtime.settings.scouting_database_url and runtime.scouting_service:
             await runtime.scouting_service.repository.ready()
+        if runtime.auto_market_service and (
+            runtime.settings.auto_market_database_url or runtime.settings.scouting_database_url
+        ):
+            await runtime.auto_market_service.repository.ready()
         return HealthResponse(status="ok")
 
     @app.exception_handler(UnauthorizedError)

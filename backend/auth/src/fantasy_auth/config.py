@@ -62,6 +62,7 @@ class Settings(BaseSettings):
     internal_jwt_audience: str = "fantasy-api"
     auth_jwks_url: str = "http://localhost:8003/auth/jwks"
     scouting_service_token: str = ""
+    auto_market_service_token: str = ""
     internal_service_token: str = ""
 
     @model_validator(mode="after")

@@ -1,0 +1,21 @@
+/* The trigger shares the .market-section-actions row with Offers, so it reuses that row's sizing. */
+.market-options-trigger { position:relative; min-height:44px; }
+.market-options-chevron { flex-shrink:0; width:14px; height:14px; fill:none; stroke:currentColor; stroke-width:1.5; }
+.market-options-trigger[aria-expanded="true"] .market-options-chevron { transform:rotate(180deg); }
+.market-options-popup { min-width:240px; }
+.market-options-item { flex-direction:row; align-items:center; gap:12px; padding-inline:10px; }
+.market-options-icon { display:grid; place-items:center; width:20px; height:20px; flex-shrink:0; }
+.market-options-icon :is(svg, .market-auction-icon) { width:18px; height:18px; }
+.market-options-label { flex:1 1 auto; }
+.market-options-count {
+  box-sizing:border-box; display:inline-grid; place-items:center; min-width:22px; height:22px;
+  padding:0 5px; border:1px solid currentColor; font-size:12px; font-weight:700; line-height:1;
+}
+@media(max-width:700px) {
+  /* Phones: the popup spans the row's width so items stay thumb-sized. */
+  .market-options-popup { min-width:min(280px,calc(100vw - 32px)); }
+}
+/* On the narrowest phones the label needs the whole button; aria-haspopup still announces the menu. */
+@media(max-width:400px) {
+  .market-options-chevron { display:none; }
+}

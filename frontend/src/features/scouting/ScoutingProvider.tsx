@@ -132,3 +132,9 @@ export function useScouting() {
   if (!context) throw new Error("ScoutingProvider required");
   return context;
 }
+
+const NO_FAVORITES: ReadonlySet<string> = new Set();
+/** Favorite master player ids; empty when no provider is mounted, so shared panels never throw. */
+export function useFavoritePlayerIds(): ReadonlySet<string> {
+  return useContext(Context)?.favorites ?? NO_FAVORITES;
+}

@@ -11,12 +11,22 @@ import { remainingLabel } from "../model/valueSeries";
 import "./MarketBids.css";
 import auctionIconUrl from "../../../assets/auction-9367178.png";
 
-type Props = { board: MarketBoard; actions: MarketActionsApi; now: number };
+type Props = {
+  board: MarketBoard; actions: MarketActionsApi; now: number;
+  /** Controlled by the Market options menu, which then owns the trigger. */
+  open?: boolean; onOpenChange?: (open: boolean) => void; showTrigger?: boolean;
+};
+
+const MENU_TRIGGER = "[data-market-options-trigger]";
+const focusTarget = (own: HTMLElement | null) =>
+  own?.isConnected ? own : document.querySelector<HTMLElement>(MENU_TRIGGER) ?? false;
 
 /** Current commitments from the same pending-adjusted snapshot as the market table. */
-export function MarketBids({ board, actions, now }: Props) {
+export function MarketBids({ board, actions, now, open: controlled, onOpenChange, showTrigger = true }: Props) {
   useTranslation();
-  const [open, setOpen] = useState(false);
+  const [inner, setInner] = useState(false);
+  const open = controlled ?? inner;
+  const setOpen = onOpenChange ?? setInner;
   const trigger = useRef<HTMLButtonElement>(null);
   const refresh = useRef<HTMLButtonElement>(null);
   const total = useRef<HTMLParagraphElement>(null);
@@ -31,20 +41,20 @@ export function MarketBids({ board, actions, now }: Props) {
   const { bids, spending, complete } = board.activeBids;
   const close = () => { if (!actions.actionPending) setOpen(false); };
   return <>
-    <Button ref={trigger} shape="square" variant="outline" className="market-bids-trigger"
+    {showTrigger ? <Button ref={trigger} shape="square" variant="outline" className="market-bids-trigger"
       icon={<span className="market-auction-icon" style={{ maskImage: `url(${auctionIconUrl})` }} />}
       aria-label={t("My bids, {{0}} active{{1}}", { 0: bids.length, 1: !complete ? t(", incomplete") : "" })}
       aria-haspopup="dialog" aria-expanded={open} onClick={() => setOpen(true)}>
       {t("My bids ")}<span className="market-bids-count">{bids.length}</span>
-    </Button>
+    </Button> : null}
     <Dialog open={open} title={t("My bids")} layout="sheet" className="market-bids-panel"
       closeOnBackdrop={!actions.actionPending} onClose={close}
-      finalFocus={() => trigger.current?.isConnected ? trigger.current : false}
+      finalFocus={() => focusTarget(trigger.current)}
       onOpenChangeComplete={(isOpen) => {
         if (!isOpen && modifyAfterClose.current) {
           const row = modifyAfterClose.current;
           modifyAfterClose.current = null;
-          trigger.current?.focus();
+          (trigger.current ?? document.querySelector<HTMLElement>(MENU_TRIGGER))?.focus();
           actions.openBid(row, "modify");
         }
       }}

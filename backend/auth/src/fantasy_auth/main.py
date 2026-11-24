@@ -121,7 +121,7 @@ def create_app(
 
     app = FastAPI(
         title=cfg.app_name,
-        version="0.6.2",
+        version="0.7.0",
         lifespan=_lifespan,
     )
     app.state.settings = cfg

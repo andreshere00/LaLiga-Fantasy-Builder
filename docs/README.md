@@ -34,6 +34,7 @@ logical database and new runtime values; follow the
 | [Frontend](frontend.md) | Lineup, market, players, and Teams UI, data loading, actions, details, and product screenshot gallery |
 | [Spanish and English localization](frontend-localization-plan.md) | Deterministic UI/data translations, selective GTranslate for scraped injury/news prose, and Options language control |
 | [Favorites and scouting](api/scouting/README.md) | Global bookmarks, per-league alerts, worker delegation, storage and recovery |
+| [Automatic market rules](api/auto-market/README.md) | Armed sell/buy thresholds, rule storage, write delegation and HTTP contract |
 | [Lineup builder](api/lineup-builder.md) | Read-only recommendations, scoring, and source contracts |
 | [LALIGA standings](api/standings/README.md) | Completed-match table and provider limitations |
 | [Authentication](authentication/authentication.md) | Sessions, internal JWT, LaLiga vault, CSRF |
