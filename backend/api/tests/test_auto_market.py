@@ -547,15 +547,18 @@ async def test_postgres_rules_enforce_one_live_rule_cancel_idle_and_owner_scope(
     write = AutoRuleWrite.model_validate(sell())
     async with repository.session("alice") as session:
         rule_id = await session.arm("l1", "Liga", "grant", write, "Pedri", 100_000_000)
-        with pytest.raises(UpstreamError) as exc:
-            await session.arm("l1", "Liga", "grant", write, "Pedri", 100_000_000)
-        assert exc.value.status_code == 409
-    async with repository.session("alice") as session:
         other = AutoRuleWrite.model_validate(sell(playerId="8", playerTeamId="s8"))
         other_id = await session.arm("l1", "Liga", "grant", other, "Gavi", 90_000_000)
-        with pytest.raises(UpstreamError) as clash:
+    # A unique violation aborts its transaction, so each clash runs in its own session.
+    with pytest.raises(UpstreamError) as exc:
+        async with repository.session("alice") as session:
+            await session.arm("l1", "Liga", "grant", write, "Pedri", 100_000_000)
+    assert exc.value.status_code == 409
+    with pytest.raises(UpstreamError) as clash:
+        async with repository.session("alice") as session:
             await session.replace("l1", other_id, write, "Pedri", 100_000_000)
-        assert clash.value.status_code == 409 and clash.value.category == "rule_exists"
+    assert clash.value.status_code == 409 and clash.value.category == "rule_exists"
+    async with repository.session("alice") as session:
         await session.cancel("l1", other_id)
     async with repository.session("alice") as session:
         data = await session.rules("l1")
