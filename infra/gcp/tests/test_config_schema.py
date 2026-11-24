@@ -10,6 +10,16 @@ SCHEMA = ROOT / "infra" / "config-schema.json"
 EXAMPLES = ROOT / "infra" / "gcp" / "examples"
 KEY = re.compile(r"^#?\s*([A-Z][A-Z0-9_]*)=")
 SECRET_NAME = re.compile(r"(PASSWORD|_TOKEN|_SECRET|_KEY|_KEY_BASE64)$")
+LOCAL_TEMPLATES = [ROOT / ".env.template", *sorted((ROOT / "backend").glob("*/.env.example"))]
+# Credential shapes that must never appear in the locator (names and locations only).
+LEAK_PATTERNS = [
+    r"\bre_[A-Za-z0-9]{16,}",
+    r"\bsk-[A-Za-z0-9_-]{16,}",
+    r"\bAIza[0-9A-Za-z_-]{20,}",
+    r"-----BEGIN [A-Z ]*KEY-----",
+    r"\b[0-9a-f]{32,}\b",
+    r"\b[A-Za-z0-9+/]{40,}={0,2}",
+]
 
 # ---- Mocks, fixtures & helpers ---- #
 
@@ -50,11 +60,21 @@ class ConfigSchemaTests(unittest.TestCase):
                     with self.subTest(key=key, file=path.name):
                         self.assertIn(key, listed)
 
+    def test_local_template_secret_like_keys_are_all_listed(self) -> None:
+        listed = {entry["name"] for entry in _load()["secrets"]}
+        for path in LOCAL_TEMPLATES:
+            for key in _keys(path):
+                if SECRET_NAME.search(key):
+                    with self.subTest(key=key, file=str(path.relative_to(ROOT))):
+                        self.assertIn(key, listed)
+
     # ---- Error paths ---- #
 
     def test_schema_never_contains_secret_looking_values(self) -> None:
         text = SCHEMA.read_text()
-        self.assertIsNone(re.search(r"\bre_[A-Za-z0-9]{16,}", text))
+        for pattern in LEAK_PATTERNS:
+            with self.subTest(pattern=pattern):
+                self.assertIsNone(re.search(pattern, text))
 
     # ---- Edge cases ---- #
 

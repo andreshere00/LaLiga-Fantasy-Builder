@@ -17,7 +17,8 @@ entry, not a claim that every optional provider or deployment gate is complete.
 
 - Add `infra/config-schema.json`, a locator that maps every secret to its local dotenv
   file, Secret Manager payload, consuming services and provider console, with a test that
-  keeps it aligned with the dotenv templates. It holds no secret values.
+  keeps it aligned with the example and local dotenv templates and rejects credential-like
+  values. It holds no secret values.
 
 ## [0.6.2] - 2026-11-17
 
