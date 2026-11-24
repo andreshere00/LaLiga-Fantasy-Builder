@@ -19,6 +19,11 @@ export function assertLocalDatabase(databaseURL: string | undefined, env: NodeJS
   } catch {
     throw new Error("IDENTITY_DATABASE_URL is not a valid URL");
   }
+  // node-postgres lets these query parameters (and multi-host URLs) override the hostname.
+  const params = new URL(databaseURL).searchParams;
+  if (params.has("host") || params.has("hostaddr") || (databaseURL.split("@").pop() ?? "").split("/")[0]?.includes(",")) {
+    throw new Error("seed:dev-user refuses database URLs that override the host (host, hostaddr or several hosts)");
+  }
   if (LOOPBACK_HOSTS.includes(host)) return;
   if (host === "postgres" && env.ALLOW_DEV_SEED === "1") return;
   throw new Error(

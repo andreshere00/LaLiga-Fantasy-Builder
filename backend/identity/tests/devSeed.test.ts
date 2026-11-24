@@ -16,6 +16,16 @@ test("assertLocalDatabase rejects remote hosts and missing or invalid URLs", () 
   assert.throws(() => assertLocalDatabase("not a url", {}), /valid URL/);
 });
 
+test("assertLocalDatabase refuses URLs that override the host", () => {
+  for (const url of [
+    "postgresql://u:p@localhost/db?host=prod.example.com",
+    "postgresql://u:p@localhost/db?hostaddr=10.0.0.5",
+    "postgresql://u:p@localhost,prod.example.com/db",
+  ]) {
+    assert.throws(() => assertLocalDatabase(url, {}), /override the host|valid URL|local development/);
+  }
+});
+
 test("assertLocalDatabase requires an explicit opt-in for the Compose postgres host", () => {
   const url = "postgresql://u:p@postgres:5432/db";
   assert.throws(() => assertLocalDatabase(url, {}), /ALLOW_DEV_SEED/);

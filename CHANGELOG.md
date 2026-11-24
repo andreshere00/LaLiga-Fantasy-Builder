@@ -11,7 +11,8 @@ entry, not a claim that every optional provider or deployment gate is complete.
 - Add `uv run poe seed-dev-user`, which creates or resets a verified mock user for local
   development without SMTP. It only runs against a loopback database (the Compose
   `postgres` host needs `ALLOW_DEV_SEED=1`), validates the password policy, and resets an
-  existing account only if it is `dev@example.com` or `DEV_USER_FORCE=1` is set.
+  existing account only if it is `dev@example.com` or `DEV_USER_FORCE=1` is set. It also
+  refuses database URLs that override the host (`host`, `hostaddr` or several hosts).
 
 ### Infrastructure
 
