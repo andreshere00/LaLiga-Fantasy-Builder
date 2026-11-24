@@ -84,6 +84,15 @@
       "rotation": "Must differ from INTERNAL_SERVICE_TOKEN."
     },
     {
+      "name": "AUTO_MARKET_SERVICE_TOKEN",
+      "purpose": "Lets the auto-market worker redeem its write delegation at Auth.",
+      "generate": "openssl rand -hex 32 (URL-safe)",
+      "local": [".env", "backend/api/.env", "backend/auth/.env"],
+      "production": {"payload": "runtime", "secret": "<prefix>-runtime-env"},
+      "consumers": ["auth", "auto-market-worker"],
+      "rotation": "Must differ from INTERNAL_SERVICE_TOKEN and SCOUTING_SERVICE_TOKEN."
+    },
+    {
       "name": "SCRAPING_SERVICE_TOKEN",
       "purpose": "Service token for the scraping service's /internal/scrape/* routes.",
       "generate": "openssl rand -hex 32 (URL-safe)",
