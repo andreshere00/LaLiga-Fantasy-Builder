@@ -22,6 +22,12 @@ Verification mail is sent through Resend to the address entered at registration.
 Check that inbox, including spam. Verification and recovery messages use branded
 HTML matching the frontend and retain a plain-text fallback. There are no shared
 demo passwords.
+To skip SMTP and the verification email locally, run `uv run poe seed-dev-user` (or
+`bun run seed:dev-user` in this directory). It creates or resets a verified user
+`dev@example.com` (username `devuser`) and prints a random password. Override with
+`DEV_USER_EMAIL`, `DEV_USER_USERNAME`, `DEV_USER_NAME` and `DEV_USER_PASSWORD` (at least
+12 characters, passing the password policy). It sends no mail and refuses a non-local
+database or `NODE_ENV=production`.
 Account settings at `/account` support username and password changes, a verified
 email change by one-time code, provider linking, and permanent deletion. Deletion
 calls LaLiga Auth to remove the user's sealed connection before removing their

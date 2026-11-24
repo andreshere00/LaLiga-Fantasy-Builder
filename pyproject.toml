@@ -67,6 +67,10 @@ cmd = "bash scripts/dev-local.sh"
 help = "Clear stale app containers and Uvicorn processes, then run local development"
 cmd = "bash scripts/dev-clean.sh"
 
+[tool.poe.tasks.seed-dev-user]
+help = "Create or reset a verified mock identity user (dev@example.com) for local development"
+cmd = "bun run --cwd backend/identity seed:dev-user"
+
 [tool.poe.tasks.install]
 help = "Install root and backend deps, then enable git pre-commit hooks"
 shell = """

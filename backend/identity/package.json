@@ -13,6 +13,7 @@
     "lint": "tsc --noEmit",
     "test": "node --import tsx --test tests/*.test.ts",
     "schema:generate": "node --env-file-if-exists=.env --env-file-if-exists=../../.env node_modules/.bin/auth generate --config src/runtime.ts --output migrations/schema.sql --yes",
+    "seed:dev-user": "node --env-file-if-exists=.env --env-file-if-exists=../../.env --import tsx src/seedDevUser.ts",
     "migrate": "node --env-file-if-exists=.env --import tsx src/migrate.ts"
   },
   "dependencies": {
