@@ -562,7 +562,8 @@ async def test_postgres_rules_enforce_one_live_rule_cancel_idle_and_owner_scope(
         await session.cancel("l1", other_id)
     async with repository.session("alice") as session:
         data = await session.rules("l1")
-        assert data.rules[0].threshold_amount == 105_000_000 and data.status == "active"
+        live = next(rule for rule in data.rules if rule.id == rule_id)
+        assert live.threshold_amount == 105_000_000 and data.status == "active"
         assert (await repository.due()) == [("alice", "l1")]
     async with repository.session("bob") as session:
         assert (await session.rules("l1")).rules == []
