@@ -26,7 +26,13 @@ const schema = z.object({
   APPLE_PRIVATE_KEY: optionalSecret,
 });
 
-export function readConfig(env: NodeJS.ProcessEnv = process.env) {
+/**
+ * Validate and normalize Identity configuration.
+ *
+ * `skipSmtp` relaxes only the real-SMTP requirement, for tooling that never sends mail.
+ * It is rejected in production.
+ */
+export function readConfig(env: NodeJS.ProcessEnv = process.env, options: { skipSmtp?: boolean } = {}) {
   const result = schema.safeParse(env);
   // Never include values (which can contain credentials) in configuration errors.
   if (!result.success) throw new Error(`Invalid identity configuration: ${result.error.issues.map(i => i.path.join(".")).join(", ")}`);
@@ -55,7 +61,10 @@ export function readConfig(env: NodeJS.ProcessEnv = process.env) {
   if (Boolean(cfg.SMTP_USER) !== Boolean(cfg.SMTP_PASSWORD)) {
     throw new Error("Configure both SMTP_USER and SMTP_PASSWORD");
   }
-  if (cfg.NODE_ENV !== "test" && (
+  if (options.skipSmtp && cfg.NODE_ENV === "production") {
+    throw new Error("skipSmtp is not allowed in production");
+  }
+  if (cfg.NODE_ENV !== "test" && !options.skipSmtp && (
     !cfg.SMTP_USER || !cfg.SMTP_PASSWORD || cfg.MAIL_FROM.endsWith(".test") ||
     ["localhost", "127.0.0.1", "mailpit"].includes(cfg.SMTP_HOST.toLowerCase())
   )) {
