@@ -6,6 +6,21 @@ entry, not a claim that every optional provider or deployment gate is complete.
 
 ## [Unreleased]
 
+### Identity
+
+- Add `uv run poe seed-dev-user`, which creates or resets a verified mock user for local
+  development without SMTP. It only runs against a loopback database (the Compose
+  `postgres` host needs `ALLOW_DEV_SEED=1`), validates the password policy, and resets an
+  existing account only if it is `dev@example.com` or `DEV_USER_FORCE=1` is set. It also
+  refuses database URLs that override the host (`host`, `hostaddr` or several hosts).
+
+### Infrastructure
+
+- Add `infra/config-schema.json`, a locator that maps every secret to its local dotenv
+  file, Secret Manager payload, consuming services and provider console, with a test that
+  keeps it aligned with the example and local dotenv templates and rejects credential-like
+  values. It holds no secret values.
+
 ## [0.7.0] - 2026-11-24
 
 ### Auto-market

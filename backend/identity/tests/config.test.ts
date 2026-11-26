@@ -46,3 +46,12 @@ test("development requires real authenticated mail delivery", () => {
   assert.throws(() => readConfig({ ...development, SMTP_HOST: "mailpit" }), /authenticated SMTP/);
   assert.throws(() => readConfig({ ...development, MAIL_FROM: "accounts@localhost.test" }), /authenticated SMTP/);
 });
+
+test("skipSmtp drops the SMTP requirement outside production only", () => {
+  const development = { ...base, NODE_ENV: "development", BETTER_AUTH_URL: "http://localhost:3000",
+    SMTP_USER: undefined, SMTP_PASSWORD: undefined };
+  assert.throws(() => readConfig(development), /authenticated SMTP/);
+  assert.doesNotThrow(() => readConfig(development, { skipSmtp: true }));
+  assert.throws(() => readConfig({ ...base, SMTP_USER: undefined, SMTP_PASSWORD: undefined },
+    { skipSmtp: true }), /production/);
+});
