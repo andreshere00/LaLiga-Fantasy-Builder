@@ -1,0 +1,14 @@
+.fb-tabs-list { display:flex; border-bottom:1px solid var(--fb-line); overflow-x:auto; scrollbar-width:none; }
+.fb-tabs-tab {
+  display:inline-flex; align-items:center; gap:8px; flex:0 0 auto; min-height:48px; padding:0 16px;
+  border:0; border-bottom:4px solid transparent; border-radius:0; background:transparent;
+  color:var(--fb-secondary); font:inherit; font-size:14px; font-weight:500; letter-spacing:.01em;
+  text-transform:uppercase; cursor:pointer;
+  transition:background-color var(--fb-color-duration) ease,border-color var(--fb-color-duration) ease;
+}
+.fb-tabs-tab:hover { background:var(--fb-subtle); }
+/* Selection is an underline plus weight, never only a colour change. */
+.fb-tabs-tab[data-active] { border-bottom-color:var(--fb-tertiary); color:var(--fb-tertiary); font-weight:600; }
+.fb-tabs-tab:focus-visible { outline:2px solid var(--fb-focus); outline-offset:-2px; }
+.fb-tabs-panel { padding-top:16px; }
+.fb-tabs-panel:focus-visible { outline:2px solid var(--fb-focus); outline-offset:3px; }

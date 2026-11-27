@@ -1034,10 +1034,12 @@ User-facing copy constants: `marketMessages.ts`, `marketActionErrors.ts`,
 
 ### Automatic rules
 
-The **Auto market** entry in the Market options menu (a button on the Players page) opens a sheet sorted by concern into three
-sections. *Selling* holds everything for your own players, then the active auto-sells. *Buying*
-holds everything for players you want, then the active auto-buys. *History* lists finished rules.
-The *Selling* section has a list of selectable players (photo, name, club badge, FSYP and
+The **Auto market** entry in the Market options menu (a button on the Players page) opens a sheet with two tabs (`Tabs`), each
+showing its count of active rules. *Selling* (the default) lists the active auto-sells first,
+then everything for setting one up for your own players. *Buying* lists the active auto-buys
+first, then everything for players you want. *History (n)* is a collapsed disclosure below
+the tabs with finished rules.
+The *Selling* tab has a list of selectable players (photo, name, club badge, FSYP and
 market value) to start an auto-sell for one of your squad players that is not already on the
 market. **List all my players…** puts every player that is not on the market yet, and has no live sell rule,
 on the market by default (players already listed are left as they are) (*Only list them*, at market value, with no automatic sale, so you choose which offer

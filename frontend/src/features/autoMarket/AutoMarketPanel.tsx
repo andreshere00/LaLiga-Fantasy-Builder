@@ -6,6 +6,7 @@ import { Badge } from "../../components/ui/Badge";
 import { Button } from "../../components/ui/Button";
 import { Dialog } from "../../components/ui/Dialog";
 import { Field, FieldDescription, FieldLabel } from "../../components/ui/Fields";
+import { Tabs, TabsList, TabsPanel, TabsTab } from "../../components/ui/Tabs";
 import { t, useTranslation } from "../../i18n";
 import { AutoBuySearch } from "./AutoBuySearch";
 import { FavoritesField, useFavoriteCandidates } from "./FavoritesRules";
@@ -140,6 +141,8 @@ function AutoMarketSheet({ auto, squad, open: controlled, onOpenChange, showTrig
   const listFor = (side: "sell" | "buy") => live.filter((rule) => rule.side === side);
   const busy = auto.cancel.isPending;
   const [confirmingId, setConfirmingId] = useState<AutoRule["id"] | null>(null);
+  // Selling and buying are separate tasks: one tab at a time keeps the sheet short.
+  const [side, setSide] = useState<RuleSide>("sell");
   const listProps: RuleActions = {
     busy,
     confirmingId,
@@ -166,8 +169,14 @@ function AutoMarketSheet({ auto, squad, open: controlled, onOpenChange, showTrig
       {auto.status === "not_member" ? <p role="alert">{t("Rules are paused because this account is no longer in the league.")}</p> : null}
       {auto.status === "degraded" ? <p role="status">{t("LaLiga was unavailable on the last check. Rules will try again soon.")}</p> : null}
       {auto.rulesQuery.isError && !auto.rulesQuery.data ? <p role="alert">{t("Rules could not be loaded. Try again in a moment.")}</p> : null}
-      <section className="auto-market-section" aria-labelledby={`${ids}-selling`}>
-        <h3 className="fb-section-title" id={`${ids}-selling`}>{t("Selling")}</h3>
+      <Tabs value={side} onValueChange={(value) => setSide(value as RuleSide)}>
+      <TabsList aria-label={t("Rule type")}>
+        <TabsTab value="sell">{t("Selling")} ({listFor("sell").length})</TabsTab>
+        <TabsTab value="buy">{t("Buying")} ({listFor("buy").length})</TabsTab>
+      </TabsList>
+      <TabsPanel value="sell" className="auto-market-section">
+        <ActiveRules empty={t("No active auto-sells.")} loading={auto.rulesQuery.isLoading} rules={listFor("sell")}
+          label={t("Active auto-sells")} {...listProps} />
         <Field>
           <FieldLabel id={`${ids}-squad`}>{t("Sell one of my players automatically")}</FieldLabel>
           <div role="radiogroup" aria-labelledby={`${ids}-squad`} className="auto-market-players">
@@ -204,11 +213,10 @@ function AutoMarketSheet({ auto, squad, open: controlled, onOpenChange, showTrig
         </Field>
         <FavoritesField side="sell" players={favorites.sells} hasFavorites={favorites.hasFavorites}
           onLaunch={() => { setOpen(false); auto.clearBulkMessage(); setFavoritesSide("sell"); }} />
-        <ActiveRules empty={t("No active auto-sells.")} loading={auto.rulesQuery.isLoading} rules={listFor("sell")}
-          label={t("Active auto-sells")} {...listProps} />
-      </section>
-      <section className="auto-market-section" aria-labelledby={`${ids}-buying`}>
-        <h3 className="fb-section-title" id={`${ids}-buying`}>{t("Buying")}</h3>
+      </TabsPanel>
+      <TabsPanel value="buy" className="auto-market-section">
+        <ActiveRules empty={t("No active auto-buys.")} loading={auto.rulesQuery.isLoading} rules={listFor("buy")}
+          label={t("Active auto-buys")} {...listProps} />
         <AutoBuySearch open={open} onPick={(target) => {
           const existing = auto.liveRuleFor(target.playerId, "buy");
           setOpen(false);
@@ -218,14 +226,13 @@ function AutoMarketSheet({ auto, squad, open: controlled, onOpenChange, showTrig
         <FavoritesField side="buy" players={favorites.buys} hasFavorites={favorites.hasFavorites}
           onLaunch={() => { setOpen(false); auto.clearBulkMessage(); setFavoritesSide("buy"); }} />
         <FieldDescription>{t("You can also open Options on a player in the market to auto-buy them.")}</FieldDescription>
-        <ActiveRules empty={t("No active auto-buys.")} loading={auto.rulesQuery.isLoading} rules={listFor("buy")}
-          label={t("Active auto-buys")} {...listProps} />
-      </section>
+      </TabsPanel>
+      </Tabs>
       {history.length > 0 ? (
-        <section className="auto-market-section" aria-labelledby={`${ids}-history`}>
-          <h3 className="fb-section-title" id={`${ids}-history`}>{t("History")}</h3>
+        <details className="auto-market-section auto-market-history">
+          <summary>{t("History")} ({history.length})</summary>
           <RuleList label={t("Finished rules")} rules={history} {...listProps} />
-        </section>
+        </details>
       ) : null}
     </Dialog>
     <FavoritesRulesDialog open={favoritesSide != null} side={favoritesSide ?? "buy"}

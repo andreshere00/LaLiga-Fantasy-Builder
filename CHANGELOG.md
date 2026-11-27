@@ -8,6 +8,9 @@ entry, not a claim that every optional provider or deployment gate is complete.
 
 ### Frontend
 
+- The Auto market sheet splits **Selling** and **Buying** into tabs (each with its active
+  rule count, active rules first) and folds finished rules into a collapsed **History**;
+  a new `Tabs` primitive wraps Base UI tabs.
 - Changing **Last N** or the market period on a player page shows one progress or failure
   message, with one Retry, in that section instead of a page banner plus a notice and
   Retry in every section.

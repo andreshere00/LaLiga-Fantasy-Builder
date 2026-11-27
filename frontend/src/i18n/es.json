@@ -644,6 +644,7 @@
   "Offer for {{0}}. The owner must accept your offer before the player joins your squad.": "Oferta por {{0}}. El propietario debe aceptar tu oferta para que el jugador pase a tu plantilla.",
   "Pay {{0}} to trigger the release clause for {{1}}? The payment can't be undone.": "¿Pagar {{0}} para ejecutar la cláusula de rescisión de {{1}}? El pago no se puede deshacer.",
   "Players to put on the market": "Jugadores que se pondrán a la venta",
+  "Rule type": "Tipo de regla",
   "Select at least one player with a market value to arm rules.": "Selecciona al menos un jugador con valor de mercado para activar las reglas.",
   "Sell {{0}} now for {{1}}, half of {{2}}. The money is added to your balance and the player leaves your squad.": "Vende a {{0}} ahora por {{1}}, la mitad de {{2}}. El dinero se añadirá a tu saldo y el jugador se irá de la plantilla.",
   "Sell {{0}} to {{1}} for {{2}}?": "¿Vender a {{0}} a {{1}} por {{2}}?",
