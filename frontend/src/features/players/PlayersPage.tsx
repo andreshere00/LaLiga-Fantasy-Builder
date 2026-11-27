@@ -429,7 +429,7 @@ function PlayersListContent() {
       )}
       {!leaderboard && filtered.length > PLAYERS_PAGE_SIZE ? (
         <NumberPagination page={currentPage} totalPages={totalPages}
-          label={t("Players pages")} onPageChange={(page) =>
+          label={t("Players pages")} showArrows onPageChange={(page) =>
             setSearchParams(withPlayersPage(searchParams, page), { replace: true })} />
       ) : null}
       <MarketActionDialogs

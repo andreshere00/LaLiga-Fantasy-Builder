@@ -30,6 +30,26 @@ describe("NumberPagination", () => {
     expect(screen.getAllByRole("button")).toHaveLength(2);
   });
 
+  it("jumps to the first and last pages with the end controls", () => {
+    function Ends() {
+      const [page, setPage] = useState(4);
+      return <NumberPagination page={page} totalPages={8} onPageChange={setPage} showArrows />;
+    }
+    render(<Ends />);
+    fireEvent.click(screen.getByRole("button", { name: "Last page" }));
+    expect(screen.getByText("Page 8 of 8")).toBeTruthy();
+    expect((screen.getByRole("button", { name: "Next page" }) as HTMLButtonElement).disabled).toBe(true);
+    fireEvent.click(screen.getByRole("button", { name: "First page" }));
+    expect(screen.getByText("Page 1 of 8")).toBeTruthy();
+    expect((screen.getByRole("button", { name: "First page" }) as HTMLButtonElement).disabled).toBe(true);
+  });
+
+  it("omits end controls when every page is already visible", () => {
+    render(<NumberPagination page={1} totalPages={3} onPageChange={() => {}} showArrows />);
+    expect(screen.queryByRole("button", { name: "First page" })).toBeNull();
+    expect(screen.getByRole("button", { name: "Next page" })).toBeTruthy();
+  });
+
   it("hides navigation for a single page", () => {
     render(<Host total={1} />);
     expect(screen.queryByRole("navigation")).toBeNull();

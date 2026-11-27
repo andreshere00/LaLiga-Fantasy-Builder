@@ -677,7 +677,8 @@ when available, plus explicit player-name/details links. Favorite selection
 changes only the bookmark icon; its surface stays neutral. Rich rows have thin
 dividers without entrance motion. Filters edit a draft in a desktop side panel
 or mobile bottom panel; Apply writes the existing URL state, while Cancel or
-Escape discards edits. Catalog pagination uses a sliding three-number window.
+Escape discards edits. Catalog pagination uses a sliding three-number window with
+previous/next arrows, plus first/last buttons once there are more than three pages.
 
 Above **1280px**, the catalog shows every comparison column side by side. From
 **1001px to 1280px** (tablet landscape), Team sits under the player name and Owned

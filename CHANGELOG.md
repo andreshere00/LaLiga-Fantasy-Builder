@@ -8,6 +8,8 @@ entry, not a claim that every optional provider or deployment gate is complete.
 
 ### Frontend
 
+- Players pagination has previous/next arrows and, like the news and injury histories,
+  first/last page buttons when there are more than three pages.
 - Auto market explains its unavailable actions: why a listed or running rule cannot be
   edited, why **List all my players…** is off, and why favourite rules cannot be armed.
 - A disabled lineup **Save** explains how many positions are still empty instead of
