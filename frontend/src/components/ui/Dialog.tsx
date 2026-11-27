@@ -10,7 +10,7 @@ type DialogProps = {
   initialFocus?: ComponentProps<typeof Primitive.Popup>["initialFocus"];
   busy?: boolean;
   onClose: () => void;
-  children: ReactNode;
+  children?: ReactNode;
   footer?: ReactNode;
   closeOnBackdrop?: boolean;
   layout?: "dialog" | "sheet";

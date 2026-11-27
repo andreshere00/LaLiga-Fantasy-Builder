@@ -36,7 +36,8 @@ Sessions expire after one day without sliding renewal or cookie caching.
 Better Auth owns cookie, Origin and CSRF validation; there is no separate Python
 CSRF token. Production requires HTTPS and uses Secure, HttpOnly cookies.
 
-`/account` provides explicit provider linking and unlinking. Implicit same-email
+`/account` provides explicit provider linking and unlinking; unlinking asks for
+confirmation in a dialog that starts on **Cancel**. Implicit same-email
 linking is disabled. Linking requires a session created in the last ten minutes;
 unlinking the last login method is rejected. Different provider emails may be
 linked only through the authenticated linking flow. Social-only accounts enroll

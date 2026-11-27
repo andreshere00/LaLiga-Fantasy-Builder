@@ -12,6 +12,7 @@ entry, not a claim that every optional provider or deployment gate is complete.
   and from My bids, and the success toast says "Bid cancelled" instead of "Bid updated".
 - Rejecting a received offer now asks for inline confirmation, like accepting one.
 - Cancelling an auto-market rule now asks for inline confirmation and shows its progress.
+- Unlinking a sign-in provider on the account page now asks for confirmation.
 
 ### Identity
 
