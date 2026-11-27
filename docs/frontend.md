@@ -1202,13 +1202,14 @@ component does not scrape or calculate population percentiles in the browser.
 
 ### Published performance radars
 
-The player performance radar sits below Fantasy outlook as a full-width subsection
-of Overview, sharing its panel and navigation selection. It reads independently
+The player performance radar is its own **Performance profile** section between
+Overview and Form, with its own section link (shown only while the section is on the
+page), so Overview stays limited to identity, averages, actions and outlook. It reads independently
 when it enters the viewport or receives focus. It also remains reachable when the detail
 aggregate is loading or temporarily fails; confirmed missing players and coaches
 retain their own appropriate flow. Player/account changes reset selections.
-The reviewed default role is selected; multiple published roles remain selectable. Within
-Overview the main header owns the player's name, club, Fantasy position and age
+The reviewed default role is selected; multiple published roles remain selectable. The
+Overview header owns the player's name, club, Fantasy position and age
 when a birth date is available. Age uses the current date in Europe/Madrid. The
 embedded radar shows the performance role, league and sample minutes; it
 omits a single-player legend and keeps its table caption available to assistive
@@ -1224,8 +1225,8 @@ recipe IDs. Retrieval and provider-update dates are distinct; an unknown update
 is explicitly marked as not provided. Population uncertainty remains visible
 beside the graph, and raw values are never inferred from percentiles.
 
-When the API confirms no published radar for the selection, the entire subsection
-is omitted, including its heading, controls and absence message. Partial profiles
+When the API confirms no published radar for the selection, the entire section
+is omitted, including its heading, section link, controls and absence message. Partial profiles
 with available data remain visible. Errors retry the local API only. Available data
 stays visible on refresh failure. The data date and retrieval date appear in
 Source and methodology. No overall score or invented values are derived from the polygon.

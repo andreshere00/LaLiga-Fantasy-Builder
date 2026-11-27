@@ -361,7 +361,7 @@ function PlayerDetailBody({ masterId }: PlayerDetailBodyProps) {
         <Link to={returnTo}>{t(returnPlace(returnTo))}</Link>
         <span aria-hidden="true">/</span><span aria-current="page">{name}</span>
       </nav>
-      <PlayerSectionNavigation detailReady={detailReady} />
+      <PlayerSectionNavigation detailReady={detailReady} radar={radarSection != null} />
       {detailQuery.isError ? (
         <div className="player-detail-panel player-detail-recovery">
           <p role="alert">{t("Player data could not be updated. Previous results are still shown.")}</p>
@@ -472,8 +472,8 @@ function PlayerDetailBody({ masterId }: PlayerDetailBodyProps) {
           </div>
           <PlayerFantasySummary profile={profileBlock} clubId={clubId} />
         </section>
-        {radarSection}
       </section>
+      {radarSection}
 
       <section className="player-detail-panel player-detail-section player-form-section" aria-labelledby="player-form-title"
         aria-busy={updatingPreviousDetail || undefined}>

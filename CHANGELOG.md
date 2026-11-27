@@ -8,6 +8,8 @@ entry, not a claim that every optional provider or deployment gate is complete.
 
 ### Frontend
 
+- The player performance radar is its own **Performance profile** section with a section
+  link, instead of filling the bottom of Overview.
 - Using a builder result over an unsaved draft asks in its own dialog, starting on
   **Keep my draft**, instead of a note at the end of the long results list.
 - Teams sections with no data for a club keep their heading and say no information is
