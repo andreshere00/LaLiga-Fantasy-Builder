@@ -8,6 +8,8 @@ entry, not a claim that every optional provider or deployment gate is complete.
 
 ### Frontend
 
+- On phones the standings pin a narrower club column (168px with the rank instead of 240px),
+  leaving room to scroll the statistics.
 - Teams retry buttons show *Retrying…* while the club reloads, and the section bar measures
   the sticky header instead of assuming a fixed 140px offset.
 - Account, LaLiga connection and scouting buttons show a specific busy label while they
