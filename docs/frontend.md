@@ -657,6 +657,8 @@ Choosing it on a pitch player opens the squad replacement picker. Choosing it on
 a bench player asks you to select a pitch player in the same position. During
 replacement selection, card clicks choose players directly. Changes remain a
 local draft until you save the lineup; past and opponent lineups cannot be edited.
+While positions are empty, **Save** stays focusable and its tooltip says how many
+positions are left to fill; with no edits it says no changes were detected.
 
 ### Players screen
 

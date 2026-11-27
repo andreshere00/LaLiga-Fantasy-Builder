@@ -240,6 +240,19 @@ export function unfilledLineupRoles(
   return roles;
 }
 
+/** Positions still empty (or duplicated) before an incomplete draft can be saved. */
+export function missingDraftPositions(draft: LineupDraft): number {
+  if (isDraftComplete(draft)) return 0;
+  const expected = 1 + draft.tactical.reduce((total, count) => total + count, 0);
+  const filled = new Set<string>();
+  for (const role of ROLE_ORDER) {
+    for (const id of slotsForRole(draft, role)) {
+      if (isFilledSlotId(id)) filled.add(id);
+    }
+  }
+  return Math.max(1, expected - filled.size);
+}
+
 export function isDraftComplete(draft: LineupDraft): boolean {
   const [defenders, midfielders, strikers] = draft.tactical;
   const filledIds: string[] = [];

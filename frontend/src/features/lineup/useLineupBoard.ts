@@ -84,6 +84,7 @@ import {
   groupsFromDraft,
   isDraftComplete,
   lineupWriteBody,
+  missingDraftPositions,
   squadPickerPool,
   type LineupDraft,
   type PitchSelection,
@@ -161,6 +162,8 @@ export type LineupBoard = {
   restoreLastSavedLineup: () => void;
   saveDisabled: boolean;
   saveNoChangesTooltip: string | null;
+  /** Empty positions blocking save, or null when the draft is complete or not editable. */
+  saveMissingPositions: number | null;
   savePending: boolean;
   isPastFixture: boolean;
   fixtureScoresVisible: boolean;
@@ -1038,6 +1041,10 @@ export function useLineupBoard(options: UseLineupBoardOptions = {}): LineupBoard
       !draftDirty &&
       !saveMutation.isPending
         ? SAVE_NO_CHANGES_MESSAGE
+        : null,
+    saveMissingPositions:
+      editable && draft != null && !isDraftComplete(draft) && !saveMutation.isPending
+        ? missingDraftPositions(draft)
         : null,
     savePending: saveMutation.isPending,
     isPastFixture: !lineupUsesCurrent,

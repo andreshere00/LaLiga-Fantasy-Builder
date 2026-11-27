@@ -10,6 +10,7 @@ import {
   groupsForPitchDisplay,
   isDraftComplete,
   lineupWriteBody,
+  missingDraftPositions,
   unfilledLineupRoles,
   roleFromPositionId,
   squadPickerPool,
@@ -59,6 +60,11 @@ describe("lineupDraft", () => {
     expect(isDraftComplete(draft!)).toBe(false);
   });
 
+  it("missingDraftPositions_partial_442_counts_empty_slots", () => {
+    const draft = draftFromGroups(groups442(), [4, 4, 2])!;
+    expect(missingDraftPositions(draft)).toBe(4);
+  });
+
   it("draftFromGroups_marks_full_lineup_complete", () => {
     const draft = draftFromGroups(
       [
@@ -76,6 +82,7 @@ describe("lineupDraft", () => {
       [4, 4, 2],
     );
     expect(isDraftComplete(draft!)).toBe(true);
+    expect(missingDraftPositions(draft!)).toBe(0);
   });
 
   it("applyFormationCode_keeps_players_that_still_fit", () => {

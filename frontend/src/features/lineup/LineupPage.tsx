@@ -220,8 +220,13 @@ function LineupPageContent() {
     );
   }
 
-  const saveNoChangesOnly =
-    board.saveNoChangesTooltip != null && board.saveDisabled && !board.savePending;
+  // Keep an explained disabled Save focusable so its reason is reachable by keyboard and touch.
+  const saveReason = board.saveMissingPositions != null
+    ? t(board.saveMissingPositions === 1
+      ? "Fill 1 more position to save" : "Fill {{0}} more positions to save",
+    { 0: board.saveMissingPositions })
+    : board.saveNoChangesTooltip ? t(board.saveNoChangesTooltip) : null;
+  const saveExplained = saveReason != null && board.saveDisabled && !board.savePending;
 
   return (
     <section className="lineup-page" data-layout-profile={LINEUP_LAYOUT_PROFILE}>
@@ -324,16 +329,16 @@ function LineupPageContent() {
             </div>
             <div className="control-block save-lineup">
               <span className="field-label">{t("Save lineup")}</span>
-              <Help content={board.saveNoChangesTooltip ? t(board.saveNoChangesTooltip) : null}
+              <Help content={saveReason}
                 trigger={<div className="accent-control-shell save-lineup-shell" />}>
                 <button
                   type="button"
                   className="save-lineup-button"
                   aria-busy={board.savePending || undefined}
-                  disabled={board.saveDisabled && !saveNoChangesOnly}
-                  aria-disabled={saveNoChangesOnly ? true : undefined}
+                  disabled={board.saveDisabled && !saveExplained}
+                  aria-disabled={saveExplained ? true : undefined}
                   onClick={() => {
-                    if (saveNoChangesOnly) return;
+                    if (saveExplained) return;
                     board.saveLineup();
                   }}
                 >
