@@ -296,7 +296,7 @@ from the header's Sections navigation. On a phone the four header destinations m
 the bottom bar and keep their labels inside the safe area.
 
 The Club sections bar (the shared `.fb-section-tabs` style, also used by player details) is sticky and follows the section being read as the page
-scrolls; selecting a link, or opening a `?section=` URL, jumps to that section and
+scrolls (measured below the sticky header and bar, not a fixed offset); selecting a link, or opening a `?section=` URL, jumps to that section and
 keeps the jump in place while images and radar chips finish loading, until the
 reader scrolls. Sections are separated by a rule and share one heading style.
 

@@ -169,10 +169,16 @@ describe("Teams page", () => {
       const element = document.getElementById(id) as HTMLElement;
       element.getBoundingClientRect = () => ({ top } as DOMRect);
     }
-    act(() => { window.dispatchEvent(new Event("scroll")); });
-    const bar = screen.getByRole("navigation", { name: "Club sections" });
-    const current = bar.querySelector('[aria-current="true"]');
-    expect(current?.textContent).toBe("Players");
+    // The sticky header publishes its height; the spy reads it instead of a fixed offset.
+    document.documentElement.style.setProperty("--app-header-height", "120px");
+    try {
+      act(() => { window.dispatchEvent(new Event("scroll")); });
+      const bar = screen.getByRole("navigation", { name: "Club sections" });
+      const current = bar.querySelector('[aria-current="true"]');
+      expect(current?.textContent).toBe("Players");
+    } finally {
+      document.documentElement.style.removeProperty("--app-header-height");
+    }
   });
 
   it("TeamsPage_navigation_gives_each_section_an_icon_and_each_club_a_short_name", async () => {
