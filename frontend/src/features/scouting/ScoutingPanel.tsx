@@ -147,7 +147,7 @@ function PanelContent({ details }: { details: (player: string, league?: string) 
         </select></label>
       </div>
       <div className="scouting-refresh"><small>{t("Alerts are checked even when the website is closed.")}</small>
-        <Button variant="outline" disabled={!selected} loading={scouting.refresh.isPending} onClick={() => scouting.refresh.mutate()}>{t("Refresh monitoring")}</Button></div>
+        <Button variant="outline" disabled={!selected} loading={scouting.refresh.isPending} loadingLabel={t("Refreshing monitoring…")} onClick={() => scouting.refresh.mutate()}>{t("Refresh monitoring")}</Button></div>
       {scouting.favoritesQuery.isPending ? <p role="status">{t("Loading favorites…")}</p> : scouting.favoritesQuery.isError ? <p role="alert">{t("Favorites could not be loaded.")} <Button variant="outline" onClick={() => void scouting.favoritesQuery.refetch()}>{t("Retry")}</Button></p>
         : !scouting.favorites.size ? <p>{t("Save players with the bookmark button to follow them here.")}</p>
         : !favorites.length ? <p>{t("No favorites match your filters.")}</p>

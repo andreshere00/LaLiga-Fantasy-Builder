@@ -8,6 +8,8 @@ entry, not a claim that every optional provider or deployment gate is complete.
 
 ### Frontend
 
+- Account, LaLiga connection and scouting buttons show a specific busy label while they
+  work (for example *Sending code…*, *Checking…*, *Refreshing monitoring…*).
 - Position badges use one token-based neutral style in both themes; the unknown-position
   badge no longer puts dark text on mid grey and is marked by a dashed border.
 - A sign-in, registration or verification error is linked to the form's fields, so screen
