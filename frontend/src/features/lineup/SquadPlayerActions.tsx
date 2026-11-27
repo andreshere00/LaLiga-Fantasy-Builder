@@ -104,6 +104,11 @@ export function SquadPlayerActions({
   const [rawPrice, setRawPrice] = useState("");
   const inputId = useId();
   const menuTrigger = useRef<HTMLButtonElement>(null);
+  const backButton = useRef<HTMLButtonElement>(null);
+  // Irreversible steps start on the safe choice once the view changes inside the open dialog.
+  useEffect(() => {
+    if (view === "cancel" || view === "immediate") backButton.current?.focus();
+  }, [view]);
   const pending =
     sales.listPlayer.isPending ||
     sales.modifyListing.isPending ||
@@ -142,6 +147,7 @@ export function SquadPlayerActions({
   const modifyError = sales.modifyListing.error
     ? squadSaleErrorMessage(sales.modifyListing.error, "modify")
     : null;
+  const saleError = view === "modify" ? modifyError : view === "list" ? listError : null;
   const cancelError = sales.cancelListing.error
     ? squadSaleErrorMessage(sales.cancelListing.error, "cancel")
     : null;
@@ -196,8 +202,9 @@ export function SquadPlayerActions({
       <Dialog
         open={open && (ownPlayer || view !== "choose")}
         className={`squad-player-actions-dialog squad-player-actions-dialog--${view}`}
-        title={(view === "choose" || view === "options") ? player.name : view === "list" ? t("Bring to market") : view === "modify" ? t("Modify bid") : view === "cancel" ? t("Cancel bid") : t("Send immediately to market")}
+        title={(view === "choose" || view === "options") ? player.name : view === "list" ? t("Bring to market") : view === "modify" ? t("Modify listing") : view === "cancel" ? t("Withdraw listing") : t("Send immediately to market")}
         onClose={close}
+        busy={pending}
         closeOnBackdrop={!pending}
         footer={
           (view === "choose" || view === "options") ? (
@@ -206,6 +213,7 @@ export function SquadPlayerActions({
           ) : (
             <>
               <button
+                ref={backButton}
                 type="button"
                 className="squad-sale-secondary"
                 disabled={pending}
@@ -251,7 +259,10 @@ export function SquadPlayerActions({
                   sales.sellImmediately.mutate(player.id, { onSuccess: () => close() });
                 }}
               >
-                {pending ? t("Sending…") : view === "list" ? t("List player") : view === "modify" ? t("Update listing") : view === "cancel" ? t("Withdraw listing") : t("Sell player now")}
+                {pending ? <span className="fb-button-spinner" aria-hidden="true" /> : null}
+                {pending ? (view === "list" ? t("Listing player…") : view === "modify" ? t("Updating listing…")
+                  : view === "cancel" ? t("Withdrawing…") : t("Selling player…"))
+                  : view === "list" ? t("List player") : view === "modify" ? t("Update listing") : view === "cancel" ? t("Withdraw listing") : t("Sell player now")}
               </button>
             </>
           )
@@ -305,11 +316,11 @@ export function SquadPlayerActions({
             <PlayerActionsSummary player={player} />
             {listed ? (
               <>
-                <PlayerActionRow icon="edit" tone="market" label={t("Modify bid")}
+                <PlayerActionRow icon="edit" tone="market" label={t("Modify listing")}
                   hint={t(priceBlocked ?? cancelBlocked ?? "Set a new asking price")}
                   disabled={priceBlocked != null || cancelBlocked != null}
                   onClick={() => setView("modify")} />
-                <PlayerActionRow icon="close" tone="danger" label={t("Cancel bid")}
+                <PlayerActionRow icon="close" tone="danger" label={t("Withdraw listing")}
                   hint={t(cancelBlocked ?? "Keep the player and drop the offers")}
                   disabled={cancelBlocked != null}
                   onClick={() => setView("cancel")} />
@@ -366,10 +377,12 @@ export function SquadPlayerActions({
                 if (parsed == null) return;
                 setRawPrice(formatIntegerAmount(clampListingPrice(parsed, player.marketValue)));
               }}
+              ariaDescribedBy={saleError ? `${inputId}-error` : undefined}
+              ariaInvalid={saleError != null}
             />
-            {listError || modifyError ? (
-              <p className="squad-sale-error" role="alert">
-                {view === "modify" ? modifyError : listError}
+            {saleError ? (
+              <p id={`${inputId}-error`} className="squad-sale-error" role="alert">
+                {t(saleError)}
               </p>
             ) : null}
           </>

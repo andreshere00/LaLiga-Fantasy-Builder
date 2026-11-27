@@ -811,11 +811,13 @@ Code: `frontend/src/features/lineup/`.
 - On your own squad, hover a player for **Click for player options**, then click the
   card. **Bring to market** lists the player (`POST /api/market/leagues/{id}/listings`)
   for a whole-euro offer from the current market value through 999.999.999 €.
-  When that player is already listed, **Bring to market** is replaced by **Cancel bid**
-  (`DELETE /api/market/leagues/{id}/{marketId}`) and **Modify bid** (withdraw, then list
+  When that player is already listed, **Bring to market** is replaced by **Withdraw listing**
+  (`DELETE /api/market/leagues/{id}/{marketId}`) and **Modify listing** (withdraw, then list
   again at the new amount). **Send immediately to market**
   (`POST /api/market/leagues/{id}/immediate-sales`) sells at half the market value;
-  Fantasy credits the balance and the player leaves the squad. These actions are hidden
+  Fantasy credits the balance and the player leaves the squad. Withdrawal and immediate-sale
+  confirmations start on **Back**; while a sale request runs the dialog is busy (no Escape or
+  backdrop dismissal) and the confirm button names the step in progress. These actions are hidden
   while you are replacing a pitch player, and on another manager’s squad.
 
 ## Market screen

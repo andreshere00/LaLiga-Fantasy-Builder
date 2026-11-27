@@ -13,6 +13,9 @@ entry, not a claim that every optional provider or deployment gate is complete.
 - Rejecting a received offer now asks for inline confirmation, like accepting one.
 - Cancelling an auto-market rule now asks for inline confirmation and shows its progress.
 - Unlinking a sign-in provider on the account page now asks for confirmation.
+- Squad and lineup-builder sale dialogs stay open while a sale is in flight, start on the safe
+  choice for withdrawals and immediate sales, show a specific progress label, translate listing
+  errors and label the own-listing actions **Modify listing** / **Withdraw listing**.
 
 ### Identity
 
