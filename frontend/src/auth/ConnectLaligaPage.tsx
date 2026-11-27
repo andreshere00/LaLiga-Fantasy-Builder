@@ -134,7 +134,7 @@ export function ConnectLaligaPage() {
       {isMac ? <><code className="auth-helper-command">{helperCommand}</code><Button variant="outline" onClick={() => { void navigator.clipboard.writeText(helperCommand).then(() => setCopied(true)); }}>{copied ? t("Copied") : t("Copy command")}</Button></> : <p>{t("This helper currently supports macOS. Open this page on your Mac to connect; you can use the app here afterward.")}</p>}
       <p>{t("This page checks your connection when you return to it after signing in to LaLiga.")}</p>
       {checkError && <p role="alert">{t("Connection could not be checked. Try again.")}</p>}
-      <Button onClick={() => { void checkConnection(); }} disabled={checkingConnection}>{checkingConnection ? t("Checking…") : t("Check connection")}</Button>
+      <Button onClick={() => { void checkConnection(); }} loading={checkingConnection} loadingLabel={t("Checking…")}>{t("Check connection")}</Button>
       {status === "needs-reauth" && <p>{t("Your LaLiga connection needs renewal. Run the helper again.")}</p>}
     </div>}
     {!signedOut && !waiting && !linkOptionsError && browser &&
@@ -147,8 +147,8 @@ export function ConnectLaligaPage() {
     {!signedOut && !waiting && !linkOptionsError && manual && (status === "unlinked" || status === "needs-reauth") && <div className="auth-connection-guide">
       <h2>{t("Connect from a desktop browser")}</h2>
       <p>{t("This method needs no installation. You will sign in to LaLiga in another tab and copy one return URL from your browser’s Network tools. Keep this tab open.")}</p>
-      {!manualExpiry || expired ? <Button onClick={() => { void beginManual(); }} disabled={manualBusy}>
-        {manualBusy ? t("Starting…") : expired ? t("Start a new attempt") : t("Start LaLiga sign-in")}
+      {!manualExpiry || expired ? <Button onClick={() => { void beginManual(); }} loading={manualBusy} loadingLabel={t("Starting…")}>
+        {expired ? t("Start a new attempt") : t("Start LaLiga sign-in")}
       </Button> : <>
         <ol>
           <li>{t("In the LaLiga tab, open DevTools → Network and enable Preserve log.")}</li>
@@ -161,7 +161,7 @@ export function ConnectLaligaPage() {
               autoComplete="off" spellCheck={false} maxLength={4096} required
               placeholder={t("authredirect://com.lfp.laligafantasy?...")} /></div>
           <p className="auth-field-hint">{t("This one-time URL is sent only to Fantasy Builder. Do not share it elsewhere.")}</p>
-          <Button type="submit" disabled={manualBusy || !callback.trim()}>{manualBusy ? t("Connecting…") : t("Complete connection")}</Button>
+          <Button type="submit" disabled={!callback.trim()} loading={manualBusy} loadingLabel={t("Connecting…")}>{t("Complete connection")}</Button>
         </form>
         <Button variant="outline" onClick={() => { void cancelManual(); }} disabled={manualBusy}>{t("Cancel attempt")}</Button>
       </>}

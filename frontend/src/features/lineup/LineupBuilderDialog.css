@@ -36,7 +36,7 @@
 .lineup-builder-field textarea { resize:vertical; }
 .lineup-builder-checks { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:8px 16px; border:0; margin:0; padding:0; }
 .lineup-builder-checks legend { margin-bottom:8px; color:var(--fb-muted); font-size:12px; text-transform:uppercase; }
-.lineup-builder-checks label,.lineup-builder-options label { display:flex; align-items:center; gap:9px; min-height:36px; font-size:14px; }
+.lineup-builder-checks label,.lineup-builder-options label { display:flex; align-items:center; gap:9px; min-height:44px; font-size:14px; }
 .lineup-builder input[type="checkbox"] { width:18px; height:18px; accent-color:var(--fb-primary); }
 .lineup-builder-options { display:grid; max-height:220px; overflow:auto; border:1px solid var(--fb-control-line); background:var(--fb-surface); }
 .lineup-builder-options[role="listbox"] { max-height:260px; }
@@ -169,7 +169,7 @@
   .lineup-builder-transaction-estimate { flex-basis:100%; text-align:left; margin-left:0; padding-left:34px; }
 }
 
-.lineup-builder-section > label:has(input[type="checkbox"]) { display:flex; align-items:center; gap:9px; min-height:36px; }
+.lineup-builder-section > label:has(input[type="checkbox"]) { display:flex; align-items:center; gap:9px; min-height:44px; }
 .lineup-builder-candidate { min-width:0; overflow-wrap:anywhere; }
 
 .lineup-builder-player-reasoning { border:1px solid var(--fb-line); background:var(--fb-surface); }
@@ -283,7 +283,7 @@
 .lineup-builder-dependent:disabled :is(label,input) { cursor:not-allowed; }
 .lineup-builder-dependent-hint { margin:0; color:var(--fb-secondary); font-size:12px; }
 .lineup-builder-option { display:grid; gap:2px; }
-.lineup-builder-option > label { min-height:36px; }
+.lineup-builder-option > label { min-height:44px; }
 .lineup-builder-option > .lineup-builder-section-help { padding-left:26px; }
 .lineup-builder-option[data-tone="warning"] { padding:8px 10px; border-left:3px solid var(--fb-warning); background:var(--fb-subtle); }
 .lineup-builder-subheading { font-size:13px; font-weight:600; }

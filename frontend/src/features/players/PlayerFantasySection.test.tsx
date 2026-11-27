@@ -77,14 +77,15 @@ describe("PlayerFantasySection history pagination", () => {
       { title, source: "Reporter", publishedAt: "2026-10-18", url: "https://example.com/report" },
       { title: "Invalid article URL", url: "javascript:alert(1)" },
     ] }} />);
-    const link = screen.getByRole("link", { name: title });
+    // The visible "Read article" text starts the accessible name (WCAG 2.5.3).
+    const link = screen.getByRole("link", { name: `Read article ${title}` });
     expect(link.getAttribute("href")).toBe("https://example.com/report");
     expect(link.getAttribute("target")).toBe("_blank");
     expect(link.getAttribute("rel")).toContain("noopener");
     expect(document.getElementById(link.getAttribute("aria-describedby")!)?.textContent)
       .toBe("Opens in a new tab.");
     expect(screen.getByRole("heading", { name: title }).textContent).toBe(title);
-    expect(screen.queryByRole("link", { name: "Invalid article URL" })).toBeNull();
+    expect(screen.queryByRole("link", { name: /Invalid article URL/ })).toBeNull();
     expect(screen.getByText("Article link unavailable")).toBeTruthy();
   });
 

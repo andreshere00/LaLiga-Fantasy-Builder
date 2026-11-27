@@ -19,7 +19,8 @@ Each main navigation tab (Lineup, Market, Players, Teams) carries a decorative
 `NavIcon` from `features/shell/icons.tsx` that follows `currentColor`; on a phone
 it stacks above the label in the bottom bar.
 The panel contains the 44 × 44px globe-only language selector beside the theme
-control; both stay hidden when Options is collapsed. The language selector’s
+control; both stay hidden when Options is collapsed. Escape (focus returns to Options) or a press
+outside the panel closes it. The language selector’s
 accessible name and hover title follow the current language (Idioma/Language). The popup lists Español and English with the selected
 option marked; keyboard selection restores focus to the globe. The controls
 share the existing league/account panel without adding a second header row.
@@ -109,6 +110,9 @@ are synthesized by the browser. Width adaptation comes from responsive layout,
 wrapping, and the existing type scale, rather than variable-font width axes.
 The app uses Base UI for dialogs, selection, menus, tooltips, collapsibles and
 toasts, with local CSS and native buttons/fields where appropriate.
+Help tooltips on information-only triggers also open with a tap on touch screens
+(tap again or outside to close); triggers that act on press, such as position filters
+or tiles, keep their action.
 Toasts lead with a ✓ (success) or ! (error) icon and error toasts are announced as
 "Error", so the tone is not carried by the border colour alone. Lost matches use the
 failure colour, not the coral primary.
@@ -292,7 +296,7 @@ from the header's Sections navigation. On a phone the four header destinations m
 the bottom bar and keep their labels inside the safe area.
 
 The Club sections bar (the shared `.fb-section-tabs` style, also used by player details) is sticky and follows the section being read as the page
-scrolls; selecting a link, or opening a `?section=` URL, jumps to that section and
+scrolls (measured below the sticky header and bar, not a fixed offset); selecting a link, or opening a `?section=` URL, jumps to that section and
 keeps the jump in place while images and radar chips finish loading, until the
 reader scrolls. Sections are separated by a rule and share one heading style.
 

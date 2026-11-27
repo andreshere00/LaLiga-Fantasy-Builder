@@ -27,7 +27,7 @@ for (const { theme, width } of [{ theme: "light", width: 1440 }, { theme: "dark"
     await expect(injuries.getByRole("listitem").first()).toContainText("Current injury");
     await expect(injuries.getByRole("listitem").first()).not.toContainText("2027");
     await expect(injuries.getByRole("listitem").nth(1)).toContainText("End date unreported");
-    const article = news.getByRole("link", { name: headline, exact: true });
+    const article = news.getByRole("link", { name: `Read article ${headline}`, exact: true });
     await article.focus();
     await expect(article).toBeFocused();
     await expect(article).toHaveCSS("outline-style", "solid");

@@ -133,4 +133,7 @@
 }
 @media(max-width:600px) {
   .lineup-page > .standings-panel > .fb-card-header { grid-template-columns:1fr; padding:16px 12px 0; }
+  /* Pinned rank + club take 168px instead of 240px, leaving phones room to scroll the stats. */
+  .standings-table :is(th, td):nth-child(2) { width:136px; }
+  .standings-table.fb-table { min-width:736px; }
 }

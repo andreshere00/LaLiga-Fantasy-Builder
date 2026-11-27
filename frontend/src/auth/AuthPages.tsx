@@ -205,6 +205,10 @@ export function AuthPage() {
   const availableProviders = providers.filter(provider => signInOptions?.directProviders[provider]);
   const password = ["/sign-in", "/register", "/reset-password"].includes(pathname);
   const email = ["/register", "/forgot-password", "/verify-email"].includes(pathname);
+  // A form error is read with every field, so it is not only announced once at the top.
+  const formError = Boolean(message && failure) || Boolean(errorMessage);
+  const described = (...ids: (string | false | undefined)[]) =>
+    [...ids, formError && "auth-error"].filter(Boolean).join(" ") || undefined;
   return <section className="auth-page" aria-labelledby="auth-title">
     <header className="auth-heading">
       <p className="auth-eyebrow">{t("LALIGA Fantasy Builder")}</p>
@@ -216,7 +220,7 @@ export function AuthPage() {
     {handoff?.verified && !message && !errorMessage && <div className="auth-feedback" role="status">
       <p>{t(VERIFIED_NOTICE)}</p>
     </div>}
-    {(message || errorMessage || deleted) && <div className={`auth-feedback ${failure || errorMessage ? "auth-feedback--error" : ""}`} role={failure || errorMessage ? "alert" : "status"}>
+    {(message || errorMessage || deleted) && <div id={formError ? "auth-error" : undefined} className={`auth-feedback ${failure || errorMessage ? "auth-feedback--error" : ""}`} role={failure || errorMessage ? "alert" : "status"}>
       <p>{t(message || errorMessage || "Your Fantasy Builder account was deleted.")}</p>
       {message === errors.EMAIL_NOT_VERIFIED && <Link to="/verify-email"
         state={rememberedEmail ? { email: rememberedEmail } : undefined}>{t("Verify your email")}</Link>}
@@ -241,17 +245,17 @@ export function AuthPage() {
         <fieldset disabled={busy}>
         <legend className="visually-hidden">{t(titles[pathname])} {t(" with ")}{social ? t("email or username") : t("your account")}</legend>
         {pathname === "/register" && <>
-          <div className="auth-field"><label htmlFor="name">{t("Name")}</label><input id="name" name="name" required autoComplete="name" maxLength={100} /></div>
-          <div className="auth-field"><label htmlFor="username">{t("Username")}</label><input id="username" name="username" required autoComplete="username" minLength={3} maxLength={30} pattern="[A-Za-z0-9_]{3,30}" aria-describedby="username-hint" /><p id="username-hint" className="auth-field-hint">{t("3–30 letters, digits or underscores.")}</p></div>
+          <div className="auth-field"><label htmlFor="name">{t("Name")}</label><input id="name" name="name" required autoComplete="name" maxLength={100} aria-describedby={described()} /></div>
+          <div className="auth-field"><label htmlFor="username">{t("Username")}</label><input id="username" name="username" required autoComplete="username" minLength={3} maxLength={30} pattern="[A-Za-z0-9_]{3,30}" aria-describedby={described("username-hint")} /><p id="username-hint" className="auth-field-hint">{t("3–30 letters, digits or underscores.")}</p></div>
         </>}
-        {pathname === "/sign-in" && <div className="auth-field"><label htmlFor="identifier">{t("Username or email")}</label><input id="identifier" name="identifier" required autoComplete="username" autoCapitalize="none" spellCheck={false} defaultValue={handoff?.identifier} /></div>}
+        {pathname === "/sign-in" && <div className="auth-field"><label htmlFor="identifier">{t("Username or email")}</label><input id="identifier" name="identifier" required autoComplete="username" autoCapitalize="none" spellCheck={false} defaultValue={handoff?.identifier} aria-describedby={described()} aria-invalid={formError || undefined} /></div>}
         {email && <div className="auth-field"><label htmlFor="email">{t("Email")}</label>
           <input id="email" name="email" type="email" required autoComplete="email"
-            defaultValue={pendingVerificationEmail} /></div>}
-        {pathname === "/verify-email" && <div className="auth-field"><label htmlFor="otp">{t("Verification code")}</label><input id="otp" name="otp" inputMode="numeric" autoComplete="one-time-code" pattern="[0-9]{8}" required minLength={8} maxLength={8} /></div>}
+            defaultValue={pendingVerificationEmail} aria-describedby={described()} /></div>}
+        {pathname === "/verify-email" && <div className="auth-field"><label htmlFor="otp">{t("Verification code")}</label><input id="otp" name="otp" inputMode="numeric" autoComplete="one-time-code" pattern="[0-9]{8}" required minLength={8} maxLength={8} aria-describedby={described()} /></div>}
         {password && <div className="auth-field">
           <div className="auth-label-row"><label htmlFor="password">{pathname === "/sign-in" ? t("Password") : t("New password (at least 12 characters)")}</label>{pathname === "/sign-in" && <Link to="/forgot-password">{t("Forgot password?")}</Link>}</div>
-          <div className="auth-password"><input id="password" name="password" type={showPassword ? "text" : "password"} required minLength={pathname === "/sign-in" ? 1 : 12} maxLength={128} autoComplete={pathname === "/sign-in" ? "current-password" : "new-password"} aria-describedby={pathname === "/sign-in" ? undefined : "password-hint"} aria-invalid={passwordProblems.length > 0 || undefined} />
+          <div className="auth-password"><input id="password" name="password" type={showPassword ? "text" : "password"} required minLength={pathname === "/sign-in" ? 1 : 12} maxLength={128} autoComplete={pathname === "/sign-in" ? "current-password" : "new-password"} aria-describedby={described(pathname !== "/sign-in" && "password-hint")} aria-invalid={passwordProblems.length > 0 || (pathname === "/sign-in" && formError) || undefined} />
             <button type="button" className="auth-password-toggle" aria-label={showPassword ? t("Hide password") : t("Show password")} aria-pressed={showPassword} aria-controls="password" onClick={() => setShowPassword(value => !value)}>{showPassword ? t("Hide") : t("Show")}</button>
           </div>
           {pathname !== "/sign-in" && <p id="password-hint" className="auth-field-hint" aria-live="polite">

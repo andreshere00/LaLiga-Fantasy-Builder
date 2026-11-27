@@ -1,6 +1,6 @@
 // ---- Mocks, fixtures & helpers ---- //
 
-import { fireEvent, render, screen, waitFor } from "@testing-library/react";
+import { fireEvent, render, screen, waitFor, within } from "@testing-library/react";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter } from "react-router-dom";
 import { beforeEach, describe, expect, it, vi } from "vitest";
@@ -85,6 +85,29 @@ describe("Header", () => {
 
     await waitFor(() => expect(window.location.search).toBe("?keep=1"));
     window.history.replaceState(null, "", "/");
+  });
+
+  it("Header_optionsPanel_closesOnEscapeAndOutsidePress", () => {
+    const { container } = render(
+      <QueryClientProvider client={new QueryClient()}>
+        <BrowserRouter>
+          <Header />
+          <p>Page content</p>
+        </BrowserRouter>
+      </QueryClientProvider>,
+    );
+    const view = within(container);
+    const trigger = view.getByRole("button", { name: "Open settings and account options" });
+
+    fireEvent.click(trigger);
+    expect(trigger.getAttribute("aria-expanded")).toBe("true");
+    fireEvent.keyDown(view.getByRole("button", { name: "Log in" }), { key: "Escape" });
+    expect(trigger.getAttribute("aria-expanded")).toBe("false");
+    expect(document.activeElement).toBe(trigger);
+
+    fireEvent.click(trigger);
+    fireEvent.pointerDown(view.getByText("Page content"));
+    expect(trigger.getAttribute("aria-expanded")).toBe("false");
   });
 
   it("Header_sections_eachTabHasDecorativeIconAndTextName", () => {

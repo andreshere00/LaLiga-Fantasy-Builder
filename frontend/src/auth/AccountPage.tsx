@@ -94,7 +94,7 @@ export function AccountPage() {
           const parsed = usernameSchema.safeParse(username); if (!parsed.success) throw new Error(parsed.error.issues[0]?.message);
           if (parsed.data === auth.user?.username) throw new Error("Enter a different username.");
           checked(await authClient.updateUser({ username: parsed.data })); await auth.reload(); setActive(null); setFeedback({ text: "Username updated.", error: false });
-        }); }}><div className="auth-field"><label htmlFor="new-username">{t("New username")}</label><input id="new-username" name="username" required minLength={3} maxLength={30} pattern="[A-Za-z0-9_]{3,30}" autoComplete="username" defaultValue={auth.user.username ?? ""} /><p className="auth-field-hint">{t("3–30 letters, digits or underscores.")}</p></div><Button type="submit" loading={busy}>{t("Save username")}</Button></form>}
+        }); }}><div className="auth-field"><label htmlFor="new-username">{t("New username")}</label><input id="new-username" name="username" required minLength={3} maxLength={30} pattern="[A-Za-z0-9_]{3,30}" autoComplete="username" defaultValue={auth.user.username ?? ""} /><p className="auth-field-hint">{t("3–30 letters, digits or underscores.")}</p></div><Button type="submit" loading={busy} loadingLabel={t("Saving…")}>{t("Save username")}</Button></form>}
       </div>
       <div className="auth-setting">{panel("email", "Change email", t("Current: {{0}}", { 0: auth.user.email ?? t("No email") }))}
         {active === "email" && <div id="setting-email" className="auth-setting-form">
@@ -103,19 +103,19 @@ export function AccountPage() {
             if (newEmail === auth.user?.email?.toLowerCase()) throw new Error("Enter a different email address.");
             checked(await authClient.emailOtp.requestEmailChange({ newEmail })); setPendingEmail(newEmail);
             setFeedback({ text: "We sent an eight-digit code to {{0}}. It expires in 10 minutes.", parameters: { 0: newEmail }, error: false });
-          }); }}><div className="auth-field"><label htmlFor="new-email">{t("New email address")}</label><input id="new-email" name="email" type="email" autoComplete="email" required /></div><Button type="submit" loading={busy}>{t("Send verification code")}</Button></form>
+          }); }}><div className="auth-field"><label htmlFor="new-email">{t("New email address")}</label><input id="new-email" name="email" type="email" autoComplete="email" required /></div><Button type="submit" loading={busy} loadingLabel={t("Sending code…")}>{t("Send verification code")}</Button></form>
           : <form className="auth-form" onSubmit={(event: FormEvent<HTMLFormElement>) => { event.preventDefault(); const otp = String(new FormData(event.currentTarget).get("otp") ?? ""); void run(async () => {
             if (!/^[0-9]{8}$/.test(otp)) throw new Error("Enter the eight-digit code.");
             checked(await authClient.emailOtp.changeEmail({ newEmail: pendingEmail, otp })); await auth.reload(); setPendingEmail(null); setActive(null);
             setFeedback({ text: "Email updated and verified.", error: false });
-          }); }}><p>{t("Enter the code sent to ")}<strong>{pendingEmail}</strong>.</p><div className="auth-field"><label htmlFor="email-code">{t("Verification code")}</label><input id="email-code" name="otp" inputMode="numeric" autoComplete="one-time-code" pattern="[0-9]{8}" minLength={8} maxLength={8} required /></div><Button type="submit" loading={busy}>{t("Confirm new email")}</Button><button type="button" className="auth-text-action" disabled={busy} onClick={() => { setPendingEmail(null); setFeedback(null); }}>{t("Use another address")}</button></form>}
+          }); }}><p>{t("Enter the code sent to ")}<strong>{pendingEmail}</strong>.</p><div className="auth-field"><label htmlFor="email-code">{t("Verification code")}</label><input id="email-code" name="otp" inputMode="numeric" autoComplete="one-time-code" pattern="[0-9]{8}" minLength={8} maxLength={8} required /></div><Button type="submit" loading={busy} loadingLabel={t("Confirming…")}>{t("Confirm new email")}</Button><button type="button" className="auth-text-action" disabled={busy} onClick={() => { setPendingEmail(null); setFeedback(null); }}>{t("Use another address")}</button></form>}
         </div>}
       </div>
       <div className="auth-setting">{panel("password", "Change password", !methodsReady ? "Loading sign-in methods…" : hasPassword ? "Update your password and sign out other sessions" : "Add a password through email recovery", !methodsReady)}
         {active === "password" && <div id="setting-password" className="auth-setting-form">{hasPassword ? <form className="auth-form" onSubmit={(event: FormEvent<HTMLFormElement>) => { event.preventDefault(); const data = new FormData(event.currentTarget); const currentPassword = String(data.get("currentPassword") ?? ""); const newPassword = String(data.get("newPassword") ?? ""); void run(async () => {
           if (newPassword.length < 12 || newPassword.length > 128) throw new Error("Use a password between 12 and 128 characters.");
           checked(await authClient.changePassword({ currentPassword, newPassword, revokeOtherSessions: true })); setActive(null); setFeedback({ text: "Password changed. Other sessions have been signed out.", error: false });
-        }); }}><div className="auth-field"><label htmlFor="current-password">{t("Current password")}</label><input id="current-password" name="currentPassword" type="password" autoComplete="current-password" required /></div><div className="auth-field"><label htmlFor="new-password">{t("New password")}</label><input id="new-password" name="newPassword" type="password" autoComplete="new-password" minLength={12} maxLength={128} required /></div><Button type="submit" loading={busy}>{t("Save password")}</Button></form>
+        }); }}><div className="auth-field"><label htmlFor="current-password">{t("Current password")}</label><input id="current-password" name="currentPassword" type="password" autoComplete="current-password" required /></div><div className="auth-field"><label htmlFor="new-password">{t("New password")}</label><input id="new-password" name="newPassword" type="password" autoComplete="new-password" minLength={12} maxLength={128} required /></div><Button type="submit" loading={busy} loadingLabel={t("Saving…")}>{t("Save password")}</Button></form>
           : <p>{t("Use ")}<Link to="/forgot-password">{t("password recovery")}</Link> {t(" to add a password to this account.")}</p>}</div>}
       </div>
     </section>
@@ -162,7 +162,7 @@ export function AccountPage() {
         <div className="auth-field"><label htmlFor="delete-confirmation">{t("Type DELETE to confirm")}</label><input id="delete-confirmation" name="confirmation" required autoComplete="off" /></div>
         {hasPassword && <div className="auth-field"><label htmlFor="delete-password">{t("Current password")}</label><input id="delete-password" name="password" type="password" autoComplete="current-password" required /></div>}
         {!hasPassword && <p className="auth-field-hint">{t("If your session is no longer recent, sign in again before deleting.")}</p>}
-        <Button type="submit" loading={busy}>{t("Permanently delete account")}</Button>
+        <Button type="submit" loading={busy} loadingLabel={t("Deleting account…")}>{t("Permanently delete account")}</Button>
       </form>}
     </section>
   </section>;

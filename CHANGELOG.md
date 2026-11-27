@@ -8,6 +8,25 @@ entry, not a claim that every optional provider or deployment gate is complete.
 
 ### Frontend
 
+- On phones the standings pin a narrower club column (168px with the rank instead of 240px),
+  leaving room to scroll the statistics.
+- Teams retry buttons show *Retrying…* while the club reloads, and the section bar measures
+  the sticky header instead of assuming a fixed 140px offset.
+- Account, LaLiga connection and scouting buttons show a specific busy label while they
+  work (for example *Sending code…*, *Checking…*, *Refreshing monitoring…*).
+- Position badges use one token-based neutral style in both themes; the unknown-position
+  badge no longer puts dark text on mid grey and is marked by a dashed border.
+- A sign-in, registration or verification error is linked to the form's fields, so screen
+  readers read it with each field; sign-in marks both fields invalid.
+- The header **Options** panel closes on Escape (returning focus to Options) or a press
+  outside it.
+- Small touch targets reach 44px: the balance help button, lineup builder checkbox rows,
+  footer links and the sign-in page's inline links.
+- Help tooltips on information-only triggers (definitions on the player page, team value
+  history, the balance help, market cells) open with a tap on touch screens and close with
+  another tap or a tap outside; menus wrapped in help no longer add an empty tab stop.
+- The **Read article** link's accessible name starts with its visible text, followed by the
+  headline.
 - The Auto market sheet splits **Selling** and **Buying** into tabs (each with its active
   rule count, active rules first) and folds finished rules into a collapsed **History**;
   a new `Tabs` primitive wraps Base UI tabs.

@@ -71,7 +71,7 @@ export function MarketActionMenu({ row, context, actions, detailsPlayer, details
   return (
     <div className="market-actions">
       <Menu.Root>
-        <Help content={row.myBid ? bidAmountTooltipLabel(row.myBid.money) : null}>
+        <Help content={row.myBid ? bidAmountTooltipLabel(row.myBid.money) : null} trigger={<span />}>
           <Menu.Trigger ref={trigger} className={"market-actions-trigger" + (bidded ? " is-bidded" : "")}>
             {bidded ? <><img className="market-actions-bid-icon" src={bidIconUrl} alt="" aria-hidden /><span>{t("Bidded")}</span></> : t("Options")}
           </Menu.Trigger>

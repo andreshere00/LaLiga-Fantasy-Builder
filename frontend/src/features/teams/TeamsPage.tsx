@@ -1,3 +1,4 @@
+import { Button } from "../../components/ui/Button";
 import { useEffect, useRef, useState } from "react";
 import { t, useTranslation } from "../../i18n";
 import {
@@ -157,13 +158,15 @@ export function TeamsPage({ opponentClubId = null }: { opponentClubId?: number |
         ))}
       </nav>
       {index.isError && clubs.length === 0 ? (
-        <LoadError message={t("The clubs could not be loaded.")} onRetry={() => void index.refetch()} />
+        <LoadError message={t("The clubs could not be loaded.")} retrying={index.isFetching}
+          onRetry={() => void index.refetch()} />
       ) : null}
       {dossier.isError && !dossier.data ? (
         <LoadError
           message={dossier.error instanceof ApiError && dossier.error.status === 404
             ? t("This club could not be found.")
             : t("The club could not be loaded.")}
+          retrying={dossier.isFetching}
           onRetry={() => void dossier.refetch()}
         />
       ) : null}
@@ -183,6 +186,7 @@ export function TeamsPage({ opponentClubId = null }: { opponentClubId?: number |
         />
       ) : <EmptySection section="performance" loading={loading} loaded={dossier.data != null} />}
       <SegmentNotice
+        retrying={dossier.isFetching}
         failed={dossier.data?.segmentErrors?.some((error) => error.segment === "roster") ?? false}
         onRetry={() => void dossier.refetch()}
       />
@@ -209,6 +213,7 @@ export function TeamsPage({ opponentClubId = null }: { opponentClubId?: number |
         />
       ) : <EmptySection section="lineup" loading={loading} loaded={dossier.data != null} />}
       <SegmentNotice
+        retrying={dossier.isFetching}
         failed={dossier.data?.segmentErrors?.some(
           (error) => error.segment === "news" || error.segment === "injuries",
         ) ?? false}
@@ -232,7 +237,11 @@ export function TeamsPage({ opponentClubId = null }: { opponentClubId?: number |
  * Returns null above the first section so the route's section stays authoritative.
  */
 function sectionInView(): TeamSection | null {
-  const offset = 140;
+  const root = getComputedStyle(document.documentElement);
+  const header = parseFloat(root.getPropertyValue("--app-header-height")) || 0;
+  const nav = document.querySelector<HTMLElement>(".team-sections");
+  const sticky = nav && getComputedStyle(nav).position === "sticky" ? nav.offsetHeight : 0;
+  const offset = Math.max(parseFloat(root.scrollPaddingTop) || 0, header + sticky) + 24;
   let found: TeamSection | null = null;
   for (const section of TEAM_SECTIONS) {
     const element = document.getElementById(teamSectionId(section));
@@ -266,17 +275,22 @@ function predictionFailed(dossier: { segmentErrors?: { segment: string }[] }): b
   return dossier.segmentErrors?.some((error) => error.segment === "prediction") ?? false;
 }
 
-function SegmentNotice({ failed, onRetry }: { failed: boolean; onRetry: () => void }) {
+function SegmentNotice({ failed, retrying, onRetry }: {
+  failed: boolean; retrying: boolean; onRetry: () => void;
+}) {
   if (!failed) return null;
-  return <LoadError message={t("This section could not be loaded.")} onRetry={onRetry} />;
+  return <LoadError message={t("This section could not be loaded.")} retrying={retrying} onRetry={onRetry} />;
 }
 
 /** A failed request is announced, never drawn as an empty page. */
-function LoadError({ message, onRetry }: { message: string; onRetry: () => void }) {
+function LoadError({ message, retrying, onRetry }: {
+  message: string; retrying: boolean; onRetry: () => void;
+}) {
   return (
     <p role="alert">
       {message}
-      <button type="button" onClick={onRetry}>{t("Retry")}</button>
+      <Button variant="outline" loading={retrying} loadingLabel={t("Retrying…")}
+        onClick={onRetry}>{t("Retry")}</Button>
     </p>
   );
 }

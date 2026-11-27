@@ -582,43 +582,24 @@
   cursor: help;
 }
 
+/* Position badges are neutral: the abbreviation carries the meaning, so no tone relies on colour. */
 .market-position-badge {
   display: inline-flex;
   align-items: center;
   justify-content: center;
   min-width: 2.35rem;
   padding: 0.18rem 0.4rem;
+  border: 1px solid var(--fb-line);
   border-radius: 0;
+  background: var(--fb-subtle);
+  color: var(--fb-secondary);
   font-size: 12px;
   font-weight: 700;
   line-height: 1.1;
-  color: #fff;
-}
-
-.market-position-badge.is-fwd {
-  background:var(--fb-primary);
-}
-
-.market-position-badge.is-gk {
-  background: #000;
-}
-
-.market-position-badge.is-def {
-  background: #ffc2bf;
-  color: #000;
-}
-
-.market-position-badge.is-mdf {
-  background: #35353d;
-}
-
-.market-position-badge.is-coa {
-  background: var(--fb-cyan);
-  color: var(--fb-tertiary);
 }
 
 .market-position-badge.is-unknown {
-  background: #666;
+  border-style: dashed;
 }
 
 .market-form {
@@ -1140,8 +1121,6 @@ a.market-actions-item {
 .market-filter-chip { min-height:44px; color:var(--fb-secondary); }
 .market-filter-chip.is-active { color:var(--fb-ink-on-status); }
 .market-filter-select { color:var(--fb-secondary); padding-right:44px; }
-.market-position-badge { background:var(--fb-subtle); color:var(--fb-secondary); border:1px solid var(--fb-line); font-size:12px; }
-.market-position-badge:is(.is-fwd,.is-gk,.is-def,.is-mdf,.is-coa) { background:var(--fb-subtle); color:var(--fb-secondary); }
 .market-value-change,.market-seal-end.is-urgent { color:var(--fb-secondary); }
 .market-seal-end.is-urgent { border-left:3px solid var(--fb-primary); padding-left:6px; }
 .market-seal-end.is-expiring { display:inline-flex; align-items:center; gap:4px; font-weight:700; }
