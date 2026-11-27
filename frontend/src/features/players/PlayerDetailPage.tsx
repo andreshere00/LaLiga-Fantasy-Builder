@@ -155,6 +155,9 @@ function PlayerDetailBody({ masterId }: PlayerDetailBodyProps) {
   const scouting = useScouting();
   const favorites = scouting.favorites;
   const [lastLoadedDetail, setLastLoadedDetail] = useState<Record<string, unknown> | null>(null);
+  // The section whose control triggered the current refetch owns its progress and failure
+  // notice, so one change shows one message and one retry where the user is looking.
+  const [changedSection, setChangedSection] = useState<"form" | "market" | null>(null);
 
   const detailQueryInput = useMemo((): PlayerStatsDetailQuery => {
     const base: PlayerStatsDetailQuery = {
@@ -254,11 +257,14 @@ function PlayerDetailBody({ masterId }: PlayerDetailBodyProps) {
   // Keep an explicitly labeled previous result if a different period fails to load.
   if (queryDetail && !detailQuery.isPlaceholderData && queryDetail !== lastLoadedDetail) {
     setLastLoadedDetail(queryDetail);
+    setChangedSection(null);
   }
   const detail = queryDetail ?? lastLoadedDetail;
   const detailReady = detail != null;
   const updatingPreviousDetail = detailQuery.isFetching &&
     (detailQuery.isPlaceholderData || queryDetail == null && detailReady);
+  const updateFailed = detailQuery.isError && detailReady;
+  const pageNotices = changedSection == null;
   const segmentErrors = Array.isArray(detail?.segmentErrors) ? detail.segmentErrors : [];
   const fixturesBlock = asRecord(detail?.fixtures);
   const marketBlock = asRecord(detail?.market);
@@ -361,15 +367,15 @@ function PlayerDetailBody({ masterId }: PlayerDetailBodyProps) {
         <Link to={returnTo}>{t(returnPlace(returnTo))}</Link>
         <span aria-hidden="true">/</span><span aria-current="page">{name}</span>
       </nav>
-      <PlayerSectionNavigation detailReady={detailReady} />
-      {detailQuery.isError ? (
+      <PlayerSectionNavigation detailReady={detailReady} radar={radarSection != null} />
+      {detailQuery.isError && pageNotices ? (
         <div className="player-detail-panel player-detail-recovery">
           <p role="alert">{t("Player data could not be updated. Previous results are still shown.")}</p>
           <Button variant="outline" loading={detailQuery.isFetching} loadingLabel={t("Retrying…")}
             onClick={() => void detailQuery.refetch()}>{t("Retry player data")}</Button>
         </div>
       ) : null}
-      {updatingPreviousDetail ? (
+      {updatingPreviousDetail && pageNotices ? (
         <p className="status-copy" role="status">
           {t("Updating player data… Previous results remain visible until the update completes.")}</p>
       ) : null}
@@ -472,8 +478,8 @@ function PlayerDetailBody({ masterId }: PlayerDetailBodyProps) {
           </div>
           <PlayerFantasySummary profile={profileBlock} clubId={clubId} />
         </section>
-        {radarSection}
       </section>
+      {radarSection}
 
       <section className="player-detail-panel player-detail-section player-form-section" aria-labelledby="player-form-title"
         aria-busy={updatingPreviousDetail || undefined}>
@@ -484,18 +490,18 @@ function PlayerDetailBody({ masterId }: PlayerDetailBodyProps) {
           </div>
           <div className="player-detail-fixture-actions" role="group" aria-label={t("Fixture history length")}>
             {FIXTURE_LAST_STEPS.map((step) => (
-              <button key={step} type="button" aria-pressed={last === step} onClick={() => setLast(step)}>
+              <button key={step} type="button" aria-pressed={last === step} onClick={() => { setChangedSection("form"); setLast(step); }}>
                 {t("Last ")}{step}
               </button>
             ))}
           </div>
         </div>
-        {updatingPreviousDetail ? (
-          <p className="player-detail-context">{t("Updating fixture statistics… Previous results shown below.")}</p>
-        ) : detailQuery.isError && detailReady ? (
-          <p className="player-detail-context">{t("Update failed. Previous fixture results shown below.")}</p>
+        {changedSection !== "form" ? null : updatingPreviousDetail ? (
+          <p className="player-detail-context" role="status">{t("Updating fixture statistics… Previous results shown below.")}</p>
+        ) : updateFailed ? (
+          <p className="player-detail-context" role="alert">{t("Update failed. Previous fixture results shown below.")}</p>
         ) : null}
-        {detailReady && (detailQuery.isError || fixturesBlock == null) ? (
+        {detailReady && ((updateFailed && changedSection === "form") || (!detailQuery.isError && fixturesBlock == null)) ? (
           <Button variant="outline" loading={detailQuery.isFetching} loadingLabel={t("Retrying…")}
             onClick={() => void detailQuery.refetch()}>{t("Retry fixture statistics")}</Button>
         ) : null}
@@ -518,6 +524,7 @@ function PlayerDetailBody({ masterId }: PlayerDetailBodyProps) {
               type="button"
               aria-pressed={!marketUseCustomRange && marketPreset === value}
               onClick={() => {
+                setChangedSection("market");
                 setMarketUseCustomRange(false);
                 setMarketPreset(value);
               }}
@@ -536,15 +543,15 @@ function PlayerDetailBody({ masterId }: PlayerDetailBodyProps) {
         </div>
         {dateEditorOpen ? <Suspense fallback={<PulseRing label={t("Loading calendar…")} />}><DateRangeDialog from={marketCustomFrom} to={marketCustomTo}
           onClose={() => setDateEditorOpen(false)} onApply={(from, to) => {
-            setMarketCustomFrom(from); setMarketCustomTo(to);
+            setChangedSection("market"); setMarketCustomFrom(from); setMarketCustomTo(to);
             setMarketUseCustomRange(true); setDateEditorOpen(false);
           }} /></Suspense> : null}
-        {updatingPreviousDetail ? (
-          <p className="player-detail-context">{t("Updating market history… Previous period shown below.")}</p>
-        ) : detailQuery.isError && detailReady ? (
-          <p className="player-detail-context">{t("Update failed. Previous market period shown below.")}</p>
+        {changedSection !== "market" ? null : updatingPreviousDetail ? (
+          <p className="player-detail-context" role="status">{t("Updating market history… Previous period shown below.")}</p>
+        ) : updateFailed ? (
+          <p className="player-detail-context" role="alert">{t("Update failed. Previous market period shown below.")}</p>
         ) : null}
-        {detailReady && (detailQuery.isError || marketBlock == null) ? (
+        {detailReady && ((updateFailed && changedSection === "market") || (!detailQuery.isError && marketBlock == null)) ? (
           <Button variant="outline" loading={detailQuery.isFetching} loadingLabel={t("Retrying…")}
             onClick={() => void detailQuery.refetch()}>{t("Retry market history")}</Button>
         ) : null}

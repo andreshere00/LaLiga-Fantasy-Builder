@@ -63,6 +63,7 @@ function mount(cards: SquadCard[] = [squad()]) {
   );
   return { client, ...view };
 }
+const openBuying = (dialog: HTMLElement) => fireEvent.click(within(dialog).getByRole("tab", { name: /^Buying/ }));
 const openPanel = async (count = 0) => {
   fireEvent.click(await screen.findByRole("button", { name: `Auto market, ${count} active` }));
   return screen.findByRole("dialog");
@@ -84,7 +85,7 @@ describe("AutoMarketPanel", () => {
 
   it("AutoMarketPanel_arms_auto_buy_for_favorites_not_in_the_squad_at_an_amount", async () => {
     mount();
-    await openPanel();
+    openBuying(await openPanel());
     const buy = await screen.findByRole("button", { name: "Auto-buy favorites… (1)" });
     fireEvent.click(buy);
     fireEvent.click(await screen.findByRole("button", { name: "At an amount" }));
@@ -116,12 +117,15 @@ describe("AutoMarketPanel", () => {
     ];
     mount();
     const panel = await (async () => { await waitFor(() => expect(calls.length).toBeGreaterThan(0)); return openPanel(2); })();
-    expect(within(panel).getByRole("heading", { name: "Selling" })).toBeTruthy();
-    expect(within(panel).getByRole("heading", { name: "Buying" })).toBeTruthy();
-    expect(within(panel).getByRole("heading", { name: "History" })).toBeTruthy();
-    expect(within(panel).getByText("The player left your squad.")).toBeTruthy();
-    expect(within(panel).getByText("Failed")).toBeTruthy();
-    expect(within(panel).getByText(/Spends at most 95,000,000 €/)).toBeTruthy();
+    expect(within(panel).getByRole("tab", { name: "Selling (1)" }).getAttribute("aria-selected")).toBe("true");
+    expect(within(panel).getByRole("tab", { name: "Buying (1)" })).toBeTruthy();
+    const history = within(panel).getByText("History (1)").closest("details")!;
+    expect(history.open).toBe(false);
+    expect(within(history).getByText("The player left your squad.")).toBeTruthy();
+    expect(within(history).getByText("Failed")).toBeTruthy();
+    expect(within(panel).queryByText(/Spends at most 95,000,000 €/)).toBeNull();
+    openBuying(panel);
+    expect(await within(panel).findByText(/Spends at most 95,000,000 €/)).toBeTruthy();
   });
 
   it("AutoMarketPanel_cancel_sends_one_authenticated_delete_and_confirms", async () => {
@@ -216,8 +220,8 @@ describe("AutoMarketPanel", () => {
 
   it("AutoMarketPanel_search_finds_any_player_and_arms_a_buy_rule_that_waits_for_the_market", async () => {
     mount();
-    await openPanel();
-    fireEvent.change(screen.getByLabelText("Buy any player automatically"), { target: { value: "lam" } });
+    openBuying(await openPanel());
+    fireEvent.change(await screen.findByLabelText("Buy any player automatically"), { target: { value: "lam" } });
     fireEvent.click(await screen.findByRole("button", { name: /Lamine/ }));
     expect(await screen.findByText(/does not have to be on the market now/)).toBeTruthy();
     fireEvent.click(screen.getByRole("button", { name: "Arm auto-buy" }));
@@ -345,9 +349,10 @@ describe("AutoMarketPanel", () => {
 
   it("AutoMarketPanel_without_sellable_players_shows_no_player_options", async () => {
     mount([squad({ marketValue: null }), squad({ id: "s2", masterPlayerId: null })]);
-    await openPanel();
+    const dialog = await openPanel();
     expect(screen.queryAllByRole("radio")).toHaveLength(0);
     expect(screen.getByText("No active auto-sells.")).toBeTruthy();
-    expect(screen.getByText("No active auto-buys.")).toBeTruthy();
+    openBuying(dialog);
+    expect(await screen.findByText("No active auto-buys.")).toBeTruthy();
   });
 });

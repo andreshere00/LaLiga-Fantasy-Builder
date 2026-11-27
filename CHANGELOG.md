@@ -8,6 +8,16 @@ entry, not a claim that every optional provider or deployment gate is complete.
 
 ### Frontend
 
+- The Auto market sheet splits **Selling** and **Buying** into tabs (each with its active
+  rule count, active rules first) and folds finished rules into a collapsed **History**;
+  a new `Tabs` primitive wraps Base UI tabs.
+- Changing **Last N** or the market period on a player page shows one progress or failure
+  message, with one Retry, in that section instead of a page banner plus a notice and
+  Retry in every section.
+- The player performance radar is its own **Performance profile** section with a section
+  link, instead of filling the bottom of Overview.
+- Using a builder result over an unsaved draft asks in its own dialog, starting on
+  **Keep my draft**, instead of a note at the end of the long results list.
 - Teams sections with no data for a club keep their heading and say no information is
   available yet, instead of leaving a blank gap where section links land.
 - When the market fails to load, a **Retry** button sits next to the error instead of

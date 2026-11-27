@@ -1,5 +1,5 @@
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { act, cleanup, fireEvent, render, screen } from "@testing-library/react";
+import { act, cleanup, fireEvent, render, screen, waitFor, within } from "@testing-library/react";
 import { afterEach, beforeEach, expect, it, vi } from "vitest";
 import response from "../../../../contracts/lineup-builder-response.json";
 import { getJson } from "../../api/client";
@@ -56,7 +56,7 @@ it.each([
   client.clear();
 });
 
-it.each(["success", "cancel"])("should discard an old draft confirmation after rebuild %s", async (outcome) => {
+it.each(["success", "cancel"])("should keep the draft, then replace it with the current build after rebuild %s", async (outcome) => {
   const first = lineupBuildResponseSchema.parse(response.payload);
   const second = lineupBuildResponseSchema.parse(response.payload);
   first.candidates = first.candidates.slice(0, 1);
@@ -76,14 +76,17 @@ it.each(["success", "cancel"])("should discard an old draft confirmation after r
 
   fireEvent.click(screen.getByRole("button", { name: "Build" }));
   fireEvent.click(await screen.findByRole("button", { name: "Use as draft" }));
-  expect(screen.getByRole("region", { name: "Replace draft confirmation" })).toBeTruthy();
+  const confirmation = screen.getByRole("dialog", { name: "Replace your unsaved lineup draft?" });
+  await waitFor(() => expect(document.activeElement?.textContent).toBe("Keep my draft"));
+  fireEvent.click(within(confirmation).getByRole("button", { name: "Keep my draft" }));
+  await waitFor(() => expect(screen.queryByRole("dialog", { name: "Replace your unsaved lineup draft?" })).toBeNull());
 
   fireEvent.click(screen.getByLabelText("4-3-3"));
   fireEvent.click(screen.getByRole("button", { name: "Build" }));
-  expect(screen.queryByRole("region", { name: "Replace draft confirmation" })).toBeNull();
+  expect(screen.queryByRole("dialog", { name: "Replace your unsaved lineup draft?" })).toBeNull();
   if (outcome === "cancel") fireEvent.click(screen.getByRole("button", { name: "Cancel build" }));
   await act(async () => { finish(second); });
-  expect(screen.queryByRole("region", { name: "Replace draft confirmation" })).toBeNull();
+  expect(screen.queryByRole("dialog", { name: "Replace your unsaved lineup draft?" })).toBeNull();
   expect(onApply).not.toHaveBeenCalled();
 
   fireEvent.click(screen.getByRole("button", { name: "Use as draft" }));

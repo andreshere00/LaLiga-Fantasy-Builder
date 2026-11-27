@@ -118,10 +118,13 @@ for (const { theme, width } of [{ theme: "light", width: 375 }, { theme: "dark",
     await overview.focus();
     await page.keyboard.press("Enter");
     await expect(page.getByRole("heading", { level: 1, name: "Player 01", exact: true })).toBeFocused();
-    const radar = page.locator(".player-profile-header").getByRole("region", { name: "Performance profile", exact: true });
+    await expect(page.locator(".player-profile-header .player-radar-section")).toHaveCount(0);
+    const radar = page.getByRole("region", { name: "Performance profile", exact: true });
     await expect(radar).toHaveCount(1);
-    await radar.scrollIntoViewIfNeeded();
-    await expect(overview).toHaveAttribute("aria-current", "location");
+    const profileLink = navigation.getByRole("link", { name: "Performance profile", exact: true });
+    await profileLink.click();
+    await expect(page.locator("#player-radar-title")).toBeFocused();
+    await expect(profileLink).toHaveAttribute("aria-current", "location");
     await expect(page.getByRole("table", { name: "Percentiles for Pau Cubarsí", exact: true })).toBeVisible();
     await expect(page.getByRole("link", { name: "Preview the six supplied examples" })).toHaveCount(0);
     await page.getByText("Source and methodology", { exact: true }).click();

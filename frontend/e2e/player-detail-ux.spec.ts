@@ -190,7 +190,9 @@ test("failed period updates retain the previous result with truthful scope and r
   await expect(preset).toBeFocused();
   await expect(period).toContainText("1 Oct 2026");
   release();
-  await expect(page.getByRole("alert")).toHaveText("Player data could not be updated. Previous results are still shown.");
+  // The failure is reported once, in the section whose period changed, with one retry.
+  await expect(page.getByRole("alert")).toHaveText("Update failed. Previous market period shown below.");
+  await expect(page.getByRole("button", { name: /^Retry (player data|fixture statistics|market history)$/ })).toHaveCount(1);
   await expect(period).toContainText("1 Oct 2026");
   await expect(page.getByRole("radiogroup", { name: "Fixture performance" }).getByRole("radio")).toHaveCount(3);
   fail = false;

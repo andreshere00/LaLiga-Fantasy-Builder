@@ -570,7 +570,9 @@ the server confirms the player no longer exists.
 
 Market value labels the current price, change, and actual date range returned by
 the server. Previous results remain visible and explicitly labeled during a
-period update or after a failed update; Retry uses the selected period. A
+period update or after a failed update; Retry uses the selected period. Changing
+**Last N** or the market period reports progress and failure only in that section,
+with a single Retry, instead of repeating it in a page banner and other sections. A
 collapsed **View daily market values** table provides exact dates/prices alongside
 the chart. Axis precision adapts to the price range, and an empty history keeps
 the known current price visible. `e2e/player-detail-ux.spec.ts` checks keyboard
@@ -785,7 +787,8 @@ Code: `frontend/src/features/lineup/`.
   with the suggested price, still editable. Each is one confirmation; nothing is
   confirmed automatically. After a write the squad, cash and offers refresh, and
   **Use as draft** is re-evaluated locally: every starter owned and the round
-  editable. Cash never blocks it; when the build required a non-negative balance
+  editable. With an unsaved draft for that round it opens **Replace your unsaved lineup
+  draft?**, starting on **Keep my draft**. Cash never blocks it; when the build required a non-negative balance
   and refreshed cash minus pending bids is still below 0, a note says so. Sale
   steps also offer **Put on the market**, or **Market options** (change the price
   or withdraw the listing) when the player is already listed.
@@ -1031,10 +1034,12 @@ User-facing copy constants: `marketMessages.ts`, `marketActionErrors.ts`,
 
 ### Automatic rules
 
-The **Auto market** entry in the Market options menu (a button on the Players page) opens a sheet sorted by concern into three
-sections. *Selling* holds everything for your own players, then the active auto-sells. *Buying*
-holds everything for players you want, then the active auto-buys. *History* lists finished rules.
-The *Selling* section has a list of selectable players (photo, name, club badge, FSYP and
+The **Auto market** entry in the Market options menu (a button on the Players page) opens a sheet with two tabs (`Tabs`), each
+showing its count of active rules. *Selling* (the default) lists the active auto-sells first,
+then everything for setting one up for your own players. *Buying* lists the active auto-buys
+first, then everything for players you want. *History (n)* is a collapsed disclosure below
+the tabs with finished rules.
+The *Selling* tab has a list of selectable players (photo, name, club badge, FSYP and
 market value) to start an auto-sell for one of your squad players that is not already on the
 market. **List all my players…** puts every player that is not on the market yet, and has no live sell rule,
 on the market by default (players already listed are left as they are) (*Only list them*, at market value, with no automatic sale, so you choose which offer
@@ -1201,13 +1206,14 @@ component does not scrape or calculate population percentiles in the browser.
 
 ### Published performance radars
 
-The player performance radar sits below Fantasy outlook as a full-width subsection
-of Overview, sharing its panel and navigation selection. It reads independently
+The player performance radar is its own **Performance profile** section between
+Overview and Form, with its own section link (shown only while the section is on the
+page), so Overview stays limited to identity, averages, actions and outlook. It reads independently
 when it enters the viewport or receives focus. It also remains reachable when the detail
 aggregate is loading or temporarily fails; confirmed missing players and coaches
 retain their own appropriate flow. Player/account changes reset selections.
-The reviewed default role is selected; multiple published roles remain selectable. Within
-Overview the main header owns the player's name, club, Fantasy position and age
+The reviewed default role is selected; multiple published roles remain selectable. The
+Overview header owns the player's name, club, Fantasy position and age
 when a birth date is available. Age uses the current date in Europe/Madrid. The
 embedded radar shows the performance role, league and sample minutes; it
 omits a single-player legend and keeps its table caption available to assistive
@@ -1223,8 +1229,8 @@ recipe IDs. Retrieval and provider-update dates are distinct; an unknown update
 is explicitly marked as not provided. Population uncertainty remains visible
 beside the graph, and raw values are never inferred from percentiles.
 
-When the API confirms no published radar for the selection, the entire subsection
-is omitted, including its heading, controls and absence message. Partial profiles
+When the API confirms no published radar for the selection, the entire section
+is omitted, including its heading, section link, controls and absence message. Partial profiles
 with available data remain visible. Errors retry the local API only. Available data
 stays visible on refresh failure. The data date and retrieval date appear in
 Source and methodology. No overall score or invented values are derived from the polygon.

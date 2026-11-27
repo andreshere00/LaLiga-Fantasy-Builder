@@ -66,3 +66,15 @@
 .auto-bulk-players li:last-child { border-bottom: 0; }
 .auto-bulk-players li span:last-child { color: var(--fb-muted); white-space: nowrap; }
 .auto-rule-actions > .fb-helper { flex-basis:100%; margin:0; }
+.auto-market-panel .fb-tabs { margin-top:24px; }
+.auto-market-panel .fb-tabs-panel.auto-market-section { margin-top:0; border-top:0; }
+.auto-market-history > summary {
+  display:flex; align-items:center; gap:8px; min-height:44px; cursor:pointer; list-style:none;
+  font-family:var(--fb-font-body); font-weight:600;
+}
+.auto-market-history > summary::-webkit-details-marker { display:none; }
+.auto-market-history > summary::before { content:"▸"; }
+.auto-market-history[open] > summary::before { content:"▾"; }
+.auto-market-history > summary:focus-visible { outline:2px solid var(--fb-focus); outline-offset:3px; }
+.auto-market-panel .fb-tabs-panel > .auto-rule-list:first-child { margin-top:0; }
+.auto-market-panel .fb-tabs-panel > .auto-rule-list:first-child > .auto-rule:first-child { border-top:0; padding-top:0; }
