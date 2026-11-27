@@ -130,6 +130,9 @@ describe("AutoMarketPanel", () => {
     await waitFor(() => expect(screen.getByRole("button", { name: "Auto market, 1 active" })).toBeTruthy());
     await openPanel(1);
     fireEvent.click(screen.getByRole("button", { name: "Cancel rule for Pedri" }));
+    expect(calls.filter((call) => call.method === "DELETE")).toEqual([]);
+    const confirmation = screen.getByRole("group", { name: "Confirm cancellation" });
+    fireEvent.click(within(confirmation).getByRole("button", { name: "Cancel rule" }));
     await waitFor(() => expect(notify).toHaveBeenCalledWith("Rule cancelled. Nothing will be bought or sold for it."));
     const deletes = calls.filter((call) => call.method === "DELETE");
     expect(deletes).toEqual([{ method: "DELETE", url: "/api/auto-market/leagues/lg/rules/5", body: undefined }]);
@@ -285,6 +288,19 @@ describe("AutoMarketPanel", () => {
     await waitFor(() => expect(calls.length).toBeGreaterThan(0));
     await openPanel();
     await waitFor(() => expect(screen.getByText(message)).toBeTruthy());
+  });
+
+  it("AutoMarketPanel_keep_rule_closes_the_confirmation_without_a_request", async () => {
+    rules = [rule({ id: 6 })];
+    mount();
+    await waitFor(() => expect(screen.getByRole("button", { name: "Auto market, 1 active" })).toBeTruthy());
+    await openPanel(1);
+
+    fireEvent.click(screen.getByRole("button", { name: "Cancel rule for Pedri" }));
+    fireEvent.click(screen.getByRole("button", { name: "Keep rule" }));
+
+    expect(screen.queryByRole("group", { name: "Confirm cancellation" })).toBeNull();
+    expect(calls.filter((call) => call.method === "DELETE")).toEqual([]);
   });
 
   it("AutoMarketPanel_an_executing_rule_cannot_be_edited_or_cancelled", async () => {

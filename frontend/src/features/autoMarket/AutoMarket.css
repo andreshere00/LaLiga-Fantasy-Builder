@@ -17,6 +17,8 @@
 .auto-rule p { margin:8px 0; overflow-wrap:anywhere; }
 .auto-rule-reason { color:var(--fb-muted); }
 .auto-rule-actions { display:flex; flex-wrap:wrap; justify-content:space-between; gap:24px; margin-top:12px; }
+.auto-rule-confirmation { margin-top:12px; padding:12px; border:1px solid var(--fb-control-line); background:var(--fb-subtle); }
+.auto-rule-confirmation p { margin-top:0; }
 .auto-rule-dialog .fb-field { margin-top:16px; }
 .auto-rule-preview { margin:20px 0 8px; padding:12px; border:1px solid var(--fb-line); overflow-wrap:anywhere; }
 .auto-rule-consent { margin:0; font-size:13px; color:var(--fb-muted); }

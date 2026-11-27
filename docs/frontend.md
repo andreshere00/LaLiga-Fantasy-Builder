@@ -1052,6 +1052,8 @@ states that the rule acts once, on its own, even with the app closed. Initial fo
 **Cancel**; the confirm button names the effect (**Arm auto-sell** / **Arm auto-buy**) and
 dismissal is blocked while the request is pending. Arming is the confirmation: nothing is
 sent until you press it, and an armed rule can be edited or cancelled until it acts.
+**Cancel rule** asks for an inline confirmation (focus on **Keep rule**) before the rule is
+disarmed, and the sheet cannot be closed while the cancellation is in flight.
 
 State is polled every 60 seconds and on focus. A rule that lists, completes, fails or
 expires after the first load raises a toast; the sheet shows the latest reason in plain
