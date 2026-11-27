@@ -8,6 +8,8 @@ entry, not a claim that every optional provider or deployment gate is complete.
 
 ### Frontend
 
+- Teams sections with no data for a club keep their heading and say no information is
+  available yet, instead of leaving a blank gap where section links land.
 - When the market fails to load, a **Retry** button sits next to the error instead of
   pointing to **Refresh bids** inside the bids dialog.
 - Players pagination has previous/next arrows and, like the news and injury histories,

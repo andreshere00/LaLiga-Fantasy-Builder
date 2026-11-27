@@ -281,7 +281,9 @@ While the club directory or the dossier loads, a `PulseRing` announces "Loading 
 dossier." and each section that has not arrived is a `TeamSectionSkeleton`: the real
 heading and id (so deep links and the section bar still land) over skeleton blocks shaped
 like the finished content, marked `aria-busy`. The club strip shows skeleton tiles until the
-directory arrives. A section left empty after the load stays a plain anchor. Season
+directory arrives. A section with no data after the dossier loads keeps its heading and says
+"No information is available for this club yet."; if the dossier itself fails, sections stay
+plain anchors beside the error. Season
 statistics that are still loading show a small `PulseRing` above the squad table.
 The club strip and the Performance, Players, Lineup, and News & Injuries links (each with a
 decorative icon, in that order and in the same order down the page) stay available from the

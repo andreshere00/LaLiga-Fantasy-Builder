@@ -181,7 +181,7 @@ export function TeamsPage({ opponentClubId = null }: { opponentClubId?: number |
           onWindow={(window) => replaceRoute({ window })}
           onRetry={() => void dossier.refetch()}
         />
-      ) : <EmptySection section="performance" loading={loading} />}
+      ) : <EmptySection section="performance" loading={loading} loaded={dossier.data != null} />}
       <SegmentNotice
         failed={dossier.data?.segmentErrors?.some((error) => error.segment === "roster") ?? false}
         onRetry={() => void dossier.refetch()}
@@ -197,7 +197,7 @@ export function TeamsPage({ opponentClubId = null }: { opponentClubId?: number |
             onRetry: () => void seasonStats.refetch(),
           }}
         />
-      ) : <EmptySection section="players" loading={loading} />}
+      ) : <EmptySection section="players" loading={loading} loaded={dossier.data != null} />}
       {dossier.data && (dossier.data.prediction || predictionFailed(dossier.data)) ? (
         <TeamLineupSection
           prediction={dossier.data.prediction ?? null}
@@ -207,7 +207,7 @@ export function TeamsPage({ opponentClubId = null }: { opponentClubId?: number |
           returnTo={teamPath(clubId ?? "", { ...route, section: "lineup" })}
           onRetry={() => void dossier.refetch()}
         />
-      ) : <EmptySection section="lineup" loading={loading} />}
+      ) : <EmptySection section="lineup" loading={loading} loaded={dossier.data != null} />}
       <SegmentNotice
         failed={dossier.data?.segmentErrors?.some(
           (error) => error.segment === "news" || error.segment === "injuries",
@@ -222,7 +222,7 @@ export function TeamsPage({ opponentClubId = null }: { opponentClubId?: number |
             squad={dossier.data.roster?.players ?? []}
             returnTo={teamPath(clubId ?? "", { ...route, section: "news" })}
           />
-        ) : <EmptySection section="news" loading={loading} />}
+        ) : <EmptySection section="news" loading={loading} loaded={dossier.data != null} />}
     </div>
   );
 }
@@ -243,11 +243,23 @@ function sectionInView(): TeamSection | null {
   return found;
 }
 
-/** Before the dossier arrives a section is a skeleton; afterwards it is an empty anchor for links. */
-function EmptySection({ section, loading }: { section: TeamSection; loading: boolean }) {
-  return loading
-    ? <TeamSectionSkeleton section={section} />
-    : <section id={teamSectionId(section)} tabIndex={-1} />;
+/**
+ * Before the dossier arrives a section is a skeleton. Once it has loaded, a section the
+ * club has no data for keeps its heading and says so, so section links never land on a
+ * blank area; without a dossier (failed load) it stays an empty anchor beside the error.
+ */
+function EmptySection({ section, loading, loaded }: {
+  section: TeamSection; loading: boolean; loaded: boolean;
+}) {
+  if (loading) return <TeamSectionSkeleton section={section} />;
+  const id = teamSectionId(section);
+  if (!loaded) return <section id={id} tabIndex={-1} />;
+  return (
+    <section id={id} tabIndex={-1} aria-labelledby={`${id}-title`}>
+      <h2 id={`${id}-title`} className="team-section-title">{t(SECTION_LABELS[section])}</h2>
+      <p className="status-copy">{t("No information is available for this club yet.")}</p>
+    </section>
+  );
 }
 
 function predictionFailed(dossier: { segmentErrors?: { segment: string }[] }): boolean {

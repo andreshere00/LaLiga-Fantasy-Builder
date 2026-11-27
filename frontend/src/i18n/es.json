@@ -639,6 +639,7 @@
   "Market options": "Opciones de mercado",
   "Auto-buy my favorites": "Compra automática de mis favoritos",
   "Auto-sell my favorites": "Venta automática de mis favoritos",
+  "No information is available for this club yet.": "Todavía no hay información disponible para este club.",
   "No performance data is available for the {{0}} season.": "No hay datos de rendimiento disponibles para la temporada {{0}}.",
   "Offer for {{0}}. The owner must accept your offer before the player joins your squad.": "Oferta por {{0}}. El propietario debe aceptar tu oferta para que el jugador pase a tu plantilla.",
   "Pay {{0}} to trigger the release clause for {{1}}? The payment can't be undone.": "¿Pagar {{0}} para ejecutar la cláusula de rescisión de {{1}}? El pago no se puede deshacer.",
