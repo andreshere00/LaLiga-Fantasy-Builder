@@ -44,6 +44,7 @@ export function useMarketActions(onAcquisitionSuccess?: () => void) {
   const [pendingBid, setPendingBid] = useState<PendingBid | null>(null);
   const [pendingClause, setPendingClause] = useState<PendingClause | null>(null);
   const [pendingWithdraw, setPendingWithdraw] = useState<MarketRow | null>(null);
+  const [pendingCancelBid, setPendingCancelBid] = useState<MarketRow | null>(null);
   const [message, setMessage] = useState<string | null>(null);
 
   const teamId = selected ? callerTeamId(selected) : null;
@@ -190,8 +191,9 @@ export function useMarketActions(onAcquisitionSuccess?: () => void) {
       patchCachedBid(row.marketId, null, row.myBid?.id ?? null);
     },
     onSuccess: async (_data, row) => {
+      setPendingCancelBid(null);
       setMessage(null);
-      notify("Bid updated");
+      notify("Bid cancelled");
       patchCachedBid(row.marketId, null, row.myBid?.id ?? null);
       await refreshAfterMutation();
     },
@@ -288,13 +290,16 @@ export function useMarketActions(onAcquisitionSuccess?: () => void) {
   const closeClause = useCallback(() => setPendingClause(null), []);
   const dismissMessage = useCallback(() => setMessage(null), []);
 
-  const cancelBidForRow = useCallback(
-    (row: MarketRow) => {
-      setMessage(null);
-      cancelBid.mutate(row);
-    },
-    [cancelBid],
-  );
+  const openCancelBid = useCallback((row: MarketRow) => {
+    setMessage(null);
+    setPendingCancelBid(row);
+  }, []);
+
+  const confirmCancelBid = useCallback(() => {
+    if (pendingCancelBid) cancelBid.mutate(pendingCancelBid);
+  }, [cancelBid, pendingCancelBid]);
+
+  const closeCancelBid = useCallback(() => setPendingCancelBid(null), []);
 
   const pending =
     createBid.isPending ||
@@ -307,6 +312,7 @@ export function useMarketActions(onAcquisitionSuccess?: () => void) {
     pendingBid,
     pendingClause,
     pendingWithdraw,
+    pendingCancelBid,
     openBid,
     openWithdraw,
     closeWithdraw,
@@ -316,7 +322,9 @@ export function useMarketActions(onAcquisitionSuccess?: () => void) {
     closeClause,
     submitBid,
     confirmClause,
-    cancelBid: cancelBidForRow,
+    openCancelBid,
+    closeCancelBid,
+    confirmCancelBid,
     actionPending: pending,
     message,
     dismissMessage,

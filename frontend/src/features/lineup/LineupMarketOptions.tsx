@@ -67,7 +67,7 @@ function OpponentMarketOptions({ player, onClose }: Omit<Props, "open">) {
                   onClick={() => {
                     if (!row || !offer.enabled || actions.actionPending) return;
                     if (offer.type === "bid") actions.openBid(row, offer.kind);
-                    else if (offer.type === "cancel-bid") actions.cancelBid(row);
+                    else if (offer.type === "cancel-bid") actions.openCancelBid(row);
                     else if (offer.type === "withdraw") actions.openWithdraw(row);
                     else if (offer.type === "pay-clause") actions.openClause(row, offer.amount);
                   }} />

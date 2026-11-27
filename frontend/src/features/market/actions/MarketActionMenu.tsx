@@ -86,7 +86,7 @@ export function MarketActionMenu({ row, context, actions, detailsPlayer, details
                   onClick={() => {
                     trigger.current?.focus();
                     if (offer.type === "bid") actions.openBid(row, offer.kind);
-                    else if (offer.type === "cancel-bid") actions.cancelBid(row);
+                    else if (offer.type === "cancel-bid") actions.openCancelBid(row);
                     else if (offer.type === "withdraw") actions.openWithdraw(row);
                     else if (offer.type === "pay-clause") actions.openClause(row, offer.amount);
                   }}>

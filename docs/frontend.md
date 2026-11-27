@@ -147,7 +147,9 @@ than requiring people to remember them from another panel.
 
 Dialogs can provide a concise accessible description and deliberate initial
 focus. Bid dialogs focus the amount; clause payment and withdrawal start on
-**Cancel**. A pending request marks the dialog busy and prevents Escape, backdrop,
+**Cancel**. Cancelling a bid, from a row menu or from My bids, always opens a
+**Cancel bid** confirmation that names the amount and player and starts on **Keep bid**;
+My bids closes first so only one modal is on screen. A pending request marks the dialog busy and prevents Escape, backdrop,
 or close-button dismissal until a result is available. Closing an idle dialog
 restores focus to its originating control. Date-range editing still uses an
 explicit Apply/Cancel workflow.

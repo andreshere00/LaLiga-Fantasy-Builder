@@ -1,6 +1,6 @@
 import { t, useTranslation } from "../../../i18n";
 import { ManagerLink, PlayerLink } from "../../../components/links/EntityLinks";
-import { useEffect, useRef, useState } from "react";
+import { useRef, useState } from "react";
 import { formatEuro } from "../../../api/format";
 import { Button } from "../../../components/ui/Button";
 import { Dialog } from "../../../components/ui/Dialog";
@@ -28,16 +28,8 @@ export function MarketBids({ board, actions, now, open: controlled, onOpenChange
   const open = controlled ?? inner;
   const setOpen = onOpenChange ?? setInner;
   const trigger = useRef<HTMLButtonElement>(null);
-  const refresh = useRef<HTMLButtonElement>(null);
-  const total = useRef<HTMLParagraphElement>(null);
-  const modifyAfterClose = useRef<MarketRow | null>(null);
-  const focusAfterCancel = useRef(false);
-  useEffect(() => {
-    if (!actions.actionPending && !board.projectionRefreshing && focusAfterCancel.current) {
-      refresh.current?.focus();
-      focusAfterCancel.current = false;
-    }
-  }, [actions.actionPending, board.projectionRefreshing]);
+  // Bid confirmations open after this sheet closes, so only one modal is ever on screen.
+  const afterClose = useRef<{ row: MarketRow; action: "modify" | "cancel" } | null>(null);
   const { bids, spending, complete } = board.activeBids;
   const close = () => { if (!actions.actionPending) setOpen(false); };
   return <>
@@ -51,17 +43,18 @@ export function MarketBids({ board, actions, now, open: controlled, onOpenChange
       closeOnBackdrop={!actions.actionPending} onClose={close}
       finalFocus={() => focusTarget(trigger.current)}
       onOpenChangeComplete={(isOpen) => {
-        if (!isOpen && modifyAfterClose.current) {
-          const row = modifyAfterClose.current;
-          modifyAfterClose.current = null;
+        if (!isOpen && afterClose.current) {
+          const { row, action } = afterClose.current;
+          afterClose.current = null;
           (trigger.current ?? document.querySelector<HTMLElement>(MENU_TRIGGER))?.focus();
-          actions.openBid(row, "modify");
+          if (action === "modify") actions.openBid(row, "modify");
+          else actions.openCancelBid(row);
         }
       }}
       footer={<Button variant="outline" shape="square" disabled={actions.actionPending} onClick={close}>{t("Close")}</Button>}>
       <p>{t("Current active bids in this league. Assuming all bids succeed.")}</p>
-      <p ref={total} tabIndex={-1} className="market-bids-total">{t("Projected spending: ")}<strong>{spending == null ? t("Unavailable") : formatEuro(spending)}</strong></p>
-      <Button ref={refresh} variant="outline" shape="square"
+      <p className="market-bids-total">{t("Projected spending: ")}<strong>{spending == null ? t("Unavailable") : formatEuro(spending)}</strong></p>
+      <Button variant="outline" shape="square"
         disabled={actions.actionPending || board.projectionRefreshing}
         onClick={board.refreshBids}>{t("Refresh bids")}</Button>
       {board.bidsLoading ? <p role="status">{t("Loading bids…")}</p> : null}
@@ -93,18 +86,15 @@ export function MarketBids({ board, actions, now, open: controlled, onOpenChange
               <Button shape="square" variant="outline" disabled={!modifyEligible || actions.actionPending}
                 aria-label={t("Modify bid for {{0}}", { 0: bid.name })} onClick={() => {
                   if (!bid.actionRow) return;
-                  modifyAfterClose.current = bid.actionRow;
+                  afterClose.current = { row: bid.actionRow, action: "modify" };
                   setOpen(false);
                 }}>{t("Modify")}</Button>
               <Button shape="square" variant="outline" disabled={!eligible || actions.actionPending}
                 aria-label={t("Cancel bid for {{0}}", { 0: bid.name })} onClick={() => {
-                  if (bid.actionRow) {
-                    // Cancellation can remove the focused row before the request settles.
-                    focusAfterCancel.current = true;
-                    total.current?.focus();
-                    actions.cancelBid(bid.actionRow);
-                  }
-                }}>{t("Cancel")}</Button>
+                  if (!bid.actionRow) return;
+                  afterClose.current = { row: bid.actionRow, action: "cancel" };
+                  setOpen(false);
+                }}>{t("Cancel bid")}</Button>
             </div>
           </li>;
         })}

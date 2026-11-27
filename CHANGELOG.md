@@ -6,6 +6,11 @@ entry, not a claim that every optional provider or deployment gate is complete.
 
 ## [Unreleased]
 
+### Frontend
+
+- Cancelling a bid now asks for confirmation (**Cancel bid** / **Keep bid**) from every row menu
+  and from My bids, and the success toast says "Bid cancelled" instead of "Bid updated".
+
 ### Identity
 
 - Add `uv run poe seed-dev-user`, which creates or resets a verified mock user for local

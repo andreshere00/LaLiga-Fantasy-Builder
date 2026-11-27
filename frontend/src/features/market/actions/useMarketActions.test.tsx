@@ -17,6 +17,47 @@ const row: MarketRow = {
   buyoutClause: 1, clauseUnlockAt: null, isShielded: false, myBid: null, directOffer: false, valueHistory: [],
 };
 afterEach(() => vi.unstubAllGlobals());
+const renderActions = (client: QueryClient) => renderHook(() => useMarketActions(), {
+  wrapper: ({ children }: { children: ReactNode }) =>
+    <QueryClientProvider client={client}>{children}</QueryClientProvider>,
+});
+const bidRow: MarketRow = { ...row, sellerKind: "laliga", myBid: { id: "bid-1", money: 5 }, expiresAt: Date.now() + 60_000 };
+
+// ---- Happy path ---- //
+describe("cancel bid confirmation", () => {
+  it("openCancelBid_beforeConfirmation_sendsNoRequest", () => {
+    const fetchFn = vi.fn();
+    vi.stubGlobal("fetch", fetchFn);
+    const { result, unmount } = renderActions(new QueryClient());
+
+    act(() => result.current.openCancelBid(bidRow));
+
+    expect(result.current.pendingCancelBid).toBe(bidRow);
+    expect(fetchFn).not.toHaveBeenCalled();
+    act(() => result.current.closeCancelBid());
+    expect(result.current.pendingCancelBid).toBeNull();
+    expect(fetchFn).not.toHaveBeenCalled();
+    unmount();
+  });
+
+  it("confirmCancelBid_afterOpening_deletesBidAndClosesDialog", async () => {
+    const fetchFn = vi.fn().mockResolvedValue(new Response('{"ok":true}', { status: 200 }));
+    vi.stubGlobal("fetch", fetchFn);
+    const client = new QueryClient();
+    vi.spyOn(client, "refetchQueries").mockResolvedValue();
+    const { result, unmount } = renderActions(client);
+
+    act(() => result.current.openCancelBid(bidRow));
+    act(() => result.current.confirmCancelBid());
+
+    await waitFor(() => expect(result.current.pendingCancelBid).toBeNull());
+    expect(fetchFn).toHaveBeenCalledTimes(1);
+    expect(String(fetchFn.mock.calls[0][0])).toContain("bid-1");
+    expect(fetchFn.mock.calls[0][1]).toMatchObject({ method: "DELETE" });
+    unmount();
+  });
+});
+
 // ---- Error paths ---- //
 describe("market mutation reconciliation", () => {
   it.each(["clause", "bid", "offer", "modify"] as const)(
