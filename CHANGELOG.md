@@ -8,6 +8,8 @@ entry, not a claim that every optional provider or deployment gate is complete.
 
 ### Frontend
 
+- The lineup builder's **Cancel build** no longer looks destructive, and **Sell now** sits
+  apart from **Put on the market** in sale steps.
 - Starter likelihood on Teams uses the same colours as the Lineup tile (green when likely,
   red when unlikely); it was red for likely starters.
 - Cancelling a bid now asks for confirmation (**Cancel bid** / **Keep bid**) from every row menu

@@ -261,7 +261,7 @@ function BuilderDialogSession({
             </ProgressLabel>
           </Progress>
         </div>}
-        {builder.pending ? <Button shape="square" variant="destructive" onClick={builder.cancel}>{t("Cancel build")}</Button> : <Button shape="square"
+        {builder.pending ? <Button shape="square" variant="outline" onClick={builder.cancel}>{t("Cancel build")}</Button> : <Button shape="square"
           disabled={scope.length === 0 || !token || invalidReturn} onClick={() => {
             setReplacement(null);
             void builder.build({

@@ -134,6 +134,7 @@ export function LineupBuilderTradeDetails({
                   ? <p role="status" className="fb-helper">{t("Sale confirmed. Your squad and cash were refreshed.")}</p>
                   : <>
                     <Button size="sm" shape="square" variant={step.method === "immediate_sale" ? "destructive" : "secondary"}
+                      className={step.method === "immediate_sale" ? "lineup-builder-trade-costly" : undefined}
                       onClick={() => onSaleAction(step.method === "accept_offer"
                         ? { kind: "accept_offer", playerId: step.playerId, playerTeamId: step.playerTeamId!, name: playerName(step.playerId),
                           amount: step.estimate, marketValue: step.marketValue ?? step.estimate, offerId: step.offerId, marketId: step.offerMarketId }

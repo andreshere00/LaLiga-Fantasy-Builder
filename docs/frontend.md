@@ -765,7 +765,8 @@ Code: `frontend/src/features/lineup/`.
   or **Needs more sales** with the shortfall. Sale steps offer **Accept offer (€X)**,
   which re-reads the offer and accepts it only if still pending at that amount or
   higher, and **Sell now (€X)**, which warns that an immediate sale pays half the
-  market value and cannot be undone. Listing suggestions open **List for sale**
+  market value and cannot be undone; it sits at the far end of the row, apart from
+  listing. **Cancel build** is a plain outline button, since stopping a build loses nothing. Listing suggestions open **List for sale**
   with the suggested price, still editable. Each is one confirmation; nothing is
   confirmed automatically. After a write the squad, cash and offers refresh, and
   **Use as draft** is re-evaluated locally: every starter owned and the round
