@@ -47,7 +47,7 @@ export function LineupMarketActions({
   actions: MarketActionsApi;
 }) {
   useTranslation();
-  const offers = resolveMarketActionOffers(row, context).filter((offer) => offer.type !== "immediate-sell");
+  const offers = resolveMarketActionOffers(row, context);
   if (offers.length === 0) return null;
   return (
     <section className="team-detail-market" aria-labelledby="team-detail-market-title">

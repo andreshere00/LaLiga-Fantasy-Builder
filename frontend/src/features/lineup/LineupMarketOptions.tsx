@@ -17,7 +17,6 @@ const OFFER_VISUAL: Record<MarketActionOffer["type"], { icon: PlayerActionIcon; 
   "pay-clause": { icon: "flash_on", tone: "market" },
   "cancel-bid": { icon: "close", tone: "danger" },
   withdraw: { icon: "close", tone: "danger" },
-  "immediate-sell": { icon: "flash_on", tone: "danger" },
 };
 
 type Props = { player: SquadCard; open: boolean; onClose: () => void };

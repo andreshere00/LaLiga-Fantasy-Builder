@@ -57,18 +57,13 @@ function baseContext(overrides: Partial<Parameters<typeof resolveMarketActions>[
 }
 
 describe("resolveMarketActionOffers own listings", () => {
-  it("resolveMarketActionOffers_own_listing_offers_withdraw_and_disabled_immediate_sell", () => {
+  it("resolveMarketActionOffers_own_listing_offers_only_withdraw", () => {
     const offers = resolveMarketActionOffers(
       baseRow({ sellerKind: "self", seller: "Me", sellerTeamId: "me" }),
       baseContext(),
     );
-    expect(offers.map((offer) => offer.label)).toEqual([
-      "Withdraw from market",
-      "Immediate sell",
-    ]);
+    expect(offers.map((offer) => offer.label)).toEqual(["Withdraw from market"]);
     expect(offers[0]?.enabled).toBe(true);
-    expect(offers[1]?.enabled).toBe(false);
-    expect(offers[1]?.disabledReason).toContain("not available");
   });
 
   it("resolveMarketActionOffers_own_listing_without_market_id_disables_withdraw", () => {

@@ -35,12 +35,6 @@ export type MarketActionOffer =
       label: string;
       enabled: boolean;
       disabledReason?: string;
-    }
-  | {
-      type: "immediate-sell";
-      label: string;
-      enabled: boolean;
-      disabledReason?: string;
     };
 
 export const MAX_SQUAD_PLAYERS = 24;
@@ -170,11 +164,8 @@ function bidDisabledReason(
 }
 
 export const WITHDRAW_LABEL = "Withdraw from market";
-export const IMMEDIATE_SELL_LABEL = "Immediate sell";
-export const IMMEDIATE_SELL_UNAVAILABLE =
-  "Selling immediately to LaLiga is not available yet.";
 
-/** Menu entries for the caller's own listing (withdraw or sell to LaLiga). */
+/** Menu entries for the caller's own listing. */
 function resolveOwnListingOffers(row: MarketRow): MarketActionOffer[] {
   const withdrawable = row.marketId !== "";
   return [
@@ -183,12 +174,6 @@ function resolveOwnListingOffers(row: MarketRow): MarketActionOffer[] {
       label: WITHDRAW_LABEL,
       enabled: withdrawable,
       disabledReason: withdrawable ? undefined : "This listing could not be identified.",
-    },
-    {
-      type: "immediate-sell",
-      label: IMMEDIATE_SELL_LABEL,
-      enabled: false,
-      disabledReason: IMMEDIATE_SELL_UNAVAILABLE,
     },
   ];
 }

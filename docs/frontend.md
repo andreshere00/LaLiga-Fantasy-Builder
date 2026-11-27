@@ -957,7 +957,7 @@ Future verified gross accounting uses `B - P`; verified net accounting uses `B`.
 | Market value | Price, 5-day change, your active bid amount when present, then release clause with protection and lock countdown; hover on the price: last, highest, lowest, 5d/14d ago with % vs current |
 | Availability | SVG icons + hover text for next matchday readiness |
 | Seal end | Countdown with a coral status rail when under one hour remains. In the final minute the rail is replaced by the warning icon and the time shows `<1m` |
-| Sell options | Seller link (`/?team=…`) or `LALIGA`; **Options** / **Bidded** action menu. On your own listings the menu offers **Withdraw from market** (confirmation modal, `DELETE /api/market/leagues/{id}/{marketId}`) and a disabled **Immediate sell** entry until a documented Fantasy route exists |
+| Sell options | Seller link (`/?team=…`) or `LALIGA`; **Options** / **Bidded** action menu. On your own listings the menu offers **Withdraw from market** (confirmation modal, `DELETE /api/market/leagues/{id}/{marketId}`); there is no disabled placeholder for selling to LaLiga from the market menu |
 
 The player name occupies a single compact grid track beside the photo, wrapping
 long names. Table headers and loading placeholders use the same column layout.

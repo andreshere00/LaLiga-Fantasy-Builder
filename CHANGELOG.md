@@ -8,6 +8,8 @@ entry, not a claim that every optional provider or deployment gate is complete.
 
 ### Frontend
 
+- The market menu for your own listing no longer shows a permanently disabled
+  **Immediate sell** entry.
 - The lineup builder's **Cancel build** no longer looks destructive, and **Sell now** sits
   apart from **Put on the market** in sale steps.
 - Starter likelihood on Teams uses the same colours as the Lineup tile (green when likely,
