@@ -53,6 +53,7 @@ import { PlayersScreenLoading } from "./PlayerScreenLoading";
 import {
   activePlayersFilterCount,
   applyPlayersFilters,
+  ownerLabel,
   ownerOptions,
   PLAYERS_LEADERBOARD_SIZE,
   PLAYERS_PAGE_SIZE,
@@ -131,7 +132,7 @@ function PlayersListRow({
       <ManagerIdentity name={row.ownedBy} avatarUrl={row.ownerAvatarUrl} />
     </ManagerLink>
   ) : (
-    row.ownedBy
+    ownerLabel(row.ownedBy)
   );
   const detailsOptions = row.positionId === 5 ? null : (
     <Menu.Root>
@@ -206,7 +207,7 @@ function PlayersListRow({
       <span className="market-cell market-cell-availability" data-column="availability" data-label={t("Availability")}>
         <AvailabilityCell availability={row.availability} />
       </span>
-      <span className="market-cell players-owner-cell" data-column="owner" data-label={t("Owned by")} title={row.ownedBy}>
+      <span className="market-cell players-owner-cell" data-column="owner" data-label={t("Owned by")} title={ownerLabel(row.ownedBy)}>
         {ownerCell}
       </span>
       <span className="market-cell players-actions-cell" data-column="actions" data-label={t("Actions")}>

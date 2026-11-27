@@ -11,7 +11,7 @@ export function ReleaseClauseDetail({ row, now }: { row: ReleaseClauseData; now:
   const protection = protectionDescription(row, now);
   const countdown = row.sellerKind === "laliga" ? null : clauseUnlockCountdown(row.clauseUnlockAt, now);
   const value = row.buyoutClause != null && row.buyoutClause > 0
-    ? formatEuro(row.buyoutClause) : row.sellerKind === "laliga" ? "Not applicable" : "Unavailable";
+    ? formatEuro(row.buyoutClause) : row.sellerKind === "laliga" ? t("Not applicable") : t("Unavailable");
   return (
     <span className="market-release-clause">
       <span className="market-clause-detail">

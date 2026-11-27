@@ -16,6 +16,9 @@ entry, not a claim that every optional provider or deployment gate is complete.
 - Squad and lineup-builder sale dialogs stay open while a sale is in flight, start on the safe
   choice for withdrawals and immediate sales, show a specific progress label, translate listing
   errors and label the own-listing actions **Modify listing** / **Withdraw listing**.
+- Spanish: the balance help, release-clause placeholders, form ratings and the Players "Free
+  Agent" owner (display, filter and search) are now translated; the minimum bid hint says
+  "importe" instead of "saldo", and balance copy uses "pujas" for bids.
 
 ### Identity
 
