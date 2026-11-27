@@ -208,11 +208,6 @@
   background: var(--fb-subtle);
 }
 
-.player-detail-fixture-actions button.is-active,
-.player-detail-market-presets button.is-active {
-  outline: 2px solid var(--cyan);
-  outline-offset: 1px;
-}
 
 .player-detail-deltas {
   margin: 0 0 0.75rem;
@@ -437,7 +432,6 @@
 .player-detail-header-identity .player-score-badge { left:6.6667%; }
 .player-detail-header-averages > h2 { font:400 20px/1.3 Anton,sans-serif; letter-spacing:.03em; text-transform:uppercase; color:var(--fb-tertiary); }
 .player-detail-page .player-detail-fixture-actions button { min-height:44px; font-size:14px; font-weight:500; color:var(--fb-secondary); }
-.player-detail-page .player-detail-fixture-actions button.is-active { background:var(--fb-primary); color:var(--fb-ink-on-status); outline:0; border-color:var(--fb-primary); }
 .player-detail-page .player-detail-averages-details .player-detail-table thead th { background:var(--fb-subtle); color:var(--fb-secondary); }
 .player-detail-table { font-size:14px; }
 .player-detail-table :is(th,td) { padding:12px; }
@@ -447,9 +441,7 @@
 
 .player-detail-chart { background:var(--fb-surface); border:1px solid var(--fb-line); padding:12px; }
 .player-detail-market-presets button { min-height:44px; font-size:14px; color:var(--fb-secondary); }
-.player-detail-fixture-actions button[aria-pressed="true"],
-.player-detail-market-presets button[aria-pressed="true"] { font-weight:700; text-decoration:underline; text-underline-offset:3px; }
-.player-detail-market-presets button.is-active { background:var(--fb-primary); color:var(--fb-ink-on-status); border-color:var(--fb-primary); outline:0; }
+.player-detail-page :is(.player-detail-fixture-actions,.player-detail-market-presets) button[aria-pressed="true"] { border-color: var(--fb-tertiary); background: var(--fb-surface); color: var(--fb-tertiary); box-shadow: inset 0 -3px var(--fb-tertiary); font-weight: 600; text-decoration: none; }
 .player-detail-deltas { display:flex; flex-wrap:wrap; gap:8px; align-items:center; font-size:14px; }
 .player-detail-deltas strong { font-size:24px; font-weight:500; }
 .player-detail-deltas :is(.is-up,.is-mid,.is-down) { color:var(--fb-secondary); }

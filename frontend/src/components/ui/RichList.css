@@ -392,10 +392,9 @@
   cursor: not-allowed;
 }
 
-.market-head-filter.is-active .market-head-filter-icon {
-  filter: brightness(0) saturate(100%) invert(18%) sepia(89%) saturate(6882%) hue-rotate(358deg)
-    brightness(93%) contrast(88%);
-}
+/* An active filter fills its funnel and underlines the heading, so it is not shown by colour alone. */
+.market-head-filter.is-active .market-head-filter-icon path { fill: currentColor; }
+.market-head-filter.is-active .market-head-label { text-decoration: underline; text-decoration-thickness: 2px; text-underline-offset: 4px; }
 
 .market-head-filter-icon {
   width: 1rem;

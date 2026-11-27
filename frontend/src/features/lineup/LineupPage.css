@@ -899,7 +899,7 @@
   flex: 1;
   min-height: 0;
   overflow-y: auto;
-  scrollbar-color: var(--cyan) var(--fb-coral);
+  scrollbar-color: var(--fb-control-line) var(--fb-subtle);
   scrollbar-width: thin;
 }
 
@@ -908,12 +908,12 @@
 }
 
 .side-panel-scroll::-webkit-scrollbar-track {
-  background: var(--fb-coral);
+  background: var(--fb-subtle);
   border-radius: 0;
 }
 
 .side-panel-scroll::-webkit-scrollbar-thumb {
-  background: var(--cyan);
+  background: var(--fb-control-line);
   border-radius: 0;
 }
 

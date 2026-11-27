@@ -31,9 +31,10 @@
   text-align: inherit;
 }
 
+/* The tile picked for a swap uses the shared selection colour (the undefined --cyan drew nothing). */
 .player-tile.is-selected {
-  outline: 2px solid var(--cyan);
-  outline-offset: 1px;
+  outline: 3px solid var(--fb-tertiary);
+  outline-offset: 2px;
 }
 
 .player-tile.is-empty {

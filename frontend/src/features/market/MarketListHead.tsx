@@ -4,7 +4,7 @@ import { Button } from "../../components/ui/Button";
 import { Dialog } from "../../components/ui/Dialog";
 import { MarketColumnFilterFields } from "./MarketColumnFilterFields";
 import { clearMarketColumnFilter, isMarketColumnFilterable } from "./marketColumnFilters";
-import { marketColumnBaseLabel, type MarketColumnHeading, type MarketColumnKey } from "./marketColumnHeadings";
+import { filterLabel, marketColumnBaseLabel, type MarketColumnHeading, type MarketColumnKey } from "./marketColumnHeadings";
 import type { MarketFilters } from "./marketFilters";
 
 const COLUMNS: MarketColumnKey[] = ["player", "position", "fsyp", "form", "marketValue", "availability", "sealEnd", "sellOptions"];
@@ -24,7 +24,7 @@ export function MarketListHead({ headings, filters, sellers, names = [], onFilte
         <span key={column} className={(column === "player" ? "market-head-player " : "") + "market-head-cell market-head-cell-" + column}>
           {isMarketColumnFilterable(column) ? (
             <button type="button" className={"market-head-filter" + (headings[column].filtered ? " is-active" : "")}
-              aria-label={t("Filter {{0}}", { 0: marketColumnBaseLabel(column) })} aria-haspopup="dialog"
+              aria-label={filterLabel(t("Filter {{0}}", { 0: marketColumnBaseLabel(column) }), headings[column].filtered)} aria-haspopup="dialog"
               aria-expanded={editor?.column === column}
               onClick={() => setEditor({ column, draft: filters })}>
               <span className="market-head-label">{column === "position" ? t("Pos.") : marketColumnBaseLabel(column)}</span>

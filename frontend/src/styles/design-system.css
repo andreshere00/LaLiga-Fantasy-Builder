@@ -72,10 +72,10 @@
 .fb-breadcrumb a{color:var(--fb-secondary);text-decoration:none}.fb-breadcrumb a:hover{color:var(--fb-primary)}
 .fb-pagination{display:flex;align-items:center;gap:4px;flex-wrap:wrap}
 .fb-page-button{width:44px;height:44px;border:1px solid var(--fb-control-line);border-radius:0;background:var(--fb-surface);color:var(--fb-secondary);cursor:pointer;font-size:14px;font-weight:500}
-.fb-page-button[aria-current="page"]{background:var(--fb-primary);color:var(--fb-on-brand);border-color:var(--fb-primary)}
 .fb-page-button:not(:disabled):hover{background:var(--fb-coral);color:var(--fb-on-coral)}
 .fb-page-button:disabled{opacity:.5;cursor:not-allowed}
-.fb-page-button[aria-current="page"]{font-weight:700;text-decoration:underline;text-underline-offset:3px}
+/* Selection (current page, pressed range) is a dark border plus an underline bar; coral stays for primary actions. */
+.fb-page-button[aria-current="page"]{border-color:var(--fb-tertiary);background:var(--fb-surface);color:var(--fb-tertiary);box-shadow:inset 0 -3px var(--fb-tertiary);font-weight:600;text-decoration:none}
 .fb-loader{display:flex;align-items:center;justify-content:center;gap:20px;min-height:120px}
 .fb-pulse-ring{position:relative;display:inline-block;width:48px;height:48px;flex-shrink:0}
 .fb-pulse-ring--sm{width:16px;height:16px}.fb-pulse-ring--md{width:32px;height:32px}.fb-pulse-ring--xl{width:64px;height:64px}

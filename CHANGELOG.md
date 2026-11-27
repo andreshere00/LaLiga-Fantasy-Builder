@@ -8,6 +8,10 @@ entry, not a claim that every optional provider or deployment gate is complete.
 
 ### Frontend
 
+- Current page and pressed range buttons share one selection style (dark border and
+  underline bar) instead of the coral primary fill; active column filters fill their icon,
+  underline the heading and are announced as filtered; a lineup tile picked for a swap shows
+  an outline again (it referenced an undefined colour).
 - Each view now has one filled (coral) action: the lineup builder button, extra builder
   results, release-clause, received-offer, scouting and connect-page helper buttons became
   outline or secondary.

@@ -97,3 +97,8 @@ export function marketColumnHeadings(
 export function marketColumnBaseLabel(column: MarketColumnKey): string {
   return t(MARKET_COLUMN_BASE_LABELS[column]);
 }
+
+/** Names a column filter button and, when the filter is on, says so for screen readers. */
+export function filterLabel(action: string, filtered: boolean): string {
+  return filtered ? t("{{0}} · filtered", { 0: action }) : action;
+}

@@ -131,8 +131,10 @@ Button guidelines apply throughout the application, including portaled dialogs:
   a Teams player dialog (the release clause is outline), and the confirm step of a received
   offer (**Accept** is secondary, **Reject** outline). Retry, copy, cancel and load-more
   buttons are outline.
-  Selected filters and pagination also use an underline, so color is not the
-  only indication of selection.
+  Selection (current page, pressed range buttons such as **Last N** or a market period)
+  is a dark border with an underline bar, never the coral primary fill. An active column
+  filter fills its funnel icon, underlines the heading and is announced as "filtered". A
+  tile picked for a swap has a dark outline.
 - Disabled actions retain their appearance on hover. The shared `Button`
   suppresses activation when `aria-disabled` while remaining focusable for
   explanations. Pending mutations disable repeat submission, show a specific
