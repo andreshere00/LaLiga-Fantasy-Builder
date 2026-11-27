@@ -54,7 +54,7 @@ export function TeamValueBox({
               {t("Last 30 days team value:")}{" "}
               {lookbackLine(evolution.thirtyDaysAgo, evolution.today, historyLoading)}
             </span>
-      </> : null} trigger={<span className="value-box-tooltip-wrap"
+      </> : null} tapToOpen trigger={<span className="value-box-tooltip-wrap"
         tabIndex={evolution ? 0 : undefined}
         onPointerEnter={requestHistory} onFocus={requestHistory} />}>
         <span className="value-box-text">{display}</span>

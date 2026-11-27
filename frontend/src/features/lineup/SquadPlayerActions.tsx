@@ -169,7 +169,7 @@ export function SquadPlayerActions({
         }) : children}
         {!cardMenu ? <div className="squad-tile-controls">
           <Menu.Root open={menuOpen} onOpenChange={setMenuOpen}>
-            <Help content={triggerText ? null : t(PLAYER_OPTIONS_HINT)}>
+            <Help content={triggerText ? null : t(PLAYER_OPTIONS_HINT)} trigger={<span />}>
               <Menu.Trigger ref={menuTrigger}
                 className={"player-details-link squad-details-link" + (triggerText ? " is-text-trigger" : "")}
                 aria-label={t("{{0}}, options", { 0: player.name })}>

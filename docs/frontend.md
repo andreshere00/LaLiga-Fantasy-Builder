@@ -109,6 +109,9 @@ are synthesized by the browser. Width adaptation comes from responsive layout,
 wrapping, and the existing type scale, rather than variable-font width axes.
 The app uses Base UI for dialogs, selection, menus, tooltips, collapsibles and
 toasts, with local CSS and native buttons/fields where appropriate.
+Help tooltips on information-only triggers also open with a tap on touch screens
+(tap again or outside to close); triggers that act on press, such as position filters
+or tiles, keep their action.
 Toasts lead with a ✓ (success) or ! (error) icon and error toasts are announced as
 "Error", so the tone is not carried by the border colour alone. Lost matches use the
 failure colour, not the coral primary.

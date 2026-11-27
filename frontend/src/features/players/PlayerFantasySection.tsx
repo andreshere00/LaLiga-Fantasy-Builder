@@ -127,7 +127,7 @@ export function PlayerFantasySummary({ profile, clubId = null }: FantasySectionP
     <dl className="player-fantasy-profile-list player-detail-fantasy-summary"
       aria-label={t("Fantasy profile")}>
       <Help content={t("Probability that the player starts the game from the first minute.")}
-        trigger={<div tabIndex={0} className="player-fantasy-summary-block player-fantasy-summary-block--starter"
+        tapToOpen trigger={<div tabIndex={0} className="player-fantasy-summary-block player-fantasy-summary-block--starter"
           data-unavailable={startPercent == null || undefined} />}>
         <dt>{t("Starter likelihood")}<span className="player-outlook-help" aria-hidden="true" /></dt>
         <dd>
@@ -168,7 +168,7 @@ export function PlayerFantasySummary({ profile, clubId = null }: FantasySectionP
         </dd>
       </Help>
       <Help content={t("The player's form and performance in recent matches: poor, average, good, or very good.")}
-        trigger={<div tabIndex={0} className="player-fantasy-summary-block" />}>
+        tapToOpen trigger={<div tabIndex={0} className="player-fantasy-summary-block" />}>
         <dt>{t("Form")}<span className="player-outlook-help" aria-hidden="true" /></dt>
         <dd>
           <span className="player-fantasy-summary-value">
@@ -184,7 +184,7 @@ export function PlayerFantasySummary({ profile, clubId = null }: FantasySectionP
         </dd>
       </Help>
       <Help content={t("Indicates the player's injury risk based on recent injuries. For players new to the league, the risk may be Unknown.")}
-        trigger={<div tabIndex={0} className="player-fantasy-summary-block" />}>
+        tapToOpen trigger={<div tabIndex={0} className="player-fantasy-summary-block" />}>
         <dt>{t("Injury risk")}<span className="player-outlook-help" aria-hidden="true" /></dt>
         <dd>
           <span className="player-fantasy-summary-value">
@@ -245,7 +245,7 @@ function PlayerNewsList({ profile }: FantasySectionProps) {
                   {source ? <span className="player-news-source">{source}</span> : null}
                   {published ? <time dateTime={published}>{reportDate(published)}</time> : null}
                 </span>
-                <h4 aria-labelledby={`${externalHintId}-${index}`}><ScrapedText text={title} textId={`${externalHintId}-${index}`} /></h4>{href ? <a href={href} aria-labelledby={`${externalHintId}-${index}`} aria-describedby={externalHintId} target="_blank" rel="noopener noreferrer">{t("Read article")}</a> : null}
+                <h4 aria-labelledby={`${externalHintId}-${index}`}><ScrapedText text={title} textId={`${externalHintId}-${index}`} /></h4>{href ? <a id={`${externalHintId}-${index}-link`} href={href} aria-labelledby={`${externalHintId}-${index}-link ${externalHintId}-${index}`} aria-describedby={externalHintId} target="_blank" rel="noopener noreferrer">{t("Read article")}</a> : null}
                 {href ? <span className="player-news-read" aria-hidden="true"><ArticleArrow /></span>
                   : <span className="player-news-unavailable">{t("Article link unavailable")}</span>}
               </>;

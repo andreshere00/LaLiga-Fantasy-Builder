@@ -8,6 +8,11 @@ entry, not a claim that every optional provider or deployment gate is complete.
 
 ### Frontend
 
+- Help tooltips on information-only triggers (definitions on the player page, team value
+  history, the balance help, market cells) open with a tap on touch screens and close with
+  another tap or a tap outside; menus wrapped in help no longer add an empty tab stop.
+- The **Read article** link's accessible name starts with its visible text, followed by the
+  headline.
 - The Auto market sheet splits **Selling** and **Buying** into tabs (each with its active
   rule count, active rules first) and folds finished rules into a collapsed **History**;
   a new `Tabs` primitive wraps Base UI tabs.
