@@ -8,6 +8,8 @@ entry, not a claim that every optional provider or deployment gate is complete.
 
 ### Frontend
 
+- A sign-in, registration or verification error is linked to the form's fields, so screen
+  readers read it with each field; sign-in marks both fields invalid.
 - The header **Options** panel closes on Escape (returning focus to Options) or a press
   outside it.
 - Small touch targets reach 44px: the balance help button, lineup builder checkbox rows,

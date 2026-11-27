@@ -84,6 +84,20 @@ it("submit_emailSignInNeedsVerification_prefillsThatAddress", async () => {
   expect(emailValue()).toBe("alice@example.test");
 });
 
+it("submit_signInFails_linksTheErrorToEveryField", async () => {
+  vi.mocked(authClient.signIn.email).mockResolvedValue(unverified);
+  renderAuth("/sign-in");
+  fill("Username or email", "alice@example.test");
+  fill("Password", "synthetic-password-123");
+  fireEvent.click(screen.getByRole("button", { name: "Sign in" }));
+  const alert = await screen.findByRole("alert");
+  for (const label of ["Username or email", "Password"]) {
+    const field = screen.getByLabelText(label);
+    expect(field.getAttribute("aria-describedby")).toContain(alert.id);
+    expect(field.getAttribute("aria-invalid")).toBe("true");
+  }
+});
+
 function identifierValue(): string {
   const field = screen.getByLabelText("Username or email");
   if (!(field instanceof HTMLInputElement)) throw new Error("Identifier control is not an input");
