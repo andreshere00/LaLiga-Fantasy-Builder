@@ -1,5 +1,5 @@
 import { t } from "../../i18n";
-import { formatEuro, parseIntegerAmount, parsePercent } from "../../api/format";
+import { formatEuro, formatIntegerAmount, parseIntegerAmount, parsePercent } from "../../api/format";
 import type { AutoRule, AutoRuleWrite } from "../../api/autoMarket";
 
 export const MIN_PERCENT = 0.1;
@@ -58,11 +58,11 @@ export function defaultDraft(target: AutoRuleTarget): AutoRuleDraft {
     // A player already on the market is adopted at once, so offers are accepted from the start.
     listNow: target.side === "sell" && target.listed,
     percent: "5",
-    amount: waiting && target.marketValue ? String(target.marketValue) : "",
+    amount: waiting && target.marketValue ? formatIntegerAmount(target.marketValue) : "",
     priceMode: "threshold",
     target: clauseOnly ? "clause" : "market",
     // The cap starts at the current value: the most conservative amount that can still buy.
-    maxSpend: target.side === "buy" && target.marketValue ? String(target.marketValue) : "",
+    maxSpend: target.side === "buy" && target.marketValue ? formatIntegerAmount(target.marketValue) : "",
     expires: "",
   };
 }
@@ -71,10 +71,10 @@ export function draftFromRule(rule: AutoRule): AutoRuleDraft {
   return {
     kind: rule.triggerKind,
     percent: rule.triggerPercent == null ? "5" : String(rule.triggerPercent),
-    amount: rule.triggerAmount == null ? "" : String(rule.triggerAmount),
+    amount: rule.triggerAmount == null ? "" : formatIntegerAmount(rule.triggerAmount),
     priceMode: rule.priceMode,
     target: rule.target,
-    maxSpend: rule.maxSpend == null ? "" : String(rule.maxSpend),
+    maxSpend: rule.maxSpend == null ? "" : formatIntegerAmount(rule.maxSpend),
     listNow: rule.listNow === true,
     expires: rule.expiresAt ? localDay(new Date(rule.expiresAt)) : "",
   };

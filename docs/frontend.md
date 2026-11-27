@@ -1051,7 +1051,10 @@ The arm dialog (`features/autoMarket/AutoRuleDialog.tsx`) asks only what a rule 
   always costs its clause price, and for a list-only sell).
 - **Buy only:** *bid on the market* or *pay the release clause* when both are possible, plus
   the most the rule may ever spend. The cap starts at the current market value and the
-  dialog shows your cash and the 20% squad-value allowance beside it.
+  dialog shows your cash and, when the squad value is known, the resulting maximum bid
+  (cash plus up to 20% of squad value) beside it.
+- Amounts are shown with the locale's thousands separator and regrouped when the field
+  loses focus; either separator is accepted while typing.
 - **Optional deadline:** a day, taken as the end of that local day.
 
 A live sentence previews the amount the rule waits for, warns when that is already true, and

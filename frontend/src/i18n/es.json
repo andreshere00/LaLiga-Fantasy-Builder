@@ -640,6 +640,7 @@
   "Pay {{0}} to trigger the release clause for {{1}}? The payment can't be undone.": "¿Pagar {{0}} para ejecutar la cláusula de rescisión de {{1}}? El pago no se puede deshacer.",
   "Players to put on the market": "Jugadores que se pondrán a la venta",
   "Time left": "Tiempo restante",
+  "Your cash: {{0}}. You can bid up to {{1}}, using up to 20% of your squad value.": "Tu saldo: {{0}}. Puedes pujar hasta {{1}}, usando hasta el 20% del valor de tu plantilla.",
   "{{0}} favorite players": "{{0}} jugadores favoritos",
   "Modify listing": "Modificar anuncio",
   "Pick an owner": "Elige un propietario",

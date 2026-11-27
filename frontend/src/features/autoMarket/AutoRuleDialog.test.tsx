@@ -27,6 +27,16 @@ afterEach(() => { cleanup(); void i18n.changeLanguage("en"); });
 
 // ---- Happy path ---- //
 describe("AutoRuleDialog", () => {
+  it("AutoRuleDialog_buy_states_the_maximum_bid_and_groups_typed_amounts", () => {
+    open({ target: buyTarget, rule: null }, { squadMarketValue: 500_000_000 });
+    const spend = screen.getByLabelText("Most this rule may spend (€)") as HTMLInputElement;
+    expect(spend.value).toBe("90,000,000");
+    expect(screen.getByText("Your cash: 200,000,000 €. You can bid up to 300,000,000 €, using up to 20% of your squad value.")).toBeTruthy();
+    fireEvent.change(spend, { target: { value: "95000000" } });
+    fireEvent.blur(spend);
+    expect(spend.value).toBe("95,000,000");
+  });
+
   it("AutoRuleDialog_sell_previews_the_threshold_and_arms_one_confirmed_write", () => {
     const { onConfirm } = open({ target: sellTarget, rule: null });
     expect(screen.getByRole("status").textContent).toContain("at least 105,000,000 € (now 100,000,000 €)");
@@ -92,7 +102,7 @@ describe("AutoRuleDialog", () => {
     } as AutoRule;
     open({ target: sellTarget, rule });
     expect(screen.getByText("Edit auto-sell")).toBeTruthy();
-    expect((screen.getByLabelText("Amount (€)") as HTMLInputElement).value).toBe("150000000");
+    expect((screen.getByLabelText("Amount (€)") as HTMLInputElement).value).toBe("150,000,000");
   });
 
   it("AutoRuleDialog_localizes_copy_when_the_language_changes", async () => {

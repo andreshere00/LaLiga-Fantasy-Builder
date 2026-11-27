@@ -84,7 +84,7 @@ function MarketListContent() {
   if (board.noLeague) return <p className="status-copy">{t("No leagues found for this account.")}</p>;
 
   return (
-    <AutoMarketProvider money={board.money}>
+    <AutoMarketProvider money={board.money} squadMarketValue={board.squadMarketValue}>
       <MarketToolbar
         money={board.money}
         projection={board.projection}

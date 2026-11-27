@@ -1,5 +1,6 @@
 import { useEffect, useId, useRef, useState } from "react";
-import { formatEuro, parseIntegerAmount } from "../../api/format";
+import { formatEuro, formatIntegerAmount, parseIntegerAmount } from "../../api/format";
+import { maximumBidAmount } from "../market/actions/marketActions";
 import type { AutoRuleWrite } from "../../api/autoMarket";
 import { Button } from "../../components/ui/Button";
 import { Dialog } from "../../components/ui/Dialog";
@@ -19,10 +20,17 @@ type Props = {
   open: boolean;
   state: RuleDialogState | null;
   money: number | null;
+  squadMarketValue?: number | null;
   pending: boolean;
   error: string | null;
   onClose: () => void;
   onConfirm: (write: AutoRuleWrite) => void;
+};
+
+/** Groups a typed whole-euro amount with the locale separator; leaves anything unparsable as typed. */
+const tidyAmount = (raw: string) => {
+  const amount = parseIntegerAmount(raw);
+  return amount == null ? raw : formatIntegerAmount(amount);
 };
 
 /** One value of a single-choice toggle group; ignores the empty array a deselect produces. */
@@ -31,11 +39,12 @@ const single = <T extends string>(values: readonly unknown[], set: (value: T) =>
 };
 
 /** Arming a rule is the user's confirmation that it may act once, unattended. */
-export function AutoRuleDialog({ open, state, money, pending, error, onClose, onConfirm }: Props) {
+export function AutoRuleDialog({ open, state, money, squadMarketValue = null, pending, error, onClose, onConfirm }: Props) {
   useTranslation();
   const ids = useId();
   const now = useNow(60_000);
   const cancelRef = useRef<HTMLButtonElement>(null);
+  const maximumBid = maximumBidAmount(money, squadMarketValue);
   const [draft, setDraft] = useState<AutoRuleDraft | null>(null);
   const target = state?.target ?? null;
   const rule = state?.rule ?? null;
@@ -136,7 +145,8 @@ export function AutoRuleDialog({ open, state, money, pending, error, onClose, on
           <FieldLabel htmlFor={`${ids}-amount`}>{t("Amount (€)")}</FieldLabel>
           <Input id={`${ids}-amount`} inputMode="numeric" autoComplete="off" value={draft.amount} disabled={pending}
             aria-invalid={!!errors.amount} aria-describedby={errors.amount ? `${ids}-amount-error` : undefined}
-            onChange={(event) => change({ amount: event.target.value })} />
+            onChange={(event) => change({ amount: event.target.value })}
+            onBlur={() => change({ amount: tidyAmount(draft.amount) })} />
           {errors.amount ? <FieldError id={`${ids}-amount-error`}>{errors.amount}</FieldError> : null}
         </Field>
       )}
@@ -161,12 +171,16 @@ export function AutoRuleDialog({ open, state, money, pending, error, onClose, on
         <Field data-invalid={errors.maxSpend ? "" : undefined}>
           <FieldLabel htmlFor={`${ids}-spend`}>{t("Most this rule may spend (€)")}</FieldLabel>
           <FieldDescription id={`${ids}-spend-hint`}>
-            {money == null ? t("Your balance is unavailable.") : t("Your cash: {{0}}. Bids can use up to 20% of your squad value on top.", { 0: formatEuro(money) })}
+            {money == null ? t("Your balance is unavailable.")
+              : maximumBid != null && squadMarketValue != null && squadMarketValue > 0
+                ? t("Your cash: {{0}}. You can bid up to {{1}}, using up to 20% of your squad value.", { 0: formatEuro(money), 1: formatEuro(maximumBid) })
+                : t("Your cash: {{0}}. Bids can use up to 20% of your squad value on top.", { 0: formatEuro(money) })}
           </FieldDescription>
           <Input id={`${ids}-spend`} inputMode="numeric" autoComplete="off" value={draft.maxSpend} disabled={pending}
             aria-invalid={!!errors.maxSpend}
             aria-describedby={`${ids}-spend-hint${errors.maxSpend ? ` ${ids}-spend-error` : ""}`}
-            onChange={(event) => change({ maxSpend: event.target.value })} />
+            onChange={(event) => change({ maxSpend: event.target.value })}
+            onBlur={() => change({ maxSpend: tidyAmount(draft.maxSpend) })} />
           {errors.maxSpend ? <FieldError id={`${ids}-spend-error`}>{errors.maxSpend}</FieldError> : null}
         </Field>
       ) : null}

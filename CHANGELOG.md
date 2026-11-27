@@ -15,6 +15,8 @@ entry, not a claim that every optional provider or deployment gate is complete.
 - Loading the last saved or original lineup asks before discarding unsaved lineup edits.
 - **List all my players…** lists the players (with market value) it is about to put on the
   market instead of only their count.
+- Auto-market rule amounts use thousands separators, and buy rules state the maximum bid
+  instead of leaving you to add 20% of the squad value to your cash.
 - Rejecting a received offer now asks for inline confirmation, like accepting one.
 - Cancelling an auto-market rule now asks for inline confirmation and shows its progress.
 - Unlinking a sign-in provider on the account page now asks for confirmation.

@@ -361,7 +361,7 @@ function PlayersListContent() {
   }
 
   return (
-    <AutoMarketProvider money={marketBoard.money}>
+    <AutoMarketProvider money={marketBoard.money} squadMarketValue={marketBoard.squadMarketValue}>
       <div className="market-toolbar scouting-toolbar">
         <h1>{t("Players")}</h1>
         <ScoutingPanel />
