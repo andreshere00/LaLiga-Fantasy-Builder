@@ -40,6 +40,30 @@ export function Header() {
   const { leagues, selected, selectLeague } = useLeague();
   const [profileOpen, setProfileOpen] = useState(false);
   const [optionsOpen, setOptionsOpen] = useState(false);
+  const actionsRef = useRef<HTMLDivElement | null>(null);
+  const optionsTrigger = useRef<HTMLButtonElement | null>(null);
+  // The options panel behaves like a disclosure popover: Escape or a press outside closes it.
+  useEffect(() => {
+    if (!optionsOpen) return;
+    // Portaled popups opened from the panel (league list, language menu, dialogs) count as inside.
+    const inside = (target: EventTarget | null) => target instanceof Element && (
+      actionsRef.current?.contains(target)
+      || target.closest('[role="listbox"], [role="menu"], [role="dialog"], [role="alertdialog"]') != null);
+    const onKey = (event: KeyboardEvent) => {
+      if (event.key !== "Escape" || event.defaultPrevented) return;
+      if (event.target instanceof Element && !actionsRef.current?.contains(event.target)
+        && event.target !== document.body) return;
+      setOptionsOpen(false);
+      optionsTrigger.current?.focus();
+    };
+    const onPointer = (event: PointerEvent) => { if (!inside(event.target)) setOptionsOpen(false); };
+    document.addEventListener("keydown", onKey);
+    document.addEventListener("pointerdown", onPointer);
+    return () => {
+      document.removeEventListener("keydown", onKey);
+      document.removeEventListener("pointerdown", onPointer);
+    };
+  }, [optionsOpen]);
   const prefetchHandlers = useRoutePrefetch();
   const signedIn = status !== "signed-out" && status !== "loading";
   const [params, setParams] = useSearchParams();
@@ -67,9 +91,10 @@ export function Header() {
           <NavLink to="/players" className="nav-tab" {...prefetchHandlers("/players")}><NavIcon name="players" /><span>{t("Players")}</span></NavLink>
           <NavLink to="/teams" className="nav-tab" {...prefetchHandlers("/teams")}><NavIcon name="teams" /><span>{t("Teams")}</span></NavLink>
         </nav>
-        <div className={`nav-actions${optionsOpen ? " is-open" : ""}`}>
+        <div ref={actionsRef} className={`nav-actions${optionsOpen ? " is-open" : ""}`}>
           {signedIn ? <><NotificationsButton /><ScoutingDialog /></> : null}
           <button
+            ref={optionsTrigger}
             type="button"
             className="nav-options-trigger"
             aria-label={t("Open settings and account options")}

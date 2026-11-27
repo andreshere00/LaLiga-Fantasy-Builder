@@ -19,7 +19,8 @@ Each main navigation tab (Lineup, Market, Players, Teams) carries a decorative
 `NavIcon` from `features/shell/icons.tsx` that follows `currentColor`; on a phone
 it stacks above the label in the bottom bar.
 The panel contains the 44 × 44px globe-only language selector beside the theme
-control; both stay hidden when Options is collapsed. The language selector’s
+control; both stay hidden when Options is collapsed. Escape (focus returns to Options) or a press
+outside the panel closes it. The language selector’s
 accessible name and hover title follow the current language (Idioma/Language). The popup lists Español and English with the selected
 option marked; keyboard selection restores focus to the globe. The controls
 share the existing league/account panel without adding a second header row.

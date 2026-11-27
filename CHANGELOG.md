@@ -8,6 +8,8 @@ entry, not a claim that every optional provider or deployment gate is complete.
 
 ### Frontend
 
+- The header **Options** panel closes on Escape (returning focus to Options) or a press
+  outside it.
 - Small touch targets reach 44px: the balance help button, lineup builder checkbox rows,
   footer links and the sign-in page's inline links.
 - Help tooltips on information-only triggers (definitions on the player page, team value
