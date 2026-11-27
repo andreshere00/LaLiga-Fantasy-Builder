@@ -13,6 +13,8 @@ entry, not a claim that every optional provider or deployment gate is complete.
 - Bid dialogs show your balance and the listing's time left; the release-clause dialog shows
   your balance before and after paying and says the payment can't be undone.
 - Loading the last saved or original lineup asks before discarding unsaved lineup edits.
+- **List all my players…** lists the players (with market value) it is about to put on the
+  market instead of only their count.
 - Rejecting a received offer now asks for inline confirmation, like accepting one.
 - Cancelling an auto-market rule now asks for inline confirmation and shows its progress.
 - Unlinking a sign-in provider on the account page now asks for confirmation.

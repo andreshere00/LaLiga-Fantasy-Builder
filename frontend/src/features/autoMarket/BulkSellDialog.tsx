@@ -3,6 +3,8 @@ import type { SquadCard } from "../../api/mappers";
 import type { AutoRuleWrite } from "../../api/autoMarket";
 import { Button } from "../../components/ui/Button";
 import { Dialog } from "../../components/ui/Dialog";
+import { formatEuro } from "../../api/format";
+import { ScrollArea } from "../../components/ui/ScrollArea";
 import { Field, FieldDescription, FieldError, FieldLabel, Input } from "../../components/ui/Fields";
 import { ToggleGroup, ToggleGroupItem } from "../../components/ui/ToggleGroup";
 import { t, useTranslation } from "../../i18n";
@@ -48,6 +50,14 @@ export function BulkSellDialog({ open, cards, alreadyListed = 0, pending, error,
         <Button shape="square" disabled={!writes || count === 0} loading={pending} loadingLabel={t("Arming…")}
           onClick={() => writes && onConfirm(writes)}>{mode === "list" ? t("List {{0}} players", { 0: count }) : t("Arm {{0}} auto-sells", { 0: count })}</Button>
       </>}>
+      <ScrollArea className="auto-bulk-players"
+        viewportProps={{ role: "region", "aria-label": t("Players to put on the market") }}>
+        <ul>
+          {cards.map((card) => (
+            <li key={card.id}><span>{card.name}</span><span>{formatEuro(card.marketValue)}</span></li>
+          ))}
+        </ul>
+      </ScrollArea>
       <Field>
         <FieldLabel id={`${ids}-mode`}>{t("Put them on the market")}</FieldLabel>
         <ToggleGroup aria-labelledby={`${ids}-mode`} value={[mode]} disabled={pending}

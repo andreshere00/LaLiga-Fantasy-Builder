@@ -1020,7 +1020,8 @@ The *Selling* section has a list of selectable players (photo, name, club badge,
 market value) to start an auto-sell for one of your squad players that is not already on the
 market. **List all my players…** puts every player that is not on the market yet, and has no live sell rule,
 on the market by default (players already listed are left as they are) (*Only list them*, at market value, with no automatic sale, so you choose which offer
-to accept). It can also apply one general rule to all of them: *List and sell at a gain* lists
+to accept). The dialog lists each of those players with their market value before you
+arm anything. It can also apply one general rule to all of them: *List and sell at a gain* lists
 them now and accepts an offer that reaches the percentage, and *List when each value rises*
 lists each one only after its own value rises. Any single player can still get their own rule
 from the player list, or have their armed rule edited. **Sell my favorites** (in *Selling*) and **Buy my favorites** (in *Buying*) arm rules for several favorite players at once. **Auto-sell favorites…**

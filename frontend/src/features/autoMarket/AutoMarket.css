@@ -55,3 +55,13 @@
   /* Phones stack icon over label, so the flag sits in the corner like the unread count. */
   .market-section-actions .market-options-new { position:absolute; top:4px; right:4px; margin:0; }
 }
+
+.auto-bulk-players { border: 1px solid var(--fb-line); }
+.auto-bulk-players .fb-scroll-viewport { max-height: 200px; }
+.auto-bulk-players ul { list-style: none; margin: 0; padding: 0; }
+.auto-bulk-players li {
+  display: flex; justify-content: space-between; gap: 12px; padding: 8px 12px;
+  border-bottom: 1px solid var(--fb-line); font-variant-numeric: tabular-nums;
+}
+.auto-bulk-players li:last-child { border-bottom: 0; }
+.auto-bulk-players li span:last-child { color: var(--fb-muted); white-space: nowrap; }
