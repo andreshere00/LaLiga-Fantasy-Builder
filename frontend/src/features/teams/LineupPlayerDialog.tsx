@@ -53,6 +53,7 @@ export function LineupPlayerDialog({
     openBid: (...args: Parameters<MarketActionsApi["openBid"]>) => { onClose(); actions.openBid(...args); },
     openClause: (...args: Parameters<MarketActionsApi["openClause"]>) => { onClose(); actions.openClause(...args); },
     openWithdraw: (...args: Parameters<MarketActionsApi["openWithdraw"]>) => { onClose(); actions.openWithdraw(...args); },
+    openCancelBid: (...args: Parameters<MarketActionsApi["openCancelBid"]>) => { onClose(); actions.openCancelBid(...args); },
   } as MarketActionsApi;
   return (
     <Dialog

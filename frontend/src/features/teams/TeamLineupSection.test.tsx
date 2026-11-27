@@ -40,6 +40,7 @@ vi.mock("../market/actions/useMarketActions", () => ({
     pendingBid: null,
     pendingClause: null,
     pendingWithdraw: null,
+    confirmationOpen: false,
     actionPending: false,
     openBid,
   }),

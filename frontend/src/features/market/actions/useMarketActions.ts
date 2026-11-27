@@ -308,7 +308,12 @@ export function useMarketActions(onAcquisitionSuccess?: () => void) {
     payClause.isPending ||
     withdrawListing.isPending;
 
+  // One flag for every confirmation, so callers hide their own dialog while any is open.
+  const confirmationOpen = pendingBid != null || pendingClause != null ||
+    pendingWithdraw != null || pendingCancelBid != null;
+
   return {
+    confirmationOpen,
     pendingBid,
     pendingClause,
     pendingWithdraw,

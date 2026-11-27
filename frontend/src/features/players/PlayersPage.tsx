@@ -326,10 +326,7 @@ function PlayersListContent() {
     activeBidCount: marketBoard.activeBidCount,
     squadMarketValue: marketBoard.squadMarketValue,
   };
-  const dialogOpen =
-    actions.pendingBid != null ||
-    actions.pendingClause != null ||
-    actions.pendingWithdraw != null;
+  const dialogOpen = actions.confirmationOpen;
 
   const setFilters = useCallback(
     (patch: Partial<PlayersFilters>) => {

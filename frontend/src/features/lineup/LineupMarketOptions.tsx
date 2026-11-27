@@ -43,8 +43,7 @@ function OpponentMarketOptions({ player, onClose }: Omit<Props, "open">) {
     squadMarketValue: board.squadMarketValue,
   };
   const offers = row ? resolveMarketActionOffers(row, context) : [];
-  const confirming = actions.pendingBid != null || actions.pendingClause != null ||
-    actions.pendingWithdraw != null;
+  const confirming = actions.confirmationOpen;
 
   return (
     <>

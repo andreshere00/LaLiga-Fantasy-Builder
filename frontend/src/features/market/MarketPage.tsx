@@ -75,10 +75,7 @@ function MarketListContent() {
     squadMarketValue: board.squadMarketValue,
   };
 
-  const dialogOpen =
-    marketActions.pendingBid != null ||
-    marketActions.pendingClause != null ||
-    marketActions.pendingWithdraw != null;
+  const dialogOpen = marketActions.confirmationOpen;
 
   const clearFilters = () => {
     setFilters(createEmptyMarketFilters());
