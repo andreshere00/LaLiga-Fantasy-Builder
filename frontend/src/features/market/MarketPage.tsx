@@ -24,6 +24,7 @@ import {
   sellerOptions,
 } from "./marketFilters";
 import { RichRow } from "../../components/ui/RichRow";
+import { Button } from "../../components/ui/Button";
 import { MarketToolbar } from "./MarketToolbar";
 import { useMarketBoard } from "./useMarketBoard";
 import "./MarketPage.css";
@@ -116,7 +117,11 @@ function MarketListContent() {
         </p>
       ) : null}
       {board.isLoading ? <MarketScreenLoading tableOnly /> : board.hasError ? (
-        <p className="status-copy" role="alert">{t("The market could not be loaded. Refresh bids to retry.")}</p>
+        <div className="market-load-error" role="alert">
+          <p className="status-copy">{t("The market could not be loaded. Check your connection and try again.")}</p>
+          <Button variant="outline" shape="square" loading={board.projectionRefreshing}
+            loadingLabel={t("Retrying…")} onClick={board.refreshBids}>{t("Retry")}</Button>
+        </div>
       ) : board.rows.length === 0 ? (
         <p className="status-copy">{t("No players on the market.")}</p>
       ) : visibleRows.length === 0 ? (

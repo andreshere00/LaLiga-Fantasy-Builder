@@ -8,6 +8,8 @@ entry, not a claim that every optional provider or deployment gate is complete.
 
 ### Frontend
 
+- When the market fails to load, a **Retry** button sits next to the error instead of
+  pointing to **Refresh bids** inside the bids dialog.
 - Players pagination has previous/next arrows and, like the news and injury histories,
   first/last page buttons when there are more than three pages.
 - Auto market explains its unavailable actions: why a listed or running rule cannot be
