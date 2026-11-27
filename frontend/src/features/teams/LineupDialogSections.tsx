@@ -47,7 +47,7 @@ export function LineupMarketActions({
   actions: MarketActionsApi;
 }) {
   useTranslation();
-  const offers = resolveMarketActionOffers(row, context).filter((offer) => offer.type !== "immediate-sell");
+  const offers = resolveMarketActionOffers(row, context);
   if (offers.length === 0) return null;
   return (
     <section className="team-detail-market" aria-labelledby="team-detail-market-title">
@@ -61,7 +61,7 @@ export function LineupMarketActions({
             else if (offer.type === "withdraw") actions.openWithdraw(row);
             else if (offer.type === "pay-clause") actions.openClause(row, offer.amount);
           };
-          const primary = offer.type === "bid" || offer.type === "pay-clause";
+          const primary = offer.type === "bid";
           return (
             <li key={key}>
               <Button

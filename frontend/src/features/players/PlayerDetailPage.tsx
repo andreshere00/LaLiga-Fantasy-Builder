@@ -484,8 +484,7 @@ function PlayerDetailBody({ masterId }: PlayerDetailBodyProps) {
           </div>
           <div className="player-detail-fixture-actions" role="group" aria-label={t("Fixture history length")}>
             {FIXTURE_LAST_STEPS.map((step) => (
-              <button key={step} type="button" className={last === step ? "is-active" : undefined}
-                aria-pressed={last === step} onClick={() => setLast(step)}>
+              <button key={step} type="button" aria-pressed={last === step} onClick={() => setLast(step)}>
                 {t("Last ")}{step}
               </button>
             ))}
@@ -517,7 +516,6 @@ function PlayerDetailBody({ masterId }: PlayerDetailBodyProps) {
             <button
               key={value}
               type="button"
-              className={!marketUseCustomRange && marketPreset === value ? "is-active" : undefined}
               aria-pressed={!marketUseCustomRange && marketPreset === value}
               onClick={() => {
                 setMarketUseCustomRange(false);
@@ -529,7 +527,6 @@ function PlayerDetailBody({ masterId }: PlayerDetailBodyProps) {
           ))}
           <button
             type="button"
-            className={marketUseCustomRange ? "is-active" : undefined}
             aria-pressed={marketUseCustomRange}
             onClick={() => {
               setDateEditorOpen(true);

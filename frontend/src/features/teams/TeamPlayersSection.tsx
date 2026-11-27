@@ -9,6 +9,7 @@ import { usePlayerOutlooks } from "../lineup/useSquadStats";
 import { radarMetric } from "../players/radar/radarLocalization";
 import { PlayerRadarChart } from "../players/radar/PlayerRadarChart";
 import { playerFormPresentation } from "../players/playerForm";
+import { starterProbabilityTone } from "../players/starterProbability";
 import { ProfilePhoto } from "../shell/ProfilePhoto";
 import { PersonIcon } from "../shell/icons";
 import { usePlayersCatalogQuery } from "../../api/queries";
@@ -271,13 +272,6 @@ type Outlook = {
   startProbability?: { percent?: number | null } | null;
 };
 
-/** Starter likelihood from this percentage up is flagged in red on the MVP cards. */
-const STARTER_RED_FROM = 90;
-
-export function isStarterFlagged(percent: number | null | undefined): boolean {
-  return typeof percent === "number" && Number.isFinite(percent) && percent >= STARTER_RED_FROM;
-}
-
 function MvpStrip({
   players,
   outlooks,
@@ -314,7 +308,7 @@ function MvpStrip({
         {shown.map(({ player, radar, published }, index) => {
           const outlook = outlooks.get(player.playerId) as Outlook | undefined;
           const starter = outlook?.startProbability?.percent;
-          const flagged = isStarterFlagged(starter);
+          const starterTone = starterProbabilityTone(starter);
           const form = playerFormPresentation(outlook?.form?.rating);
           const displayed = radar.displayed;
           const age = playerAge(outlook?.birthDate, Date.now());
@@ -373,16 +367,15 @@ function MvpStrip({
                   </div>
                   <div>
                     <dt>{t("Starter likelihood")}</dt>
-                    <dd data-level={flagged ? "high" : undefined}>
+                    <dd data-tone={starterTone ?? undefined}>
                       {outlooksLoading && !outlook ? (
                         <Skeleton className="team-mvp-skeleton-value" />
                       ) : (
                       <>
                       <span className="team-starter-value">
                         {starter == null ? "—" : `${starter}%`}
-                        {flagged ? <span className="visually-hidden"> {t("(90% or more)")}</span> : null}
                       </span>
-                      <TeamMeter percent={starter} tone={flagged ? "red" : undefined} />
+                      <TeamMeter percent={starter} tone={starterTone} />
                       </>
                       )}
                     </dd>

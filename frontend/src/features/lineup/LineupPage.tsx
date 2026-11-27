@@ -310,7 +310,7 @@ function LineupPageContent() {
             </div>
             <div className="control-block recommend">
               <span className="field-label">{t("Build lineup")}</span>
-              <div className="accent-control-shell">
+              <div className="quiet-control-shell">
                 <button type="button" className="recommend-button" onClick={() => setBuilderOpen(true)}>
                   <span className="recommend-button-text">{t(RECOMMEND_COPY)}</span>
                   <img

@@ -137,7 +137,7 @@ function PanelContent({ details }: { details: (player: string, league?: string) 
     {health === "needs_reauth" ? <p role="alert">{t("Monitoring paused. Reconnect LaLiga in your account, then refresh monitoring.")}</p> : null}
     {health === "not_member" ? <p role="alert">{t("Monitoring paused: this account no longer belongs to the league.")}</p> : null}
     {health === "degraded" ? <p role="status">{t("Some checks failed. Showing the last confirmed data; monitoring will retry.")}</p> : null}
-    {scouting.importMutation.isError ? <p role="alert">{t("Device favorites could not be imported.")} <Button onClick={scouting.retryImport}>{t("Retry")}</Button></p> : null}
+    {scouting.importMutation.isError ? <p role="alert">{t("Device favorites could not be imported.")} <Button variant="outline" onClick={scouting.retryImport}>{t("Retry")}</Button></p> : null}
     {tab === "favorites" ? <>
       {board.hasError || board.isDegraded ? <p role="status">{t("Some league data could not be loaded. Ownership and form may be incomplete.")}</p> : null}
       <div className="scouting-filters">
@@ -148,14 +148,14 @@ function PanelContent({ details }: { details: (player: string, league?: string) 
       </div>
       <div className="scouting-refresh"><small>{t("Alerts are checked even when the website is closed.")}</small>
         <Button variant="outline" disabled={!selected} loading={scouting.refresh.isPending} onClick={() => scouting.refresh.mutate()}>{t("Refresh monitoring")}</Button></div>
-      {scouting.favoritesQuery.isPending ? <p role="status">{t("Loading favorites…")}</p> : scouting.favoritesQuery.isError ? <p role="alert">{t("Favorites could not be loaded.")} <Button onClick={() => void scouting.favoritesQuery.refetch()}>{t("Retry")}</Button></p>
+      {scouting.favoritesQuery.isPending ? <p role="status">{t("Loading favorites…")}</p> : scouting.favoritesQuery.isError ? <p role="alert">{t("Favorites could not be loaded.")} <Button variant="outline" onClick={() => void scouting.favoritesQuery.refetch()}>{t("Retry")}</Button></p>
         : !scouting.favorites.size ? <p>{t("Save players with the bookmark button to follow them here.")}</p>
         : !favorites.length ? <p>{t("No favorites match your filters.")}</p>
         : <ul className="scouting-list">{favorites.map(favorite => <FavoriteCard key={favorite.playerId} favorite={favorite} row={rows.get(favorite.playerId)} details={() => details(favorite.playerId)} />)}</ul>}
     </> : <>
       <p className="scouting-help">{t("Alerts from all your leagues. Opening this list does not mark them as read.")}</p>
       {scouting.inbox.isPending ? <p role="status">{t("Loading alerts…")}</p> : null}
-      {scouting.inbox.isError ? <p role="alert">{t("Alerts could not be loaded.")} <Button onClick={() => void scouting.inbox.refetch()}>{t("Retry")}</Button></p> : null}
+      {scouting.inbox.isError ? <p role="alert">{t("Alerts could not be loaded.")} <Button variant="outline" onClick={() => void scouting.inbox.refetch()}>{t("Retry")}</Button></p> : null}
       {scouting.inbox.isSuccess && !scouting.inbox.data.pages[0].notifications.length ? <p>{t("No scouting alerts yet.")}</p> : null}
       <ul className="scouting-list">{scouting.inbox.data?.pages.flatMap(page => page.notifications).map(event => <li key={event.id} className={"scouting-card" + (!event.readAt ? " scouting-card--unread" : "")}>
         <strong>{event.playerName}</strong><p>{t(alertMessages[event.kind])}</p>
@@ -163,11 +163,11 @@ function PanelContent({ details }: { details: (player: string, league?: string) 
         <div className="scouting-card-footer">
           {!event.readAt ? <Button variant="ghost" disabled={scouting.read.isPending} onClick={() => scouting.read.mutate(event.id)}>{t("Mark as read")}</Button> : <span>{t("Read")}</span>}
           {leagues.some(league => leagueId(league) === event.leagueId)
-            ? <Button onClick={() => { scouting.read.mutate(event.id); details(event.playerId, event.leagueId); }}>{t("Player details")}</Button>
+            ? <Button variant="outline" onClick={() => { scouting.read.mutate(event.id); details(event.playerId, event.leagueId); }}>{t("Player details")}</Button>
             : <span>{t("League no longer available")}</span>}
         </div>
       </li>)}</ul>
-      {scouting.inbox.hasNextPage ? <Button loading={scouting.inbox.isFetchingNextPage} onClick={() => void scouting.inbox.fetchNextPage()}>{t("Load more alerts")}</Button> : null}
+      {scouting.inbox.hasNextPage ? <Button variant="outline" loading={scouting.inbox.isFetchingNextPage} loadingLabel={t("Loading more alerts…")} onClick={() => void scouting.inbox.fetchNextPage()}>{t("Load more alerts")}</Button> : null}
     </>}
   </div>;
 }

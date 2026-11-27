@@ -156,6 +156,8 @@
 .lineup-builder-trade-conditions > span { font-weight:600; }
 .lineup-builder-trade-conditions ul { margin:6px 0 0; padding-left:16px; color:var(--fb-muted); line-height:1.6; }
 .lineup-builder-trade-actions { display:flex; flex-wrap:wrap; gap:8px; margin-top:12px; }
+/* Selling to LaLiga at half value sits apart from listing, at the far end of the row. */
+.lineup-builder-trade-actions .lineup-builder-trade-costly { order:1; margin-inline-start:auto; }
 @media(max-width:700px) {
   .lineup-builder-projection,.lineup-builder-transaction-balances { grid-template-columns:repeat(2,minmax(0,1fr)); }
   .lineup-builder-retained { grid-template-columns:repeat(2,minmax(0,1fr)); }

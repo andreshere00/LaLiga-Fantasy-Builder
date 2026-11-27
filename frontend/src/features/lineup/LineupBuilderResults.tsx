@@ -141,7 +141,7 @@ export function LineupBuilderResults({
     {result.candidates.some((candidate) => candidate.resourceGroup === "owned") && <p className="fb-helper">
       {t("External lineups must score higher than the best lineup using only your current squad.")}</p>}
     {candidates.length === 0 && <p role="status">{group === "owned" ? t("No lineup using only your current squad was found for these settings.") : t("No improving external lineups were found for these settings.")}</p>}
-    {candidates.map(({ candidate, rank }) => <article key={candidate.candidateId} className="lineup-builder-candidate">
+    {candidates.map(({ candidate, rank }, position) => <article key={candidate.candidateId} className="lineup-builder-candidate">
       <h4>{rank}. {candidate.formation.replaceAll(",", "-")} · {candidate.resourceGroup === "owned" ? t("Owned starting XI") : t("Acquisitions required")}</h4>
       {FUNDING[candidate.tradingPlan.fundingStatus] && <p className="lineup-builder-funding" data-tone="warning" role="note">
         <strong>{t(FUNDING[candidate.tradingPlan.fundingStatus]!.title)}</strong>{" "}
@@ -179,7 +179,8 @@ export function LineupBuilderResults({
         playerName={playerName} playersById={playersById}
         confirmedSales={confirmedSales} onSaleAction={onSaleAction} squadByEntryId={squadByEntryId} />
       {result.explanations[candidate.candidateId] && <details className="lineup-builder-candidate-details"><summary>{t("Original generated explanation")}</summary><p lang="en">{result.explanations[candidate.candidateId]}</p></details>}
-      <Button shape="square" disabled={!canApply(candidate)} onClick={() => onApply(candidate)}>{t("Use as draft")}</Button>
+      <Button shape="square" variant={position === 0 ? "default" : "outline"}
+        disabled={!canApply(candidate)} onClick={() => onApply(candidate)}>{t("Use as draft")}</Button>
       {candidate.resourceGroup === "owned" && requireNonnegativeCash
         && availableCash != null && availableCash < 0 && <p className="fb-helper" role="status">
         {t("Your balance after pending bids is {{0}}. Confirm the suggested sales to reach 0 before kickoff; you can still use this draft.", { 0: money(availableCash) })}</p>}

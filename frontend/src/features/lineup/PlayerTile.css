@@ -31,9 +31,10 @@
   text-align: inherit;
 }
 
+/* The tile picked for a swap uses the shared selection colour (the undefined --cyan drew nothing). */
 .player-tile.is-selected {
-  outline: 2px solid var(--cyan);
-  outline-offset: 1px;
+  outline: 3px solid var(--fb-tertiary);
+  outline-offset: 2px;
 }
 
 .player-tile.is-empty {
@@ -280,7 +281,7 @@
 .player-starter-probability { position:absolute; z-index:5; left:6.6667%; bottom:calc(20% + 4px); display:grid; place-items:center; min-height:18px; padding:1px 3px; background:var(--fb-surface); border:1px solid var(--fb-line); color:var(--fb-secondary); font-size:10px; font-weight:700; line-height:1.2; }
 .player-starter-probability[data-tone] { color:var(--fb-ink-on-status); }
 .player-starter-probability[data-tone="low"] { background:var(--fb-failure); border-color:var(--fb-failure); }
-.player-starter-probability[data-tone="mid"] { background:#FFC413; border-color:#FFC413; }
+.player-starter-probability[data-tone="mid"] { background:var(--fb-warning); border-color:var(--fb-warning); }
 .player-starter-probability[data-tone="high"] { background:var(--fb-success); border-color:var(--fb-success); }
 .player-tile.is-position-needed.is-captain .player-name {
   border-top-color:var(--fb-ink-on-status);

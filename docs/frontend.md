@@ -109,6 +109,9 @@ are synthesized by the browser. Width adaptation comes from responsive layout,
 wrapping, and the existing type scale, rather than variable-font width axes.
 The app uses Base UI for dialogs, selection, menus, tooltips, collapsibles and
 toasts, with local CSS and native buttons/fields where appropriate.
+Toasts lead with a ✓ (success) or ! (error) icon and error toasts are announced as
+"Error", so the tone is not carried by the border colour alone. Lost matches use the
+failure colour, not the coral primary.
 The lineup sidebar uses local shadcn Base UI Card, ScrollArea, Table, and Badge
 components, adapted to these same tokens and plain CSS.
 Fixture and standings widgets share a fixed type scale in both themes and at
@@ -126,8 +129,15 @@ Button guidelines apply throughout the application, including portaled dialogs:
   clickable area; dense performance controls retain full-size targets.
 - Primary actions use coral with black text; secondary and cancellation actions
   use neutral surfaces or outlines. Dialog footers preserve these variants.
-  Selected filters and pagination also use an underline, so color is not the
-  only indication of selection.
+  Each view has one filled action: **Save** on the lineup toolbar (**Lineup builder** is an
+  outline control), **Use as draft** on the top-ranked builder result only, **Place bid** in
+  a Teams player dialog (the release clause is outline), and the confirm step of a received
+  offer (**Accept** is secondary, **Reject** outline). Retry, copy, cancel and load-more
+  buttons are outline.
+  Selection (current page, pressed range buttons such as **Last N** or a market period)
+  is a dark border with an underline bar, never the coral primary fill. An active column
+  filter fills its funnel icon, underlines the heading and is announced as "filtered". A
+  tile picked for a swap has a dark outline.
 - Disabled actions retain their appearance on hover. The shared `Button`
   suppresses activation when `aria-disabled` while remaining focusable for
   explanations. Pending mutations disable repeat submission, show a specific
@@ -378,7 +388,7 @@ the Fantasy points each stat earned) and the percentile radar. Starting a bid or
 the dialog first. Alternatives sit in a narrower column as one collapsible group per line (goalkeeper to
 attack), each header showing the translated line, a count and, when collapsed, the two
 likeliest names; the line holding the likeliest alternative starts open and Expand all
-opens the rest. Rows show form, FSYP, last five points, a probability bar (red from 90%)
+opens the rest. Rows show form, FSYP, last five points, a probability bar coloured like the Lineup tile (red below 50%, amber below 75%, green from 75%)
 and a quiet bookmark toggle. Every resolved name links to the player page and Back returns to this club. Published names
 ("I. Williams") are matched first inside the club squad (initial plus surname), then in the
 catalog; an unmatched name stays plain text marked "Details unavailable". Form loads for the XI and for open alternative lines; last-five points follow the same ids. Market actions use the
@@ -765,7 +775,8 @@ Code: `frontend/src/features/lineup/`.
   or **Needs more sales** with the shortfall. Sale steps offer **Accept offer (€X)**,
   which re-reads the offer and accepts it only if still pending at that amount or
   higher, and **Sell now (€X)**, which warns that an immediate sale pays half the
-  market value and cannot be undone. Listing suggestions open **List for sale**
+  market value and cannot be undone; it sits at the far end of the row, apart from
+  listing. **Cancel build** is a plain outline button, since stopping a build loses nothing. Listing suggestions open **List for sale**
   with the suggested price, still editable. Each is one confirmation; nothing is
   confirmed automatically. After a write the squad, cash and offers refresh, and
   **Use as draft** is re-evaluated locally: every starter owned and the round
@@ -956,7 +967,7 @@ Future verified gross accounting uses `B - P`; verified net accounting uses `B`.
 | Market value | Price, 5-day change, your active bid amount when present, then release clause with protection and lock countdown; hover on the price: last, highest, lowest, 5d/14d ago with % vs current |
 | Availability | SVG icons + hover text for next matchday readiness |
 | Seal end | Countdown with a coral status rail when under one hour remains. In the final minute the rail is replaced by the warning icon and the time shows `<1m` |
-| Sell options | Seller link (`/?team=…`) or `LALIGA`; **Options** / **Bidded** action menu. On your own listings the menu offers **Withdraw from market** (confirmation modal, `DELETE /api/market/leagues/{id}/{marketId}`) and a disabled **Immediate sell** entry until a documented Fantasy route exists |
+| Sell options | Seller link (`/?team=…`) or `LALIGA`; **Options** / **Bidded** action menu. On your own listings the menu offers **Withdraw from market** (confirmation modal, `DELETE /api/market/leagues/{id}/{marketId}`); there is no disabled placeholder for selling to LaLiga from the market menu |
 
 The player name occupies a single compact grid track beside the photo, wrapping
 long names. Table headers and loading placeholders use the same column layout.

@@ -279,7 +279,10 @@
   background: var(--fb-subtle);
 }
 .team-meter > span { display: block; height: 100%; background: var(--fb-secondary); }
-.team-meter[data-tone="red"] > span { background: var(--fb-failure); }
+/* Starter likelihood uses the Lineup tile scale: low red, mid amber, high green. */
+.team-meter[data-tone="low"] > span { background: var(--fb-failure); }
+.team-meter[data-tone="mid"] > span { background: var(--fb-warning); }
+.team-meter[data-tone="high"] > span { background: var(--fb-success); }
 .team-empty { display: flex; flex-wrap: wrap; align-items: center; gap: 12px; margin: 0; }
 .team-filter button,
 .team-page [role="alert"] button,
@@ -380,16 +383,10 @@
 .team-mvp-form .is-dark { display: none; }
 :root[data-theme="dark"] .team-mvp-form .is-light { display: none; }
 :root[data-theme="dark"] .team-mvp-form .is-dark { display: block; }
-.team-mvp-form[data-form="bad"] { border-left-color: #ff4b44; }
+.team-mvp-form[data-form="bad"] { border-left-color: var(--fb-failure); }
 .team-mvp-form[data-form="mid"] { border-left-color: var(--fb-warning); }
 .team-mvp-form[data-form="good"],
-.team-mvp-form[data-form="very_good"] { border-left-color: #10bd00; }
-.team-mvp-facts dd[data-level="high"] .team-starter-value {
-  justify-self: start;
-  padding: 1px 8px;
-  background: var(--fb-failure);
-  color: var(--fb-ink-on-status);
-}
+.team-mvp-form[data-form="very_good"] { border-left-color: var(--fb-success); }
 .team-mvp-radar { padding-top: 10px; border-top: 1px solid var(--fb-line); }
 .team-mvp-radar .player-radar-chart.is-compact { height: 230px; max-width: none; }
 .team-mvp-note { margin: 8px 0 0; color: var(--fb-muted); font-size: 13px; }
@@ -809,7 +806,6 @@
   font: 400 20px/1 Anton, "Arial Narrow", sans-serif;
   font-variant-numeric: tabular-nums;
 }
-.team-xi-probability[data-level="high"] > span:not(.visually-hidden):not(.team-meter) { color: var(--fb-failure); }
 .team-xi-player .team-mvp-recent { grid-area: recent; text-align: left; }
 .team-xi-player .team-mvp-recent ol { justify-content: flex-start; }
 .team-mvp-recent.is-compact li { min-width: 24px; height: 24px; font-size: 12px; }
@@ -843,7 +839,6 @@
 .team-detail-facts .is-lead { grid-column: 1 / -1; }
 .team-detail-figure--fsyp { display: inline-flex; align-items: center; justify-content: center; min-width: 4rem; justify-self: start; padding: 4px 12px; text-align: center; border: 2px solid var(--fb-secondary); }
 .team-detail-figure { color: var(--fb-tertiary); font: 400 32px/1 Anton, "Arial Narrow", sans-serif; font-variant-numeric: tabular-nums; }
-.team-detail-facts [data-level="high"] .team-detail-figure { color: var(--fb-failure); }
 .team-detail .team-mvp-recent { text-align: left; }
 .team-detail .team-mvp-recent ol { justify-content: flex-start; }
 .team-detail-actions { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 12px; padding-top: 12px; border-top: 1px solid var(--fb-line); }

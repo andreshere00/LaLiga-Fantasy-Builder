@@ -5,6 +5,7 @@ import { Dialog } from "../../components/ui/Dialog";
 import { clearPlayersColumnFilter } from "./playersColumnFilters";
 import { PlayersColumnFilterFields } from "./PlayersColumnFilterFields";
 import { playersColumnBaseLabel, type PlayersColumnHeading, type PlayersColumnKey } from "./playersColumnHeadings";
+import { filterLabel } from "../market/marketColumnHeadings";
 import type { PlayersFilters } from "./playersSearchParams";
 
 const COLUMNS: PlayersColumnKey[] = ["team", "position", "fsyp", "form", "marketValue", "availability", "owner"];
@@ -23,7 +24,7 @@ export function PlayersListHead({ headings, filters, owners, teams, names = [], 
     <li className="market-row market-head market-head-row players-head-row">
       <span className="market-head-cell players-player-heading">
         <button type="button" className={"market-head-filter" + (headings.name.filtered ? " is-active" : "")}
-          aria-label={t("Filter Player")} aria-haspopup="dialog"
+          aria-label={filterLabel(t("Filter Player"), headings.name.filtered)} aria-haspopup="dialog"
           aria-expanded={editor?.column === "name"}
           onClick={() => setEditor({ column: "name", draft: filters })}>
           <span className="market-head-label">{t("Player")}</span>
@@ -35,7 +36,7 @@ export function PlayersListHead({ headings, filters, owners, teams, names = [], 
       {COLUMNS.map((column) => (
         <span key={column} className={"market-head-cell market-head-cell-" + column}>
           <button type="button" className={"market-head-filter" + (headings[column].filtered ? " is-active" : "")}
-            aria-label={t("Filter {{0}}", { 0: playersColumnBaseLabel(column) })} aria-haspopup="dialog"
+            aria-label={filterLabel(t("Filter {{0}}", { 0: playersColumnBaseLabel(column) }), headings[column].filtered)} aria-haspopup="dialog"
             aria-expanded={editor?.column === column}
             onClick={() => setEditor({ column, draft: filters })}>
             <span className="market-head-label">{headings[column].label}</span>

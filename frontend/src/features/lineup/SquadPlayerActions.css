@@ -64,7 +64,7 @@
 }
 
 .squad-player-hit:focus-visible {
-  outline: 2px solid var(--cyan);
+  outline: 2px solid var(--fb-focus);
   outline-offset: 2px;
 }
 

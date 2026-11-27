@@ -26,4 +26,13 @@ describe("Market filter editing", () => {
     fireEvent.click(screen.getByRole("button", { name: "Apply filters" }));
     expect(apply).toHaveBeenCalledWith({ ...filters, player: "Pedri" });
   });
+
+  it("MarketListHead_active_filter_names_its_state_for_screen_readers", () => {
+    const filters = { ...createEmptyMarketFilters(), player: "Pedri" };
+    render(<ul><MarketListHead filters={filters} headings={marketColumnHeadings(filters)}
+      sellers={[]} onFiltersChange={vi.fn()} /></ul>);
+    const trigger = screen.getByRole("button", { name: "Filter Player · filtered" });
+    expect(trigger.classList.contains("is-active")).toBe(true);
+    expect(screen.getByRole("button", { name: "Filter Position" }).classList.contains("is-active")).toBe(false);
+  });
 });

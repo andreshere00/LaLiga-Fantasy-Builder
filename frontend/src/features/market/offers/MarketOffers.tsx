@@ -274,7 +274,7 @@ function OffersPanel({ cards, squadAvailable, showTrigger, leagueKey, teamId }: 
                   setConfirmAction("reject");
                   setConfirmation(offer);
                 }} aria-label={t("Reject offer for {{0}} from {{1}}", { 0: offer.player.name, 1: offer.sender })}>{t("Reject")}</Button>
-              <Button shape="square" disabled={response.isPending || confirmation != null || !!offer.unavailableReason}
+              <Button variant="secondary" shape="square" disabled={response.isPending || confirmation != null || !!offer.unavailableReason}
                 onClick={(event) => {
                   acceptanceTrigger.current = event.currentTarget;
                   setError(null);
