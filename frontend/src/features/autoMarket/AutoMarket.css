@@ -65,3 +65,4 @@
 }
 .auto-bulk-players li:last-child { border-bottom: 0; }
 .auto-bulk-players li span:last-child { color: var(--fb-muted); white-space: nowrap; }
+.auto-rule-actions > .fb-helper { flex-basis:100%; margin:0; }

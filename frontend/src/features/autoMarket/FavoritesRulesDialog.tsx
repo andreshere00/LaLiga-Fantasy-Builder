@@ -94,6 +94,8 @@ export function FavoritesRulesDialog({ open, side, players, pending, error, onCl
             );
           })}
         </div>
+        {count === 0 && !amountError
+          ? <FieldDescription>{t("Select at least one player with a market value to arm rules.")}</FieldDescription> : null}
       </Field>
       <p className="auto-rule-consent">
         {t("Each rule acts once, on its own, even when this app is closed. You can edit or cancel any of them, one by one, until it acts.")}

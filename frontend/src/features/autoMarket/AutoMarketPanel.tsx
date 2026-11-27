@@ -81,6 +81,8 @@ function RuleItem({ rule, busy, confirmingId, onEdit, onRequestCancel, onKeep, o
             aria-label={t("Edit rule for {{0}}", { 0: rule.playerName })} onClick={() => onEdit(rule)}>{t("Edit")}</Button>
           <Button variant="ghost" shape="square" disabled={busy || rule.state === "executing" || confirmingId != null}
             aria-label={t("Cancel rule for {{0}}", { 0: rule.playerName })} onClick={() => onRequestCancel(rule)}>{t("Cancel rule")}</Button>
+          {rule.state === "listed" ? <p className="fb-helper">{t("The player is already listed, so the rule can no longer be edited.")}</p> : null}
+          {rule.state === "executing" ? <p className="fb-helper">{t("The rule is acting now and cannot be changed.")}</p> : null}
         </div>
       ) : null}
     </li>
@@ -197,6 +199,8 @@ function AutoMarketSheet({ auto, squad, open: controlled, onOpenChange, showTrig
               onClick={() => { setOpen(false); auto.clearBulkMessage(); setBulkOpen(true); }}>{t("List all my players…")}</Button>
           </div>
           {chosen ? null : <FieldDescription>{t("Choose a player to set up an auto-sell for them.")}</FieldDescription>}
+          {unlisted.length === 0 && sellable.length > 0
+            ? <FieldDescription>{t("All your players are already on the market.")}</FieldDescription> : null}
         </Field>
         <FavoritesField side="sell" players={favorites.sells} hasFavorites={favorites.hasFavorites}
           onLaunch={() => { setOpen(false); auto.clearBulkMessage(); setFavoritesSide("sell"); }} />

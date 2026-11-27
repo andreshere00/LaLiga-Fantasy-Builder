@@ -8,6 +8,8 @@ entry, not a claim that every optional provider or deployment gate is complete.
 
 ### Frontend
 
+- Auto market explains its unavailable actions: why a listed or running rule cannot be
+  edited, why **List all my players…** is off, and why favourite rules cannot be armed.
 - A disabled lineup **Save** explains how many positions are still empty instead of
   giving no reason.
 - A page that fails to render no longer takes the header and navigation with it; the error
