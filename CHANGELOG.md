@@ -8,6 +8,8 @@ entry, not a claim that every optional provider or deployment gate is complete.
 
 ### Frontend
 
+- Starter likelihood on Teams uses the same colours as the Lineup tile (green when likely,
+  red when unlikely); it was red for likely starters.
 - Cancelling a bid now asks for confirmation (**Cancel bid** / **Keep bid**) from every row menu
   and from My bids, and the success toast says "Bid cancelled" instead of "Bid updated".
 - Bid dialogs show your balance and the listing's time left; the release-clause dialog shows

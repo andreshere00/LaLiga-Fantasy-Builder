@@ -378,7 +378,7 @@ the Fantasy points each stat earned) and the percentile radar. Starting a bid or
 the dialog first. Alternatives sit in a narrower column as one collapsible group per line (goalkeeper to
 attack), each header showing the translated line, a count and, when collapsed, the two
 likeliest names; the line holding the likeliest alternative starts open and Expand all
-opens the rest. Rows show form, FSYP, last five points, a probability bar (red from 90%)
+opens the rest. Rows show form, FSYP, last five points, a probability bar coloured like the Lineup tile (red below 50%, amber below 75%, green from 75%)
 and a quiet bookmark toggle. Every resolved name links to the player page and Back returns to this club. Published names
 ("I. Williams") are matched first inside the club squad (initial plus surname), then in the
 catalog; an unmatched name stays plain text marked "Details unavailable". Form loads for the XI and for open alternative lines; last-five points follow the same ids. Market actions use the

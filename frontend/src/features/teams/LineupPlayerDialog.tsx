@@ -11,7 +11,7 @@ import { RecentPoints } from "./RecentPoints";
 import { TeamMeter } from "./TeamMeter";
 import { fieldPlayerPath } from "./teamLineup";
 import type { Entry, Outlook, RecentMap } from "./lineupTypes";
-import { isStarterFlagged } from "./TeamPlayersSection";
+import { starterProbabilityTone } from "../players/starterProbability";
 
 /** Everything known about one published starter: facts first, then the actions. */
 export function LineupPlayerDialog({
@@ -46,7 +46,7 @@ export function LineupPlayerDialog({
   useTranslation();
   const playerId = player?.playerId ?? null;
   const likelihood = player?.probability ?? outlook?.startProbability?.percent ?? null;
-  const flagged = isStarterFlagged(likelihood);
+  const starterTone = starterProbabilityTone(likelihood);
   /** A market dialog replaces this one instead of stacking over it. */
   const handoff = {
     ...actions,
@@ -70,11 +70,11 @@ export function LineupPlayerDialog({
               ? <img src={player.photoUrl} alt="" />
               : <span className="team-xi-photo" aria-hidden="true" />}
             <dl className="team-detail-facts">
-              <div className="is-lead" data-level={flagged ? "high" : undefined}>
+              <div className="is-lead" data-tone={starterTone ?? undefined}>
                 <dt>{t("Probability")}</dt>
                 <dd>
                   <span className="team-detail-figure">{likelihood == null ? "—" : `${likelihood}%`}</span>
-                  <TeamMeter percent={likelihood} tone={flagged ? "red" : undefined} />
+                  <TeamMeter percent={likelihood} tone={starterTone} />
                 </dd>
               </div>
               <div>

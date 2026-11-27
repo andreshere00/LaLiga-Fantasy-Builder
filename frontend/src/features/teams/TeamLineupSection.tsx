@@ -30,7 +30,7 @@ import { RecentPoints } from "./RecentPoints";
 import { TeamMeter } from "./TeamMeter";
 import { TeamSummary } from "./TeamSummary";
 import { alternativeLines, pitchLineLabel, pitchLines, type PitchLine } from "./teamPitch";
-import { isStarterFlagged } from "./TeamPlayersSection";
+import { starterProbabilityTone } from "../players/starterProbability";
 import { useRecentPoints } from "./useRecentPoints";
 import type { Entry, Outlook, RecentMap } from "./lineupTypes";
 
@@ -275,7 +275,7 @@ function AlternativeRow({
 }) {
   const playerId = player.playerId;
   const likelihood = player.probability ?? outlook?.startProbability?.percent ?? null;
-  const flagged = isStarterFlagged(likelihood);
+  const starterTone = starterProbabilityTone(likelihood);
   const roleLabel = outlook?.hierarchy?.label;
   const role = roleLabel ? hierarchyPresentation(roleLabel) : null;
   return (
@@ -306,10 +306,10 @@ function AlternativeRow({
           {!playerId && !catalogLoading ? <span className="team-xi-status">{t("Details unavailable")}</span> : null}
         </p>
       </div>
-      <span className="team-xi-probability" data-level={flagged ? "high" : undefined}>
+      <span className="team-xi-probability" data-tone={starterTone ?? undefined}>
         <span className="visually-hidden">{t("Probability")} </span>
         <span>{likelihood == null ? "—" : `${likelihood}%`}</span>
-        <TeamMeter percent={likelihood} tone={flagged ? "red" : undefined} />
+        <TeamMeter percent={likelihood} tone={starterTone} />
       </span>
       {playerId ? <RecentPoints compact entries={recent.get(playerId) ?? []} /> : null}
       {playerId ? (

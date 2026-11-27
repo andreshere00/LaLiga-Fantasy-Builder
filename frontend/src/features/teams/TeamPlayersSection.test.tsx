@@ -140,15 +140,14 @@ describe("TeamPlayersSection", () => {
     expect(photo?.getAttribute("src")).toBe("https://example.test/ana.png");
   });
 
-  it.each([[89, undefined], [90, "high"], [95, "high"]])(
-    "TeamPlayersSection_starter_at_%s_percent_has_level_%s",
-    (percent, level) => {
+  it.each([[40, "low"], [60, "mid"], [90, "high"]])(
+    "TeamPlayersSection_starter_at_%s_percent_uses_the_lineup_tone_%s",
+    (percent, tone) => {
       outlookState.value = { form: { rating: "good" }, startProbability: { percent } };
       renderSection();
       const value = document.querySelector(".team-mvp-facts > div:nth-child(2) dd");
-      expect(value?.getAttribute("data-level") ?? undefined).toBe(level);
-      expect(document.querySelector(".team-mvp-card .team-meter")?.getAttribute("data-tone") ?? undefined)
-        .toBe(level ? "red" : undefined);
+      expect(value?.getAttribute("data-tone")).toBe(tone);
+      expect(document.querySelector(".team-mvp-card .team-meter")?.getAttribute("data-tone")).toBe(tone);
     },
   );
 
