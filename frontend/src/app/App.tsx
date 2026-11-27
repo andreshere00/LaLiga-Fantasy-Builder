@@ -42,7 +42,13 @@ export function routeSectionKey(pathname: string): string {
 
 function AppMain({ children }: { children: ReactNode }) {
   const { pathname } = useLocation();
-  return <main className="app-main route-enter" key={routeSectionKey(pathname)}>{children}</main>;
+  // The inner boundary keeps the header and navigation usable after a page fails, and
+  // keying it by path clears the error as soon as the user navigates elsewhere.
+  return (
+    <main className="app-main route-enter" key={routeSectionKey(pathname)}>
+      <AppErrorBoundary key={pathname}>{children}</AppErrorBoundary>
+    </main>
+  );
 }
 
 function LineupRoute() {

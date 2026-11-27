@@ -8,6 +8,8 @@ entry, not a claim that every optional provider or deployment gate is complete.
 
 ### Frontend
 
+- A page that fails to render no longer takes the header and navigation with it; the error
+  stays inside the page area and clears when you open another section.
 - When the LaLiga connection check fails, the gate offers **Log out** next to **Retry**, as
   its message already promised.
 - Toasts show a ✓ or ! icon and error toasts are announced as errors; lost matches on the

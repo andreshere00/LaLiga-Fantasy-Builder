@@ -26,7 +26,7 @@ export class AppErrorBoundary extends Component<Props, State> {
       return (
         <section className="gate">
           <h1>{t("Something went wrong")}</h1>
-          <p>{t("This page could not be displayed.")}</p>
+          <p>{t("This page could not be displayed. Reload it or open another section from the menu.")}</p>
           <Button type="button" onClick={() => window.location.reload()}>
             {t("Reload")}</Button>
         </section>
