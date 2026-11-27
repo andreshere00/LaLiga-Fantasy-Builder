@@ -382,7 +382,7 @@ function PlayersListContent() {
         />
       </div>
       <div className="market-results-summary">
-        <p role="status">{visibleRows.length} {t(" of ")}{filtered.length} {t(" players")}{leaderboard ? t(" · Top by points") : ""}{filterCount > 0 ? t(" · Filters active") : ""}</p>
+        <p role="status">{t("{{0}} of {{1}} players", { 0: visibleRows.length, 1: filtered.length })}{leaderboard ? t(" · Top by points") : ""}{filterCount > 0 ? t(" · Filters active") : ""}</p>
         <span>{t("Form: oldest → latest")}</span>
       </div>
       {board.isDegraded ? (

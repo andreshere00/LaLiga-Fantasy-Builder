@@ -10,7 +10,7 @@ const number = numberFormatter({ minimumFractionDigits: 1, maximumFractionDigits
 const date = dateFormatter({ day: "numeric", month: "short", year: "numeric", timeZone: "UTC" });
 const readableDate = (value: string) => date.format(new Date(value));
 
-const percentile = (value: number | null) => value === null ? "Not published" : `P${number.format(value)}`;
+const percentile = (value: number | null) => value === null ? t("Not published") : `P${number.format(value)}`;
 
 /** Unknown populations are never compatible, even when both keys are null. */
 export function canCompareRadars(a: PlayerRadarDto, b: PlayerRadarDto): boolean {

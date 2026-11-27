@@ -2,6 +2,7 @@ import { ScrapedText } from "../translation/ScrapedText";
 import { playersFilterPath } from "./playersSearchParams";
 import { ClubLink } from "../../components/links/EntityLinks";
 import { t, useTranslation } from "../../i18n";
+import { dateFormatter } from "../../i18n/format";
 import { PulseRing } from "../../components/ui/PulseRing";
 import { Button, buttonVariants } from "../../components/ui/Button";
 import { lazy, Suspense, useEffect, useMemo, useRef, useState } from "react";
@@ -83,6 +84,12 @@ const DateRangeDialog = lazy(() => import("./DateRangeDialog").then((module) => 
 
 const FIXTURE_LAST_STEPS = [5, 10, 20, 40, 60] as const;
 const MARKET_PRESETS = ["season", "30d", "14d", "10d", "5d"] as const;
+const dayFormat = dateFormatter({ day: "numeric", month: "short", year: "numeric", timeZone: "UTC" });
+/** Calendar day in the reader's locale; an unparsable value is shown as received. */
+const readableDay = (value: string) => {
+  const parsed = Date.parse(value);
+  return Number.isFinite(parsed) ? dayFormat.format(parsed) : value;
+};
 const SEGMENT_LABELS: Record<string, string> = {
   fixtures: "Fixture statistics", market: "Market value", recent: "Recent matches",
   upcoming: "Upcoming matches", profile: "Fantasy outlook, news and injuries",
@@ -550,7 +557,7 @@ function PlayerDetailBody({ masterId }: PlayerDetailBodyProps) {
           <>
             <p className="player-detail-context player-detail-market-period">
               {t("Shown period: ")}{marketFrom && marketTo ? <>
-                <time dateTime={marketFrom}>{marketFrom}</time> – <time dateTime={marketTo}>{marketTo}</time>
+                <time dateTime={marketFrom}>{readableDay(marketFrom)}</time> – <time dateTime={marketTo}>{readableDay(marketTo)}</time>
               </> : t("Unavailable")}
             </p>
             <dl className="player-detail-deltas">
@@ -645,7 +652,7 @@ function PlayerDetailBody({ masterId }: PlayerDetailBodyProps) {
                   <caption className="visually-hidden">{t("Market values for the shown period")}</caption>
                   <thead><tr><th scope="col">{t("Date")}</th><th scope="col">{t("Market value")}</th></tr></thead>
                   <tbody>{marketSeries.map((point, index) => <tr key={`${point.date}-${index}`}>
-                    <th scope="row"><time dateTime={point.date}>{point.date}</time></th>
+                    <th scope="row"><time dateTime={point.date}>{readableDay(point.date)}</time></th>
                     <td>{formatEuro(point.value)}</td>
                   </tr>)}</tbody>
                 </table>

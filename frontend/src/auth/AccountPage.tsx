@@ -96,7 +96,7 @@ export function AccountPage() {
           checked(await authClient.updateUser({ username: parsed.data })); await auth.reload(); setActive(null); setFeedback({ text: "Username updated.", error: false });
         }); }}><div className="auth-field"><label htmlFor="new-username">{t("New username")}</label><input id="new-username" name="username" required minLength={3} maxLength={30} pattern="[A-Za-z0-9_]{3,30}" autoComplete="username" defaultValue={auth.user.username ?? ""} /><p className="auth-field-hint">{t("3–30 letters, digits or underscores.")}</p></div><Button type="submit" loading={busy}>{t("Save username")}</Button></form>}
       </div>
-      <div className="auth-setting">{panel("email", "Change email", t("Current: {{0}}", { 0: auth.user.email ?? "No email" }))}
+      <div className="auth-setting">{panel("email", "Change email", t("Current: {{0}}", { 0: auth.user.email ?? t("No email") }))}
         {active === "email" && <div id="setting-email" className="auth-setting-form">
           {!pendingEmail ? <form className="auth-form" onSubmit={(event: FormEvent<HTMLFormElement>) => { event.preventDefault(); const newEmail = String(new FormData(event.currentTarget).get("email") ?? "").trim().toLowerCase(); void run(async () => {
             if (!z.email().safeParse(newEmail).success) throw new Error("Enter a valid email address.");

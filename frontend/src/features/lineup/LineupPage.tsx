@@ -613,7 +613,7 @@ function LineupPageContent() {
             ) : null}
             {filterCount > 0 ? (
               <p className="squad-filter-status" role="status">
-                {t("Showing ")}{visibleSquad.length} {t(" of ")}{squadSource.length} {t(" players")}</p>
+                {t("Showing {{0}} of {{1}} players", { 0: visibleSquad.length, 1: squadSource.length })}</p>
             ) : null}
             {board.squadLoading ? <p className="status-copy">{t("Loading squad…")}</p> : null}
             {board.squadMessage ? (

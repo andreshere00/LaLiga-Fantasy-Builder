@@ -54,7 +54,7 @@ for (const { theme, width } of [{ theme: "light", width: 1440 }, { theme: "dark"
     expect(headingTop).toBeGreaterThanOrEqual(Math.max(headerBottom, shortcutsBottom));
     await page.keyboard.press("Tab");
     await expect(page.getByRole("button", { name: "Season", exact: true })).toBeFocused();
-    await expect(page.locator(".player-detail-market-period")).toHaveText("Shown period: 2026-10-01 – 2026-10-12");
+    await expect(page.locator(".player-detail-market-period")).toHaveText("Shown period: 1 Oct 2026 – 12 Oct 2026");
     const dailyValues = page.locator(".player-market-history summary");
     await dailyValues.focus();
     await page.keyboard.press("Enter");
@@ -183,19 +183,19 @@ test("failed period updates retain the previous result with truthful scope and r
   });
   await page.goto("/players/1");
   const period = page.locator(".player-detail-market-period");
-  await expect(period).toContainText("2026-10-01");
+  await expect(period).toContainText("1 Oct 2026");
   const preset = page.getByRole("button", { name: "5d", exact: true });
   await preset.click();
   await expect(page.getByText("Updating market history… Previous period shown below.", { exact: true })).toBeVisible();
   await expect(preset).toBeFocused();
-  await expect(period).toContainText("2026-10-01");
+  await expect(period).toContainText("1 Oct 2026");
   release();
   await expect(page.getByRole("alert")).toHaveText("Player data could not be updated. Previous results are still shown.");
-  await expect(period).toContainText("2026-10-01");
+  await expect(period).toContainText("1 Oct 2026");
   await expect(page.getByRole("radiogroup", { name: "Fixture performance" }).getByRole("radio")).toHaveCount(3);
   fail = false;
   await page.getByRole("button", { name: "Retry market history", exact: true }).click();
-  await expect(period).toContainText("2026-10-08");
+  await expect(period).toContainText("8 Oct 2026");
   await expect(page.getByRole("alert")).toHaveCount(0);
 });
 

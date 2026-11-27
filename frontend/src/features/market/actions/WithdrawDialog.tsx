@@ -29,7 +29,7 @@ export function WithdrawDialog({
     <Dialog
       open={open}
       title={t("Withdraw from market")}
-      description={<>{t("Withdraw ")}<strong>{row.name}</strong> {t(" from the market? The player will stay in your squad and all the offers will be cancelled.")}</>}
+      description={t("Withdraw {{0}} from the market? The player will stay in your squad and all the offers will be cancelled.", { 0: row.name })}
       initialFocus={cancelRef}
       busy={pending}
       onClose={onClose}

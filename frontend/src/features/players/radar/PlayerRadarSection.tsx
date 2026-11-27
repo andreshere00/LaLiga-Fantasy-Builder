@@ -18,9 +18,17 @@ const reasons: Record<RadarCoverageDto["reasonCode"], string> = {
   insufficient_minutes: "The verified league minutes are below the minimum required for this season’s radar.",
   incomplete_metrics: "Some of the seven metrics have not been published.",
   out_of_scope: "This player is outside the season and competition covered by the current radar dataset.",
-  season_unavailable: "No performance data is available for the 2026/27 season.",
+  season_unavailable: "No performance data is available for the {{0}} season.",
   expired: "The saved performance data is too old to show. A new validated dataset is needed.",
 };
+/** ``2026-27`` as ``2026/27``; the current season when the response does not name one. */
+function seasonLabel(season: string | undefined): string {
+  if (season) return season.replace("-", "/");
+  const now = new Date();
+  const start = now.getMonth() >= 6 ? now.getFullYear() : now.getFullYear() - 1;
+  return `${start}/${String((start + 1) % 100).padStart(2, "0")}`;
+}
+
 /** Keep identity and account changes as deliberate selection boundaries. */
 export function PlayerRadarSection({ playerId, embedded = false }: { playerId: string; embedded?: boolean }) {
   const { user } = useAuth();
@@ -47,7 +55,7 @@ function RadarContent({ playerId, embedded }: { playerId: string; embedded: bool
     {query.isFetching && !query.isPending ? <p role="status">{t("Updating saved radar…")}</p> : null}
     {query.isError ? <div className="player-radar-notice"><p role="alert">{t("Performance data could not be loaded. Other player statistics remain available.")}</p>
       <Button variant="outline" loading={query.isFetching} onClick={refresh}>{t("Retry performance data")}</Button></div> : null}
-    {query.data?.status === "unavailable" || reason && reason !== "ready" ? <p>{reason ? t(reasons[reason]) : t(reasons.not_published)}</p> : null}
+    {query.data?.status === "unavailable" || reason && reason !== "ready" ? <p>{reason ? t(reasons[reason], { 0: seasonLabel(query.data?.coverage?.season) }) : t(reasons.not_published)}</p> : null}
     {query.data?.coverage && Object.keys(query.data.coverage.profileErrors).length ? <p className="player-radar-notice">{t("Some role profiles could not be updated. Available profiles remain shown.")}</p> : null}
     {profile && selected && selected.profile !== profile ? <p role="status">{t("The selected role is no longer published. Showing ")}{radarProfile(selected)}.</p> : null}
     {displayed ? <>

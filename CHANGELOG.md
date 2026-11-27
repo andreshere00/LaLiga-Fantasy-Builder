@@ -26,6 +26,10 @@ entry, not a claim that every optional provider or deployment gate is complete.
 - Spanish: the balance help, release-clause placeholders, form ratings and the Players "Free
   Agent" owner (display, filter and search) are now translated; the minimum bid hint says
   "importe" instead of "saldo", and balance copy uses "pujas" for bids.
+- Spanish: sale, withdrawal, offer and result-count sentences are translated as whole
+  sentences (fixing word order such as "Vender … para …"); player market dates use the
+  reader's locale instead of ISO dates; the match countdown, radar season, "Not published",
+  "News article" and "No email" are translated.
 - Sign-in, registration and account pages no longer show library or upstream error text; they
   show translated, actionable messages instead.
 

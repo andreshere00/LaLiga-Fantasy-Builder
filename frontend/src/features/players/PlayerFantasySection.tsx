@@ -235,7 +235,7 @@ function PlayerNewsList({ profile }: FantasySectionProps) {
           <ul className="player-news-list">
             {visibleNews.map((item, index) => {
               const row = asRecord(item);
-              const title = text(row?.title) ?? "News article";
+              const title = text(row?.title) ?? t("News article");
               const href = newsItemHref(row);
               const published = text(row?.publishedAt);
               const source = text(row?.source);

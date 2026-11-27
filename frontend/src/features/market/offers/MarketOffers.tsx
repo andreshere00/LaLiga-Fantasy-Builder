@@ -253,7 +253,7 @@ function OffersPanel({ cards, squadAvailable, showTrigger, leagueKey, teamId }: 
             {confirmation?.key === offer.key ? <div className="market-offer-confirmation" role="group"
               aria-label={confirmAction === "accept" ? t("Confirm acceptance") : t("Confirm rejection")}>
               {confirmAction === "accept"
-                ? <p>{t("Sell ")}<strong>{offer.player.name}</strong> {t(" to ")}{offer.sender} {t(" for ")}<strong>{formatEuro(confirmation.money)}</strong>?</p>
+                ? <p>{t("Sell {{0}} to {{1}} for {{2}}?", { 0: offer.player.name, 1: offer.sender, 2: formatEuro(confirmation.money) })}</p>
                 : <p>{t("Reject the {{0}} offer from {{1}} for {{2}}? It will disappear from your offers.",
                   { 0: formatEuro(confirmation.money), 1: offer.sender, 2: offer.player.name })}</p>}
               {!freshConfirmation ? <p role="alert">{t("The offer changed. Cancel and review it again.")}</p> : null}

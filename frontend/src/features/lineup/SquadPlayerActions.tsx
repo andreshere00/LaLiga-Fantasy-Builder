@@ -343,7 +343,7 @@ export function SquadPlayerActions({
         {view === "cancel" ? (
           <>
             <p className="squad-sale-copy">
-              {t("Cancel the sale of ")}<strong>{player.name}</strong>{t("? The player stays in your squad and offers on this listing are dropped.")}</p>
+              {t("Cancel the sale of {{0}}? The player stays in your squad and offers on this listing are dropped.", { 0: player.name })}</p>
             {cancelError ? (
               <p className="squad-sale-error" role="alert">
                 {t(cancelError)}
@@ -354,9 +354,11 @@ export function SquadPlayerActions({
         {(view === "list" || view === "modify") && minimum != null ? (
           <>
             <p className="squad-sale-copy">
-              {view === "modify" ? t("Change") : t("List")} <strong>{player.name}</strong> {t(" for a whole-euro offer of at least ")}{formatEuro(minimum)}{t(", and no more than")}{" "}
-              {formatEuro(MAX_LISTING_PRICE)}.
-              {view === "modify" ? t(" The current listing and its offers are replaced by this amount.") : null}
+              {view === "modify"
+                ? t("Change the listing of {{0}} to a whole-euro price of at least {{1}} and no more than {{2}}. The current listing and its offers are replaced by this amount.",
+                  { 0: player.name, 1: formatEuro(minimum), 2: formatEuro(MAX_LISTING_PRICE) })
+                : t("List {{0}} for a whole-euro price of at least {{1}} and no more than {{2}}.",
+                  { 0: player.name, 1: formatEuro(minimum), 2: formatEuro(MAX_LISTING_PRICE) })}
             </p>
             <label className="squad-sale-label" htmlFor={inputId}>
               {t("Offer")}</label>
@@ -390,8 +392,8 @@ export function SquadPlayerActions({
         {view === "immediate" && half != null ? (
           <>
             <p className="squad-sale-copy">
-              {t("Sell ")}<strong>{player.name}</strong> {t(" now for ")}{formatEuro(half)}{t(", half of")}{" "}
-              {formatEuro(minimum)}{t(". The money is added to your balance and the player leaves your squad.")}</p>
+              {t("Sell {{0}} now for {{1}}, half of {{2}}. The money is added to your balance and the player leaves your squad.",
+                { 0: player.name, 1: formatEuro(half), 2: formatEuro(minimum) })}</p>
             {immediateError ? (
               <p className="squad-sale-error" role="alert">
                 {t(immediateError)}

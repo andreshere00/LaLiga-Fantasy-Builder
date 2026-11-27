@@ -1,4 +1,4 @@
-import { numberFormatter } from "../../i18n/format";
+import { durationLabel, numberFormatter } from "../../i18n/format";
 import { ClubLink } from "../../components/links/EntityLinks";
 import { t, useTranslation } from "../../i18n";
 import { BadgeImage } from "../../components/BadgeImage";
@@ -88,22 +88,12 @@ function MatchTimer({ kickoff }: { kickoff: string | null }) {
   const now = useNow();
   const kickoffMs = kickoff ? Date.parse(kickoff) : NaN;
   const remaining = kickoffMs - now;
-  let countdown = "Kickoff time not confirmed";
+  let countdown = t("Kickoff time not confirmed");
   if (kickoff && /T\d{2}:\d{2}/.test(kickoff) && Number.isFinite(kickoffMs)) {
     if (remaining <= 0) {
-      countdown = "Kickoff has passed";
+      countdown = t("Kickoff has passed");
     } else {
-      const minutes = Math.floor(remaining / 60_000);
-      const days = Math.floor(minutes / 1_440);
-      const hours = Math.floor((minutes % 1_440) / 60);
-      const restMinutes = minutes % 60;
-      countdown = [
-        days ? `${days}d` : null,
-        hours || days ? `${hours}h` : null,
-        `${restMinutes}m`,
-      ]
-        .filter(Boolean)
-        .join(" ");
+      countdown = durationLabel(Math.floor(remaining / 60_000), true);
     }
   }
 

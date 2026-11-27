@@ -101,7 +101,9 @@ function MarketListContent() {
           squadAvailable={board.ownSquadAvailable} /></>}
       />
       {!board.isLoading && !board.hasError && board.rows.length > 0 ? <div className="market-results-summary">
-        <p role="status">{visibleRows.length} {t(" of ")}{board.rows.length} {t(" players")}{filterCount > 0 ? t(" · Filters active") : t(" available")}</p>
+        <p role="status">{filterCount > 0
+          ? t("{{0}} of {{1}} players · Filters active", { 0: visibleRows.length, 1: board.rows.length })
+          : t("{{0}} of {{1}} players available", { 0: visibleRows.length, 1: board.rows.length })}</p>
         <span>{t("Form: oldest → latest")}</span>
       </div> : null}
       {board.isDegraded ? (

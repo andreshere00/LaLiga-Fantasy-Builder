@@ -36,7 +36,9 @@ components to language changes and returns `t`. Composed messages pass numeric
 parameters explicitly, including translated application labels. Club, player and
 manager identities remain verbatim. Shared primitives render their supplied
 children and labels; each producer owns its application copy. Notifications retain
-message keys and translate while rendering, including screen-reader announcements. Spanish copy uses
+message keys and translate while rendering, including screen-reader announcements. A sentence is
+one key with `{{0}}`-style placeholders, never fragments joined around names or amounts, so each
+language keeps its own word order. Spanish copy uses
 football/Fantasy terms such as plantilla, jornada, puja, titularidad and cláusula
 de rescisión; bids and seller offers remain distinct. OpenWeather forecasts use
 «pronóstico», including upcoming-match headings and unavailable states.
