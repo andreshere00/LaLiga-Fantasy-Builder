@@ -7,13 +7,13 @@ import { afterEach, describe, expect, it, vi } from "vitest";
 import { i18n } from "../../i18n";
 import { GatePanel } from "./GatePanel";
 
-const harness = vi.hoisted(() => ({ connectLaliga: vi.fn() }));
+const harness = vi.hoisted(() => ({ connectLaliga: vi.fn(), reload: vi.fn(), logout: vi.fn() }));
 
 vi.mock("../../auth/AuthProvider", () => ({
-  useAuth: () => ({ login: vi.fn(), reload: vi.fn(), connectLaliga: harness.connectLaliga }),
+  useAuth: () => ({ login: vi.fn(), reload: harness.reload, logout: harness.logout, connectLaliga: harness.connectLaliga }),
 }));
 
-function renderGate(status: "unlinked" | "needs-reauth") {
+function renderGate(status: "unlinked" | "needs-reauth" | "unavailable") {
   render(
     <MemoryRouter initialEntries={["/"]}>
       <Routes>
@@ -46,6 +46,19 @@ describe("GatePanel", () => {
       expect(harness.connectLaliga).not.toHaveBeenCalled();
     },
   );
+
+  it("logOutAction_unavailable_signsOutInsteadOfRetrying", () => {
+    // Arrange
+    renderGate("unavailable");
+
+    // Act
+    fireEvent.click(screen.getByRole("button", { name: "Log out" }));
+
+    // Assert
+    expect(harness.logout).toHaveBeenCalledOnce();
+    expect(harness.reload).not.toHaveBeenCalled();
+    expect(screen.getByRole("button", { name: "Retry" })).toBeTruthy();
+  });
 
   // ---- Edge cases ---- //
 

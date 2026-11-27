@@ -2,3 +2,4 @@
 .gate h1 { margin:0 0 16px; font:400 28px/1.2 Anton,sans-serif; letter-spacing:.03em; text-transform:uppercase; color:var(--fb-tertiary); }
 .gate p { margin:0; line-height:1.5; }
 .gate .fb-button { margin-top:20px; }
+.gate-actions { display:flex; flex-wrap:wrap; gap:12px; }
