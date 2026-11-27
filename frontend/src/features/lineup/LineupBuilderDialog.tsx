@@ -1,6 +1,6 @@
 import { t, useTranslation } from "../../i18n";
 import { useQueries, useQuery } from "@tanstack/react-query";
-import { useMemo, useState } from "react";
+import { useMemo, useRef, useState } from "react";
 
 import { useLineupBuilder } from "./useLineupBuilder";
 import { LINEUP_RECOMMENDATION_LIMIT, LineupBuilderResults } from "./LineupBuilderResults";
@@ -102,6 +102,7 @@ function BuilderDialogSession({
   const { selected } = useLeague();
   const id = selected ? leagueId(selected) : "";
   const token = accessToken ?? "";
+  const keepDraftRef = useRef<HTMLButtonElement>(null);
   const [replacement, setReplacement] = useState<{
     candidate: BuilderCandidate; build: LineupBuildDto;
   } | null>(null);
@@ -460,15 +461,24 @@ function BuilderDialogSession({
         {saleAction && <LineupBuilderSaleActions key={`${saleAction.kind}-${saleAction.playerId}`}
           action={saleAction} squad={ownSquad} onClose={() => setSaleAction(null)}
           onDone={(done) => setConfirmedSales((current) => new Set([...current, `${done.kind}:${done.playerId}`]))} />}
-        {replacement && replacement.build === builder.result && <section aria-label={t("Replace draft confirmation")}>
-          <p>{t("Replace your unsaved lineup draft?")}</p>
-          <Button shape="square" onClick={() => {
-            const { candidate, build } = replacement;
-            if (draftable(candidate, build)) onApply(candidate, build.target.week);
-            setReplacement(null);
-          }}>{t("Replace draft")}</Button>
-          <Button shape="square" variant="secondary" onClick={() => setReplacement(null)}>{t("Keep my draft")}</Button>
-        </section>}
+        {/* A nested dialog moves focus to the confirmation instead of leaving it at the end
+            of a long results list; Keep my draft is the safe initial focus. */}
+        <Dialog open={replacement != null && replacement.build === builder.result}
+          title={t("Replace your unsaved lineup draft?")}
+          initialFocus={() => keepDraftRef.current}
+          onClose={() => setReplacement(null)}
+          footer={<>
+            <Button ref={keepDraftRef} shape="square" variant="outline"
+              onClick={() => setReplacement(null)}>{t("Keep my draft")}</Button>
+            <Button shape="square" onClick={() => {
+              if (!replacement) return;
+              const { candidate, build } = replacement;
+              if (draftable(candidate, build)) onApply(candidate, build.target.week);
+              setReplacement(null);
+            }}>{t("Replace draft")}</Button>
+          </>}>
+          <p>{t("Your unsaved changes to this matchweek will be replaced by the recommended lineup.")}</p>
+        </Dialog>
       </div>
     </Dialog>
   );

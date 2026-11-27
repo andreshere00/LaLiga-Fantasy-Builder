@@ -255,9 +255,11 @@ test("live-round owned candidate opens its target draft and protects unsaved cha
   await page.getByRole("button", { name: "Lineup builder", exact: true }).click();
   await dialog.getByRole("button", { name: "Build", exact: true }).click();
   await dialog.getByRole("button", { name: "Use as draft" }).click();
-  await expect(dialog.getByRole("region", { name: "Replace draft confirmation" })).toBeVisible();
-  await dialog.getByRole("button", { name: "Keep my draft", exact: true }).click();
-  await expect(dialog.getByRole("region", { name: "Replace draft confirmation" })).not.toBeVisible();
+  const replace = page.getByRole("dialog", { name: "Replace your unsaved lineup draft?" });
+  await expect(replace).toBeVisible();
+  await expect(replace.getByRole("button", { name: "Keep my draft", exact: true })).toBeFocused();
+  await replace.getByRole("button", { name: "Keep my draft", exact: true }).click();
+  await expect(replace).not.toBeVisible();
   expect(saves).toBe(0);
 });
 

@@ -8,6 +8,8 @@ entry, not a claim that every optional provider or deployment gate is complete.
 
 ### Frontend
 
+- Using a builder result over an unsaved draft asks in its own dialog, starting on
+  **Keep my draft**, instead of a note at the end of the long results list.
 - Teams sections with no data for a club keep their heading and say no information is
   available yet, instead of leaving a blank gap where section links land.
 - When the market fails to load, a **Retry** button sits next to the error instead of
