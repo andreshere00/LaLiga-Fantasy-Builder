@@ -8,6 +8,20 @@ entry, not a claim that every optional provider or deployment gate is complete.
 
 ### Frontend
 
+- Teams sections with no data for a club keep their heading and say no information is
+  available yet, instead of leaving a blank gap where section links land.
+- When the market fails to load, a **Retry** button sits next to the error instead of
+  pointing to **Refresh bids** inside the bids dialog.
+- Players pagination has previous/next arrows and, like the news and injury histories,
+  first/last page buttons when there are more than three pages.
+- Auto market explains its unavailable actions: why a listed or running rule cannot be
+  edited, why **List all my players…** is off, and why favourite rules cannot be armed.
+- A disabled lineup **Save** explains how many positions are still empty instead of
+  giving no reason.
+- A page that fails to render no longer takes the header and navigation with it; the error
+  stays inside the page area and clears when you open another section.
+- When the LaLiga connection check fails, the gate offers **Log out** next to **Retry**, as
+  its message already promised.
 - Toasts show a ✓ or ! icon and error toasts are announced as errors; lost matches on the
   player page use the failure colour instead of the primary coral.
 - Current page and pressed range buttons share one selection style (dark border and

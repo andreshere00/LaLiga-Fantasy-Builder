@@ -153,6 +153,12 @@ describe("Teams page", () => {
     expect(screen.getAllByRole("button", { name: "Retry" }).length).toBeGreaterThan(0);
   });
 
+  it("TeamsPage_section_without_data_keeps_its_heading_and_says_so", async () => {
+    renderTeams("/teams/4");
+    const lineup = await screen.findByRole("region", { name: "Lineup" });
+    expect(lineup.textContent).toContain("No information is available for this club yet.");
+  });
+
   it("TeamsPage_section_bar_follows_the_section_being_read", async () => {
     renderTeams("/teams/4");
     await screen.findByRole("heading", { name: "FC Barcelona" });

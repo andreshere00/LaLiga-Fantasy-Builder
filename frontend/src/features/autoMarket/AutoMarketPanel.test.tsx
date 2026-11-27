@@ -315,6 +315,18 @@ describe("AutoMarketPanel", () => {
     await openPanel(1);
     expect((screen.getByRole("button", { name: "Edit rule for Pedri" }) as HTMLButtonElement).disabled).toBe(true);
     expect((screen.getByRole("button", { name: "Cancel rule for Pedri" }) as HTMLButtonElement).disabled).toBe(true);
+    expect(screen.getByText("The rule is acting now and cannot be changed.")).toBeTruthy();
+  });
+
+  it("AutoMarketPanel_explains_unavailable_edit_and_list_all_actions", async () => {
+    rules = [rule({ state: "listed" })];
+    mount([squad({ onMarket: true })]);
+    await waitFor(() => expect(screen.getByRole("button", { name: "Auto market, 1 active" })).toBeTruthy());
+    await openPanel(1);
+    expect((screen.getByRole("button", { name: "Edit rule for Pedri" }) as HTMLButtonElement).disabled).toBe(true);
+    expect(screen.getByText("The player is already listed, so the rule can no longer be edited.")).toBeTruthy();
+    expect((screen.getByRole("button", { name: "List all my players…" }) as HTMLButtonElement).disabled).toBe(true);
+    expect(screen.getByText("All your players are already on the market.")).toBeTruthy();
   });
 
   it("ruleErrorMessage_maps_failures_to_specific_actions_without_upstream_text", () => {

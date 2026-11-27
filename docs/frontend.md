@@ -281,7 +281,9 @@ While the club directory or the dossier loads, a `PulseRing` announces "Loading 
 dossier." and each section that has not arrived is a `TeamSectionSkeleton`: the real
 heading and id (so deep links and the section bar still land) over skeleton blocks shaped
 like the finished content, marked `aria-busy`. The club strip shows skeleton tiles until the
-directory arrives. A section left empty after the load stays a plain anchor. Season
+directory arrives. A section with no data after the dossier loads keeps its heading and says
+"No information is available for this club yet."; if the dossier itself fails, sections stay
+plain anchors beside the error. Season
 statistics that are still loading show a small `PulseRing` above the squad table.
 The club strip and the Performance, Players, Lineup, and News & Injuries links (each with a
 decorative icon, in that order and in the same order down the page) stay available from the
@@ -657,6 +659,8 @@ Choosing it on a pitch player opens the squad replacement picker. Choosing it on
 a bench player asks you to select a pitch player in the same position. During
 replacement selection, card clicks choose players directly. Changes remain a
 local draft until you save the lineup; past and opponent lineups cannot be edited.
+While positions are empty, **Save** stays focusable and its tooltip says how many
+positions are left to fill; with no edits it says no changes were detected.
 
 ### Players screen
 
@@ -675,7 +679,8 @@ when available, plus explicit player-name/details links. Favorite selection
 changes only the bookmark icon; its surface stays neutral. Rich rows have thin
 dividers without entrance motion. Filters edit a draft in a desktop side panel
 or mobile bottom panel; Apply writes the existing URL state, while Cancel or
-Escape discards edits. Catalog pagination uses a sliding three-number window.
+Escape discards edits. Catalog pagination uses a sliding three-number window with
+previous/next arrows, plus first/last buttons once there are more than three pages.
 
 Above **1280px**, the catalog shows every comparison column side by side. From
 **1001px to 1280px** (tablet landscape), Team sits under the player name and Owned

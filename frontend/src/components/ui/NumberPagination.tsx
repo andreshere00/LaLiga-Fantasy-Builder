@@ -10,7 +10,7 @@ type NumberPaginationProps = {
   showArrows?: boolean;
 };
 
-/** Sliding numeric window with optional previous and next controls. */
+/** Sliding numeric window with optional first, previous, next and last controls. */
 export function NumberPagination({
   page, totalPages, onPageChange, label, caption, showArrows = false,
 }: NumberPaginationProps) {
@@ -21,8 +21,13 @@ export function NumberPagination({
   const count = Math.min(3, totalPages);
   const start = Math.max(1, Math.min(current - 1, totalPages - count + 1));
   const pages = Array.from({ length: count }, (_, index) => start + index);
+  // First/last only add value once the window can no longer show every page.
+  const showEnds = showArrows && totalPages > count;
   return (
     <nav aria-label={label ?? t("Player result pages")} className="fb-pagination">
+      {showEnds ? <button type="button" className="fb-page-button fb-page-arrow"
+        aria-label={t("First page")} disabled={current === 1}
+        onClick={() => onPageChange(1)}>«</button> : null}
       {showArrows ? <button type="button" className="fb-page-button fb-page-arrow"
         aria-label={t("Previous page")} disabled={current === 1}
         onClick={() => onPageChange(current - 1)}>←</button> : null}
@@ -40,6 +45,9 @@ export function NumberPagination({
       {showArrows ? <button type="button" className="fb-page-button fb-page-arrow"
         aria-label={t("Next page")} disabled={current === totalPages}
         onClick={() => onPageChange(current + 1)}>→</button> : null}
+      {showEnds ? <button type="button" className="fb-page-button fb-page-arrow"
+        aria-label={t("Last page")} disabled={current === totalPages}
+        onClick={() => onPageChange(totalPages)}>»</button> : null}
       <span className="fb-helper" aria-live="polite">
         {(caption ?? (t("Page {{0}} of {{1}}", { 0: current, 1: totalPages })))}
       </span>

@@ -215,3 +215,4 @@
   .market-section-actions > .fb-button { flex:0 0 auto; min-width:0; padding-inline:16px; }
   .market-section-actions > .fb-button > span:last-child { white-space:nowrap; }
 }
+.market-load-error { display:flex; flex-wrap:wrap; align-items:center; gap:12px 16px; }

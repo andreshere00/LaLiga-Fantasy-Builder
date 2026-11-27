@@ -41,7 +41,7 @@ const COPY: Record<Exclude<AuthStatus, "ready">, GateCopy> = {
 
 export function GatePanel({ status }: { status: Exclude<AuthStatus, "ready"> }) {
   useTranslation();
-  const { login, reload } = useAuth();
+  const { login, reload, logout } = useAuth();
   const copy = COPY[status];
 
   return (
@@ -61,8 +61,12 @@ export function GatePanel({ status }: { status: Exclude<AuthStatus, "ready"> }) 
           {t("Connect LaLiga")}</Link>
       ) : null}
       {copy.action === "retry" ? (
-        <Button type="button" onClick={() => void reload()}>
-          {t("Retry")}</Button>
+        <div className="gate-actions">
+          <Button type="button" onClick={() => void reload()}>
+            {t("Retry")}</Button>
+          <Button type="button" variant="outline" onClick={() => void logout()}>
+            {t("Log out")}</Button>
+        </div>
       ) : null}
     </section>
   );

@@ -190,6 +190,21 @@ test("modify waits for catalog metadata while cancellation stays available", asy
   await expect(dialog.getByRole("button", { name: "Update bid", exact: true })).toBeEnabled();
 });
 
+test("inline retry recovers a failed catalog request", async ({ page }) => {
+  await mockMarketBids(page);
+  let failed = true;
+  await page.route("**/api/players", (route) => failed
+    ? route.fulfill({ status: 502, json: { error: "unavailable" } })
+    : route.fulfill({ json: catalog }));
+  await page.goto("/market");
+  const error = page.getByRole("alert").filter({ hasText: "The market could not be loaded." });
+  await expect(error).toBeVisible();
+  failed = false;
+  await error.getByRole("button", { name: "Retry", exact: true }).click();
+  await expect(page.locator(".market-list").getByRole("link", { name: "Player 14", exact: true })).toBeVisible();
+  await expect(error).toHaveCount(0);
+});
+
 test("refresh bids recovers a failed catalog request", async ({ page }) => {
   await mockMarketBids(page);
   let failed = true;
@@ -201,7 +216,7 @@ test("refresh bids recovers a failed catalog request", async ({ page }) => {
       : route.fulfill({ json: catalog });
   });
   await page.goto("/market");
-  const error = page.getByText("The market could not be loaded. Refresh bids to retry.");
+  const error = page.getByText("The market could not be loaded. Check your connection and try again.");
   await expect(error).toBeVisible();
   const failedReads = catalogReads;
   failed = false;
