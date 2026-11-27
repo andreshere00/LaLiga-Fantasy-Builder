@@ -43,7 +43,8 @@
 .market-page:not(.players-page) :is(.market-offers-trigger, .market-bids-trigger) { margin-top:24px; }
 .market-money-summary { width:208px; max-width:100%; font-variant-numeric:tabular-nums; }
 .market-money-heading { display:block; min-height:18px; margin-bottom:6px; font-size:12px; font-weight:700; }
-.market-money-help { display:grid; place-items:center; padding:0; width:18px; height:18px; border:0; background:transparent; color:var(--fb-muted); cursor:help; }
+/* 44px hit area around an 18px glyph; the negative margin keeps the heading compact. */
+.market-money-help { display:grid; place-items:center; padding:0; width:44px; height:44px; margin:-13px -13px -13px 0; border:0; background:transparent; color:var(--fb-muted); cursor:help; }
 .market-money-help svg { width:16px; height:16px; fill:none; stroke:currentColor; stroke-width:1.5; }
 .market-balance-amount { display:flex; align-items:center; gap:10px; width:100%; min-height:44px; padding:0 12px; border:0; background:var(--fb-surface); color:inherit; font:inherit; font-size:16px; cursor:pointer; }
 .market-balance-amount strong { margin-right:auto; white-space:nowrap; }

@@ -27,6 +27,7 @@
 .app-footer-links a {
   display: inline-flex;
   align-items: center;
+  min-height: 44px;
   gap: 8px;
   color: inherit;
   text-decoration: none;

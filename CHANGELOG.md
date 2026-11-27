@@ -8,6 +8,8 @@ entry, not a claim that every optional provider or deployment gate is complete.
 
 ### Frontend
 
+- Small touch targets reach 44px: the balance help button, lineup builder checkbox rows,
+  footer links and the sign-in page's inline links.
 - Help tooltips on information-only triggers (definitions on the player page, team value
   history, the balance help, market cells) open with a tap on touch screens and close with
   another tap or a tap outside; menus wrapped in help no longer add an empty tab stop.
