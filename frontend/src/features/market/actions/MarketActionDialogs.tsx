@@ -56,6 +56,7 @@ export function MarketActionDialogs({
         open={actions.pendingClause != null}
         row={clause?.row ?? null}
         amount={clause?.amount ?? 0}
+        money={money}
         pending={actions.actionPending}
         error={actions.message}
         onClose={actions.closeClause}

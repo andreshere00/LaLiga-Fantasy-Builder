@@ -999,6 +999,20 @@ a.market-actions-item {
   color: #c0392b;
 }
 
+.market-dialog-facts {
+  grid-template-columns: repeat(auto-fit, minmax(104px, 1fr));
+  margin-bottom: 16px;
+}
+
+.market-dialog-facts dd {
+  font-size: 16px;
+  overflow-wrap: anywhere;
+}
+
+.market-dialog-facts > [data-tone="failure"] {
+  border-left: 3px solid var(--fb-failure);
+}
+
 .market-dialog-primary,
 .market-dialog-secondary {
   border: 0;

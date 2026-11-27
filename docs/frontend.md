@@ -143,7 +143,10 @@ Shared shadcn-style field compositions keep the persistent label, constraints,
 control, and correction together. Descriptions and errors are connected to their
 inputs with stable IDs and `aria-describedby`; invalid amounts and date ranges
 also expose `aria-invalid`. Bid limits stay visible next to the amount rather
-than requiring people to remember them from another panel.
+than requiring people to remember them from another panel. Above the amount, bid
+dialogs show your balance and, for market listings, the time left; the release-clause
+dialog shows the clause, your balance and your balance after payment (marked when it
+would drop below zero) and states that the payment can't be undone.
 
 Dialogs can provide a concise accessible description and deliberate initial
 focus. Bid dialogs focus the amount; clause payment and withdrawal start on

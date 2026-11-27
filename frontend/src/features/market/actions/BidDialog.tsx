@@ -8,6 +8,9 @@ import { Field, FieldDescription, FieldError, FieldLabel } from "../../../compon
 import { NumericCounterField } from "../../../components/NumericCounterField";
 import { MARKET_VALUE_FILTER_STEP } from "../marketFilterInputs";
 import type { MarketRow } from "../model/row";
+import { SealEnd } from "../MarketRowView";
+import { useNow } from "../../../hooks/useNow";
+import { MarketDialogFacts, type MarketDialogFact } from "./MarketDialogFacts";
 import { isValidBidAmount, maximumBidAmount, usesDirectOfferBid, type BidActionKind } from "./marketActions";
 
 type BidDialogProps = {
@@ -50,6 +53,7 @@ export function BidDialog({
   useTranslation();
   const inputId = useId();
   const [raw, setRaw] = useState("");
+  const now = useNow();
 
   useEffect(() => {
     if (!open || !row) return;
@@ -82,6 +86,11 @@ export function BidDialog({
     : parsed < bidFloor ? t("Enter at least {{0}}.", { 0: formatEuro(bidFloor) })
     : maximum != null ? t("Enter no more than {{0}}.", { 0: formatEuro(maximum) })
     : t("Your bidding limit is unavailable. Refresh the market before trying again.");
+  const facts: MarketDialogFact[] = [];
+  if (!directOffer && row.expiresAt != null) {
+    facts.push({ label: "Time left", value: <SealEnd expiresAt={row.expiresAt} now={now} /> });
+  }
+  facts.push({ label: "Balance", value: formatEuro(money) });
   const hintId = `${inputId}-hint`;
   const errorId = `${inputId}-error`;
 
@@ -96,8 +105,9 @@ export function BidDialog({
       className="market-bid-dialog"
       open={open}
       title={directOffer ? t("Make offer") : t(TITLES[kind])}
-      description={<>{directOffer ? t("Offer for") : t("Bid for")} <strong>{row.name}</strong>.
-        {(directOffer && t(" The owner must accept your offer before the player joins your squad."))}</>}
+      description={directOffer
+        ? t("Offer for {{0}}. The owner must accept your offer before the player joins your squad.", { 0: row.name })
+        : t("Bid for {{0}}.", { 0: row.name })}
       initialFocus={() => document.getElementById(inputId)}
       busy={pending}
       onClose={() => { if (!pending) onClose(); }}
@@ -121,10 +131,11 @@ export function BidDialog({
         </>
       }
     >
+      <MarketDialogFacts facts={facts} />
       <Field data-invalid={amountError ? "" : undefined}>
         <FieldLabel htmlFor={inputId}>{directOffer ? t("Offer amount (€)") : t("Bid amount (€)")}</FieldLabel>
         <FieldDescription id={hintId}>
-          {t("Amount must be at least ")}{formatEuro(row.marketValue)} {t(" and ")}{balanceHint}.
+          {t("Amount must be at least {{0}} and {{1}}.", { 0: formatEuro(row.marketValue), 1: balanceHint })}
         </FieldDescription>
         <NumericCounterField
           id={inputId}
