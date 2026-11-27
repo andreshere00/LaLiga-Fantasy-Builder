@@ -570,7 +570,9 @@ the server confirms the player no longer exists.
 
 Market value labels the current price, change, and actual date range returned by
 the server. Previous results remain visible and explicitly labeled during a
-period update or after a failed update; Retry uses the selected period. A
+period update or after a failed update; Retry uses the selected period. Changing
+**Last N** or the market period reports progress and failure only in that section,
+with a single Retry, instead of repeating it in a page banner and other sections. A
 collapsed **View daily market values** table provides exact dates/prices alongside
 the chart. Axis precision adapts to the price range, and an empty history keeps
 the known current price visible. `e2e/player-detail-ux.spec.ts` checks keyboard

@@ -8,6 +8,9 @@ entry, not a claim that every optional provider or deployment gate is complete.
 
 ### Frontend
 
+- Changing **Last N** or the market period on a player page shows one progress or failure
+  message, with one Retry, in that section instead of a page banner plus a notice and
+  Retry in every section.
 - The player performance radar is its own **Performance profile** section with a section
   link, instead of filling the bottom of Overview.
 - Using a builder result over an unsaved draft asks in its own dialog, starting on
