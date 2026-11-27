@@ -19,6 +19,8 @@ entry, not a claim that every optional provider or deployment gate is complete.
 - Spanish: the balance help, release-clause placeholders, form ratings and the Players "Free
   Agent" owner (display, filter and search) are now translated; the minimum bid hint says
   "importe" instead of "saldo", and balance copy uses "pujas" for bids.
+- Sign-in, registration and account pages no longer show library or upstream error text; they
+  show translated, actionable messages instead.
 
 ### Identity
 

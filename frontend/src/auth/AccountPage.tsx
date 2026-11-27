@@ -1,4 +1,5 @@
 import { t, useTranslation } from "../i18n";
+import { feedbackMessage } from "./authFeedback";
 import { useEffect, useRef, useState, type FormEvent } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { z } from "zod";
@@ -62,7 +63,7 @@ export function AccountPage() {
     if (busy) return;
     setBusy(true); setFeedback(null);
     try { await action(); }
-    catch (error) { setFeedback({ text: error instanceof Error ? error.message : "The change could not be saved. Try again.", error: true }); }
+    catch (error) { setFeedback({ text: feedbackMessage(error, "The change could not be saved. Try again."), error: true }); }
     finally { setBusy(false); }
   }
   function select(action: Action) {

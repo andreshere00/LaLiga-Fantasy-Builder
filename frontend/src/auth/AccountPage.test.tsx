@@ -54,6 +54,17 @@ it("unlink_afterConfirmation_removesProviderAndReportsIt", async () => {
   expect(await screen.findByText("Google unlinked.")).toBeTruthy();
 });
 
+// ---- Error paths ---- //
+it("unlink_upstreamErrorText_isReplacedByActionableCopy", async () => {
+  client.unlinkAccount.mockResolvedValue({ data: null, error: { message: "SQLSTATE 23505 duplicate key" } });
+  const dialog = await openUnlink();
+
+  fireEvent.click(within(dialog).getByRole("button", { name: "Unlink Google" }));
+
+  expect((await screen.findByRole("alert")).textContent).toBe("The change could not be saved. Try again.");
+  expect(screen.queryByText(/SQLSTATE/)).toBeNull();
+});
+
 // ---- Edge cases ---- //
 it("unlink_beforeConfirmation_sendsNoRequest", async () => {
   const dialog = await openUnlink();

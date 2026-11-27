@@ -42,6 +42,11 @@ export function t(key: string, parameters?: Record<string, string | number>): st
   return i18n.t(key, parameters ?? {});
 }
 
+/** Whether a message is application copy in the bundled catalogs (and so safe to show). */
+export function hasMessage(key: string): boolean {
+  return i18n.exists(key, { lng: "en" });
+}
+
 /** Subscribe the caller to language changes without replacing component instances. */
 export function useTranslation(): typeof t {
   useLanguage();
