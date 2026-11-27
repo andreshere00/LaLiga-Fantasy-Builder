@@ -178,7 +178,7 @@ export function PlayerFantasySummary({ profile, clubId = null }: FantasySectionP
                 <img className="player-form-rating-icon is-dark" src={formIcons.dark} alt="" />
               </> : "—"}
             </span>
-            <span>{(formRating?.label ?? (formValue != null ? String(formValue) : t("Unavailable")))}</span>
+            <span>{(formRating ? t(formRating.label) : (formValue != null ? String(formValue) : t("Unavailable")))}</span>
           </span>
           <span className="player-outlook-caption">{t("Recent performances")}</span>
         </dd>
@@ -235,7 +235,7 @@ function PlayerNewsList({ profile }: FantasySectionProps) {
           <ul className="player-news-list">
             {visibleNews.map((item, index) => {
               const row = asRecord(item);
-              const title = text(row?.title) ?? "News article";
+              const title = text(row?.title) ?? t("News article");
               const href = newsItemHref(row);
               const published = text(row?.publishedAt);
               const source = text(row?.source);

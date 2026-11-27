@@ -28,7 +28,7 @@ export function MarketBalance({ money, projection, projectionRefreshing, project
     projection.available != null && projection.available < 0
       ? "Active bids could exceed your cash. This projection is separate from your reported balance."
       : "",
-  ].filter(Boolean).join(" ") : "Your reported balance.";
+  ].filter(Boolean).map((sentence) => t(sentence)).join(" ") : t("Your reported balance.");
   return (
     <div className="market-money-summary" aria-label={t("Market money summary")} aria-busy={projectionRefreshing}>
       <span className="market-money-heading">{t("Amount available")}</span>
@@ -44,7 +44,7 @@ export function MarketBalance({ money, projection, projectionRefreshing, project
             <Popover.Popup className="market-money-popup" initialFocus={false}>
               <div className="market-money-popup-heading">
                 <Popover.Title>{t("Balance details")}</Popover.Title>
-                <Help content={t(help)} trigger={<button type="button" className="market-money-help" aria-label={t("About available balance")} />}>
+                <Help content={help} trigger={<button type="button" className="market-money-help" aria-label={t("About available balance")} />}>
                   <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9" /><path d="M12 11v6M12 7v1" /></svg>
                 </Help>
               </div>

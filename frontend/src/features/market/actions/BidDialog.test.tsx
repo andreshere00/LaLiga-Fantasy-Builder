@@ -82,3 +82,13 @@ it("should start a new bid from the suggested amount and keep it editable", () =
   fireEvent.click(screen.getByRole("button", { name: "Place bid" }));
   expect(confirm).toHaveBeenCalledExactlyOnceWith(160);
 });
+
+it("bidDialog_listingWithExpiry_showsTimeLeftAndBalance", () => {
+  render(<BidDialog open row={{ ...row, expiresAt: Date.now() + 3 * 3_600_000 }} kind="hire"
+    money={100} squadMarketValue={null} initialAmount={null} pending={false}
+    onClose={() => {}} onConfirm={() => {}} />);
+  const facts = screen.getByRole("dialog").querySelector(".market-dialog-facts") as HTMLElement;
+  expect(facts.textContent).toContain("Time left");
+  expect(facts.textContent).toContain("Balance");
+  expect(facts.textContent).toContain("100 €");
+});

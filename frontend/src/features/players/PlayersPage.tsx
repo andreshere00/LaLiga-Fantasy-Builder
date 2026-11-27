@@ -53,6 +53,7 @@ import { PlayersScreenLoading } from "./PlayerScreenLoading";
 import {
   activePlayersFilterCount,
   applyPlayersFilters,
+  ownerLabel,
   ownerOptions,
   PLAYERS_LEADERBOARD_SIZE,
   PLAYERS_PAGE_SIZE,
@@ -131,7 +132,7 @@ function PlayersListRow({
       <ManagerIdentity name={row.ownedBy} avatarUrl={row.ownerAvatarUrl} />
     </ManagerLink>
   ) : (
-    row.ownedBy
+    ownerLabel(row.ownedBy)
   );
   const detailsOptions = row.positionId === 5 ? null : (
     <Menu.Root>
@@ -206,7 +207,7 @@ function PlayersListRow({
       <span className="market-cell market-cell-availability" data-column="availability" data-label={t("Availability")}>
         <AvailabilityCell availability={row.availability} />
       </span>
-      <span className="market-cell players-owner-cell" data-column="owner" data-label={t("Owned by")} title={row.ownedBy}>
+      <span className="market-cell players-owner-cell" data-column="owner" data-label={t("Owned by")} title={ownerLabel(row.ownedBy)}>
         {ownerCell}
       </span>
       <span className="market-cell players-actions-cell" data-column="actions" data-label={t("Actions")}>
@@ -326,10 +327,7 @@ function PlayersListContent() {
     activeBidCount: marketBoard.activeBidCount,
     squadMarketValue: marketBoard.squadMarketValue,
   };
-  const dialogOpen =
-    actions.pendingBid != null ||
-    actions.pendingClause != null ||
-    actions.pendingWithdraw != null;
+  const dialogOpen = actions.confirmationOpen;
 
   const setFilters = useCallback(
     (patch: Partial<PlayersFilters>) => {
@@ -363,7 +361,7 @@ function PlayersListContent() {
   }
 
   return (
-    <AutoMarketProvider money={marketBoard.money}>
+    <AutoMarketProvider money={marketBoard.money} squadMarketValue={marketBoard.squadMarketValue}>
       <div className="market-toolbar scouting-toolbar">
         <h1>{t("Players")}</h1>
         <ScoutingPanel />
@@ -384,7 +382,7 @@ function PlayersListContent() {
         />
       </div>
       <div className="market-results-summary">
-        <p role="status">{visibleRows.length} {t(" of ")}{filtered.length} {t(" players")}{leaderboard ? t(" · Top by points") : ""}{filterCount > 0 ? t(" · Filters active") : ""}</p>
+        <p role="status">{t("{{0}} of {{1}} players", { 0: visibleRows.length, 1: filtered.length })}{leaderboard ? t(" · Top by points") : ""}{filterCount > 0 ? t(" · Filters active") : ""}</p>
         <span>{t("Form: oldest → latest")}</span>
       </div>
       {board.isDegraded ? (

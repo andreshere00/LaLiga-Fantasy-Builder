@@ -77,7 +77,7 @@ describe("validateDraft", () => {
 describe("defaults and previews", () => {
   it("defaultDraft_starts_conservative_and_picks_the_only_possible_buy_target", () => {
     expect(defaultDraft(sell)).toMatchObject({ kind: "relative", percent: "5", priceMode: "threshold", maxSpend: "" });
-    expect(defaultDraft(buy)).toMatchObject({ target: "market", maxSpend: "90000000" });
+    expect(defaultDraft(buy)).toMatchObject({ target: "market", maxSpend: "90,000,000" });
     expect(defaultDraft({ ...buy, listed: false })).toMatchObject({ target: "clause" });
   });
   it("draftThreshold_previews_only_valid_inputs", () => {
@@ -92,7 +92,7 @@ describe("defaults and previews", () => {
       target: "market", maxSpend: null, expiresAt: new Date(2026, 10, 30, 23, 59, 59).toISOString(),
     } as AutoRule;
     expect(draftFromRule(rule)).toMatchObject({
-      kind: "absolute", amount: "150000000", priceMode: "market_value", maxSpend: "", expires: "2026-11-30",
+      kind: "absolute", amount: "150,000,000", priceMode: "market_value", maxSpend: "", expires: "2026-11-30",
     });
   });
 });

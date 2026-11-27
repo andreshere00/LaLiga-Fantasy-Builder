@@ -27,9 +27,18 @@ function targetOf(rule: AutoRule): AutoRuleTarget {
   };
 }
 
-function RuleItem({ rule, busy, onEdit, onCancel }: {
-  rule: AutoRule; busy: boolean; onEdit: () => void; onCancel: () => void;
-}) {
+type RuleActions = {
+  busy: boolean;
+  /** Rule whose cancellation is waiting for the user's confirmation. */
+  confirmingId: AutoRule["id"] | null;
+  onEdit: (rule: AutoRule) => void;
+  onRequestCancel: (rule: AutoRule) => void;
+  onKeep: () => void;
+  onConfirmCancel: (rule: AutoRule) => void;
+};
+
+function RuleItem({ rule, busy, confirmingId, onEdit, onRequestCancel, onKeep, onConfirmCancel }:
+  RuleActions & { rule: AutoRule }) {
   const reason = reasonLabel(rule.lastExecution?.reason ?? null);
   const trigger = rule.triggerKind === "relative" && rule.triggerPercent != null
     ? t(rule.side === "sell" ? "Rises {{0}}%" : "Drops {{0}}%", { 0: rule.triggerPercent.toLocaleString() })
@@ -56,34 +65,38 @@ function RuleItem({ rule, busy, onEdit, onCancel }: {
         ? <p>{t("Accepts any offer from {{0}}.", { 0: formatEuro(rule.acceptFloor) })}</p> : null}
       {rule.expiresAt && rule.state === "armed" ? <p>{t("Stops looking on {{0}}.", { 0: new Date(rule.expiresAt).toLocaleDateString() })}</p> : null}
       {reason ? <p className="auto-rule-reason">{reason}</p> : null}
-      {isLive(rule.state) ? (
+      {isLive(rule.state) && confirmingId === rule.id ? (
+        <div className="auto-rule-confirmation" role="group" aria-label={t("Confirm cancellation")}>
+          <p>{t("Cancel the rule for {{0}}? Nothing will be bought or sold for it.", { 0: rule.playerName })}</p>
+          <div className="auto-rule-actions">
+            <Button autoFocus variant="outline" shape="square" disabled={busy} onClick={onKeep}>
+              {t("Keep rule")}</Button>
+            <Button shape="square" loading={busy} loadingLabel={t("Cancelling rule…")}
+              onClick={() => onConfirmCancel(rule)}>{t("Cancel rule")}</Button>
+          </div>
+        </div>
+      ) : isLive(rule.state) ? (
         <div className="auto-rule-actions">
           <Button variant="outline" shape="square" disabled={busy || rule.state !== "armed"}
-            aria-label={t("Edit rule for {{0}}", { 0: rule.playerName })} onClick={onEdit}>{t("Edit")}</Button>
-          <Button variant="ghost" shape="square" disabled={busy || rule.state === "executing"}
-            aria-label={t("Cancel rule for {{0}}", { 0: rule.playerName })} onClick={onCancel}>{t("Cancel rule")}</Button>
+            aria-label={t("Edit rule for {{0}}", { 0: rule.playerName })} onClick={() => onEdit(rule)}>{t("Edit")}</Button>
+          <Button variant="ghost" shape="square" disabled={busy || rule.state === "executing" || confirmingId != null}
+            aria-label={t("Cancel rule for {{0}}", { 0: rule.playerName })} onClick={() => onRequestCancel(rule)}>{t("Cancel rule")}</Button>
         </div>
       ) : null}
     </li>
   );
 }
 
-function RuleList({ label, rules, busy, onEdit, onCancel }: {
-  label: string; rules: readonly AutoRule[]; busy: boolean;
-  onEdit: (rule: AutoRule) => void; onCancel: (rule: AutoRule) => void;
-}) {
+function RuleList({ label, rules, ...actions }: RuleActions & { label: string; rules: readonly AutoRule[] }) {
   return (
     <ul className="auto-rule-list" aria-label={label}>
-      {rules.map((rule) => (
-        <RuleItem key={rule.id} rule={rule} busy={busy} onEdit={() => onEdit(rule)} onCancel={() => onCancel(rule)} />
-      ))}
+      {rules.map((rule) => <RuleItem key={rule.id} rule={rule} {...actions} />)}
     </ul>
   );
 }
 
-function ActiveRules({ empty, loading, rules, label, ...rest }: {
-  empty: string; loading: boolean; rules: readonly AutoRule[]; label: string; busy: boolean;
-  onEdit: (rule: AutoRule) => void; onCancel: (rule: AutoRule) => void;
+function ActiveRules({ empty, loading, rules, label, ...rest }: RuleActions & {
+  empty: string; loading: boolean; rules: readonly AutoRule[]; label: string;
 }) {
   if (rules.length > 0) return <RuleList label={label} rules={rules} {...rest} />;
   return loading ? null : <p className="auto-market-empty">{empty}</p>;
@@ -124,10 +137,14 @@ function AutoMarketSheet({ auto, squad, open: controlled, onOpenChange, showTrig
   const history = auto.rules.filter((rule) => !isLive(rule.state)).slice(0, 10);
   const listFor = (side: "sell" | "buy") => live.filter((rule) => rule.side === side);
   const busy = auto.cancel.isPending;
-  const listProps = {
+  const [confirmingId, setConfirmingId] = useState<AutoRule["id"] | null>(null);
+  const listProps: RuleActions = {
     busy,
-    onEdit: (rule: AutoRule) => { setOpen(false); auto.openRule(targetOf(rule), rule); },
-    onCancel: (rule: AutoRule) => auto.cancel.mutate(rule),
+    confirmingId,
+    onEdit: (rule) => { setOpen(false); auto.openRule(targetOf(rule), rule); },
+    onRequestCancel: (rule) => setConfirmingId(rule.id),
+    onKeep: () => setConfirmingId(null),
+    onConfirmCancel: (rule) => auto.cancel.mutate(rule, { onSettled: () => setConfirmingId(null) }),
   };
   return <>
     {showTrigger ? <Button ref={trigger} shape="square" variant="outline" className="auto-market-trigger"
@@ -137,10 +154,11 @@ function AutoMarketSheet({ auto, squad, open: controlled, onOpenChange, showTrig
       {t("Auto market ")}<span className="auto-market-count">{live.length}</span>
       {flag.isNew ? <NewFlag /> : null}
     </Button> : null}
-    <Dialog open={open} title={t("Auto market")} layout="sheet" className="auto-market-panel"
-      onClose={() => setOpen(false)} finalFocus={() => (trigger.current?.isConnected ? trigger.current
+    <Dialog open={open} title={t("Auto market")} layout="sheet" className="auto-market-panel" busy={busy}
+      onClose={() => { setConfirmingId(null); setOpen(false); }} finalFocus={() => (trigger.current?.isConnected ? trigger.current
         : document.querySelector<HTMLElement>("[data-market-options-trigger]") ?? false)}
-      footer={<Button variant="outline" shape="square" onClick={() => setOpen(false)}>{t("Close")}</Button>}>
+      footer={<Button variant="outline" shape="square" disabled={busy}
+        onClick={() => { setConfirmingId(null); setOpen(false); }}>{t("Close")}</Button>}>
       <p>{t("Rules act once, on their own, even when this app is closed. You confirm each one when you arm it.")}</p>
       {auto.status === "needs_reauth" ? <p role="alert">{t("Rules are paused because your LaLiga session expired. Link your account again to resume them.")}</p> : null}
       {auto.status === "not_member" ? <p role="alert">{t("Rules are paused because this account is no longer in the league.")}</p> : null}

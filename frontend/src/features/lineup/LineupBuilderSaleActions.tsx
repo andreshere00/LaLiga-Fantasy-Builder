@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 
 import { t, useTranslation } from "../../i18n";
@@ -71,6 +71,7 @@ export function LineupBuilderSaleActions({ action, squad, onClose, onDone }: {
   const [offer, setOffer] = useState<ResolvedOffer | null | "checking">(null);
   const [pending, setPending] = useState(false);
   const [message, setMessage] = useState<string | null>(null);
+  const cancelButton = useRef<HTMLButtonElement>(null);
   const listingPrice = Number(price);
   // A second listing for the same squad entry would be rejected upstream.
   const alreadyListed = action.kind === "listing" && card?.listingId != null;
@@ -136,13 +137,17 @@ export function LineupBuilderSaleActions({ action, squad, onClose, onDone }: {
   const ready = action.kind === "accept_offer" ? offer != null && offer !== "checking"
     : action.kind === "immediate_sale" ? half != null
       : !alreadyListed && isValidListingPrice(Number.isFinite(listingPrice) ? listingPrice : null, currentValue);
-  return <Dialog open title={title} onClose={onClose} closeOnBackdrop={!pending}
+  return <Dialog open title={title} onClose={onClose} closeOnBackdrop={!pending} busy={pending}
+    initialFocus={action.kind === "immediate_sale" ? cancelButton : undefined}
     className="lineup-builder-dialog" footer={<>
-      <Button variant="secondary" shape="square" disabled={pending} onClick={onClose}>{t("Cancel")}</Button>
+      <Button ref={cancelButton} variant="secondary" shape="square" disabled={pending} onClick={onClose}>{t("Cancel")}</Button>
       {action.kind === "accept_offer" && (offer == null || offer === "checking")
         ? <Button shape="square" disabled={offer === "checking"} onClick={() => void checkOffer()}>{t("Check offer")}</Button>
         : <Button shape="square" variant={action.kind === "immediate_sale" ? "destructive" : "default"}
-          disabled={!ready || pending} onClick={() => void confirm()}>
+          disabled={!ready} loading={pending}
+          loadingLabel={action.kind === "accept_offer" ? t("Accepting offer…")
+            : action.kind === "immediate_sale" ? t("Selling player…") : t("Listing player…")}
+          onClick={() => void confirm()}>
           {action.kind === "accept_offer" ? t("Accept offer") : action.kind === "immediate_sale" ? t("Sell now") : t("List for sale")}
         </Button>}
     </>}>

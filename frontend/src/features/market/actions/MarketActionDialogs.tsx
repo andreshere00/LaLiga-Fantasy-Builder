@@ -1,5 +1,6 @@
 import { useRetained } from "../../../hooks/useRetained";
 import { BidDialog } from "./BidDialog";
+import { CancelBidDialog } from "./CancelBidDialog";
 import { ClauseDialog } from "./ClauseDialog";
 import { WithdrawDialog } from "./WithdrawDialog";
 import type { MarketActionsApi } from "./useMarketActions";
@@ -19,6 +20,7 @@ export function MarketActionDialogs({
   const bid = useRetained(actions.pendingBid);
   const clause = useRetained(actions.pendingClause);
   const withdraw = useRetained(actions.pendingWithdraw);
+  const cancelBid = useRetained(actions.pendingCancelBid);
 
   return (
     <>
@@ -42,10 +44,19 @@ export function MarketActionDialogs({
         onClose={actions.closeWithdraw}
         onConfirm={actions.confirmWithdraw}
       />
+      <CancelBidDialog
+        open={actions.pendingCancelBid != null}
+        row={cancelBid}
+        pending={actions.actionPending}
+        error={actions.message}
+        onClose={actions.closeCancelBid}
+        onConfirm={actions.confirmCancelBid}
+      />
       <ClauseDialog
         open={actions.pendingClause != null}
         row={clause?.row ?? null}
         amount={clause?.amount ?? 0}
+        money={money}
         pending={actions.actionPending}
         error={actions.message}
         onClose={actions.closeClause}

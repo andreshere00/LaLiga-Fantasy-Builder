@@ -48,6 +48,7 @@ function OffersPanel({ cards, squadAvailable, showTrigger, leagueKey, teamId }: 
   const target = offersMenu?.target ?? null;
   const targetPlayerTeamId = target?.playerTeamId ?? null;
   const [confirmation, setConfirmation] = useState<ReceivedOffer | null>(null);
+  const [confirmAction, setConfirmAction] = useState<"accept" | "reject">("accept");
   const [error, setError] = useState<string | null>(null);
   const [answered, setAnswered] = useState<ReadonlySet<string>>(new Set());
   const sending = useRef(false);
@@ -249,24 +250,35 @@ function OffersPanel({ cards, squadAvailable, showTrigger, leagueKey, teamId }: 
             {offer.unavailableReason ? <p className="market-offer-unavailable">{t(offer.unavailableReason)}</p> : null}
             {response.isPending && response.variables?.offer.key === offer.key
               ? <p role="status">{t("Sending response…")}</p> : null}
-            {confirmation?.key === offer.key ? <div className="market-offer-confirmation" role="group" aria-label={t("Confirm acceptance")}>
-              <p>{t("Sell ")}<strong>{offer.player.name}</strong> {t(" to ")}{offer.sender} {t(" for ")}<strong>{formatEuro(confirmation.money)}</strong>?</p>
+            {confirmation?.key === offer.key ? <div className="market-offer-confirmation" role="group"
+              aria-label={confirmAction === "accept" ? t("Confirm acceptance") : t("Confirm rejection")}>
+              {confirmAction === "accept"
+                ? <p>{t("Sell {{0}} to {{1}} for {{2}}?", { 0: offer.player.name, 1: offer.sender, 2: formatEuro(confirmation.money) })}</p>
+                : <p>{t("Reject the {{0}} offer from {{1}} for {{2}}? It will disappear from your offers.",
+                  { 0: formatEuro(confirmation.money), 1: offer.sender, 2: offer.player.name })}</p>}
               {!freshConfirmation ? <p role="alert">{t("The offer changed. Cancel and review it again.")}</p> : null}
               <div className="market-offer-actions">
                 <Button autoFocus variant="outline" shape="square" disabled={response.isPending}
                   onClick={() => setConfirmation(null)}>{t("Cancel")}</Button>
                 <Button shape="square" loading={response.isPending} loadingLabel={t("Sending…")}
                   disabled={!freshConfirmation || !!freshConfirmation.unavailableReason}
-                  onClick={() => { if (freshConfirmation) answer(freshConfirmation, "accept"); }}>{t("Confirm sale")}</Button>
+                  onClick={() => { if (freshConfirmation) answer(freshConfirmation, confirmAction); }}>
+                  {confirmAction === "accept" ? t("Confirm sale") : t("Reject offer")}</Button>
               </div>
             </div> : null}
             <div className="market-offer-actions">
               <Button variant="outline" shape="square" disabled={response.isPending || confirmation != null || !!offer.unavailableReason}
-                onClick={() => answer(offer, "reject")} aria-label={t("Reject offer for {{0}} from {{1}}", { 0: offer.player.name, 1: offer.sender })}>{t("Reject")}</Button>
+                onClick={(event) => {
+                  acceptanceTrigger.current = event.currentTarget;
+                  setError(null);
+                  setConfirmAction("reject");
+                  setConfirmation(offer);
+                }} aria-label={t("Reject offer for {{0}} from {{1}}", { 0: offer.player.name, 1: offer.sender })}>{t("Reject")}</Button>
               <Button shape="square" disabled={response.isPending || confirmation != null || !!offer.unavailableReason}
                 onClick={(event) => {
                   acceptanceTrigger.current = event.currentTarget;
                   setError(null);
+                  setConfirmAction("accept");
                   setConfirmation(offer);
                 }}
                 aria-label={t("Accept offer for {{0}} from {{1}}", { 0: offer.player.name, 1: offer.sender })}>{t("Accept")}</Button>

@@ -113,6 +113,11 @@ test("catalog bid mutations reconcile amounts and counts, including stale reads 
   fixture.rejectCancellation(true);
   await row.getByRole("button", { name: "Bid placed", exact: true }).click();
   await page.getByRole("menuitem", { name: "Cancel bid", exact: true }).click();
+  const cancelDialog = page.getByRole("dialog", { name: "Cancel bid", exact: true });
+  await cancelDialog.getByRole("button", { name: "Cancel bid", exact: true }).click();
+  await expect(cancelDialog.getByRole("alert")).toBeVisible();
+  await cancelDialog.getByRole("button", { name: "Keep bid", exact: true }).click();
+  await expect(cancelDialog).toHaveCount(0);
   await expect(page.locator(".players-page").getByRole("alert")).toBeVisible();
   await expect(row.getByText("Bids: 2", { exact: true })).toBeVisible();
   await expect(row.locator(".players-value-details .market-bid-value")).toHaveText("Your bid: 6,000,000 €");
@@ -122,6 +127,8 @@ test("catalog bid mutations reconcile amounts and counts, including stale reads 
   while (await dismissals.count()) await dismissals.first().click();
   await row.getByRole("button", { name: "Bid placed", exact: true }).click();
   await page.getByRole("menuitem", { name: "Cancel bid", exact: true }).click();
+  await cancelDialog.getByRole("button", { name: "Cancel bid", exact: true }).click();
+  await expect(cancelDialog).toHaveCount(0);
   await expect(row.locator(".market-bid-value")).toHaveCount(0);
   await expect(row.getByText("Bids: 1", { exact: true })).toBeVisible();
   await page.getByRole("combobox", { name: "Search players" }).fill("Player 16");

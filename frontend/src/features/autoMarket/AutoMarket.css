@@ -17,6 +17,8 @@
 .auto-rule p { margin:8px 0; overflow-wrap:anywhere; }
 .auto-rule-reason { color:var(--fb-muted); }
 .auto-rule-actions { display:flex; flex-wrap:wrap; justify-content:space-between; gap:24px; margin-top:12px; }
+.auto-rule-confirmation { margin-top:12px; padding:12px; border:1px solid var(--fb-control-line); background:var(--fb-subtle); }
+.auto-rule-confirmation p { margin-top:0; }
 .auto-rule-dialog .fb-field { margin-top:16px; }
 .auto-rule-preview { margin:20px 0 8px; padding:12px; border:1px solid var(--fb-line); overflow-wrap:anywhere; }
 .auto-rule-consent { margin:0; font-size:13px; color:var(--fb-muted); }
@@ -53,3 +55,13 @@
   /* Phones stack icon over label, so the flag sits in the corner like the unread count. */
   .market-section-actions .market-options-new { position:absolute; top:4px; right:4px; margin:0; }
 }
+
+.auto-bulk-players { border: 1px solid var(--fb-line); }
+.auto-bulk-players .fb-scroll-viewport { max-height: 200px; }
+.auto-bulk-players ul { list-style: none; margin: 0; padding: 0; }
+.auto-bulk-players li {
+  display: flex; justify-content: space-between; gap: 12px; padding: 8px 12px;
+  border-bottom: 1px solid var(--fb-line); font-variant-numeric: tabular-nums;
+}
+.auto-bulk-players li:last-child { border-bottom: 0; }
+.auto-bulk-players li span:last-child { color: var(--fb-muted); white-space: nowrap; }

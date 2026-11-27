@@ -82,7 +82,7 @@ export function LineupBuilderPlayerActions({ player, opponentTeamIds, clausesDea
       if (blocked) return { ...offer, enabled: false, disabledReason: blocked };
       return offer;
     }) : [];
-  const confirming = actions.pendingBid != null || actions.pendingClause != null;
+  const confirming = actions.confirmationOpen;
   const loading = board.isLoading || (player.source === "opponents" && rosters.some((query) => query.isFetching));
   return <>
     <Dialog open={!confirming} title={t("{{0}} — Acquisition options", { 0: player.name })} onClose={onClose}

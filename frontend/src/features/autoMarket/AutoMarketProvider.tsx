@@ -134,13 +134,16 @@ type AutoMarketApi = ReturnType<typeof useAutoMarketState>;
 const Context = createContext<AutoMarketApi | null>(null);
 
 /** Shares the league's rules and the single arm/edit dialog with the toolbar and row menus. */
-export function AutoMarketProvider({ money, children }: { money: number | null; children: ReactNode }) {
+export function AutoMarketProvider({ money, squadMarketValue = null, children }: {
+  money: number | null; squadMarketValue?: number | null; children: ReactNode;
+}) {
   const value = useAutoMarketState(money);
   const retained = useRetained(value.dialog);
   return (
     <Context.Provider value={value}>
       {children}
-      <AutoRuleDialog open={value.dialog != null} state={retained} money={money} pending={value.save.isPending}
+      <AutoRuleDialog open={value.dialog != null} state={retained} money={money}
+        squadMarketValue={squadMarketValue} pending={value.save.isPending}
         error={value.message} onClose={value.closeDialog}
         onConfirm={(write) => retained && value.save.mutate({ write, rule: retained.rule })} />
     </Context.Provider>

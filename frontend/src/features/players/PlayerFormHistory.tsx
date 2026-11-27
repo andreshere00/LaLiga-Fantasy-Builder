@@ -210,7 +210,7 @@ export function PlayerFormHistory({ rows }: { rows: readonly unknown[] }) {
               </span>
               <h3>{selected.label}</h3>
             </div>
-            <time dateTime={selected.date ?? undefined}>{(selected.date?.slice(0, 10) ?? selected.dateLabel)}</time>
+            <time dateTime={selected.date ?? undefined}>{selected.dateLabel}</time>
           </div>
           <dl className="player-form-selected-scores">
             <div><dt>{t("Fantasy points")}</dt><dd>{(selected.points ?? t("Unavailable"))}</dd></div>

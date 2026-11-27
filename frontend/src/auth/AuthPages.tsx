@@ -1,4 +1,5 @@
 import { t, useTranslation } from "../i18n";
+import { ComposedMessageError, feedbackMessage } from "./authFeedback";
 import { useEffect, useRef, useState, type FormEvent } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { z } from "zod";
@@ -137,7 +138,7 @@ export function AuthPage() {
   async function run(action: () => Promise<void>) {
     setBusy(true); setMessage(null); setFailure(false);
     try { await action(); } catch (error) {
-      setFailure(true); setMessage(error instanceof Error ? error.message : "Request failed. Try again.");
+      setFailure(true); setMessage(feedbackMessage(error, "Request failed. Try again."));
     } finally { setBusy(false); }
   }
   function problemsFor(data: FormData): PasswordIssue[] {
@@ -155,7 +156,7 @@ export function AuthPage() {
       const problems = problemsFor(data);
       if (problems.length) {
         setPasswordProblems(problems);
-        throw new Error(t("Choose a stronger password. {{0}}", { 0: t(problems[0].key, problems[0].parameters) }));
+        throw new ComposedMessageError(t("Choose a stronger password. {{0}}", { 0: t(problems[0].key, problems[0].parameters) }));
       }
       if (pathname === "/sign-in") {
         const identifier = field("identifier").trim();
@@ -172,7 +173,7 @@ export function AuthPage() {
         checked(result);
         await auth.reload(); navigate("/connect-laliga");
       } else if (pathname === "/register") {
-        const registration = z.object({ name: z.string().trim().min(1).max(100), username: z.string().trim().toLowerCase().regex(/^[a-z0-9_]{3,30}$/, "Use 3–30 letters, digits or underscores."), email: z.email(), password: z.string().min(12).max(128) }).safeParse({ name: field("name"), username: field("username"), email: field("email"), password: field("password") });
+        const registration = z.object({ name: z.string().trim().min(1, "Enter your name.").max(100, "Use at most 100 characters for your name."), username: z.string().trim().toLowerCase().regex(/^[a-z0-9_]{3,30}$/, "Use 3–30 letters, digits or underscores."), email: z.email("Enter a valid email address."), password: z.string().min(12, "Use 12 to 128 characters for your password.").max(128, "Use 12 to 128 characters for your password.") }).safeParse({ name: field("name"), username: field("username"), email: field("email"), password: field("password") });
         if (!registration.success) throw new Error(registration.error.issues[0]?.message);
         checked(await authClient.signUp.email({ ...registration.data, callbackURL: "/verify-email" }));
         writeVerificationEmail(registration.data.email);

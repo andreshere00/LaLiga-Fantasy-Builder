@@ -6,6 +6,33 @@ entry, not a claim that every optional provider or deployment gate is complete.
 
 ## [Unreleased]
 
+### Frontend
+
+- Cancelling a bid now asks for confirmation (**Cancel bid** / **Keep bid**) from every row menu
+  and from My bids, and the success toast says "Bid cancelled" instead of "Bid updated".
+- Bid dialogs show your balance and the listing's time left; the release-clause dialog shows
+  your balance before and after paying and says the payment can't be undone.
+- Loading the last saved or original lineup asks before discarding unsaved lineup edits.
+- **List all my players…** lists the players (with market value) it is about to put on the
+  market instead of only their count.
+- Auto-market rule amounts use thousands separators, and buy rules state the maximum bid
+  instead of leaving you to add 20% of the squad value to your cash.
+- Rejecting a received offer now asks for inline confirmation, like accepting one.
+- Cancelling an auto-market rule now asks for inline confirmation and shows its progress.
+- Unlinking a sign-in provider on the account page now asks for confirmation.
+- Squad and lineup-builder sale dialogs stay open while a sale is in flight, start on the safe
+  choice for withdrawals and immediate sales, show a specific progress label, translate listing
+  errors and label the own-listing actions **Modify listing** / **Withdraw listing**.
+- Spanish: the balance help, release-clause placeholders, form ratings and the Players "Free
+  Agent" owner (display, filter and search) are now translated; the minimum bid hint says
+  "importe" instead of "saldo", and balance copy uses "pujas" for bids.
+- Spanish: sale, withdrawal, offer and result-count sentences are translated as whole
+  sentences (fixing word order such as "Vender … para …"); player market dates use the
+  reader's locale instead of ISO dates; the match countdown, radar season, "Not published",
+  "News article" and "No email" are translated.
+- Sign-in, registration and account pages no longer show library or upstream error text; they
+  show translated, actionable messages instead.
+
 ### Identity
 
 - Add `uv run poe seed-dev-user`, which creates or resets a verified mock user for local

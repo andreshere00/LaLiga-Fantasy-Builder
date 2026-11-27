@@ -1,8 +1,10 @@
 import { t, useTranslation } from "../i18n";
-import { useEffect, useState, type FormEvent } from "react";
+import { feedbackMessage } from "./authFeedback";
+import { useEffect, useRef, useState, type FormEvent } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { z } from "zod";
 import { Button, buttonVariants } from "../components/ui/Button";
+import { Dialog } from "../components/ui/Dialog";
 import { authClient } from "./auth-client";
 import { useAuth } from "./AuthProvider";
 import { ProviderLogo, type SocialProvider } from "./ProviderLogo";
@@ -28,6 +30,8 @@ export function AccountPage() {
   const [pendingEmail, setPendingEmail] = useState<string | null>(null);
   const [accountsFor, setAccountsFor] = useState<{ userId: string; accounts: LinkedAccount[] } | null>(null);
   const [available, setAvailable] = useState<Record<SocialProvider, boolean>>({ google: false, facebook: false, apple: false });
+  const [unlinking, setUnlinking] = useState<{ provider: SocialProvider; accountId: string } | null>(null);
+  const keepLinkedRef = useRef<HTMLButtonElement>(null);
   const userId = auth.user?.userId;
   const accounts = accountsFor && accountsFor.userId === userId ? accountsFor.accounts : [];
   const methodsReady = accountsFor?.userId === userId;
@@ -59,7 +63,7 @@ export function AccountPage() {
     if (busy) return;
     setBusy(true); setFeedback(null);
     try { await action(); }
-    catch (error) { setFeedback({ text: error instanceof Error ? error.message : "The change could not be saved. Try again.", error: true }); }
+    catch (error) { setFeedback({ text: feedbackMessage(error, "The change could not be saved. Try again."), error: true }); }
     finally { setBusy(false); }
   }
   function select(action: Action) {
@@ -92,7 +96,7 @@ export function AccountPage() {
           checked(await authClient.updateUser({ username: parsed.data })); await auth.reload(); setActive(null); setFeedback({ text: "Username updated.", error: false });
         }); }}><div className="auth-field"><label htmlFor="new-username">{t("New username")}</label><input id="new-username" name="username" required minLength={3} maxLength={30} pattern="[A-Za-z0-9_]{3,30}" autoComplete="username" defaultValue={auth.user.username ?? ""} /><p className="auth-field-hint">{t("3–30 letters, digits or underscores.")}</p></div><Button type="submit" loading={busy}>{t("Save username")}</Button></form>}
       </div>
-      <div className="auth-setting">{panel("email", "Change email", t("Current: {{0}}", { 0: auth.user.email ?? "No email" }))}
+      <div className="auth-setting">{panel("email", "Change email", t("Current: {{0}}", { 0: auth.user.email ?? t("No email") }))}
         {active === "email" && <div id="setting-email" className="auth-setting-form">
           {!pendingEmail ? <form className="auth-form" onSubmit={(event: FormEvent<HTMLFormElement>) => { event.preventDefault(); const newEmail = String(new FormData(event.currentTarget).get("email") ?? "").trim().toLowerCase(); void run(async () => {
             if (!z.email().safeParse(newEmail).success) throw new Error("Enter a valid email address.");
@@ -122,11 +126,29 @@ export function AccountPage() {
       {providers.filter(provider => available[provider] || accounts.some(account => account.providerId === provider)).map(provider => {
         const linked = accounts.find(account => account.providerId === provider);
         const alternative = accounts.some(account => account.id !== linked?.id && (account.providerId === "credential" || providers.some(other => other === account.providerId && available[other])));
-        return <div className="auth-method" key={provider}><span className="auth-method-name"><ProviderLogo provider={provider} />{providerNames[provider]}</span><Button variant="outline" disabled={busy || accountsFor?.userId !== userId || (linked ? !alternative : !available[provider])} onClick={() => void run(async () => {
-          if (linked) { checked(await authClient.unlinkAccount({ accountId: linked.id })); const result = await authClient.listAccounts(); checked(result); setAccountsFor({ userId: userId!, accounts: result.data ?? [] }); setFeedback({ text: "{{0}} unlinked.", parameters: { 0: providerNames[provider] }, error: false }); }
-          else checked(await authClient.linkSocial({ provider, callbackURL: "/account", errorCallbackURL: "/account" }));
-        })}>{linked ? t("Unlink") : t("Link")}</Button></div>;
+        return <div className="auth-method" key={provider}><span className="auth-method-name"><ProviderLogo provider={provider} />{providerNames[provider]}</span><Button variant="outline" disabled={busy || accountsFor?.userId !== userId || (linked ? !alternative : !available[provider])} onClick={() => {
+          // Removing a sign-in method is confirmed first; linking redirects to the provider.
+          if (linked) { setFeedback(null); setUnlinking({ provider, accountId: linked.id }); }
+          else void run(async () => { checked(await authClient.linkSocial({ provider, callbackURL: "/account", errorCallbackURL: "/account" })); });
+        }}>{linked ? t("Unlink") : t("Link")}</Button></div>;
       })}
+      <Dialog open={unlinking != null} busy={busy} initialFocus={keepLinkedRef}
+        onClose={() => setUnlinking(null)}
+        title={t("Unlink {{0}}", { 0: unlinking ? providerNames[unlinking.provider] : "" })}
+        description={t("You will no longer be able to sign in with {{0}}. You can link it again later.", { 0: unlinking ? providerNames[unlinking.provider] : "" })}
+        footer={<>
+          <Button variant="outline" ref={keepLinkedRef} disabled={busy} onClick={() => setUnlinking(null)}>{t("Cancel")}</Button>
+          <Button loading={busy} loadingLabel={t("Unlinking…")} onClick={() => {
+            if (!unlinking) return;
+            const { provider, accountId } = unlinking;
+            void run(async () => {
+              checked(await authClient.unlinkAccount({ accountId }));
+              const result = await authClient.listAccounts(); checked(result);
+              setAccountsFor({ userId: userId!, accounts: result.data ?? [] });
+              setFeedback({ text: "{{0}} unlinked.", parameters: { 0: providerNames[provider] }, error: false });
+            }).finally(() => setUnlinking(null));
+          }}>{t("Unlink {{0}}", { 0: unlinking ? providerNames[unlinking.provider] : "" })}</Button>
+        </>} />
     </section>
 
     <section className="auth-settings-group auth-settings-danger" aria-labelledby="delete-title"><h2 id="delete-title">{t("Delete account")}</h2>

@@ -1,3 +1,4 @@
+import { t } from "../../i18n";
 import { normalizeSearchText } from "../../searchText";
 import type { Availability } from "../market/model/availability";
 import type { NumericRange } from "../market/marketFilters";
@@ -22,10 +23,22 @@ function matchesSubstring(haystack: string, query: string): boolean {
   return normalizeSearchText(haystack).includes(normalized);
 }
 
+/** Owner placeholders the board stores in English; real manager names are never translated. */
+const OWNER_PLACEHOLDERS = new Set(["Free Agent", "Unavailable", "Unknown manager"]);
+
+/** Owner as shown to the user: placeholders in the current language, names verbatim. */
+export function ownerLabel(ownedBy: string): string {
+  return OWNER_PLACEHOLDERS.has(ownedBy) ? t(ownedBy) : ownedBy;
+}
+
+function matchesOwner(ownedBy: string, query: string): boolean {
+  return matchesSubstring(ownedBy, query) || matchesSubstring(ownerLabel(ownedBy), query);
+}
+
 function matchesQuery(row: PlayerRow, query: string): boolean {
   const normalized = normalizeSearchText(query);
   if (!normalized) return true;
-  const haystacks = [row.name, row.teamName ?? "", row.ownedBy];
+  const haystacks = [row.name, row.teamName ?? "", row.ownedBy, ownerLabel(row.ownedBy)];
   return haystacks.some((value) => normalizeSearchText(value).includes(normalized));
 }
 
@@ -49,7 +62,7 @@ export function applyPlayersFilters(
     (row) =>
       matchesQuery(row, filters.query) &&
       matchesSubstring(row.name, filters.player) &&
-      matchesSubstring(row.ownedBy, filters.owner) &&
+      matchesOwner(row.ownedBy, filters.owner) &&
       matchesSubstring(row.teamName ?? "", filters.team) &&
       matchesRange(row.marketValue, filters.marketValue) &&
       matchesRange(row.points, filters.points) &&

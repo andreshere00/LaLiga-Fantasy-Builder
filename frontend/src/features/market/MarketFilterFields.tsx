@@ -266,15 +266,21 @@ export function FilterSellerSelect({
   sellers,
   onPick,
   value = "",
+  label,
+  labelFor,
 }: {
   sellers: readonly string[];
   onPick: (seller: string) => void;
   value?: string;
+  /** Visible label; Players picks an owner rather than a seller. */
+  label?: string;
+  /** Display text for an option whose value must stay stable across languages. */
+  labelFor?: (seller: string) => string;
 }) {
   useTranslation();
   return (
     <label className="market-column-filter-text">
-      {t("Pick a seller")}<NativeSelect
+      {label ?? t("Pick a seller")}<NativeSelect
         className="market-filter-select"
         value={sellers.includes(value) ? value : ""}
         onChange={(event) => onPick(event.target.value)}
@@ -282,7 +288,7 @@ export function FilterSellerSelect({
         <option value="">{t("Choose…")}</option>
         {sellers.map((seller) => (
           <option key={seller} value={seller}>
-            {seller}
+            {labelFor ? labelFor(seller) : seller}
           </option>
         ))}
       </NativeSelect>

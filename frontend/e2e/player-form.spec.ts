@@ -53,7 +53,7 @@ for (const { theme, width } of [{ theme: "light", width: 1440 }, { theme: "dark"
     await expect(radios.nth(3)).toBeChecked();
     await expect(radios.nth(3)).toBeFocused();
     const selected = form.getByRole("region", { name: "Selected fixture details" });
-    await expect(selected).toContainText("2026-09-04");
+    await expect(selected).toContainText("4 Sept");
     await selected.getByRole("button", { name: "Show match statistics", exact: true }).click();
     await expect(selected.locator(".player-form-details > div").filter({ has: page.locator("dt", { hasText: /^Saves$/ }) }))
       .toHaveText("Saves4");
@@ -62,7 +62,7 @@ for (const { theme, width } of [{ theme: "light", width: 1440 }, { theme: "dark"
     await radios.first().focus();
     await page.keyboard.press("Space");
     await expect(radios.first()).toBeChecked();
-    await expect(selected).toContainText("2026-09-01");
+    await expect(selected).toContainText("1 Sept");
     await expect(selected.locator(".player-form-details > div").filter({ has: page.locator("dt", { hasText: /^Saves$/ }) }))
       .toHaveText("Saves1");
     const frame = await form.locator(".player-form-chart-scroll").boundingBox();

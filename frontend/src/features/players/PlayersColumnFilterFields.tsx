@@ -9,6 +9,7 @@ import {
 } from "../market/MarketFilterFields";
 import type { PlayersColumnKey } from "./playersColumnHeadings";
 import type { PlayersFilters } from "./playersSearchParams";
+import { ownerLabel } from "./playersFilters";
 import { NativeSelect } from "../../components/ui/Fields";
 
 type PlayersColumnFilterFieldsProps = {
@@ -74,10 +75,12 @@ export function PlayersColumnFilterFields({
             value={filters.owner}
             onChange={(owner) => onChange({ ...filters, owner })}
             placeholder={t("Manager or Free Agent")}
-            suggestions={owners}
+            suggestions={owners.map(ownerLabel)}
           />
           {owners.length > 0 ? (
             <FilterSellerSelect
+              label={t("Pick an owner")}
+              labelFor={ownerLabel}
               sellers={owners}
               value={filters.owner}
               onPick={(owner) => onChange({ ...filters, owner })}

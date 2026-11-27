@@ -36,7 +36,9 @@ components to language changes and returns `t`. Composed messages pass numeric
 parameters explicitly, including translated application labels. Club, player and
 manager identities remain verbatim. Shared primitives render their supplied
 children and labels; each producer owns its application copy. Notifications retain
-message keys and translate while rendering, including screen-reader announcements. Spanish copy uses
+message keys and translate while rendering, including screen-reader announcements. A sentence is
+one key with `{{0}}`-style placeholders, never fragments joined around names or amounts, so each
+language keeps its own word order. Spanish copy uses
 football/Fantasy terms such as plantilla, jornada, puja, titularidad and cláusula
 de rescisión; bids and seller offers remain distinct. OpenWeather forecasts use
 «pronóstico», including upcoming-match headings and unavailable states.
@@ -143,11 +145,16 @@ Shared shadcn-style field compositions keep the persistent label, constraints,
 control, and correction together. Descriptions and errors are connected to their
 inputs with stable IDs and `aria-describedby`; invalid amounts and date ranges
 also expose `aria-invalid`. Bid limits stay visible next to the amount rather
-than requiring people to remember them from another panel.
+than requiring people to remember them from another panel. Above the amount, bid
+dialogs show your balance and, for market listings, the time left; the release-clause
+dialog shows the clause, your balance and your balance after payment (marked when it
+would drop below zero) and states that the payment can't be undone.
 
 Dialogs can provide a concise accessible description and deliberate initial
 focus. Bid dialogs focus the amount; clause payment and withdrawal start on
-**Cancel**. A pending request marks the dialog busy and prevents Escape, backdrop,
+**Cancel**. Cancelling a bid, from a row menu or from My bids, always opens a
+**Cancel bid** confirmation that names the amount and player and starts on **Keep bid**;
+My bids closes first so only one modal is on screen. A pending request marks the dialog busy and prevents Escape, backdrop,
 or close-button dismissal until a result is available. Closing an idle dialog
 restores focus to its originating control. Date-range editing still uses an
 explicit Apply/Cancel workflow.
@@ -743,7 +750,8 @@ lineup** discards local edits and restores `GET /teams/{team_id}/lineup`.
 The scoring action is enabled after the fixture starts and a snapshot is available;
 an unavailable snapshot is never replaced by the latest saved lineup. Loading either
 lineup changes the local draft only. Loading a different scoring snapshot enables
-Save, which must be used explicitly to replace the saved lineup.
+Save, which must be used explicitly to replace the saved lineup. When the draft has unsaved
+edits, either action first asks **Discard unsaved changes?**, starting on **Keep editing**.
 
 Code: `frontend/src/features/lineup/`.
 
@@ -809,11 +817,13 @@ Code: `frontend/src/features/lineup/`.
 - On your own squad, hover a player for **Click for player options**, then click the
   card. **Bring to market** lists the player (`POST /api/market/leagues/{id}/listings`)
   for a whole-euro offer from the current market value through 999.999.999 €.
-  When that player is already listed, **Bring to market** is replaced by **Cancel bid**
-  (`DELETE /api/market/leagues/{id}/{marketId}`) and **Modify bid** (withdraw, then list
+  When that player is already listed, **Bring to market** is replaced by **Withdraw listing**
+  (`DELETE /api/market/leagues/{id}/{marketId}`) and **Modify listing** (withdraw, then list
   again at the new amount). **Send immediately to market**
   (`POST /api/market/leagues/{id}/immediate-sales`) sells at half the market value;
-  Fantasy credits the balance and the player leaves the squad. These actions are hidden
+  Fantasy credits the balance and the player leaves the squad. Withdrawal and immediate-sale
+  confirmations start on **Back**; while a sale request runs the dialog is busy (no Escape or
+  backdrop dismissal) and the confirm button names the step in progress. These actions are hidden
   while you are replacing a pitch player, and on another manager’s squad.
 
 ## Market screen
@@ -879,7 +889,8 @@ Code: `frontend/src/features/market/` (`model/`, `cells/`, `actions/`,
   be answered through offer endpoints.
 - Pending offers with valid identifiers and whole-euro amounts can be rejected or
   accepted. Acceptance confirms the player, sender and exact amount before sending
-  `offerMoney`; expired offers are excluded. Changed amounts and unknown statuses
+  `offerMoney`; rejection likewise confirms the amount, sender and player inline, with
+  focus on **Cancel**, before sending. Expired offers are excluded. Changed amounts and unknown statuses
   block confirmation. Writes are never automatically retried. Confirmed responses
   update the count and refresh market, offers, squad, lineup, balance and leagues;
   unusable success responses refresh reads so the user can check the outcome.
@@ -1011,7 +1022,8 @@ The *Selling* section has a list of selectable players (photo, name, club badge,
 market value) to start an auto-sell for one of your squad players that is not already on the
 market. **List all my players…** puts every player that is not on the market yet, and has no live sell rule,
 on the market by default (players already listed are left as they are) (*Only list them*, at market value, with no automatic sale, so you choose which offer
-to accept). It can also apply one general rule to all of them: *List and sell at a gain* lists
+to accept). The dialog lists each of those players with their market value before you
+arm anything. It can also apply one general rule to all of them: *List and sell at a gain* lists
 them now and accepts an offer that reaches the percentage, and *List when each value rises*
 lists each one only after its own value rises. Any single player can still get their own rule
 from the player list, or have their armed rule edited. **Sell my favorites** (in *Selling*) and **Buy my favorites** (in *Buying*) arm rules for several favorite players at once. **Auto-sell favorites…**
@@ -1041,7 +1053,10 @@ The arm dialog (`features/autoMarket/AutoRuleDialog.tsx`) asks only what a rule 
   always costs its clause price, and for a list-only sell).
 - **Buy only:** *bid on the market* or *pay the release clause* when both are possible, plus
   the most the rule may ever spend. The cap starts at the current market value and the
-  dialog shows your cash and the 20% squad-value allowance beside it.
+  dialog shows your cash and, when the squad value is known, the resulting maximum bid
+  (cash plus up to 20% of squad value) beside it.
+- Amounts are shown with the locale's thousands separator and regrouped when the field
+  loses focus; either separator is accepted while typing.
 - **Optional deadline:** a day, taken as the end of that local day.
 
 A live sentence previews the amount the rule waits for, warns when that is already true, and
@@ -1049,6 +1064,8 @@ states that the rule acts once, on its own, even with the app closed. Initial fo
 **Cancel**; the confirm button names the effect (**Arm auto-sell** / **Arm auto-buy**) and
 dismissal is blocked while the request is pending. Arming is the confirmation: nothing is
 sent until you press it, and an armed rule can be edited or cancelled until it acts.
+**Cancel rule** asks for an inline confirmation (focus on **Keep rule**) before the rule is
+disarmed, and the sheet cannot be closed while the cancellation is in flight.
 
 State is polled every 60 seconds and on focus. A rule that lists, completes, fails or
 expires after the first load raises a toast; the sheet shows the latest reason in plain
