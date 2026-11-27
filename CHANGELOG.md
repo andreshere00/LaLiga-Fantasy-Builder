@@ -8,6 +8,9 @@ entry, not a claim that every optional provider or deployment gate is complete.
 
 ### Frontend
 
+- Each view now has one filled (coral) action: the lineup builder button, extra builder
+  results, release-clause, received-offer, scouting and connect-page helper buttons became
+  outline or secondary.
 - The market menu for your own listing no longer shows a permanently disabled
   **Immediate sell** entry.
 - The lineup builder's **Cancel build** no longer looks destructive, and **Sell now** sits

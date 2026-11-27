@@ -18,6 +18,7 @@
   .select-wrap select,
   .formation-value,
   .accent-control-shell,
+  .quiet-control-shell,
   .rank-row,
   .squad-picker-search,
   .player-tile.is-interactive
@@ -336,6 +337,7 @@
 
 .formation-value,
 .accent-control-shell,
+.quiet-control-shell,
 .value-box,
 .pager,
 .score-pill {
@@ -1223,7 +1225,6 @@
 .select-wrap::after { top:50%; transform:translateY(-50%); }
 .select-wrap select { padding-inline:12px 44px; }
 .accent-control-shell { border-radius: 0; color:var(--fb-ink-on-status); }
-.accent-control-shell:has(.recommend-button:disabled) { background:var(--fb-subtle); color:var(--fb-muted); border:1px solid var(--fb-line); }
 .accent-control-shell:has(.save-lineup-button:disabled) { background:var(--fb-primary); color:var(--fb-ink-on-status); opacity:.5; }
 .save-lineup-button { justify-content:center; text-transform:uppercase; font-weight:600; }
 .save-lineup-button-text { text-align:center; }
@@ -1293,18 +1294,25 @@
 .value-box .value-box-tooltip-wrap { justify-content:center; }
 .value-box-text { flex:0 1 auto; text-align:center; }
 /* Shared action colors keep text legible and unavailable controls visually stable. */
-.save-lineup-button,.recommend-button { color:var(--fb-on-brand); }
-.save-lineup-button-icon,.recommend-button-icon { filter:brightness(0); }
-.accent-control-shell:has(:is(.save-lineup-button,.recommend-button)) { background:var(--fb-primary); color:var(--fb-on-brand); }
-.accent-control-shell:has(:is(.save-lineup-button,.recommend-button):not(:disabled):not([aria-disabled="true"]):hover) { background:var(--fb-coral); color:var(--fb-on-coral); }
-.accent-control-shell:has(:is(.save-lineup-button,.recommend-button):not(:disabled):not([aria-disabled="true"]):hover) :is(.save-lineup-button,.recommend-button) { color:var(--fb-on-coral); }
-.accent-control-shell:has(:is(.save-lineup-button,.recommend-button):is(:disabled,[aria-disabled="true"])) { background:var(--fb-subtle); border:1px solid var(--fb-control-line); color:var(--fb-muted); opacity:1; }
-.accent-control-shell:has(:is(.save-lineup-button,.recommend-button):is(:disabled,[aria-disabled="true"])) :is(.save-lineup-button,.recommend-button) { color:var(--fb-muted); cursor:not-allowed; }
-.accent-control-shell:has(:is(.save-lineup-button,.recommend-button):is(:disabled,[aria-disabled="true"])) img { opacity:.5; }
-:root[data-theme="dark"] .accent-control-shell:has(:is(.save-lineup-button,.recommend-button):is(:disabled,[aria-disabled="true"])) img { filter:brightness(0) invert(1); }
+.save-lineup-button { color:var(--fb-on-brand); }
+.save-lineup-button-icon { filter:brightness(0); }
+.accent-control-shell:has(.save-lineup-button) { background:var(--fb-primary); color:var(--fb-on-brand); }
+.accent-control-shell:has(.save-lineup-button:not(:disabled):not([aria-disabled="true"]):hover) { background:var(--fb-coral); color:var(--fb-on-coral); }
+.accent-control-shell:has(.save-lineup-button:not(:disabled):not([aria-disabled="true"]):hover) .save-lineup-button { color:var(--fb-on-coral); }
+.accent-control-shell:has(.save-lineup-button:is(:disabled,[aria-disabled="true"])) { background:var(--fb-subtle); border:1px solid var(--fb-control-line); color:var(--fb-muted); opacity:1; }
+.accent-control-shell:has(.save-lineup-button:is(:disabled,[aria-disabled="true"])) .save-lineup-button { color:var(--fb-muted); cursor:not-allowed; }
+.accent-control-shell:has(.save-lineup-button:is(:disabled,[aria-disabled="true"])) img { opacity:.5; }
+:root[data-theme="dark"] .accent-control-shell:has(.save-lineup-button:is(:disabled,[aria-disabled="true"])) img { filter:brightness(0) invert(1); }
 .recommend-button { align-items:center; justify-content:center; text-align:center; font-size:16px; font-weight:600; }
 .recommend-button-text,.save-lineup-button-text { flex:0 1 auto; text-align:center; }
 .pager button:focus-visible { outline-offset:-3px; }
 .board-controls .lineup-formation-trigger { justify-content:center; text-align:center; min-width:var(--lineup-formation-control-min); min-height:var(--lineup-control-height); }
 .lineup-formation-icon { display:flex; align-items:center; justify-content:center; align-self:center; flex:0 0 18px; height:18px; line-height:0; }
 .lineup-formation-icon svg { display:block; width:18px; height:18px; }
+
+/* The builder opens a dialog, so it is an outline control; Save stays the page's one filled action. */
+.quiet-control-shell { display:flex; align-items:stretch; width:100%; border:1px solid var(--fb-control-line); background:var(--fb-surface); color:var(--fb-secondary); box-sizing:border-box; transition:background-color var(--fb-color-duration) var(--fb-color-ease); }
+.quiet-control-shell:has(.recommend-button:hover),
+.quiet-control-shell:has(.recommend-button:active) { background:var(--fb-subtle); }
+.recommend-button-icon { filter:brightness(0); }
+:root[data-theme="dark"] .recommend-button-icon { filter:brightness(0) invert(1); }

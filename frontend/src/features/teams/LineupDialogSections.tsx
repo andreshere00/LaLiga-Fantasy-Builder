@@ -61,7 +61,7 @@ export function LineupMarketActions({
             else if (offer.type === "withdraw") actions.openWithdraw(row);
             else if (offer.type === "pay-clause") actions.openClause(row, offer.amount);
           };
-          const primary = offer.type === "bid" || offer.type === "pay-clause";
+          const primary = offer.type === "bid";
           return (
             <li key={key}>
               <Button

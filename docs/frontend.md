@@ -126,6 +126,11 @@ Button guidelines apply throughout the application, including portaled dialogs:
   clickable area; dense performance controls retain full-size targets.
 - Primary actions use coral with black text; secondary and cancellation actions
   use neutral surfaces or outlines. Dialog footers preserve these variants.
+  Each view has one filled action: **Save** on the lineup toolbar (**Lineup builder** is an
+  outline control), **Use as draft** on the top-ranked builder result only, **Place bid** in
+  a Teams player dialog (the release clause is outline), and the confirm step of a received
+  offer (**Accept** is secondary, **Reject** outline). Retry, copy, cancel and load-more
+  buttons are outline.
   Selected filters and pagination also use an underline, so color is not the
   only indication of selection.
 - Disabled actions retain their appearance on hover. The shared `Button`

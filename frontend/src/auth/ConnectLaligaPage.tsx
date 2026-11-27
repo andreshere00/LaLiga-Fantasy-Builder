@@ -131,7 +131,7 @@ export function ConnectLaligaPage() {
     {!signedOut && !waiting && !linkOptionsError && helper && <div className="auth-connection-guide">
       <h2>{t("Connect with the Mac helper")}</h2>
       <p>{t("On a Mac, get the helper from the ")}<a href="https://github.com/andreshere00/LaLiga-Fantasy-Builder">{t("Fantasy Builder repository")}</a>{t(", then run this command in its folder. Sign in with the same Fantasy Builder account. The helper will guide you through LaLiga authorization.")}</p>
-      {isMac ? <><code className="auth-helper-command">{helperCommand}</code><Button onClick={() => { void navigator.clipboard.writeText(helperCommand).then(() => setCopied(true)); }}>{copied ? t("Copied") : t("Copy command")}</Button></> : <p>{t("This helper currently supports macOS. Open this page on your Mac to connect; you can use the app here afterward.")}</p>}
+      {isMac ? <><code className="auth-helper-command">{helperCommand}</code><Button variant="outline" onClick={() => { void navigator.clipboard.writeText(helperCommand).then(() => setCopied(true)); }}>{copied ? t("Copied") : t("Copy command")}</Button></> : <p>{t("This helper currently supports macOS. Open this page on your Mac to connect; you can use the app here afterward.")}</p>}
       <p>{t("This page checks your connection when you return to it after signing in to LaLiga.")}</p>
       {checkError && <p role="alert">{t("Connection could not be checked. Try again.")}</p>}
       <Button onClick={() => { void checkConnection(); }} disabled={checkingConnection}>{checkingConnection ? t("Checking…") : t("Check connection")}</Button>
@@ -163,7 +163,7 @@ export function ConnectLaligaPage() {
           <p className="auth-field-hint">{t("This one-time URL is sent only to Fantasy Builder. Do not share it elsewhere.")}</p>
           <Button type="submit" disabled={manualBusy || !callback.trim()}>{manualBusy ? t("Connecting…") : t("Complete connection")}</Button>
         </form>
-        <Button onClick={() => { void cancelManual(); }} disabled={manualBusy}>{t("Cancel attempt")}</Button>
+        <Button variant="outline" onClick={() => { void cancelManual(); }} disabled={manualBusy}>{t("Cancel attempt")}</Button>
       </>}
       {expired && <p role="status">{t("This attempt expired. Start a new one.")}</p>}
       {(manualError && <p role="alert">{t(manualError)}</p>)}
