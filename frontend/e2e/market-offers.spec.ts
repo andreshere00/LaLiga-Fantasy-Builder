@@ -198,6 +198,9 @@ test("rejection uses the offer endpoint without a body", async ({ page }) => {
   await page.goto("/market");
   await page.getByRole("button", { name: "Market offers, 2 pending", exact: true }).click();
   await page.getByRole("button", { name: "Reject offer for Player 13 from Another Manager", exact: true }).click();
+  const rejection = page.getByRole("group", { name: "Confirm rejection", exact: true });
+  await expect(rejection.getByRole("button", { name: "Cancel", exact: true })).toBeFocused();
+  await rejection.getByRole("button", { name: "Reject offer", exact: true }).click();
   await expect(page.locator(".fb-toast").getByText("Offer rejected", { exact: true })).toBeVisible();
   await expect(page.locator(".market-offers-trigger")).toHaveAttribute("aria-label", "Market offers, 1 pending");
 });
@@ -228,6 +231,9 @@ test("an unusable successful write refreshes state without retrying the write", 
   await page.goto("/market");
   await page.getByRole("button", { name: "Market offers, 2 pending", exact: true }).click();
   await page.getByRole("button", { name: "Reject offer for Player 13 from Another Manager", exact: true }).click();
+  const rejection = page.getByRole("group", { name: "Confirm rejection", exact: true });
+  await expect(rejection.getByRole("button", { name: "Cancel", exact: true })).toBeFocused();
+  await rejection.getByRole("button", { name: "Reject offer", exact: true }).click();
   await expect(page.getByRole("dialog").getByText(/The response could not be confirmed/)).toBeVisible();
   await expect(page.locator(".market-offers-trigger")).toHaveAttribute("aria-label", "Market offers, 1 pending");
   expect(writes).toBe(1);

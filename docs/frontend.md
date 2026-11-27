@@ -881,7 +881,8 @@ Code: `frontend/src/features/market/` (`model/`, `cells/`, `actions/`,
   be answered through offer endpoints.
 - Pending offers with valid identifiers and whole-euro amounts can be rejected or
   accepted. Acceptance confirms the player, sender and exact amount before sending
-  `offerMoney`; expired offers are excluded. Changed amounts and unknown statuses
+  `offerMoney`; rejection likewise confirms the amount, sender and player inline, with
+  focus on **Cancel**, before sending. Expired offers are excluded. Changed amounts and unknown statuses
   block confirmation. Writes are never automatically retried. Confirmed responses
   update the count and refresh market, offers, squad, lineup, balance and leagues;
   unusable success responses refresh reads so the user can check the outcome.
