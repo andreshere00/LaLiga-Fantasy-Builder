@@ -8,6 +8,8 @@ entry, not a claim that every optional provider or deployment gate is complete.
 
 ### Frontend
 
+- Toasts show a ✓ or ! icon and error toasts are announced as errors; lost matches on the
+  player page use the failure colour instead of the primary coral.
 - Current page and pressed range buttons share one selection style (dark border and
   underline bar) instead of the coral primary fill; active column filters fill their icon,
   underline the heading and are announced as filtered; a lineup tile picked for a swap shows

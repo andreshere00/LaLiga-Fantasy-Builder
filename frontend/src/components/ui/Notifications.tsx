@@ -29,7 +29,9 @@ function NotificationList() {
       <Toast.Viewport className="fb-toast-viewport">
         {toasts.map((toast) => (
           <Toast.Root key={toast.id} toast={toast} className="fb-toast" data-tone={toast.type}>
+            <span className="fb-toast-icon" aria-hidden="true">{toast.type === "error" ? "!" : "✓"}</span>
             <Toast.Content className="fb-toast-content">
+              {toast.type === "error" ? <span className="visually-hidden">{t("Error")}: </span> : null}
               <Toast.Title className="fb-toast-title" />
               <Toast.Description />
             </Toast.Content>
