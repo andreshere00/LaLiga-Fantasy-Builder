@@ -748,7 +748,8 @@ lineup** discards local edits and restores `GET /teams/{team_id}/lineup`.
 The scoring action is enabled after the fixture starts and a snapshot is available;
 an unavailable snapshot is never replaced by the latest saved lineup. Loading either
 lineup changes the local draft only. Loading a different scoring snapshot enables
-Save, which must be used explicitly to replace the saved lineup.
+Save, which must be used explicitly to replace the saved lineup. When the draft has unsaved
+edits, either action first asks **Discard unsaved changes?**, starting on **Keep editing**.
 
 Code: `frontend/src/features/lineup/`.
 

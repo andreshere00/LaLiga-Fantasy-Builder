@@ -12,6 +12,7 @@ entry, not a claim that every optional provider or deployment gate is complete.
   and from My bids, and the success toast says "Bid cancelled" instead of "Bid updated".
 - Bid dialogs show your balance and the listing's time left; the release-clause dialog shows
   your balance before and after paying and says the payment can't be undone.
+- Loading the last saved or original lineup asks before discarding unsaved lineup edits.
 - Rejecting a received offer now asks for inline confirmation, like accepting one.
 - Cancelling an auto-market rule now asks for inline confirmation and shows its progress.
 - Unlinking a sign-in provider on the account page now asks for confirmation.

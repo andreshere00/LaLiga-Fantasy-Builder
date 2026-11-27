@@ -50,6 +50,7 @@ import { useLineupBoard } from "./useLineupBoard";
 import { useSquadSales } from "./useSquadSales";
 import { useSquadStats } from "./useSquadStats";
 import { LineupBuilderDialog } from "./LineupBuilderDialog";
+import { DiscardDraftDialog, type DraftRestoreSource } from "./DiscardDraftDialog";
 import { MarketOffers } from "../market/offers/MarketOffers";
 import { MarketOffersProvider } from "../market/offers/MarketOffersContext";
 import { useOwnSquadOffers } from "../market/offers/useOwnSquadOffers";
@@ -106,6 +107,7 @@ function LineupPageContent() {
   }, [board.fixtureScoresVisible, board.groups]);
   const pitchFixtures = usePitchFixtureStats(pitchMasterIds, board.fixtureScoresVisible);
   const [builderOpen, setBuilderOpen] = useState(false);
+  const [pendingRestore, setPendingRestore] = useState<DraftRestoreSource | null>(null);
   const [swapCandidate, setSwapCandidate] = useState<{
     playerId: string;
     positionId: number | null;
@@ -115,6 +117,16 @@ function LineupPageContent() {
   } | null>(null);
   const activeSwap = board.editable && swapCandidate?.teamId === board.selectedTeamId &&
     swapCandidate.week === board.week ? swapCandidate : null;
+  const restoreDraft = (source: DraftRestoreSource) => {
+    setSwapCandidate(null);
+    if (source === "original") board.restoreOriginalLineup();
+    else board.restoreLastSavedLineup();
+  };
+  // Loading another lineup replaces unsaved edits, so ask first when there are any.
+  const requestRestore = (source: DraftRestoreSource) => {
+    if (board.draftDirty) setPendingRestore(source);
+    else restoreDraft(source);
+  };
 
   const [squadFilters, setSquadFilters] = useState<SquadFilters>(createEmptySquadFilters);
   const [filterOpen, setFilterOpen] = useState(false);
@@ -386,8 +398,7 @@ function LineupPageContent() {
                         disabled={!board.originalLineupAvailable || board.savePending}
                         onClick={(event) => {
                           event.currentTarget.closest("details")?.removeAttribute("open");
-                          setSwapCandidate(null);
-                          board.restoreOriginalLineup();
+                          requestRestore("original");
                         }}
                       >
                         <span className="pitch-original-lineup-icons" aria-hidden="true">
@@ -395,7 +406,7 @@ function LineupPageContent() {
                           <img className="pitch-original-lineup-icon is-hover" src={originalFixtureWhiteUrl} alt="" />
                           <img className="pitch-original-lineup-icon is-disabled" src={originalFixtureGrayUrl} alt="" />
                         </span>
-                        <span>{t("Load original lineup for ")}{scoreWeekLabel(board.week)}</span>
+                        <span>{t("Load original lineup for {{0}}", { 0: scoreWeekLabel(board.week) })}</span>
                       </button>
                     </Help>
                     <button
@@ -404,8 +415,7 @@ function LineupPageContent() {
                       disabled={!board.lastSavedLineupAvailable || board.savePending}
                       onClick={(event) => {
                         event.currentTarget.closest("details")?.removeAttribute("open");
-                        setSwapCandidate(null);
-                        board.restoreLastSavedLineup();
+                        requestRestore("saved");
                       }}
                     >
                       <span className="pitch-original-lineup-icons" aria-hidden="true">
@@ -776,6 +786,13 @@ function LineupPageContent() {
         }
         onClose={board.dismissOpponentLineupNotice}
       />
+      <DiscardDraftDialog source={pendingRestore} weekLabel={scoreWeekLabel(board.week)}
+        onKeep={() => setPendingRestore(null)}
+        onDiscard={() => {
+          if (pendingRestore) restoreDraft(pendingRestore);
+          setPendingRestore(null);
+        }}
+        finalFocus={() => document.querySelector<HTMLElement>(".pitch-lineup-load-trigger") ?? false} />
       <SquadFilterDialog open={filterOpen} filters={squadFilters}
         players={filterRows} pending={squadStats.isLoading}
         onClose={() => setFilterOpen(false)}
